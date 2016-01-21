@@ -1,12 +1,5 @@
 Vagrant.configure("2") do |config|
 
-    # Enable the Puppet provisioner
-    config.vm.provision :puppet do |puppet|
-        puppet.manifests_path = "manifests"
-        puppet.manifest_file = "default.pp"
-        puppet.module_path = "protwis_puppet_modules"
-    end
-
     # Vagrant box to build off of.
     config.vm.box = "ubuntu/trusty64"
 
@@ -24,5 +17,15 @@ Vagrant.configure("2") do |config|
 
     # Set up a shared directory
     config.vm.synced_folder "shared", "/protwis/", :owner => "vagrant"
+
+    # copy puppet scripts to VM
+    config.vm.provision "file", source: "protwis_puppet_modules", destination: "/protwis/conf/protwis_puppet_modules"
+
+    # Enable the Puppet provisioner
+    config.vm.provision :puppet do |puppet|
+        puppet.manifests_path = "manifests"
+        puppet.manifest_file = "default.pp"
+        puppet.module_path = "protwis_puppet_modules"
+    end
 
 end
