@@ -1,0 +1,3 @@
+[submodule "protwis_puppet_modules"]
+	path = protwis_puppet_modules
+	url = https://github.com/protwis/protwis_puppet_modules.git
