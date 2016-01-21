@@ -72,7 +72,7 @@ Open up a shell and type
 
 ##### Fork the protwis repository
 
-    Go to https://github.com/protwis/protwis and click "Fork" in the top right corner
+Go to https://github.com/protwis/protwis and click "Fork" in the top right corner
 
 ##### Clone the forked repository
 
