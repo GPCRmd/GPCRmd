@@ -42,13 +42,12 @@ Go to https://github.com/protwis/protwis and click "Fork" in the top right corne
 Clone into the "shared" directory (replace your-username with your GitHub username)
 
     cd ~/protwis_vagrant
-    git clone https://github.com/your-username/protwis.git shared/protwis
+    git clone https://github.com/your-username/protwis.git shared/sites/protwis
 
 ##### Start the vagrant box
 
 This may take a few minutes
 
-    cd ~/protwis_vagrant
     vagrant up
 
 ##### Log into the vagrant VM
@@ -80,13 +79,12 @@ Open up a shell and type
     Clone into the "shared" directory (replace your-username with your GitHub username)
 
     cd ~/protwis_vagrant
-    git clone https://github.com/your-username/protwis.git .\shared\protwis
+    git clone https://github.com/your-username/protwis.git .\shared\sites\protwis
 
 ##### Start the vagrant box
 
 This may take a few minutes
 
-    cd ~/protwis_vagrant
     vagrant up
 
 ##### Log into the vagrant VM
