@@ -99,7 +99,7 @@ Use an SSH client, e.g. PuTTY, with the following settings
 ##### Start the built in Django development webserver
 
     cd /vagrant/protwis
-    python3 manage.py runserver 0.0.0.0:8000
+    /protwis/env/bin/python3 manage.py runserver 0.0.0.0:8000
 
 You're all set up. The webserver will now be accessible from http://localhost:8000
 
