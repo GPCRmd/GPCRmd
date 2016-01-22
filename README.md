@@ -30,7 +30,7 @@ the Vagrant website.
 
 Open up a terminal and type
 
-    git clone https://github.com/protwis/protwis_vagrant.git ~/protwis_vagrant
+    git clone --recursive https://github.com/protwis/protwis_vagrant.git ~/protwis_vagrant
     cd ~/protwis_vagrant
 
 ##### Fork the protwis repository
@@ -67,7 +67,7 @@ You're all set up. The webserver will now be accessible from http://localhost:80
 
 Open up a shell and type
 
-    git clone https://github.com/protwis/protwis_vagrant.git .\protwis_vagrant
+    git clone --recursive https://github.com/protwis/protwis_vagrant.git .\protwis_vagrant
     cd .\protwis_vagrant
 
 ##### Fork the protwis repository
