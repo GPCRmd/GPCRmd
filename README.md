@@ -76,7 +76,7 @@ Go to https://github.com/protwis/protwis and click "Fork" in the top right corne
 
 ##### Clone the forked repository
 
-    Clone into the "shared" directory (replace your-username with your GitHub username)
+Clone into the "shared" directory (replace your-username with your GitHub username)
 
     cd ~/protwis_vagrant
     git clone https://github.com/your-username/protwis.git .\shared\sites\protwis
@@ -98,7 +98,7 @@ Use an SSH client, e.g. PuTTY, with the following settings
 
 ##### Start the built in Django development webserver
 
-    cd /vagrant/protwis
+    cd /protwis/sites/protwis
     /env/bin/python3 manage.py runserver 0.0.0.0:8000
 
 You're all set up. The webserver will now be accessible from http://localhost:8000
