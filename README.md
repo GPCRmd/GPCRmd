@@ -57,7 +57,7 @@ This may take a few minutes
 ##### Start the built in Django development webserver
 
     cd /protwis/sites/protwis
-    /protwis/env/bin/python3 manage.py runserver 0.0.0.0:8000
+    /env/bin/python3 manage.py runserver 0.0.0.0:8000
 
 You're all set up. The webserver will now be accessible from http://localhost:8000
 
@@ -99,7 +99,7 @@ Use an SSH client, e.g. PuTTY, with the following settings
 ##### Start the built in Django development webserver
 
     cd /vagrant/protwis
-    /protwis/env/bin/python3 manage.py runserver 0.0.0.0:8000
+    /env/bin/python3 manage.py runserver 0.0.0.0:8000
 
 You're all set up. The webserver will now be accessible from http://localhost:8000
 
@@ -108,12 +108,12 @@ You're all set up. The webserver will now be accessible from http://localhost:80
 The protwis directory is now shared between the host machine and the virtual machine, and any changes made on the host
 machine will be instantly reflected on the server.
 
-To run django commands from the protwis directory, ssh into the VM, and use the "/protwis/env/bin/python3" command e.g
+To run django commands from the protwis directory, ssh into the VM, and use the "/env/bin/python3" command e.g
 
     cd ~/protwis_vagrant/
     vagrant ssh
     cd /vagrant/protwis
-    /protwis/env/bin/python3 manage.py check protein
+    /env/bin/python3 manage.py check protein
 
 The database administration tool Adminer is installed and accessible at http://localhost:8001/adminer. Use the
 following settings
