@@ -112,7 +112,7 @@ To run django commands from the protwis directory, ssh into the VM, and use the 
 
     cd ~/protwis_vagrant/
     vagrant ssh
-    cd /vagrant/protwis
+    cd /protwis/sites/protwis
     /env/bin/python3 manage.py check protein
 
 The database administration tool Adminer is installed and accessible at http://localhost:8001/adminer. Use the
