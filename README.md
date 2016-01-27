@@ -96,7 +96,7 @@ Use an SSH client, e.g. PuTTY, with the following settings
     username: vagrant
     password: vagrant
 
-##### Start the built in Django development webserver
+##### Start the Django development webserver
 
     cd /protwis/sites/protwis
     /env/bin/python3 manage.py runserver 0.0.0.0:8000
