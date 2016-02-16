@@ -1,0 +1,69 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+
+ {% block content %}
+
+<div id="form-main">
+  <div id="form-div">
+    <form class="form" id="form1">
+
+      <p class="header"> Please enter the PDB code of the simulated crystal </p>
+	<p class="PDB">
+        <input name="PDB" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="PDB" id="PDB" />
+	</p>
+
+      <p class="header"> Please enter the membrane composition </p> 
+        <p class="membrane">
+	<select>
+		<option value="POPC">POPC</option>
+        	<option value="DOPC">DOPC</option>
+        	<option value="POPE">POPE</option>
+	</select>
+
+        <input name="MEMB" type="text" class="validate[required,custom[MEMB]] feedback-input" id="MEMB" placeholder="MEMB" />
+        </p>
+      
+      <p class="header"> Please enter the Force Field </p>
+	<p class="ffield">
+        <input name="ffield" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="Force Field" id="ffield" />
+	</p>
+
+      <p class="header"> Please enter the membrane composition </p> 
+        <p class="">
+        <input name="MEMB" type="text" class="validate[required,custom[MEMB]] feedback-input" id="MEMB" placeholder="MEMB" />
+        </p>
+      
+      <p class="header"> Please enter the PDB code of the simulated crystal </p>
+	<p class="PDB">
+        <input name="PDB" type="text" class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="PDB" id="PDB" />
+	</p>
+
+      <p class="header"> Please enter the membrane composition </p> 
+        <p class="membrane">
+        <input name="MEMB" type="text" class="validate[required,custom[MEMB]] feedback-input" id="MEMB" placeholder="MEMB" />
+        </p>
+
+
+
+
+
+
+
+
+
+
+      <p class="text">
+        <textarea name="text" class="validate[required,length[6,300]] feedback-input" id="comment" placeholder="Comment"></textarea>
+      </p>
+      
+      
+      <div class="submit">
+        <input type="submit" value="SEND" id="button-blue"/>
+        <div class="ease"></div>
+      </div>
+    </form>
+  </div>
+
+ {% endblock content %}

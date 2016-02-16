@@ -4,6 +4,8 @@ from django.conf import settings
 
 
 urlpatterns = [
+#   url(r'^juanmaapp/', include('juanmaapp.urls')),  #### introducida por mi para  /protwis/sites/protwis/juanmaapp
+    url(r'^juanmaapp/', include('juanmaapp.urls')), 
     url(r'^', include('home.urls')),
     url(r'^services/', include('api_' + settings.SITE_NAME + '.urls')),
     url(r'^admin/', include(admin.site.urls)),
