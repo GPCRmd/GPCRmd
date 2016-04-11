@@ -1,6 +1,8 @@
+
 *.pyc
 *.log
 protwis/settings_local.py
 env
 /data
 *~
+.vagrant
