@@ -1,0 +1,12 @@
+{% block content %}
+<h3>{% trans "Alerts limit" %}</h3>
+<form action="" method="POST">{% csrf_token %}
+    {{ alert_form.as_p }}
+    <input type="submit" value="{% trans 'Update' %}" />
+</form>
+
+<h3>{% trans "Notifier setting" %}</h3>
+<form action="" method="POST">{% csrf_token %}
+    {{ notifier_form.as_p }}
+    <input type="submit" value="{% trans 'Update' %}" />
+</form>

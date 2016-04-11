@@ -16,9 +16,15 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
+#DEBUG CAMBIAR a True
+#DEBUG=False
+
+
 # Application definition
 
 INSTALLED_APPS = (
+    'polls.apps.PollsConfig',
+    'dynadb.apps.DynadbConfig',
     'juanmaapp.apps.JuanmaappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -118,7 +124,8 @@ TEMPLATES = [
 ]
 
 if DEBUG:
-    TEMPLATES[0]['OPTIONS']['debug'] = True
+   TEMPLATES[0]['OPTIONS']['debug'] = True
+   #VOLVER A PONER EN TRUE
 
 
 # Debug toolbar

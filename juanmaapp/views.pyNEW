@@ -2,26 +2,34 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
 from django.template import loader
-from .models import Question,Formup
+#from .models import Question
 #from .forms import PostForm
 #from .models import DyndbModel
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
 
 # Create your views here.
+#def index(request):
+#    return HttpResponse("Hello, JUANMA. You're at the juanmaapp index.")
+
+
+class DyndbModelFormView():
+    template_name = 'formview.html'
+    form_class = DyndbModelForm
+    success_url = '/thanks/'
+    
+    def form_valid(self,form):
+        form.send_email()
+        return super(DyndbModelFormView,self).form_valid(form)
+
+
 def index(request):
-    return HttpResponse("Hello, JUANMA. You're at the juanmaapp index.")
-
-
-
-#   def index(request):
-#   latest_question_list = Question.objects.order_by('-pub_date')[:5]
-#   template = loader.get_template('juanmaapp/index.html')
-#   context = {
-#       'latest_question_list': latest_question_list,
-#   }
-#   return HttpResponse(template.render(context, request))
-
+    latest_question_list = Question.objects.order_by('-pub_date')[:5]
+    template = loader.get_template('juanmaapp/index.html')
+    context = {
+        'latest_question_list': latest_question_list,
+    }
+    return HttpResponse(template.render(context, request))
 
 #  def upload_detail(request, pk):
 #          post = get_object_or_404(Formup, pk=pk)
@@ -30,16 +38,27 @@ def index(request):
 
 
 
+def form_dyndbmodel(request):
+#   if request.method == "POST":
+#       form = PostForm(request.POST)
+#       if form.is_valid():
+#           post = form.save(commit=False)
+#           post.author = request.user
+#           post.published_date = timezone.now()
+#           post.save()
+#           return redirect('juanmaapp.views.upload_detail', pk=upload.pk)
+#   else:
+#       form = PostForm()
+    return render(request, 'juanmaapp/pruebaform.html', {'form':form})
 
 def upload(request):
 #  latest_question_list = Question.objects.order_by('-pub_date')[:5]
 #  template = loader.get_template('juanmaapp/uploadform.html')
-#    form = PostForm() 
+    form = PostForm() 
 #  context = {
 #      'latest_question_list': latest_question_list,
 #  }
-#    return render(request, 'juanmaapp/uploadform.html', {'form':form})
-    return render(request, 'juanmaapp/uploadform.html')
+    return render(request, 'juanmaapp/uploadform.html', {'form':form})
 
 #   if request.method == "POST":
 #       form = PostForm(request.POST)
