@@ -6,3 +6,8 @@ env
 /data
 *~
 .vagrant
+/manifests/default.pp
+/.gitmodules
+/Vagrantfile
+/shared/.gitignore
+/shared/.gitignore
