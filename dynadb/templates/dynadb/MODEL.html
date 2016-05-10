@@ -14,7 +14,7 @@
      
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 2-3:<br>System information<br>(Model Form)</h3>
+        	<h3 > Simulation Submission<br>Step 3:<br>Model Information</h3>
          </div> 
      </div>
 
@@ -89,10 +89,14 @@
 
 
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_type"><a title="Type of structure that it is modeled. VALUES: ('Protein','Complex'). 'Complex' is set when an “molecular complex” is modeled." > Model Type***:</a></label></div>
-			<div class="col-md-6"><input cols="40" id="id_type" type="text" name="type" rows="2" style="width:250px"></input></div>
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_name"><a title=" " > Model Name:</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" style="width:250px"></input></div>
 		<br></div>
 
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_type"><a title="Type of structure that it is modeled. VALUES: ('Protein','Complex'). 'Complex' is set when an “molecular complex” is modeled." > Model Type:</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_type" type="text" name="type" rows="2" style="width:250px"></input></div>
+		<br></div>
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_pdbid"><a title="PDB ID from Protein Data Bank database . It should contain chain code when necessary (e.g. 4IAR.A). NULL when “dyndb_model”.”source_type” is not X-Ray or NMR." >PDB ID:</a></label></div>
@@ -105,13 +109,19 @@
 		<br></div>
 
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_source_type"><a title="Source of the coordinates of the “model”. Loop repairs and other replaced missing protein residues on X-Ray or NMR structures are not taking into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-Ray or an NMR experiment. Other 'VALUES: ( 'X-Ray', 'NMR', 'Docking', 'MD', 'Other')." >Source Type:****</a></label></div>
-			<div class="col-md-6"><input cols="40" id="id_source_type" type="text" name="source_type" style="width:250px" ></input></div>
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_source_type"><a title="Source of the coordinates of the “model”. Loop repairs and other replaced missing protein residues on X-Ray or NMR structures are not taking into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-Ray or an NMR experiment. Other 'VALUES: ( 'X-Ray', 'NMR', 'Docking', 'MD', 'Other')." >Source Type:</a></label></div>
+				<div class="col-md-6" style="height:30px"><select id="id_source_type" name="source_type" style="width:250px" >
+					<option value="0" selected="selected">X-ray</option>
+					<option value="1">NMR</option>
+					<option value="2">Docking</option>
+					<option value="3">MD</option>
+					<option value="4">Other</option>
+				</select></div>
 		<br></div>
 
 
 	        <div class="row">
-                	<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="upload_pdb"><a title="" >Upload PDB file:****</a></label></div>
+                	<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="upload_pdb"><a title="" >Upload PDB file:</a></label></div>
 			<div class="col-md-4"><input type="file"  name="upload`_pdb"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="Coordinates (PDB)" id="PDBcoor" /></div>
 		</div>
 
@@ -218,11 +228,11 @@
       <div class="col-md-12 panel panel-primary">
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href=/dynadb/dynamics/  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 3: MD protocol </a>
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-2: System Information (Small Molecules Form) </a>
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2: Small Molecule Information </a>
       	  </div>
       </div>
   </div>

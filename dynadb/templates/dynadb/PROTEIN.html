@@ -11,7 +11,7 @@
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 2-1:<br>System information<br>(Protein Form) </h3>
+        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3>
          </div> 
      </div>
 
@@ -63,12 +63,14 @@
 			<div class="col-md-2"><input id="id_isoform" name="isoform" type="number" style="width:100px" /></div>
 			<div class="col-md-4" style="margin-left:1.5%"><button  style="width:140px;" type="button">Validate </button></div>
 		<br></div>
-	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_is_mutated"><a title="This value is TRUE if the protein sequence differs from the one identified at uniprot by “uniprotkac” and “isoform”. Otherwise is set to FALSE.">Is mutated:</a></label></div>
-			<div class="col-md-6"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
+	        <div class="row" style="padding:10px 0px 10px 0px">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_receptor"><a title="Receptor: This value must be set if the protein is a GPCR.">Receptor:</a></label></div>
+			<div class="col-md-1"><input id="id_receptor" name="receptor" type="checkbox" /></div>
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_is_mutated"><a title="This value is TRUE if the protein sequence differs from the one identified at uniprot by “uniprotkac” and “isoform”. Otherwise is set to FALSE.">Mutant:</a></label></div>
+			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
 		<br></div>
 
-	        <div class="row">
+	 <!--       <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_receptor_id_protein"><a title="“Id” for the “protein” stored in GPCRDB. This value must be set if the protein is a GPCR. Otherwise is set to NULL. Foreign key to “protein”.”id”. ">Receptor id protein:</a></label></div>
 			<div class="col-md-6"><select id="id_receptor_id_protein" name="receptor_id_protein" style="width:250px">
 				<option value="" selected="selected">---------</option>
@@ -76,20 +78,24 @@
 				<option value="2">DyndbProtein object</option>
 				<option value="3">DyndbProtein object</option>
 			</select></div>
-		<br></div>
+		<br></div> -->
 
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_id_species"><a title="“Id” from GPCRDB for the specie corresponding to this protein sequence. Foreign key to “species”.”id”.">Id species:</a></label></div>
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_id_species"><a title="“Id” from GPCRDB for the specie corresponding to this protein sequence. Foreign key to “species”.”id”.">Species:</a></label></div>
 			<div class="col-md-6"style="height:30px"><select id="id_id_species" name="id_species" style="width:250px">
 				<option value="" selected="selected">---------</option>
 				<option value="1">Species object</option>
 			</select></div>
 		<br></div>
 
+	        <div class="row">
+<div class="col-md-1" style="height:30px"></div><div class="col-md-4"><label for="id_other_names"><a title="Other names (varchar(100)): other names that are not in “dyndb_protein”.”name”. They are obtained from UNIPROTK SWISSPROT.">Aliases:</a></label></div><div class="col-md-6">
+		<textarea cols="40" id="id_other_names" name="other_names" rows="2" style="width:250px"></textarea></div>
+		</div>
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_sequence"><a title="Sequence (text): sequence of the protein in  IUPAC one letter code with the format specified in “dyndb_protein_cannonical_protein”.”resletter_to”.">Sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" d="id_sequence" name="sequence" rows="2" style="width:250px"></textarea></div>
+			<div class="col-md-6"><textarea cols="40" id="id_sequence" name="sequence" rows="2" style="width:250px"></textarea></div>
 		<br></div>
 
 		<br>
@@ -133,11 +139,11 @@
       <div class="col-md-12 panel panel-primary">
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2-2: System Information (Small Molecule Form) </a>
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2: Small Molecule Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
-        	<a id='selection-button' href="/dynadb/db_author_information/"  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Author Information </a>
+        	<a id='selection-button' href="/dynadb/db_inputform/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to index </a>
       	  </div>
       </div>
 
