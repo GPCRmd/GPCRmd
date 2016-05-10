@@ -8,18 +8,6 @@ For more information, please refer to our [documentation](http://docs.gpcrdb.org
 INSTALLATION
 ------------
 
-Please follow the [instructions in the documentation](http://docs.gpcrdb.org/local_installation.html#for-development).
-=======
-Development environment for [Protwis](https://github.com/protwis/protwis) using Vagrant and Puppet.
-
-### Instructions
-
-This guide describes how to set up a ready-to-go virtual machine with Virtualbox and Vagrant.
-
-Works on Linux, Mac, and Windows.
-
-#### Prerequisites
-
 * [Vagrant][vagrant]
 * [Virtualbox][virtualbox]
 * [Git][git]
