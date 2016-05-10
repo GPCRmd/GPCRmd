@@ -1,6 +1,6 @@
-from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModeledResidues, DyndbFilesModel, DyndbDynamics, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates
+from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates
 from django import forms
-from django.forms import ModelForm, formset_factory, modelformset_factory
+from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 
 
 class NameForm(forms.Form):
@@ -19,7 +19,10 @@ class FormsetForm(forms.Form):
 class dyndb_ProteinForm(ModelForm):
     class Meta:
         model = DyndbProtein
-        fields = '__all__'
+#        fields = '__all__'
+        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
+
+
 
 class dyndb_Other_Protein_NamesForm(ModelForm):
     class Meta:
@@ -29,8 +32,10 @@ class dyndb_Other_Protein_NamesForm(ModelForm):
 class dyndb_Protein_SequenceForm(ModelForm):
     class Meta:
         model = DyndbProteinSequence
-        fields = '__all__'
-
+#        fields = '__all__'
+        exclude=['id_protein','length']
+        widgets= {'sequence':Textarea(attrs={'cols': 40, 'rows': 3})}
+  
 class dyndb_Cannonical_ProteinsForm(ModelForm):
     class Meta:
         model = DyndbCannonicalProteins
@@ -40,6 +45,7 @@ class dyndb_Protein_MutationsForm(ModelForm):
     class Meta:
         model = DyndbProteinMutations
         fields = '__all__'
+        exclude=['id_protein']
 
 class dyndb_CompoundForm(ModelForm):
     class Meta:
@@ -54,7 +60,8 @@ class dyndb_Other_Compound_Names(ModelForm):
 class dyndb_Molecule(ModelForm):
     class Meta:
         model = DyndbMolecule
-        fields = '__all__'
+     #   fields = '__all__'
+        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by']
 
 class dyndb_Files(ModelForm):
     class Meta:
@@ -88,13 +95,18 @@ class dyndb_Complex_Molecule(ModelForm):
 
 class dyndb_Complex_Molecule_Molecule(ModelForm):
     class Meta:
-        model = DyndbComplexMoleculeMolecule
+        model = DyndbComplexCompound
+        fields = '__all__'
+
+class dyndb_Complex_Compound(ModelForm):
+    class Meta:
+        model = DyndbComplexCompound
         fields = '__all__'
 
 class dyndb_Modeled_Residues(ModelForm):
-    class Meta:
-        model = DyndbModeledResidues
-        fields = '__all__'
+   class Meta:
+       model = DyndbModeledResidues
+       fields = '__all__'
 
 class dyndb_Files_Model(ModelForm):
     class Meta:
@@ -105,6 +117,12 @@ class dyndb_Dynamics(ModelForm):
     class Meta:
         model = DyndbDynamics
         fields = '__all__'
+
+class dyndb_Dynamics_Components(ModelForm):
+    class Meta:
+        model = DyndbDynamicsComponents
+        fields = '__all__'
+
 # falta dyndb_dynamics_components
 class dyndb_Dynamics_tags(ModelForm):
     class Meta:
@@ -152,12 +170,17 @@ class dyndb_Related_Dynamics_Dynamics(ModelForm):
 class dyndb_Model(ModelForm):       
     class Meta:
         model = DyndbModel
-        fields = '__all__'
+     #   fields = '__all__'
+        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
 
     class Media:
         js = ('addInput.js',)     
               
 ##########################
+class dyndb_Model_Components(ModelForm):       
+    class Meta:
+        model = DyndbModelComponents
+        fields = '__all__'
 
 
 class AlertForm(forms.ModelForm):

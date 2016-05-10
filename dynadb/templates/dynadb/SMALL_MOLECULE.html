@@ -1,0 +1,241 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-2 </h3>
+         </div> 
+     </div>
+     
+<!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             
+<!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
+            <div style="text-align:center"> 
+             <h4>FILL IN THE SMALL MOLECULE FORM</h4>
+	    </div>
+             <p>Please, provide information of all non-protein molecules in your system.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+            <div style="text-align:center"> 
+             <h4><br>Molecule information</h4>
+	    </div><br>
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_name"><a title="Name (varchar): First name in the list of names in pubchem or 'compund name' in CHEMBL if there is no entry in pubchem.">Compound name:</a></label></div>
+			<div class="col-md-6"><input  style="width:250px" id="id_name" maxlength="60" name="name" type="text" /></div>
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-4"><label for="id_iupac_name"><a title="Iupac name (varchar): IUPAC name downloaded from pubchem.  ">Iupac name:</a></label></div>
+			<div class="col-md-6"><input id="id_iupac_name" style="width:250px" maxlength="500" name="iupac_name" type="text" /></div>
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_pubchem_cid"><a title="Pubchem cid(int): Pubchem chemical identifier">Pubchem cid:</a></label></div>
+			<div class="col-md-3"><input id="id_pubchem_cid" name="pubchem_cid"  style="width:120px" type="number" /></div>
+			<div class="col-md-4"><button style="width:100px;text-align:center;" type="button" onclick="alert('Hi!!!')">Validate</button></div>
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_chembleid"><a title="ChEMBL ID(int): id in CHEMBL.">ChEMBL ID:</a></label></div>
+			<div class="col-md-3"><input id="id_chembleid" name="chembleid" type="number" style="width:120px" /></div>
+			<div class="col-md-4"><button style="width:100px;text-align:center;" type="button" onclick="alert('Hi!!!')">Validate</button></div>
+		</div>
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_std_id_molecule"><a title="Std id molecule(id): “molecule” ID that represents the standard form of the compound, here the properties downloaded directly from pubchem or CHEMBL.  ">Std ID molecule:</a></label></div>
+			<div class="col-md-6"><select id="id_std_id_molecule" name="std_id_molecule"  style="width:250px">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbMolecule object</option>
+				<option value="3">DyndbMolecule object</option>
+				<option value="4">DyndbMolecule object</option>
+				<option value="5">DyndbMolecule object</option>
+				<option value="6">DyndbMolecule object</option>
+				<option value="7">DyndbMolecule object</option>
+				<option value="2">DyndbMolecule object</option>
+			</select></div>
+		</div>
+
+	        <div class="row">
+<div class="col-md-1" style="height:30px"></div><div class="col-md-4"><label for="id_other_names"><a title="Other_names (varchar(200)): other names that are not in “dyndb_compound”.”name”. They are obtained from PubChem or otherwise from CHEMBL.">Alias:</a></label></div><div class="col-md-6"><input id="id_other_names" maxlength="200" name="other_names" type="text"  style="width:250px" /></div>
+		</div>
+
+	        <div class="row">
+		<div class="col-md-1" style="height:30px"></div><div class="col-md-4"><label for="id_type"><a title="Type (enum, dyndb_complex_compound_type): type of compound that forms part of a complex_exp. VALUES: ('Orthosteric ligand', 'Allosteric ligand', 'Crystallographic waters', 'Other').  ">Type:</a></label></div><div class="col-md-4"><textarea cols="20" id="id_type" name="type" rows="3" style="width:250px"></textarea></div><div class="col-md-4"></div>
+		</div><br>
+
+	        <div class="row">
+		<div class="col-md-2" style="height:30px">****</div><div class="col-md-4"><button style="width:180px;text-align:center;margin-right:5%" type="button" onclick="alert('Hi!!!')">Provide standard form</button></div><div class="col-md-4"><button style="width:180px;text-align:center;margin-right:5%" type="button" onclick="alert('Pipol!')">Get standard form</button></div><div class="col-md-4"></div>
+		</div><br>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_is_present"><a title="  ">Not present in model:</a></label></div>
+			<div class="col-md-6"><input id="id_is_present" name="is_present" type="checkbox" /></div>
+		</div><br>
+                
+
+                        <table align='center'>
+				<tr>	<th style="width:80px;text-align:center"><label for="id_stdform"><a title=" ">Standard form</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_upload_mol"><a title=" ">Upload Molecule</a></label></th>
+				<tr> 	<td style="padding:5px 5px 5px 5px"><textarea rows="3"style="width:200px;" id="id_stdform" name="stdform" /></textarea></td>
+					<td style="padding:5px 5px 5px 5px"><textarea rows="3"style="width:200px;" id="id_upload_mol"  name="upload_mol" /></textarea></td>
+				</tr>
+
+			</table><br>
+
+
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_id_compound"><a title="“id” of the compound that is represented with this chemical model (“molecule”). Foreign key to “dyndb_compound”.”id”.">Id compound:</a></label></div><div class="col-md-6"><select id="id_id_compound" name="id_compound" style="width:250px">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbCompound object</option>
+				<option value="2">DyndbCompound object</option>
+				<option value="3">DyndbCompound object</option>
+				<option value="4">DyndbCompound object</option>
+				<option value="5">DyndbCompound object</option>
+				<option value="6">DyndbCompound object</option>
+			</select></div>
+		<br></div>	
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_description"><a title="Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" style="width:250px" id="id_description" name="description" rows="2"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_net_charge"><a title="Net charge of the molecule structure.">Net charge:</a></label></div>
+			<div class="col-md-6"><input style="width:250px" id="id_net_charge" name="net_charge" type="number" /></div>
+		<br></div>
+	
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_inchi"><a title="IUPAC International Chemical Identifier (InChI) of the “molecule”.">InChI:</a></label></div>
+			<div class="col-md-6"><textarea style="width:250px" cols="40" id="id_inchi" name="inchi" rows="2"></textarea></div>	
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_sinchikey"><a title="Molecule Standard InChI's hash">SInChIKey:</a></label></div>
+			<div class="col-md-3"><input style="width:120px" id="id_sinchikey" maxlength="27" name="sinchikey" type="text" /></div>
+			<div class="col-md-4"><button style="width:100px;text-align:center;" type="button" onclick="alert('Hi!!!')">Get data</button></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_inchikey"><a title="Molecule InChI's hash">InChIKey:</a></label></div>
+			<div class="col-md-3"><input style="width:250px" id="id_inchikey" maxlength="27" name="inchikey" type="text" /></div>
+		<br></div>
+	        
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_inchicol"><a title="The default value of this column is '1'. The value has to be incremented in case of collision of several InChIKeys in order that “InChIkey” + “InChIcol” values are always unique.">InChIcol:</a></label></div>
+			<div class="col-md-6"><input style="width:250px" id="id_inchicol" name="inchicol" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_smiles"><a title="Canonical smiles representation of the molecule in PubChem format.">Open SMILES:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" style="width:250px" id="id_smiles" name="smiles" rows="2"></textarea>
+		</div><br></div>
+
+			<br>
+ 			<div style="text-align:center">
+					<button style="height:30px;width:400px" onclick="addFields()"> + Add molecule </button> 
+		        </div> 		
+			<br>
+
+
+<!--	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_update_timestamp">Update timestamp:</label></div>
+			<div class="col-md-6"><input id="id_update_timestamp" name="update_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_creation_timestamp">Creation timestamp:</label></div>
+			<div class="col-md-6"><input id="id_creation_timestamp" name="creation_timestamp" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_created_by_dbengine">Created by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_created_by_dbengine" maxlength="40" name="created_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_last_update_by_dbengine">Last update by dbengine:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by_dbengine" maxlength="40" name="last_update_by_dbengine" type="text" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_created_by">Created by:</label></div>
+			<div class="col-md-6"><input id="id_created_by" name="created_by" type="number" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"></div><div class="col-md-4"><label for="id_last_update_by">Last update by:</label></div>
+			<div class="col-md-6"><input id="id_last_update_by" name="last_update_by" type="number" /></div>
+		<br></div>  
+
+
+
+        <th><input type="submit" value="Submit" /> </th><br> -->
+   </div>  
+  </div>
+
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/model/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2-3: System Information (Model Form) </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/protein/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-1: System Information (Protein Form) </a>
+      	  </div>
+      </div>
+  </div>
+
+
+
+
+
+
+
+</div>
+
+{% endblock content %}
+
+
+

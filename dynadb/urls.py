@@ -12,7 +12,7 @@ urlpatterns = [
     url(r'^sub_sim/$', views.sub_sim, name='sub_sim'),
     url(r'^name/$', views.get_name, name='name'),
     url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
-#    url(r'^pruebadyndbfiles/$', views.get_Prueba, name='pruebadyndbfiles'),
+    url(r'^pruebadyndbfiles/$', views.get_Prueba, name='pruebadyndbfiles'),
     url(r'^db_inputform/$', views.db_inputformMAIN, name='db_inputform'),
     url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
     url(r'^db_dynamics/$', views.get_Dynamics, name='db_dynamics'),
@@ -25,5 +25,10 @@ urlpatterns = [
     url(r'^your_name/$', views.get_name, name='your_name'),
     url(r'^thanks/$', views.get_name, name='thanks'),
     url(r'^admin/', admin.site.urls),
+    url(r'^protein/$', views.PROTEINview, name='protein'),
+    url(r'^PROTEINfilled/$', views.PROTEINview, name='PROTEINfilled'),
+    url(r'^molecule/$', views.SMALL_MOLECULEview, name='molecule'),
+    url(r'^model/$', views.MODELview, name='model'),
+    url(r'^dynamics/$', views.DYNAMICSview, name='dynamics')
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 ]

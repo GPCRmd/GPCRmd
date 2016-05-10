@@ -1,0 +1,150 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-1:<br>System information<br>(Protein Form) </h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE PROTEIN FORM</h4>
+	    </div>
+             <p>Fill in the form with the relevant data concerning the receptor involved in the simulation.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+ 			<div style="text-align:center">
+             			<h4>Receptor sequence details</h4>
+            		</div><br>
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_name"><a title="Recommended name from  UNIPROTK. ">Name:</a></label></div>
+			<div class="col-md-6"><input id="id_name" maxlength="60" name="name" type="text" style="width:250px" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_uniprotkbac"><a title="UNIPROTK Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers for cannonical sequences. Mutations are handled in a different field. ">Uniprotkbac:</a></label></div>
+			<div class="col-md-6"><input id="id_uniprotkbac" maxlength="10" name="uniprotkbac" style="width:250px" type="text" /></div>
+		<br></div>
+			
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_isoform"><a title="Isoform number for a UNIPROTK Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
+			<div class="col-md-2"><input id="id_isoform" name="isoform" type="number" style="width:100px" /></div>
+			<div class="col-md-4" style="margin-left:1.5%"><button  style="width:140px;" type="button">Validate </button></div>
+		<br></div>
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_is_mutated"><a title="This value is TRUE if the protein sequence differs from the one identified at uniprot by “uniprotkac” and “isoform”. Otherwise is set to FALSE.">Is mutated:</a></label></div>
+			<div class="col-md-6"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_receptor_id_protein"><a title="“Id” for the “protein” stored in GPCRDB. This value must be set if the protein is a GPCR. Otherwise is set to NULL. Foreign key to “protein”.”id”. ">Receptor id protein:</a></label></div>
+			<div class="col-md-6"><select id="id_receptor_id_protein" name="receptor_id_protein" style="width:250px">
+				<option value="" selected="selected">---------</option>
+				<option value="1">DyndbProtein object</option>
+				<option value="2">DyndbProtein object</option>
+				<option value="3">DyndbProtein object</option>
+			</select></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_id_species"><a title="“Id” from GPCRDB for the specie corresponding to this protein sequence. Foreign key to “species”.”id”.">Id species:</a></label></div>
+			<div class="col-md-6"style="height:30px"><select id="id_id_species" name="id_species" style="width:250px">
+				<option value="" selected="selected">---------</option>
+				<option value="1">Species object</option>
+			</select></div>
+		<br></div>
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_sequence"><a title="Sequence (text): sequence of the protein in  IUPAC one letter code with the format specified in “dyndb_protein_cannonical_protein”.”resletter_to”.">Sequence:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" d="id_sequence" name="sequence" rows="2" style="width:250px"></textarea></div>
+		<br></div>
+
+		<br>
+		<div class=row id='PRUEBA'>
+			
+ 			<div style="text-align:center">
+             			<h4>Receptor mutations</h4>
+            		</div>
+
+                        <table align='center'>
+				<tr>	<th style="width:80px;text-align:center"><label for="id_resid"><a title="Resid (2 bytes int): residue number that its mutated on cannonical protein. ">Resid</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_resletter_from"><a title=" Resletter_from (char(1)): residue name in IUPAC one letter code that is present on cannonical protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_resletter_to"><a title=" Resletter_to (char(1)): residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions, '/' is used in case of missing residues, and 'X' for engineered residues.  ">Resletter to</a></label></th></tr>
+					<th style="width:80px;text-align:center"></th></tr>
+			 	<div class="row" id='container'>   
+				<tr> 	<td style="padding:5px 5px 5px 5px"><input style="width:140px;" id="id_resid" name="resid" type="number" /></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:140px;" id="id_resletter_from" maxlength="1" name="resletter_from" type="text" /></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:140px;" id="id_resletter_to" maxlength="1" name="resletter_to" type="text" /></td>	
+					<td style="padding:5px 5px 5px 5px"><button style="width:140px;" onclick="addFields()"> + Add mutation </button>	
+				</tr>
+				</div> 
+					<div id="container">
+					</div>
+
+			</table>
+		</div>
+ 	<div class="col-md-6">
+		<p style="margin-right:10%;margin-left:40%;padding:5px 5px 5px 5px"><button style="width:120px;" onclick="addFields()"> Apply mutations </button></p>
+	</div>
+ 	<div class="col-md-6">
+		<p style="margin-right:40%;margin-left:10%;padding:5px 5px 5px 5px"><button style="width:120px;" onclick="addFields()"> Get mutations </button></p>
+		
+		        </div><br>
+</div>
+</div>
+
+<!--        <th><input type="submit" value="Submit" /> </th><br>   -->
+
+<!--           <div id="selection-buttons"> -->
+
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2-2: System Information (Small Molecule Form) </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/db_author_information/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Author Information </a>
+      	  </div>
+      </div>
+
+
+   </div>
+
+{% endblock content %}
+
+
+

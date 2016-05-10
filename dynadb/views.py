@@ -9,10 +9,126 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule, dyndb_Modeled_Residues, dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List
 #from .forms import NameForm, TableForm
 
 # Create your views here.
+
+def PROTEINview(request):
+    if request.method == 'POST':
+        fdbPF = dyndb_ProteinForm(request.POST)
+        fdbPS = dyndb_Protein_SequenceForm(request.POST)
+        fdbPM = dyndb_Protein_MutationsForm(request.POST)
+
+        # check whether it's valid:
+        if fdbPF.is_valid() and fdbPF.is_valid() and fdbPF.is_valid(): 
+            # process the data in form.cleaned_data as required
+
+            formPF=fdbPF.save(commit=False)
+            formPS=fdbPS.save(commit=False)
+            formPM=fdbPM.save(commit=False)
+
+            form.user=request.user
+            form.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/PROTEINfilled/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+
+        fdbPF = dyndb_ProteinForm()
+        fdbPS = dyndb_Protein_SequenceForm()
+        fdbPM = dyndb_Protein_MutationsForm()
+        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM })
+
+def MODELview(request):
+    if request.method == 'POST':
+        fdbMF = dyndb_Model(request.POST)
+        fdbMR = dyndb_Modeled_Residues(request.POST)
+
+        # check whether it's valid:
+        if fdbMF.is_valid() and fdbMR.is_valid(): 
+            # process the data in form.cleaned_data as required
+
+            formMF=fdbPF.save(commit=False)
+            formMR=fdbMR.save(commit=False)
+
+            form.user=request.user
+            form.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/PROTEIN/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+
+        fdbMF = dyndb_Model()
+        fdbMR = dyndb_Modeled_Residues()
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbMR':fdbMR})
+
+
+def SMALL_MOLECULEview(request):
+    if request.method == 'POST':
+        fdbCF=dyndb_CompoundForm(request.POST)
+        fdbCN= dyndb_Other_Compound_Names(request.POST)
+        fdbMF = dyndb_Molecule(request.POST)
+        fdbMfl = dyndb_Files_Molecule(request.POST)
+        fdbMM = dyndb_Complex_Molecule_Molecule(request.POST)
+
+        # check whether it's valid:
+        if fdbMF.is_valid() and fdbMfl.is_valid() and fdbMM.is_valid() and fdbCF.is_valid() and fdbCN.is_valid(): 
+            # process the data in form.cleaned_data as required
+
+            formMF=fdbMF.save(commit=False)
+            formMfl=fdbMfl.save(commit=False)
+            formMM=fdbMM.save(commit=False)
+
+            form.user=request.user
+            form.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/PROTEIN/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+
+        fdbMF = dyndb_Molecule()
+        fdbMfl = dyndb_Files_Molecule()
+        fdbMM = dyndb_Complex_Molecule_Molecule()
+        fdbCF=dyndb_CompoundForm()
+        fdbCN=dyndb_Other_Compound_Names()
+
+        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
+
+def DYNAMICSview(request):
+    if request.method == 'POST':
+        dd=dyndb_CompoundForm(request.POST)
+        ddC= dyndb_Other_Compound_Names(request.POST)
+        ddT= dyndb_Dynamics_tags(request.POST)
+        ddTL=dyndb_Dynamics_Tags_List(request.POST)
+
+        # check whether it's valid:
+        if dd.is_valid() and ddC.is_valid() and ddT.is_valid() and ddTL.is_valid(): 
+            # process the data in form.cleaned_data as required
+
+            dd=dd.save(commit=False)
+            ddC=ddC.save(commit=False)
+            ddT=ddT.save(commit=False)
+
+            form.user=request.user
+            form.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/DYNAMICS/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        dd=dyndb_CompoundForm()
+        ddC= dyndb_Other_Compound_Names()
+        ddT= dyndb_Dynamics_tags()
+        ddTL=dyndb_Dynamics_Tags_List()
+
+
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC,'ddT':ddT, 'ddTL':ddTL})
+
+
 
 def get_Author_Information(request): 
         return render(request,'dynadb/dynadb_Author_Information.html'  )

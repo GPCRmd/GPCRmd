@@ -5,9 +5,9 @@ function addInput(divName){
           alert("You have reached the limit of adding " + counter + " inputs");
      }
      else {
-          var newdiv = document.createElement('div');
+          var newdiv = document.createElement('tr');
           newdiv.innerHTML = "Entry " + (counter + 1) + " <br><input type='text' name='myInputs[]'>";
-          document.getElementById(divName).appendChild(newdiv);
+          document.getElementById(divName).appendSibling(newdiv);
           counter++;
      }
 }

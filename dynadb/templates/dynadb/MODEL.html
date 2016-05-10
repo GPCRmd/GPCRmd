@@ -1,0 +1,232 @@
+<!-- dynadb_Dynamics.html -->
+
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+
+ <!-- description column -->
+ <div class="col-md-4">
+     
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Simulation Submission<br>Step 2-3:<br>System information<br>(Model Form)</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+            <div style="text-align:center"> 
+             <h4>FILL IN THE MODEL FORM</h4>
+            </div>
+             <p>Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-md-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+ 			<div style="text-align:center">
+             			<h4><br>Select Model</h4><br>
+            		</div>
+
+	        <div class="row">
+	 	<!--	<div class="col-md-5"><input type="radio" name="Model" value="New Model" checked> New Model</div> -->
+		<!--  	<div class="col-md-7"><input type="radio" name="Model" value="Reuse Model"> Reuse Model</div><br> -->
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Model:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Model <input  type="radio" name="Model" value="Reuse Model"></div>
+	 		<div class="col-md-4" style="text-align:center"><input  type="radio" name="Model" value="New Model" checked> New Model</div></div>
+	        <div class="row">
+			<div class="col-md-4"></div> 
+			<div class="col-md-2" style="text-align:left"><label for="Choose_reused_model"><a title="Choose a previous model from DB database">Model ID: </a> </label></div>
+			<div class="col-md-3"><input style="width:100px" id="Choose_reused_model" name="type" rows="1"></input></div>
+		<br><br>
+				
+		<br>
+		</div>
+
+<!-- 			EJEMPLO ANADIR OBJETO DESPUES DE SELECCION      https://css-tricks.com/exposing-form-fields-radio-button-css/  
+			    <input type="radio" name="choice-animals" id="choice-animals-dogs" required>
+			    <label for="choice-animals-dogs">I like dogs more</label>
+    
+			    <div class="reveal-if-active">
+			    <label for="which-dog">Good call. What's the name of your favorite dog?</label>
+		            <input type="text" id="which-dog" name="which-dog" class="require-if-active" data-require-pair="#choice-animals-dogs">
+		            </div>
+			    </div>
+    
+    			    <div>
+			    <input type="radio" name="choice-animals" id="choice-animals-cats">
+		            <label for="choice-animals-cats">I like cats more</label>	
+		            <div class="reveal-if-active">
+        			<label for="which-dog">Good call. What's the name of your favorite dog?</label>
+        			<input type="text" id="which-dog" name="which-dog" class="require-if-active" data-require-pair="#choice-animals-dogs">
+      			    </div>
+  		-->
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_type"><a title="Type of structure that it is modeled. VALUES: ('Protein','Complex'). 'Complex' is set when an “molecular complex” is modeled." > Model Type***:</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_type" type="text" name="type" rows="2" style="width:250px"></input></div>
+		<br></div>
+
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_pdbid"><a title="PDB ID from Protein Data Bank database . It should contain chain code when necessary (e.g. 4IAR.A). NULL when “dyndb_model”.”source_type” is not X-Ray or NMR." >PDB ID:</a></label></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text" style="width:250px"/></div>
+		<br></div>
+
+	        <div class="row">
+		<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_description"><a title="Description of the model containing information that is not provided in other filed such as procedure followed for the construction of the model. " >Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2" style="width:250px"></textarea></div>
+		<br></div>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_source_type"><a title="Source of the coordinates of the “model”. Loop repairs and other replaced missing protein residues on X-Ray or NMR structures are not taking into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-Ray or an NMR experiment. Other 'VALUES: ( 'X-Ray', 'NMR', 'Docking', 'MD', 'Other')." >Source Type:****</a></label></div>
+			<div class="col-md-6"><input cols="40" id="id_source_type" type="text" name="source_type" style="width:250px" ></input></div>
+		<br></div>
+
+
+	        <div class="row">
+                	<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="upload_pdb"><a title="" >Upload PDB file:****</a></label></div>
+			<div class="col-md-4"><input type="file"  name="upload`_pdb"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder="Coordinates (PDB)" id="PDBcoor" /></div>
+		</div>
+
+			<div style="text-align:right;margin-right:5%"><input type="submit" value="Upload" name="upload`_pdb"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" id="PDBcoor" /></div>
+			
+  <br></div>
+		<div class=row id='PRUEBA1'>
+ 			<div style="text-align:center">
+             			<h4>Modeled Residues</h4><br>
+            		</div>
+
+
+                        <table style="text-align=center;width:96%;margin-left:2%;margin-right:2%;"> 
+
+
+
+				<tr>	<th style="width:40px;text-align:center"><label for="prot" size='10'><a title=" ">Prot</a></label>
+					<th style="width:70px;text-align:center"><label for="id_id_protein" size='10'><a title="id_protein (int): “id” of the protein that is modeled in this fragment. Foreign key to “dyndb_protein”.”id”. ">Id protein</a></label></th>
+					<th style="width:60px;text-align:center"><label for="id_chain" size='10'><a title="chain (char(1)): chain identifier for the model in PDB format. ">Chain</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_resid_from" size='10'><a title="resid_from (2 byte int): starting resid of the protein fragment. ">Res from</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_resid_to"><a title="resid_to (2 byte int): ending resid of the protein fragment.">Res to</a></label></th>
+					<th style="width:55px;text-align:center"><label for="id_pdbid"><a title="pdbid (char(6)): PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). NULL when “dyndb_modeled_residues”.”source_type” is not X-Ray or NMR. ">Pdbid</a></label></th>
+					<th style="width:90px;text-align:center"><label for="id_source_type"><a title="source_type (enum, dyndb_modeled_residues_source_type): source of the coordinates of the protein fragment. VALUES:  ('Ab-Initio', 'Homology', 'Threading', 'Other computational methods',  'X-Ray', 'NMR'). ">Source type</a></label></th>
+					<th style="width:110px;text-align:center"><label for="id_template_id_model"><a title="template_id_model (int): “id” of the model used as template if “dyndb_modeled_residues”.“source_type” is set to 'Homology'. Otherwise must be set to NULL. ">Template model ID</a></label></th></tr>
+				<tr id="PRUEBA1"><td style="padding:5px 5px 5px 5px"><input id="prot" name="prot" type="number" style="width:30px"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:50px"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_from" name="resid_from" type="number"  style="width:60px"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" name="resid_to" type="number" style="width:60px"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  style="width:45px"/></td>
+				<td style="padding:5px 5px 5px 5px"><select id="id_source_type" name="source_type" style="width:70px" >	
+					<option value="0" selected="selected">Ab-initio</option>
+					<option value="1">Homology</option>
+					<option value="2">Threading</option>
+					<option value="3">Other Computational Methods</option>
+				</select></td>
+				<td style="padding:5px 5px 5px 5px"><select id="id_template_id_model" style="width:120px"  name="template_id_model">
+					<option value="" selected="selected">---------</option>
+					<option value="1">DyndbModel object</option>
+				</select></td></tr>
+
+					<tr id="container">
+					</tr>
+				</div>  
+			</table> 
+			<br>
+		        <script src="{% static 'dynadb/addFields.js' %}"></script>		
+ 			<div style="text-align:center">
+					<button onclick="addFields()"> + Add mutated residue </button> 
+		        </div> 		
+ 			<div style="text-align:right;margin-right:5%">
+					<button onclick="addFields()"> Validate </button> 
+		        </div> 		
+		        </div><br>
+
+ 			<div style="text-align:center">
+             			<h4>Modeled Components</h4><br>
+            		</div>
+
+ 			<div style="text-align=center">
+                        <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="resname (char(4)): resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
+					<th style="width:80px;text-align:center"><label for="molecule"><a title=" ">Molecule</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="id_molecule (int): “id” of the chemical model (“molecule”) present in  “dynamics”. Foreign key to “dyndb_molecule”.”id”. ">Mol ID</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_name"><a title=" ">Mol name</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="number of molecules (2 bytes int): number of molecules (residues) with same “id_molecule” present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_type"><a title="type (enum, dyndb_type_dynamics_components): type of compound/molecule present in the simulation. VALUES: ('Ions', 'Ligand', 'Membrane','Water', 'Other'). ">Type</a></label></th>
+
+				<tr>	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" /></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" /></td>
+					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule">
+						<option value="" selected="selected">---------</option>
+						<option value="1">DyndbMolecule object</option>
+						<option value="3">DyndbMolecule object</option>
+						<option value="4">DyndbMolecule object</option>
+						<option value="5">DyndbMolecule object</option>
+						<option value="6">DyndbMolecule object</option>
+						<option value="7">DyndbMolecule object</option>
+						<option value="2">DyndbMolecule object</option>
+						</select></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" /></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px"/></td>
+					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px">
+						<option value="Ions" selected="selected">Ions</option>
+						<option value="Ligand">Ligand</option>
+						<option value="Membrane">Membrane</option>
+						<option value="Water">Water</option>
+						<option value="Other">Other</option>
+						</select></td></tr>
+
+			</table>
+			<br>
+ 			<div style="text-align:center">
+					<button onclick="addFields()"> + Add mutated residue </button> 
+		        </div> 		
+		        </div><br>
+
+
+            		</div>
+
+</div>
+
+  <div id="selection-buttons">
+      <div class="col-md-12 panel panel-primary">
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href=/dynadb/dynamics/  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 3: MD protocol </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+        	<a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2-2: System Information (Small Molecules Form) </a>
+      	  </div>
+      </div>
+  </div>
+</div>
+
+{% endblock content %}
+
