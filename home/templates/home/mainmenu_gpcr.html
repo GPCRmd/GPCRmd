@@ -50,6 +50,7 @@
                 <li class="nav-header disabled"><a>DATA</a></li>
                 <li><a href="/structure">Structure browser</a></li>
                 <li><a href="/structure/statistics">Structure statistics</a></li>
+                <li><a href="/structure/homology_models">Homology models</a></li>
                 <li class="nav-header disabled"><a>TOOLS</a></li>
                 <li><a href="/structure/superposition_workflow_index/true">Structure superposition</a></li>
                 <li><a href="/structure/generic_numbering_index">PDB file residue numbering</a></li>
@@ -65,18 +66,29 @@
             <ul class="dropdown-menu" role="menu">
                 <li class="nav-header disabled"><a>DATA</a></li>
                 <li><a href="/mutations">Mutation browser</a></li>
-                <li>
-                    <a href="{{ documentation_url }}mutations.html#mutation-data-submission">
-                        Mutation data submission
-                    </a>
-                </li>
+                <li><a href="{{ documentation_url }}mutations.html#mutation-data-submission">Mutation data submission</a></li>
+                <li class="nav-header disabled"><a>TOOLS</a></li>
+                <li><a href="/mutations/design">Mutation design (from rec name)</a></li>
+                <li><a href="/mutations/designpdb">Mutation design (from pdb id)</a></li>
             </ul>
         </li>
 
         <!-- SITES -->
         <li>
             <a href="/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-                Sites<span class="caret"></span>
+                SignProts<span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu" role="menu">
+                <li class="nav-header disabled"><a>DATA</a></li>
+                <li><a href="/interaction/gsinterface">Gs interface</a></li>
+                <li><a href="/interaction/gprotein">G protein statistics</a></li>                
+            </ul>
+        </li>
+
+        <!-- SITES -->
+        <li>
+            <a href="/" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                Ligands<span class="caret"></span>
             </a>
             <ul class="dropdown-menu" role="menu">
                 <li class="nav-header disabled"><a>DATA</a></li>
