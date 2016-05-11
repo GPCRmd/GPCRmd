@@ -1,11 +1,4 @@
 *.pyc
 *.log
 protwis/settings_local.py
-env
-/data
 *~
-/manifests/default.pp
-/.gitmodules
-/Vagrantfile
-/shared/.gitignore
-/shared/.gitignore
