@@ -5,7 +5,6 @@ from django import forms
 from django.db.models import Count, Min, Sum, Avg, Q
 from django.utils.text import slugify
 
-
 from interaction.models import *
 from interaction.forms import PDBform
 from ligand.models import Ligand
@@ -22,6 +21,7 @@ from common.diagrams_gpcr import DrawHelixBox, DrawSnakePlot
 from common.selection import SimpleSelection, Selection, SelectionItem
 from common import definitions
 from common.views import AbsTargetSelection
+from protein.models import Protein, ProteinFamily, ProteinGProtein
 
 import os
 from os import listdir, devnull, makedirs
@@ -373,10 +373,10 @@ def updateall(request):
     # pdbname, 'structures': structures})
 
 
-def runcalculation(pdbname):
+def runcalculation(pdbname, peptide=""):
     calc_script = os.sep.join(
         [os.path.dirname(__file__), 'legacy_functions.py'])
-    call(["python", calc_script, "-p", pdbname],
+    call(["python", calc_script, "-p", pdbname, "-c", peptide],
          stdout=open(devnull, 'wb'), stderr=open(devnull, 'wb'))
     return None
 
@@ -422,7 +422,8 @@ def extract_fragment_rotamer(f, residue, structure, ligand):
         fragment, created = Fragment.objects.get_or_create(
             ligand=ligand, structure=structure, pdbdata=fragment_data, residue=residue)
     else:
-        quit("Could not find " + f)
+        #quit("Could not find " + residue)
+        return None, None
 
     return fragment, rotamer
 
@@ -437,6 +438,8 @@ def parsecalculation(pdbname, debug=True, ignore_ligand_preset=False):
         slug='pdb', url='http://www.rcsb.org/pdb/explore/explore.do?structureId=$index')
     web_link, created = WebLink.objects.get_or_create(
         web_resource=web_resource, index=pdbname)
+
+    annotated_found = 0
 
     structure = Structure.objects.filter(pdb_code=web_link)
     if structure.exists():
@@ -457,6 +460,7 @@ def parsecalculation(pdbname, debug=True, ignore_ligand_preset=False):
 
         for f in listdir(mypath):
             if os.path.isfile(os.path.join(mypath, f)):
+                annotated = 0
                 #print(mypath + "/" +f)
                 result = yaml.load(open(mypath + "/" + f, 'rb'))
                 output = result
@@ -465,6 +469,7 @@ def parsecalculation(pdbname, debug=True, ignore_ligand_preset=False):
                 temp.append(round(output['score']))
                 temp.append((output['inchikey']).strip())
                 temp.append((output['smiles']).strip())
+
                 results.append(temp)
 
                 if 'prettyname' not in output:
@@ -483,8 +488,10 @@ def parsecalculation(pdbname, debug=True, ignore_ligand_preset=False):
                     quit()
 
                 structureligandinteraction = StructureLigandInteraction.objects.filter(
-                    pdb_reference=temp[1], structure=structure, pdb_file=None, annotated=True)
+                    pdb_reference=temp[1], structure=structure, annotated=True) #, pdb_file=None 
                 if structureligandinteraction.exists():  # if the annotated exists
+                    annotated_found = 1
+                    annotated = 1
                     try:
                         structureligandinteraction = structureligandinteraction.get()
                         structureligandinteraction.pdb_file = pdbdata
@@ -548,12 +555,14 @@ def parsecalculation(pdbname, debug=True, ignore_ligand_preset=False):
                                     f, residue, structure, ligand)
 
                     #print(interaction[2],interaction[3],interaction[4],interaction[5])
-
-                    interaction_type, created = ResidueFragmentInteractionType.objects.get_or_create(
-                                    slug=interaction[2], name=interaction[3], type=interaction[4], direction=interaction[5])
-                    fragment_interaction, created = ResidueFragmentInteraction.objects.get_or_create(
-                                    structure_ligand_pair=structureligandinteraction, interaction_type=interaction_type, fragment=fragment, rotamer=rotamer)
-
+                    if fragment!=None:
+                        interaction_type, created = ResidueFragmentInteractionType.objects.get_or_create(
+                                        slug=interaction[2], name=interaction[3], type=interaction[4], direction=interaction[5])
+                        fragment_interaction, created = ResidueFragmentInteraction.objects.get_or_create(
+                                        structure_ligand_pair=structureligandinteraction, interaction_type=interaction_type, fragment=fragment, rotamer=rotamer)
+                #print("Inserted",len(output['interactions']),"interactions","ligand",temp[1],"annotated",annotated)
+        # if not annotated_found:
+        #     print("No interactions for annotated ligand")
 
     else:
         if debug:
@@ -666,7 +675,7 @@ def calculate(request, redirect=None):
                 runusercalculation(pdbname, session_key)
 
             # MAPPING GPCRdb numbering onto pdb.
-            generic_numbering = GenericNumbering(temp_path,top_results=5)
+            generic_numbering = GenericNumbering(temp_path,top_results=1)
             out_struct = generic_numbering.assign_generic_numbers()
             structure_residues = generic_numbering.residues
             prot_id_list = generic_numbering.prot_id_list
@@ -1179,3 +1188,46 @@ def pdb(request):
         response = HttpResponse(structure.pdb_data.pdb,
                                 content_type='text/plain')
     return response
+
+def GProtein(request):
+
+    context = OrderedDict()
+
+    # proteins = Protein.objects.filter(source__name='SWISSPROT').prefetch_related('proteingproteinpair_set')
+    gproteins = ProteinGProtein.objects.all().prefetch_related('proteingproteinpair_set')
+    jsondata = {}
+    for gp in gproteins:
+        ps = gp.proteingproteinpair_set.all()
+        if ps:
+            jsondata[str(gp)] = []
+            for p in ps:
+                jsondata[str(gp)].append(str(p.protein.entry_name)+'\n')
+            jsondata[str(gp)] = ''.join(jsondata[str(gp)])
+
+    context["gdata"] = jsondata
+
+    return render(request, 'interaction/gprotein.html', context)
+
+
+def GSinterface(request):
+
+    context = OrderedDict()
+
+    residuelist = Residue.objects.filter(protein_conformation__protein__entry_name="adrb2_human").prefetch_related('protein_segment','display_generic_number','generic_number')
+    SnakePlot = DrawSnakePlot(
+                residuelist, "Class A (Rhodopsin)", "adrb2_human", nobuttons=1)
+
+    crystal = Structure.objects.get(pdb_code__index="3SN6")
+
+    # return render(request, 'interaction/structure.html', {'pdbname': pdbname, 'structures': structures,
+    #                                                       'crystal': crystal, 'protein': p, 'helixbox' : HelixBox, 'snakeplot': SnakePlot, 'residues': residues_browser, 'annotated_resn':
+    #                                                       resn_list, 'ligands': ligands, 'data': context['data'],
+    #                                                       'header': context['header'], 'segments': context['segments'],
+    #                                                       'number_of_schemes': len(numbering_schemes)})
+
+    interacting = [135, 136, 139, 141, 225, 229, 274, 328]
+    accessible = [131, 134, 135, 136, 138, 139, 141, 142, 222, 225, 226, 228, 229, 267, 270, 271, 274, 275, 328, 330, 331]
+
+    return render(request, 'interaction/gsinterface.html', {'pdbname': '3SN6', 'snakeplot': SnakePlot, 'crystal': crystal, 'interacting': interacting, 'accessible': accessible} )
+
+
