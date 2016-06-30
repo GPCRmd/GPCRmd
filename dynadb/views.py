@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.urlresolvers import reverse
+from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 #from .models import Question,Formup
@@ -9,27 +10,32 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup
 #from .forms import NameForm, TableForm
 
 # Create your views here.
 
 def PROTEINview(request):
     if request.method == 'POST':
+        author="jmr"
+        action="/dynadb/PROTEINFILLED/"
         fdbPF = dyndb_ProteinForm(request.POST)
         fdbPS = dyndb_Protein_SequenceForm(request.POST)
         fdbPM = dyndb_Protein_MutationsForm(request.POST)
-
+        initial={'update_timestamp':timezone.now() , 'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':timezone.now() , 'created_by':author, 'last_update_by':'jmr', 'submission_id':'1' }
         # check whether it's valid:
         if fdbPF.is_valid() and fdbPF.is_valid() and fdbPF.is_valid(): 
             # process the data in form.cleaned_data as required
 
-            formPF=fdbPF.save(commit=False)
-            formPS=fdbPS.save(commit=False)
-            formPM=fdbPM.save(commit=False)
+          #  formPF=fdbPF.save(commit=False)
+          #  formPS=fdbPS.save(commit=False)
+          #  formPM=fdbPM.save(commit=False)
+            formPF=fdbPF.save(commit=True)
+            formPS=fdbPS.save(commit=True)
+            formPM=fdbPM.save(commit=True)
 
-            form.user=request.user
-            form.save()
+    #        form.user=request.user
+    #        form.save()
             # redirect to a new URL:
             return HttpResponseRedirect('/dynadb/PROTEINfilled/')
 
@@ -65,6 +71,38 @@ def MODELview(request):
         fdbMR = dyndb_Modeled_Residues()
         return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbMR':fdbMR})
 
+
+def SMALL_MOLECULEview2(request):
+    if request.method == 'POST':
+        fdbCF=dyndb_CompoundForm(request.POST)
+        fdbCN= dyndb_Other_Compound_Names(request.POST)
+        fdbMF = dyndb_Molecule(request.POST)
+        fdbMfl = dyndb_Files_Molecule(request.POST)
+        fdbMM = dyndb_Complex_Molecule_Molecule(request.POST)
+
+        # check whether it's valid:
+        if fdbMF.is_valid() and fdbMfl.is_valid() and fdbMM.is_valid() and fdbCF.is_valid() and fdbCN.is_valid(): 
+            # process the data in form.cleaned_data as required
+
+            formMF=fdbMF.save(commit=False)
+            formMfl=fdbMfl.save(commit=False)
+            formMM=fdbMM.save(commit=False)
+
+            form.user=request.user
+            form.save()
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/PROTEIN/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+
+        fdbMF = dyndb_Molecule()
+        fdbMfl = dyndb_Files_Molecule()
+        fdbMM = dyndb_Complex_Molecule_Molecule()
+        fdbCF=dyndb_CompoundForm()
+        fdbCN=dyndb_Other_Compound_Names()
+
+        return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
 
 def SMALL_MOLECULEview(request):
     if request.method == 'POST':
@@ -129,6 +167,8 @@ def DYNAMICSview(request):
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC,'ddT':ddT, 'ddTL':ddTL})
 
 
+def SUBMITTEDview(request): 
+        return render(request,'dynadb/SUBMITTED.html'  )
 
 def get_Author_Information(request): 
         return render(request,'dynadb/dynadb_Author_Information.html'  )
@@ -488,6 +528,29 @@ def sub_sim(request):
     return render(request, 'dynadb/sub_sim_form.html')
 
 
+
+def get_formup(request):
+    FormupSet=formset_factory(Formup, extra=2)
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+#        form = NameForm(request.POST)
+        formset = FormupSet(request.POST)
+
+        # check whether it's valid:
+#       if form.is_valid():
+        if formset.is_valid():
+            formset=formset.clean()
+            # process the data in form.cleaned_data as required
+            # ...
+            # redirect to a new URL:
+            return HttpResponseRedirect('/dynadb/thanks/')
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        formset = FormupSet()
+
+    return render(request, 'dynadb/form.html', {'formset': formset})
 
 def get_name(request):
     NameFormSet=formset_factory(NameForm, extra=1)

@@ -12,7 +12,7 @@
  <div class="col-md-4">
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 4:<br>Dynamcis Information</h3>
+        	<h3 > Simulation Submission<br>Step 4:<br>Dynamics Information</h3>
         </div> 
      </div>
      <!-- main description -->
@@ -21,7 +21,8 @@
             <div style="text-align:center"> 
              <h4>FILL IN THE DYNAMICS FORM</h4>
             </div>
-             <p>Fill in the following form concerning specific details on the MD simulation protocol. </p>
+             <p style="text-align: justify;" >Fill in the following form concerning specific details on the MD simulation protocol. </p>
+             <p style="text-align: justify;"  >User must provide molecular dynamics information as well as files required to rerun simulations in a specific simulation software (coordinates, topology, parameters, others). Note, it is mandatory to add files needed to regenerate topology files that are not published elsewhere.</p>
          </div>
      </div>
 
@@ -30,109 +31,111 @@
          <div class="panel-body">
              <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
              </p>
+
+ 
          </div>
      </div>
  </div>
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div class="col-md-7 "> 
+<div id="pdynform"class="col-md-7 "> 
     <!-- filters -->
-  <div class="col-md-12 panel panel-primary"> 
+  <div id="dynform" class="col-md-12 panel panel-primary"> 
 
     <div class="panel-body">
  <!------------------------------------------------------------------------------ middle column -->
 <!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
 <!--	<div style=display:table;>  -->
 
+            <div id="dynnumb" style="text-align:right;color:black" > 
+             <h4>SIMULATION #1</h4>
+	    </div>
 		<div class=row id='PRUEBA'>
  			<div style="text-align:center">
-             			<h4><br>Simulation details</h4>
+             			<h4><br>Simulation Details</h4>
             		</div>
 		</div><br>
 
 		<div class="row">
- 			<div class="col-md-1"style="height:30px"></div><div class="col-md-4"><label for="id_id_dynamics_methods"> <a title="id for the classification of molecular dynamics simulation methods."> Method: </a> </label></div>
-			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:250px">
-        			<option value="" selected="selected">---------</option>
-		        	<option value="8">DyndbDynamicsMethods object</option>
-		        	<option value="6">DyndbDynamicsMethods object</option>
-		        	<option value="5">DyndbDynamicsMethods object</option>
-        			<option value="9">DyndbDynamicsMethods object</option>
-       				<option value="7">DyndbDynamicsMethods object</option>
-		        	<option value="1">DyndbDynamicsMethods object</option>
-		        	<option value="4">DyndbDynamicsMethods object</option>
-		        	<option value="3">DyndbDynamicsMethods object</option>
-		        	<option value="2">DyndbDynamicsMethods object</option>
+ 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px">
+        			<option value="" selected="selected">Molecular Mechanics (MM)</option>
+		        	<option value="1">Molecular Mechanics (MM)               </option>
+		        	<option value="2">Quantum Mechanics/Molecular Mechanics </option>
+		        	<option value="3">NMR                           </option>
+        			<option value="4">Molecular Mechanics Markov State Model </option>
+       				<option value="5">Metadynamics              </option>
+		        	<option value="6">Umbrella sampling          </option>
+		        	<option value="7">Other MM biased methods    </option>
+		        	<option value="8">MM scaled potentials       </option>
 	        	</select></div>
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_software"> <a title=" Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:250px" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" ACEMD" /></td></tr></div>
 		<br></div>	
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_sversion"> <a title="Version of the software used to compute the simulations."> Software version: </a></label></th></div>
-			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:250px" /></td></tr></div>
+	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_sversion"> <a title="Software version: Version of the software used to compute the simulations."> Software version: </a></label></th></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p"  placeholder=" 3212M"  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_ff"> <a title="Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:250px"  /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder=" CHARMM "  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_ffversion"> <a title="Version of the force field used to compute the simulations."> Force Field Version: </a> </label></th> </div>
-			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:250px" /></td></tr></div>
+	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
+			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  placeholder=" 36  "/></td></tr></div>
 		<br></div>
 
-	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_description"><a title="short text describing other relevant information that it is not contained on other fields. ">Description:</a> </label></th></div>
-			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="5" style="width:250px" ></textarea></div>
-		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_id_assay_types"><a title="id for the classification of molecular dynamics simulation methods. See “dyndb_dynamics_methods”. Foreign key to “dyndb_assay_types”.”id”."> Assay type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:250px" > 
-		        	<option value="" selected="selected">---------</option> 
-			        <option value="1">DyndbAssayTypes object</option>
-			        <option value="2">DyndbAssayTypes object</option>
-			        <option value="3">DyndbAssayTypes object</option>
-			        <option value="4">DyndbAssayTypes object</option>
-			        <option value="5">DyndbAssayTypes object</option>
-			        <option value="6">DyndbAssayTypes object</option>
-		        	<option value="7">DyndbAssayTypes object</option>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"  placeholder="  " > 
+		        	<option value="0">Protein stability</option> 
+			        <option value="1">Orthosteric binding/unbinding</option>
+			        <option value="2">Allosteric binding/unbinding</option>
+			        <option value="3">Activation/Inactivation/Modulation</option>
+			        <option value="4">Oligomerization</option>
+			        <option value="5">Protein partner coupling</option>
+			        <option value="6">Others</option>
 		        </select></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_id_dynamics_membrane_types"><a title="id for the classification of membranes used in molecular dynamics simulation methods. See “dyndb_dynamics_membrane_types”. Foreign key to “dyndb_dynamics_membrane_types”.”id”."> Membrane type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:250px" ><br>
-        			<option value="" selected="selected">---------</option>
-			        <option value="3">DyndbDynamicsMembraneTypes object</option>
-			        <option value="2">DyndbDynamicsMembraneTypes object</option>
-			        <option value="1">DyndbDynamicsMembraneTypes object</option>
+	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px"  placeholder="  " ><br>
+        			<option value="1">Implicit</option>
+			        <option value="2">Homogeneous</option>
+			        <option value="3">Heterogeneous</option>
 		        </select></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_id_dynamics_solvent_types"><a title="id for the classification of solvent models used in molecular dynamics simulation methods. See “dyndb_dynamics_solvent_types”. Foreign key to “dyndb_dynamics_solvent_types”.”id”. "> Solvent type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:250px" >
-		        	<option value="" selected="selected">---------</option>
-			        <option value="1">DyndbDynamicsSolventTypes object</option>
-			        <option value="7">DyndbDynamicsSolventTypes object</option>
-			        <option value="5">DyndbDynamicsSolventTypes object</option>
-		        	<option value="6">DyndbDynamicsSolventTypes object</option>
-			        <option value="2">DyndbDynamicsSolventTypes object</option>
-			        <option value="3">DyndbDynamicsSolventTypes object</option>
-			        <option value="4">DyndbDynamicsSolventTypes object</option>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. "> Solvent type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px"  placeholder="  " >
+		        	<option value="0">TIP3P</option>
+			        <option value="1">Implicit</option>
+			        <option value="2">TIP4P</option>
+		        	<option value="3">TIPS</option>
+			        <option value="4">SPC</option>
+			        <option value="5">SPC/E</option>
+			        <option value="6">Other</option>
 	        	</select></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_solvent_num"><a title=" ">Solvent num:</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" style="width:250px" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" style="width:300px"  placeholder=" 10000 " /></td></tr></div>
+		<br></div>
+
+	        <div class="row">
+	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study. " ></textarea></div>
 		<br></div><br>
 
 
@@ -144,27 +147,27 @@
 
 
 		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_coor"><a title=" "> Input coordinates (coor)</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_coor" name="coor" type="file" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_coor"><a title="Coordinate file: Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB">Coordinate file (.pdb)</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_coor" name="coor" type="file" accept="file_extension|.pdb"/></td></tr></div>
       		</div>
 
 		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_top"><a title=" "> Input topology (top)</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_top" name="top" type="file" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_top"><a title="Topology file: Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, other) max 50 MB"> Topology file (.psf)</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_top" name="top" type="file" accept="file_extension|.rtf,.psf,.pmtop,.top" /></td></tr></div>
       		</div>
 
 		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_traj"><a title=" "> Input trajectory (traj)</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_traj"><a title="Trajectory files: Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB"> Trajectory files (.dcd)</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" accept="file_extension|.dcd,.xtc"/></td></tr></div>
       		</div>
 
 		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_parm"><a title=" "> Input parameters (param)</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_parm" name="parm" type="file" /></td></tr></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_parm"><a title=" Simulation parameters: Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB"> Simulation parameters (.par)</a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_parm" name="parm" type="file" accept="file_extension|.tar.gz,.tgz" /></td></tr></div>
       		</div>
 
 		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_other"><a title=" "> Others </a> </label></th></div>
+        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_other"><a title="Others: Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB "> Others </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_other" name="other" type="file" /></td></tr></div>
       		</div><br>
 
@@ -175,21 +178,21 @@
 
 		<div class=row id='PRUEBA'>
  			<div style="text-align:center">
-             			<h4> Modeled Components</h4>
+             			<h4> Simulation Components</h4>
             		</div>
 		</div><br>
 
  			<div style="text-align=center">
-                        <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
-				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="resname (char(4)): resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
-					<th style="width:80px;text-align:center"><label for="molecule"><a title=" ">Molecule</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="id_molecule (int): “id” of the chemical model (“molecule”) present in  “dynamics”. Foreign key to “dyndb_molecule”.”id”. ">Mol ID</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_name"><a title=" ">Mol name</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="number of molecules (2 bytes int): number of molecules (residues) with same “id_molecule” present on simulation topology. ">Num of mol</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_type"><a title="type (enum, dyndb_type_dynamics_components): type of compound/molecule present in the simulation. VALUES: ('Ions', 'Ligand', 'Membrane','Water', 'Other'). ">Type</a></label></th>
+                        <table id="pElement1" style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
+					<th style="width:80px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
 
-				<tr>	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" /></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" /></td>
+				<tr id="Element1">	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
 					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule">
 						<option value="" selected="selected">---------</option>
 						<option value="1">DyndbMolecule object</option>
@@ -200,8 +203,8 @@
 						<option value="7">DyndbMolecule object</option>
 						<option value="2">DyndbMolecule object</option>
 						</select></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" /></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px"/></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px">
 						<option value="Ions" selected="selected">Ions</option>
 						<option value="Ligand">Ligand</option>
@@ -213,35 +216,35 @@
 			</table>
 
 
-
-
-
-
-
-
-
-
-
-
 			<br>
  			<div style="text-align:center">
-					<button onclick="addFields()"> + Add mutated residue </button> 
+			     <input type="button" value="+ Add component"  style="height:30px;width:250px" onClick="addSimcomp();">
 		        </div> 		
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
-		        </div> 		
+		        </div><br><br> 		
+
+			<div class=row >
+	 			<div class="col-md-6" style="text-align:center">
+				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:250px" onClick="addDynamics();">
+			        </div> 		
+ 				<div class="col-md-6" style="text-align:center">
+			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:250px" onClick=";">
+		       		</div> 
+			</div>	<br> 		
      </div>
      </div>
   </div>
-  <div id="selection-buttons">
+  </div>
+<div class="col-md-7 col-md-offset-4"> 
       <div class="col-md-12 panel panel-primary">
   	  <div class="panel-body" id="selection-">
-        	<a id='selection-button' href=/dynadb/db_files/  class="btn btn-success btn-lg btn-block has-spinner">
+        	<a id='selection-button' href=/dynadb/submitted/  class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span>  Submission </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/model/"  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Model Information </a>
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Complex Information </a>
       	  </div>
       </div>
   </div>
@@ -250,3 +253,9 @@
 
 
 
+{% block addon_js %} 
+
+    <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
+    <script src="{% static 'dynadb/addDynamics.js' %}"></script>
+
+{% endblock %}

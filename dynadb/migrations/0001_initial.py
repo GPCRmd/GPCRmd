@@ -463,7 +463,7 @@ class Migration(migrations.Migration):
                 ('last_update_by_dbengine', models.CharField(max_length=40)),
                 ('created_by', models.IntegerField(blank=True, null=True)),
                 ('last_update_by', models.IntegerField(blank=True, null=True)),
-                ('submission_id', models.ForeignKey(blank=True, db_column='submission_id', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbSubmission')),
+#                ('submission_id', models.ForeignKey(blank=True, db_column='submission_id', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbSubmission')),
                 ('id_assay_types',models.ForeignKey(blank=True, db_column='id_assay_types', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True,  to='dynadb.DyndbAssayTypes')), 
                 ('id_dynamics_membrane_types',models.ForeignKey(blank=True, db_column='id_dynamics_membrane_types', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbDynamicsMembraneTypes')),
                 ('id_dynamics_methods', models.ForeignKey(blank=True, db_column='id_dynamics_methods', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbDynamicsMethods')),
@@ -674,7 +674,7 @@ class Migration(migrations.Migration):
                 ('last_update_by', models.IntegerField(blank=True, null=True)),
             ],
             options={
-                'managed': False,
+                'managed': True,
                 'db_table': 'dyndb_model',
             },
         ),
@@ -689,7 +689,7 @@ class Migration(migrations.Migration):
                 ('resid_to', models.SmallIntegerField()),
                 ('pdbid', models.CharField(blank=True, max_length=6, null=True)),
                 ('source_type', models.SmallIntegerField()),
-                ('template_id_model', models.ForeignKey(to='dynadb.DyndbModel', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False, db_column='template_id_model')),
+                ('template_id_model', models.ForeignKey(to='dynadb.DyndbModel', null=True, on_delete=django.db.models.deletion.DO_NOTHING, serialize=False, db_column='template_id_model')),
             ],
             options={
                 'managed': False,

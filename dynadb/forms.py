@@ -215,3 +215,13 @@ class NotifierForm(forms.ModelForm):
         }
 
 #NotifierFormset = modelformset_factory(Notifier, form = NotifierForm)
+class Formup(forms.Form):
+    UNIPROTid = forms.CharField(max_length=20)
+    iso = forms.CharField(max_length=100)
+    MUT = forms.CharField(max_length=4)
+    Nam = forms.CharField(max_length=30)
+    ORGAN = forms.CharField(max_length=200)
+    DescMOL = forms.CharField()
+    NETc = forms.IntegerField()
+    INCHI = forms.CharField()
+            

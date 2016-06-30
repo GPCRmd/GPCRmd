@@ -1,4 +1,6 @@
 from django.conf.urls import url
+from django.conf.urls.static import static
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
 
@@ -28,7 +30,11 @@ urlpatterns = [
     url(r'^protein/$', views.PROTEINview, name='protein'),
     url(r'^PROTEINfilled/$', views.PROTEINview, name='PROTEINfilled'),
     url(r'^molecule/$', views.SMALL_MOLECULEview, name='molecule'),
+    url(r'^molecule2/$', views.SMALL_MOLECULEview2, name='molecule2'),
     url(r'^model/$', views.MODELview, name='model'),
-    url(r'^dynamics/$', views.DYNAMICSview, name='dynamics')
+    url(r'^dynamics/$', views.DYNAMICSview, name='dynamics'),
+    url(r'^form/$', views.get_formup, name='form'),
+    url(r'^submitted/$', views.SUBMITTEDview, name='submitted')
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
+
 ]
