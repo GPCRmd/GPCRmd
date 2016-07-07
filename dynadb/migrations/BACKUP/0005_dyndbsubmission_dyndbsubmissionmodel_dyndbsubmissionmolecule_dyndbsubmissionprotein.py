@@ -13,11 +13,21 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='DyndbSubmission',
-            name='submission_id',
-            field=[('submission_id', models.ForeignKey(blank=True, db_column='submission_id', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbSubmission')),
+        migrations.CreateModel(
+            name='DyndbSubmission',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('user_id', models.IntegerField(blank=True, null=True)),
             ],
+            options={
+                'db_table': 'dyndb_submission',
+                'managed': True,
+            },
+        ),
+        migrations.AddField(
+            model_name='DyndbDynamics',
+            name='submission_id',
+            field=models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True ),   
         ),
         migrations.CreateModel(
             name='DyndbSubmissionModel',

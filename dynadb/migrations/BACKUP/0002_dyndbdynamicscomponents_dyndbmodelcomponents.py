@@ -19,10 +19,12 @@ class Migration(migrations.Migration):
                 ('resname', models.CharField(max_length=4)),
                 ('numberofmol', models.PositiveSmallIntegerField(blank=True, null=True)),
                 ('type', models.CharField(choices=[('Ions', 'Ions'), ('Ligand', 'Ligand'), ('Membrane', 'Membrane'), ('Water', 'Water'), ('Other', 'Other')], default='Ions', max_length=8)),
+#               ('id_molecule', models.ForeignKey(blank=True, db_column='id_molecule', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='DyndbMolecule')),
+#               ('id_dynamics', models.ForeignKey(blank=True, db_column='id_dynamics', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='DyndbDynamics')),
             ],
             options={
                 'db_table': 'dyndb_dynamics_components',
-                'managed': False,
+                'managed': True,
             },
         ),
         migrations.CreateModel(
@@ -32,10 +34,12 @@ class Migration(migrations.Migration):
                 ('resname', models.CharField(max_length=4)),
                 ('numberofmol', models.PositiveSmallIntegerField(blank=True, null=True)),
                 ('type', models.CharField(choices=[('Ions', 'Ions'), ('Ligand', 'Ligand'), ('Membrane', 'Membrane'), ('Water', 'Water'), ('Other', 'Other')], default='Ions', max_length=8)),
+#               ('id_molecule', models.ForeignKey(blank=True, db_column='id_molecule', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbMolecule')),
+#               ('id_model', models.ForeignKey(blank=True, db_column='id_model', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False,null=True, to='dynadb.DyndbModel')),
             ],
             options={
                 'db_table': 'dyndb_model_components',
-                'managed': False,
+                'managed': True,
             },
         ),
     ]

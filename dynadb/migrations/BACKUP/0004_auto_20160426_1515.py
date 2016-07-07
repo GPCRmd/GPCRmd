@@ -23,9 +23,9 @@ class Migration(migrations.Migration):
             name='source_type',
             field=models.SmallIntegerField(choices=[(0, 'Ab-initio'), (1, 'Homology'), (2, 'Threading'), (3, 'Other Computational Methods')], default=0),
         ),
-        migrations.AlterField(
-            model_name='dyndbmodeledresidues',
-            name='template_id_model',
-            field=models.ForeignKey(blank=True, db_column='template_id_model', null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='DyndbModeledResidues_template_id_protein_fky', to='dynadb.DyndbModel'),
-        ),
+#       migrations.AlterField(
+#           model_name='dyndbmodeledresidues',
+#           name='template_id_model',
+#           field=models.ForeignKey(blank=True, db_column='template_id_model', null=True, on_delete=django.db.models.deletion.DO_NOTHING, related_name='DyndbModeledResidues_template_id_protein_fky', to='dynadb.DyndbModel'),
+#       ),
     ]

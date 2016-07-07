@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.AddField(
+            model_name='DyndbDynamics',
+            name='submission_id',
+            field=models.ForeignKey('DyndbSubmission', models.DO_NOTHING, blank=True, null=True ),  #db_column='submission_id', Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
+        ),
         migrations.AlterField(
             model_name='dyndbdynamics',
             name='id_assay_types',
@@ -41,11 +46,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbdynamics',
             name='submission_id',
-            field=models.ForeignKey(blank=True, db_column='submission_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'), #db_column='submission_id', Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
         ),
-        migrations.AlterField(
-            model_name='dyndbsubmissionprotein',
-            name='submission_id',
-            field=models.ForeignKey(blank=True, db_column='submission_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
-        ),
+#       migrations.AlterField(
+#           model_name='dyndbsubmissionprotein',
+#           name='submission_id',
+#           field=models.ForeignKey(blank=True, db_column='submission_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
+#       ),  ESTA ALTERACION SE HA hecho anteriormente en  0005_dyndbsubmission_dyndbsubmissionmodel_dyndbsubmissionmolecule_dyndbsubmissionprotein.py 
     ]

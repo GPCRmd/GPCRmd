@@ -17,10 +17,10 @@ class Migration(migrations.Migration):
             name='dyndbdynamicscomponents',
             options={'managed': True},
         ),
-        migrations.AlterModelOptions(
-            name='dyndbmodel',
-            options={'managed': False},
-        ),
+#        migrations.AlterModelOptions(
+#            name='dyndbmodel',
+#            options={'managed': True},
+#        ),
         migrations.AlterModelOptions(
             name='dyndbmodelcomponents',
             options={'managed': True},
@@ -35,9 +35,29 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='DyndbIonicComponents',
         ),
-        migrations.AlterField(
+        migrations.AddField(
             model_name='DyndbModel',
             name='source_type',
             field=models.SmallIntegerField(choices=((0,'X-ray'),(1,'NMR'),(2,'Docking'),(3,'MD'),(4,'Other')), default=0),
+        ),
+        migrations.AddField(
+            model_name='DyndbModel',
+            name='id_protein',
+            field=models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='DyndbModel',
+            name='id_complex_molecule',
+            field= models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule', blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='DyndbModel',
+            name='template_id_model',
+            field= models.ForeignKey('self', models.DO_NOTHING, db_column='template_id_model', blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name='DyndbModel',
+            name='id_structure_model',
+            field= models.ForeignKey('StructureModel', models.DO_NOTHING, db_column='id_structure_model', blank=True, null=True),
         ),
     ]

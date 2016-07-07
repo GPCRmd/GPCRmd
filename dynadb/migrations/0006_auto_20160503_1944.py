@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbsubmissionprotein',
             name='submission_id',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'), #Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
         ),
     ]
