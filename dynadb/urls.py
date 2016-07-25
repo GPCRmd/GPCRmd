@@ -28,6 +28,8 @@ urlpatterns = [
     url(r'^thanks/$', views.get_name, name='thanks'),
     url(r'^admin/', admin.site.urls),
     url(r'^protein/$', views.PROTEINview, name='protein'),
+    url(r'^references/$', views.REFERENCEview, name='references'),
+    url(r'^REFERENCEfilled/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/$', views.PROTEINview, name='PROTEINfilled'),
     url(r'^molecule/$', views.SMALL_MOLECULEview, name='molecule'),
     url(r'^molecule2/$', views.SMALL_MOLECULEview2, name='molecule2'),
