@@ -1,4 +1,4 @@
-from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates
+from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 
@@ -17,10 +17,22 @@ class FormsetForm(forms.Form):
 #################################
 
 class dyndb_ProteinForm(ModelForm):
+#    is_mutated=forms.BooleanField(required=False,initial=False)
+
     class Meta:
         model = DyndbProtein
-#        fields = '__all__'
-        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
+#        exclude=['is_mutated']
+        fields = '__all__'
+#        widgets = {
+#            'is_mutated': forms.CheckboxInput(attrs={'required':False, 'initial':False})
+#        }
+#        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
+
+class dyndb_ReferenceForm(ModelForm):
+    class Meta:
+        model = DyndbReferences
+        fields = '__all__'
+#        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
 
 
 
@@ -32,8 +44,8 @@ class dyndb_Other_Protein_NamesForm(ModelForm):
 class dyndb_Protein_SequenceForm(ModelForm):
     class Meta:
         model = DyndbProteinSequence
-#        fields = '__all__'
-        exclude=['id_protein','length']
+        fields = '__all__'
+ #       exclude=['id_protein','length']
         widgets= {'sequence':Textarea(attrs={'cols': 40, 'rows': 3})}
   
 class dyndb_Cannonical_ProteinsForm(ModelForm):
@@ -60,8 +72,8 @@ class dyndb_Other_Compound_Names(ModelForm):
 class dyndb_Molecule(ModelForm):
     class Meta:
         model = DyndbMolecule
-     #   fields = '__all__'
-        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by']
+        fields = '__all__'
+      #  exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by']
 
 class dyndb_Files(ModelForm):
     class Meta:

@@ -7,51 +7,173 @@ from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates
+from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm
 #from .forms import NameForm, TableForm
 
 # Create your views here.
 
+def REFERENCEview(request):
+    if request.method == 'POST':
+        action="/dynadb/REFERENCEfilled/"
+        now=timezone.now()
+        initREFF={'dbname':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':None }
+
+        fdbREFF = dyndb_ReferenceForm(request.POST)
+
+#####  Fill the empty fields in the fdbREFF instance with data from the initREFF dictionary
+
+        for key,value in initREFF.items():
+            fdbREFF.data[key]=value
+            
+
+##### Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
+        if fdbREFF.is_valid(): 
+            # process the data in form.cleaned_data as required
+            formREFF=fdbREFF.save(commit=False)
+            formREFFi=fdbREFF.save()
+            print("\n primary  key: ", formREFFi.pk )
+
+            
+
+            return HttpResponseRedirect('/dynadb/REFERENCEfilled/')
+
+        else:
+           # for field in fdbPF:
+            iii=fdbREFF.errors.as_data()
+            print("Errors", iii)
+            
+            pass
+        
+    # if a GET (or any other method) we'll create a blank form
+    else:
+
+        fdbREFF = dyndb_ReferenceForm()
+        return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF})
+
+
 def PROTEINview(request):
     if request.method == 'POST':
-        author="jmr"
-        action="/dynadb/PROTEINFILLED/"
+        author="jmr"   #to be modified with author information. To initPF dict
+        action="/dynadb/PROTEINfilled/"
+        now=timezone.now()
+#####  inintPF dictionary containing fields of the form dynadb_ProteinForm not
+#####  available in the request.POST
+#####
+#####  initOPN dictionary dyndb_Other_Protein_NamesForm. To be updated in the
+#####  view. Not depending on is_mutated field in dynadb_ProteinForm 
+        initPF={'id_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
+        initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
+
+
+#####  instantiate fdbPF and fdbOPN (this one is not affected by the is_mutated field in dynadb_ProteinForm)
         fdbPF = dyndb_ProteinForm(request.POST)
-        fdbPS = dyndb_Protein_SequenceForm(request.POST)
-        fdbPM = dyndb_Protein_MutationsForm(request.POST)
-        initial={'update_timestamp':timezone.now() , 'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':timezone.now() , 'created_by':author, 'last_update_by':'jmr', 'submission_id':'1' }
-        # check whether it's valid:
-        if fdbPF.is_valid() and fdbPF.is_valid() and fdbPF.is_valid(): 
+        fdbOPN= dyndb_Other_Protein_NamesForm(initOPN)
+        initPM={'id_protein':'1','id_resid':'90','id_resletter_from':'D','id_resletter_to':'E' }
+
+#####  Fill dyndb_Protein_SequenceForm fields depending on whether the protein is mutated   
+#####  'msequence' does not appear in models but it does in the html so the information in 
+#####  this html field should be tranfered into the 'sequence' field in the form instance      
+
+        if 'is_mutated' in fdbPF.data: 
+            mseq=request.POST['msequence']
+            lmseq=len(mseq)
+            initPS={'id_protein':None,'sequence':mseq,'length':lmseq} 
+            #id_protein will be eventually taken from the pk value in the dyndb_Protein table entry
+        else:
+ #           print("Valor de is_mutated",fdbPF.data['is_mutated'])
+            seq="HOLA COLEGA"  ########## esta parte debe ser cambiada por Isma para leer la secuencia
+            lseq=len(seq)
+            initPS={'id_protein':None,'sequence':seq,'length':lseq} 
+            #id_protein will be eventually taken from the pk value in the dyndb_Protein table entry
+
+#####  Fill the empty fields in the fdbPF instance with data from the initPF dictionary
+
+        for key,value in initPF.items():
+            fdbPF.data[key]=value
+            
+#####   Intance of the forms depending on the is_mutated value in dyndb_ProteinForm
+
+        fdbPS = dyndb_Protein_SequenceForm(initPS)
+       #fdbPM = dyndb_Protein_MutationsForm(request.POST,initial=initPM)
+
+#        print("\nQue hay en el POST:", request.POST['msequence'])
+#        iii2=fdbPF.errors.as_data()
+
+##### Check whether the fdbPF instance of dyndb_ProteinForm is valid:
+        if fdbPF.is_valid(): 
             # process the data in form.cleaned_data as required
+            formPF=fdbPF.save(commit=False)
+            formPFi=fdbPF.save()
+            print("\n primary  key: ", formPFi.pk )
 
-          #  formPF=fdbPF.save(commit=False)
-          #  formPS=fdbPS.save(commit=False)
-          #  formPM=fdbPM.save(commit=False)
-            formPF=fdbPF.save(commit=True)
-            formPS=fdbPS.save(commit=True)
-            formPM=fdbPM.save(commit=True)
+##### Once fdbPF has been saved process fields with primary keys involving the dyndb_protein table
+            initPS['id_protein']=formPFi.pk
+            initOPN['id_protein']=formPFi.pk
+            
+          # for key,value in initPS.items():
+          #     fdbPS.data[key]=value
+          # for key,value in initOPN.items():
+          #     fdbOPN.data[key]=value
 
-    #        form.user=request.user
-    #        form.save()
+            fdbPS.data['id_protein']=formPFi.pk
+            fdbOPN.data['id_protein']=formPFi.pk
+            print("\n datos desde el diccionario initPS", fdbPS.data.values())
+            print("\n datos desde el diccionario initOPN", fdbOPN.data.values())
+            
+#           formPM=fdbPM.save(commit=False)
+          #  formPF=fdbPF.save(commit=True)
+          #  formPS=fdbPS.save(commit=True)
+          #  formPM=fdbPM.save(commit=True)
+#            formPS.user=request.user
+            if fdbPS.is_valid() and fdbOPN.is_valid():
+                formPS=fdbPS.save(commit=False)
+                formOPN=fdbOPN.save(commit=False) 
+                formPS=fdbPS.save()
+                formOPN=fdbOPN.save() 
+                print ("hasta aqui")
+            else:
+                iii1=fdbPS.errors.as_data()
+                iii2=fdbOPN.errors.as_data()
+                print("fdbPS no es valido")
+                print("!!!!!!Errores despues del fdbPS\n",iii1,"\n")
+                print("!!!!!!Errores despues del fdbOPN\n",iii2,"\n")
             # redirect to a new URL:
+
             return HttpResponseRedirect('/dynadb/PROTEINfilled/')
 
+        else:
+           # for field in fdbPF:
+            iii=fdbPF.errors.as_data()
+            print(iii)
+            
+            
+#           for field in fdbPF:
+#               field.clean()
+#               print (field, field.clean())
+
+            pass
+            #return HttpResponseRedirect('/dynadb/PROTEINerror/')    
+        
     # if a GET (or any other method) we'll create a blank form
     else:
 
         fdbPF = dyndb_ProteinForm()
         fdbPS = dyndb_Protein_SequenceForm()
-        fdbPM = dyndb_Protein_MutationsForm()
-        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM })
+#       fdbPM = dyndb_Protein_MutationsForm()
+        fdbOPN= dyndb_Other_Protein_NamesForm()
+#        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
+        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def MODELview(request):
     if request.method == 'POST':
+
+
         fdbMF = dyndb_Model(request.POST)
         fdbMR = dyndb_Modeled_Residues(request.POST)
-
+        fdbON = dyndb_
         # check whether it's valid:
         if fdbMF.is_valid() and fdbMR.is_valid(): 
             # process the data in form.cleaned_data as required
@@ -74,7 +196,21 @@ def MODELview(request):
 
 def SMALL_MOLECULEview2(request):
     if request.method == 'POST':
-        fdbCF=dyndb_CompoundForm(request.POST)
+        author="jmr"   #to be modified with author information. To initPF dict
+        action="/dynadb/PROTEINfilled/"
+        now=timezone.now()
+        onames="Pepito; Juanito; Herculito" #to be modified... scripted
+
+        initMF={'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
+        initCF={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
+        initON={'other_names': onames,'id_compound':None} 
+
+        fdbrMF=dyndb_CompoundForm(request.POST)
+        for key,value in initCF.items():
+            initCF.data[key]=value
+
+
+        fdbMF=dyndb_CompoundForm(request.POST)
         fdbCN= dyndb_Other_Compound_Names(request.POST)
         fdbMF = dyndb_Molecule(request.POST)
         fdbMfl = dyndb_Files_Molecule(request.POST)
