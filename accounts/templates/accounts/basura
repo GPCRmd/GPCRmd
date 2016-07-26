@@ -1,0 +1,7 @@
+
+<!--{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} -->
+<!--{% endblock content %} -->

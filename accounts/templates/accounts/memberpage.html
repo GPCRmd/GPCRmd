@@ -1,0 +1,12 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+{% block content %} 
+
+<ul>
+<h3>Welcome {{ username }}</h3>
+<li><a href="/accounts/change_data">Change user information</a></li>
+<li><a href="/accounts/change_passw">Change password</a></li>
+<li><a href="/accounts/logout">Log out</a></li>
+</ul>
+{% endblock content %} 

@@ -19,6 +19,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # Application definition
 
 INSTALLED_APPS = (
+
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -174,3 +176,15 @@ if DEBUG:
            },
        }
     }
+
+
+
+AUTH_USER_MODEL = 'accounts.User'
+
+# Configure this so that it works with real mail, not terminal
+EMAIL_USE_TLS = False
+EMAIL_HOST = '127.0.0.1'
+EMAIL_PORT = 2525
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
