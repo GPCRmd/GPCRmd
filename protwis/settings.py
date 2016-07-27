@@ -23,11 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # Application definition
 
 INSTALLED_APPS = (
-    'polls.apps.PollsConfig',
     'dynadb.apps.DynadbConfig',
-    'tutorial.apps.TutorialConfig',
-    'juanmaapp.apps.JuanmaappConfig',
-    'pruebaapp.apps.PruebaappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

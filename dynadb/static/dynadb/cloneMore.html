@@ -1,0 +1,15 @@
+<h3>My Services</h3>
+{{ serviceFormset.management_form }}
+{% for form in serviceFormset.forms %}
+    <div class='table'>
+    <table class='no_error'>
+        {{ form.as_table }}
+    </table>
+    </div>
+{% endfor %}
+<input type="button" value="Add More" id="add_more">
+<script>
+    $('#add_more').click(function() {
+        cloneMore('div.table:last', 'service');
+    });
+</script>

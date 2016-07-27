@@ -20,7 +20,7 @@
          <div class="panel-body">
              
             <div style="text-align:center"> 
-             <h4>MOLECULAR DYNAMICS DATABASE FOR CRYSTALLIZED GPCR COMPLEXES</h4>
+             <h4>MOLECULAR DYNAMICS DATABASE FOR CRYSTALLIZED GPCRS COMPLEXES</h4>
 	    </div>
              <p>Follow the 4 steps for uploading simulations.</p>
          </div>
@@ -45,26 +45,35 @@
 
     		<div class="panel-body" id="selection-">
 		        <a id='selection-button' href="/dynadb/protein/"  class="btn btn-success btn-lg btn-block has-spinner">
-			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 1:<br> Protein Information </a>
+			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 1:<br> Protein information </a>
 		</div>
 
 
     		<div class="panel-body" id="selection-">
 		        <a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
-			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 2:<br> Small Molecule Information </a>
+			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 2:<br> Small molecules information </a>
 		</div>
 
     		<div class="panel-body" id="selection-">
-		        <a id='selection-button' href="/dynadb/model/"  class="btn btn-success btn-lg btn-block has-spinner">
-			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 3:<br> Model Information </a>
+		        <a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
+			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 3:<br> Model information </a>
 		</div>
 
     		<div class="panel-body" id="selection-">
-		        <a id='selection-button' href="/dynadb/dynamics/"  class="btn btn-success btn-lg btn-block has-spinner">
-			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 4:<br> Dynamics Information </a>
+		        <a id='selection-button'   class="btn btn-success btn-lg btn-block has-spinner">
+			<span class="spinner"><i class="fa fa-spinner fa-spin" style="background-color:grey!important" ></i></span> Step 4:<br> Dynamics information </a>
 		</div>
 
     </div>
+
+	<div class="col-md-12 panel panel-primary" >   
+
+    		<div class="panel-body" id="selection-" >
+		        <a id='selection-button' href="/dynadb/protein/"  class="btn btn-success btn-lg btn-block has-spinner">
+			<span class="spinner" ><i class="fa fa-spinner fa-spin" style="background-color:grey"  ></i></span> Step 1:<br> Protein information </a>
+		</div>
+
+        </div>
 </div>
 
 {% endblock content %}

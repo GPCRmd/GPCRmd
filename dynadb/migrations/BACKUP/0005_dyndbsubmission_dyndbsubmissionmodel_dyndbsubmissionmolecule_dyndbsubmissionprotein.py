@@ -27,14 +27,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='DyndbDynamics',
             name='submission_id',
-            field=models.ForeignKey('DyndbSubmission', models.DO_NOTHING, blank=True, null=True ),  #db_column='submission_id', Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
+            field=models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True ),   
         ),
         migrations.CreateModel(
             name='DyndbSubmissionModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('model_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbModel')), #db_column='id_model', Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
-                ('submission_id', models.ForeignKey(blank=True,null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission')), # db_column='id_submission', Coge como columna de referencia por defecto a la PK de la tabla correspondiente 
+                ('model_id', models.ForeignKey(blank=True, db_column='id_model', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbModel')),
+                ('submission_id', models.ForeignKey(blank=True, db_column='id_submission', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission')),
             ],
             options={
                 'db_table': 'dyndb_submission_model',
@@ -60,8 +60,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('int_id', models.PositiveSmallIntegerField(blank=True, null=True)),
-                ('protein_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein')), #db_column='id_protein', Coge como columna de referencia por defecto a la PK de la tabla correspondiente
-                ('submission_id', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission')),  #db_column='id_submission',  Coge como columna de referencia por defecto a la PK de la tabla correspondiente
+                ('protein_id', models.ForeignKey(blank=True, db_column='id_protein', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein')),
+                ('submission_id', models.ForeignKey(blank=True, db_column='id_submission', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission')),
             ],
             options={
                 'db_table': 'dyndb_submission_protein',

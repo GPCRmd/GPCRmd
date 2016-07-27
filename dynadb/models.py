@@ -11,46 +11,46 @@ from django.db import models
 from django.forms import ModelForm, Textarea
 
 #BORRAR Formup!!!! 
-class Formup(models.Model):
-    UNIPROTid=models.CharField(max_length=20)
-    iso=models.CharField(max_length=100)
-    MUT=models.CharField(max_length=4)
-    Nam=models.CharField(max_length=30)
-    ORGAN=models.CharField(max_length=200)
-    
-    DescMOL=models.TextField()
-    NETc=models.IntegerField()
-    INCHI=models.TextField()
-    inchik=models.CharField(max_length=27)
-    SMI=models.TextField()
-    resnamMOL=models.CharField(max_length=5)
-    numMOL=models.IntegerField()
-
-    MAINprot=models.TextField()
-    MAINlig=models.TextField()
-
-    IONresn=models.CharField(max_length=5)
-    IONnum=models.IntegerField()
-
-    COMtyp=models.CharField(max_length=50)
-    idproT= models.CharField(max_length=50)
-    idcoM=models.CharField(max_length=50)
-    Msour=models.CharField(max_length=50)
-    PDB=models.CharField(max_length=4)
-    desc=models.TextField()
-    mTEMP=models.TextField()
-    
-    METH=models.CharField(max_length=50)
-    SOFT=models.CharField(max_length=50) 
-    SOFTver=models.CharField(max_length=50) 
-    ffield=models.CharField(max_length=50) 
-    MEMB=models.CharField(max_length=50) 
-    Solv=models.CharField(max_length=50) 
-    PDBcoor=models.CharField(max_length=50) 
-    PSF=models.CharField(max_length=50) 
-    topPSF=models.CharField(max_length=50) 
-    par=models.CharField(max_length=50) 
-    DCD=models.CharField(max_length=50) 
+#   class Formup(models.Model):
+#       UNIPROTid=models.CharField(max_length=20)
+#       iso=models.CharField(max_length=100)
+#       MUT=models.CharField(max_length=4)
+#       Nam=models.CharField(max_length=30)
+#       ORGAN=models.CharField(max_length=200)
+#       
+#       DescMOL=models.TextField()
+#       NETc=models.IntegerField()
+#       INCHI=models.TextField()
+#       inchik=models.CharField(max_length=27)
+#       SMI=models.TextField()
+#       resnamMOL=models.CharField(max_length=5)
+#       numMOL=models.IntegerField()
+#   
+#       MAINprot=models.TextField()
+#       MAINlig=models.TextField()
+#   
+#       IONresn=models.CharField(max_length=5)
+#       IONnum=models.IntegerField()
+#   
+#       COMtyp=models.CharField(max_length=50)
+#       idproT= models.CharField(max_length=50)
+#       idcoM=models.CharField(max_length=50)
+#       Msour=models.CharField(max_length=50)
+#       PDB=models.CharField(max_length=4)
+#       desc=models.TextField()
+#       mTEMP=models.TextField()
+#       
+#       METH=models.CharField(max_length=50)
+#       SOFT=models.CharField(max_length=50) 
+#       SOFTver=models.CharField(max_length=50) 
+#       ffield=models.CharField(max_length=50) 
+#       MEMB=models.CharField(max_length=50) 
+#       Solv=models.CharField(max_length=50) 
+#       PDBcoor=models.CharField(max_length=50) 
+#       PSF=models.CharField(max_length=50) 
+#       topPSF=models.CharField(max_length=50) 
+#       par=models.CharField(max_length=50) 
+#       DCD=models.CharField(max_length=50) 
    
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=80)
@@ -369,12 +369,18 @@ class DyndbCannonicalProteins(models.Model):
 
 
 class DyndbComplexCompound(models.Model):
-    id_complex_exp = models.ForeignKey('DyndbComplexExp', models.DO_NOTHING, db_column='id_complex_exp')
-    id_compound = models.ForeignKey('DyndbCompound', models.DO_NOTHING, db_column='id_compound')
-    type = models.TextField()  # This field type is a guess.
+    COMPOUND_TYPE=(
+        (0,'Orthosteric ligand'),
+        (1,'Allosteric ligand'),
+        (2,'Crystallographic waters'),
+        (3,'Other')
+    )
+    id_complex_exp = models.ForeignKey('DyndbComplexExp', models.DO_NOTHING,  null=True)#db_column='id_complex_exp',
+    id_compound = models.ForeignKey('DyndbCompound', models.DO_NOTHING, null=True) # db_column='id_compound',
+    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_complex_compound'
         unique_together = (('id_complex_exp', 'id_compound'),)
 
@@ -434,6 +440,8 @@ class DyndbCompound(models.Model):
     iupac_name = models.CharField(max_length=500)
     pubchem_cid = models.IntegerField(unique=True, blank=True, null=True)
     chembleid = models.IntegerField(unique=True, blank=True, null=True)
+    sinchi = models.TextField()
+    sinchikey = models.CharField(max_length=27)
     std_id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='std_id_molecule', blank=True, null=True)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
@@ -455,8 +463,8 @@ class DyndbSubmission(models.Model):
         db_table = 'dyndb_submission'
 
 class DyndbSubmissionProtein(models.Model):
-    submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='submission_id',  blank=True, null=True)
-    protein_id = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', blank=True, null=True)
+    submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='submission_id',  blank=True, null=True) 
+    protein_id = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', blank=True, null=True)  
     int_id=models.PositiveSmallIntegerField(blank=True, null=True)
 
     class Meta:
@@ -475,11 +483,11 @@ class DyndbSubmissionMolecule(models.Model):
 
 
 class DyndbSubmissionModel(models.Model):
-    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='id_submission', blank=True, null=True)
-    model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model', blank=True, null=True)
+    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
+    model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='model_id', blank=True, null=True) 
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'dyndb_submission_model'
 
 class DyndbDynamics(models.Model):
@@ -500,57 +508,47 @@ class DyndbDynamics(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
+    submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
 
     class Meta:
         managed = True
         db_table = 'dyndb_dynamics'
 
 class DyndbDynamicsComponents(models.Model):
-    IONS = 'Ions'
-    LIGAND = 'Ligand'
-    MEMBRANE = 'Membrane'
-    WATER = 'Water'
-    OTHER = 'Other'
-    MOLECULE_TYPES=(
-        (IONS,'Ions'),
-        (LIGAND,'Ligand'),
-        (MEMBRANE,'Membrane'),
-        (WATER,'Water'),
-        (OTHER,'Other')
+    MOLECULE_TYPE=(
+        (0,'Ions'),
+        (1,'Ligand'),
+        (2,'Membrane'),
+        (3,'Water'),
+        (4,'Other')
     )
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
+    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
+    id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics', null=True)
     resname = models.CharField(max_length=4)
     numberofmol = models.PositiveSmallIntegerField(blank=True, null=True)
-    type = models.CharField(max_length=8, choices=MOLECULE_TYPES, default=IONS)
+    type = models.SmallIntegerField( choices=MOLECULE_TYPE, default=0)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_dynamics_components'
         unique_together = (('id_dynamics', 'id_molecule'),)
 
 class DyndbModelComponents(models.Model):
-    IONS = 'Ions'
-    LIGAND = 'Ligand'
-    MEMBRANE = 'Membrane'
-    WATER = 'Water'
-    OTHER = 'Other'
-    MOLECULE_TYPES=(
-        (IONS,'Ions'),
-        (LIGAND,'Ligand'),
-        (MEMBRANE,'Membrane'),
-        (WATER,'Water'),
-        (OTHER,'Other')
+    MOLECULE_TYPE=(
+        (0,'Ions'),
+        (1,'Ligand'),
+        (2,'Membrane'),
+        (3,'Water'),
+        (4,'Other')
     )
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')
+    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=True)
+    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',null=True)
     resname = models.CharField(max_length=4)
     numberofmol = models.PositiveSmallIntegerField(blank=True, null=True)
-    type = models.CharField(max_length=8, choices=MOLECULE_TYPES, default=IONS)
+    type = models.SmallIntegerField(choices=MOLECULE_TYPE, default=0)
   
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_model_components'
         unique_together = (('id_model', 'id_molecule'),)
 
@@ -599,13 +597,20 @@ class DyndbDynamicsTagsList(models.Model):
 
 
 class DyndbEfficacy(models.Model):
+    EFFICACY_TYPE=(
+        (0,'Full Agonist'),
+        (1,'Partial Agonist'),
+        (2,'Antagonist'),
+        (3, 'Inverse Agonist'),
+        (4,'Other')
+    )
     id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
     rvalue = models.FloatField()
     units = models.CharField(max_length=10)
     description = models.CharField(max_length=60)
-    type = models.TextField()  # This field type is a guess.
-    reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound')
-    id_functional = models.ForeignKey('DyndbFunctional', models.DO_NOTHING, db_column='id_functional', blank=True, null=True)
+    type = models.SmallIntegerField( choices=EFFICACY_TYPE, default=0)
+    reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound',null=True)   
+    id_functional = models.ForeignKey('DyndbFunctional', models.DO_NOTHING, blank=True, db_column='id_functional', null=True) 
 
     class Meta:
         managed = False
@@ -613,12 +618,17 @@ class DyndbEfficacy(models.Model):
 
 
 class DyndbExpInteractionData(models.Model):
-    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp')
-    type = models.TextField()  # This field type is a guess.
-    protein1 = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='protein1', related_name='DyndbExpInteractionData_protein1_fky')
+    INTERACTION_TYPE=(
+        (0, 'Functional'),
+        (1, 'Binding'),
+        (2, 'Efficacy')
+    )
+    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp',null=True)
+    type = models.SmallIntegerField( choices=INTERACTION_TYPE, default=0)
+    protein1 = models.ForeignKey('DyndbProtein',  models.DO_NOTHING, db_column='protein1', related_name='DyndbExpInteractionData_protein1_fky', null=True)
     protein2 = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='protein2', blank=True, null=True, related_name='DyndbExpInteractionData_protein2_fky' )
     ligand1 = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='ligand1', blank=True, null=True, related_name='DyndbExpInteractionData_ligand1_fky')
-    ligand2 = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='ligand2', blank=True, null=True, related_name='DyndbExpInteractionData_ligand2_fky')
+    ligand2 = models.ForeignKey(DyndbCompound, models.DO_NOTHING,db_column='ligand2',   blank=True, null=True, related_name='DyndbExpInteractionData_ligand2_fky') 
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)
@@ -627,13 +637,17 @@ class DyndbExpInteractionData(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True 
         db_table = 'dyndb_exp_interaction_data'
 
 
 class DyndbExpProteinData(models.Model):
-    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein')
-    type = models.TextField()  # This field type is a guess.
+    EXP_PROTEIN_TYPES=(
+        (0,'Activity'),
+        (1, 'Others')
+    )
+    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', null=True)
+    type = models.SmallIntegerField(choices=EXP_PROTEIN_TYPES, default=0)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)
@@ -642,7 +656,7 @@ class DyndbExpProteinData(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_exp_protein_data'
 
 
@@ -666,7 +680,7 @@ class DyndbFileTypes(models.Model):
 
 class DyndbFiles(models.Model):
     filename = models.CharField(unique=True, max_length=80)
-    id_file_types = models.ForeignKey(DyndbFileTypes, models.DO_NOTHING, db_column='id_file_types')
+    id_file_types = models.ForeignKey(DyndbFileTypes,  models.DO_NOTHING, db_column='id_file_types', null=True ) 
     description = models.CharField(max_length=40, blank=True, null=True)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
@@ -682,13 +696,19 @@ class DyndbFiles(models.Model):
 
 
 class DyndbFilesDynamics(models.Model):
-    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
- #   id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING )
-    id_files = models.ForeignKey(DyndbFiles, models.DO_NOTHING, db_column='id_files')
-    type = models.TextField(blank=True, null=True)  # This field type is a guess.
+    file_types=(
+        (0, 'Input coordinates'),
+        (1, 'input topology'),
+        (2, 'trajectory'),
+        (3, 'others'),
+    )
+    id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics',   null=True) 
+    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING,   db_column='id_files',  null=True)
+    type = models.SmallIntegerField( choices=file_types, default=0)
+
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_files_dynamics'
         unique_together = (('id_dynamics', 'id_files'),)
 
@@ -704,14 +724,18 @@ class DyndbFilesModel(models.Model):
 
 
 class DyndbFilesMolecule(models.Model):
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files', unique=True)
-    type = models.TextField()  # This field type is a guess.
+    filemolec_types=(
+        (0,'Image'),
+        (1,'Molecule')
+    )
+    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
+    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files', unique=True,null=True) 
+    type = models.SmallIntegerField(choices=filemolec_types, default=0)
 
     class Meta:
         managed = False
         db_table = 'dyndb_files_molecule'
-        unique_together = (('id_molecule', 'type'),)
+        unique_together = (('id_molecule', 'id_files'),)
 
 
 class DyndbFunctional(models.Model):
@@ -724,30 +748,30 @@ class DyndbFunctional(models.Model):
         db_table = 'dyndb_functional'
 
 
-class DyndbIonicComponents(models.Model):
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
-    resname = models.CharField(max_length=4)
-    number = models.IntegerField(blank=True, null=True)
+#      class DyndbIonicComponents(models.Model):
+#          id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
+#          id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
+#          resname = models.CharField(max_length=4)
+#          number = models.IntegerField(blank=True, null=True)
+#      
+#          class Meta:
+#              managed = True
+#              db_table = 'dyndb_ionic_components'
+#              unique_together = (('id_dynamics', 'id_molecule'),)
+#      
 
-    class Meta:
-        managed = False
-        db_table = 'dyndb_ionic_components'
-        unique_together = (('id_dynamics', 'id_molecule'),)
-
-
-class DyndbMembraneComponents(models.Model):
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
-    resname = models.CharField(max_length=4)
-    number = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'dyndb_membrane_components'
-        unique_together = (('id_dynamics', 'id_molecule'),)
-
-
+#  class DyndbMembraneComponents(models.Model):
+#      id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
+#      id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
+#      resname = models.CharField(max_length=4)
+#      number = models.IntegerField(blank=True, null=True)
+#  
+#      class Meta:
+#          managed = True
+#          db_table = 'dyndb_membrane_components'
+#          unique_together = (('id_dynamics', 'id_molecule'),)
+#  
+   
 class DyndbModel(models.Model):
     MODEL_TYPE=(
         (0,'Protein'),
@@ -760,10 +784,11 @@ class DyndbModel(models.Model):
         (3,'MD'),
         (4,'Other')
     )
-    type = models.TextField(choices=MODEL_TYPE)  # This field type is a guess.
-    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', blank=True, null=True)
-    id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule', blank=True, null=True)
-    source_type = models.TextField(choices=SOURCE_TYPE)  # This field type is a guess.
+
+    type = models.SmallIntegerField(choices=MODEL_TYPE, default=0) 
+    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING,  db_column='id_protein',blank=True, null=True) 
+    id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',blank=True, null=True) 
+    source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0) 
     pdbid = models.CharField(max_length=6, blank=True, null=True)
     description = models.CharField(max_length=100, blank=True, null=True)
     template_id_model = models.ForeignKey('self', models.DO_NOTHING, db_column='template_id_model', blank=True, null=True)
@@ -773,10 +798,10 @@ class DyndbModel(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    id_structure_model = models.ForeignKey('StructureModel', models.DO_NOTHING, db_column='id_structure_model', blank=True, null=True)
+    id_structure_model = models.ForeignKey('StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_model'
 
 class DyndbModeledResidues(models.Model):
@@ -787,13 +812,13 @@ class DyndbModeledResidues(models.Model):
         (3,'Other Computational Methods')
     )
     id_protein = models.IntegerField(blank=True, null=True)
-    id_model = models.ForeignKey(DyndbModel,  models.DO_NOTHING, db_column='id_model', related_name='DyndbModeledResidues_id_model_fky',null=True)
+    id_model = models.ForeignKey(DyndbModel,  models.DO_NOTHING, db_column='id_model', related_name='DyndbModeledResidues_id_model_fky',null=True) 
     chain = models.CharField(max_length=1)
     resid_from = models.SmallIntegerField()
     resid_to = models.SmallIntegerField()
     pdbid = models.CharField(max_length=6, blank=True, null=True)
-    source_type = models.SmallIntegerField( choices=SOURCE_TYPE, default=0)
-    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', blank=True, null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
+    source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0)
+    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model',  blank=True, null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
 
     class Meta:
         managed = True
@@ -802,11 +827,10 @@ class DyndbModeledResidues(models.Model):
 
 
 class DyndbMolecule(models.Model):
-    id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='id_compound')
+    id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='id_compound' ) 
     description = models.CharField(max_length=80, blank=True, null=True)
     net_charge = models.SmallIntegerField(blank=True, null=True)
     inchi = models.TextField()
-    sinchikey = models.CharField(max_length=27)
     inchikey = models.CharField(max_length=27)
     inchicol = models.SmallIntegerField()
     smiles = models.TextField(blank=True, null=True)
@@ -848,7 +872,7 @@ class DyndbProtein(models.Model):
     isoform = models.SmallIntegerField()
     is_mutated = models.BooleanField()
     name = models.CharField(max_length=60)
-    update_timestamp = models.DateTimeField()
+    update_timestamp = models.DateTimeField(null=True)
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)
     last_update_by_dbengine = models.CharField(max_length=40)
@@ -884,13 +908,13 @@ class DyndbProteinCannonicalProtein(models.Model):
 
 
 class DyndbProteinMutations(models.Model):
-    id_protein = models.ForeignKey(DyndbProtein, models.DO_NOTHING, db_column='id_protein')
-    resid = models.SmallIntegerField()
-    resletter_from = models.CharField(max_length=1)
-    resletter_to = models.CharField(max_length=1)
+    id_protein = models.ForeignKey(DyndbProtein, models.DO_NOTHING, db_column='id_protein', null=True)
+    resid = models.SmallIntegerField(null=True)
+    resletter_from = models.CharField(max_length=1, null=True)
+    resletter_to = models.CharField(max_length=1, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_protein_mutations'
         unique_together = (('id_protein', 'resid', 'resletter_from', 'resletter_to'),)
 
@@ -909,7 +933,7 @@ class DyndbReferences(models.Model):
     doi = models.CharField(unique=True, max_length=80, blank=True, null=True)
     authors = models.CharField(max_length=60, blank=True, null=True)
     title = models.CharField(max_length=100, blank=True, null=True)
-    institution = models.CharField(max_length=100, blank=True, null=True)
+             #institution = models.CharField(max_length=100, blank=True, null=True)
     pmid = models.IntegerField(unique=True, blank=True, null=True)
     journal_press = models.CharField(max_length=60, blank=True, null=True)
     issue = models.IntegerField(blank=True, null=True)
@@ -926,7 +950,7 @@ class DyndbReferences(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references'
 
 
@@ -1103,65 +1127,65 @@ class InteractionTypeResidueFragment(models.Model):
         db_table = 'interaction_type_residue_fragment'
 
 
-class JuanmaappChoice(models.Model):
-    choice_text = models.CharField(max_length=200)
-    votes = models.IntegerField()
-    question = models.ForeignKey('JuanmaappQuestion', models.DO_NOTHING)
-
-    class Meta:
-        managed = False
-        db_table = 'juanmaapp_choice'
-
-
-class JuanmaappFormup(models.Model):
-    uniprotid = models.CharField(db_column='UNIPROTid', max_length=20)  # Field name made lowercase.
-    iso = models.CharField(max_length=100)
-    mut = models.CharField(db_column='MUT', max_length=4)  # Field name made lowercase.
-    nam = models.CharField(db_column='Nam', max_length=30)  # Field name made lowercase.
-    organ = models.CharField(db_column='ORGAN', max_length=200)  # Field name made lowercase.
-    descmol = models.TextField(db_column='DescMOL')  # Field name made lowercase.
-    netc = models.IntegerField(db_column='NETc')  # Field name made lowercase.
-    inchi = models.TextField(db_column='INCHI')  # Field name made lowercase.
-    inchik = models.CharField(max_length=27)
-    smi = models.TextField(db_column='SMI')  # Field name made lowercase.
-    resnammol = models.CharField(db_column='resnamMOL', max_length=5)  # Field name made lowercase.
-    nummol = models.IntegerField(db_column='numMOL')  # Field name made lowercase.
-    mainprot = models.TextField(db_column='MAINprot')  # Field name made lowercase.
-    mainlig = models.TextField(db_column='MAINlig')  # Field name made lowercase.
-    ionresn = models.CharField(db_column='IONresn', max_length=5)  # Field name made lowercase.
-    ionnum = models.IntegerField(db_column='IONnum')  # Field name made lowercase.
-    comtyp = models.CharField(db_column='COMtyp', max_length=50)  # Field name made lowercase.
-    idprot = models.CharField(db_column='idproT', max_length=50)  # Field name made lowercase.
-    idcom = models.CharField(db_column='idcoM', max_length=50)  # Field name made lowercase.
-    msour = models.CharField(db_column='Msour', max_length=50)  # Field name made lowercase.
-    pdb = models.CharField(db_column='PDB', max_length=4)  # Field name made lowercase.
-    desc = models.TextField()
-    mtemp = models.TextField(db_column='mTEMP')  # Field name made lowercase.
-    meth = models.CharField(db_column='METH', max_length=50)  # Field name made lowercase.
-    soft = models.CharField(db_column='SOFT', max_length=50)  # Field name made lowercase.
-    softver = models.CharField(db_column='SOFTver', max_length=50)  # Field name made lowercase.
-    ffield = models.CharField(max_length=50)
-    memb = models.CharField(db_column='MEMB', max_length=50)  # Field name made lowercase.
-    solv = models.CharField(db_column='Solv', max_length=50)  # Field name made lowercase.
-    pdbcoor = models.CharField(db_column='PDBcoor', max_length=50)  # Field name made lowercase.
-    psf = models.CharField(db_column='PSF', max_length=50)  # Field name made lowercase.
-    toppsf = models.CharField(db_column='topPSF', max_length=50)  # Field name made lowercase.
-    par = models.CharField(max_length=50)
-    dcd = models.CharField(db_column='DCD', max_length=50)  # Field name made lowercase.
-
-    class Meta:
-        managed = False
-        db_table = 'juanmaapp_formup'
-
-
-class JuanmaappQuestion(models.Model):
-    question_text = models.CharField(max_length=200)
-    pub_date = models.DateTimeField()
-
-    class Meta:
-        managed = False
-        db_table = 'juanmaapp_question'
-
+#   class JuanmaappChoice(models.Model):
+#       choice_text = models.CharField(max_length=200)
+#       votes = models.IntegerField()
+#       question = models.ForeignKey('JuanmaappQuestion', models.DO_NOTHING)
+#   
+#       class Meta:
+#           managed = False
+#           db_table = 'juanmaapp_choice'
+#   
+#   
+#   class JuanmaappFormup(models.Model):
+#       uniprotid = models.CharField(db_column='UNIPROTid', max_length=20)  # Field name made lowercase.
+#       iso = models.CharField(max_length=100)
+#       mut = models.CharField(db_column='MUT', max_length=4)  # Field name made lowercase.
+#       nam = models.CharField(db_column='Nam', max_length=30)  # Field name made lowercase.
+#       organ = models.CharField(db_column='ORGAN', max_length=200)  # Field name made lowercase.
+#       descmol = models.TextField(db_column='DescMOL')  # Field name made lowercase.
+#       netc = models.IntegerField(db_column='NETc')  # Field name made lowercase.
+#       inchi = models.TextField(db_column='INCHI')  # Field name made lowercase.
+#       inchik = models.CharField(max_length=27)
+#       smi = models.TextField(db_column='SMI')  # Field name made lowercase.
+#       resnammol = models.CharField(db_column='resnamMOL', max_length=5)  # Field name made lowercase.
+#       nummol = models.IntegerField(db_column='numMOL')  # Field name made lowercase.
+#       mainprot = models.TextField(db_column='MAINprot')  # Field name made lowercase.
+#       mainlig = models.TextField(db_column='MAINlig')  # Field name made lowercase.
+#       ionresn = models.CharField(db_column='IONresn', max_length=5)  # Field name made lowercase.
+#       ionnum = models.IntegerField(db_column='IONnum')  # Field name made lowercase.
+#       comtyp = models.CharField(db_column='COMtyp', max_length=50)  # Field name made lowercase.
+#       idprot = models.CharField(db_column='idproT', max_length=50)  # Field name made lowercase.
+#       idcom = models.CharField(db_column='idcoM', max_length=50)  # Field name made lowercase.
+#       msour = models.CharField(db_column='Msour', max_length=50)  # Field name made lowercase.
+#       pdb = models.CharField(db_column='PDB', max_length=4)  # Field name made lowercase.
+#       desc = models.TextField()
+#       mtemp = models.TextField(db_column='mTEMP')  # Field name made lowercase.
+#       meth = models.CharField(db_column='METH', max_length=50)  # Field name made lowercase.
+#       soft = models.CharField(db_column='SOFT', max_length=50)  # Field name made lowercase.
+#       softver = models.CharField(db_column='SOFTver', max_length=50)  # Field name made lowercase.
+#       ffield = models.CharField(max_length=50)
+#       memb = models.CharField(db_column='MEMB', max_length=50)  # Field name made lowercase.
+#       solv = models.CharField(db_column='Solv', max_length=50)  # Field name made lowercase.
+#       pdbcoor = models.CharField(db_column='PDBcoor', max_length=50)  # Field name made lowercase.
+#       psf = models.CharField(db_column='PSF', max_length=50)  # Field name made lowercase.
+#       toppsf = models.CharField(db_column='topPSF', max_length=50)  # Field name made lowercase.
+#       par = models.CharField(max_length=50)
+#       dcd = models.CharField(db_column='DCD', max_length=50)  # Field name made lowercase.
+#   
+#       class Meta:
+#           managed = False
+#           db_table = 'juanmaapp_formup'
+#   
+#   
+#   class JuanmaappQuestion(models.Model):
+#       question_text = models.CharField(max_length=200)
+#       pub_date = models.DateTimeField()
+#   
+#       class Meta:
+#           managed = False
+#           db_table = 'juanmaapp_question'
+    
 
 class Ligand(models.Model):
     name = models.TextField()
