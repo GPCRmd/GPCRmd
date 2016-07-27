@@ -1,4 +1,5 @@
-﻿"""
+# -*- coding: utf-8 -*-
+"""
 Django settings for protwis project.
 """
 
@@ -76,7 +77,7 @@ WSGI_APPLICATION = 'protwis.wsgi.application'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Copenhagen'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
