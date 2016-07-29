@@ -1,0 +1,3 @@
+To be able to receive the emails, run:
+
+>/env/bin/python -m smtpd -n -c DebuggingServer localhost:2525
