@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
 from django.http import HttpResponseRedirect, HttpResponse
@@ -166,6 +167,14 @@ def PROTEINview(request):
         fdbOPN= dyndb_Other_Protein_NamesForm()
 #        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
+
+def protein_get_data_upkb(request, uniprotkbac=None):
+    if uniprotkbac is None or request.method == 'POST':
+        pass
+    response = HttpResponse("Text only, please.", content_type="text/plain")
+    return response
+
+
 
 def MODELview(request):
     if request.method == 'POST':
