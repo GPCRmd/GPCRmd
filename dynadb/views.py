@@ -5,12 +5,15 @@ from django.core.urlresolvers import reverse
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
+import re
+import pickle
 #from .models import Question,Formup
 #from .forms import PostForm
+import os
 from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components
 #from .forms import NameForm, TableForm
 
 # Create your views here.
@@ -19,23 +22,36 @@ def REFERENCEview(request):
     if request.method == 'POST':
         action="/dynadb/REFERENCEfilled/"
         now=timezone.now()
-        initREFF={'dbname':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':None }
-
+        author="jmr"
+#        forminfo={'issue':'1','url':'http://localhost:8000/ttt/prueba','doi':'8382938','title':'prinncii','journal_press':'marca','pub_year':'1996', 'volume':'agosto', 'pages':'2-3','authors':'pepe; luis', 'pmid':'4'}
+        initREFF={'dbname':None,'update_timestamp':now,'creation_timestamp':now,'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':None }
         fdbREFF = dyndb_ReferenceForm(request.POST)
+        with open('/protwis/sites/protwis/dynadb/REFpost.txt', 'wb') as handle:
+            pickle.dump(request.POST, handle)
 
+#       with open('/protwis/sites/protwis/dynadb/REFpost.txt', 'rb') as handle:
+#           b = pickle.loads(handle.read())
+
+
+#        f=open('/protwis/sites/protwis/dynadb/REFpost.txt','w') 
+#        f.write(request.POST)
 #####  Fill the empty fields in the fdbREFF instance with data from the initREFF dictionary
 
-        for key,value in initREFF.items():
-            fdbREFF.data[key]=value
             
 
 ##### Check whether the fdbREFF instance of dyndb_ReferenceForm is valid:
         if fdbREFF.is_valid(): 
             # process the data in form.cleaned_data as required
             formREFF=fdbREFF.save(commit=False)
-            formREFFi=fdbREFF.save()
-            print("\n primary  key: ", formREFFi.pk )
-
+            for (key,value) in initREFF.items():
+                setattr(formREFF, key, value)
+#                print("valor de", key, "  ", formREFF.__dict__.values())
+            
+            print(fdbREFF.data,"  datos objeto fdbREFF")
+            formREFF.save()
+#            print("\n primary  key: ", formREFFi.pk )
+#        else:
+#            print("Errores del formulario ",fdbREFF.errors)
             
 
             return HttpResponseRedirect('/dynadb/REFERENCEfilled/')
@@ -274,33 +290,94 @@ def SMALL_MOLECULEview(request):
 
 def DYNAMICSview(request):
     if request.method == 'POST':
-        dd=dyndb_CompoundForm(request.POST)
-        ddC= dyndb_Other_Compound_Names(request.POST)
-        ddT= dyndb_Dynamics_tags(request.POST)
-        ddTL=dyndb_Dynamics_Tags_List(request.POST)
+        author="jmr"   #to be modified with author information. To initPF dict
+        action="/dynadb/DYNAMICSfilled/"
+        now=timezone.now()
+        onames="Pepito; Juanito; Herculito" #to be modified... scripted
+        initDD={'id_model':'1','id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        dd=dyndb_Dynamics(request.POST)
+                
 
-        # check whether it's valid:
-        if dd.is_valid() and ddC.is_valid() and ddT.is_valid() and ddTL.is_valid(): 
+
+        with open('/protwis/sites/protwis/dynadb/DYNpost.txt', 'wb') as handle:
+            pickle.dump(request.POST, handle)
+
+        for key,value in initDD.items():
+            dd.data[key]=value
+
+        print("\npath", os.getcwd())
+        ##for key,value in data.items():
+        ##    f.write(str(key,value))
+        ff=open('/protwis/sites/protwis/dynadb/filePOST.txt','w')
+#        ff.write(data)
+        print("created by dbengine antes de validar", dd.data['created_by_dbengine'])
+
+        if dd.is_valid():
             # process the data in form.cleaned_data as required
+            ddi=dd.save(commit=False)
+            with open('/protwis/sites/protwis/dynadb/DYNdd.txt', 'wb') as handle:
+                pickle.dump(ddi, handle)
 
-            dd=dd.save(commit=False)
-            ddC=ddC.save(commit=False)
-            ddT=ddT.save(commit=False)
+            dd.save()
+            with open('/protwis/sites/protwis/dynadb/DYNddi.txt', 'wb') as handle:
+                pickle.dump(ddi, handle)
+            dynafk=ddi.pk 
+            print(dynafk)
+            dicpost=request.POST
+            postspl={}
+            postsplmod={}
+            dmodinst={}
+            indexl=[]
+            dinst={}
+            for key,val in dicpost.items():
+                if re.search('formc',key):
+                    index=int(key.split("-")[1])
+                    if index not in indexl:
+                        indexl.append(index)
+                        postspl[index]={}
+                        postsplmod[index]={}
+                        
+                    postspl[index][key]=val
+                    postsplmod[index][key.split("-")[2]]=val
 
-            form.user=request.user
-            form.save()
+            if len(indexl)==0:
+                indexl=[1]
+                postsplmod[1]={}    
+                for key,val in dicpost.items():
+                    if key not in ddi.__dict__.keys():
+                        postsplmod[1][key]=val
+                         
+
+            print("longitud postspl[1]",len(postsplmod[1]), postsplmod)
+            print("lista de indices", indexl) 
+            for val in indexl:
+                print("componente ", val, " ", postsplmod[val])
+                postsplmod[val]['id_dynamics']=dynafk
+                postsplmod[val]['id_molecule']=int(val+1) #este valor debe modificarse se le suma 1 porque si no no lo acepta el html (pide opciones entre uno y 7)
+                dinst[val]=dyndb_Dynamics_Components(postsplmod[val])
+                if dinst[val].is_valid():
+                    dmodinst[val]=dinst[val].save(commit=False)
+                    dmodinst[val]=dinst[val].save()
+                    print("diccionario ", val, "  ", dmodinst[val].__dict__) 
+                else:
+                    print("Errores de la instancia del form nº",val," ",  dinst[val].errors.as_data())
+
+          #  ttt=ddi.created_by_dbengine
+          #  print("created by dbengine despues de grabar", ttt)
+
             # redirect to a new URL:
-            return HttpResponseRedirect('/dynadb/DYNAMICS/')
+            return HttpResponseRedirect('/dynadb/DYNAMICSfilled/')
+        else:
+            iii2=dd.errors.as_data()
+            print("Errores en dynamics: ",iii2)
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        dd=dyndb_CompoundForm()
-        ddC= dyndb_Other_Compound_Names()
-        ddT= dyndb_Dynamics_tags()
-        ddTL=dyndb_Dynamics_Tags_List()
+        dd=dyndb_Dynamics()
+       # ddT= dyndb_Dynamics_tags()
+       # ddTL=dyndb_Dynamics_Tags_List()
 
-
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC,'ddT':ddT, 'ddTL':ddTL})
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
 
 
 def SUBMITTEDview(request): 

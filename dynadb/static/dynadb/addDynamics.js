@@ -22,6 +22,14 @@ function addDynamics() {
 	} 
 //	else {
 		var item = document.getElementById("dynform-0");
+                var itemparent = document.getElementById("pdynform");
+                var itemlast = itemparent.lastElementChild;
+                var itemlastl = itemlast.id.split("-")[1]
+                var lll=Number(itemlastl);
+                ll=lll+1;
+                l=ll+1;
+                console.log("itemlastl " + itemlastl +" ll " + ll + " l " +l)
+                
 		var	protnumb = "SIMULATION  #" + l;
 		var	t = item.cloneNode(true);
 		var	idlabnod = "dynform-" + ll;
