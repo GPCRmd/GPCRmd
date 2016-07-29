@@ -1,12 +1,15 @@
+<head><style>
+.long input {
+ width:100%;
+}
+</style></head>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% load i18n %}
-
 {% block content %}
 
-<form method="post">{% csrf_token %}
 
- <!-- description column -->
+{% if validlink %} <!-- if it's correct -->
  <div class="col-md-4">
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
@@ -20,10 +23,9 @@
          <div class="panel-body">
 
             <div style="text-align:center"> 
-             <h4 >RESET YOUR PASSWORD</h4>
+             <h4 >CREATE A NEW ACCOUNT</h4>
 	    </div>
-             <p style="text-align: justify;">Forgot your password? Enter your email address and we will email instructions for setting a new one.</p>
-
+            <p style="text-align: justify;"> As a registered user, you will be able to access the GPCRmd Simulation Submission tool.</p>
          </div>
      </div>
 
@@ -35,22 +37,22 @@
          </div>
      </div>
   </div>
- <!--   <body> -->
+
+<!-- body: Modified part -->
+
 <div id="pprotform"class="col-md-7 "> 
-  <div id="protform" class="col-md-12 panel-primary alert alert-info"> 
-
- 			<div style="text-align:center">
-             			<h4><br>Password Reset</h4>
-            		</div>   
-
-  <div class="panel-body ">
-  <div style="text-align: justify;text-justify: inter-word;">
-  <p>If an activated account exists with the email you provided, you will receive instructions for resetting your password.</p>
-
-  <p>If you don't receive an email, please make sure you have entered the address you registered with. Also, don't forget to check your spam folder.</p>
+ <div class="alert alert-info" style="border-color:#337ac1">
+  <strong style="font-size:125%">Activation successful. </strong>You can now access to <a href="/accounts/memberpage" style="color:#31708F"><u>your account</u></a>.
  </div>
+</div>
 
-<!-- fins aquí -->
+{% else %}
+
+<div class="alert alert-danger">
+<h3><b>Error</b></h3>
+<p>{% trans "The activation link was invalid, possibly because it has already been used." %}</p>
+{% endif %}
+
 
 
 {% endblock content %} 

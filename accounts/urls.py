@@ -19,6 +19,11 @@ urlpatterns = [
    url(r'^reset/done/$', views.reset_complete, name='password_reset_complete'),
 # Confirmation_mail
    url(r'^reg_mail/$', views.reg_mail, name='reg_mail'),
-   url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/$', views.confirm, name='confirm'), # This will get the code, ask for username and passw (like login) and check if they match
+   url(r'^act/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.act_confirm, name='act_confirm'),
+
+# Change_mail
+   url(r'^newmail/$', views.mail_reset, name='mail_reset'),
+   url(r'^newmail/done/$', views.mail_done, name='mail_done'),
+   url(r'^email/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.mail_confirm, name='mail_confirm'),
 ]
 

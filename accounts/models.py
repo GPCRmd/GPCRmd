@@ -7,8 +7,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import UserManager
 import string
-import random
-
 
 def my_random_code():
     """creates a random code and makes sure that it's not present in any other user, just in case"""
@@ -47,8 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active =  models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_admin =models.BooleanField(default=False)
-    act_code= models.CharField(max_length=200, default=my_random_code)###
-
+    email_new = models.EmailField(max_length=254, blank=True)
     objects = NewUserManager()
 
     USERNAME_FIELD = 'username'

@@ -8,7 +8,7 @@
 
 
 {% block content %} 
-<form method="post">
+<form action="{% url 'accounts:change_data' %}" method="post">
 {% csrf_token %}
 
  <!-- description column -->
@@ -25,15 +25,10 @@
          <div class="panel-body">
 
             <div style="text-align:center"> 
-             <h4 >CREATE A NEW ACCOUNT</h4>
+             <h4>MODIFY THE DESIRED FIELDS</h4>
 	    </div>
-             <p style="text-align: justify;">Please introduce your username and password to confirm your account.</p>
-
-            <p style="text-align: justify;"> As a registered user, you will be able to access the Simulation Submission tool (... list?).</p>
-
-	     <p style="text-align: justify;">Any time later, you will be able to modify all submitted personal data.<p>
-
-	     <p style="text-align: justify;">All the information you provide to us is confidential and will not be shared.<p>
+             <p style="text-align: justify;">Edit your personal account information by changing the information of the fields you wish to update.</p>
+             <p style="text-align: justify;">If you change your email address, you need access to the new address to complete the process.</p> 
 
          </div>
      </div>
@@ -53,14 +48,29 @@
     <div class="panel-body">
 
  			<div style="text-align:center">
-             			<h4><br>User Activation</h4>
+             			<h4><br>Change User Information</h4>
             		</div><br>   
 <!-- modifica a partir de aqui -->
 <div style="margin:10px">
+
+<!-- Change email -->
+     <div class="row" style="margin-bottom:8px;">
+         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
+               <p style="margin-bottom:6px"><b>Email:</b></p> 
+         </div>  
+         <div class="col-md-6" > 
+           <a href="/accounts/newmail" class="btn btn-block btn-default" style="text-align:left;padding-left:2px;padding-top:3px;padding-bottom:3px;border-color:#A8A8A8">{{ user_mail }}</a>
+         </div>
+         <div class="col-md-1" >
+         </div>
+     </div>
+
+<!-- Change email end-->
+
   <div class=row > 
         <div class="col-md-10 col-md-offset-1" > 
             {% if form.non_field_errors %}
-               <div class="non-field-errors alert alert-danger" style="padding:7px">
+               <div class="non-field-errors alert alert-danger">
                  {% for err in form.non_field_errors %}
                     <p>{{ err }}</p>
                 {% endfor %}
@@ -71,10 +81,10 @@
 {% for field in form %}
   <div  style="margin-bottom:8px">
      <div class="row">
-         <div class="col-md-3 col-md-offset-1" style="width:120px;color:#337ac1;">  
+         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
                {{ field.label_tag }} 
          </div>  
-         <div class="col-md-7" ><span class="long"> {{field}}</span>
+         <div class="col-md-6" ><span class="long"> {{field}}</span>
          </div>
          <div class="col-md-1" >
          </div>

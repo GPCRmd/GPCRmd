@@ -8,7 +8,7 @@
 
 
 {% block content %} 
-<form action="{% url 'accounts:login' %}" method="post">
+<form method="post">
 {% csrf_token %}
 
  <!-- description column -->
@@ -25,15 +25,11 @@
          <div class="panel-body">
 
             <div style="text-align:center"> 
-             <h4 >FILL IN THE LOGIN FORM</h4>
+             <h4 >CREATE A NEW ACCOUNT</h4>
 	    </div>
-             <p style="text-align: justify;">Please sign in with your account to access the Simulation Submission tool.</p>
+             <p style="text-align: justify;">Please introduce your username and password to confirm your account.</p>
 
-	     <p style="text-align: justify;">Once you are logged-in, you will be able to access the GPCRmd Simulation Submission tool.<p>
-
-	     <p style="text-align: justify;">If you are not registered, you can <a href="/accounts/register">create an account</a> to take advantage of this service.<p>
-
-	     <p style="text-align: justify;"> In case you forget your password, use the <a href="/accounts/password_reset" >password reset</a>  page to obtain a new one. </p>
+            <p style="text-align: justify;"> As a registered user, you will be able to access the GPCRmd Simulation Submission tool.</p>
 
          </div>
      </div>
@@ -53,7 +49,7 @@
     <div class="panel-body">
 
  			<div style="text-align:center">
-             			<h4><br>Log in</h4>
+             			<h4><br>User Activation</h4>
             		</div><br>   
 <!-- modifica a partir de aqui -->
 <div style="margin:10px">
@@ -97,12 +93,6 @@
 <div class="row" >
   <div class="col-md-3 col-md-offset-1" style="margin-bottom:5px;width:120px">
      <input type="submit" value="Submit" style="width:75px"/> </form>
-  </div>
-  <div class="col-md-2" style="width:80px;">
-    <a href='/accounts/register'>Register</a>
-  </div>
-  <div class="col-md-4">
-    <a href='/accounts/password_reset'>Forgot your password?</a>
   </div>
 
 </div>

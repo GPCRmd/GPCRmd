@@ -28,8 +28,7 @@
              <h4>MODIFY THE DESIRED FIELDS</h4>
 	    </div>
              <p style="text-align: justify;">Edit your personal account information by changing the information of the fields you wish to update.</p>
-<!--             <p style="text-align: justify;">If you change your email address, you need access to the new email address to complete the process. The new address takes effect immediately.</p> -->
-	     <p style="text-align: justify;">All the information you provide to us is confidential and will not be shared.</p>
+             <p style="text-align: justify;">If you change your email address, you need access to the new address to complete the process.</p> 
 
          </div>
      </div>
@@ -53,6 +52,21 @@
             		</div><br>   
 <!-- modifica a partir de aqui -->
 <div style="margin:10px">
+
+<!-- Change email -->
+     <div class="row" style="margin-bottom:8px;">
+         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
+               <p style="margin-bottom:6px"><b>Email:</b></p> 
+         </div>  
+         <div class="col-md-6" > 
+           <a href="/accounts/newmail" class="btn btn-block btn-default" style="text-align:left;padding-left:2px;padding-top:3px;padding-bottom:3px;border-color:#A8A8A8">{{ user_mail }}</a>
+         </div>
+         <div class="col-md-1" >
+         </div>
+     </div>
+
+<!-- Change email end-->
+
   <div class=row > 
         <div class="col-md-10 col-md-offset-1" > 
             {% if form.non_field_errors %}
@@ -67,12 +81,12 @@
 {% for field in form %}
   <div  style="margin-bottom:8px">
      <div class="row">
-         <div class="col-md-4 col-md-offset-1" style="width:180px;color:#337ac1;">  
+         <div class="col-md-3 col-md-offset-1" style="min-width:180px;color:#337ac1;">  
                {{ field.label_tag }} 
          </div>  
          <div class="col-md-6" ><span class="long"> {{field}}</span>
          </div>
-         <div class="col-md-1" >
+         <div class="col-md-2" >
          </div>
      </div>
      <div class="row" >

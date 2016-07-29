@@ -1,0 +1,14 @@
+{% load i18n %}{% autoescape off %}
+{% blocktrans %}Welcome to {{ site_name }}.{% endblocktrans %}
+
+{% trans "To activate your account, please go to the following link within the next two days:" %}
+{% block reset_link %}
+{{ protocol }}://{{ domain }}{% url 'accounts:act_confirm' uidb64=uid token=token %}   
+{% endblock %}
+{% trans "Your username, in case you forgot:" %} {{ user.get_username }}
+
+{% trans "Thanks for using our site!" %}
+
+{% blocktrans %}The {{ site_name }} team{% endblocktrans %}
+
+{% endautoescape %}
