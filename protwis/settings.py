@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 #DEBUG CAMBIAR a True
 #DEBUG=False
-
+#ALLOWED_HOSTS = ['*']
 
 # Application definition
 
