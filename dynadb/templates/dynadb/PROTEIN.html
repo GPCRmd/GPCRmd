@@ -127,7 +127,7 @@
 					<td style="padding:5px 5px 5px 5px"><input style="width:140px;" id="id_resletter_to" maxlength="1" disabled name="resletter_to" type="text" /></td>	<!--placeholder=" A"-->	
 				</tr>
 
-			</table>
+			</table
 		</div>
 
 <!--	<div class="col-md-6">
@@ -135,13 +135,19 @@
 	</div> -->
 			<br>
  			<div style="text-align:center">
-			     <input type="button" value="+ Add protein"  style="height:30px;width:300px" onClick="addProtein();">
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+				     <input type="button" value="+ Add Protein"  style="height:30px;width:160px" onClick="addProtein();">
+                		</div>
+	 			<div class="col-md-4 " style="text-align:center">
+			     		<input type="button" value="- Remove Protein"  style="height:30px;width:160px" onClick="delProtein();">
+                                </div>
 		        </div> 		
-  			<br>
-	</div>
+  			<br><br>
+	</div> <br>
         <th><input type="submit" value="Submit" /> </th><br>   
 </form>
-   </div>
+   </div><br>
+</div>
 
 
 <!--           <div id="selection-buttons"> -->
@@ -169,5 +175,6 @@
 {% block addon_js %} 
 
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
+    <script src="{% static 'dynadb/delProtein.js' %}"></script>
 
 {% endblock %}

@@ -1,0 +1,9 @@
+function cloneDynamics() {
+
+delDynamics();
+addDynamics();
+
+
+}
+
+

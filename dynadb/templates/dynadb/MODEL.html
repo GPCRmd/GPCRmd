@@ -123,11 +123,8 @@
             		</div>
 
 
-                        <table id="pElement1" style="text-align=center;width:96%;margin-left:2%;margin-right:2%;"> 
-
-
-
-				<tr>	<th style="width:40px;text-align:center"><label for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot</a></label>
+                        <table style="text-align=center;width:96%;margin-left:2%;margin-right:2%;"> 
+                                <thead><tr><th style="width:40px;text-align:center"><label for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot</a></label></th>
 					<th style="width:70px;text-align:center"><label for="id_id_protein" size='10'><a title="Protein ID: ID of the protein that is modeled in this fragment.">Protein ID</a></label></th>
 					<th style="width:60px;text-align:center"><label for="id_chain" size='10'><a title="Chain: Chain identifier for the model in PDB format. ">Chain</a></label></th>
 					<th style="width:70px;text-align:center"><label for="id_resid_from" size='10'><a title="Res from: Starting resid of the protein fragment. ">Res from</a></label></th>
@@ -135,6 +132,8 @@
 					<th style="width:55px;text-align:center"><label for="id_pdbid"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). Must be empty when the source of the modeled residues is not X-ray or NMR. ">PDB ID</a></label></th>
 					<th style="width:90px;text-align:center"><label for="id_source_type"><a title="Source type: Source of the coordinates of the protein fragment.">Source type</a></label></th>
 					<th style="width:110px;text-align:center"><label for="id_template_id_model"><a title="Template id model: ID of the model used as template if “Source type” is set to 'Homology'. ">Template model ID</a></label></th></tr>
+                                </thead>
+                                <tbody id="pElement1">
 				<tr id="Element1"><td style="padding:5px 5px 5px 5px"><input id="id_prot" name="prot" type="number" style="width:30px" placeholder="  1" /></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:45px" placeholder=" E"/></td>
@@ -153,16 +152,13 @@
 				<td style="padding:5px 5px 5px 5px"><select id="id_template_id_model" style="width:120px"  name="template_id_model">
 					<option value="" selected="selected">---------</option>
 					<option value="1">DyndbModel object</option>
-				</select></td></tr>
-
-					<tr id="container">
-					</tr>
-				</div>  
-			</table> 
+				</select></td>
+				</tr><tbody></table> 
 			<br>
 		        <script src="{% static 'dynadb/addFields.js' %}"></script>		
  			<div style="text-align:center">
-			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;width:300px" onClick="addModeledelement1();">
+			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
+			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
 		        </div> 		
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
@@ -174,15 +170,16 @@
             		</div>
 
  			<div style="text-align=center">
-                        <table id="pElement2" style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
-				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Atom names and residue names from Protein Data Bank are prefered but not mandatory.">Resname</a></label></th>	
+                        <table style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+				<thead><tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Atom names and residue names from Protein Data Bank are prefered but not mandatory.">Resname</a></label></th>	
 					<th style="width:80px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form. ">Molecule</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in “model”. ">Mol ID</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_name"><a title="Mol name: Name of the component">Mol name</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to an specific residue type present on simulation topology. ">Num of mol</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
-
-				<tr id="Element2">	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ" /></td>
+				</thead>
+                                <tbody id="pElement2">
+				<tr id="Element2"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ" /></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 " /></td>
 					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule" placeholder="   " >
 						<option value="" selected="selected">---------</option>
@@ -206,8 +203,9 @@
 
 			</table>
 			<br>
- 			<div style="text-align:center">
-			     <input type="button" value="+ Add molecule"  style="height:30px;width:300px" onClick="addModeledelement2();">
+ 			<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
+			     <input type="button" value="+ Add Molecule"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();"><br>
+			     <input type="button" value="- Remove Molecule"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">
 				<!--	<button onclick="addFields()"> + Add modeled residue </button>  -->
 		        </div> 		
 		        </div><br>
@@ -236,6 +234,8 @@
 {% block addon_js %} 
 
     <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
+    <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>
+    <script src="{% static 'dynadb/delModeledelement2.js' %}"></script>
 
 {% endblock %}

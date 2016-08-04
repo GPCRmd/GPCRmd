@@ -184,15 +184,17 @@
 		</div><br>
 
  			<div style="text-align=center">
-                        <table id="pElement1" style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                        <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                                <thead>  
 				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
 					<th style="width:80px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+                                </thead>
 
-				<tr id="Element1">	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
+                                <tbody id="pElement1-0"><tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
 					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule">
 						<option value="" selected="selected">---------</option>
@@ -213,36 +215,42 @@
 						<option value="3">Water</option>
 						<option value="4">Other</option>
 						</select></td></tr>
-
+				</tbody>
 			</table>
 
 
 			<br>
  			<div style="text-align:center">
-			     <input type="button" value="+ Add component"  style="height:30px;width:250px" onClick="addSimcomp();">
-		        </div> 		
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+			     		<input type="button" value="+ Add Component"  style="height:30px;;margin: 0px 0px 0px 0px;width:160px" onClick="addSimcomp();"></div>
+	 			<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="- Remove Component"  style="height:30px;margin: 0px 0px 0px 0px;width:160px" onClick="delSimcomp();"></div>
+		        </div>
+                        <br>
+ 		
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div><br><br> 		
 
-			<div class=row >
+                        <div style="text-align:center">
 	 			<div class="col-md-4" style="text-align:center">
-				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:150px" onClick="addDynamics();">
+				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:160px" onClick="addDynamics();">
 			        </div> 		
 	 			<div class="col-md-4" style="text-align:center">
-				     	<input type="button" value="+ Remove Dynamics"  style="height:30px;width:150px" onClick="delDynamics();">
+				     	<input type="button" value="- Remove Dynamics"  style="height:30px;width:160px" onClick="delDynamics();">
 			        </div> 		
  				<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:150px" onClick=";">
+			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:160px" onClick="cloneDynamics();">
 		       		</div> 
-			</div>	<br> 		
+			</div>	<br><br> 		
      </div>
+        <br> <th><input type="submit" value="Submit" /> </th><br>   
+<br>
      </div>
-  </div>
+</form>
+  </div> 
+
 </div>
-        <th><input type="submit" value="Submit" /> </th><br>   
-
-
 <div class="col-md-7 col-md-offset-4"> 
       <div class="col-md-12 panel panel-primary">
   	  <div class="panel-body" id="selection-">
@@ -262,7 +270,9 @@
 {% block addon_js %} 
 
     <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
+    <script src="{% static 'dynadb/delSimcomp.js' %}"></script>
     <script src="{% static 'dynadb/addDynamics.js' %}"></script>
     <script src="{% static 'dynadb/delDynamics.js' %}"></script>
+    <script src="{% static 'dynadb/cloneDynamics.js' %}"></script>
 
 {% endblock %}
