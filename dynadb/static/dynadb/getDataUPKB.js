@@ -29,19 +29,34 @@ $.ajaxSetup({
 });
 
 $(document).ready(function(){
-    $("[id*='id_get_data_upkb']").click(function(){
-//         $("#id_msequence").load("/dynadb/protein/get_data_upkb/A");
+    $(document).on('click',"[id='id_get_data_upkb'],[id|=id_form][id$='-get_data_upkb']",function(){
+	var protform = $(this).parents("[id|=protform]") 
+	var uniprotkbacval = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']").val()
+        var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']")
+	var isoformval = isoform.val()
+	var uniprotkbac_isoform = uniprotkbacval + '-' + isoformval
+	var sequence = protform.find("[id='id_sequence'],[id|=id_form][id$='-sequence']")
+        var name = protform.find("[id='id_name'],[id|=id_form][id$='-name']")
+        var aliases = protform.find("[id='id_other_names'],[id|=id_form][id$='-other_names']")
+        name.val('Retriving...')
+        aliases.text('Retriving...')
+        sequence.text('Retriving...')
         
-        $.post("get_data_upkb/A",
+        $.post("get_data_upkb/",
         {
-//             uniprotkbac:
+            uniprotkbac:uniprotkbac_isoform
         },
-        function(data){  
-           $("#id_sequence").text(data)
+        function(data){
+	  
+	  
+	  sequence.text(data)
         })
 
         .fail(function(xhr) {
            alert("error "+ "\nStatus: " + xhr.status+"\n"+xhr.responseText);
+           name.val('')
+           aliases.text('')
+           sequence.text('')
         })
 
     });

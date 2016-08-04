@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 import re
 import pickle
+import json
+import requests
+from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot
 #from .models import Question,Formup
 #from .forms import PostForm
 import os
@@ -185,10 +189,23 @@ def PROTEINview(request):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def protein_get_data_upkb(request, uniprotkbac=None):
-    if uniprotkbac is None or request.method == 'POST':
-        pass
-    response = HttpResponse("Text only, please.", content_type="text/plain")
-    return response
+
+    if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
+      uniprotkbac = request.POST['uniprotkbac']
+    if uniprotkbac is not None:
+      if valid_uniprotkbac(uniprotkbac):
+        data = retreive_data_uniprot(uniprotkbac,columns='id,organism,length')
+        if data is None:
+          response = HttpResponseNotFound('No data found for '+'UniProtKB accession number "'+uniprotkbac+'".')
+        else:
+          response = JsonResponse(data)
+        
+        return response
+      else:
+        raise ValidationError("Invalid UniProtKB accession number.")
+    else:
+      raise ValidationError("Missing UniProtKB accession number.")
+
 
 
 
