@@ -11,10 +11,10 @@ function addProtein() {
 		var idlabnod1= "protform-0";
 		itemfirst.id = idlabnod1;
 		//Jquery function for changing labels for all the HTML input elements
-		$(itemfirst).find(':input').each(function() {
+		$(itemfirst).find(':input,:button').each(function() {
 		var name1 = $(this).attr('name');
 		var namelab1="form-"+ll+"-"+name1;
-		var idlab1 ="id-form-"+0+"-"+name1;
+		var idlab1 ="id_form-"+0+"-"+name1;
 		var forlab ="id_form-"+ll+"-"+name1;
 		$(this).attr({'placeholder':namelab1, 'id':idlab1, 'for':idlab1, 'name':namelab1});
 		});
@@ -40,7 +40,7 @@ function addProtein() {
 	var ttt = t.childNodes[1];
 
 		//Jquery function for changing labels for all the HTML input elements
-	$(ttt).find(':input').each(function() {
+	$(ttt).find(':input,:button').each(function() {
 		var name1 = $(this).attr('name');
 		var name= name1.replace('form-0-','');
 		var namelab="form-"+ll+"-"+name;
