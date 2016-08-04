@@ -1,4 +1,4 @@
-from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences
+from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 
@@ -31,8 +31,8 @@ class dyndb_ProteinForm(ModelForm):
 class dyndb_ReferenceForm(ModelForm):
     class Meta:
         model = DyndbReferences
-        fields = '__all__'
-#        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
+ #       fields = '__all__'
+        exclude=['dbname','update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
 
 
 
@@ -123,6 +123,11 @@ class dyndb_Modeled_Residues(ModelForm):
 class dyndb_Files_Model(ModelForm):
     class Meta:
         model = DyndbFilesModel
+        fields = '__all__'
+
+class dyndb_Dynamics_Membrane_Types(ModelForm):
+    class Meta:
+        model = DyndbDynamicsMembraneTypes
         fields = '__all__'
 
 class dyndb_Dynamics(ModelForm):

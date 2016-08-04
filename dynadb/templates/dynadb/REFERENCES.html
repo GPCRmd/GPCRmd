@@ -22,7 +22,7 @@
             <div style="text-align:center"> 
              <h4>FILL IN THE AUTHORSHIP/REFERENCES FORM</h4>
 	    </div>
-             <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
+             <p style="text-align: justify;"> Please provide citation data for the submitted simulation data. Provide scientific journal name or book publisher.</p>
          </div>
      </div>
 
@@ -40,42 +40,36 @@
 <div id="pprotform"class="col-md-7 "> 
   <div id="protform" class="col-md-12 panel panel-primary"> 
     <div class="panel-body">
-      <div style="text-align:right;color:black" > 
-             <h4 id="protlabnum">PROTEIN  #1</h4>
-	    </div>
 
  			<div style="text-align:center">
-             			<h4><br>Protein Sequence Details</h4>
+             			<h4><br>Reference Information</h4>
             		</div><br>
 
 			<br>
 
 <div class=row id='PRUEBA'>
+	 <div class="row">   
+		 <div class="col-md-5 col-md-offset-1 " style="height:30px"> <a title=""> Submission ID:</a></div> <div class="col-md-6">  <td><input id="submission_id" maxlength="30" name="submission_id" type="text" style="width:180px" placeholder="" /></div> 
+         </div><br>
 {% for field in fdbREFF %}
 	 <div class="row">   
-		 <div class="col-md-5">  {{ field.label }} </div> <div class="col-md-6"> {{field.as_widget}}{{ field.errors }} </div> 
+		 <div class="col-md-5 col-md-offset-1 " style="height:30px"> <a title="{{field.help_text|safe}}"> {{ field.label }}:</a></div> <div class="col-md-6"> {{field.as_widget}}{{ field.errors }} </div> 
 </div>
 {% endfor %}
-</div>
+</div><br><br>
 <!--	<div class="col-md-6">
 		<p style="margin-right:10%;margin-left:40%;padding:5px 5px 5px 5px"><button style="width:120px;" onclick="addFields()" title="Manually requested mutations in the Receptor Mutation section are applied after clicking herein. 'Sequence' field is automatically updated with the mutated sequence."> Apply mutations</button></p>
 	</div> -->
-			<br>
- 			<div style="text-align:center">
-			     <input type="button" value="+ Add protein"  style="height:30px;width:300px" onClick="addProtein();">
-		        </div> 		
-  			<br>
 	</div>
    </div>
 
         <th><input type="submit" value="Submit" /> </th><br>   
 </form>
 
-<!--           <div id="selection-buttons"> -->
+<!--           <div id="selection-buttons"> 
 </div>
 <div class="col-md-7 col-md-offset-4"> 
       <div class="col-md-12 panel panel-primary">
-          <!--Submit prueba -->
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/molecule/"  class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2: Small Molecule Information </a>
@@ -88,7 +82,7 @@
 
 
 </div>
-
+-->
 {% endblock content %}
 </form>
 

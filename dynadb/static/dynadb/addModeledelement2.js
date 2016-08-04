@@ -22,6 +22,16 @@ function addModeledelement2() {
 	} 
 //	else {
 		var item = document.getElementById("Element2_0");
+                var itemparent = document.getElementById("pElement2");
+                var itemlast = itemparent.lastElementChild;
+
+                console.log("itemlast " + itemlast.id);
+
+
+                var itemlastl = itemlast.id.split("_")[1];
+                var lll=Number(itemlastl);
+                ll=lll+1;
+                l=ll+1;
 //		var	protnumb = "PROTEIN  #" + l;
 		//alert("Mira   "+ item.id)
 		var	t = item.cloneNode(true);

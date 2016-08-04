@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<form method="post" action="{{ action }}" enctype="multipart/form-data">
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
  <!-- description column -->
  <div class="col-md-4">
@@ -54,15 +54,15 @@
 		<div class="row">
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
 			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px">
-        			<option value="" selected="selected">Molecular Mechanics (MM)</option>
 		        	<option value="1">Molecular Mechanics (MM)               </option>
 		        	<option value="2">Quantum Mechanics/Molecular Mechanics </option>
 		        	<option value="3">NMR                           </option>
-        			<option value="4">Molecular Mechanics Markov State Model </option>
-       				<option value="5">Metadynamics              </option>
-		        	<option value="6">Umbrella sampling          </option>
-		        	<option value="7">Other MM biased methods    </option>
-		        	<option value="8">MM scaled potentials       </option>
+        			<option value="4">Monte Carlo simulations </option>
+        			<option value="5">Molecular Mechanics Markov State Model </option>
+       				<option value="6">Metadynamics              </option>
+		        	<option value="7">Umbrella sampling          </option>
+		        	<option value="8">Other MM biased methods    </option>
+		        	<option value="9">MM scaled potentials       </option>
 	        	</select></div>
 		<br></div>
 
@@ -90,13 +90,15 @@
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
 			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"  placeholder="  " > 
-		        	<option value="0">Protein stability</option> 
 			        <option value="1">Orthosteric binding/unbinding</option>
-			        <option value="2">Allosteric binding/unbinding</option>
-			        <option value="3">Activation/Inactivation/Modulation</option>
-			        <option value="4">Oligomerization</option>
-			        <option value="5">Protein partner coupling</option>
-			        <option value="6">Others</option>
+			        <option value="2">Activation/Inactivation/Modulation</option>
+			        <option value="3">Oligomerization</option>
+			        <option value="4">Allosteric binding/unbinding</option>
+			        <option value="5">Allosteric modulation</option>
+			        <option value="6">G-protein coupling/uncoupling</option>
+			        <option value="7">Arrestin coupling/uncoupling</option>
+		        	<option value="8">Protein stability</option> 
+			        <option value="9">Others</option>
 		        </select></td></tr></div>
 		<br></div>
 
@@ -112,13 +114,13 @@
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. "> Solvent type:</a> </label></th></div>
 			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px"  placeholder="  " >
-		        	<option value="0">TIP3P</option>
 			        <option value="1">Implicit</option>
-			        <option value="2">TIP4P</option>
-		        	<option value="3">TIPS</option>
-			        <option value="4">SPC</option>
-			        <option value="5">SPC/E</option>
-			        <option value="6">Other</option>
+		        	<option value="2">TIP3P</option>
+			        <option value="3">TIP4P</option>
+		        	<option value="4">TIPS</option>
+			        <option value="5">SPC</option>
+			        <option value="6">SPC/E</option>
+			        <option value="7">Other</option>
 	        	</select></td></tr></div>
 		<br></div>
 
@@ -140,7 +142,7 @@
 		</div><br>
 
 
-		<div class=row id='PRUEBA'>
+<!--		<div class=row id='PRUEBA'>
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_coor"><a title="Coordinate file: Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB">Coordinate file (.pdb)</a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_coor" name="coor" type="file" accept="file_extension|.pdb"/></td></tr></div>
       		</div>
@@ -152,8 +154,13 @@
 
 		<div class=row id='PRUEBA'>
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_traj"><a title="Trajectory files: Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB"> Trajectory files (.dcd)</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" accept="file_extension|.dcd,.xtc"/></td></tr></div>
-      		</div>
+			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file"  multiple/></td></tr></div> -->
+
+
+<!--			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" accept="file_extension|.dcd,.xtc" multiple/></td></tr></div> -->
+
+
+<!--      		</div>
 
 		<div class=row id='PRUEBA'>
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_parm"><a title=" Simulation parameters: Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB"> Simulation parameters (.par)</a> </label></th></div>
@@ -164,7 +171,7 @@
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_other"><a title="Others: Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB "> Others </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_other" name="other" type="file" /></td></tr></div>
       		</div><br>
-
+-->
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div> 		
@@ -177,15 +184,17 @@
 		</div><br>
 
  			<div style="text-align=center">
-                        <table id="pElement1" style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                        <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
+                                <thead>  
 				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
 					<th style="width:80px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+                                </thead>
 
-				<tr id="Element1">	<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
+                                <tbody id="pElement1-0"><tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
 					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule">
 						<option value="" selected="selected">---------</option>
@@ -200,36 +209,48 @@
 					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px">
-						<option value="Ions" selected="selected">Ions</option>
-						<option value="Ligand">Ligand</option>
-						<option value="Membrane">Membrane</option>
-						<option value="Water">Water</option>
-						<option value="Other">Other</option>
+						<option value="0">Ions</option>
+						<option value="1">Ligand</option>
+						<option value="2">Membrane</option>
+						<option value="3">Water</option>
+						<option value="4">Other</option>
 						</select></td></tr>
-
+				</tbody>
 			</table>
 
 
 			<br>
  			<div style="text-align:center">
-			     <input type="button" value="+ Add component"  style="height:30px;width:250px" onClick="addSimcomp();">
-		        </div> 		
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+			     		<input type="button" value="+ Add Component"  style="height:30px;;margin: 0px 0px 0px 0px;width:160px" onClick="addSimcomp();"></div>
+	 			<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="- Remove Component"  style="height:30px;margin: 0px 0px 0px 0px;width:160px" onClick="delSimcomp();"></div>
+		        </div>
+                        <br>
+ 		
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div><br><br> 		
 
-			<div class=row >
-	 			<div class="col-md-6" style="text-align:center">
-				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:250px" onClick="addDynamics();">
+                        <div style="text-align:center">
+	 			<div class="col-md-4" style="text-align:center">
+				     	<input type="button" value="+ Add Dynamics"  style="height:30px;width:160px" onClick="addDynamics();">
 			        </div> 		
- 				<div class="col-md-6" style="text-align:center">
-			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:250px" onClick=";">
+	 			<div class="col-md-4" style="text-align:center">
+				     	<input type="button" value="- Remove Dynamics"  style="height:30px;width:160px" onClick="delDynamics();">
+			        </div> 		
+ 				<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="Clone Dynamics"  style="height:30px;width:160px" onClick="cloneDynamics();">
 		       		</div> 
-			</div>	<br> 		
+			</div>	<br><br> 		
      </div>
+        <br> <th><input type="submit" value="Submit" /> </th><br>   
+<br>
      </div>
-  </div>
-  </div>
+</form>
+  </div> 
+
+</div>
 <div class="col-md-7 col-md-offset-4"> 
       <div class="col-md-12 panel panel-primary">
   	  <div class="panel-body" id="selection-">
@@ -242,7 +263,6 @@
       	  </div>
       </div>
   </div>
-</div>
 {% endblock content %}
 
 
@@ -250,6 +270,9 @@
 {% block addon_js %} 
 
     <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
+    <script src="{% static 'dynadb/delSimcomp.js' %}"></script>
     <script src="{% static 'dynadb/addDynamics.js' %}"></script>
+    <script src="{% static 'dynadb/delDynamics.js' %}"></script>
+    <script src="{% static 'dynadb/cloneDynamics.js' %}"></script>
 
 {% endblock %}
