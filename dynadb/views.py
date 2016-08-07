@@ -189,23 +189,43 @@ def PROTEINview(request):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def protein_get_data_upkb(request, uniprotkbac=None):
-
+    KEYS = set(('entry','organism','length'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
       uniprotkbac = request.POST['uniprotkbac']
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
-        data = retreive_data_uniprot(uniprotkbac,columns='id,organism,length')
-        if data is None:
-          response = HttpResponseNotFound('No data found for '+'UniProtKB accession number "'+uniprotkbac+'".')
-        else:
-          response = JsonResponse(data)
         
-        return response
+        data = retreive_data_uniprot(uniprotkbac,columns='id,organism,length')
+        datakeys = data.keys()
+        if 'Error' in datakeys:
+          
+          if data['ErrorType'] == 'HTTPError':
+            if data['status_code'] == 404 or data['status_code'] == 410:
+              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            else:
+              response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(data['status_code']) \
+                +'\n'+data['reason'],status=502,content_type='text/plain')
+          elif data['ErrorType'] == 'Internal':
+            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
+          else:
+            response = HttpResponse('Cannot connect to UniProt server:\n'+data['reason'],status=504,content_type='text/plain')
+            
+        else:
+          datakeys = set([i.lower() for i in data.keys()])
+          if datakeys == KEYS:
+            response = JsonResponse(data)
+          elif data == dict():
+            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+          else:
+            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain')
+        
+        
+        
       else:
-        raise ValidationError("Invalid UniProtKB accession number.")
+        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
     else:
-      raise ValidationError("Missing UniProtKB accession number.")
-
+      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    return response
 
 
 

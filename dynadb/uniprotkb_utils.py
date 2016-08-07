@@ -2,6 +2,16 @@ import re
 import sys
 import time
 import requests
+from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirects
+
+class StreamSizeLimitError(Exception):
+    pass
+class StreamTimeoutError(Exception):
+    pass
+class ParsingError(Exception):
+    pass
+
+
 def valid_uniprotkbac(uniprotkbac):
     reupkbac1 = re.compile(r'^[OPQ][0-9][A-Z0-9]{3}[0-9]([-][0-9]*)?$')
     reupkbac2 = re.compile(r'^[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}([-][0-9]*)?$')
@@ -11,11 +21,11 @@ def valid_uniprotkbac(uniprotkbac):
       return False
     
 def retreive_protein_names_uniprot(acnum):
-    URL = 'http://www.uniprot.org/uniprot/'
+    URL = 'http://www.uniprot.org/uniprot/?'
     SIZE_LIMIT = 512000
     RECIEVE_TIMEOUT = 120
-    response = requests.get(URL+str(acnum)+'&format=txt',timeout=30,stream=True)
-    if response.status_code != 404 or response.status_code != 410:
+    response = requests.get(URL+'query=accession:'+str(acnum)+'&format=txt',timeout=30,stream=True)
+    if response.status_code != 404 and response.status_code != 410:
         response.raise_for_status()
     else:
         response.close()
@@ -37,7 +47,7 @@ def retreive_protein_names_uniprot(acnum):
     lastfield = ''
     size = 0
     start = time.time()
-    lines = response.iter_lines()
+    lines = response.iter_lines(chunk_size=SIZE_LIMIT)
     for line in lines:
         if size > SIZE_LIMIT:
             raise ValueError('response too large')
@@ -113,50 +123,117 @@ def get_other_names(protnames):
     return(name, other_names)
 
 
-def retreive_data_uniprot(acnum,columns='id,entry name,reviewed,protein names,organism,length'):
+def retreive_data_uniprot(acnum,columns='id,entry name,reviewed,protein names,organism,length',\
+  size_limit=51200,buffer_size=512,recieve_timeout=120,connect_timeout=30):
   ### Returns a dictionary with the selected columns as keys. 'id' --> 'entry'
-    URL = 'http://www.uniprot.org/uniprot/'
-    SIZE_LIMIT = 51200
-    RECIEVE_TIMEOUT = 120
-    response = requests.get(URL+str(acnum)+'&columns='+columns+'&format=tab',timeout=30,stream=True)
-    if response.status_code != 404 and response.status_code != 410:
-        response.raise_for_status()
-    else:
-        response.close()
-        return None
-    encoding = response.encoding
+    URL = 'http://www.uniprot.org/uniprot/?'
+
     data = dict()
-    size = 0
-    start = time.time()
-    lines = response.iter_lines()
-    headersread=False
-    for line in lines:
-        if size > SIZE_LIMIT:
-            raise ValueError('response too large')
-        if time.time() - start > RECIEVE_TIMEOUT:
-            raise ValueError('timeout reached')
-        uline = line.decode(encoding)
-        vallist = uline.split('\t')
-        if headersread:
-            for header,value in zip(headers,vallist):
-                data[str(header.strip())] = value.strip()
+    try:
+      response = requests.get(URL+'query=accession:'+str(acnum)+'&columns='+columns+'&format=tab',timeout=connect_timeout,stream=True)
+      response.raise_for_status()
+      encoding = response.encoding
+      
+      size = 0
+      start = time.time()
+      headersread=False
+      chunckend = False
+      chuncks = response.iter_content(chunk_size=buffer_size)
+      remain = ''
+      
+      while True:
+        
+        
+        try:
+          
+          chunck = next(chuncks)
+          size += sys.getsizeof(chunck)
+          if size > size_limit:
+                raise StreamSizeLimitError('Response too large.')
+          if time.time() - start > recieve_timeout:
+                raise StreamTimeoutError('Stream download time limit reached.')
+          chunck = chunck.decode(response.encoding)
+          chunck = remain+chunck
+          
+        except StopIteration:
+          if chunckend:
+            break
+          else:
+            lines = [remain]
+            chunckend = True
+            pass
+        except:
+          raise
         else:
-            #do only for first line
-            headers = vallist
-            headersread = True
-                
-        size += sys.getsizeof(line) 
+          lines = chunck.split('\n')
+          remain = lines.pop()
+        for line in lines:
 
+            if line != '':
+              vallist = line.split('\t')
+              if headersread:
+                  if len(headers) == len(vallist):
+                    for header,value in zip(headers,vallist):
+                        data[str(header.strip())] = value.strip()
+                    response.close()
+                    return data
+                  else:
+                    raise ParsingError('Error pasing data.')
+              else:
+                  #do only for first line
+                  headers = vallist
+                  headersread = True
+                   
+            
 
-    response.close()
-    return data
-    
+    except HTTPError:
+      data['Error'] = True
+      data['ErrorType'] = 'HTTPError'
+      data['status_code'] = response.status_code
+      data['reason'] = response.reason
+    except ConnectionError as e:
+      data['Error'] = True
+      data['ErrorType'] = 'ConnectionError'
+      data['reason'] = str(e)
+    except Timeout as e:
+      data['Error'] = True
+      data['ErrorType'] = 'Timeout'
+      data['reason'] = str(e)
+    except TooManyRedirects as e:
+      data['Error'] = True
+      data['ErrorType'] = 'TooManyRedirects'
+      data['reason'] = str(e)
+    except StreamSizeLimitError as e:
+      data['Error'] = True
+      data['ErrorType'] = 'StreamSizeLimitError'
+      data['reason'] = str(e)
+    except StreamTimeoutError as e:
+      data['Error'] = True
+      data['ErrorType'] = 'StreamTimeoutError'
+      data['reason'] = str(e)
+
+    except ParsingError as e:
+      data['Error'] = True
+      data['ErrorType'] = 'ParsingError'
+      data['reason'] = str(e)
+    except:
+      print('holas')
+      data['Error'] = True
+      data['ErrorType'] = 'Internal'
+      raise
+    finally:
+      try:
+        response.close()
+      except:
+        pass
+      return data
 def retreive_fasta_seq_uniprot(acnum):
-    URL = 'http://www.uniprot.org/uniprot/'
+    URL = 'http://www.uniprot.org/uniprot/?'
     SIZE_LIMIT = 51200
     RECIEVE_TIMEOUT = 120
-    response = requests.get(URL+str(acnum)+'&format=fasta',timeout=30,stream=True)
-    if response.status_code != 404 or response.status_code != 410:
+
+    response = requests.get(URL+'query=accession:'+str(acnum)+'&format=fasta',timeout=30,stream=True)
+    if response.status_code != 404 and response.status_code != 410:
         response.raise_for_status()
     else:
         response.close()
@@ -166,7 +243,7 @@ def retreive_fasta_seq_uniprot(acnum):
     sequence=''
     size = 0
     start = time.time()
-    lines = response.iter_lines()
+    lines = response.iter_lines(chunk_size=SIZE_LIMIT)
     headerread=False
     for line in lines:
         if size > SIZE_LIMIT:
