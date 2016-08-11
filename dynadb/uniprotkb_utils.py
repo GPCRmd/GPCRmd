@@ -188,7 +188,7 @@ def get_other_names(protnames):
     return(name, other_names)
 
 
-def retreive_data_uniprot(acnum,columns='id,entry name,reviewed,protein names,organism,length',\
+def retreive_data_uniprot(acnum,isoform=None,columns='id,entry name,reviewed,protein names,organism,length',\
   size_limit=512000,buffer_size=512000,recieve_timeout=120,connect_timeout=30):
   ### Returns a dictionary with the selected columns as keys. 'id' --> 'entry'
     URL = 'http://www.uniprot.org/uniprot/?'
@@ -196,10 +196,15 @@ def retreive_data_uniprot(acnum,columns='id,entry name,reviewed,protein names,or
     errdata = dict()
     do_not_skip_on_debug = False
     try:
-      response = requests.get(URL+'query=accession:'+str(acnum)+'&columns='+columns+'&format=tab',timeout=connect_timeout,stream=True)
+      if isoform is None:
+        seqstr = ''
+      else:
+        seqstr = '+AND+sequence:'+acnum+'-'+str(isoform)
+      
+      response = requests.get(URL+'query=accession:'+str(acnum)+'+AND+active:yes'+seqstr+'&columns='+columns+'&format=tab',timeout=connect_timeout,stream=True)
       response.raise_for_status()
       encoding = response.encoding
-      
+      rowcounter = 0
       size = 0
       start = time.time()
       headersread=False
@@ -237,13 +242,15 @@ def retreive_data_uniprot(acnum,columns='id,entry name,reviewed,protein names,or
             if line != '':
               vallist = line.split('\t')
               if headersread:
+                  if rowcounter > 0:
+                    raise ParsingError('Error parsing data: secondary accession number pointing to multiple entries.')
                   if len(headers) == len(vallist):
                     for header,value in zip(headers,vallist):
                         data[str(header.strip())] = value.strip()
-                    response.close()
-                    return
+                         
                   else:
                     raise ParsingError('Error parsing data.')
+                  rowcounter += 1
               else:
                   #do only for first line
                   
@@ -400,7 +407,8 @@ def retreive_fasta_seq_uniprot(acnum,size_limit=102400,buffer_size=512000,reciev
 def retreive_isoform_data_uniprot(acnum,\
   size_limit=512000,buffer_size=512000,recieve_timeout=120,connect_timeout=30):
   COLUMNS='comment(ALTERNATIVE PRODUCTS)'
-  KEYS = set(('Synonyms', 'Event', 'Named isoforms', 'Sequence', 'Note', 'Name', 'IsoId','Comment'))
+  KEYS = set(('Event', 'Named isoforms', 'Comment','Name','Synonyms','IsoId','Sequence', 'Note'))
+  MANDATORY_KEYS = set(('Event','IsoId','Sequence'))
   do_not_skip_on_debug = False
   data,errdata = retreive_data_uniprot(acnum,columns=COLUMNS,\
   size_limit=size_limit,buffer_size=buffer_size,recieve_timeout=recieve_timeout,connect_timeout=connect_timeout)
@@ -423,19 +431,28 @@ def retreive_isoform_data_uniprot(acnum,\
         keyval = row.split('=')
         key = keyval[0]
         val = keyval[1].strip()
-        if key not in data.keys():
-          data[key] = []
-        if key not in set(('Name','Note','Comment')):
-          val = [i.strip() for i in val.split(',')]
-        data[key].append(val)
-        if data.keys() == KEYS:
-          for acnlist,seqlist in zip(data['IsoId'],data['Sequence']):
-            for seq in seqlist:
-              if seq == 'Displayed':
-                data['Displayed'] = acnlist[0]
-                
+        if key == 'Named isoforms':
+          try:
+            data[key] = int(val)
+          except ValueError:
+            raise ParsingError('Cannot parse isoform data, invalid format.')
+          except:
+            raise
         else:
-          raise ParsingError('Cannot parse isoform data, invalid format.')
+          if key not in data.keys():
+            data[key] = []
+          if key not in set(('Name','Note','Comment')):
+            val = [i.strip() for i in val.split(',')]
+          data[key].append(val)
+      datakeys = set(data.keys())  
+      if datakeys.issubset(KEYS) and MANDATORY_KEYS.issubset(datakeys):
+        for acnlist,seqlist in zip(data['IsoId'],data['Sequence']):
+          for seq in seqlist:
+            if seq == 'Displayed':
+              data['Displayed'] = acnlist[0]
+                
+      else:
+        raise ParsingError('Cannot parse isoform data, invalid format.')
     elif rawdata != '':
       raise ParsingError('Cannot parse isoform data.')
   except ParsingError as e:

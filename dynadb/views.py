@@ -195,9 +195,19 @@ def protein_get_data_upkb(request, uniprotkbac=None):
       uniprotkbac = request.POST['uniprotkbac']
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
-        uniprotkbac_noiso = uniprotkbac.split('-')[0]
-        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,columns='id,organism,length')
+        if uniprotkbac.find('-') < 0:
+          uniprotkbac_noiso = uniprotkbac
+          isoform = None
+        else:
+          uniprotkbac_noiso,isoform = uniprotkbac.split('-')
+        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,organism,length')
         if errdata == dict():
+          if data == dict():
+            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            return response
+          if data['Entry'] != uniprotkbac_noiso and isoform is not None:
+            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
+            return response
           time.sleep(10)
           namedata,errdata = retreive_protein_names_uniprot(uniprotkbac_noiso)
           
@@ -208,16 +218,19 @@ def protein_get_data_upkb(request, uniprotkbac=None):
             time.sleep(10)
             seqdata,errdata = retreive_fasta_seq_uniprot(uniprotkbac)
             if errdata == dict():
+              if seqdata['sequence'] == '':
+                seqdata['sequence'] = 'Sequence not available for ' + uniprotkbac+'.'
               data['Sequence'] = seqdata['sequence']
-              length2 = len(seqdata['sequence'])
-              if length2 != data['Length']:
-                print('len1: '+str(data['Length'])+', len2:'+str(length2))
               if uniprotkbac_noiso == uniprotkbac:
                 time.sleep(10)
                 dataiso,errdata = retreive_isoform_data_uniprot(data['Entry'])
-                data['Isoform'] = dataiso['Displayed'].split('-')[1]
+                if errdata == dict():
+                  if dataiso == dict():
+                    data['Isoform'] = '1'
+                  else:
+                    data['Isoform'] = dataiso['Displayed'].split('-')[1]
               else:
-                data['Isoform'] = uniprotkbac.split('-')[1]
+                data['Isoform'] = isoform
         if 'Error' in errdata.keys():
           if errdata['ErrorType'] == 'HTTPError':
             if errdata['status_code'] == 404 or errdata['status_code'] == 410:
@@ -225,7 +238,8 @@ def protein_get_data_upkb(request, uniprotkbac=None):
             else:
               response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(errdata['status_code']) \
                 +'\n'+errdata['reason'],status=502,content_type='text/plain')
-          elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError':
+          elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError' \
+            or errdata['ErrorType'] == 'ParsingError':
             response = HttpResponse('Problem downloading from UniProtKB:'\
                 +'\n'+errdata['reason'],status=502,content_type='text/plain')
           elif errdata['ErrorType'] == 'Internal':
@@ -237,8 +251,7 @@ def protein_get_data_upkb(request, uniprotkbac=None):
           datakeys = set([i.lower() for i in data.keys()])
           if datakeys == KEYS:
             response = JsonResponse(data)
-          elif data == dict():
-            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+
           else:
             response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain')
         

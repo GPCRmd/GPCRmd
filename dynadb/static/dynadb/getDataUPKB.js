@@ -32,7 +32,8 @@ $(document).ready(function(){
     $(document).on('click',"[id='id_get_data_upkb'],[id|=id_form][id$='-get_data_upkb']",function(){
         var uniprotkbac_isoform;
 	var protform = $(this).parents("[id|=protform]");
-	var uniprotkbacval = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']").val();
+        var uniprotkbac = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']");
+	var uniprotkbacval = uniprotkbac.val();
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
 	var isoformval = isoform.val();
         if (isoformval == '') {
@@ -53,11 +54,13 @@ $(document).ready(function(){
             uniprotkbac:uniprotkbac_isoform
         },
         function(data){
-	  name.val('');
-          aliases.text('');
-	  sequence.text(data);
+          uniprotkbac.val(data.Entry);
+          isoform.val(data.Isoform)
+	  name.val(data.Name);
+          aliases.text(data.Aliases);
+	  sequence.text(data.Sequence);
           
-        })
+        }, 'json')
 
         .fail(function(xhr) {
            alert("Error "+ "\nStatus: " + xhr.status+"\n"+xhr.responseText);
