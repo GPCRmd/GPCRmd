@@ -8,10 +8,11 @@ from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 import re
+import time
 import pickle
 import json
 import requests
-from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot
+from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 #from .models import Question,Formup
 #from .forms import PostForm
 import os
@@ -189,26 +190,48 @@ def PROTEINview(request):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def protein_get_data_upkb(request, uniprotkbac=None):
-    KEYS = set(('entry','organism','length'))
+    KEYS = set(('entry','organism','length','name','aliases','sequence','isoform'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
       uniprotkbac = request.POST['uniprotkbac']
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
-        
-        data = retreive_data_uniprot(uniprotkbac,columns='id,organism,length')
-        datakeys = data.keys()
-        if 'Error' in datakeys:
+        uniprotkbac_noiso = uniprotkbac.split('-')[0]
+        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,columns='id,organism,length')
+        if errdata == dict():
+          time.sleep(10)
+          namedata,errdata = retreive_protein_names_uniprot(uniprotkbac_noiso)
           
-          if data['ErrorType'] == 'HTTPError':
-            if data['status_code'] == 404 or data['status_code'] == 410:
+          if errdata == dict():
+            name, other_names = get_other_names(namedata)
+            data['Name'] = name
+            data['Aliases'] = ';'.join(other_names)
+            time.sleep(10)
+            seqdata,errdata = retreive_fasta_seq_uniprot(uniprotkbac)
+            if errdata == dict():
+              data['Sequence'] = seqdata['sequence']
+              length2 = len(seqdata['sequence'])
+              if length2 != data['Length']:
+                print('len1: '+str(data['Length'])+', len2:'+str(length2))
+              if uniprotkbac_noiso == uniprotkbac:
+                time.sleep(10)
+                dataiso,errdata = retreive_isoform_data_uniprot(data['Entry'])
+                data['Isoform'] = dataiso['Displayed'].split('-')[1]
+              else:
+                data['Isoform'] = uniprotkbac.split('-')[1]
+        if 'Error' in errdata.keys():
+          if errdata['ErrorType'] == 'HTTPError':
+            if errdata['status_code'] == 404 or errdata['status_code'] == 410:
               response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
             else:
-              response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(data['status_code']) \
-                +'\n'+data['reason'],status=502,content_type='text/plain')
-          elif data['ErrorType'] == 'Internal':
+              response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(errdata['status_code']) \
+                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+          elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError':
+            response = HttpResponse('Problem downloading from UniProtKB:'\
+                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+          elif errdata['ErrorType'] == 'Internal':
             response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
           else:
-            response = HttpResponse('Cannot connect to UniProt server:\n'+data['reason'],status=504,content_type='text/plain')
+            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain')
             
         else:
           datakeys = set([i.lower() for i in data.keys()])
