@@ -55,33 +55,34 @@
              			<h4><br>Protein Sequence Details</h4>
             		</div><br>
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
 			<div class="col-md-6"><input id="id_name" maxlength="60" name="name" type="text" style="width:300px" placeholder=" 5-HT1B receptor"/></div>
 		<br></div>
 
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers for cannonical sequences. Mutations are handled in a different field. ">UniProtKB AC:</a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers for cannonical sequences. Mutations are handled in a different field. ">UniProtKB AC:</a></label></div>
 			<div class="col-md-6"><input id="id_uniprotkbac" maxlength="10" name="uniprotkbac" style="width:300px" type="text" placeholder=" P28222"/></div>
 		<br></div>
 			
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
 			<div class="col-md-3"><input id="id_isoform" name="isoform" type="number" style="width:140px" placeholder=" 1"/></div>
 			<div class="col-md-3" style="margin-left:1.5%"><!-- jQuery static/retrieve_data.js --><button style="width:140px;" type=button id="id_get_data_upkb" name="get_data_upkb">Retrieve data</button></div>
 		<br></div>
 	        <div class="row" style="padding:10px 0px 0px 0px">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-5"><label for="id_receptor"><a title="Receptor: This value must be checked if the protein is a GPCR.">Is it a receptor? </a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_receptor"><a title="Receptor: This value must be checked if the protein is a GPCR.">Is it a receptor? </a></label></div>
 			<div class="col-md-5"><input id="id_receptor" name="receptor" type="checkbox" /></div>
 	        </div>
 		<div class="row" style="padding:0px 0px 10px 0px">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-5"><label for="id_is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
 			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
 		<br></div>
 
 	        <div class="row">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species.">Species:</a></label></div>
-			<div class="col-md-6"style="height:30px"><select id="id_id_species" name="id_species" style="width:300px" disabled placeholder=" Homo Sapiens">
-				<option value="0" selected="selected">Homo Sapiens</option>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species.">Species:</a></label></div>
+			<div class="col-md-8" style="height:30px;display:inline-block;">
+                        <!--<input id="id_species" maxlength="200" name="species" type="text" style="width:300px" placeholder="Homo Sapiens"/>-->
+			<select id="id_id_species" name="id_species">
 				<option value="1">Homo Sapiens</option>
 				<option value="2">Other</option>
 			</select></div>
@@ -173,7 +174,7 @@
 
 
 {% block addon_js %} 
-
+    <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
     <script src="{% static 'dynadb/delProtein.js' %}"></script>
     <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
