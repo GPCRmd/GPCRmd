@@ -756,6 +756,7 @@ class Migration(migrations.Migration):
                 ('last_update_by_dbengine', models.CharField(max_length=40)),
                 ('created_by', models.IntegerField(blank=True, null=True)),
                 ('last_update_by', models.IntegerField(blank=True, null=True)),
+		('receptor_id_protein',models.ForeignKey(blank=True, db_column='receptor_id_protein', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein')),
             ],
             options={
                 'managed': False,
