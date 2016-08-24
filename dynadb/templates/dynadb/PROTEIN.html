@@ -173,7 +173,8 @@
 {% endblock content %}
 
 
-{% block addon_js %} 
+{% block addon_js %}
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
     <script src="{% static 'dynadb/delProtein.js' %}"></script>
