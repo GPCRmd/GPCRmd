@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -12,17 +12,23 @@ import time
 import pickle
 import json
 import requests
+from django.db.models.functions import Concat
+from django.db.models import CharField,TextField, Value as V
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
+from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
 import os
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein
+from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components
 #from .forms import NameForm, TableForm
 
 # Create your views here.
+
+
+
 
 def REFERENCEview(request):
     if request.method == 'POST':
@@ -86,7 +92,7 @@ def PROTEINview(request):
 #####
 #####  initOPN dictionary dyndb_Other_Protein_NamesForm. To be updated in the
 #####  view. Not depending on is_mutated field in dynadb_ProteinForm 
-        initPF={'id_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
+        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
         initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
 
 
@@ -190,7 +196,7 @@ def PROTEINview(request):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def protein_get_data_upkb(request, uniprotkbac=None):
-    KEYS = set(('entry','organism','length','name','aliases','sequence','isoform'))
+    KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
       uniprotkbac = request.POST['uniprotkbac']
     if uniprotkbac is not None:
@@ -200,7 +206,7 @@ def protein_get_data_upkb(request, uniprotkbac=None):
           isoform = None
         else:
           uniprotkbac_noiso,isoform = uniprotkbac.split('-')
-        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,organism,length')
+        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
         if errdata == dict():
           if data == dict():
             response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
@@ -208,6 +214,7 @@ def protein_get_data_upkb(request, uniprotkbac=None):
           if data['Entry'] != uniprotkbac_noiso and isoform is not None:
             response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
             return response
+          data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
           time.sleep(10)
           namedata,errdata = retreive_protein_names_uniprot(uniprotkbac_noiso)
           
@@ -263,7 +270,92 @@ def protein_get_data_upkb(request, uniprotkbac=None):
       response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
     return response
 
+def get_uniprot_species_id_and_screen_name(mnemonic):
+  speciesqs = DyndbUniprotSpecies.objects.filter(code=mnemonic)
+  speciesqs = speciesqs.annotate(screen_name=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()))
+  try:
+    record = speciesqs.order_by('id')[0]
+  except IndexError:
+    return None
+  except:
+    raise
+  return (record.pk,record.screen_name)
 
+def download_specieslist(request):
+    """A view that streams a TSV file."""
+    COMMENT_BLOCK = '# id = species GPCRmd internal identifier\r\n\
+# kingdom = \'A\' archaea;\'B\' bacteria;\'E\' eukaryota;\'V\' viruses and phages;\'O\' Others;\r\n\
+# taxon_node = taxonomic node id number in the NCBI taxonomy\r\n\
+# scientific_name = official organism name\r\n'
+    fieldnames = []
+    for field in DyndbUniprotSpecies._meta.get_fields():
+      if not field.is_relation:
+        if field.name != 'code':
+          fieldnames.append(field.name)
+    speciesqso = DyndbUniprotSpecies.objects.filter(code=None)
+    writer = CsvDictWriterNoFile(fieldnames, dialect='excel-tab',extrasaction='ignore')
+    iterator = speciesqso.iterator()
+    csvwiterator = CsvDictWriterRowQuerySetIterator(writer,iterator,comment_block=COMMENT_BLOCK)
+    response = StreamingHttpResponse(csvwiterator,
+                                     content_type="text/tab-separated-values")
+    response['Content-Disposition'] = 'attachment; filename="alt_speclist.tsv"'
+    return response
+
+def get_specieslist(request):
+  LIMIT=50
+  code_max_length = DyndbUniprotSpecies._meta.get_field('code').max_length
+  sbracketsre1 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{1,'+str(code_max_length)+r'})$')
+  sbracketsre2 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{'+str(code_max_length)+r'})\)$')
+  sbracketsre3 = re.compile(r'^([A-Za-z0-9]{1,'+str(code_max_length)+r'})\)$')
+  sbracketsre4 = re.compile(r'^(.*?) \(?$')
+  term4 = ''
+  if request.method == 'GET':
+    term = request.GET['term']
+  elif request.method == 'POST':
+    term = request.POST['term']
+  m1 = sbracketsre1.search(term)
+  if m1:
+    term2 = m1.group(2)
+    term3 = m1.group(1)
+    speciesqscode = DyndbUniprotSpecies.objects.filter(code__istartswith=term2)
+  else:
+    m2 = sbracketsre2.search(term)
+    if m2:
+      term2 = m2.group(2)
+      term3 = m2.group(1)
+      speciesqscode = DyndbUniprotSpecies.objects.filter(code__iexact=term2)
+    else:
+      term3 = ''
+      m3 = sbracketsre3.search(term)
+      if m3:
+        term2 = m3.group(1)
+        speciesqscode = DyndbUniprotSpecies.objects.filter(code__iendswith=term2)
+      else:
+        speciesqscode = DyndbUniprotSpecies.objects.filter(code__icontains=term)
+        m4 = sbracketsre4.search(term)
+        if m4:
+          term4 = m4.group(1)
+          
+  if term3 != '':
+    speciesqscode = speciesqscode.filter(scientific_name__iendswith=term3)
+  speciesqsname = DyndbUniprotSpecies.objects.filter(scientific_name__icontains=term)
+  if term4 != '':
+    speciesqsname = speciesqsname | DyndbUniprotSpecies.objects.filter(scientific_name__iendswith=term4)
+    
+  
+
+  speciesqs = speciesqsname | speciesqscode
+  speciesqs = speciesqs.annotate(screen_name=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()))
+  speciesqs = speciesqs.order_by('screen_name')[:LIMIT]
+  speciesqs = speciesqs.values('id','screen_name')
+
+  datajson = json.dumps(list(speciesqs))
+  response = HttpResponse(datajson, content_type="application/json")
+  return response
+
+  
+  
+  
 
 def MODELview(request):
     if request.method == 'POST':

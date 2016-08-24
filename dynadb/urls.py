@@ -30,6 +30,9 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^protein/$', views.PROTEINview, name='protein'),
     url(r'^protein/get_data_upkb/?([A-Z0-9-]+)?$', views.protein_get_data_upkb, name='protein_get_data_upkb'),
+    url(r'^protein/download_specieslist/$', views.download_specieslist, name='protein_download_specieslist'),
+    url(r'^protein/get_specieslist/$', views.get_specieslist, name='protein_get_specieslist'),
+    
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/$', views.PROTEINview, name='PROTEINfilled'),
