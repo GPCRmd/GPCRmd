@@ -12,7 +12,7 @@ import time
 import json
 import requests
 from django.db.models.functions import Concat
-from django.db.models import CharField,TextField, Value as V
+from django.db.models import CharField,TextField, Case, When, Value as V
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
@@ -300,12 +300,15 @@ def download_specieslist(request):
     return response
 
 def get_specieslist(request):
+  """A view that shows an 'screen_name' = scientific_name +' (' + (uniprot_)code + ')' 
+  that matches a searched 'term'."""
   LIMIT=50
   code_max_length = DyndbUniprotSpecies._meta.get_field('code').max_length
   sbracketsre1 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{1,'+str(code_max_length)+r'})$')
   sbracketsre2 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{'+str(code_max_length)+r'})\)$')
   sbracketsre3 = re.compile(r'^([A-Za-z0-9]{1,'+str(code_max_length)+r'})\)$')
   sbracketsre4 = re.compile(r'^(.*?) \(?$')
+  # Remove ' (' and ')' from term and filter scientific_name and code by term.
   term4 = ''
   if request.method == 'GET':
     term = request.GET['term']
@@ -339,15 +342,27 @@ def get_specieslist(request):
   speciesqsname = DyndbUniprotSpecies.objects.filter(scientific_name__icontains=term)
   if term4 != '':
     speciesqsname = speciesqsname | DyndbUniprotSpecies.objects.filter(scientific_name__iendswith=term4)
-    
-  
 
+  # select if 
   speciesqs = speciesqsname | speciesqscode
-  speciesqs = speciesqs.annotate(screen_name=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()))
+  
+  ## create new field 'screen_name'
+  # SELECT CASE 
+  # WHEN code IS NULL THEN scientific_name
+  #
+  # ELSE
+  # concatenate(scientific_name,' (',code,')')
+  # AS screen_name;
+  speciesqs = speciesqs.annotate(screen_name=Case(
+    When(code__isnull=True,
+         then='scientific_name'),
+    default=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()),
+    output_field=TextField()))
   speciesqs = speciesqs.order_by('screen_name')[:LIMIT]
   speciesqs = speciesqs.values('id','screen_name')
 
   datajson = json.dumps(list(speciesqs))
+
   response = HttpResponse(datajson, content_type="application/json")
   return response
 
