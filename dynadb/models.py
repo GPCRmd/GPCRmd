@@ -866,6 +866,25 @@ class DyndbOtherProteinNames(models.Model):
         db_table = 'dyndb_other_protein_names'
         unique_together = (('other_names', 'id_protein'),)
 
+class DyndbUniprotSpecies(models.Model):
+    code = models.CharField(max_length=5,db_index=True,null=True,blank=False)
+    kingdom = models.CharField(max_length=1,null=False)
+    taxon_node = models.IntegerField(null=True)
+    scientific_name = models.TextField(max_length=200,db_index=True,null=False,blank=False)
+    class Meta:
+      db_table = 'dyndb_uniprot_species'
+    
+class DyndbUniprotSpeciesAliases(models.Model):
+    NAME_TYPE=(
+        ('C','Common name'),
+        ('S','Synonym'),
+    )
+    id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.CASCADE, db_column='id_uniprot_species',null=False)
+    name = models.TextField(max_length=200,db_index=True,null=False,blank=False)
+    name_type = models.CharField(max_length=1,choices=NAME_TYPE,null=False)
+    class Meta:
+      db_table = 'dyndb_uniprot_species_aliases'
+      unique_together = ("name", "id_uniprot_species")
 
 class DyndbProtein(models.Model):
     uniprotkbac = models.CharField(max_length=10, blank=True, null=True)
@@ -879,10 +898,10 @@ class DyndbProtein(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     receptor_id_protein = models.ForeignKey('self', models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
-    id_species = models.ForeignKey('Species', models.DO_NOTHING, db_column='id_species', blank=True, null=True)
+    id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.DO_NOTHING, db_column='id_uniprot_species',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_protein'
 
 
@@ -1040,6 +1059,7 @@ class DyndbRelatedDynamicsDynamics(models.Model):
         managed = False
         db_table = 'dyndb_related_dynamics_dynamics'
         unique_together = (('id_dynamics', 'id_related_dynamics'),)
+        
 
 
 class Gene(models.Model):
