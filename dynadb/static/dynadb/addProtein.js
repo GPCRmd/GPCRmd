@@ -50,5 +50,5 @@ function addProtein() {
 		$(this).attr({'placeholder':namelab, 'id':idlab, 'for':idlab, 'name':namelab});
 	});
 
-        $("#id_form-"+ll.toString()+"-id_species").combobox();
+        $("#id_form-"+ll+"-id_species").species_autocomplete();
 };

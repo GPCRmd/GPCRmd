@@ -1,7 +1,21 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
-
-
+{% block addon_css %}
+  <style>
+  .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+  </style>
+{% endblock %}
 {% block content %}
 
 <form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
@@ -76,18 +90,22 @@
 		<div class="row" style="padding:0px 0px 10px 0px">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
 			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
-		<br></div>
-
+		</div>
+                <br>
 	        <div class="row">
-			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species.">Species:</a></label></div>
-			<div class="col-md-8" style="height:30px;display:inline-block;">
-                        <!--<input id="id_species" maxlength="200" name="species" type="text" style="width:300px" placeholder="Homo Sapiens"/>-->
-			<select id="id_id_species" name="id_species">
-				<option value="1">Homo Sapiens</option>
-				<option value="2">Other</option>
-			</select></div>
-		<br></div>
-
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic construct&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
+			<div class="col-md-6" style="height:30px;display:inline-block;">
+			<input id="id_id_species" name="id_species" type="hidden" value=""/>
+<!--                         <input id="id_id_species_autocomplete" maxlength="200" name="id_species_autocomplete" type="text" style="width:300px" placeholder="Homo Sapiens (HUMAN)"/> -->
+                        </div>
+		</div>
+		<div class="row">
+		<div class="col-md-4" style="height:90px"></div>
+		<div class="col-md-7">
+		<p style='margin-top: 10px;' align="justify">You can search for scientific names and UniprotKB mnemonics <a href="http://www.uniprot.org/taxonomy/" target="_blank">here</a>. Also, you can download <a href="http://www.uniprot.org/docs/speclist" target="_blank">UniprotKB species list</a> and species <a href="download_specieslist/" target="_blank">not included there</a>.</p>
+		</div>
+		</div>
+                <br>
 	        <div class="row">
 <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_other_names"><a title="Aliases: Other names that are obtained from UniProtKB/Swiss-Prot.">Aliases:</a></label></div><div class="col-md-6">
 		<textarea cols="40" id="id_other_names" name="other_names" rows="2" style="width:300px" disabled ></textarea></div>

@@ -5,6 +5,7 @@ $(document).ready(function(){
 	var protform = $(this).parents("[id|=protform]");
         var uniprotkbac = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']");
 	var uniprotkbacval = uniprotkbac.val();
+        var id_species = protform.find("[id='id_id_species'],[id|=id_form][id$='-id_species']");
         var species = protform.find("[id='id_id_species_autocomplete'],[id|=id_form][id$='-id_species_autocomplete']");
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
 	var isoformval = isoform.val();
@@ -32,6 +33,7 @@ $(document).ready(function(){
           aliases.text(data.Aliases);
 	  sequence.text(data.Sequence);
           species.val(data.Organism);
+          id_species.val(data.speciesid);
         }, 'json')
 
         .fail(function(xhr) {
@@ -40,6 +42,7 @@ $(document).ready(function(){
            aliases.text('');
            sequence.text('');
            species.val('');
+           id_species.val('');
         })
 
     });
