@@ -2,15 +2,11 @@ import re
 import sys
 import time
 import requests
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
 from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirects
 from django.conf import settings
 
-class StreamSizeLimitError(Exception):
-    pass
-class StreamTimeoutError(Exception):
-    pass
-class ParsingError(Exception):
-    pass
+
 
 
 def valid_uniprotkbac(uniprotkbac):
