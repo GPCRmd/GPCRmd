@@ -9,12 +9,10 @@ from . import views
 app_name= 'dynadb'
 urlpatterns = [
     url(r'^prueba_varios/$', TemplateView.as_view(template_name='dynadb/pruebamult_template.html'), name="prueba_varios"),
-#    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
     url(r'^profile_setting/$', views.profile_setting, name='profile_setting'),
     url(r'^sub_sim/$', views.sub_sim, name='sub_sim'),
     url(r'^name/$', views.get_name, name='name'),
     url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
-    url(r'^pruebadyndbfiles/$', views.get_Prueba, name='pruebadyndbfiles'),
     url(r'^db_inputform/$', views.db_inputformMAIN, name='db_inputform'),
     url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
     url(r'^db_dynamics/$', views.get_Dynamics, name='db_dynamics'),
@@ -34,10 +32,11 @@ urlpatterns = [
     url(r'^molecule/$', views.SMALL_MOLECULEview, name='molecule'),
     url(r'^molecule2/$', views.SMALL_MOLECULEview2, name='molecule2'),
     url(r'^model/$', views.MODELview, name='model'),
+    url(r'^MODELfilled/$', views.MODELview, name='MODELfilled'),
     url(r'^dynamics/$', views.DYNAMICSview, name='dynamics'),
     url(r'^DYNAMICSfilled/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
-    url(r'^submitted/$', views.SUBMITTEDview, name='submitted')
+    url(r'^submitted/$', views.SUBMITTEDview, name='submitted')]
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
+#    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
 
-]

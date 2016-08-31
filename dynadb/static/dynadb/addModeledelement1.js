@@ -11,9 +11,9 @@ function addModeledelement1() {
 		itemfirst.id = idlabnod1;
 		$(itemfirst).find(':input').each(function() {
 		var name1 = $(this).attr('name');
-		var namelab1="form-"+ss+"-"+name1;
-		var idlab1 ="id-form-"+0+"-"+name1;
-		var forlab ="id_form-"+ss+"-"+name1;
+		var namelab1="formps-"+ss+"-"+name1;
+		var idlab1 ="id-formps-"+0+"-"+name1;
+		var forlab ="id_formps-"+ss+"-"+name1;
 		$(this).attr({'placeholder':namelab1, 'id':idlab1, 'for':idlab1, 'name':namelab1});
 		});
 		s=2;
@@ -39,11 +39,11 @@ function addModeledelement1() {
 		var ttt = t;
 		$(ttt).find(':input').each(function() {
 			var name1 = $(this).attr('name');
-			var name= name1.replace('form-0-','');
-			var namelab="form-"+ss+"-"+name;
+			var name= name1.replace('formps-0-','');
+			var namelab="formps-"+ss+"-"+name;
 						//alert("before change " +  name1 + "  After change >> " + name );
-			var idlab ="id_form-"+ss+"-"+name;
-			var forlab ="id_form-"+ss+"-"+name;
+			var idlab ="id_formps-"+ss+"-"+name;
+			var forlab ="id_formps-"+ss+"-"+name;
 			$(this).attr({'placeholder':namelab, 'id':idlab, 'for':idlab, 'name':namelab});
 		});	
 //	}

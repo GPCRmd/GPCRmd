@@ -187,11 +187,11 @@ class dyndb_Related_Dynamics_Dynamics(ModelForm):
 class dyndb_Model(ModelForm):       
     class Meta:
         model = DyndbModel
-     #   fields = '__all__'
-        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
+        fields = '__all__'
+     #   exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
 
-    class Media:
-        js = ('addInput.js',)     
+    #class Media:
+    #    js = ('addInput.js',)     
               
 ##########################
 class dyndb_Model_Components(ModelForm):       

@@ -11,7 +11,7 @@ import re, os, pickle
 from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, DyndbFileTypes
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, DyndbFileTypes
 #from .forms import NameForm, TableForm
 
 # Create your views here.
@@ -182,30 +182,155 @@ def PROTEINview(request):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 def MODELview(request):
+    # Function for saving files
+    def handle_uploaded_file(f,p):
+        print("file name = ", f.name , "path =", p)
+        path=p+"/"+f.name
+        with open(path, 'wb+') as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+    # Dealing with POST data
     if request.method == 'POST':
+        #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
+        action="/dynadb/MODELfilled/"
+        now=timezone.now()
+        author="jmr"
+        initMOD={'id_protein':'1','id_complex_molecule':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        #initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        
+        lkeyprotsour=["id_protein","id_model","chain","resid_from","resid_to","pdbidps","source_typeps","template_id_model"]  
+        ckeyprotsour={'source_typeps':"source_type",'pdbidps':"pdbid"}
+        lkeymodcomp=["id_molecule","id_model","molecule","namemc","numberofmol","resname","typemc"]
+        ckeymodcomp={'namemc':"name",'typemc':"type"}
+         
+        dictpost=request.POST
+        dictfiles=request.FILES
+        formps=re.compile('formps-')
+        formmc=re.compile('formmc-')
+        
+        dictmodel={}
+        dictprotsour={}
+        dictprotsourmod={}
+        dictmodcomp={}
+        dictmodcompmod={}
+        indexpsl=[]
+        indexmcl=[]
+        print ("REQUEST.POST",dictpost)
+        for key,val in dictpost.items():
+            if key in lkeyprotsour or formps.search(key):
+                if key in lkeyprotsour:
+                    print("\nkey en prot sour", key)
+                    indexps=0
+                    n=0# if n=0 the HTML name label is not modified by js and there is only one protein source!!
+                else:
+                    indexps=int(key.split("-")[1]) 
+                    n=1# if n=1 the label has been modified by javascript    
+                    print("\nkey en prot sour con formps", key)
+                if indexps not in indexpsl:
+                    indexpsl.append(indexps)
+                try: 
+                    dictprotsour[indexps]
+                except KeyError:
+                    dictprotsour[indexps]={}  
+                    dictprotsourmod[indexps]={}  
+                dictprotsour[indexps][key]=val
+                if n == 1:
+                   dictprotsourmod[indexps]["-".join(key.split("-")[2:])]=val
+                elif n == 0:
+                   dictprotsourmod[indexps][key]=val
+            elif key in lkeymodcomp or formmc.search(key): 
+                if key in lkeymodcomp:
+                    indexmc=0
+                    print("\nkey en mod comp", key)
+                    m=0
+                else:
+                    indexmc=int(key.split("-")[1])
+                    print("\nkey en mod comp formmc", key)
+                    m=1 
+                if indexmc not in indexmcl:
+                    indexmcl.append(indexmc)
+                try: 
+                    dictmodcomp[indexmc]
+                except KeyError:
+                    dictmodcomp[indexmc]={}  
+                    dictmodcompmod[indexmc]={}  
+                dictmodcomp[indexmc][key]=val
+                if m==1:
+                    dictmodcompmod[indexmc]["-".join(key.split("-")[2:])]=val
+                elif m==0:
+                    dictmodcompmod[indexmc][key]=val
+            else:
+                dictmodel[key]=val
+                
 
+        print ("\ndictmodel:\n", dictmodel)
+        for i in indexpsl:
+            print ("\ndictprotsour",i,":\n", dictprotsour[i])
+            print ("\ndictprotsourmod",i,":\n", dictprotsourmod[i])
+            
+        for i in indexmcl:
+            print ("\ndictmodcomp",i,":\n", dictmodcomp[i])
+            print ("\ndictmodcompmod",i,":\n", dictmodcompmod[i])
 
-        fdbMF = dyndb_Model(request.POST)
-        fdbMR = dyndb_Modeled_Residues(request.POST)
-        fdbON = dyndb_
-        # check whether it's valid:
-        if fdbMF.is_valid() and fdbMR.is_valid(): 
-            # process the data in form.cleaned_data as required
+        fdbMF = dyndb_Model(dictmodel)
+        for key,value in initMOD.items():
+            fdbMF.data[key]=value
+        if fdbMF.is_valid():
+            fdbMFobj=fdbMF.save(commit=False)
+            fdbMFobj=fdbMF.save()
+            MFpk=fdbMFobj.pk
+        else:
+            print("Errores en el form dyndbModels\n ", fdbMF.errors.as_data())
 
-            formMF=fdbPF.save(commit=False)
-            formMR=fdbMR.save(commit=False)
+        #Create storage directory: Every MODEL has its own directory in which the corresponding pdb file is saved. This directory is labeled as "PDBmodel"+ MFpk (primary key of the model)
+        #Maybe we have to label the directory with submissionID?????
+        direct='/protwis/sites/files/MODEL/pdb'+str(MFpk)
+        print("\nDirectorio a crear ", direct)
+        if not os.path.exists(direct):
+            os.makedirs(direct)
 
-            form.user=request.user
-            form.save()
+        PDBmodel=request.FILES['upload_pdb']
+        handle_uploaded_file(PDBmodel,direct)
+
+        fdbPS={} 
+        fdbPSobj={} 
+        for ii in indexpsl:  
+            dictprotsourmod[ii]['id_model']=MFpk
+            dictprotsourmod[ii]['source_type']=dictprotsourmod[ii].pop('source_typeps')
+            dictprotsourmod[ii]['pdbid']=dictprotsourmod[ii].pop('pdbidps')
+            fdbPS[ii] = dyndb_Modeled_Residues(dictprotsourmod[ii])
+            if fdbPS[ii].is_valid():
+                fdbPSobj[ii]=fdbPS[ii].save(commit=False)
+                fdbPSobj[ii]=fdbPS[ii].save()
+            else:
+                print("Errores en el form dyndb_Modeled_Residues\n ", fdbPS[ii].errors.as_data())
+
+        fdbMC={} 
+        fdbMCobj={} 
+        for ii in indexmcl:  
+            dictmodcompmod[ii]['id_model']=MFpk
+            dictmodcompmod[ii]['name']=dictmodcompmod[ii].pop('namemc')
+            dictmodcompmod[ii]['type']=dictmodcompmod[ii].pop('typemc')
+            print ("\ndictmodcompmod type  name y id_model",i,":\n", dictmodcompmod[ii]['type'], dictmodcompmod[ii]['name'],  dictmodcompmod[ii]['id_model'])
+            fdbMC[ii] = dyndb_Model_Components(dictmodcompmod[ii])
+            if fdbMC[ii].is_valid():
+                fdbMCobj[ii]=fdbMC[ii].save(commit=False)
+                fdbMCobj[ii]=fdbMC[ii].save()
+            else:
+                print("Errores en el form dyndb_Model_Components\n ", fdbMC[ii].errors.as_data())
+                
+#            form.user=request.user
+#            form.save()
             # redirect to a new URL:
-            return HttpResponseRedirect('/dynadb/PROTEIN/')
+        return HttpResponseRedirect('/dynadb/MODELfilled/')
 
     # if a GET (or any other method) we'll create a blank form
     else:
 
         fdbMF = dyndb_Model()
-        fdbMR = dyndb_Modeled_Residues()
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbMR':fdbMR})
+        fdbPS = dyndb_Modeled_Residues()
+        fdbMC = dyndb_Model_Components()
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC})
 
 
 def SMALL_MOLECULEview2(request):
@@ -822,29 +947,29 @@ def get_Dynamics(request):
 
 
 
-def get_Prueba(request):
-    if request.method == 'POST':
-        fdb_Dynamics = Pdyndb_Dynamics(request.POST)
-        fdb_Dynamics_tags = Pdyndb_Dynamics_tags(request.POST)
-        fdb_Dynamics_Tags_List = Pdyndb_Dynamics_Tags_List(request.POST)
-        # check whether it's valid:
-        if fdb_Dynamics.is_valid() and fdb_Dynamics_tags.is_valid() and fdb_Dynamics_Tags_List.is_valid(): 
-
-            # process the data in form.cleaned_data as required
-            # ...
-            # redirect to a new URL:
-            return HttpResponseRedirect('/dynadb/TF/')
-
-    # if a GET (or any other method) we'll create a blank form
-    else:
-
-        fdb_Dynamics=Pdyndb_Dynamics()
-        fdb_Dynamics_tags=Pdyndb_Dynamics_tags()
-        fdb_Dynamics_Tags_List=Pdyndb_Dynamics_Tags_List()
-
-        return render(request,'dynadb/pruebaDYNAname.html', {'fdb_Dynamics':fdb_Dynamics, 'fdb_Dynamics_tags':fdb_Dynamics_tags, 'fdb_Dynamics_Tags_List':fdb_Dynamics_Tags_List} )
-
-
+#      def get_Prueba(request):
+#          if request.method == 'POST':
+#              fdb_Dynamics = Pdyndb_Dynamics(request.POST)
+#              fdb_Dynamics_tags = Pdyndb_Dynamics_tags(request.POST)
+#              fdb_Dynamics_Tags_List = Pdyndb_Dynamics_Tags_List(request.POST)
+#              # check whether it's valid:
+#              if fdb_Dynamics.is_valid() and fdb_Dynamics_tags.is_valid() and fdb_Dynamics_Tags_List.is_valid(): 
+#      
+#                  # process the data in form.cleaned_data as required
+#                  # ...
+#                  # redirect to a new URL:
+#                  return HttpResponseRedirect('/dynadb/TF/')
+#      
+#          # if a GET (or any other method) we'll create a blank form
+#          else:
+#      
+#              fdb_Dynamics=Pdyndb_Dynamics()
+#              fdb_Dynamics_tags=Pdyndb_Dynamics_tags()
+#              fdb_Dynamics_Tags_List=Pdyndb_Dynamics_Tags_List()
+#      
+#              return render(request,'dynadb/pruebaDYNAname.html', {'fdb_Dynamics':fdb_Dynamics, 'fdb_Dynamics_tags':fdb_Dynamics_tags, 'fdb_Dynamics_Tags_List':fdb_Dynamics_Tags_List} )
+#      
+#      
 
 def get_DyndbFilesExcFields(request):
     if request.method == 'POST':
