@@ -13,7 +13,9 @@ import json
 import requests
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
+from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
@@ -367,8 +369,23 @@ def get_specieslist(request):
   return response
 
   
-  
-  
+def get_mutations_view(request):
+  if request.method == 'POST':
+    try:
+      fasta = request.POST['alignment']
+      refseq = request.POST['sequence']
+      if check_fasta(fasta,allow_stop=False):
+        return JsonResponse(get_mutations(fasta,refseq),safe=False)
+      elif check_fasta(fasta,allow_stop=True):
+        raise ParsingError('Translation stop character (*) is not allowed. Please truncate sequence until first stop.')
+      else:
+        raise ParsingError('Invalid fasta format.')
+    except ParsingError as e:
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      return response
+    except:
+      raise
+      
 
 def MODELview(request):
     if request.method == 'POST':
