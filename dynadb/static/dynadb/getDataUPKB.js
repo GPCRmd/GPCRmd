@@ -18,9 +18,9 @@ $(document).ready(function(){
 	var sequence = protform.find("[id='id_sequence'],[id|=id_form][id$='-sequence']");
         var name = protform.find("[id='id_name'],[id|=id_form][id$='-name']");
         var aliases = protform.find("[id='id_other_names'],[id|=id_form][id$='-other_names']");
-        name.val('Retriving...');
-        aliases.text('Retriving...');
-        sequence.text('Retriving...');
+        name.val('Retrieving...');
+        aliases.text('Retrieving...');
+        sequence.text('Retrieving...');
         
         $.post("get_data_upkb/",
         {
