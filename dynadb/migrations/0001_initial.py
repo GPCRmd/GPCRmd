@@ -408,12 +408,16 @@ class Migration(migrations.Migration):
             name='DyndbComplexMoleculeMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+    ('id_complex_molecule', models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule',null=False)),
+    ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)),
+		
                 ('resname', models.CharField(blank=True, max_length=4, null=True)),
                 ('number', models.IntegerField(blank=True, null=True)),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_complex_molecule_molecule',
+		'unique_together' : (('id_complex_molecule', 'id_molecule'),),
             },
         ),
         migrations.CreateModel(
@@ -611,7 +615,7 @@ class Migration(migrations.Migration):
                 ('type', models.TextField()),
             ],
             options={
-                'managed': True,
+                'managed': False,
                 'db_table': 'dyndb_files_molecule',
             },
         ),

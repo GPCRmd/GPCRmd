@@ -413,13 +413,12 @@ class DyndbComplexMolecule(models.Model):
 
 
 class DyndbComplexMoleculeMolecule(models.Model):
-    id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule')
-    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')
-    resname = models.CharField(max_length=4, blank=True, null=True)
-    number = models.IntegerField(blank=True, null=True)
+    id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',null=False)
+    id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)
+
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_complex_molecule_molecule'
         unique_together = (('id_complex_molecule', 'id_molecule'),)
 
@@ -671,9 +670,10 @@ class DyndbFileTypes(models.Model):
     is_image = models.NullBooleanField()
     is_molecule = models.NullBooleanField()
     is_model = models.NullBooleanField()
+    is_accepted = models.NullBooleanField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_file_types'
         unique_together = (('type_name', 'extension'),)
 
@@ -698,9 +698,10 @@ class DyndbFiles(models.Model):
 class DyndbFilesDynamics(models.Model):
     file_types=(
         (0, 'Input coordinates'),
-        (1, 'input topology'),
-        (2, 'trajectory'),
-        (3, 'others'),
+        (1, 'Input topology'),
+        (2, 'Trajectory'),
+        (3, 'Parameters'),
+        (4, 'Others'),
     )
     id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics',   null=True) 
     id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING,   db_column='id_files',  null=True)
@@ -710,7 +711,7 @@ class DyndbFilesDynamics(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_files_dynamics'
-        unique_together = (('id_dynamics', 'id_files'),)
+        unique_together = (('id_dynamics', 'id_files','type'),)
 
 
 class DyndbFilesModel(models.Model):
@@ -725,17 +726,20 @@ class DyndbFilesModel(models.Model):
 
 class DyndbFilesMolecule(models.Model):
     filemolec_types=(
-        (0,'Image'),
-        (1,'Molecule')
+        (0,'Molecule'),
+        (1,'Image 100px'),
+        (2,'Image 300px'),
+        
     )
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
     id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files', unique=True,null=True) 
     type = models.SmallIntegerField(choices=filemolec_types, default=0)
+    
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_files_molecule'
-        unique_together = (('id_molecule', 'id_files'),)
+        unique_together = (('id_molecule', 'id_files','type'),)
 
 
 class DyndbFunctional(models.Model):
@@ -806,19 +810,26 @@ class DyndbModel(models.Model):
 
 class DyndbModeledResidues(models.Model):
     SOURCE_TYPE=(
-        (0,'Ab-initio'),
-        (1,'Homology'),
-        (2,'Threading'),
-        (3,'Other Computational Methods')
+        (0,'X-ray'),
+        (1,'NMR'),
+        (2,'Ab-initio'),
+        (3,'Homology'),
+        (4,'Threading'),
+        (5,'MD'),
+        (6,'Other Computational Methods')
     )
-    id_protein = models.IntegerField(blank=True, null=True)
+    id_protein = models.IntegerField(null=True)
     id_model = models.ForeignKey(DyndbModel,  models.DO_NOTHING, db_column='id_model', related_name='DyndbModeledResidues_id_model_fky',null=True) 
-    chain = models.CharField(max_length=1)
+    chain = models.CharField(max_length=1,blank=True, null=False,default='')
+    segid = models.CharField(max_length=4,blank=True, null=False,default='')
     resid_from = models.SmallIntegerField()
     resid_to = models.SmallIntegerField()
-    pdbid = models.CharField(max_length=6, blank=True, null=True)
+    seq_resid_from = models.SmallIntegerField()
+    seq_resid_to = models.SmallIntegerField()
+    bound_to_id_modeled_residues = models.ForeignKey('self', models.DO_NOTHING, db_column='bound_to_id_modeled_residues', null=True, related_name='DyndbModeledResidues_bound_to_id_modeled_residues_fky')
+    pdbid = models.CharField(max_length=6, blank=False, null=True)
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0)
-    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model',  blank=True, null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
+    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
 
     class Meta:
         managed = True
