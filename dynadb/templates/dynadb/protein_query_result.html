@@ -1,0 +1,9 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+{% block content %}
+{% for key,value in answer.items %}
+    <p>{{key}} , {{value}}<p>
+{% endfor %}
+{% endblock content %}
+

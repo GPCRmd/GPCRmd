@@ -195,6 +195,16 @@ def PROTEINview(request):
 #        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+
+def query_protein(request, protein_id):
+    fiva=dict()
+    yourprotein=DyndbProtein.objects.get(pk=protein_id)
+    #for singlefield in DyndbProtein._meta.get_fields():
+    #    fiva[singlefield.name]=getattr(yourprotein,singlefield.name)
+    fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')
+    fiva['Protein_name']=getattr(yourprotein,'name')
+    return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
+
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
