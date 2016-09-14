@@ -10,6 +10,7 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 import re, os, pickle
 import time
 import json
+import mimetypes
 import requests
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
@@ -19,7 +20,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases
+from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein,DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, DyndbFileTypes
@@ -199,12 +200,51 @@ def PROTEINview(request):
 def query_protein(request, protein_id):
     fiva=dict()
     yourprotein=DyndbProtein.objects.get(pk=protein_id)
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
     #for singlefield in DyndbProtein._meta.get_fields():
     #    fiva[singlefield.name]=getattr(yourprotein,singlefield.name)
     fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')
     fiva['Protein_name']=getattr(yourprotein,'name')
+    fiva['Protein_sequence']=getattr(yourseq,'sequence')
+    count=0
+    bseq=''
+    '''
+    for char in fiva['Protein_sequence']:
+        if count==120:
+            bseq=bseq+'\n'
+            count=0
+        bseq=bseq+char
+        count=count+1
+    fiva['Protein_sequence']=bseq
+    '''
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
+
+def query_protein_fasta(request,protein_id):
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
+    seq=getattr(yourseq,'sequence')
+    count=0
+    fseq=''
+    for char in seq:
+        if count==79:
+            fseq=fseq+'\n'+char
+            count=0
+        else:
+            fseq=fseq+char
+        count=count+1
+
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
+        fh.write('>'+protein_id+':\n')
+        fh.write(fseq)
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+protein_id+'_gpcrmd.fasta')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
+    return response
+            
+
+ 
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():

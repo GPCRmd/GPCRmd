@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^protein/get_specieslist/$', views.get_specieslist, name='protein_get_specieslist'),
     url(r'^protein/get_mutations/$', views.get_mutations_view, name='protein_get_mutations'),
     url(r'^protein/id/(?P<protein_id>[0-9]+)/$',views.query_protein, name='query_protein'),
+    url(r'^protein/id/(?P<protein_id>[0-9]+)/fasta$',views.query_protein_fasta, name='query_protein_fasta'),
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/$', views.PROTEINview, name='PROTEINfilled'),

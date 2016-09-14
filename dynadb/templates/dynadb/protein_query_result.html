@@ -1,9 +1,21 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
-
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+    
+  </style>
+{% endblock %}
 {% block content %}
-{% for key,value in answer.items %}
-    <p>{{key}} , {{value}}<p>
-{% endfor %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> {{answer.Uniprot_id}}.<a href=fasta> Download! </a></div>
+    <div class="panel-body"><span>{{answer.Protein_sequence}}<span></div>
+    </div>
+    </div>
+    </div>
+    </div>
 {% endblock content %}
 
