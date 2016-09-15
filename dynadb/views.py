@@ -12,6 +12,7 @@ import time
 import json
 import mimetypes
 import requests
+import math
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
@@ -199,23 +200,56 @@ def PROTEINview(request):
 
 def query_protein(request, protein_id):
     fiva=dict()
-    yourprotein=DyndbProtein.objects.get(pk=protein_id)
-    yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
+    yourprotein=DyndbProtein.objects.get(pk=protein_id) #checked
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id) #checked
     try:
-        yourspecies=DyndbUniprotSpecies.objects.get(pk=protein_id)
+        yourspecies=DyndbUniprotSpecies.objects.get(pk=protein_id) #wrong, this table lacks pk??
     except:
         yourspecies=None
     try:
-        youract=DyndbProteinActivity.objects.get(pk=protein_id)
+        youract=DyndbProteinActivity.objects.get(pk=protein_id) #wrong, proteinactivity uses the pk of expproteindata which pk is not the one from protein.
     except:
         youract=None
     try:
-        yourothernames=DyndbOtherProteinNames.objects.all().filter(id_protein=protein_id)
+        yourothernames=DyndbOtherProteinNames.objects.all().filter(id_protein=protein_id) #checked
     except:
         yourothernames=None
-    fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')
+    try:
+        yourmodels=DyndbModel.objects.all().filter(id_protein=protein_id)
+    except:
+        yourmodels=None
+
+    fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')    
     fiva['Protein_name']=getattr(yourprotein,'name')
     fiva['Protein_sequence']=getattr(yourseq,'sequence')
+
+    #Let's make the sequence fancier:
+    numberoflines= math.ceil( ( len(fiva['Protein_sequence']) + (4 * ( len(fiva['Protein_sequence']) /50 ))) /54)
+    beautyseq=''
+    for line in range(1,numberoflines+1):
+        count=0
+        signal_number=[i for i in range(line*50-40,line*50+10,10)]
+        string=' '*(10-len(str(signal_number[0])))+str(signal_number[0])+' '+' '*(10-len(str(signal_number[1])))+str(signal_number[1])+' '+' '*(10-len(str(signal_number[2])))+str(signal_number[2])+' '+' '*(10-len(str(signal_number[3])))+str(signal_number[3])+' '+' '*(10-len(str(signal_number[4])))+str(signal_number[4])+'\n'
+        cutoff=line*50
+        cuton=cutoff-50
+        fiva['Protein_sequence'][cuton:cutoff]
+        seqline=''
+        for char in fiva['Protein_sequence'][cuton:cutoff]:
+            if count==9:
+                seqline=seqline+char+' '
+                count=0
+            else:
+                seqline=seqline+char
+                count+=1
+        seqline+='\n'
+        cutnumbering=seqline.rfind('') #if the sequences finishes, stop the counting.
+        string=string[0:cutnumbering]
+        if '\n' not in string:
+           string=string+'\n'
+        beautyseq=beautyseq+string+seqline
+    #it looks much better now!
+
+    fiva['Protein_sequence']=beautyseq
     fiva['is_mutated']=getattr(yourprotein,'is_mutated')
     if yourspecies!=None:
         fiva['scientific_name']=getattr(yourspecies,'scientific_name')
@@ -234,6 +268,13 @@ def query_protein(request, protein_id):
             fiva['other_names'].append(getattr(yourothernames[i],'other_names'))
     else:
         fiva['other_names']=''
+    if yourmodels!=None:
+        fiva['models']=list()
+        for i in range(len(yourmodels)):
+            fiva['models'].append(getattr(yourmodels[i],'id')) #WHATS THE NAME OF THE PRIMARY KEY? id or Models_id????????
+    else:
+        fiva['models']=''
+
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
 

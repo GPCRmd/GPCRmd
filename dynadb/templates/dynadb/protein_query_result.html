@@ -12,7 +12,7 @@
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> {{answer.Uniprot_id}}.<a href=fasta> Download! </a></div>
-    <div class="panel-body">{{answer.Protein_sequence}}</div>
+    <div class="panel-body"><pre>{{answer.Protein_sequence}}</pre></div>
     </div>
     </div>
 
@@ -24,6 +24,12 @@
     <b>Alternative names:</b>
     {% for name in answer.other_names %}
         {{name}},
+    {% endfor %}
+    <br>
+    <b>You can find this protein in the following models:</b>
+    {% for link in answer.model %}
+        <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
+        <a href='/dynadb/model/id/1'>Click me!</a>, <!--correct way to make a link-->
     {% endfor %}
     </div>
 
