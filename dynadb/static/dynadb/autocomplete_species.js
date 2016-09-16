@@ -19,6 +19,7 @@ $(document).ready(function(){
           .attr("type","text")
           .val( "" )
           .css('width','300px')
+          .prop("disabled",true)
           .insertAfter(input1)
           
           
