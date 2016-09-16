@@ -10,7 +10,9 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 import re, os, pickle
 import time
 import json
+import mimetypes
 import requests
+import math
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
@@ -19,7 +21,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases
+from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein,DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases,DyndbOtherProteinNames,DyndbProteinActivity
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model, dyndb_Modeled_Residues,  Pdyndb_Dynamics, Pdyndb_Dynamics_tags, Pdyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, DyndbFileTypes
@@ -194,6 +196,110 @@ def PROTEINview(request):
 #        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+
+def query_protein(request, protein_id):
+    fiva=dict()
+    actlist=list()
+    modellist=list()
+    yourprotein=DyndbProtein.objects.get(pk=protein_id) #checked
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id) #checked
+    speciestable_object=getattr(yourprotein,'id_uniprot_species') #you get the instance of a uniprot_species object that is linked to your Protein object instance.
+    yourspecies=speciestable_object.scientific_name #accesing the scientific_name property of that instance.
+    try:
+        youract=DyndbProteinActivity.objects.all()
+        for obj in youract:
+            if protein_id==obj.id.id_protein.id: #obj.id=ExpProteinData instance,obj.id.id_protein(Protein instance),obj.id.id_protein.id id of that protein instance
+                actlist.append((obj.rvalue,obj.units,obj.description)) #list of tuples! one protein: n activities.
+    except:
+        youract=None
+    try:
+        yourothernames=DyndbOtherProteinNames.objects.all().filter(id_protein=protein_id) #checked
+    except:
+        yourothernames=None
+    try:
+        yourmodels=DyndbModel.objects.all()
+        for model in yourmodels:
+            if model.id_protein.id==protein_id: #model.id_protein is a Protein instance. protein istances have an id field as its pk.
+                modellist.append(model.id)
+    except:
+        yourmodels=None
+
+    fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')    
+    fiva['Protein_name']=getattr(yourprotein,'name')
+    fiva['Protein_sequence']=getattr(yourseq,'sequence')
+
+    #Let's make the sequence fancier:
+    numberoflines= math.ceil( ( len(fiva['Protein_sequence']) + (4 * ( len(fiva['Protein_sequence']) /50 ))) /54)
+    beautyseq=''
+    for line in range(1,numberoflines+1):
+        count=0
+        signal_number=[i for i in range(line*50-40,line*50+10,10)]
+        string=' '*(10-len(str(signal_number[0])))+str(signal_number[0])+' '+' '*(10-len(str(signal_number[1])))+str(signal_number[1])+' '+' '*(10-len(str(signal_number[2])))+str(signal_number[2])+' '+' '*(10-len(str(signal_number[3])))+str(signal_number[3])+' '+' '*(10-len(str(signal_number[4])))+str(signal_number[4])+'\n'
+        cutoff=line*50
+        cuton=cutoff-50
+        fiva['Protein_sequence'][cuton:cutoff]
+        seqline=''
+        for char in fiva['Protein_sequence'][cuton:cutoff]:
+            if count==9:
+                seqline=seqline+char+' '
+                count=0
+            else:
+                seqline=seqline+char
+                count+=1
+        seqline+='\n'
+        cutnumbering=seqline.rfind('') #if the sequences finishes, stop the counting.
+        string=string[0:cutnumbering]
+        if '\n' not in string:
+           string=string+'\n'
+        beautyseq=beautyseq+string+seqline
+    #it looks much better now!
+
+    fiva['Protein_sequence']=beautyseq
+    fiva['is_mutated']=getattr(yourprotein,'is_mutated')
+    fiva['scientific_name']=yourspecies
+    if youract!=None:
+        fiva['activity']=actlist
+    else:
+        fiva['activity']=[]
+    if yourothernames!=None:
+        fiva['other_names']=list()
+        for i in range(len(yourothernames)):
+            fiva['other_names'].append(getattr(yourothernames[i],'other_names'))
+    else:
+        fiva['other_names']=''
+    if yourmodels!=None:
+        fiva['models']=modellist
+    else:
+        fiva['models']=list()
+
+    return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
+
+
+def query_protein_fasta(request,protein_id):
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
+    seq=getattr(yourseq,'sequence')
+    count=0
+    fseq=''
+    for char in seq:
+        if count==79:
+            fseq=fseq+'\n'+char
+            count=0
+        else:
+            fseq=fseq+char
+        count=count+1
+
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
+        fh.write('>'+protein_id+':\n')
+        fh.write(fseq)
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+protein_id+'_gpcrmd.fasta')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
+    return response
+            
+
+ 
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
