@@ -20,7 +20,11 @@ $(document).ready(function(){
               var namelab1 = name1.replace(/-[0-9]+$/,"-0");
               var idlab1 = id1.replace(/-[0-9]$/,"-0");
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
+              $(this).prop("readonly",false);
               $(this).val('');
+              $(this).prop("disabled",true);
+              $(this).set_restore_color();
+              
           });
       
       });
@@ -60,6 +64,9 @@ $(document).ready(function(){
               var idlab1 = id1.replace(/-[0-9]$/,"-"+rowid);
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
               $(this).val(values[i]);
+              $(this).prop("disabled",false);
+              $(this).prop("readonly",true);
+              $(this).set_readonly_color();
               i++;
           });
       
@@ -96,7 +103,11 @@ $(document).ready(function(){
         },
         function(data){
           i = 0;
+          msequence.prop("readonly",false);
           msequence.val(data.mutsequence);
+          msequence.prop("readonly",true);
+          msequence.prop("disabled",false);
+          msequence.set_readonly_color();
           $(data.mutations).each(function(){
             if (i == 0) {
               protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to],false);
@@ -107,8 +118,8 @@ $(document).ready(function(){
           });
         }, 'json')
 
-        .fail(function(xhr) {
-           alert("Error "+ "\nStatus: " + xhr.status+"\n"+xhr.responseText);
+        .fail(function(xhr,status,msg) {
+           alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
 
         })
 
