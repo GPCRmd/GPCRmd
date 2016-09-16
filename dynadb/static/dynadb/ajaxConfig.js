@@ -25,5 +25,6 @@ $.ajaxSetup({
         if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
         }
-    }
+    },
+    timeout: 300000,
 });
