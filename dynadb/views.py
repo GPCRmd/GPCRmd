@@ -86,7 +86,6 @@ def PROTEINview(request):
     if request.method == 'POST':
         author="jmr"   #to be modified with author information. To initPF dict
         action="/dynadb/PROTEINfilled/"
-        now=timezone.now()
 #####  inintPF dictionary containing fields of the form dynadb_ProteinForm not
 #####  available in the request.POST
 #####
