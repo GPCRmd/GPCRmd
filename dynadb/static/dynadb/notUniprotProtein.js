@@ -38,18 +38,18 @@ $(document).ready(function() {
         aliases.set_restore_color();
         sequence.set_restore_color();
         
-        getdata.prop("disabled", this.checked);
-        uniprotkbac.prop("disabled", this.checked);
-        species.prop("disabled", !this.checked);
-        isoform.prop("disabled", this.checked);
-        name.prop("disabled", !this.checked);
-        aliases.prop("disabled", !this.checked);
-        sequence.prop("disabled",!this.checked);
+        getdata.prop("disabled", $(this).prop('checked'));
+        uniprotkbac.prop("disabled", $(this).prop('checked'));
+        species.prop("disabled", !$(this).prop('checked'));
+        isoform.prop("disabled", $(this).prop('checked'));
+        name.prop("disabled", !$(this).prop('checked'));
+        aliases.prop("disabled", !$(this).prop('checked'));
+        sequence.prop("disabled",!$(this).prop('checked'));
         
-        species.prop("readonly", !this.checked);
-        name.prop("readonly", !this.checked);
-        aliases.prop("readonly", !this.checked);
-        sequence.prop("readonly",!this.checked);
+        species.prop("readonly", !$(this).prop('checked'));
+        name.prop("readonly", !$(this).prop('checked'));
+        aliases.prop("readonly", !$(this).prop('checked'));
+        sequence.prop("readonly",!$(this).prop('checked'));
 
         $("[readonly]").set_readonly_color();
 
