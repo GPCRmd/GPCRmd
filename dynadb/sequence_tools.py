@@ -3,22 +3,39 @@ from .customized_errors import ParsingError
 import re
 
 def check_sequence(seqstr,allow_gaps=True,allow_stop=False):
-  strre = r''
+  w = re.compile(r'^\s+$')
+  rec = re.compile(r'^[A-Z\s]+$')
+  seqstr2 = seqstr
+  if seqstr2 == "":
+      return False
   if allow_gaps:
-    strre += r'-'
+      seqstr2 = seqstr2.replace('-','')
   if allow_stop:
-    strre += r'*'
-  
-  rec = re.compile(r'^[A-Z'+strre+r'\s]+$')
-  return bool(rec.match(seqstr.replace('\n','')))
+      seqstr2 = seqstr2.replace('*','')
+  seqst2 = seqstr2.replace('\n','')
+  return bool(rec.match(seqstr2) and not w.match(seqstr2))
 def check_fasta(fastastr,allow_stop=False):
+  if fastastr.replace('\n','') == "":
+     return False
   lines = fastastr.split('\n')
+  seqcounter = 0
+  hcounter = 0
   for el in lines:
-     if el.find('>') == 0 or el == '':
+     if el.find('>') == 0:
+       if seqcounter == 0 and hcounter > 0:
+          return False
+       seqcounter = 0
+       hcounter += 1
+       continue
+     if el == '':
        continue
      if not check_sequence(el,allow_gaps=True,allow_stop=False):
        return False
-  return True
+     seqcounter += len(el)
+  if seqcounter > 0:
+    return True
+  else:
+    return False
 def get_mutations(fastastr,refseq):
         '''Get the sequence from a fasta file, compare this sequence with the one given in the pdb.
          Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
