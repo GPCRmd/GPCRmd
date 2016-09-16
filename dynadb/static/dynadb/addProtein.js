@@ -61,6 +61,12 @@ function addProtein() {
                   $(searchstr).attr('for',idlab);
                 };
 	});
+	
         $("#id_form-"+ll+"-id_species").species_autocomplete();
+        $("#id_form-"+ll+"-del_protein").prop("disabled",false);
+        var receptor = $("#id_form-"+ll+"-receptor");
+        receptor.prop("disabled",false);
+        receptor.prop("checked",false);
+        
         
 };
