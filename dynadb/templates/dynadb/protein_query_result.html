@@ -11,7 +11,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> {{answer.Uniprot_id}}.<a href=fasta> Download! </a></div>
+    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> Download! </a></div>
     <div class="panel-body"><pre>{{answer.Protein_sequence}}</pre></div>
     </div>
     </div>
@@ -20,7 +20,14 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>+info</b></div>
     <div class="panel-body"> <b>Scientific name:</b> {{answer.scientific_name}} <br> <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br> 
-    <b>Activity Description:</b>{{answer.activity.0}}<br><b>Activity Value (in {{answer.activity.1}}): </b> {{answer.activity.2}}<br>
+    <b>Activity (Description, value, units):</b><br>
+
+    {% for values in answer.activity %}
+
+        {{values.2}},{{values.1}},{{values.0}}<br>
+
+    {% endfor %}
+
     <b>Alternative names:</b>
     {% for name in answer.other_names %}
         {{name}},

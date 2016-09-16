@@ -200,14 +200,17 @@ def PROTEINview(request):
 
 def query_protein(request, protein_id):
     fiva=dict()
+    actlist=list()
+    modellist=list()
     yourprotein=DyndbProtein.objects.get(pk=protein_id) #checked
     yourseq=DyndbProteinSequence.objects.get(pk=protein_id) #checked
+    speciestable_object=getattr(yourprotein,'id_uniprot_species') #you get the instance of a uniprot_species object that is linked to your Protein object instance.
+    yourspecies=speciestable_object.scientific_name #accesing the scientific_name property of that instance.
     try:
-        yourspecies=DyndbUniprotSpecies.objects.get(pk=protein_id) #wrong, this table lacks pk??
-    except:
-        yourspecies=None
-    try:
-        youract=DyndbProteinActivity.objects.get(pk=protein_id) #wrong, proteinactivity uses the pk of expproteindata which pk is not the one from protein.
+        youract=DyndbProteinActivity.objects.all()
+        for obj in youract:
+            if protein_id==obj.id.id_protein.id: #obj.id=ExpProteinData instance,obj.id.id_protein(Protein instance),obj.id.id_protein.id id of that protein instance
+                actlist.append((obj.rvalue,obj.units,obj.description)) #list of tuples! one protein: n activities.
     except:
         youract=None
     try:
@@ -215,7 +218,10 @@ def query_protein(request, protein_id):
     except:
         yourothernames=None
     try:
-        yourmodels=DyndbModel.objects.all().filter(id_protein=protein_id)
+        yourmodels=DyndbModel.objects.all()
+        for model in yourmodels:
+            if model.id_protein.id==protein_id: #model.id_protein is a Protein instance. protein istances have an id field as its pk.
+                modellist.append(model.id)
     except:
         yourmodels=None
 
@@ -251,17 +257,11 @@ def query_protein(request, protein_id):
 
     fiva['Protein_sequence']=beautyseq
     fiva['is_mutated']=getattr(yourprotein,'is_mutated')
-    if yourspecies!=None:
-        fiva['scientific_name']=getattr(yourspecies,'scientific_name')
-    else:
-        fiva['scientific_name']=''
+    fiva['scientific_name']=yourspecies
     if youract!=None:
-        fiva['activity']=list()
-        fiva['activity'].append(getattr(youract,'description'))
-        fiva['activity'].append(getattr(youract,'units'))
-        fiva['activity'].append(getattr(youract,'rvalue'))
+        fiva['activity']=actlist
     else:
-        fiva['activity']=['','dpm','']
+        fiva['activity']=[]
     if yourothernames!=None:
         fiva['other_names']=list()
         for i in range(len(yourothernames)):
@@ -269,11 +269,9 @@ def query_protein(request, protein_id):
     else:
         fiva['other_names']=''
     if yourmodels!=None:
-        fiva['models']=list()
-        for i in range(len(yourmodels)):
-            fiva['models'].append(getattr(yourmodels[i],'id')) #WHATS THE NAME OF THE PRIMARY KEY? id or Models_id????????
+        fiva['models']=modellist
     else:
-        fiva['models']=''
+        fiva['models']=list()
 
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
