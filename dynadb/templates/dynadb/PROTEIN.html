@@ -77,7 +77,7 @@
                 </div><br>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
-			<div class="col-md-6"><input id="id_name" maxlength="60" name="name" type="text" style="width:300px" placeholder=" 5-HT1B receptor"/></div>
+			<div class="col-md-6"><input id="id_name" maxlength="60" readonly value="" name="name" type="text" style="width:300px" placeholder=" 5-HT1B receptor"/></div>
 		<br></div>
 
 	        <div class="row">
@@ -90,13 +90,17 @@
 			<div class="col-md-3"><input id="id_isoform" name="isoform" type="number" style="width:140px" placeholder=" 1"/></div>
 			<div class="col-md-3" style="margin-left:1.5%"><!-- jQuery static/retrieve_data.js --><button style="width:140px;" type=button id="id_get_data_upkb" name="get_data_upkb">Retrieve data</button></div>
 		<br></div>
-	        <div class="row" style="padding:10px 0px 0px 0px">
+		<div class="row" style="padding:10px 0px 0px 0px">
+                        <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_not_uniprot"><a title="Not in UniprotKB: NOT RECOMENDED. This value must be checked if the protein sequence is not found in UniProtKB. This protein could be difficult to find in future queries!">Not in UniprotKB?</a></label></div>
+                        <div class="col-md-5"><input id="id_is_not_uniprot"  name="is_not_uniprot" type="checkbox" value='1'/></div>
+                </div>
+	        <div class="row" style="padding:0px 0px 0px 0px">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_receptor"><a title="Receptor: This value must be checked if the protein is a GPCR.">Is it a receptor? </a></label></div>
-			<div class="col-md-5"><input id="id_receptor" name="receptor" type="checkbox" /></div>
+			<div class="col-md-5"><input id="id_receptor" name="receptor" type="checkbox" checked disabled value='1' /></div>
 	        </div>
 		<div class="row" style="padding:0px 0px 10px 0px">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
-			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" /></div>
+			<div class="col-md-1"><input id="id_is_mutated" name="is_mutated" type="checkbox" value='1'/></div>
 		</div>
                 <br>
 	        <div class="row">
@@ -115,17 +119,17 @@
                 <br>
 	        <div class="row">
                 <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_other_names"><a title="Aliases: Other names that are obtained from UniProtKB/Swiss-Prot.">Aliases:</a></label></div><div class="col-md-6">
-		<textarea cols="40" id="id_other_names" name="other_names" rows="2" style="width:300px" disabled ></textarea></div>
+		<textarea cols="40" id="id_other_names" name="other_names" readonly rows="2" style="width:300px"></textarea></div>
 		</div><!--placeholder=" 5-hydroxytryptamine receptor 1B; Serotonin receptor 1B"-->
 
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Canonical sequence: Wild-type sequence of the protein in IUPAC one letter code.">Canonical sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_sequence" name="sequence" rows="2" disabled style="width:300px" ></textarea></div>
+			<div class="col-md-6"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" ></textarea></div>
 		<br></div>
 <!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
                 <div class="row">
                         <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the cannonical sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
-                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" style="width:300px" placeholder=""></textarea></div>
+                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" disabled style="width:300px" placeholder=""></textarea></div>
                 <br></div>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
@@ -138,7 +142,7 @@
                                 <div class="col-md-5"style="height:30px"></div>
                                 <div class="col-md-5"style="height:30px">
 
-                                <button type='button' id='id_get_mutations' name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the canonical sequence from UniProtKB." style="width:120px;">
+                                <button type='button' id='id_get_mutations' name='get_mutations' disabled title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the canonical sequence from UniProtKB." style="width:120px;">
                                 Get mutations</button></div></div>
                 </div>
 
@@ -165,12 +169,16 @@
 	</div> -->
 			<br>
                 <div class=row style="text-align:center">
-                        <div class="col-md-4 col-md-offset-2" style="text-align:center">
-                              <input type="button" value="+ Add Protein"  style="height:30px;width:160px" onClick="addProtein();">
-                        </div>
-                        <div class="col-md-4 " style="text-align:center">
-                                <input type="button" value="- Remove Protein"  style="height:30px;width:160px" onClick="delProtein();">
-                        </div>
+                        <table align='center'>
+                        <tr><td>
+                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" onClick="addProtein();">+ Add Protein</button>
+                        </td><td>
+                                <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
+                        </td><td>
+                                <button type="button" id="id_reset" name="reset"  style="height:30px;width:140px;margin-left:5px;margin-right:5px;">Clean form</button>
+                        </td></tr>
+                        </table>
+                        
                 </div> 		
                 <br><br>
                 <div class=row>
@@ -204,11 +212,15 @@
 
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
     <script src="{% static 'dynadb/delProtein.js' %}"></script>
     <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
     <script src="{% static 'dynadb/getMutations.js' %}"></script>
+    <script src="{% static 'dynadb/changeMutant.js' %}"></script>
+    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
+    
 
 {% endblock %}
