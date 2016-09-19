@@ -281,7 +281,7 @@ def PROTEINview(request, submission_id):
         fdbPS = dyndb_Protein_SequenceForm()
         fdbPM = dyndb_Protein_MutationsForm()
         fdbOPN= dyndb_Other_Protein_NamesForm()
-        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
+        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 
@@ -761,7 +761,7 @@ def MODELview(request, submission_id):
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC})
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id})
 
 
 def SMALL_MOLECULEview2(request):
@@ -1013,7 +1013,7 @@ def SMALL_MOLECULEview(request, submission_id):
         fdbFM = dyndb_Files_Molecule()
         fdbMM = dyndb_Complex_Molecule_Molecule()
 
-        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM })
+        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 
 def DYNAMICSview(request, submission_id):
     # Function for saving files
@@ -1209,7 +1209,7 @@ def DYNAMICSview(request, submission_id):
         dd=dyndb_Dynamics()
         ddC=dyndb_Dynamics_Components()
 
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC})
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'submission_id' : submission_id})
 ##############################################################################################################
 
 
@@ -1399,19 +1399,21 @@ def DYNAMICSviewOLD(request):
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
 
 
-def SUBMITTEDview(request): 
-        return render(request,'dynadb/SUBMITTED.html'  )
+def SUBMITTEDview(request,submission_id): 
+        return render(request,'dynadb/SUBMITTED.html',{'submission_id':submission_id})
 
 def get_Author_Information(request): 
         return render(request,'dynadb/dynadb_Author_Information.html'  )
 
 
-def db_inputformMAIN(request): 
-    dictsubid={}
-    dictsubid['user_id']='1'
-    fdbsub=dyndb_Submission(dictsubid)
-    fdbsubobj=fdbsub.save()
-    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':fdbsubobj.pk} )
+def db_inputformMAIN(request,submission_id): 
+    if submission_id is None:
+        dictsubid={}
+        dictsubid['user_id']='1'
+        fdbsub=dyndb_Submission(dictsubid)
+        fdbsubobj=fdbsub.save()
+        submission_id = fdbsubobj.pk
+    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':submission_id} )
 
 
 def get_FilesCOMPLETE(request): 

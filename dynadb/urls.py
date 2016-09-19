@@ -14,7 +14,7 @@ urlpatterns = [
     url(r'^sub_sim/$', views.sub_sim, name='sub_sim'),
     url(r'^name/$', views.get_name, name='name'),
     url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
-    url(r'^db_inputform/$', views.db_inputformMAIN, name='db_inputform'),
+    url(r'^db_inputform/(?P<submission_id>[0-9]+)?/?$', views.db_inputformMAIN, name='db_inputform'),
     url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
     url(r'^db_dynamics/$', views.get_Dynamics, name='db_dynamics'),
     url(r'^db_files/$', views.get_FilesCOMPLETE, name='db_files'),
@@ -44,7 +44,7 @@ urlpatterns = [
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
-    url(r'^submitted/$', views.SUBMITTEDview, name='submitted')]
+    url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
 
