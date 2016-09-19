@@ -96,7 +96,7 @@ $(document).ready(function(){
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
         protform.find("#mutationtable").resetTableRowFromFields();
         
-        $.post("get_mutations/",
+        $.post("../get_mutations/",
         {
             alignment:alignmentval,
             sequence:sequenceval

@@ -69,7 +69,7 @@ $(document).ready(function(){
         aliases.text('Retrieving...');
         sequence.text('Retrieving...');
         
-        $.post("get_data_upkb/",
+        $.post("../get_data_upkb/",
         {
             uniprotkbac:uniprotkbac_isoform
         },
