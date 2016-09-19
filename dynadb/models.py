@@ -463,7 +463,7 @@ class DyndbSubmission(models.Model):
 
 class DyndbSubmissionProtein(models.Model):
     submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='submission_id',  blank=True, null=True) 
-    protein_id = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', blank=True, null=True)  
+    protein_id = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='protein_id', blank=True, null=True)  
     int_id=models.PositiveSmallIntegerField(blank=True, null=True)
 
     class Meta:

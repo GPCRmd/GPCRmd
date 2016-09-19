@@ -781,7 +781,7 @@ class Migration(migrations.Migration):
             name='DyndbProteinMutations',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-#                ('id_protein', models.ForeignKey(to='DyndbProtein', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False, db_column='id_protein', null=True)),
+                ('id_protein', models.ForeignKey(to='DyndbProtein', on_delete=django.db.models.deletion.DO_NOTHING, serialize=False, db_column='id_protein', null=True)),
                 ('resid', models.SmallIntegerField()),
                 ('resletter_from', models.CharField(max_length=1)),
                 ('resletter_to', models.CharField(max_length=1)),
