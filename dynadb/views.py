@@ -8,10 +8,10 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 import re, os, pickle
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein
+from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbFileTypes
 #from .forms import DyndbModelForm
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_Files_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, DyndbFileTypes
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files,  dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
 
 # Create your views here.
@@ -27,12 +27,6 @@ def REFERENCEview(request):
         with open('/protwis/sites/protwis/dynadb/REFpost.txt', 'wb') as handle:
             pickle.dump(request.POST, handle)
 
-#       with open('/protwis/sites/protwis/dynadb/REFpost.txt', 'rb') as handle:
-#           b = pickle.loads(handle.read())
-
-
-#        f=open('/protwis/sites/protwis/dynadb/REFpost.txt','w') 
-#        f.write(request.POST)
 #####  Fill the empty fields in the fdbREFF instance with data from the initREFF dictionary
 
             
@@ -68,9 +62,9 @@ def REFERENCEview(request):
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF})
 
 
-def PROTEINview(request):
-#    p= submission_id
-#    print ("submission_id ==",submission_id)
+def PROTEINview(request, submission_id):
+    p= submission_id
+    print ("submission_id ==",submission_id)
     if request.method == 'POST':
         author="jmr"   #to be modified with author information. To initPF dict
         action="/dynadb/PROTEINfilled/"
@@ -84,106 +78,198 @@ def PROTEINview(request):
         initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
 
 
-#####  instantiate fdbPF and fdbOPN (this one is not affected by the is_mutated field in dynadb_ProteinForm)
-        fdbPF = dyndb_ProteinForm(request.POST)
-        fdbOPN= dyndb_Other_Protein_NamesForm(initOPN)
-        initPM={'id_protein':'1','id_resid':'90','id_resletter_from':'D','id_resletter_to':'E' }
+        form=re.compile('form-')
+        dictpost=request.POST
+        dictprot={}
+        dictOPN={}
+        indexl=[]
+        nummutl={} # Dictionary of index lists designating the mutation line for every mutated protein
+        for key,val in dictpost.items():
+            if form.search(key):
+                index=int(key.split("-")[1])
+                if index not in indexl:
+                    indexl.append(index)
+                    dictprot[index]={}
+                nkey="-".join(key.split("-")[2:])  
+            #    dictprot[index]["-".join(key.split("-")[2:])]=val
+            else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+                if len(indexl)==0:
+                    index=0
+                    indexl.append(0)
+                    dictprot[0]={}
+                nkey=key
+            dictprot[index][nkey]=val 
+
+        fdbPF={}
+        fdbSP={}
+        fdbPS={}
+        fdbPM={}
+        dictSP={}
+        dictPM={}
+        listON={}
+        fdbOPN={}
+        formPF={}
+        formSP={}
+        formPS={}
+        formOPN={}
+        initPS={}
+        initPM={}
+        
+        for ii in indexl:
+            print("valor ii=", ii, "dictprot[ii]=\n", dictprot[ii])
+            fdbPF[ii]=dyndb_ProteinForm(dictprot[ii])
+            
+#####  Fill the empty fields in the fdbPF instance with data from the initPF dictionary
+            for key,value in initPF.items():
+                fdbPF[ii].data[key]=value
+
+##### Check whether the fdbPF instance of dyndb_ProteinForm is valid and save formPF entry in the database:
+            if fdbPF[ii].is_valid(): 
+                formPF[ii]=fdbPF[ii].save()
+                print("\n primary  key: ", formPF[ii].pk )
+            else:
+                iii1=fdbPF[ii].errors.as_data()
+                print("fdbPF",ii," no es valido")
+                print("!!!!!!Errores despues del fdbPF[",ii,"]\n",iii1,"\n")
+
+##### Fill the submission protein table  (Submission PROTEIN dictionary dictSP) 
+            dictSP[ii]={'submission_id':submission_id, 'protein_id':formPF[ii].pk, 'int_id':ii} #int_id is 0 for the protein #1, 1 for the protein #2, ...
+            print("dictSP[ii]=\n",dictSP[ii])
+            fdbSP[ii]=dyndb_Submission_Protein(dictSP[ii])
+            
+            if fdbSP[ii].is_valid():
+                fdbSP[ii].save()
+            else:
+                iii1=fdbSP[ii].errors.as_data()
+                print("fdbSP[",ii,"] no es valido")
+                print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
+
+##### Create a dictionary for each alias of each protein (a.k.a. 'other_names'). A dyndb_Other_Protein_NamesForm instace correspond to each alias.
+##### 
+            if 'other_names' in dictprot[ii].keys():
+                listON[ii]=dictprot[ii]['other_names'].split(";") # for each protein a listON[ii] list containing all the aliases is created.
+                listON[ii]=list(set(listON[ii])) #convert listON[ii] in a list of unique elements
+                dictOPN[ii]={} #dictionary containing dictionaries for instantiting dyndb_Other_Protein_NamesForm for each alias
+                numON=0
+            
+                for on in listON[ii]:
+                    numON=numON+1
+                    dictOPN[ii][numON]={}
+                    dictOPN[ii][numON]['other_names']=on
+                    dictOPN[ii][numON]['id_protein']=formPF[ii].pk
+                    fdbOPN[ii][numON]=dyndb_Other_Protein_NamesForm(dictOPN[ii][numON])
+                    if fdbOPN[ii][numON].is_valid():
+                        formOPN[ii][numON]=save()
+                    else:
+                        iii1=fdbOPN[ii][numON].errors.as_data()
+                        print("fdbOPN[",ii,"] no es valido")
+                        print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n") ####HASTA AQUI#####
+            else:
+                print("NO OTHER NAMES have been found\n")
 
 #####  Fill dyndb_Protein_SequenceForm fields depending on whether the protein is mutated   
 #####  'msequence' does not appear in models but it does in the html so the information in 
 #####  this html field should be tranfered into the 'sequence' field in the form instance      
+            if 'sequence' not in dictprot[ii].keys():
+                dictprot[ii]['sequence']="TOTO"
+                print("No Sequence found (NORMAL)")
+            if 'is_mutated' in fdbPF[ii].data: 
+                dictPM[ii]={}
+                nummutl[ii]=[]
+                fdbPM[ii]={}
+                print("ITS MUTATED")
 
-        if 'is_mutated' in fdbPF.data: 
-            mseq=request.POST['msequence']
-            lmseq=len(mseq)
-            initPS={'id_protein':None,'sequence':mseq,'length':lmseq} 
-            #id_protein will be eventually taken from the pk value in the dyndb_Protein table entry
-        else:
- #           print("Valor de is_mutated",fdbPF.data['is_mutated'])
-            seq="HOLA COLEGA"  ########## esta parte debe ser cambiada por Isma para leer la secuencia
-            lseq=len(seq)
-            initPS={'id_protein':None,'sequence':seq,'length':lseq} 
-            #id_protein will be eventually taken from the pk value in the dyndb_Protein table entry
 
-#####  Fill the empty fields in the fdbPF instance with data from the initPF dictionary
+                ##### Let's search for form fields ending in a number which stand for fields belonging to the dyndbProteinMutations models
+                ##### the fields corresponding to a mutation [nummunt] in a protein [ii] will be stored in the dictionary dictPM[ii][nummut]
+                
+               
+                for k,v in dictprot[ii].items():
+                    try:
+                        nummut=int(key.split("-")[-1])
+                    except:
+                        continue
+                    if nummut not in nummutl[ii]:
+                        nummutl[ii].append(mummut)
+                        dictPM[ii][nummut]={}
+                    dictPM[ii][nummut][k]=v
+                ##### Let's create the field 'id_protein' in dyndb_Protein_MutationsForm so that an entry could be registered in the version not supporting Mutations scripts
+                if len(nummutl[ii])==0:
+                    nummutl[ii].append(0)
+                    dictPM[ii][0]={}
+                    dictPM[ii][0]['id_protein']=formPF[ii].pk 
+                    print("NO info about mutations has been provided but an entry should be registered")
 
-        for key,value in initPF.items():
-            fdbPF.data[key]=value
-            
-#####   Intance of the forms depending on the is_mutated value in dyndb_ProteinForm
+                mseq=dictprot[ii]['msequence']
+                seq=dictprot[ii]['sequence']
+                lmseq=len(mseq)
+                initPS[ii]={'id_protein':formPF[ii].pk,'sequence':mseq,'length':lmseq} 
+                if mseq is None:
+                    response = HttpResponse('Mutated sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                if seq is None:
+                    response = HttpResponse('Canonical sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                #####  For each nummut (i.e. number of mutation in an specific protein ii) a dyndb_Protein_MutationsForm instace should be created to save data in the database.
+                for nm in nummutl[ii]:
+                    dictPM[ii][nm]['id_protein']=formPF[ii].pk
+                #####  Como en mi version no hay datos de mutaciones se los doy con el diccionario initPM[ii] SOLO  UNA PARA PROBAR
+                    iiiT=formPF[ii].pk
+                    initPM[ii]={'resid':nm+90,'resletter_from':'X','resletter_to':'Ñ', } # nm has been changed to avoid posible matching of entries in the database
+                    initPM[ii]['id_protein']=iiiT
+                    print("len(dictPM[ii][nm])= ",len(dictPM[ii][nm]))
+                    if len(dictPM[ii][nm]) == 1:    # solo hay la id_protein en dictPM[ii][nm]
+                        fdbPM[ii][nm] = dyndb_Protein_MutationsForm(initPM[ii])
+                        print (initPM[ii]) 
+                    else:
+                        fdbPM[ii][nm] = dyndb_Protein_MutationsForm(dictPM[ii][nm])
 
-        fdbPS = dyndb_Protein_SequenceForm(initPS)
-       #fdbPM = dyndb_Protein_MutationsForm(request.POST,initial=initPM)
-
-#        print("\nQue hay en el POST:", request.POST['msequence'])
-#        iii2=fdbPF.errors.as_data()
-
-##### Check whether the fdbPF instance of dyndb_ProteinForm is valid:
-        if fdbPF.is_valid(): 
-            # process the data in form.cleaned_data as required
-            formPF=fdbPF.save(commit=False)
-            formPFi=fdbPF.save()
-            print("\n primary  key: ", formPFi.pk )
-
-##### Once fdbPF has been saved process fields with primary keys involving the dyndb_protein table
-            initPS['id_protein']=formPFi.pk
-            initOPN['id_protein']=formPFi.pk
-            
-          # for key,value in initPS.items():
-          #     fdbPS.data[key]=value
-          # for key,value in initOPN.items():
-          #     fdbOPN.data[key]=value
-
-            fdbPS.data['id_protein']=formPFi.pk
-            fdbOPN.data['id_protein']=formPFi.pk
-            print("\n datos desde el diccionario initPS", fdbPS.data.values())
-            print("\n datos desde el diccionario initOPN", fdbOPN.data.values())
-            
-#           formPM=fdbPM.save(commit=False)
-          #  formPF=fdbPF.save(commit=True)
-          #  formPS=fdbPS.save(commit=True)
-          #  formPM=fdbPM.save(commit=True)
-#            formPS.user=request.user
-            if fdbPS.is_valid() and fdbOPN.is_valid():
-                formPS=fdbPS.save(commit=False)
-                formOPN=fdbOPN.save(commit=False) 
-                formPS=fdbPS.save()
-                formOPN=fdbOPN.save() 
+                    if fdbPM[ii][nm].is_valid():
+                        print("PM is valid")
+                        fdbPM[ii][nm].save()
+                        #ttt=fdbPM[ii][nm].save(commit=False)
+                        #ttt.id_protein=formPF[ii].pk
+                        #print(ttt.id_protein)
+                        #ttt.save()
+                    else:
+                        iii1=fdbPM[ii][nm].errors.as_data()
+                        print("fdbPM[",ii,"][",nm,"] no es valido")
+                        print("!!!!!!Errores despues del fdbPM[",ii,"][",nm,"]\n",iii1,"\n")
+                
+            else:
+                seq=dictprot[ii]['sequence']
+                lseq=len(seq)
+                initPS[ii]={'id_protein':formPF[ii].pk,'sequence':seq,'length':lseq} 
+                if seq is None:
+                    response = HttpResponse('Canonical sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+    
+#########   Intance of the forms depending on the is_mutated value in dyndb_ProteinForm
+    
+            fdbPS[ii] = dyndb_Protein_SequenceForm(initPS[ii])
+            if fdbPS[ii].is_valid():
+                fdbPS[ii].save()
                 print ("hasta aqui")
             else:
-                iii1=fdbPS.errors.as_data()
-                iii2=fdbOPN.errors.as_data()
-                print("fdbPS no es valido")
-                print("!!!!!!Errores despues del fdbPS\n",iii1,"\n")
-                print("!!!!!!Errores despues del fdbOPN\n",iii2,"\n")
+                iii1=fdbPS[ii].errors.as_data()
+                print("fdbPS[",ii,"] no es valido")
+                print("!!!!!!Errores despues del fdbPS[",ii,"] \n",iii1,"\n")
+    
             # redirect to a new URL:
+        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]))
 
-            return HttpResponseRedirect('/dynadb/PROTEINfilled/')
-
-        else:
-           # for field in fdbPF:
-            iii=fdbPF.errors.as_data()
-            print(iii)
-            
-            
-#           for field in fdbPF:
-#               field.clean()
-#               print (field, field.clean())
-
-            pass
-            #return HttpResponseRedirect('/dynadb/PROTEINerror/')    
         
     # if a GET (or any other method) we'll create a blank form
     else:
 
         fdbPF = dyndb_ProteinForm()
         fdbPS = dyndb_Protein_SequenceForm()
-#       fdbPM = dyndb_Protein_MutationsForm()
+        fdbPM = dyndb_Protein_MutationsForm()
         fdbOPN= dyndb_Other_Protein_NamesForm()
-#        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
-        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
+        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN})
+#       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
-def MODELview(request):
+def MODELview(request, submission_id):
     # Function for saving files
     def handle_uploaded_file(f,p,name):
         print("file name = ", f.name , "path =", p)
@@ -413,7 +499,7 @@ def SMALL_MOLECULEview2(request):
 
         return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
 
-def SMALL_MOLECULEview(request):
+def SMALL_MOLECULEview(request, submission_id):
     def handle_uploaded_file(f,p):
         print("file name = ", f.name , "path =", p)
         path=p+"/"+f.name
@@ -618,7 +704,7 @@ def SMALL_MOLECULEview(request):
 
         return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM })
 
-def DYNAMICSview(request):
+def DYNAMICSview(request, submission_id):
     # Function for saving files
     def handle_uploaded_file(f,p):
         print("file name = ", f.name , "path =", p)
@@ -800,7 +886,7 @@ def DYNAMICSview(request):
                 else:
                     print("Errores en el form dyndb_Files ", ii, " ",key, " ",  file_ins[ii][key].errors.as_data())  
  
-        return HttpResponseRedirect('/dynadb/DYNAMICSfilled/')
+        return HttpResponseRedirect("/".join("/dynadb/DYNAMICSfilled/",submission_id))
                     
         with open('/protwis/sites/protwis/dynadb/POSTimod.txt', 'wb') as handle:
             pickle.dump(POSTimod, handle)
@@ -1014,7 +1100,7 @@ def db_inputformMAIN(request):
     dictsubid['user_id']='1'
     fdbsub=dyndb_Submission(dictsubid)
     fdbsubobj=fdbsub.save()
-    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':fdbsub.pk} )
+    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':fdbsubobj.pk} )
 
 
 def get_FilesCOMPLETE(request): 
@@ -1022,7 +1108,7 @@ def get_FilesCOMPLETE(request):
     if request.method == 'POST':
         fdb_Files1 = dyndb_Files(request.POST)
         fdb_Files2 = dyndb_Files_Dynamics(request.POST)
-        fdb_Files3 = dyndb_Files_Types(request.POST)
+        fdb_Files3 = dyndb_File_Types(request.POST)
         fdb_Files4 = dyndb_Files_Model(request.POST)
         fdb_Files5 = dyndb_Files_Molecule(request.POST)
 
@@ -1038,7 +1124,7 @@ def get_FilesCOMPLETE(request):
     else:
         fdb_Files1 = dyndb_Files()
         fdb_Files2 = dyndb_Files_Dynamics()
-        fdb_Files3 = dyndb_Files_Types()
+        fdb_Files3 = dyndb_File_Types()
         fdb_Files4 = dyndb_Files_Model()
         fdb_Files5 = dyndb_Files_Molecule()
 
