@@ -96,6 +96,7 @@ $(document).ready(function(){
            species.val('');
            id_species.val('');
            notuniprot.prop("disabled", false);
+           self.prop("disabled", false);
         })
         .always(function(xhr) {
             var selfstate = self.prop("disabled");
