@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<form method="post" action="{{ action }}" enctype="multipart/form-data">
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
  <!-- description column -->
  <div class="col-md-4">
@@ -192,16 +192,21 @@
 
 
 			<br>
- 			<div style="text-align:center">
-			     <input type="button" value="+ Add molecule"  style="height:30px;width:300px" onClick="addSmalmol();">
-		        </div> 		
-			<br>
+ 		 	<div style="text-align:center">
+	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
+			     		<input type="button" value="+ Add molecule"  style="height:30px;width:160px" onClick="addSmalmol();">
+		        	</div> 		
+	 			<div class="col-md-4" style="text-align:center">
+			     		<input type="button" value="- Remove molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
+		        	</div> 		
+			<br><br>
 
-   </div>  
-  </div>
+  </div><br>
         <th><input type="submit" value="Submit" /> </th><br>   
 </form>
-</div>
+</div><br>
+   </div>  
+   </div>  
 
 
 
@@ -231,6 +236,7 @@
 {% block addon_js %} 
 
     <script src="{% static 'dynadb/addSmalmol.js' %}"></script>
+    <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
 
 {% endblock %}
 
