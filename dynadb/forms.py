@@ -1,4 +1,4 @@
-from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes
+from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 
@@ -57,7 +57,6 @@ class dyndb_Protein_MutationsForm(ModelForm):
     class Meta:
         model = DyndbProteinMutations
         fields = '__all__'
-        exclude=['id_protein']
 
 class dyndb_CompoundForm(ModelForm):
     class Meta:
@@ -80,7 +79,27 @@ class dyndb_Files(ModelForm):
         model = DyndbFiles
         fields = '__all__'
 
-class dyndb_Files_Types(ModelForm):
+class dyndb_Submission(ModelForm):
+    class Meta:
+        model = DyndbSubmission
+        fields = '__all__'
+
+class dyndb_Submission_Model(ModelForm):
+    class Meta:
+        model = DyndbSubmissionModel
+        fields = '__all__'
+
+class dyndb_Submission_Protein(ModelForm):
+    class Meta:
+        model = DyndbSubmissionProtein
+        fields = '__all__'
+
+class dyndb_Submission_Molecule(ModelForm):
+    class Meta:
+        model = DyndbSubmissionMolecule
+        fields = '__all__'
+
+class dyndb_File_Types(ModelForm):
     class Meta:
         model = DyndbFileTypes
         fields = '__all__'
@@ -187,11 +206,11 @@ class dyndb_Related_Dynamics_Dynamics(ModelForm):
 class dyndb_Model(ModelForm):       
     class Meta:
         model = DyndbModel
-     #   fields = '__all__'
-        exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
+        fields = '__all__'
+     #   exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
 
-    class Media:
-        js = ('addInput.js',)     
+    #class Media:
+    #    js = ('addInput.js',)     
               
 ##########################
 class dyndb_Model_Components(ModelForm):       
