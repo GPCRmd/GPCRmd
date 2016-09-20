@@ -298,7 +298,44 @@ def query_protein_fasta(request,protein_id):
         response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
     return response
             
+def query_molecule(request, molecule_id):
+    molec_dic=dict()
+    molec_dic['link_2_compound']=list()
+    molec_dic['sdf']=list()
+    molec_dic['smiles']=DyndbMolecule.objects.get(pk=molecule_id).smiles
+    molec_dic['description']=DyndbMolecule.objects.get(pk=molecule_id).description
+    molec_dic['netcharge']=DyndbMolecule.objects.get(pk=molecule_id).net_charge
+    molec_dic['inchi']=DyndbMolecule.objects.get(pk=molecule_id).inchi
+    molec_dic['inchikey']=DyndbMolecule.objects.get(pk=molecule_id).inchikey
+    molec_dic['inchicol']=DyndbMolecule.objects.get(pk=molecule_id).inchicol
 
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
+        molec_dic['sdf'].append(molfile.id_files.filepath)
+    
+    for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
+        molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
+
+    return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
+
+
+def query_compound(request,compound_id):
+    comp_dic=dict()
+    comp_dic['link_2_molecule']=list()
+    comp_dic['imagelink']=list()
+    comp_dic['name']=DyndbCompound.objects.get(pk=compound_id).name
+    comp_dic['iupac_name']=DyndbCompound.objects.get(pk=compound_id).iupac_name
+    comp_dic['pubchem_cid']=DyndbCompound.objects.get(pk=compound_id).pubchem_cid
+    comp_dic['chembleid']=DyndbCompound.objects.get(pk=compound_id).chembleid
+    comp_dic['sinchi']=DyndbCompound.objects.get(pk=compound_id).sinchi
+    comp_dic['sinchikey']=DyndbCompound.objects.get(pk=compound_id).sinchikey
+    pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
+    comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
+        comp_dic['link_2_molecule'].append(molecule.id)
+        for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
+            comp_dic['imagelink'].append(molfile.id_files.filepath)
+
+    return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
  
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))

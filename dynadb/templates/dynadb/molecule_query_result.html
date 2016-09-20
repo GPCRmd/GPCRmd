@@ -1,0 +1,60 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+
+molec_dic=dict()
+    molec_dic['link_2_compound']=list()
+    molec_dic['sdf']=list()
+    molec_dic['smiles']=DyndbMolecule.objects.get(pk=molecule_id).smiles
+    molec_dic['description']=DyndbMolecule.objects.get(pk=molecule_id).description
+    molec_dic['netcharge']=DyndbMolecule.objects.get(pk=molecule_id).net_charge
+    molec_dic['inchi']=DyndbMolecule.objects.get(pk=molecule_id).inchi
+    molec_dic['inchikey']=DyndbMolecule.objects.get(pk=molecule_id).inchikey
+    molec_dic['inchicol']=DyndbMolecule.objects.get(pk=molecule_id).inchicol
+
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
+        molec_dic['sdf'].append(molfile.id_files.filepath)
+    
+    for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
+        molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
+
+    
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Molecule Info:</b> {{answer.description}} </div>
+    <div class="panel-body">  Smiles: {{answer.smiles}} <br>  
+
+                              Netcharge:{{answer.netcharge}} <br>
+                              InChIKey:{{answer.inchikey}} <br>
+                              InChIKey:{{answer.inchi}} <br>
+                              InChIcol:{{answer.inchicol}} <br>
+    {%for compoundlink in answer.link_2_compound%}
+       <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>
+    {%endfor%}
+    </div>
+
+
+    </div>
+    </div>
+
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Images of the SDF file</b></div>
+    {%for image in answer.sdf%}
+    <div class="panel-body"> <img src={{image}} style="width:304px;height:228px;">
+    {%endfor%}
+
+
+    </div>
+    </div>
+    </div>
+
+{% endblock content %}
+

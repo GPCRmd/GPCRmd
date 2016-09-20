@@ -1,0 +1,44 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+    
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Compound Name:</b> {{answer.name}} </div>
+    <div class="panel-body">  IUPAC name: {{answer.iupac_name}} <br>  
+
+                              PUBCHEM link: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> Pubchem Link</a> <br> 
+                              ChEMBLE link: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> ChEMBLE Link</a> <br>
+                              InChIKey:{{answer.sinchikey}} <br>
+                              InChIKey:{{answer.sinchi}} <br>
+    Corresponding Molecules:<br>
+    {% for url in answer.link_2_molecule %}
+        <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>
+    {% endfor %}
+    </div>
+
+
+    </div>
+    </div>
+
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Images of the SDF file</b></div>
+    {%for image in answer.imagelink%}
+    <div class="panel-body"> <img src={{answer.imagelink}} style="width:304px;height:228px;">
+    {%endfor%}
+
+
+    </div>
+    </div>
+    </div>
+
+{% endblock content %}
+
