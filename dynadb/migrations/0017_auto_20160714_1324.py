@@ -16,7 +16,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbsubmissionprotein',
             name='protein_id',
-            field=models.ForeignKey(blank=True, db_column='id_protein', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein'),
+            field=models.ForeignKey(blank=True, db_column='protein_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein'),
+#            field=models.ForeignKey(blank=True, db_column='id_protein', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein'),
         ),
         migrations.AlterField(
             model_name='dyndbsubmissionprotein',

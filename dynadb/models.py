@@ -425,12 +425,12 @@ class DyndbComplexMoleculeMolecule(models.Model):
 
 
 class DyndbComplexProtein(models.Model):
-    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein')
-    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp')
+    id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', null=True)
+    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp', null=True)
     is_receptor = models.BooleanField()
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_complex_protein'
         unique_together = (('id_protein', 'id_complex_exp'),)
 
@@ -472,8 +472,8 @@ class DyndbSubmissionProtein(models.Model):
         db_table = 'dyndb_submission_protein'
 
 class DyndbSubmissionMolecule(models.Model):
-    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='id_submission', blank=True, null=True)
-    molecule_id = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', blank=True, null=True)
+    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
+    molecule_id = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='molecule_id', blank=True, null=True)
     not_in_model=models.NullBooleanField()
     int_id=models.PositiveSmallIntegerField(blank=True, null=True)
 
