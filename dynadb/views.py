@@ -28,11 +28,14 @@ from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertF
 
 # Create your views here.
 
-def REFERENCEview(request, submission_id):
-
-
+def REFERENCEview(request, submission_id=None):
+ 
     if request.method == 'POST':
-        action="/".join(["/dynadb/REFERENCEfilled",submission_id])
+        if submission_id is None:
+            sub =''
+        else:
+            sub = submission_id
+        action="/".join(["/dynadb/REFERENCEfilled",sub])
         now=timezone.now()
         author="jmr"
 #        forminfo={'issue':'1','url':'http://localhost:8000/ttt/prueba','doi':'8382938','title':'prinncii','journal_press':'marca','pub_year':'1996', 'volume':'agosto', 'pages':'2-3','authors':'pepe; luis', 'pmid':'4'}
