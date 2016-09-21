@@ -8,13 +8,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import UserManager
 import string
 
-def my_random_code():
-    """creates a random code and makes sure that it's not present in any other user, just in case"""
-    code = ''.join(random.choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for x in range(33))
-    if User.objects.filter(act_code=code).exists():  
-        code = my_random_code()
-    else:
-    	return code
+
 
 class NewUserManager(BaseUserManager):
     def create_user(self,username,password):

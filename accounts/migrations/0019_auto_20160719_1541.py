@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='user',
             name='act_code',
-            field=models.CharField(default=accounts.models.my_random_code, max_length=200),
+            field=models.CharField(default='', max_length=200),
         ),
     ]
