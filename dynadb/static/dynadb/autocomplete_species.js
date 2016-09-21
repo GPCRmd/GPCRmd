@@ -5,7 +5,7 @@ $(document).ready(function(){
     $.widget( "ui.species_autocomplete", {
       _create: function() {
         var self = this;
-        var page = "get_specieslist/"
+        var page = "../get_specieslist/"
         var input1 = this.element,
           id = input1.attr("id")+"_autocomplete",
           name = input1.attr("name")+"_autocomplete";
