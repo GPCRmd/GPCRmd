@@ -1,4 +1,5 @@
-﻿"""
+# -*- coding: utf-8 -*-
+"""
 Django settings for protwis project.
 """
 
@@ -18,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 #DEBUG CAMBIAR a True
 #DEBUG=False
-
+#ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -76,7 +77,7 @@ WSGI_APPLICATION = 'protwis.wsgi.application'
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Copenhagen'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
@@ -180,3 +181,11 @@ if DEBUG:
            },
        }
     }
+
+#CACHE
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/django_cache',
+    }
+}

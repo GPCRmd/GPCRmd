@@ -74,12 +74,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dyndbfilesmolecule',
             name='id_files',
-            field=models.ForeignKey( null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbFiles', unique=True),#db_column='id_files',
+            field=models.ForeignKey( null=True,db_column='id_files', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbFiles', unique=True),#db_column='id_files',
         ),
         migrations.AddField(
             model_name='dyndbfilesmolecule',
             name='id_molecule',
-            field=models.ForeignKey( null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule'),#db_column='id_molecule',
+            field=models.ForeignKey( null=True, db_column='id_molecule',on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule'),#db_column='id_molecule',
         ),
         migrations.AddField(
             model_name='dyndbmodel',
@@ -170,12 +170,6 @@ class Migration(migrations.Migration):
             name='dyndbcomplexcompound',
             unique_together=set([('id_complex_exp', 'id_compound')]),
         ),
-        migrations.AlterUniqueTogether(
-            name='dyndbfilesdynamics',
-            unique_together=set([('id_dynamics', 'id_files')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='dyndbfilesmolecule',
-            unique_together=set([('id_molecule', 'type')]),
-        ),
+
+
     ]

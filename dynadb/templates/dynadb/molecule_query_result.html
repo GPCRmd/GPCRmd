@@ -1,0 +1,46 @@
+
+{% extends "home/base.html" %} 
+{% load static %}
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Molecule Info:</b></div>
+    <div class="panel-body">  <b>Smiles</b>: {{answer.smiles}} <br>  
+                              <b>Netcharge</b>:{{answer.netcharge}} <br>
+                              <b>InChIKey</b>:{{answer.inchikey}} <br>
+                              <b>InChI</b>:{{answer.inchi}} <br>
+                              <b>InChIcol</b>:{{answer.inchicol}} <br>
+                              <b>Related compounds</b>:
+    {%for compoundlink in answer.link_2_compound%}
+       <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>, 
+    {%endfor%}
+    </div>
+
+
+    </div>
+    </div>
+
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Images of the SDF file</b></div>
+    {%for image in answer.sdf%}
+        <img src='static/dyndb/6_mol_3.png'>
+        <div class="panel-body"> <img src={{image}} style="width:304px;height:228px;">
+    {%endfor%}
+
+
+    </div>
+    </div>
+    </div>
+
+{% endblock content %}
+

@@ -1,0 +1,37 @@
+
+{% extends "home/base.html" %} 
+{% load static %}
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Molecule Info:</b></div>
+    <div class="panel-body">  <b>Description</b>: {{answer.description}} <br>  
+                              <b>PDB ID</b>:{{answer.pdbid}} <br>
+                              <b>Model type</b>:{{answer.type}} <br>
+                              <b>Corresponding protein</b>:<a href=/dynadb/compound/id/{{answer.link2protein}}>{{answer.link2protein}} <br>
+                              <b>Dynamics in which this model appears</b>:
+
+    {%for compoundlink in answer.dynamics%}
+       <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
+    {%endfor%}
+
+    {%for compoundlink in answer.components%}
+       <a href= /dynadb/molecule/id/{{compoundlink}}>{{compoundlink}}</a>,
+    {%endfor%}
+
+
+    </div>
+    </div>
+    </div>
+
+{%endblock content %}
+

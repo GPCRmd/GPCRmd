@@ -1,4 +1,4 @@
 *.pyc
 *.log
-protwis/settings_local.py
+#protwis/settings_local.py
 *~

@@ -1,22 +1,36 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 import re, os, pickle
+import time
+import json
+import mimetypes
+import requests
+import math
+from django.db.models.functions import Concat
+from django.db.models import CharField,TextField, Case, When, Value as V
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
+from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
+from .sequence_tools import get_mutations, check_fasta
+from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbFileTypes
-#from .forms import DyndbModelForm
+from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
-from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files,  dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
+from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
 
 # Create your views here.
 
 def REFERENCEview(request, submission_id):
+
+
     if request.method == 'POST':
         action="/".join(["/dynadb/REFERENCEfilled",submission_id])
         now=timezone.now()
@@ -74,7 +88,7 @@ def PROTEINview(request, submission_id):
 #####
 #####  initOPN dictionary dyndb_Other_Protein_NamesForm. To be updated in the
 #####  view. Not depending on is_mutated field in dynadb_ProteinForm 
-        initPF={'id_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
+        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
         initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
 
 
@@ -278,8 +292,360 @@ def PROTEINview(request, submission_id):
         fdbPS = dyndb_Protein_SequenceForm()
         fdbPM = dyndb_Protein_MutationsForm()
         fdbOPN= dyndb_Other_Protein_NamesForm()
-        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN, 'submission_id':submission_id })
+        return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
+
+
+
+def query_protein(request, protein_id):
+    fiva=dict()
+    actlist=list()
+    fiva['models']=list()
+    fiva['other_names']=list()
+    fiva['activity']=list()
+    fiva['Uniprot_id']=DyndbProtein.objects.get(pk=protein_id).uniprotkbac    
+    fiva['Protein_name']=DyndbProtein.objects.get(pk=protein_id).name
+    fiva['cannonical']=DyndbProteinCannonicalProtein.objects.get(id_protein=protein_id).id_cannonical_proteins.id_protein.id
+    fiva['is_mutated']=DyndbProtein.objects.get(pk=protein_id).is_mutated
+    fiva['scientific_name']=DyndbProtein.objects.get(pk=protein_id).id_uniprot_species.scientific_name
+
+    for match in DyndbOtherProteinNames.objects.filter(id_protein=protein_id): #checked
+        fiva['other_names'].append(match.other_names)
+
+    for match in DyndbModel.objects.filter(id_protein=protein_id):
+        fiva['models'].append(match.id)
+
+    fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
+
+    numberoflines= math.ceil( ( len(fiva['Protein_sequence']) + (4 * ( len(fiva['Protein_sequence']) /50 ))) /54)
+    beautyseq=''
+    for line in range(1,numberoflines+1):
+        count=0
+        signal_number=[i for i in range(line*50-40,line*50+10,10)]
+        string=' '*(10-len(str(signal_number[0])))+str(signal_number[0])+' '+' '*(10-len(str(signal_number[1])))+str(signal_number[1])+' '+' '*(10-len(str(signal_number[2])))+str(signal_number[2])+' '+' '*(10-len(str(signal_number[3])))+str(signal_number[3])+' '+' '*(10-len(str(signal_number[4])))+str(signal_number[4])+'\n'
+        cutoff=line*50
+        cuton=cutoff-50
+        fiva['Protein_sequence'][cuton:cutoff]
+        seqline=''
+        for char in fiva['Protein_sequence'][cuton:cutoff]:
+            if count==9:
+                seqline=seqline+char+' '
+                count=0
+            else:
+                seqline=seqline+char
+                count+=1
+        seqline+='\n'
+        cutnumbering=seqline.rfind('') #if the sequences finishes, stop the counting.
+        string=string[0:cutnumbering]
+        if '\n' not in string:
+           string=string+'\n'
+        beautyseq=beautyseq+string+seqline
+
+    fiva['Protein_sequence']=beautyseq
+
+    for match in DyndbExpProteinData.objects.filter(id_protein=protein_id): #not working, but table incomplete so dont know if my fault.
+        for match2 in DyndbProteinActivity.objects.filter(pk=match.id):
+            fiva['activity'].append((match2.rvalue,match2.units,match2.description))
+
+    print(fiva['activity'])
+    return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
+
+
+def query_protein_fasta(request,protein_id):
+    yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
+    seq=getattr(yourseq,'sequence')
+    count=0
+    fseq=''
+    for char in seq:
+        if count==79:
+            fseq=fseq+'\n'+char
+            count=0
+        else:
+            fseq=fseq+char
+        count=count+1
+
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
+        fh.write('>'+protein_id+':\n')
+        fh.write(fseq)
+    with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+protein_id+'_gpcrmd.fasta')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
+    return response
+            
+def query_molecule(request, molecule_id):
+    molec_dic=dict()
+    molec_dic['link_2_compound']=list()
+    molec_dic['sdf']=list()
+    molec_dic['smiles']=DyndbMolecule.objects.get(pk=molecule_id).smiles
+    molec_dic['description']=DyndbMolecule.objects.get(pk=molecule_id).description
+    molec_dic['netcharge']=DyndbMolecule.objects.get(pk=molecule_id).net_charge
+    molec_dic['inchi']=DyndbMolecule.objects.get(pk=molecule_id).inchi
+    molec_dic['inchikey']=DyndbMolecule.objects.get(pk=molecule_id).inchikey
+    molec_dic['inchicol']=DyndbMolecule.objects.get(pk=molecule_id).inchicol
+
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
+        molec_dic['sdf'].append(molfile.id_files.filepath)
+    
+    for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
+        molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
+
+    return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
+
+
+def query_compound(request,compound_id):
+    comp_dic=dict()
+    comp_dic['link_2_molecule']=list()
+    comp_dic['imagelink']=list()
+    comp_dic['othernames']=list()
+    for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
+        comp_dic['othernames'].append(oname.other_names)
+    comp_dic['name']=DyndbCompound.objects.get(pk=compound_id).name
+    comp_dic['iupac_name']=DyndbCompound.objects.get(pk=compound_id).iupac_name
+    comp_dic['pubchem_cid']=DyndbCompound.objects.get(pk=compound_id).pubchem_cid
+    comp_dic['chembleid']=DyndbCompound.objects.get(pk=compound_id).chembleid
+    comp_dic['sinchi']=DyndbCompound.objects.get(pk=compound_id).sinchi
+    comp_dic['sinchikey']=DyndbCompound.objects.get(pk=compound_id).sinchikey
+    #pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
+    #comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
+        comp_dic['link_2_molecule'].append(molecule.id)
+        for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
+            comp_dic['imagelink'].append(molfile.id_files.filepath)
+
+    return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
+
+
+def query_model(request,model_id):
+    model_dic=dict()
+    model_dic['description']=DyndbModel.objects.get(pk=model_id).description
+    model_dic['pdbid']=DyndbModel.objects.get(pk=model_id).pdbid
+    model_dic['type']=DyndbModel.objects.get(pk=model_id).type
+    model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id
+    model_dic['components']=list()
+    model_dic['dynamics']=list()
+    for match in DyndbModelComponents.objects.filter(id_model=model_id):
+        model_dic['components'].append(match.id_molecule,match.numberofmol)
+    for match in DyndbDynamics.objects.filter(id_model=model_id):
+        model_dic['dynamics'].append(match.id)
+    return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
+
+def query_dynamics(request,dynamics_id):
+    dyna_dic=dict()
+    dyna_dic['link_2_molecules']=list()
+    dyna_dic['references']=list()
+    dyna_dic['related']=list()
+    dyna_dic['soft']=DyndbDynamics.objects.get(pk=dynamics_id).software
+    dyna_dic['softv']=DyndbDynamics.objects.get(pk=dynamics_id).sversion
+    dyna_dic['forcefield']=DyndbDynamics.objects.get(pk=dynamics_id).ff
+    dyna_dic['forcefieldv']=DyndbDynamics.objects.get(pk=dynamics_id).ffversion
+    dyna_dic['link_2_model']=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id
+    dyna_dic['description']=DyndbDynamics.objects.get(pk=dynamics_id).description
+    dyna_dic['solventtype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_solvent_types.type_name
+    dyna_dic['membranetype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_membrane_types.type_name
+    for match in DyndbDynamicsComponents.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['link_2_molecules'].append(match.id_molecule.id)
+
+    for match in DyndbRelatedDynamicsDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['related'].append(match.id_related_dynamics.id_dynamics.id)
+    
+    for match in DyndbReferencesDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['references'].append(match.id_references.doi)
+    
+    return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
+
+def protein_get_data_upkb(request, uniprotkbac=None):
+    KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
+    if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
+      uniprotkbac = request.POST['uniprotkbac']
+    if uniprotkbac is not None:
+      if valid_uniprotkbac(uniprotkbac):
+        if uniprotkbac.find('-') < 0:
+          uniprotkbac_noiso = uniprotkbac
+          isoform = None
+        else:
+          uniprotkbac_noiso,isoform = uniprotkbac.split('-')
+        data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
+        if errdata == dict():
+          if data == dict():
+            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            return response
+          if data['Entry'] != uniprotkbac_noiso and isoform is not None:
+            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
+            return response
+          data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+          time.sleep(10)
+          namedata,errdata = retreive_protein_names_uniprot(uniprotkbac_noiso)
+          
+          if errdata == dict():
+            name, other_names = get_other_names(namedata)
+            data['Name'] = name
+            data['Aliases'] = ';'.join(other_names)
+            time.sleep(10)
+            seqdata,errdata = retreive_fasta_seq_uniprot(uniprotkbac)
+            if errdata == dict():
+              if seqdata['sequence'] == '':
+                seqdata['sequence'] = 'Sequence not available for ' + uniprotkbac+'.'
+              data['Sequence'] = seqdata['sequence']
+              if uniprotkbac_noiso == uniprotkbac:
+                time.sleep(10)
+                dataiso,errdata = retreive_isoform_data_uniprot(data['Entry'])
+                if errdata == dict():
+                  if dataiso == dict():
+                    data['Isoform'] = '1'
+                  else:
+                    data['Isoform'] = dataiso['Displayed'].split('-')[1]
+              else:
+                data['Isoform'] = isoform
+        if 'Error' in errdata.keys():
+          if errdata['ErrorType'] == 'HTTPError':
+            if errdata['status_code'] == 404 or errdata['status_code'] == 410:
+              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            else:
+              response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(errdata['status_code']) \
+                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+          elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError' \
+            or errdata['ErrorType'] == 'ParsingError':
+            response = HttpResponse('Problem downloading from UniProtKB:'\
+                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+          elif errdata['ErrorType'] == 'Internal':
+            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
+          else:
+            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain')
+            
+        else:
+          datakeys = set([i.lower() for i in data.keys()])
+          if datakeys == KEYS:
+            response = JsonResponse(data)
+
+          else:
+            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain')
+        
+        
+        
+      else:
+        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    else:
+      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    return response
+
+def get_uniprot_species_id_and_screen_name(mnemonic):
+  speciesqs = DyndbUniprotSpecies.objects.filter(code=mnemonic)
+  speciesqs = speciesqs.annotate(screen_name=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()))
+  try:
+    record = speciesqs.order_by('id')[0]
+  except IndexError:
+    return None
+  except:
+    raise
+  return (record.pk,record.screen_name)
+
+def download_specieslist(request):
+    """A view that streams a TSV file."""
+    COMMENT_BLOCK = '# id = species GPCRmd internal identifier\r\n\
+# kingdom = \'A\' archaea;\'B\' bacteria;\'E\' eukaryota;\'V\' viruses and phages;\'O\' Others;\r\n\
+# taxon_node = taxonomic node id number in the NCBI taxonomy\r\n\
+# scientific_name = official organism name\r\n'
+    fieldnames = []
+    for field in DyndbUniprotSpecies._meta.get_fields():
+      if not field.is_relation:
+        if field.name != 'code':
+          fieldnames.append(field.name)
+    speciesqso = DyndbUniprotSpecies.objects.filter(code=None)
+    writer = CsvDictWriterNoFile(fieldnames, dialect='excel-tab',extrasaction='ignore')
+    iterator = speciesqso.iterator()
+    csvwiterator = CsvDictWriterRowQuerySetIterator(writer,iterator,comment_block=COMMENT_BLOCK)
+    response = StreamingHttpResponse(csvwiterator,
+                                     content_type="text/tab-separated-values")
+    response['Content-Disposition'] = 'attachment; filename="alt_speclist.tsv"'
+    return response
+
+def get_specieslist(request):
+  """A view that shows an 'screen_name' = scientific_name +' (' + (uniprot_)code + ')' 
+  that matches a searched 'term'."""
+  LIMIT=50
+  code_max_length = DyndbUniprotSpecies._meta.get_field('code').max_length
+  sbracketsre1 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{1,'+str(code_max_length)+r'})$')
+  sbracketsre2 = re.compile(r'^(.*?) ?\(([A-Za-z0-9]{'+str(code_max_length)+r'})\)$')
+  sbracketsre3 = re.compile(r'^([A-Za-z0-9]{1,'+str(code_max_length)+r'})\)$')
+  sbracketsre4 = re.compile(r'^(.*?) \(?$')
+  # Remove ' (' and ')' from term and filter scientific_name and code by term.
+  term4 = ''
+  if request.method == 'GET':
+    term = request.GET['term']
+  elif request.method == 'POST':
+    term = request.POST['term']
+  m1 = sbracketsre1.search(term)
+  if m1:
+    term2 = m1.group(2)
+    term3 = m1.group(1)
+    speciesqscode = DyndbUniprotSpecies.objects.filter(code__istartswith=term2)
+  else:
+    m2 = sbracketsre2.search(term)
+    if m2:
+      term2 = m2.group(2)
+      term3 = m2.group(1)
+      speciesqscode = DyndbUniprotSpecies.objects.filter(code__iexact=term2)
+    else:
+      term3 = ''
+      m3 = sbracketsre3.search(term)
+      if m3:
+        term2 = m3.group(1)
+        speciesqscode = DyndbUniprotSpecies.objects.filter(code__iendswith=term2)
+      else:
+        speciesqscode = DyndbUniprotSpecies.objects.filter(code__icontains=term)
+        m4 = sbracketsre4.search(term)
+        if m4:
+          term4 = m4.group(1)
+          
+  if term3 != '':
+    speciesqscode = speciesqscode.filter(scientific_name__iendswith=term3)
+  speciesqsname = DyndbUniprotSpecies.objects.filter(scientific_name__icontains=term)
+  if term4 != '':
+    speciesqsname = speciesqsname | DyndbUniprotSpecies.objects.filter(scientific_name__iendswith=term4)
+
+  # select if 
+  speciesqs = speciesqsname | speciesqscode
+  
+  ## create new field 'screen_name'
+  # SELECT CASE 
+  # WHEN code IS NULL THEN scientific_name
+  #
+  # ELSE
+  # concatenate(scientific_name,' (',code,')')
+  # AS screen_name;
+  speciesqs = speciesqs.annotate(screen_name=Case(
+    When(code__isnull=True,
+         then='scientific_name'),
+    default=Concat('scientific_name',V(' ('),'code',V(')'),output_field=TextField()),
+    output_field=TextField()))
+  speciesqs = speciesqs.order_by('screen_name')[:LIMIT]
+  speciesqs = speciesqs.values('id','screen_name')
+
+  datajson = json.dumps(list(speciesqs))
+
+  response = HttpResponse(datajson, content_type="application/json")
+  return response
+
+  
+def get_mutations_view(request):
+  if request.method == 'POST':
+    try:
+      fasta = request.POST['alignment']
+      refseq = request.POST['sequence']
+      if check_fasta(fasta,allow_stop=False):
+        return JsonResponse(get_mutations(fasta,refseq),safe=False)
+      elif check_fasta(fasta,allow_stop=True):
+        raise ParsingError('Translation stop character (*) is not allowed. Please truncate sequence until first stop.')
+      else:
+        raise ParsingError('Invalid fasta format.')
+    except ParsingError as e:
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      return response
+    except:
+      raise
+      
 
 def MODELview(request, submission_id):
     # Function for saving files
@@ -472,7 +838,7 @@ def MODELview(request, submission_id):
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC, 'submission_id':submission_id })
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id})
 
 
 def SMALL_MOLECULEview2(request):
@@ -748,7 +1114,7 @@ def SMALL_MOLECULEview(request, submission_id):
         fdbFM = dyndb_Files_Molecule()
         fdbMM = dyndb_Complex_Molecule_Molecule()
 
-        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM,'submission_id':submission_id  })
+        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 
 def DYNAMICSview(request, submission_id):
     # Function for saving files
@@ -985,7 +1351,7 @@ def DYNAMICSview(request, submission_id):
         dd=dyndb_Dynamics()
         ddC=dyndb_Dynamics_Components()
 
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC,'submission_id':submission_id })
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'submission_id' : submission_id})
 ##############################################################################################################
 
 
@@ -1175,19 +1541,21 @@ def DYNAMICSviewOLD(request):
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
 
 
-def SUBMITTEDview(request): 
-        return render(request,'dynadb/SUBMITTED.html'  )
+def SUBMITTEDview(request,submission_id): 
+        return render(request,'dynadb/SUBMITTED.html',{'submission_id':submission_id})
 
 def get_Author_Information(request): 
         return render(request,'dynadb/dynadb_Author_Information.html'  )
 
 
-def db_inputformMAIN(request): 
-    dictsubid={}
-    dictsubid['user_id']='1'
-    fdbsub=dyndb_Submission(dictsubid)
-    fdbsubobj=fdbsub.save()
-    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':fdbsubobj.pk} )
+def db_inputformMAIN(request,submission_id): 
+    if submission_id is None:
+        dictsubid={}
+        dictsubid['user_id']='1'
+        fdbsub=dyndb_Submission(dictsubid)
+        fdbsubobj=fdbsub.save()
+        submission_id = fdbsubobj.pk
+    return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':submission_id} )
 
 
 def get_FilesCOMPLETE(request): 
