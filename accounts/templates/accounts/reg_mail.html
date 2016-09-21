@@ -1,0 +1,52 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+{% block content %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Simulation Submission</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4 >CREATE A NEW ACCOUNT</h4>
+	    </div>
+             <p style="text-align: justify;">Fill in the form to create a new account.</p>
+
+            <p style="text-align: justify;"> As a registered user, you will be able to access the GPCRmd Simulation Submission tool.</p>
+
+	     <p style="text-align: justify;">Any time later, you will be able to modify all submitted personal data.<p>
+
+	     <p style="text-align: justify;">
+The personal data provided will be stored in <span style="color:#B8B8B8">Universitat Pompeu Fabra file 'Seminaris i congressos'</span>, for the purpose of  <span style="color:B8B8B8">performing the submission of the information into the database and verifying the corresponding citations associated to the information stored in the database</span>. These data will not be disclosed to third parties unless required by law. The body responsible for the <span style="color:B8B8B8">University files is the manager</span>. Rights to access, correct, cancel or object to data in these files may be exercised by applying in writing, including a photocopy of your identity card, passpoer, or equivalent to:  <span style="color:B8B8B8">Gerent. Universitat Pompeu Fabra. Pl. de la Mercè, 12. 08002 - Barcelona</span>.
+             <p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pprotform"class="col-md-7 "> 
+<!-- modifica a partir de aqui -->
+ 
+<div class="alert alert-info" style="border-color:#337ac1">
+  <strong style="font-size:125%">Registration successful. </strong>You will receive an email to activate your account.
+ </div>
+</div>
+{% endblock content %} 

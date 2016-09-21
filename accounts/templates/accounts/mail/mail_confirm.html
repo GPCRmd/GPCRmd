@@ -1,0 +1,73 @@
+<head><style>
+.long input {
+ width:100%;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% load i18n %}
+{% block content %}
+
+
+{% if validlink %} <!-- if it's correct -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Change your Email Address</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4 >CHOOSE A NEW EMAIL FOR YOUR ACCOUNT</h4>
+	    </div>
+            <p style="text-align: justify;">A new email has been associated with your GPCRmd account.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+
+<!-- body: Modified part -->
+
+
+<div id="pprotform"class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel-primary alert alert-info"> 
+
+ 			<div style="text-align:center">
+             			<h4><br>Email activation succeddful</h4>
+            		</div>   
+
+  <div class="panel-body ">
+  <div style="text-align: justify;text-justify: inter-word;">
+   <p>Your email account has been set to <b>{{ email }}</b>. You can now access to <a href="/accounts/memberpage" style="color:#31708F"><u>your account</u></a>.</p>
+
+ </div>
+
+
+{% else %}
+
+<div class="alert alert-danger">
+<h3><b>Error</b></h3>
+<p>{{ error_message }}</p>
+{% endif %}
+
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}

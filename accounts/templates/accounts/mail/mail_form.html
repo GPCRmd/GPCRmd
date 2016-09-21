@@ -1,0 +1,90 @@
+<head><style>
+.long input {
+ width:100%;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% load i18n %}
+
+{% block content %}
+
+<form method="post">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Simulation Submission</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4 >CHOOSE A NEW EMAIL FOR YOUR ACCOUNT</h4>
+	    </div>
+             <p style="text-align: justify;">Introduce the new email with which you want to associate your GPCRmd account.</p>
+             <p style="text-align: justify;">You need access to the new address to complete the process.</p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+<div id="pprotform"class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+
+ 			<div style="text-align:center">
+             			<h4><br>Change your Email Address</h4>
+            		</div><br>   
+<div style="margin:10px">
+  <div  style="margin-bottom:8px">
+     <div class="row" >
+         <div class="col-md-3" style="width:115px;color:#337ac1;margin-right:0;padding-right:0">
+           <p><label for="id_email">{% trans 'New Adress:' %}</label></p>
+         </div>  
+         <div class="col-md-7" style="margin-bottom:8px"><span class="long"> {{form.email_new}}</span>
+         </div>
+
+         <div class="col-md-1" > <!--Submit button:-->
+        <input type="submit" value="Send" style="width:75px"/> </form>
+        </div>
+     </div>
+
+     <div class="row" >
+        <div class="col-md-3" style="width:115px;right:0"></div>
+        <div class="col-md-9" style="margin-bottom:8px"> 
+          {% if form.non_field_errors %}
+            <div>
+              {% for err in form.non_field_errors %}
+                 <p style="margin-bottom:px" class=text-danger>{{ err }}</p>
+              {% endfor %}
+            </div>
+         {% endif %}
+       </div>
+     </div>
+
+</div>
+<!-- fins aquí -->
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}
+
