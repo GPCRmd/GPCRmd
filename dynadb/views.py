@@ -21,7 +21,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes                
+from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
@@ -285,38 +285,27 @@ def PROTEINview(request, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 
+
 def query_protein(request, protein_id):
     fiva=dict()
     actlist=list()
-    modellist=list()
-    yourprotein=DyndbProtein.objects.get(pk=protein_id) #checked
-    yourseq=DyndbProteinSequence.objects.get(pk=protein_id) #checked
-    speciestable_object=getattr(yourprotein,'id_uniprot_species') #you get the instance of a uniprot_species object that is linked to your Protein object instance.
-    yourspecies=speciestable_object.scientific_name #accesing the scientific_name property of that instance.
-    try:
-        youract=DyndbProteinActivity.objects.all()
-        for obj in youract:
-            if protein_id==obj.id.id_protein.id: #obj.id=ExpProteinData instance,obj.id.id_protein(Protein instance),obj.id.id_protein.id id of that protein instance
-                actlist.append((obj.rvalue,obj.units,obj.description)) #list of tuples! one protein: n activities.
-    except:
-        youract=None
-    try:
-        yourothernames=DyndbOtherProteinNames.objects.all().filter(id_protein=protein_id) #checked
-    except:
-        yourothernames=None
-    try:
-        yourmodels=DyndbModel.objects.all()
-        for model in yourmodels:
-            if model.id_protein.id==protein_id: #model.id_protein is a Protein instance. protein istances have an id field as its pk.
-                modellist.append(model.id)
-    except:
-        yourmodels=None
+    fiva['models']=list()
+    fiva['other_names']=list()
+    fiva['activity']=list()
+    fiva['Uniprot_id']=DyndbProtein.objects.get(pk=protein_id).uniprotkbac    
+    fiva['Protein_name']=DyndbProtein.objects.get(pk=protein_id).name
+    fiva['cannonical']=DyndbProteinCannonicalProtein.objects.get(id_protein=protein_id).id_cannonical_proteins.id_protein.id
+    fiva['is_mutated']=DyndbProtein.objects.get(pk=protein_id).is_mutated
+    fiva['scientific_name']=DyndbProtein.objects.get(pk=protein_id).id_uniprot_species.scientific_name
 
-    fiva['Uniprot_id']=getattr(yourprotein,'uniprotkbac')    
-    fiva['Protein_name']=getattr(yourprotein,'name')
-    fiva['Protein_sequence']=getattr(yourseq,'sequence')
+    for match in DyndbOtherProteinNames.objects.filter(id_protein=protein_id): #checked
+        fiva['other_names'].append(match.other_names)
 
-    #Let's make the sequence fancier:
+    for match in DyndbModel.objects.filter(id_protein=protein_id):
+        fiva['models'].append(match.id)
+
+    fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
+
     numberoflines= math.ceil( ( len(fiva['Protein_sequence']) + (4 * ( len(fiva['Protein_sequence']) /50 ))) /54)
     beautyseq=''
     for line in range(1,numberoflines+1):
@@ -340,26 +329,14 @@ def query_protein(request, protein_id):
         if '\n' not in string:
            string=string+'\n'
         beautyseq=beautyseq+string+seqline
-    #it looks much better now!
 
     fiva['Protein_sequence']=beautyseq
-    fiva['is_mutated']=getattr(yourprotein,'is_mutated')
-    fiva['scientific_name']=yourspecies
-    if youract!=None:
-        fiva['activity']=actlist
-    else:
-        fiva['activity']=[]
-    if yourothernames!=None:
-        fiva['other_names']=list()
-        for i in range(len(yourothernames)):
-            fiva['other_names'].append(getattr(yourothernames[i],'other_names'))
-    else:
-        fiva['other_names']=''
-    if yourmodels!=None:
-        fiva['models']=modellist
-    else:
-        fiva['models']=list()
 
+    for match in DyndbExpProteinData.objects.filter(id_protein=protein_id): #not working, but table incomplete so dont know if my fault.
+        for match2 in DyndbProteinActivity.objects.filter(pk=match.id):
+            fiva['activity'].append((match2.rvalue,match2.units,match2.description))
+
+    print(fiva['activity'])
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
 
@@ -410,21 +387,63 @@ def query_compound(request,compound_id):
     comp_dic=dict()
     comp_dic['link_2_molecule']=list()
     comp_dic['imagelink']=list()
+    comp_dic['othernames']=list()
+    for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
+        comp_dic['othernames'].append(oname.other_names)
     comp_dic['name']=DyndbCompound.objects.get(pk=compound_id).name
     comp_dic['iupac_name']=DyndbCompound.objects.get(pk=compound_id).iupac_name
     comp_dic['pubchem_cid']=DyndbCompound.objects.get(pk=compound_id).pubchem_cid
     comp_dic['chembleid']=DyndbCompound.objects.get(pk=compound_id).chembleid
     comp_dic['sinchi']=DyndbCompound.objects.get(pk=compound_id).sinchi
     comp_dic['sinchikey']=DyndbCompound.objects.get(pk=compound_id).sinchikey
-    pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
-    comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    #pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
+    #comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
         for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
             comp_dic['imagelink'].append(molfile.id_files.filepath)
 
     return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
- 
+
+
+def query_model(request,model_id):
+    model_dic=dict()
+    model_dic['description']=DyndbModel.objects.get(pk=model_id).description
+    model_dic['pdbid']=DyndbModel.objects.get(pk=model_id).pdbid
+    model_dic['type']=DyndbModel.objects.get(pk=model_id).type
+    model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id
+    model_dic['components']=list()
+    model_dic['dynamics']=list()
+    for match in DyndbModelComponents.objects.filter(id_model=model_id):
+        model_dic['components'].append(match.id_molecule,match.numberofmol)
+    for match in DyndbDynamics.objects.filter(id_model=model_id):
+        model_dic['dynamics'].append(match.id)
+    return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
+
+def query_dynamics(request,dynamics_id):
+    dyna_dic=dict()
+    dyna_dic['link_2_molecules']=list()
+    dyna_dic['references']=list()
+    dyna_dic['related']=list()
+    dyna_dic['soft']=DyndbDynamics.objects.get(pk=dynamics_id).software
+    dyna_dic['softv']=DyndbDynamics.objects.get(pk=dynamics_id).sversion
+    dyna_dic['forcefield']=DyndbDynamics.objects.get(pk=dynamics_id).ff
+    dyna_dic['forcefieldv']=DyndbDynamics.objects.get(pk=dynamics_id).ffversion
+    dyna_dic['link_2_model']=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id
+    dyna_dic['description']=DyndbDynamics.objects.get(pk=dynamics_id).description
+    dyna_dic['solventtype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_solvent_types.type_name
+    dyna_dic['membranetype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_membrane_types.type_name
+    for match in DyndbDynamicsComponents.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['link_2_molecules'].append(match.id_molecule.id)
+
+    for match in DyndbRelatedDynamicsDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['related'].append(match.id_related_dynamics.id_dynamics.id)
+    
+    for match in DyndbReferencesDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['references'].append(match.id_references.doi)
+    
+    return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
+
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
