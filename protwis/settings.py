@@ -195,9 +195,10 @@ CACHES = {
 AUTH_USER_MODEL = 'accounts.User'
 
 # Configure this so that it works with real mail, not terminal
+EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
-EMAIL_HOST = '127.0.0.1'
-EMAIL_PORT = 2525
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST = '***REMOVED***'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = '***REMOVED***'
+EMAIL_HOST_PASSWORD = '***REMOVED***'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
