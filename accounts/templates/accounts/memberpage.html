@@ -1,0 +1,90 @@
+<head><style>
+.long input {
+ width:100%;
+}
+
+.deco a:link, .deco a:visited {
+    background-color: #F0F0F0;
+    color: #337ac1;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid #337ac1;
+    border-radius: 12px;
+}
+.deco a:hover, .deco a:active {
+    background-color: #337ac1;
+    color:white;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} 
+<form action="{% url 'accounts:register' %}" method="post">
+{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Simulation Submission</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4 >WELCOME <span style="text-transform: uppercase;">{{ username }}</span></h4>
+	    </div>
+             <p style="text-align: justify;">With the GPCRmd Simulation Submission tool you can create, store and manage your simulations.</p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pprotform"class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+       <p>
+          <a href="/accounts/change_data">Change user information</a> -
+          <a href="/accounts/change_passw">Change password</a> -
+          <a href="/accounts/logout">Log out</a></li> 
+       </p>
+
+        <div class="container-fluid" style="padding-top:15px">
+            <div class="row">
+               <div class="col-sm-6 deco" style="padding-bottom:10px" >  
+                  <a href="#" class="btn btn-block" >Previous Submissions</a>
+               </div>
+               <div class="col-sm-6 deco" style="padding-bottom:10px">  
+                  <a href="/dynadb/db_inputform/" class="btn btn-block" >New Submission</a>
+               </div>
+          </div>
+       </div>
+
+
+
+
+    </div>
+  </div>
+</div>
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}

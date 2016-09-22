@@ -25,6 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 INSTALLED_APPS = (
     'dynadb.apps.DynadbConfig',
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -189,3 +190,15 @@ CACHES = {
         'LOCATION': '/tmp/django_cache',
     }
 }
+
+
+AUTH_USER_MODEL = 'accounts.User'
+
+# Configure this so that it works with real mail, not terminal
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST = '***REMOVED***'
+EMAIL_PORT = 465
+EMAIL_HOST_USER = '***REMOVED***'
+EMAIL_HOST_PASSWORD = '***REMOVED***'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

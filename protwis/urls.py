@@ -12,6 +12,7 @@ urlpatterns = [
 #    url(r'^juanmaapp/', include('juanmaapp.urls')), 
 #    url(r'^pruebaapp/', include('pruebaapp.urls')), 
     url(r'^', include('home.urls')),
+    url(r'^accounts/', include('accounts.urls')),
     url(r'^services/', include('api_' + settings.SITE_NAME + '.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^common/', include('common.urls')),
