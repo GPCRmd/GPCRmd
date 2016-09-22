@@ -28,12 +28,14 @@ from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertF
 
 # Create your views here.
 
-
-
-
-def REFERENCEview(request):
+def REFERENCEview(request, submission_id=None):
+ 
     if request.method == 'POST':
-        action="/dynadb/REFERENCEfilled/"
+        if submission_id is None:
+            sub =''
+        else:
+            sub = submission_id
+        action="/".join(["/dynadb/REFERENCEfilled",sub])
         now=timezone.now()
         author="jmr"
 #        forminfo={'issue':'1','url':'http://localhost:8000/ttt/prueba','doi':'8382938','title':'prinncii','journal_press':'marca','pub_year':'1996', 'volume':'agosto', 'pages':'2-3','authors':'pepe; luis', 'pmid':'4'}
@@ -61,7 +63,7 @@ def REFERENCEview(request):
 #            print("Errores del formulario ",fdbREFF.errors)
             
 
-            return HttpResponseRedirect('/dynadb/REFERENCEfilled/')
+            return HttpResponseRedirect("/".join(["/dynadb/REFERENCEfilled",submission_id]), {'submission_id':submission_id} )
 
         else:
            # for field in fdbPF:
@@ -74,7 +76,7 @@ def REFERENCEview(request):
     else:
 
         fdbREFF = dyndb_ReferenceForm()
-        return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF})
+        return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
 
 def PROTEINview(request, submission_id):
@@ -82,7 +84,7 @@ def PROTEINview(request, submission_id):
     print ("submission_id ==",submission_id)
     if request.method == 'POST':
         author="jmr"   #to be modified with author information. To initPF dict
-        action="/dynadb/PROTEINfilled/"
+        action="/".join(["/dynadb/PROTEINfilled",submission_id]," ")
         now=timezone.now()
 #####  inintPF dictionary containing fields of the form dynadb_ProteinForm not
 #####  available in the request.POST
@@ -129,7 +131,8 @@ def PROTEINview(request, submission_id):
         formOPN={}
         initPS={}
         initPM={}
-        
+        dictCP={}
+        fdbCP={} #dyndb_Complex_Protein
         for ii in indexl:
             print("valor ii=", ii, "dictprot[ii]=\n", dictprot[ii])
             fdbPF[ii]=dyndb_ProteinForm(dictprot[ii])
@@ -161,6 +164,17 @@ def PROTEINview(request, submission_id):
 
 ##### Create a dictionary for each alias of each protein (a.k.a. 'other_names'). A dyndb_Other_Protein_NamesForm instace correspond to each alias.
 ##### 
+            if 'receptor' in dictprot[ii].keys():
+                dictCP[ii]={'is_receptor':dictprot[ii]['receptor'],'id_protein':formPF[ii].pk,'id_complex_exp':1} #id_complex_exp should be Corrected!!!!
+                fdbCP[ii]=dyndb_Complex_Protein(dictCP[ii])
+                if fdbCP[ii].is_valid():
+                    fdbCP[ii].save()
+                else:
+                    iii1=fdbCP[ii].errors.as_data()
+                    print("fdbCP[",ii,"] no es valido")
+                    print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
+
+
             if 'other_names' in dictprot[ii].keys():
                 listON[ii]=dictprot[ii]['other_names'].split(";") # for each protein a listON[ii] list containing all the aliases is created.
                 listON[ii]=list(set(listON[ii])) #convert listON[ii] in a list of unique elements
@@ -271,7 +285,7 @@ def PROTEINview(request, submission_id):
                 print("!!!!!!Errores despues del fdbPS[",ii,"] \n",iii1,"\n")
     
             # redirect to a new URL:
-        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]))
+        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id} )
 
         
     # if a GET (or any other method) we'll create a blank form
@@ -660,7 +674,7 @@ def MODELview(request, submission_id):
     # Dealing with POST data
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
-        action="/dynadb/MODELfilled/"
+        action="/".join(["/dynadb/MODELfilled",submission_id,""])
         now=timezone.now()
         author="jmr"
         initMOD={'id_protein':'1','id_complex_molecule':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
@@ -749,6 +763,16 @@ def MODELview(request, submission_id):
             MFpk=fdbMFobj.pk
         else:
             print("Errores en el form dyndbModels\n ", fdbMF.errors.as_data())
+        
+        #Fill the dyndb_Submission_Model form. Remember there is just a single Model for each submission !!!!
+        dictSMd={'model_id':MFpk,'submission_id':submission_id}
+        fdbSMd=dyndb_Submission_Model(dictSMd)
+        if fdbSMd.is_valid():
+            fdbSMd.save()
+        else:
+            iii1=fdbSMd[ii].errors.as_data()
+            print("fdbSMd",ii," no es valido")
+            print("!!!!!!Errores despues del fdbSMd[",ii,"]\n",iii1,"\n")
 
         #Create storage directory: Every MODEL has its own directory in which the corresponding pdb file is saved. This directory is labeled as "PDBmodel"+ MFpk (primary key of the model)
         #Maybe we have to label the directory with submissionID?????
@@ -787,7 +811,7 @@ def MODELview(request, submission_id):
         else:
             print("Errores en el form dyndb_Files\n ", fdbFile.errors.as_data())
 
-        newname="file_"+fdbFileobj.pk+"model_"+MFpk+ext
+        newname="file_"+str(fdbFileobj.pk)+"model_"+str(MFpk)+fext
         handle_uploaded_file(PDBmodel,direct,newname)
 
         fdbPS={} 
@@ -820,7 +844,7 @@ def MODELview(request, submission_id):
 #            form.user=request.user
 #            form.save()
             # redirect to a new URL:
-        return HttpResponseRedirect('/dynadb/MODELfilled/')
+        return HttpResponseRedirect("/".join(["/dynadb/MODELfilled",submission_id,""]), {'submission_id':submission_id} )
 
     # if a GET (or any other method) we'll create a blank form
     else:
@@ -852,7 +876,7 @@ def SMALL_MOLECULEview2(request):
         fdbMF = dyndb_Molecule(request.POST)
         fdbMfl = dyndb_Files_Molecule(request.POST)
         fdbMM = dyndb_Complex_Molecule_Molecule(request.POST)
-
+ 
         # check whether it's valid:
         if fdbMF.is_valid() and fdbMfl.is_valid() and fdbMM.is_valid() and fdbCF.is_valid() and fdbCN.is_valid(): 
             # process the data in form.cleaned_data as required
@@ -885,7 +909,7 @@ def SMALL_MOLECULEview(request, submission_id):
             for chunk in f.chunks():
                 destination.write(chunk)
     author="jmr"   #to be modified with author information. To initPF dict
-    action="/dynadb/MOLECULEfilled/"
+    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
     now=timezone.now()
     onames="Pepito; Juanito; Herculito" #to be modified... scripted
     initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
@@ -893,7 +917,7 @@ def SMALL_MOLECULEview(request, submission_id):
     initON={'other_names': onames,'id_compound':None} 
     dicpost=request.POST
     dicfiles=request.FILES
-    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
     ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
     ft=DyndbFileTypes.objects.all()
     dict_ext_id={}
@@ -909,6 +933,8 @@ def SMALL_MOLECULEview(request, submission_id):
         dictcomp={}
         fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
         dictfmol={} 
+        fieldsPMod={"is_present"}
+        dictPMod={}
         form=re.compile('form-')
         indexl=[]
         print("!!!!!indexl== ",indexl)
@@ -922,6 +948,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     dictmol[index]={}
                     dictON[index]={}
                     dictcomp[index]={}
+                    dictPMod[index]={}
                 nkey="-".join(key.split("-")[2:])  
                 #dictmol[index]["-".join(key.split("-")[2:])]=val
             else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
@@ -931,14 +958,15 @@ def SMALL_MOLECULEview(request, submission_id):
                     dictmol[0]={}
                     dictON[0]={}
                     dictcomp[0]={}
+                    dictPMod[index]={}
                 nkey=key
            # print("indexl==V ",indexl)
                 #dictmol[0][key]=val
                 #dictON[0][key]=val
                 #dictfmol[0][key]=val
             print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
-            dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp}
-            dfielddict={'0':dictmol,'1':dictON,'2':dictcomp}
+            dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
+            dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
             for k,v in dfieldtype.items():
                 if nkey in v:
                     dfielddict[k][index][nkey]=val
@@ -952,6 +980,9 @@ def SMALL_MOLECULEview(request, submission_id):
 
         print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
         indexfl=[]
+        if len(dicfiles) == 0:
+            response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return response
         for key,val in dicfiles.items():
             if form.search(key):
                 indexf=int(key.split("-")[1])
@@ -987,11 +1018,13 @@ def SMALL_MOLECULEview(request, submission_id):
         fdbF={}
         fdbFobj={}
         fdbFM={}
+        fdbSM={}
         fdbFMobj={}
         for ii in indexl:
             fdbCF[ii]={}
             fdbCFobj[ii]={}
             fdbMF[ii]={}
+            fdbSM[ii]={}
             fdbMFobj[ii]={}
             fdbON[ii]={}
             fdbONobj[ii]={}
@@ -1010,7 +1043,7 @@ def SMALL_MOLECULEview(request, submission_id):
             for key,val in initMF.items():
                 if key not in dictmol[ii].keys():
                     dictmol[ii][key]=val
-                    dictmol[ii]['id_compound']=CFpk
+            dictmol[ii]['id_compound']=CFpk
             fdbMF[ii]=dyndb_Molecule(dictmol[ii])
             if fdbMF[ii].is_valid():
                 fdbMFobj[ii]=fdbMF[ii].save()
@@ -1018,6 +1051,21 @@ def SMALL_MOLECULEview(request, submission_id):
             else:
                 print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
             ONlist=dictON[ii]["other_names"].split(";")
+ 
+            if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+                dictPMod[ii]['not_in_model']=False
+                dictPMod[ii]['int_id']=ii
+                dictPMod[ii]['submission_id']=submission_id
+                dictPMod[ii]['molecule_id']=MFpk
+                fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+                if fdbSM[ii].is_valid():
+                    fdbSM[ii].save()
+                else:    
+                    iii1=fdbSM[ii].errors.as_data()
+                    print("fdbSM",ii," no es valido")
+                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+            
+
             for el in ONlist:
                 on=on+1
                 dON[ii][on]={}
@@ -1045,28 +1093,28 @@ def SMALL_MOLECULEview(request, submission_id):
                     initFiles['filename']=val.name
                     initFiles['filepath']=direct
                     initFiles['description']="sdf/mol2 requested in the molecule form"
+
+                    fdbF[ii][key]=dyndb_Files(initFiles)
+                    handle_uploaded_file(dictfmol[ii][key],direct)
+                    dicfmole[ii]={}
+                    fdbFM[ii]={}
+                    if fdbF[ii][key].is_valid():
+                        fdbFobj[ii][key]=fdbF[ii][key].save(commit=False)
+                        fdbFobj[ii][key]=fdbF[ii][key].save()
+                        dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
+                        dicfmole[ii]['id_molecule']=MFpk
+                        dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
+                        fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
+                        if fdbFM[ii][key].is_valid():
+                            fdbFM[ii][key].save()
+                        else:
+                            print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
+                    else:
+                        print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
                 else:
                     print("This extension is not valid for submission")
-                fdbF[ii][key]=dyndb_Files(initFiles)
-                handle_uploaded_file(dictfmol[ii][key],direct)
-            
-                dicfmole[ii]={}
-                fdbFM[ii]={}
-                if fdbF[ii][key].is_valid():
-                    fdbFobj[ii][key]=fdbF[ii][key].save(commit=False)
-                    fdbFobj[ii][key]=fdbF[ii][key].save()
-                    dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
-                    dicfmole[ii]['id_molecule']=MFpk
-                    dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
-                    fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
-                    if fdbFM[ii][key].is_valid():
-                        fdbFM[ii][key].save()
-                    else:
-                        print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
-                else:
-                    print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
 
-        return HttpResponseRedirect('/dynadb/MOLECULEfilled/')
+        return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
                         
                        
 
@@ -1097,8 +1145,8 @@ def DYNAMICSview(request, submission_id):
         action="/dynadb/DYNAMICSfilled/"
         now=timezone.now()
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
-        initDyn={'id_model':'1','id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
-        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        initDyn={'id_model':'1','id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}
@@ -1115,7 +1163,9 @@ def DYNAMICSview(request, submission_id):
         dicpost=request.POST
         dicfiles=request.FILES
         print(dicfiles)
-                                     
+        print("CLASS traj",type(request.FILES['traj'])," ",request.FILES['traj'] )
+        print("CLASS traj",type(request.FILES['traj'])," ",request.FILES.getlist('traj') )
+        print(len(request.FILES.getlist('traj')))
         lkeydyncomp=["id_molecule","molecule","name","numberofmol","resname","type"]
         indexl=[]
         indexfl=[]
@@ -1163,6 +1213,15 @@ def DYNAMICSview(request, submission_id):
                     print("indexf=0")
                     FILEmod[0]={}
                 print("key en dicfiles ", key, val)
+                if key == 'traj':
+                    print ("filemod[0][",key,"]=",val)
+                    FILEmod[0]['traj']={}
+                    n=0
+                    for files in request.FILES.getlist('traj'):
+                        FILEmod[0]['traj'][n]=files
+                        print("TRAJ", n, " ",  FILEmod[0]['traj'][n])
+                        n=n+1
+                    
                 FILEmod[0][key]=val  ###################### ME QUEDE AQUI
         file_ins={}
         filedyn_ins={}
@@ -1236,35 +1295,65 @@ def DYNAMICSview(request, submission_id):
       
             print("Dynamica ",ii," print FILEmod[ii] ",FILEmod[ii].items())
             for key,val in FILEmod[ii].items():
-                fext="".join(val.name.split(".")[1:])
-                print("val ",val, " ;val split",fext," Tambien id",dict_ext_id[fext])
-                #print("val ",val, " ;val split",fext," Tambien id")
-                if fext in dict_ext_id.keys():
-                    initFiles['id_file_types']=dict_ext_id[fext]
-                    initFiles['filename']=val.name
-                    initFiles['filepath']=direct
-                    #initFiles['filepath']='/protwis/sites/files/Dynamics/dyn'+dyn_obj[ii].pk#modificar
+                if key == 'traj':
+                    i=0
+                    file_ins[ii]['traj']={}
+                    file_obj[ii]['traj']={}
+                    filedyn_ins[ii][key]={}
+                    filedyn_obj[ii][key]={}
+                    while i < len(FILEmod[ii]['traj']):
+                        fext="".join(FILEmod[ii]['traj'][i].name.split(".")[1:])
+                        initFiles['id_file_types']=dict_ext_id[fext]
+                        initFiles['filename']=FILEmod[ii]['traj'][i].name
+                        initFiles['filepath']=direct
+                        file_ins[ii][key][i]=dyndb_Files(initFiles)
+                        handle_uploaded_file(FILEmod[ii][key][i],direct)
+                        print(initFiles, "dyndb_Files form done for the trajectory file number", i )
+                        if file_ins[ii][key][i].is_valid(): 
+                            file_obj[ii][key][i]=file_ins[ii][key][i].save()
+                            dicfyndyn['type']=d_fdyn_t[key]
+                            dicfyndyn['id_dynamics']=dyn_obj[ii].pk
+                            dicfyndyn['id_files']=file_obj[ii][key][i].pk
+                            filedyn_ins[ii][key][i]=dyndb_Files_Dynamics(dicfyndyn)
+                            if filedyn_ins[ii][key][i].is_valid():
+                                filedyn_obj[ii][key][i]=filedyn_ins[ii][key][i].save()
+                            else:
+                                print("Errores en el form dyndb_Files_Dynamics ", ii, " ",key, " ", i," ",  filedyn_ins[ii][key].errors.as_data())
+                        else:
+                            iii1=file_ins[ii][key][i].errors.as_data()
+                            print("file_ins[",ii,"]['traj'][",i,"] no es valido")
+                            print("!!!!!!Errores despues del file_ins[",ii,"]['traj'][",i,"]\n",iii1,"\n")
                 else:
-                    print("This extension is not valid for submission")
-                file_ins[ii][key]=dyndb_Files(initFiles)
-                handle_uploaded_file(FILEmod[ii][key],direct)
-                if file_ins[ii][key].is_valid(): 
-                    dicfyndyn={}
-                    file_obj[ii][key]=file_ins[ii][key].save(commit=False)
-                    file_obj[ii][key]=file_ins[ii][key].save()
-                    dicfyndyn['type']=d_fdyn_t[key]
-                    dicfyndyn['id_dynamics']=dyn_obj[ii].pk
-                    dicfyndyn['id_files']=file_obj[ii][key].pk
-                    filedyn_ins[ii][key]=dyndb_Files_Dynamics(dicfyndyn)
-                    if filedyn_ins[ii][key].is_valid():
-                        filedyn_obj[ii][key]=filedyn_ins[ii][key].save(commit=False)
-                        filedyn_obj[ii][key]=filedyn_ins[ii][key].save()
+                    fext="".join(val.name.split(".")[1:])
+                    print("val ",val, " ;val split",fext," Tambien id",dict_ext_id[fext])
+                    #print("val ",val, " ;val split",fext," Tambien id")
+                    if fext in dict_ext_id.keys():
+                        initFiles['id_file_types']=dict_ext_id[fext]
+                        initFiles['filename']=val.name
+                        initFiles['filepath']=direct
+                        #initFiles['filepath']='/protwis/sites/files/Dynamics/dyn'+dyn_obj[ii].pk#modificar
                     else:
-                        print("Errores en el form dyndb_Files_Dynamics ", ii, " ",key, " ",  filedyn_ins[ii][key].errors.as_data())
-                else:
-                    print("Errores en el form dyndb_Files ", ii, " ",key, " ",  file_ins[ii][key].errors.as_data())  
+                        print("This extension is not valid for submission")
+             
+                    file_ins[ii][key]=dyndb_Files(initFiles)
+                    handle_uploaded_file(FILEmod[ii][key],direct)
+                    if file_ins[ii][key].is_valid(): 
+                        dicfyndyn={}
+                        file_obj[ii][key]=file_ins[ii][key].save(commit=False)
+                        file_obj[ii][key]=file_ins[ii][key].save()
+                        dicfyndyn['type']=d_fdyn_t[key]
+                        dicfyndyn['id_dynamics']=dyn_obj[ii].pk
+                        dicfyndyn['id_files']=file_obj[ii][key].pk
+                        filedyn_ins[ii][key]=dyndb_Files_Dynamics(dicfyndyn)
+                        if filedyn_ins[ii][key].is_valid():
+                            filedyn_obj[ii][key]=filedyn_ins[ii][key].save(commit=False)
+                            filedyn_obj[ii][key]=filedyn_ins[ii][key].save()
+                        else:
+                            print("Errores en el form dyndb_Files_Dynamics ", ii, " ",key, " ",  filedyn_ins[ii][key].errors.as_data())
+                    else:
+                        print("Errores en el form dyndb_Files ", ii, " ",key, " ",  file_ins[ii][key].errors.as_data())  
  
-        return HttpResponseRedirect("/".join("/dynadb/DYNAMICSfilled/",submission_id))
+        return HttpResponseRedirect("/".join(["/dynadb/DYNAMICSfilled",submission_id,""]))
                     
         with open('/protwis/sites/protwis/dynadb/POSTimod.txt', 'wb') as handle:
             pickle.dump(POSTimod, handle)

@@ -431,7 +431,21 @@ class Migration(migrations.Migration):
                 'db_table': 'dyndb_complex_protein',
             },
         ),
-        migrations.CreateModel(
+        migrations.AddField(                                                                                                                                    # 
+            model_name='dyndbcomplexprotein',                                                                                                                   # 
+            name='id_complex_exp',                                                                                                                              # 
+            field=models.ForeignKey(db_column='id_complex_exp', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbComplexExp'),        # 
+        ),                                                                                                                                                      # 
+        migrations.AddField(                                                                                                                                    # 
+            model_name='dyndbcomplexprotein',                                                                                                                   # 
+            name='id_protein',                                                                                                                                  # 
+            field=models.ForeignKey(db_column='id_protein', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbProtein'),               # 
+        ),                                                                                                                                                      # 
+        migrations.AlterUniqueTogether(                                                                                                                         # 
+            name='dyndbcomplexprotein',                                                                                                                         # 
+            unique_together=set([('id_protein', 'id_complex_exp')]),                                                                                            # 
+        ),                                                                                                                                                      # 
+        migrations.CreateModel(                                                                                                                                   
             name='DyndbCompound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),

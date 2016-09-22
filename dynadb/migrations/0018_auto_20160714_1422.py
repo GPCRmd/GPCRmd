@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbsubmissionmodel',
             name='model_id',
-            field=models.ForeignKey(blank=True, db_column='id_model', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbModel'),
+            field=models.ForeignKey(blank=True, db_column='model_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbModel'),
         ),
         migrations.AlterField(
             model_name='dyndbsubmissionmodel',
@@ -90,11 +90,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbsubmissionmolecule',
             name='molecule_id',
-            field=models.ForeignKey(blank=True, db_column='id_molecule', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule'),
+            #field=models.ForeignKey(blank=True, db_column='id_molecule', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule'),
+            field=models.ForeignKey(blank=True, db_column='molecule_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule'),
         ),
         migrations.AlterField(
             model_name='dyndbsubmissionmolecule',
             name='submission_id',
-            field=models.ForeignKey(blank=True, db_column='id_submission', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
+#            field=models.ForeignKey(blank=True, db_column='id_submission', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
+            field=models.ForeignKey(blank=True, db_column='submission_id', null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbSubmission'),
         ),
     ]

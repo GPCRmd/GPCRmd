@@ -44,7 +44,7 @@
 <!-- middle column -->
 <div class="col-md-7 "> 
     <!-- filters -->
-  <div class="col-md-12 panel panel-primary"> 
+  <div class="col-lg-12 panel panel-primary"> 
 
     <div class="panel-body">
  <!------------------------------------------------------------------------------ middle column -->
@@ -122,22 +122,30 @@
             		</div>
 
 
-                        <table style="text-align=center;width:96%;margin-left:2%;margin-right:2%;"> 
+                        <table style="text-align=center;width:96%;margin-left:-2%;margin-right:2%;"> 
                                 <thead><tr><th style="width:40px;text-align:center"><label for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot</a></label></th>
-					<th style="width:70px;text-align:center"><label for="id_id_protein" size='10'><a title="Protein ID: ID of the protein that is modeled in this fragment.">Protein ID</a></label></th>
+					<!--<th style="width:70px;text-align:center"><label for="id_id_protein" size='10'><a title="Protein ID: ID of the protein that is modeled in this fragment.">Protein ID</a></label></th>-->
 					<th style="width:60px;text-align:center"><label for="id_chain" size='10'><a title="Chain: Chain identifier for the model in PDB format. ">Chain</a></label></th>
-					<th style="width:70px;text-align:center"><label for="id_resid_from" size='10'><a title="Res from: Starting resid of the protein fragment. ">Res from</a></label></th>
-					<th style="width:70px;text-align:center"><label for="id_resid_to"><a title="Resid to: ending resid of the protein fragment.">Res to</a></label></th>
+					<th style="width:60px;text-align:center"><label for="id_segid" size='10'><a title="Segid: segment identifier for the model in charmm PDB format. ">Segid</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_resid_from" size='10'><a title="Res from: Starting PDB file resid of the protein fragment. ">Res from</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_resid_to"><a title="Resid to: ending PDB file resid of the protein fragment.">Res to</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_seq_resid_from"><a title="Seq Resid to: Starting resid of the protein fragment in the protein sequence numbeing."> Seq Res from</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_seq_resid_to"><a title=" Seq Resid to: ending resid of the protein fragment in the protein sequence numbeing.."> Seq Res to</a></label></th>
+					<th style="width:70px;text-align:center"><label for="id_id_bonded_to_previous"><a title="Bond?: check this box if the fragment is covalently bonded to the C-terminal of the prevous one."> Bond?</a></label></th>
 					<th style="width:55px;text-align:center"><label for="id_pdbidps"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). Must be empty when the source of the modeled residues is not X-ray or NMR. ">PDB ID</a></label></th>
 					<th style="width:90px;text-align:center"><label for="id_source_typeps"><a title="Source type: Source of the coordinates of the protein fragment.">Source type</a></label></th>
 					<th style="width:110px;text-align:center"><label for="id_template_id_model"><a title="Template id model: ID of the model used as template if “Source type” is set to 'Homology'. ">Template model ID</a></label></th></tr>
                                 </thead>
                                 <tbody id="pElement1">
 				<tr id="Element1"><td style="padding:5px 5px 5px 5px"><input id="id_prot" name="prot" type="number" style="width:30px" placeholder="  1" /></td>
-				<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>
-				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:45px" placeholder=" E"/></td>
-				<td style="padding:5px 5px 5px 5px"><input id="id_resid_from" name="resid_from" type="text"  style="width:60px" placeholder=" ??"/></td>
-				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" name="resid_to" type="text" style="width:60px" placeholder=" ?? "/></td>
+				<!--<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
+				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:30px" placeholder=" E"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_segid" maxlength="4" name="segid" type="text" style="width:45px" placeholder="PROA"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_from" name="resid_from" type="text"  style="width:50px" placeholder=" ??"/></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" name="resid_to" type="text" style="width:50px" placeholder=" ?? "/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_from" name="resid_from" type="text"  style="width:50px" placeholder=" ??"/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_from" name="resid_from" type="text"  style="width:50px" placeholder=" ??"/></td>
+                              <td style="padding:5px 5px 5px 5px"><input id="id_bonded_to_previous" name="bonded_to_previous" style="aligned:centre" type="checkbox" checked placeholder=" ??"/></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" name="pdbidps" type="text"  style="width:50px" placeholder=" 4IAR.A  "/></td>
 				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps" readonly name="source_typeps" style="width:70px" >	
 					<option value="0" selected="selected">X-ray</option>
@@ -148,10 +156,7 @@
 					<option value="5">Threading</option>
 					<option value="6">Other Computational Methods</option>
 				</select></td>
-				<td style="padding:5px 5px 5px 5px"><select id="id_template_id_model" style="width:120px"  name="template_id_model">
-					<option value="" selected="selected">---------</option>
-					<option value="1">DyndbModel object</option>
-				</select></td>
+				<td style="padding:5px 5px 5px 5px"><input id="id_template_id_model" style="width:60px"  name="template_id_model" type=text></td>
 				</tr><tbody></table> 
 			<br>
 		        <script src="{% static 'dynadb/addFields.js' %}"></script>		
@@ -180,16 +185,8 @@
                                 <tbody id="pElement2">
 				<tr id="Element2"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ" /></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 " /></td>
-					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule" placeholder="   " >
-						<option value="" selected="selected">---------</option>
-						<option value="1">DyndbMolecule object</option>
-						<option value="3">DyndbMolecule object</option>
-						<option value="4">DyndbMolecule object</option>
-						<option value="5">DyndbMolecule object</option>
-						<option value="6">DyndbMolecule object</option>
-						<option value="7">DyndbMolecule object</option>
-						<option value="2">DyndbMolecule object</option>
-						</select></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" name="id_molecule" type="text" placeholder="   " ></td>
+
 					<td style="padding:5px 5px 5px 5px"><input id="id_namemc" maxlength="60" name="namemc" type="text" style="width:70px" placeholder=" Clozapine" /></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_typemc" name="typemc" style="width:60px">
@@ -219,7 +216,7 @@
 </div>
 
   <div id="selection-buttons">
-      <div class="col-md-12 panel panel-primary">
+      <div class="col-md-12 panel panel-primary" >
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
