@@ -1,5 +1,6 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
+{% load static %}
 {% block addon_css %}
   <style>
   .panel-body {
@@ -20,7 +21,11 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>+info</b></div>
     <div class="panel-body"> <b>Scientific name:</b> {{answer.scientific_name}} <br>
-    <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br> 
+    <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br>
+    <b>Mutations</b><br>
+    {% for mutation in answer.mutations %}
+        <p> Residue {{mutation.0}}: From {{mutation.1}}  to    {{mutation.2}} </p>
+    {%endfor%} 
     <b>Activity (Description, value, units):</b><br>
 
     {% for values in answer.activity %}

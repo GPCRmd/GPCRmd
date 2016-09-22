@@ -23,6 +23,10 @@
     {%for compoundlink in answer.link_2_compound%}
        <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
+                              <br><b> Models in which this molecule appears </b>:
+    {%for model in answer.inmodels%}
+        <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
+    {%endfor%}
     </div>
 
 
@@ -31,11 +35,13 @@
 
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Images of the SDF file</b></div>
-    {%for image in answer.sdf%}
-        <img src='static/dyndb/6_mol_3.png'>
-        <div class="panel-body"> <img src={{image}} style="width:304px;height:228px;">
-    {%endfor%}
+    <div class="panel-heading"><b>SDF file</b></div>
+    <div class="panel-body">
+    <pre>{{answer.sdf}}</pre>
+    {# for image in answer.sdf #}
+    <img src="{% static "dynadb/2_mol_2_300.png" %}" />    
+    <img src="{% static "dynadb/3_mol_4.sdf" %}" /> 
+    {#endfor#}
 
 
     </div>

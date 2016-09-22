@@ -21,7 +21,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
@@ -289,6 +289,7 @@ def PROTEINview(request, submission_id):
 def query_protein(request, protein_id):
     fiva=dict()
     actlist=list()
+    fiva['mutations']=list()
     fiva['models']=list()
     fiva['other_names']=list()
     fiva['activity']=list()
@@ -297,6 +298,10 @@ def query_protein(request, protein_id):
     fiva['cannonical']=DyndbProteinCannonicalProtein.objects.get(id_protein=protein_id).id_cannonical_proteins.id_protein.id
     fiva['is_mutated']=DyndbProtein.objects.get(pk=protein_id).is_mutated
     fiva['scientific_name']=DyndbProtein.objects.get(pk=protein_id).id_uniprot_species.scientific_name
+    
+    for match in DyndbProteinMutations.objects.filter(id_protein=protein_id):
+        fiva['mutations'].append( (match.resid,match.resletter_from, match.resletter_to) )
+    print(fiva['mutations'])
 
     for match in DyndbOtherProteinNames.objects.filter(id_protein=protein_id): #checked
         fiva['other_names'].append(match.other_names)
@@ -365,6 +370,7 @@ def query_protein_fasta(request,protein_id):
             
 def query_molecule(request, molecule_id):
     molec_dic=dict()
+    molec_dic['inmodels']=list()
     molec_dic['link_2_compound']=list()
     molec_dic['sdf']=list()
     molec_dic['smiles']=DyndbMolecule.objects.get(pk=molecule_id).smiles
@@ -374,9 +380,14 @@ def query_molecule(request, molecule_id):
     molec_dic['inchikey']=DyndbMolecule.objects.get(pk=molecule_id).inchikey
     molec_dic['inchicol']=DyndbMolecule.objects.get(pk=molecule_id).inchicol
 
+    for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
+        molec_dic['inmodels'].append(match.id_model.id)
+
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
-        molec_dic['sdf'].append(molfile.id_files.filepath)
-    
+        #molec_dic['sdf'].append(molfile.id_files.filepath)
+        intext=open('/protwis/sites/protwis/dynadb/3_mol_4.sdf','r')
+        string=intext.read()
+        molec_dic['sdf']=string
     for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
         molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
 
