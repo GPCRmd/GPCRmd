@@ -92,8 +92,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/protwis/static/protwis'
 STATICFILES_DIRS = (os.sep.join([BASE_DIR, "static"]),)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/protwis/media/protwis'
+MEDIA_URL = '/files/'
+#past: MEDIA_URL = '/media/'
+MEDIA_ROOT = '/protwis/sites/files/'
+#past: MEDIA_ROOT = '/protwis/media/protwis'
 
 
 # Serializer

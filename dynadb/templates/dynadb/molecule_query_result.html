@@ -27,26 +27,12 @@
     {%for model in answer.inmodels%}
         <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
     {%endfor%}
-    </div>
 
+    <br><center><a href=sdf><button type="button">Download the SDF file</button></a></center>
+    </div>
+    </div>
+    </div>   
 
-    </div>
-    </div>
-
-    <div class="container">
-    <div class="panel panel-info">
-    <div class="panel-heading"><b>SDF file</b></div>
-    <div class="panel-body">
-    <pre>{{answer.sdf}}</pre>
-    {# for image in answer.sdf #}
-    <img src="{% static "dynadb/2_mol_2_300.png" %}" />    
-    <img src="{% static "dynadb/3_mol_4.sdf" %}" /> 
-    {#endfor#}
-
-
-    </div>
-    </div>
-    </div>
 
 {% endblock content %}
 

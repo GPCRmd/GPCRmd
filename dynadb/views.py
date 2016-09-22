@@ -315,7 +315,6 @@ def query_protein(request, protein_id):
     
     for match in DyndbProteinMutations.objects.filter(id_protein=protein_id):
         fiva['mutations'].append( (match.resid,match.resletter_from, match.resletter_to) )
-    print(fiva['mutations'])
 
     for match in DyndbOtherProteinNames.objects.filter(id_protein=protein_id): #checked
         fiva['other_names'].append(match.other_names)
@@ -362,6 +361,7 @@ def query_protein(request, protein_id):
 def query_protein_fasta(request,protein_id):
     yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
     seq=getattr(yourseq,'sequence')
+    uniprot_id=DyndbProtein.objects.get(pk=protein_id).uniprotkbac
     count=0
     fseq=''
     for char in seq:
@@ -373,7 +373,7 @@ def query_protein_fasta(request,protein_id):
         count=count+1
 
     with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
-        fh.write('>'+protein_id+':\n')
+        fh.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
         fh.write(fseq)
     with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
         data=f.read()
@@ -399,7 +399,8 @@ def query_molecule(request, molecule_id):
 
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
         #molec_dic['sdf'].append(molfile.id_files.filepath)
-        intext=open('/protwis/sites/protwis/dynadb/3_mol_4.sdf','r')
+        #intext=open('/protwis/sites/protwis/dynadb/3_mol_4.sdf','r')
+        intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
         molec_dic['sdf']=string
     for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
@@ -407,11 +408,24 @@ def query_molecule(request, molecule_id):
 
     return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
 
+def query_molecule_sdf(request, molecule_id):
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
+        intext=open(molfile.id_files.filepath,'r')
+        string=intext.read()
+    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','w') as fh:
+        fh.write(string)
+    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+molecule_id+'_gpcrmd.sdf')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (molecule_id+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+molecule_id+'_gpcrmd.sdf')
+    return response
+            
 
 def query_compound(request,compound_id):
     comp_dic=dict()
     comp_dic['link_2_molecule']=list()
-    comp_dic['imagelink']=list()
+    #comp_dic['imagelink']=list()
     comp_dic['othernames']=list()
     for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
         comp_dic['othernames'].append(oname.other_names)
@@ -421,12 +435,17 @@ def query_compound(request,compound_id):
     comp_dic['chembleid']=DyndbCompound.objects.get(pk=compound_id).chembleid
     comp_dic['sinchi']=DyndbCompound.objects.get(pk=compound_id).sinchi
     comp_dic['sinchikey']=DyndbCompound.objects.get(pk=compound_id).sinchikey
-    #pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
-    #comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    try:
+    	pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
+    	comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    	comp_dic['imagelink']=comp_dic['imagelink'].replace("/protwis/sites/","/dynadb/") #this makes it work
+    except:
+        pass
+    #print (comp_dic['imagelink'])
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
-        for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
-            comp_dic['imagelink'].append(molfile.id_files.filepath)
+    #    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
+    #        #comp_dic['imagelink'].append(molfile.id_files.filepath)
 
     return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
 

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.conf.urls import url,patterns
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
-
+from django.conf import settings
 from . import views
 
 app_name= 'dynadb'
@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^protein/id/(?P<protein_id>[0-9]+)/$',views.query_protein, name='query_protein'),
     url(r'^protein/id/(?P<protein_id>[0-9]+)/fasta$',views.query_protein_fasta, name='query_protein_fasta'),
     url(r'^molecule/id/(?P<molecule_id>[0-9]+)/$',views.query_molecule, name='query_molecule'),
+    url(r'^molecule/id/(?P<molecule_id>[0-9]+)/sdf$',views.query_molecule_sdf,name='query_molecule_sdf'),
     url(r'^compound/id/(?P<compound_id>[0-9]+)/$',views.query_compound, name='query_compound'),
     url(r'^model/id/(?P<model_id>[0-9]+)/$',views.query_model, name='query_model'),
     url(r'^dynamics/id/(?P<dynamics_id>[0-9]+)/$',views.query_dynamics, name='query_dynamics'),
@@ -48,7 +49,18 @@ urlpatterns = [
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
+    #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
+
+if settings.DEBUG:
+    urlpatterns += patterns('',
+        url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
+            'document_root': settings.STATIC_ROOT,
+        }),
+)
 
