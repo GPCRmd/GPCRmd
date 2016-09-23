@@ -271,30 +271,30 @@ def PROTEINview(request, submission_id):
 
                 #####dyndb_Protein_Cannonical_Protein when is mutated TRUE
 
-                fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':})
-                if fdbPCP[ii].is_valid():
-                    fdbPCP[ii].save()
-                else:
-                    iii1=fdbPCP[ii].errors.as_data()
-                    print("fdbCP[",ii,"] no es valido")
-                    print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n") 
+              #  fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':})
+           #    if fdbPCP[ii].is_valid():
+           #        fdbPCP[ii].save()
+           #    else:
+           #        iii1=fdbPCP[ii].errors.as_data()
+           #        print("fdbCP[",ii,"] no es valido")
+           #        print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n") 
             else:   ### is mutated FALSE
                 #### To populate dyndb_canonical_protein 
-                fdbCaP[ii]=dyndb_Cannonical_Protein({'id_protein':formPF[ii].pk})
-                if fdbCaP[ii].is_valid():
-                    formCaP[ii]=fdbCaP[ii].save()
-                    CaPpk=formCaP[ii].pk 
-                    fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':formCaP[ii].pk})
-                    if fdbPCP[ii].is_valid():
-                        fdbPCP[ii].save()
-                    else:
-                        iii1=fdbPCP[ii].errors.as_data()
-                        print("fdbCP[",ii,"] no es valido")
-                        print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
-                else:
-                    iii1=fdbCP[ii].errors.as_data()
-                    print("fdbCP[",ii,"] no es valido")
-                    print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
+           #    fdbCaP[ii]=dyndb_Cannonical_Protein({'id_protein':formPF[ii].pk})
+           #    if fdbCaP[ii].is_valid():
+           #        formCaP[ii]=fdbCaP[ii].save()
+           #        CaPpk=formCaP[ii].pk 
+           #        fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':formCaP[ii].pk})
+           #        if fdbPCP[ii].is_valid():
+           #            fdbPCP[ii].save()
+           #        else:
+           #            iii1=fdbPCP[ii].errors.as_data()
+           #            print("fdbCP[",ii,"] no es valido")
+           #            print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
+           #    else:
+           #        iii1=fdbCP[ii].errors.as_data()
+           #        print("fdbCP[",ii,"] no es valido")
+           #        print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
  
                 seq=dictprot[ii]['sequence']
                 lseq=len(seq)
