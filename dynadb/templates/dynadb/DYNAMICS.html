@@ -68,12 +68,12 @@
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" ACEMD" /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" NAMD" /></td></tr></div>
 		<br></div>	
 
 	        <div class="row">
 	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_sversion"> <a title="Software version: Version of the software used to compute the simulations."> Software version: </a></label></th></div>
-			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p"  placeholder=" 3212M"  /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p"  placeholder=" 2.11"  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
@@ -195,15 +195,7 @@
 
                                 <tbody id="pElement1-0"><tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
-					<td style="padding:5px 5px 5px 5px"><select style="width:70px" id="id_id_molecule" name="id_molecule">
-						<option value="" selected="selected">---------</option>
-						<option value="1">DyndbMolecule object</option>
-						<option value="3">DyndbMolecule object</option>
-						<option value="4">DyndbMolecule object</option>
-						<option value="5">DyndbMolecule object</option>
-						<option value="6">DyndbMolecule object</option>
-						<option value="7">DyndbMolecule object</option>
-						<option value="2">DyndbMolecule object</option>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" type="text" readonly placeholder="1" name="id_molecule">
 						</select></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
