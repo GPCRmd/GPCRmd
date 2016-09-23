@@ -121,6 +121,8 @@ def PROTEINview(request, submission_id):
         fdbSP={}
         fdbPS={}
         fdbPM={}
+        fdbCaP={}
+        fdbPCaP={}
         dictSP={}
         dictPM={}
         listON={}
@@ -129,6 +131,7 @@ def PROTEINview(request, submission_id):
         formSP={}
         formPS={}
         formOPN={}
+        formCaP={} 
         initPS={}
         initPM={}
         dictCP={}
@@ -202,6 +205,7 @@ def PROTEINview(request, submission_id):
             if 'sequence' not in dictprot[ii].keys():
                 dictprot[ii]['sequence']="TOTO"
                 print("No Sequence found (NORMAL)")
+
             if 'is_mutated' in fdbPF[ii].data: 
                 dictPM[ii]={}
                 nummutl[ii]=[]
@@ -264,8 +268,34 @@ def PROTEINview(request, submission_id):
                         iii1=fdbPM[ii][nm].errors.as_data()
                         print("fdbPM[",ii,"][",nm,"] no es valido")
                         print("!!!!!!Errores despues del fdbPM[",ii,"][",nm,"]\n",iii1,"\n")
-                
-            else:
+
+                #####dyndb_Protein_Cannonical_Protein when is mutated TRUE
+
+                fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':})
+                if fdbPCP[ii].is_valid():
+                    fdbPCP[ii].save()
+                else:
+                    iii1=fdbPCP[ii].errors.as_data()
+                    print("fdbCP[",ii,"] no es valido")
+                    print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n") 
+            else:   ### is mutated FALSE
+                #### To populate dyndb_canonical_protein 
+                fdbCaP[ii]=dyndb_Cannonical_Protein({'id_protein':formPF[ii].pk})
+                if fdbCaP[ii].is_valid():
+                    formCaP[ii]=fdbCaP[ii].save()
+                    CaPpk=formCaP[ii].pk 
+                    fdbPCP[ii]=dyndb_Protein_Cannonical_Protein({'id_protein':formPF[ii].pk,'id_cannonical_protein':formCaP[ii].pk})
+                    if fdbPCP[ii].is_valid():
+                        fdbPCP[ii].save()
+                    else:
+                        iii1=fdbPCP[ii].errors.as_data()
+                        print("fdbCP[",ii,"] no es valido")
+                        print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
+                else:
+                    iii1=fdbCP[ii].errors.as_data()
+                    print("fdbCP[",ii,"] no es valido")
+                    print("!!!!!!Errores despues del fdbCP[",ii,"]\n",iii1,"\n")
+ 
                 seq=dictprot[ii]['sequence']
                 lseq=len(seq)
                 initPS[ii]={'id_protein':formPF[ii].pk,'sequence':seq,'length':lseq} 
@@ -1225,7 +1255,11 @@ def DYNAMICSview(request, submission_id):
                     indexfl.append(indexf)
                     FILEmod[indexf]={}
                     print("indexf ", indexf, " Key, Val ", key, val)
-                FILEmod[indexf]["-".join(key.split("-")[2:])]=val
+                nkey="-".join(key.split("-")[2:])
+                if nkey == 'traj':
+                    FILEmod[indexf][nkey]={} 
+                    continue
+                FILEmod[indexf][nkey]=val
             else:
                 if len(indexfl)==0:
                     indexfl.append(0)
@@ -1233,15 +1267,10 @@ def DYNAMICSview(request, submission_id):
                     FILEmod[0]={}
                 print("key en dicfiles ", key, val)
                 if key == 'traj':
-                    print ("filemod[0][",key,"]=",val)
-                    FILEmod[0]['traj']={}
-                    n=0
-                    for files in request.FILES.getlist('traj'):
-                        FILEmod[0]['traj'][n]=files
-                        print("TRAJ", n, " ",  FILEmod[0]['traj'][n])
-                        n=n+1
-                    
+                    FILEmod[0][key]={} #needed !!!! 
+                    continue
                 FILEmod[0][key]=val  ###################### ME QUEDE AQUI
+
         file_ins={}
         filedyn_ins={}
         file_obj={}
@@ -1320,19 +1349,21 @@ def DYNAMICSview(request, submission_id):
                     file_obj[ii]['traj']={}
                     filedyn_ins[ii][key]={}
                     filedyn_obj[ii][key]={}
-                    while i < len(FILEmod[ii]['traj']):
-                        fext="".join(FILEmod[ii]['traj'][i].name.split(".")[1:])
+                    for files in request.FILES.getlist('traj'):
+                        print("TRAJ ",  files)
+                        fext="".join(files.name.split(".")[1:])
                         initFiles['id_file_types']=dict_ext_id[fext]
-                        initFiles['filename']=FILEmod[ii]['traj'][i].name
+                        initFiles['filename']=files.name
                         initFiles['filepath']=direct
                         file_ins[ii][key][i]=dyndb_Files(initFiles)
-                        handle_uploaded_file(FILEmod[ii][key][i],direct)
-                        print(initFiles, "dyndb_Files form done for the trajectory file number", i )
+                        handle_uploaded_file(files,direct)
                         if file_ins[ii][key][i].is_valid(): 
                             file_obj[ii][key][i]=file_ins[ii][key][i].save()
+                            dicfyndyn={}
                             dicfyndyn['type']=d_fdyn_t[key]
                             dicfyndyn['id_dynamics']=dyn_obj[ii].pk
                             dicfyndyn['id_files']=file_obj[ii][key][i].pk
+                            print("numero de fichero ",i, "id_files", file_obj[ii][key][i].pk)
                             filedyn_ins[ii][key][i]=dyndb_Files_Dynamics(dicfyndyn)
                             if filedyn_ins[ii][key][i].is_valid():
                                 filedyn_obj[ii][key][i]=filedyn_ins[ii][key][i].save()
@@ -1342,6 +1373,7 @@ def DYNAMICSview(request, submission_id):
                             iii1=file_ins[ii][key][i].errors.as_data()
                             print("file_ins[",ii,"]['traj'][",i,"] no es valido")
                             print("!!!!!!Errores despues del file_ins[",ii,"]['traj'][",i,"]\n",iii1,"\n")
+                        i=i+1
                 else:
                     fext="".join(val.name.split(".")[1:])
                     print("val ",val, " ;val split",fext," Tambien id",dict_ext_id[fext])
