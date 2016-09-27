@@ -21,11 +21,11 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbFilesDynamics, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
-
+from .main4_6 import *
 # Create your views here.
 
 def REFERENCEview(request, submission_id=None):
@@ -467,6 +467,7 @@ def query_model(request,model_id):
 def query_dynamics(request,dynamics_id):
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=list()
+    dyna_dic['files']=list()
     dyna_dic['references']=list()
     dyna_dic['related']=list()
     dyna_dic['soft']=DyndbDynamics.objects.get(pk=dynamics_id).software
@@ -485,6 +486,9 @@ def query_dynamics(request,dynamics_id):
     
     for match in DyndbReferencesDynamics.objects.filter(id_dynamics=dynamics_id):
         dyna_dic['references'].append(match.id_references.doi)
+
+    for match in DyndbFilesDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
     
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
 
@@ -678,7 +682,68 @@ def get_mutations_view(request):
       return response
     except:
       raise
-      
+
+def pdbcheck(request):
+    if request.method=='POST': #See pdbcheck.js
+        chain=request.POST.get('chain')
+        segid= request.POST.get('segid')
+        start= int(request.POST.get('restart'))
+        stop= int(request.POST.get('restop'))
+        #I need the pdb and sequence! #lets assume the pdb path will be: /dynadb/files/1fat.pdb
+
+        pdbname='/protwis/sites/protwis/dynadb/1fat.pdb' #Ask Juanma to add this line request.session['newfilename']=direct+newname under:      newname="file_"+str(fdbFileobj.pk)+"model_"+str(MFpk)+fext 
+        #pdbname=request.session['newfilename']
+
+        fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
+        uniquetest=uniqueset(pdbname, segid, start, stop, chain)
+
+        if uniquetest==True:
+            checkresult=checkpdb(pdbname,segid,start,stop,chain)
+
+            if isinstance(checkresult,tuple):
+                tablepdb,simplified_sequence,hexflag=checkresult
+                guide=matchpdbfa(fastaname,simplified_sequence,tablepdb,hexflag)
+
+                if isinstance(guide, list):
+                    repairpdb(pdbname,guide,segid,start,stop,chain)
+                    segments=segment_id(pdbname, segid, start, stop, chain)
+                    results={'type':'fullrun', 'table':guide,'seg':segments}
+
+                elif isinstance(guide, tuple):
+                    #context={'mismatchlist':guide[1],'mismatchstr':guide[0]}
+                    #return HttpResponse(templatetuple.render(context,request)) #mismatch list error
+                    results={'type':'tuple_error', 'title':'Mismatch found', 'mismatchlist':guide[1],'errmess':guide[0]}
+
+                else: #PDB has insertions error
+                    results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide}
+
+            else: #checkpdb has an error
+                results={'type':'string_error','title':'Corrupted resid numbering', 'errmess':checkresult} #prints the error resid.
+
+        else:
+            results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
+
+        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
+        data = json.dumps(tojson)
+        request.session['result'] = results 
+        return HttpResponse(data, content_type='application/json')
+
+    else: #NOT POST, simply display of results in the POP UP window. See pdbcheck.js
+
+        fav_color = request.session['result']
+
+        if fav_color['type']=='tuple_error':
+            return render(request,'dynadb/tuple_error.html', {'answer':fav_color})
+
+        elif fav_color['type']=='string_error':
+            return render(request,'dynadb/string_error.html', {'answer':fav_color})
+
+        elif fav_color['type']=='fullrun':
+            return render(request,'dynadb/fullrun.html', {'answer':fav_color})
+
+        else:
+            fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very bad alignment\n ','title':'Unknown error'}
+            return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
 def MODELview(request, submission_id):
     # Function for saving files

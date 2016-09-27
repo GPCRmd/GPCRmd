@@ -46,6 +46,7 @@ urlpatterns = [
     url(r'^MOLECULEfilled2/$', views.SMALL_MOLECULEview2, name='MOLECULEfilled2'),
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
     url(r'^MODELfilled/(?P<submission_id>[0-9]+)/$', views.MODELview, name='MODELfilled'),
+    url(r'^ajax_pdbchecker/$', views.pdbcheck, name='pdbcheck'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
