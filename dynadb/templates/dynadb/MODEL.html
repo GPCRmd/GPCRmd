@@ -76,6 +76,7 @@
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex" > Complex Name:</a></label></div>
 			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder="5-HT1B receptor in complex with Clozapine"  style="width:300px"></input></div>
+                         <button type="button" id='pdbchecker'> POST! </button>
 		<br></div>
 
 	        <div class="row">
@@ -165,7 +166,7 @@
 			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
 		        </div> 		
  			<div style="text-align:right;margin-right:5%">
-					<button onclick="addFields()"> Validate </button> 
+					<button id="pdbchecker2" onclick="addFields()"> Validate </button> 
 		        </div> 		
 		        </div><br>
 
@@ -231,8 +232,9 @@
 
 {% endblock content %}
 
-{% block addon_js %} 
-
+{% block addon_js %}
+    <script src="{% static 'dynadb/pdberror.js' %}"></script>
+    <script src="{% static 'dynadb/pdbchecker.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>
