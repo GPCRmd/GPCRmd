@@ -12,23 +12,27 @@
 {% endblock %}
 {% block content %} 
     <div class="container">
-    <div class="panel panel-info">
-    <div class="panel-heading"><b>Perfect: PDB and FASTA match!</b></div>
+    <div class="panel panel-success">
+    <div class="panel-heading"><center><b>All right: PDB and FASTA match!</b></center></div>
     <div class="panel-body">
-
-
+   <center> <a href=/dynadb{{answer.path}}><button type="button"> Download the corrected PDB </button></a></center>
     <table id="table_id" class="display">
       <thead>
       <tr>
-        <th>PDB(resname and resid)</th>
-        <th>FASTA(resname and resid)</th>
+        <th>PDB(resname:resid)</th>
+        <th>FASTA(resname:resid)</th>
       </tr>
       </thead>
       <tbody>
       {%for minilist in answer.table%}
       <tr>
-        <td>{{minilist.0}}</td>
-        <td>{{minilist.1}}</td>
+      {%if minilist.0.2%}
+        <td>{{minilist.0.2}} : {{minilist.0.0}}</td>
+        <td>{{minilist.1.1}} : {{minilist.1.0}}</td>
+      {%else%}
+        <td>{{minilist.0.0}}</td>
+        <td>{{minilist.1.1}} : {{minilist.1.0}}</td> 
+      {%endif%}
       {%endfor%}
       </tr>
       </tbody>

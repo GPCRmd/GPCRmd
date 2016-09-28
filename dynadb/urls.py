@@ -47,6 +47,7 @@ urlpatterns = [
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
     url(r'^MODELfilled/(?P<submission_id>[0-9]+)/$', views.MODELview, name='MODELfilled'),
     url(r'^ajax_pdbchecker/$', views.pdbcheck, name='pdbcheck'),
+    url(r'^tmp/(?P<pdbname>[a-zA-Z0-9]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),

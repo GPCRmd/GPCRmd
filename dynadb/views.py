@@ -21,7 +21,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbFilesDynamics, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
@@ -482,16 +482,19 @@ def query_compound(request,compound_id):
 
 def query_model(request,model_id):
     model_dic=dict()
-    model_dic['description']=DyndbModel.objects.get(pk=model_id).description
+    #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
     model_dic['pdbid']=DyndbModel.objects.get(pk=model_id).pdbid
     model_dic['type']=DyndbModel.objects.get(pk=model_id).type
-    model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id
+    #model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id #NOT WORKING BECAUSE OF MISSING INFORMATION
+    model_dic['references']=list()
     model_dic['components']=list()
     model_dic['dynamics']=list()
     for match in DyndbModelComponents.objects.filter(id_model=model_id):
-        model_dic['components'].append(match.id_molecule,match.numberofmol)
+        model_dic['components'].append(match.id_molecule.id)
     for match in DyndbDynamics.objects.filter(id_model=model_id):
         model_dic['dynamics'].append(match.id)
+    for match in DyndbReferencesModel.objects.filter(id_model=model_id):
+        model_dic['references'].append( (match.id_references.doi, match.id_references.title) )
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
 
 def query_dynamics(request,dynamics_id):
@@ -721,10 +724,18 @@ def pdbcheck(request):
         stop= int(request.POST.get('restop'))
         #I need the pdb and sequence! #lets assume the pdb path will be: /dynadb/files/1fat.pdb
 
-        pdbname='/protwis/sites/protwis/dynadb/1fat.pdb' #Ask Juanma to add this line request.session['newfilename']=direct+newname under:      newname="file_"+str(fdbFileobj.pk)+"model_"+str(MFpk)+fext 
+        #pdbname='/protwis/sites/protwis/dynadb/1fat.pdb'
         #pdbname=request.session['newfilename']
 
         fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
+        pdbname='/protwis/sites/protwis/dynadb/1fat.pdb'
+
+        if stop-start<1:
+            results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is smaller or equal to the "Res to" value'}
+            tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
+            data = json.dumps(tojson)
+            request.session['result'] = results 
+            return HttpResponse(data, content_type='application/json')
         uniquetest=uniqueset(pdbname, segid, start, stop, chain)
 
         if uniquetest==True:
@@ -735,13 +746,11 @@ def pdbcheck(request):
                 guide=matchpdbfa(fastaname,simplified_sequence,tablepdb,hexflag)
 
                 if isinstance(guide, list):
-                    repairpdb(pdbname,guide,segid,start,stop,chain)
+                    path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain)
                     segments=segment_id(pdbname, segid, start, stop, chain)
-                    results={'type':'fullrun', 'table':guide,'seg':segments}
+                    results={'type':'fullrun', 'table':guide,'seg':segments, 'path':path_to_repaired}
 
                 elif isinstance(guide, tuple):
-                    #context={'mismatchlist':guide[1],'mismatchstr':guide[0]}
-                    #return HttpResponse(templatetuple.render(context,request)) #mismatch list error
                     results={'type':'tuple_error', 'title':'Mismatch found', 'mismatchlist':guide[1],'errmess':guide[0]}
 
                 else: #PDB has insertions error
@@ -774,6 +783,14 @@ def pdbcheck(request):
         else:
             fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very bad alignment\n ','title':'Unknown error'}
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
+
+def servecorrectedpdb(request,pdbname):
+    with open('/tmp/'+pdbname,'r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+pdbname)[0])
+        response['Content-Disposition']="attachment;filename=%s" % (pdbname) #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
+    return response
 
 def MODELview(request, submission_id):
     # Function for saving files
@@ -926,6 +943,7 @@ def MODELview(request, submission_id):
             print("Errores en el form dyndb_Files\n ", fdbFile.errors.as_data())
 
         newname="file_"+str(fdbFileobj.pk)+"model_"+str(MFpk)+fext
+        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
         handle_uploaded_file(PDBmodel,direct,newname)
 
         fdbPS={} 

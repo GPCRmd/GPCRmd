@@ -145,7 +145,8 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or 	 	 insertion code)  in the new PDB file is the same that was used in the original PDB'''
 
 	oldpdb=open(pdbfile, 'r')
-	newpdb=open(pdbfile[:-4]+'_corrected.pdb','w')
+	pdbfile=pdbfile[pdbfile.rfind('/'):]
+	newpdb=open('/tmp'+pdbfile[:-4]+'_corrected.pdb','w')
 	count=-1
 	pvresid=-1
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
@@ -204,6 +205,8 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 
 		else:
 			newpdb.write(line)
+
+	return '/tmp'+pdbfile[:-4]+'_corrected.pdb'
 
 	newpdb.close()
 	oldpdb.close()
