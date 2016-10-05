@@ -439,8 +439,9 @@ class DyndbCompound(models.Model):
     iupac_name = models.CharField(max_length=500)
     pubchem_cid = models.IntegerField(unique=True, blank=True, null=True)
     chembleid = models.IntegerField(unique=True, blank=True, null=True)
-    sinchi = models.TextField()
-    sinchikey = models.CharField(max_length=27)
+    sinchi = models.TextField(null=True)
+#    sinchikey = models.CharField(max_length=27, db_index=True,null=True)
+    sinchikey = models.CharField(max_length=27, null=True)
     std_id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='std_id_molecule', blank=True, null=True)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
@@ -451,7 +452,7 @@ class DyndbCompound(models.Model):
     id_ligand = models.ForeignKey('Ligand', models.DO_NOTHING, db_column='id_ligand', blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_compound'
 
 class DyndbSubmission(models.Model):
@@ -842,7 +843,8 @@ class DyndbMolecule(models.Model):
     description = models.CharField(max_length=80, blank=True, null=True)
     net_charge = models.SmallIntegerField(blank=True, null=True)
     inchi = models.TextField()
-    inchikey = models.CharField(max_length=27)
+#    inchikey = models.CharField(max_length=27,db_index=True)
+    inchikey = models.CharField(max_length=27,null=True)
     inchicol = models.SmallIntegerField()
     smiles = models.TextField(blank=True, null=True)
     update_timestamp = models.DateTimeField(blank=True, null=True)
@@ -853,10 +855,10 @@ class DyndbMolecule(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_molecule'
         unique_together = (('inchikey', 'inchicol'),)
-
+         
 
 class DyndbOtherCompoundNames(models.Model):
     other_names = models.CharField(max_length=200)
@@ -908,7 +910,7 @@ class DyndbProtein(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    receptor_id_protein = models.ForeignKey('self', models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
+    receptor_id_protein = models.ForeignKey('Protein', on_delete=models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
     id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.DO_NOTHING, db_column='id_uniprot_species',null=False)
 
     class Meta:
