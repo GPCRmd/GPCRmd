@@ -375,15 +375,17 @@ class DyndbComplexCompound(models.Model):
         (2,'Crystallographic waters'),
         (3,'Other')
     )
-    id_complex_exp = models.ForeignKey('DyndbComplexExp', models.DO_NOTHING,  null=True)#db_column='id_complex_exp',
-    id_compound = models.ForeignKey('DyndbCompound', models.DO_NOTHING, null=True) # db_column='id_compound',
+    id_complex_exp=models.ForeignKey('DyndbComplexExp', models.DO_NOTHING, db_column='id_complex_exp', null=True)#
+    #id_complex_exp_id =models.IntegerField(blank=True, null=True)
+    id_compound = models.ForeignKey('DyndbCompound',models.DO_NOTHING, db_column='id_compound',null=True)  
+    #id_compound_id = models.IntegerField(blank=True, null=True)
     type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
-
+ 
     class Meta:
         managed = True
         db_table = 'dyndb_complex_compound'
-        unique_together = (('id_complex_exp', 'id_compound'),)
-
+        unique_together = (('id_complex_exp', 'id_compound'))
+ 
 
 class DyndbComplexExp(models.Model):
     update_timestamp = models.DateTimeField()

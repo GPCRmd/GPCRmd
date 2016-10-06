@@ -365,11 +365,16 @@ class Migration(migrations.Migration):
             name='DyndbComplexCompound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_complex_exp', models.ForeignKey('DyndbComplexExp', models.DO_NOTHING, db_column='id_complex_exp',null=False)),
+            #    ('id_complex_exp_id', models.IntegerField(blank=True, null=True)),
+                ('id_compound',models.ForeignKey('DyndbCompound', models.DO_NOTHING,  db_column='id_compound',null=True)),
+            #    ('id_compound_id', models.IntegerField(blank=True, null=True)),
                 ('type', models.TextField()),
             ],
             options={
                 'managed': True,
                 'db_table': 'dyndb_complex_compound',
+                'unique_together' : (('id_complex_exp', 'id_compound'),),
             },
         ),
         migrations.CreateModel(
@@ -408,8 +413,8 @@ class Migration(migrations.Migration):
             name='DyndbComplexMoleculeMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-    ('id_complex_molecule', models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule',null=False)),
-    ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)),
+                ('id_complex_molecule', models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule',null=False)),
+                ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)),
 		
                 ('resname', models.CharField(blank=True, max_length=4, null=True)),
                 ('number', models.IntegerField(blank=True, null=True)),
