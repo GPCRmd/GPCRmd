@@ -185,6 +185,8 @@ if DEBUG:
        }
     }
 
+SESSION_ENGINE="django.contrib.sessions.backends.file"
+
 #CACHE
 CACHES = {
     'default': {

@@ -61,7 +61,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 							#print ('Modified aminoacid %s found in position %s, X inserted in sequence.' % (fields[3],cpos))
 
 					elif cpos2<ppos2 and cpos!=1: 
-						#print(cpos2,ppos2)
+						print(cpos2,ppos2)
 						#raise Exception('Residue numbering order is corrupted in position:'+str(cpos2))
 						return 'Residue numbering order is corrupted in position:'+str(cpos2)
 
@@ -78,11 +78,24 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 
 #############################################################################################################################################
 
-def matchpdbfa(faseq,pdbseq,tablepdb,hexflag):
-	'''Compare sequence from database with the one given in the pdb.
+def matchpdbfa(fastafile,pdbseq,tablepdb,hexflag):
+	'''Get the sequence from a fasta file, compare this sequence with the one given in the pdb.
 	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
 	 the changes in the pdb numbering according to the fasta.'''
-	
+	fah=open(fastafile,'r')
+	faseq=''
+	flag=0
+	for el in fah:
+		el=el.strip()
+		if '>' in el and flag==0:
+			flag=1
+			continue
+		elif '>' in el and flag==1:
+			#print ('Warning: More than one chain has been given. Only the first will be used.')
+			break
+		else:
+			faseq=faseq+el
+
 	bestalig=pairwise2.align.localms(faseq, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
 	print(bestalig)
@@ -117,7 +130,7 @@ def matchpdbfa(faseq,pdbseq,tablepdb,hexflag):
 		i=i+1
 
 	if len(mismatchlist)>0:
-		#print('Mismatch list:',mismatchlist)
+		print('Mismatch list:',mismatchlist)
 		#raise Exception('One or more missmatches were found, this is not allowed. ')
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
 
@@ -130,10 +143,8 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	'''Takes a pdb file as input, the numbering of this pdb is modified according to the fasta sequence of the PDB whose relation
 	 is represented in a schema called guide like: [[A,'27',27],[A,28]] where the first element is the pdb item and the second is the 
 	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or 	 	 insertion code)  in the new PDB file is the same that was used in the original PDB'''
-
 	oldpdb=open(pdbfile, 'r')
-	pdbfile=pdbfile[pdbfile.rfind('/'):]
-	newpdb=open('/tmp'+pdbfile[:-4]+'_corrected.pdb','w')
+	newpdb=open('/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb','w')
 	count=-1
 	pvresid=-1
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
@@ -193,11 +204,10 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 		else:
 			newpdb.write(line)
 
-	
-
 	newpdb.close()
 	oldpdb.close()
-	return '/tmp'+pdbfile[:-4]+'_corrected.pdb'
+	#return pdbfile[:-4]+'_corrected.pdb'
+	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
 #############################################################################################################################################
 
 def uniqueset(pdbname, segid, start, stop, chain):
@@ -238,7 +248,7 @@ def uniqueset(pdbname, segid, start, stop, chain):
 						return 'This combination:\n start:'+ str(start) + '\n stop:'+ str(stop) + '\n chain:'+ chain + '\n segid:' + segid +' \nis not unique as: ' + newele + ' is repeated'
 
 						oldpdb.close()
-						#return False
+						return False
 					else:
 						pdbset.add(newele)
 
@@ -268,7 +278,7 @@ def segment_id(pdbname, segid, start, stop, chain):
 	'''Looks for gaps in the sequence between start and stop in the given chain and segid ONCE the PDB file has been corrected. If the distance with de previous atom is bigger than 5 units it considers that the two atoms belong to different segments''' 
 	seq=list()
 	flag=0
-	newpdb=open(pdbname[:-4]+'_corrected.pdb','r')
+	newpdb=open(pdbname,'r')
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
 	ppos=0
 	ccoor=[0,0,0]
@@ -279,10 +289,12 @@ def segment_id(pdbname, segid, start, stop, chain):
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
 			fields[3]=fields[3].replace(" ", "")
 			fields[5]=fields[5].replace(" ", "")
-			ccoor[0]=float(fields[6])
-			ccoor[1]=float(fields[7])
-			ccoor[2]=float(fields[8])
-
+			try:
+				ccoor[0]=float(fields[6])
+				ccoor[1]=float(fields[7])
+				ccoor[2]=float(fields[8])
+			except:
+				print (fields[6],fields[7],fields[8])
 			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
 				if fields[4]!=pfields[4] or fields[9]!=pfields[9] or fields[5]=='1': #different chain and new counting
 					ppos=0

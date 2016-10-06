@@ -2,6 +2,8 @@ from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, Dynd
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 
+class FileUploadForm(forms.Form):
+    file_source = forms.FileField()
 
 class NameForm(forms.Form):
     your_name = forms.CharField(label='Your name', max_length=100)
