@@ -172,6 +172,7 @@
 		        </div> 		
  			<div style="text-align:right;margin-right:5%">
                                         <input type="submit" value="Validate" id="pdbchecker2" >  <!--This one sends data to pdbcheck view through AJAX. Newer.-->
+                                        <input type="submit" value="Autocomplete resid" id="pdbchecker1" >                                        
 		        </div> 		
 		        </div><br>
 
@@ -255,7 +256,8 @@
 {% block addon_js %}
     <script src="{% static 'dynadb/pdbchecker.js' %}"></script>
     <script src="{% static 'dynadb/upfile.js' %}"></script>
-
+    <script src="{% static 'dynadb/upload_searchtop.js' %}"></script>
+    <script src="{% static 'dynadb/searchtop.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>

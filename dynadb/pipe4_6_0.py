@@ -130,7 +130,7 @@ def matchpdbfa(fastafile,pdbseq,tablepdb,hexflag):
 		i=i+1
 
 	if len(mismatchlist)>0:
-		print('Mismatch list:',mismatchlist)
+		#print('Mismatch list:',mismatchlist)
 		#raise Exception('One or more missmatches were found, this is not allowed. ')
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
 
@@ -142,7 +142,7 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 
 	'''Takes a pdb file as input, the numbering of this pdb is modified according to the fasta sequence of the PDB whose relation
 	 is represented in a schema called guide like: [[A,'27',27],[A,28]] where the first element is the pdb item and the second is the 
-	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or 	 	 insertion code)  in the new PDB file is the same that was used in the original PDB'''
+	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or insertion code)  in the new PDB file is the same that was used in the original PDB'''
 	oldpdb=open(pdbfile, 'r')
 	newpdb=open('/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb','w')
 	count=-1
@@ -343,6 +343,30 @@ def segment_id(pdbname, segid, start, stop, chain):
 
 
 
+#############################################################################################################################################
+
+def searchtop(pdbfile,sequence, segid, start,stop,chain):
+	'''Takes a PDB file and two resids that define an interval in the PDB, extracts the interval's sequence and aligns it to the one in sequence. '''
+	tablepdb,simplified_sequence,hexflag=checkpdb(pdbfile,segid,start,stop,chain)
+	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
+	print(bestalig)
+	i=0
+	flag=0
+	while i<len(bestalig[1]): #bestalig[1] holds the aligned pdbseq
+
+		if bestalig[1][i]!='-' and flag==0: #find first NON-gap	
+			seq_res_from=i+1
+			flag=1
+
+		if  bestalig[1][i]!='-' and flag==1: #find first gap after the pdb sequence ----------AKLISR-(<-that one)111-------
+			seq_res_to=i+1
+
+		i+=1
+  
+	if '-' in bestalig[1][seq_res_from:seq_res_to]:
+		print ('GAP in the pdb')
+
+	return seq_res_from, seq_res_to
 
 #############################################################################################################################################
 def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=False,chain='A'): #we need to know if start and stop are hexadecimal or not!

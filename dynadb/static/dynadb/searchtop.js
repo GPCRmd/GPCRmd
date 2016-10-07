@@ -1,5 +1,5 @@
 
-function sendpar() {
+function searchtop() {
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -9,24 +9,34 @@ function sendpar() {
         })
         bigarray.push(postarray);
     })
+
     $.ajax({
         type: "POST",
         data: { "bigarray[]": bigarray,"url": window.location.href},
-        //data: { "id_prot": postarray[0],"chain": postarray[1], "segid": postarray[2], "restart": postarray[3], "restop": postarray[4], "seqstart": postarray[5], "seqstop": postarray[6], "url": window.location.href },
-        url: "/dynadb/ajax_pdbchecker/"+'c'+bigarray[0][0]+'_'+bigarray[0][1]+'_'+bigarray[0][2]+'_'+bigarray[0][3]+'_'+bigarray[0][4]+'_'+bigarray[0][5]+'_'+bigarray[0][6],
+        url: "/dynadb/search_top/",
         dataType: "json",
         success: function(data) {
-            $("#pdbchecker2").prop("disabled",false);
+            $("#pdbchecker1").prop("disabled",false);
             if (data.error!=''){
-                newwindow=window.open('/dynadb/ajax_pdbchecker/'+'c'+bigarray[0][0]+'_'+bigarray[0][1]+'_'+bigarray[0][2]+'_'+bigarray[0][3]+'_'+bigarray[0][4]+'_'+bigarray[0][5]+'_'+bigarray[0][6],'','height=500,width=700');
-                if (window.focus) {newwindow.focus()}
+                trcount=0;
+                $("#pElement1 tr").each(function () {
+                    tdcount=0;
+                    $('td', this).each(function () {
+                        if (tdcount==5){
+                            $(this).find(":input").val(data[trcount][0]);
+                        }else if(tdcount==6){
+                            $(this).find(":input").val(data[trcount][1]);
+                        }
+                        tdcount=tdcount+1;  
+                    })
+                 trcount=trcount+1;
+                 })
             }else{
                 alert(data.message);
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
-            $("#pdbchecker2").prop("disabled",false);
-            //alert("Something unexpected happen.");
+            $("#pdbchecker1").prop("disabled",false);
             alert(textStatus);
             alert(errorThrown);
         }

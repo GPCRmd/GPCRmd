@@ -1,6 +1,6 @@
-function upload(event) {
-    $("#pdbchecker2").prop("disabled",true);
+function dostuff(event) {
     event.preventDefault();
+    $("#pdbchecker1").prop("disabled",true);
     var data = new FormData($('#myform').get(0));
     $.ajax({
         url: "/dynadb/upload_pdb/",
@@ -10,17 +10,15 @@ function upload(event) {
         processData: false,
         contentType: false,
         success: function(data) {
-            sendpar();
+            searchtop();
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
-            $("#pdbchecker2").prop("disabled",false);
+            $("#pdbchecker1").prop("disabled",false);
         }
     });
     return false;
 }
 
-
-$('#pdbchecker2').click(function(){
-    $('form').unbind('submit').submit(upload);
-}); 
-
+$("#pdbchecker1").click(function() {
+    $("form").unbind('submit').submit(dostuff);
+});

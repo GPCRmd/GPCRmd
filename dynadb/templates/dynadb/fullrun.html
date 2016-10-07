@@ -1,7 +1,7 @@
-{% extends "home/base.html" %} 
+{% extends "home/base.html" %}
 
 {% load static %}
-{% load staticfiles %} 
+{% load staticfiles %}
 {% load dynadb %}
 {% block addon_css %}
 <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.12/css/jquery.dataTables.css">
@@ -9,18 +9,20 @@
   .panel-body {
     word-break:break-all
 }
-  
+
   </style>
 {% endblock %}
-{% block content %} 
-    <div class="container">
-    <div class="panel panel-success">
+{% block content %}
+    <div style="width:100%;" class="panel panel-success">
     <div class="panel-heading"><center><b>All right: PDB and Uniprot sequences match!</b></center></div>
     <div class="panel-body">
-   
+
    {%for mytable in answer.table%}
+        <center><div class="panel panel-info" style="width:85%;">
+
         {% with count=forloop.counter0 mylist=answer.strlist pathlist=answer.pathlist%}
-        <pre><center>Results for {{ mylist|retkey:count}}</center></pre>
+        <div class="panel-heading"> Results for {{ mylist|retkey:count}}</div>
+        <div class="panel-body">
         <center> <a href=/dynadb{{ pathlist|retkey:count}}><button type="button"> Download the corrected PDB </button></a></center>
         <table id="table_id" class="tablejs">
           <thead>
@@ -37,17 +39,18 @@
             <td>{{minilist.1.1}} : {{minilist.1.0}}</td>
           {%else%}
             <td>{{minilist.0.0}}</td>
-            <td>{{minilist.1.1}} : {{minilist.1.0}}</td> 
+            <td>{{minilist.1.1}} : {{minilist.1.0}}</td>
           {%endif%}
           {%endfor%}
           {%endwith%}
           </tr>
           </tbody>
-        </table> 
-    <br><br><hr><br><br>
+        </table>
+    </div>
+  </div></center>
+
     {%endfor%}
 
-    </div>
     </div>
     </div>
 
@@ -60,8 +63,8 @@ $.extend( true, $.fn.dataTable.defaults, {
     "searching": false,
     "ordering": false
 } );
- 
- 
+
+
 $(document).ready(function() {
     $('.tablejs').DataTable();
 } );

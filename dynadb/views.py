@@ -723,7 +723,6 @@ def get_mutations_view(request):
 def upload_pdb(request):
     if request.method == 'POST':
         form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
-        print(request.FILES["file_source"])
         myfile = request.FILES["file_source"]
         fs = FileSystemStorage()
         filename = fs.save(myfile.name, myfile)
@@ -736,8 +735,34 @@ def upload_pdb(request):
             print (form.errors)
         tojson={'chain': 'A',}
         data = json.dumps(tojson)
-        request.session.set_test_cookie()
         return HttpResponse(data, content_type='application/json')
+
+def search_top(request):
+    if request.method=='POST':
+        url=request.POST.get('url')
+        pdbname='/protwis/sites'+request.session['newfilename'] 
+        sub_id=url[url.rfind('/model/')+7:-1] 
+        arrays=request.POST.getlist('bigarray[]')
+        counter=0
+        resultsdict=dict()
+        for array in arrays:
+            array=array.split(',')
+            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
+            start=int(array[3])
+            stop=int(array[4])
+            chain=array[1]
+            segid=array[2]
+            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
+            sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            seq_res_from,seq_res_to=searchtop(pdbname,sequence, segid, start,stop,chain)
+            resultsdict[counter]=[seq_res_from,seq_res_to]
+            counter+=1
+
+    data = json.dumps(resultsdict)
+    return HttpResponse(data, content_type='application/json')
+
+
+
 
 def pdbcheck(request,combination_id):
     if request.method=='POST': #See pdbcheck.js
@@ -753,20 +778,21 @@ def pdbcheck(request,combination_id):
         counter=0
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+' SEGID: '+array[2]+' ResFrom: '+array[3]+' Resto: '+array[4]+' SeqResFrom: '+array[5]+' SeqResTo: '+array[6]+' Bond?: '+array[7]+' PDB ID: '+array[8]+' Source type: '+array[9]+' Template ID model: '+array[10])
-            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
-            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
-            sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
-            #pdbname='/protwis/sites/protwis/dynadb/1fat.pdb'
+            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|')
+            prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
             start=int(array[3])
             stop=int(array[4])
+            seqstart=int(array[5])
+            seqstop=int(array[6])
             chain=array[1]
             segid=array[2]
+            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
+            sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            #sequence=sequence[seqstart-1:seqstop+1]
             if stop-start<1:
                 results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value'}
                 tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
                 data = json.dumps(tojson)
-                #request.session['result'] = results 
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
             uniquetest=uniqueset(pdbname, segid, start, stop, chain)
@@ -780,10 +806,8 @@ def pdbcheck(request,combination_id):
                     #guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag)
 
                     if isinstance(guide, list):
-                        print('lets WRRRRRRITE')
                         path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain)
                         results['pathlist'].append(path_to_repaired)
-                        print(results['pathlist'])
                         segments=segment_id(path_to_repaired, segid, start, stop, chain)
                         finalguide.append(guide)
                     elif isinstance(guide, tuple):
@@ -822,8 +846,7 @@ def pdbcheck(request,combination_id):
             results['table']=finalguide
             results['seg']=segments
             results['path']=path_to_repaired
-            #results={'type':'fullrun', 'table':finalguide,'seg':segments, 'path':path_to_repaired}
-        #results['listofcomb']=arrays
+
         request.session[combination_id] = results
         request.session.modified = True
         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
@@ -846,7 +869,6 @@ def pdbcheck(request,combination_id):
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
 def servecorrectedpdb(request,pdbname):
-    print(pdbname)
     with open('/tmp/'+pdbname,'r') as f:
         data=f.read()
         response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+pdbname)[0])
