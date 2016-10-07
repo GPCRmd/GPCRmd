@@ -13,19 +13,31 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Molecule Info:</b></div>
+    <div class="panel-heading"><b>Model Info:</b></div>
     <div class="panel-body">  <b>Description</b>: {{answer.description}} <br>  
                               <b>PDB ID</b>:{{answer.pdbid}} <br>
                               <b>Model type</b>:{{answer.type}} <br>
-                              <b>Corresponding protein</b>:<a href=/dynadb/compound/id/{{answer.link2protein}}>{{answer.link2protein}} <br>
-                              <b>Dynamics in which this model appears</b>:
+                              <b>Corresponding protein</b>:<a href=/dynadb/compound/id/{{answer.link2protein}}>{{answer.link2protein}} <br></a>
+                              <b>Dynamics in which this model appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
        <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
-
+    <br>
+    <b>Molecules used in this model</b>:<br>
     {%for compoundlink in answer.components%}
        <a href= /dynadb/molecule/id/{{compoundlink}}>{{compoundlink}}</a>,
+    {%endfor%}
+    
+    <br><b>References in which this model is mentioned</b>:<br>
+    {%for reference in answer.references%}
+       {%if reference.0 and reference.1 %}
+           Title: {{reference.1}} DOI: {{reference.0}}
+       {%elif reference.0%}
+            DOI: {{reference.0}}
+       {%elif reference.1%}
+            Title: {{reference.1}}
+       {%endif%}
     {%endfor%}
 
 

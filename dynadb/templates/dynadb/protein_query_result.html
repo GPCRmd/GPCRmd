@@ -12,7 +12,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> Download! </a></div>
+    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> <button type="button">FASTA download!</button></a></div>
     <div class="panel-body"><pre>{{answer.Protein_sequence}}</pre></div>
     </div>
     </div>

@@ -13,7 +13,7 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Dynamics Info:</b> {{answer.description}} </div>
     <div class="panel-body">
-                              <br><b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br>  
+                              <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br>  
                               <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> 
                               <b>Model</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
                               <b>Solvent type</b>: {{answer.solventtype}} <br>
@@ -32,7 +32,17 @@
     {% for dyn in answer.related %}
         <a href= /dynadb/dynamics/id/{{dyn}}>{{dyn}}</a>,
     {% endfor %}
+    <br>
+    </div></div></div>
 
+
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Files in this simulation:</b></div>
+    <div class="panel-body">
+    {% for dyn in answer.files %}
+        <a href={{dyn.0}}><button type="button">Download {{dyn.1}}</button></a>
+    {% endfor %}
     
     </div>
     </div>
