@@ -104,7 +104,7 @@ $(document).ready(function(){
         function(data){
           i = 0;
           msequence.prop("readonly",false);
-          msequence.val(data.mutsequence);
+          msequence.text(data.mutsequence);
           msequence.prop("readonly",true);
           msequence.prop("disabled",false);
           msequence.set_readonly_color();
