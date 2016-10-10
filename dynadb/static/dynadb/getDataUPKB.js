@@ -66,8 +66,8 @@ $(document).ready(function(){
         sequence.set_restore_color();
         
         name.val('Retrieving...');
-        aliases.text('Retrieving...');
-        sequence.text('Retrieving...');
+        aliases.val('Retrieving...');
+        sequence.val('Retrieving...');
         
         $.post("../get_data_upkb/",
         {
@@ -77,8 +77,8 @@ $(document).ready(function(){
           uniprotkbac.val(data.Entry);
           isoform.val(data.Isoform);
           name.val(data.Name);
-          aliases.text(data.Aliases);
-          sequence.text(data.Sequence);
+          aliases.val(data.Aliases);
+          sequence.val(data.Sequence);
           species.val(data.Organism);
           id_species.val(data.speciesid);
           self.prop("disabled", true);
@@ -91,8 +91,8 @@ $(document).ready(function(){
         .fail(function(xhr,status,msg) {
            alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
            name.val('');
-           aliases.text('');
-           sequence.text('');
+           aliases.val('');
+           sequence.val('');
            species.val('');
            id_species.val('');
            notuniprot.prop("disabled", false);

@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    $(document).on('click',"[id='id_reset'],[id|=id_form][id$='-reset']", function() {
+     $.fn.resetProteinByButton = function () {
         var protform = $(this).parents("[id|=protform]");
         var uniprotkbac = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']");
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
@@ -26,23 +26,13 @@ $(document).ready(function(){
             if ($(this).prop("readonly")) {
                 
                 $(this).prop("readonly",false);
-                if ($(this).is("textarea")) {
-                    $(this).text("");
-                    $(this).val("");
-                    $(this).prop("value",null);
-                } else {
-                    $(this).val("");
-                }
+                $(this).val("");
                 $(this).prop("readonly",true);
                 
             } else {
-                if ($(this).is("textarea")) {
-                    $(this).text("");
-                    $(this).val("");
-                    $(this).prop("value",null);
-                } else {
-                    $(this).val("");
-                }
+
+                $(this).val("");
+
             }
             
         });
@@ -51,6 +41,12 @@ $(document).ready(function(){
         });
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
-
+        return true;
+    };
+    $(document).on('click',"[id='id_reset'],[id|=id_form][id$='-reset']", function(){
+        $(this).resetProteinByButton();
     });
+
+
+
 });
