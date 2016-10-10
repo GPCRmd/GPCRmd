@@ -356,7 +356,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	return (seq_res_from, seq_res_to)
 
 #############################################################################################################################################
-def unique(pdbname, usechain=False,usesegid=False):
+def unique(pdbname):
 	flag=0
 	pdbset=set()
 	oldpdb=open(pdbname,'r')
@@ -370,8 +370,7 @@ def unique(pdbname, usechain=False,usesegid=False):
 			#fields=[ '','' ,'' ,line[17:20],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
 			fields[3].replace(" ","")
-			csegid=fields[9]
-
+			csegid=fields[9].replace(" ","")
 
 			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
 
@@ -386,26 +385,10 @@ def unique(pdbname, usechain=False,usesegid=False):
 					cpos=int(str(cpos),16)
 					flag=1
 
-				newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_'+csegid #resid_resname_chain_segid
-				if usechain==False:
-					if usesegid==False:
-						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _ ' #resid_resname
-					else:
-						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _'+csegid #resid_resname_ _segid
+				newele=str(cpos)+'_'+fields[4]+'_'+csegid #resid_chain_segid
 
-				elif usesegid==False:
-					newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_ ' #resid_resname_chain_
-
-				#check that the selected fields are NOT empty:
-				if usechain==True and fields[4].isspace():
-					#raise Exception ('Chain field is empty in:' + newele+ '. Do not use it or fill it.')
-					return 'Chain field is empty in:' + newele+ '. Do not use this field or fill it.'
-				if usesegid==True and csegid.isspace():
-					#raise Exception ('Segid field is empty in:' + newele + '. Do not use this field or fill it.')
-					return 'Segid field is empty in:' + newele + '. Do not use this field or fill it.'
 				if newele in pdbset:
-					#raise Exception('The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated')
-					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated'
+					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated (resid_chain_segid)'
 					oldpdb.close()
 				else:
 					pdbset.add(newele)

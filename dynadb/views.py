@@ -728,12 +728,17 @@ def upload_pdb(request):
         filename = fs.save(myfile.name, myfile)
         uploaded_file_url = fs.url(filename)
         request.session['newfilename']=uploaded_file_url
+        pdbname='/protwis/sites'+request.session['newfilename']
         if form.is_valid():
-            print ('valid form')
+            firstry=unique(pdbname)
+            if firstry!=True:
+                tojson={'message':'The unambiguity test failed: ' +firstry}
+                data = json.dumps(tojson)
+                return HttpResponse(data, content_type='application/json')                       
         else:
             print ('invalid form')
             print (form.errors)
-        tojson={'chain': 'A',}
+        tojson={'chain': 'A','message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
@@ -759,8 +764,8 @@ def search_top(request):
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
-            chain=array[1].replace(" ", "") #avoid whitespace problems
-            segid=array[2].replace(" ", "") #avoid whitespace problems
+            chain=array[1].replace(" ", "").upper() #avoid whitespace problems
+            segid=array[2].replace(" ", "").upper() #avoid whitespace problems
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
@@ -769,7 +774,6 @@ def search_top(request):
                 resultsdict[counter]=[seq_res_from,seq_res_to]
                 resultsdict['message']=''
             elif isinstance(res,str):
-                 print(res)
                  resultsdict['message']=res
             counter+=1
 
@@ -812,15 +816,8 @@ def pdbcheck(request,combination_id):
                 results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')                 
-            chain=array[1].replace(" ", "")
-            segid=array[2].replace(" ", "")
-            #is the whole PDB unique:
-            untest=unique(pdbname,chain!='',segid!='')
-            if untest is not True:
-                results={'type':'string_error','title':'Range error', 'message':untest}
-                data = json.dumps(results)
-                return HttpResponse(data, content_type='application/json')
-            
+            chain=array[1].replace(" ", "").upper()
+            segid=array[2].replace(" ", "").upper()     
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
             sequence=sequence[seqstart-1:seqstop]
@@ -838,7 +835,6 @@ def pdbcheck(request,combination_id):
 
                 if isinstance(checkresult,tuple):
                     tablepdb,simplified_sequence,hexflag=checkresult
-                    #guide=matchpdbfa(fastaname,simplified_sequence,tablepdb,hexflag)
                     guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
 
                     if isinstance(guide, list):
