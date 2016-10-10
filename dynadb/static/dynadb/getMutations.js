@@ -16,7 +16,7 @@ $(document).ready(function(){
       $(tr2).find("td").each(function () {
           $(this).find(':input').each(function () {
               var name1 = $(this).attr('name');
-              var id1 = this.id;
+              var id1 = this.attr('id');
               var namelab1 = name1.replace(/-[0-9]+$/,"-0");
               var idlab1 = id1.replace(/-[0-9]$/,"-0");
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
@@ -40,12 +40,12 @@ $(document).ready(function(){
       if ($(tr2).find("td :input").length != values.length) {
          alert('Error on .addTableRowFromFields: values array argument does not match the number of columns in <table>.');
          return false;
-      };
+      }
       i = 0;
       $(tr2).find("td").each(function () {
           $(this).find(':input').each(function () {
               var name1 = $(this).attr('name');
-              var id1 = this.id;
+              var id1 = $(this).attr('id');
               var matches = /-([0-9]+)$/.exec(id1)
               if (matches == null) {
                var id = id1 ;
@@ -56,10 +56,10 @@ $(document).ready(function(){
                var rowid = 1;
               } else {
                var rowid = Number(matches[1]) + 1;
-              };
+              }
               if (!create_row) {
                 rowid--;
-              };
+              }
               var namelab1 = name1.replace(/-[0-9]+$/,"-"+rowid);
               var idlab1 = id1.replace(/-[0-9]$/,"-"+rowid);
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
@@ -75,7 +75,7 @@ $(document).ready(function(){
         tr2.insertAfter(tr);
       } else {
         tr.replaceWith(tr2)
-      };
+      }
       
   
     };
@@ -113,7 +113,7 @@ $(document).ready(function(){
               protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to],false);
             } else {
               protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to]);
-            };
+            }
             i++;
           });
         }, 'json')
