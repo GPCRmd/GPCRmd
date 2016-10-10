@@ -17,7 +17,7 @@ function sendpar() {
         dataType: "json",
         success: function(data) {
             $("#pdbchecker2").prop("disabled",false);
-            if (data.error!=''){
+            if (data.message==''){
                 newwindow=window.open('/dynadb/ajax_pdbchecker/'+'c'+bigarray[0][0]+'_'+bigarray[0][1]+'_'+bigarray[0][2]+'_'+bigarray[0][3]+'_'+bigarray[0][4]+'_'+bigarray[0][5]+'_'+bigarray[0][6],'','height=500,width=700');
                 if (window.focus) {newwindow.focus()}
             }else{
@@ -26,9 +26,7 @@ function sendpar() {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#pdbchecker2").prop("disabled",false);
-            //alert("Something unexpected happen.");
-            alert(textStatus);
-            alert(errorThrown);
+            alert("Something unexpected happen.");
         }
     });
 }

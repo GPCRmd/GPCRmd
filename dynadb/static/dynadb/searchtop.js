@@ -17,7 +17,7 @@ function searchtop() {
         dataType: "json",
         success: function(data) {
             $("#pdbchecker1").prop("disabled",false);
-            if (data.error!=''){
+            if (data.message==''){
                 trcount=0;
                 $("#pElement1 tr").each(function () {
                     tdcount=0;
@@ -37,8 +37,7 @@ function searchtop() {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#pdbchecker1").prop("disabled",false);
-            alert(textStatus);
-            alert(errorThrown);
+                alert('Error ocurred: PDB file numbering is corrupted (50,51,32); or resid interval is too short.');
         }
     });
 }
