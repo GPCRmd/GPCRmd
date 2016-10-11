@@ -189,51 +189,62 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
 #############################################################################################################################################
 
-def uniqueset(pdbname, segid, start, stop, chain):
-	'''Checks if the definied combination of resid interval, segid and chain can lead to ambiguity. If two lines in the PDB file share the values for the resid, the segid (if defined) and chain (if defined) it will STOP the program.'''
+def unique(pdbname, usechain=False,usesegid=False):
 	flag=0
 	pdbset=set()
 	oldpdb=open(pdbname,'r')
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
 	ppos=0
+	atomdic=dict()
 	for line in oldpdb:
-		if useline(line):
+		line=line.strip()
+		if line.startswith('ATOM') or line.startswith('HETATM'):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
+			#fields=[ '','' ,'' ,line[17:20],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
+			fields[3].replace(" ","")
 			csegid=fields[9]
+
+
 			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
-				if (fields[4]!=pfields[4]) or (fields[9]!=pfields[9]) or fields[5]=='1': #different chain and new counting
+
+				if (fields[4]!=pfields[4]) or (fields[9]!=pfields[9]) or fields[5].replace(" ","")=='1': #new counting for new chain, segid or whatever
 					ppos=0
 					flag=0
 				if flag==1:
 					cpos=int(fields[5],16)
 				else:
 					cpos=int(fields[5])
-					if flag!=1 and (int(pfields[5])==9999 and cpos==2710): #decimal numbers are finished 99999->2710
-						cpos=int(str(cpos),16)
-						flag=1
-				if (fields[4]==chain or chain=='') and cpos>=start and cpos<=stop and (segid in line[72:77] or segid==''):
-					newele=str(cpos)+'_'+fields[4]+'_'+csegid
-					if chain=='':
-						if segid=='':
-							newele=str(cpos)+'_ _ ' #only resid interval is used
-						else:
-							newele=str(cpos)+'_ _'+csegid #only resid interval and segid
-					elif segid=='':
-						newele=str(cpos)+'_'+chain+'_ ' #onlye chain and resid interval
+				if flag!=1 and (int(pfields[5])==9999 and cpos==2710): #decimal numbers are finished 99999->2710
+					cpos=int(str(cpos),16)
+					flag=1
 
-					if newele in pdbset:
-						return 'This combination:\n start:'+ str(start) + '\n stop:'+ str(stop) + '\n chain:'+ chain + '\n segid:' + segid +' \nis not unique as: ' + newele + ' is repeated'
-
-						oldpdb.close()
-						return False
+				newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_'+csegid #resid_resname_chain_segid
+				if usechain==False:
+					if usesegid==False:
+						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _ ' #resid_resname
 					else:
-						pdbset.add(newele)
+						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _'+csegid #resid_resname_ _segid
 
+				elif usesegid==False:
+					newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_ ' #resid_resname_chain_
+
+				#check that the selected fields are NOT empty:
+				if usechain==True and fields[4].isspace():
+					return 'Chain field is empty in:' + newele+ '. Do not use this field or fill it.'
+				if usesegid==True and csegid.isspace():
+					return 'Segid field is empty in:' + newele + '. Do not use this field or fill it.'
+				if newele in pdbset:
+					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated'
+					oldpdb.close()
+				else:
+					pdbset.add(newele)
 			pfields=fields
 			ppos=cpos
 	oldpdb.close()
 	return True
+
+
 
 #############################################################################################################################################
 
@@ -355,47 +366,6 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 
 	return (seq_res_from, seq_res_to)
 
-#############################################################################################################################################
-def unique(pdbname):
-	flag=0
-	pdbset=set()
-	oldpdb=open(pdbname,'r')
-	pfields=['','' ,'','AAA','Z','0','0','0','0','']
-	ppos=0
-	atomdic=dict()
-	for line in oldpdb:
-		line=line.strip()
-		if line.startswith('ATOM') or line.startswith('HETATM'):
-			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
-			#fields=[ '','' ,'' ,line[17:20],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
-			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
-			fields[3].replace(" ","")
-			csegid=fields[9].replace(" ","")
-
-			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
-
-				if (fields[4]!=pfields[4]) or (fields[9]!=pfields[9]) or fields[5].replace(" ","")=='1': #new counting for new chain, segid or whatever
-					ppos=0
-					flag=0
-				if flag==1:
-					cpos=int(fields[5],16)
-				else:
-					cpos=int(fields[5])
-				if flag!=1 and (int(pfields[5])==9999 and cpos==2710): #decimal numbers are finished 99999->2710
-					cpos=int(str(cpos),16)
-					flag=1
-
-				newele=str(cpos)+'_'+fields[4]+'_'+csegid #resid_chain_segid
-
-				if newele in pdbset:
-					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated (resid_chain_segid)'
-					oldpdb.close()
-				else:
-					pdbset.add(newele)
-			pfields=fields
-			ppos=cpos
-	oldpdb.close()
-	return True
 
 #############################################################################################################################################
 def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=False,chain='A'): #we need to know if start and stop are hexadecimal or not!

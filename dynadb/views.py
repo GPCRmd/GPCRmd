@@ -730,11 +730,7 @@ def upload_pdb(request):
         request.session['newfilename']=uploaded_file_url
         pdbname='/protwis/sites'+request.session['newfilename']
         if form.is_valid():
-            firstry=unique(pdbname)
-            if firstry!=True:
-                tojson={'message':'The unambiguity test failed: ' +firstry}
-                data = json.dumps(tojson)
-                return HttpResponse(data, content_type='application/json')                       
+            print('valid form')                     
         else:
             print ('invalid form')
             print (form.errors)
@@ -829,7 +825,7 @@ def pdbcheck(request,combination_id):
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
 
-            uniquetest=uniqueset(pdbname, segid, start, stop, chain)
+            uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
 
@@ -863,7 +859,7 @@ def pdbcheck(request,combination_id):
                     tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                     data = json.dumps(tojson)
                     return HttpResponse(data, content_type='application/json')
-            else:
+            else: #unique test failed
                 results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
                 request.session[combination_id] = results
                 request.session.modified = True
