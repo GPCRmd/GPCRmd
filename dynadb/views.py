@@ -81,6 +81,21 @@ def REFERENCEview(request, submission_id=None):
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
+def show_alig(request):
+    if request.method=='POST':
+        wtseq=request.POST.get('wtseq')
+        mutseq=request.POST.get('mutant')
+        result=align_wt_mut(wtseq,mutseq)
+        result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
+        key=randint(1,1000000)
+        request.session[key]=result
+        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def popup_alig(request, alignment_key):
+    alignment=request.session[int(alignment_key)]
+    return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
 def PROTEINview(request, submission_id):
     p= submission_id
@@ -512,8 +527,11 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['forcefieldv']=DyndbDynamics.objects.get(pk=dynamics_id).ffversion
     dyna_dic['link_2_model']=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id
     dyna_dic['description']=DyndbDynamics.objects.get(pk=dynamics_id).description
+    dyna_dic['timestep']=DyndbDynamics.objects.get(pk=dynamics_id).timestep
+    dyna_dic['delta']=DyndbDynamics.objects.get(pk=dynamics_id).delta
     dyna_dic['solventtype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_solvent_types.type_name
     dyna_dic['membranetype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_membrane_types.type_name
+
     for match in DyndbDynamicsComponents.objects.filter(id_dynamics=dynamics_id):
         dyna_dic['link_2_molecules'].append(match.id_molecule.id)
 

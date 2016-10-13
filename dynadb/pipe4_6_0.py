@@ -71,6 +71,13 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 
 	return (seqplain,onlyaa,hexflag)
 
+
+
+#############################################################################################################################################
+def align_wt_mut(wtseq,mutseq):
+	bestalig=pairwise2.align.localms(wtseq,mutseq,100,-1,-10,-10)[0]
+	return bestalig
+
 #############################################################################################################################################
 
 def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
@@ -342,7 +349,6 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	else:
 		tablepdb,simplified_sequence,hexflag=result
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
-	print(bestalig)
 	'''
 	The resulting alignment should be like:
     ARTNIRRAWLALEKQYL
@@ -388,6 +394,9 @@ def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=F
 		repairpdb(pdbname,guide,segid,start,stop,chain)
 		#print(segment_id(pdbname, segid, start, stop, chain),'\n')
 
+#############################################################################################################################################
 
-#main('4RES.pdb','4res.fa',segid='',start=0,starthex=False,stop=999,stophex=False,chain='A')
 
+#############################################################################################################################################
+#############################################################################################################################################
+#############################################################################################################################################
