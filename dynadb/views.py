@@ -1173,6 +1173,22 @@ def SMALL_MOLECULEview2(request):
 
         return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
 
+def generate_inchi(request):
+  if request.method == 'POST':
+    try:
+        if 'molsdf' in request.FILES.keys():
+            uploadfile = request.FILES['molsdf']
+            return JsonResponse({'test':'test'},safe=False)
+        else:
+            return HttpResponse('No file was selected.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    except ParsingError as e:
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      return response
+    except:
+      raise
+
+
+
 def SMALL_MOLECULEview(request, submission_id):
     def handle_uploaded_file(f,p):
         print("file name = ", f.name , "path =", p)
