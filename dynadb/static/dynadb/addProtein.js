@@ -42,11 +42,14 @@ $(document).ready(function(){
         }
         
         var next_form_num = form_num + 1;
+        
+        //Clone the current protform
         var newitem = $(item).clone();
 
         
         $(newitem).formrenum(next_form_num);
         $(newitem).resetProteinByButton();
+        //Insert after last protform
         $(item_parent).append(newitem);
         
         $("#id_form-"+next_form_num+"-id_species").species_autocomplete();
@@ -54,7 +57,7 @@ $(document).ready(function(){
         var receptor = $("#id_form-"+next_form_num+"-receptor");
         receptor.prop("disabled",false);
         receptor.prop("checked",false);
-        
+        //Button enabled only in the last form
         $(this).prop("disabled",true);
     });
     
