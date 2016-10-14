@@ -91,7 +91,11 @@ $(document).ready(function(){
     
     
     $(document).on('click',"[id='id_get_mutations'],[id|=id_form][id$='-get_mutations']",function(){
+        var self = $(this);
+        $(this).prop("disabled",true);
         var protform = $(this).parents("[id|=protform]");
+        var ismutated = protform.find("[id='id_is_mutated'],[id|=id_form][id$='-is_mutated']");
+        $(ismutated).prop("disabled",true);
         var alignmentval = protform.find("[id='id_alignment'],[id|=id_form][id$='-alignment']").val();
         var sequenceval = protform.find("[id='id_sequence'],[id|=id_form][id$='-sequence']").val();
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
@@ -123,6 +127,10 @@ $(document).ready(function(){
            alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
 
         })
-
+        
+        .always(function(xhr,status,msg) {
+            $(self).prop("disabled",false);
+            $(ismutated).prop("disabled",false);
+        });
     });
 });
