@@ -24,14 +24,12 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	for line in fpdb:
 		if useline(line):
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
-			#fields=[ '','' ,'' ,line[16:20],line[21],line[22:27],line[31:39],line[39:47],line[47:55]] 8/9/2016
-			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
-			fields[3]=fields[3].replace(" ", "") #it is a standard aa with 3 letters, eliminate whitespace.
-			fields[5]=fields[5].replace(" ", "") #it is a standard RESID with 4 characters, eliminate whitespace.
+			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
+			fields[3]=fields[3].replace(" ", "") #if it is a standard aa with 3 letters, eliminate whitespace.
+			fields[5]=fields[5].replace(" ", "") #if it is a standard RESID with 4 characters, eliminate whitespace.
 			i=3
 			while i<9:
-				if fields[i]=='':
-					#raise Exception('Missing required field in line: '+line)
+				if fields[i].replace(" ", "")=='':
 					return 'Missing required field in the PDB file at line: '+line
 				i+=1
 
@@ -57,12 +55,9 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 						try:
 							seqplain.append([d[fields[3]],cpos,cpos2])
 						except: #Modified aminoacid
-							seqplain.append(('X',cpos,cpos2)) #THIS IS NOT NECESSARY NOW! DELETE IT
-							#print ('Modified aminoacid %s found in position %s, X inserted in sequence.' % (fields[3],cpos))
+							seqplain.append(('X',cpos,cpos2))
 
 					elif cpos2<ppos2 and cpos!=1: 
-						print(cpos2,ppos2)
-						#raise Exception('Residue numbering order is corrupted in position:'+str(cpos2))
 						return 'Residue numbering order is corrupted in position:'+str(cpos2)
 
 			pchain=fields[4]
@@ -76,41 +71,34 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 
 	return (seqplain,onlyaa,hexflag)
 
+
+
+#############################################################################################################################################
+def align_wt_mut(wtseq,mutseq):
+	bestalig=pairwise2.align.localms(wtseq,mutseq,100,-1,-10,-10)[0]
+	return bestalig
+
 #############################################################################################################################################
 
-def matchpdbfa(fastafile,pdbseq,tablepdb,hexflag):
-	'''Get the sequence from a fasta file, compare this sequence with the one given in the pdb.
+def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
+	'''Get the sequence from database, compare this sequence with the one given in the pdb.
 	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
-	 the changes in the pdb numbering according to the fasta.'''
-	fah=open(fastafile,'r')
-	faseq=''
-	flag=0
-	for el in fah:
-		el=el.strip()
-		if '>' in el and flag==0:
-			flag=1
-			continue
-		elif '>' in el and flag==1:
-			#print ('Warning: More than one chain has been given. Only the first will be used.')
-			break
-		else:
-			faseq=faseq+el
+	 the changes in the pdb numbering according to the database sequence.'''
 
-	bestalig=pairwise2.align.localms(faseq, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
+	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
-	print(bestalig)
+	#print(bestalig)
 	biglist=list()
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
 	fastalig=bestalig[0]
-	if '-' in fastalig:
-		#raise Exception('PDB file contains insertions with respect to fasta, this is not allowed') 
+	if '-' in fastalig: 
 		return 'PDB file contains insertions with respect to fasta, this is not allowed'
 	duos=list()
 	mismatchlist=list()
 	while i < len(fastalig):
-		newpos=i+1
+		newpos=i+start  #IT USED TO BE i+1, but now we use start=1 as default!
 		if i+1>9999 and hexflag==1: #hexflag==1 means that the original PDB uses hexadecimal notation
 			newpos=format(i+1,'x')	#hexadecimal once 9999 resid is used.
 		
@@ -130,8 +118,6 @@ def matchpdbfa(fastafile,pdbseq,tablepdb,hexflag):
 		i=i+1
 
 	if len(mismatchlist)>0:
-		#print('Mismatch list:',mismatchlist)
-		#raise Exception('One or more missmatches were found, this is not allowed. ')
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
 
 	return (duos)
@@ -210,52 +196,62 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
 #############################################################################################################################################
 
-def uniqueset(pdbname, segid, start, stop, chain):
-	'''Checks if the definied combination of resid interval, segid and chain can lead to ambiguity. If two lines in the PDB file share the values for the resid, the segid (if defined) and chain (if defined) it will STOP the program.'''
+def unique(pdbname, usechain=False,usesegid=False):
 	flag=0
 	pdbset=set()
 	oldpdb=open(pdbname,'r')
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
 	ppos=0
+	atomdic=dict()
 	for line in oldpdb:
-		if useline(line):
+		line=line.strip()
+		if line.startswith('ATOM') or line.startswith('HETATM'):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
+			#fields=[ '','' ,'' ,line[17:20],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
+			fields[3].replace(" ","")
 			csegid=fields[9]
+
+
 			if fields[5]!=pfields[5]: #do not run same aa more than 1 time.
-				if (fields[4]!=pfields[4]) or (fields[9]!=pfields[9]) or fields[5]=='1': #different chain and new counting
+
+				if (fields[4]!=pfields[4]) or (fields[9]!=pfields[9]) or fields[5].replace(" ","")=='1': #new counting for new chain, segid or whatever
 					ppos=0
 					flag=0
 				if flag==1:
 					cpos=int(fields[5],16)
 				else:
 					cpos=int(fields[5])
-					if flag!=1 and (int(pfields[5])==9999 and cpos==2710): #decimal numbers are finished 99999->2710
-						cpos=int(str(cpos),16)
-						flag=1
-				if (fields[4]==chain or chain=='') and cpos>=start and cpos<=stop and (segid in line[72:77] or segid==''):
-					newele=str(cpos)+'_'+fields[4]+'_'+csegid
-					if chain=='':
-						if segid=='':
-							newele=str(cpos)+'_ _ ' #only resid interval is used
-						else:
-							newele=str(cpos)+'_ _'+csegid #only resid interval and segid
-					elif segid=='':
-						newele=str(cpos)+'_'+chain+'_ ' #onlye chain and resid interval
+				if flag!=1 and (int(pfields[5])==9999 and cpos==2710): #decimal numbers are finished 99999->2710
+					cpos=int(str(cpos),16)
+					flag=1
 
-					if newele in pdbset:
-						#raise Exception('This combination:\n start:'+ str(start) + '\n stop:'+ str(stop) + '\n chain:'+ chain + '\n segid:' + segid +' \nis not unique as: ' + newele + ' is repeated')
-						return 'This combination:\n start:'+ str(start) + '\n stop:'+ str(stop) + '\n chain:'+ chain + '\n segid:' + segid +' \nis not unique as: ' + newele + ' is repeated'
-
-						oldpdb.close()
-						return False
+				newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_'+csegid #resid_resname_chain_segid
+				if usechain==False:
+					if usesegid==False:
+						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _ ' #resid_resname
 					else:
-						pdbset.add(newele)
+						newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_ _'+csegid #resid_resname_ _segid
 
+				elif usesegid==False:
+					newele=str(cpos)+'_'+line[17:21].replace(" ","")+'_'+fields[4]+'_ ' #resid_resname_chain_
+
+				#check that the selected fields are NOT empty:
+				if usechain==True and fields[4].isspace():
+					return 'Chain field is empty in:' + newele+ '. Do not use this field or fill it.'
+				if usesegid==True and csegid.isspace():
+					return 'Segid field is empty in:' + newele + '. Do not use this field or fill it.'
+				if newele in pdbset:
+					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated'
+					oldpdb.close()
+				else:
+					pdbset.add(newele)
 			pfields=fields
 			ppos=cpos
 	oldpdb.close()
 	return True
+
+
 
 #############################################################################################################################################
 
@@ -345,11 +341,19 @@ def segment_id(pdbname, segid, start, stop, chain):
 
 #############################################################################################################################################
 
-def searchtop(pdbfile,sequence, segid, start,stop,chain):
+def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	'''Takes a PDB file and two resids that define an interval in the PDB, extracts the interval's sequence and aligns it to the one in sequence. '''
-	tablepdb,simplified_sequence,hexflag=checkpdb(pdbfile,segid,start,stop,chain)
+	result=checkpdb(pdbfile,segid,start,stop,chain)
+	if isinstance(result,str):
+		return result
+	else:
+		tablepdb,simplified_sequence,hexflag=result
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
-	print(bestalig)
+	'''
+	The resulting alignment should be like:
+    ARTNIRRAWLALEKQYL
+    ----IRRAWL-------
+	'''
 	i=0
 	flag=0
 	while i<len(bestalig[1]): #bestalig[1] holds the aligned pdbseq
@@ -358,15 +362,16 @@ def searchtop(pdbfile,sequence, segid, start,stop,chain):
 			seq_res_from=i+1
 			flag=1
 
-		if  bestalig[1][i]!='-' and flag==1: #find first gap after the pdb sequence ----------AKLISR-(<-that one)111-------
+		if  bestalig[1][i]!='-' and flag==1: #find first gap after the pdb sequence ----------AKLISR-(this one at the left)----------
 			seq_res_to=i+1
 
 		i+=1
   
-	if '-' in bestalig[1][seq_res_from:seq_res_to]:
-		print ('GAP in the pdb')
+	if '-' in bestalig[0][seq_res_from-1:seq_res_to]:
+		return 'The selected PDB sequence can not align with the uniprot sequence without gaps.'
 
-	return seq_res_from, seq_res_to
+	return (seq_res_from, seq_res_to)
+
 
 #############################################################################################################################################
 def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=False,chain='A'): #we need to know if start and stop are hexadecimal or not!
@@ -389,6 +394,9 @@ def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=F
 		repairpdb(pdbname,guide,segid,start,stop,chain)
 		#print(segment_id(pdbname, segid, start, stop, chain),'\n')
 
+#############################################################################################################################################
 
-#main('4RES.pdb','4res.fa',segid='',start=0,starthex=False,stop=999,stophex=False,chain='A')
 
+#############################################################################################################################################
+#############################################################################################################################################
+#############################################################################################################################################

@@ -26,6 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 INSTALLED_APPS = (
     'dynadb.apps.DynadbConfig',
     'accounts.apps.AccountsConfig',
+    'view.apps.ViewConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

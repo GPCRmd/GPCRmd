@@ -129,11 +129,11 @@
 <!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
                 <div class="row">
                         <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the wild type sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
-                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" disabled style="width:300px" placeholder=""></textarea></div>
+                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" style="width:300px" placeholder=""></textarea></div>
                 <br></div>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_msequence" name="msequence" disabled rows="2" style="width:300px" placeholder=""></textarea></div>
+			<div class="col-md-6"><textarea cols="40" id="id_msequence" name="msequence" rows="2" style="width:300px" placeholder=""></textarea></div>
 		<br></div>
 
 
@@ -141,8 +141,9 @@
                         <div class="col-md-12" style="text-align:center">
                                 <div class="col-md-5"style="height:30px"></div>
                                 <div class="col-md-5"style="height:30px">
-
-                                <button type='button' id='id_get_mutations' name='get_mutations' disabled title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:120px;">
+                                <button type='button' id='id_get_align' name='get_align' title="Perform an alignment between Wild type and Mutant sequence. The result will be displayed in the Sequence alignment box for editing and in pop up." style="width:120px;">
+                                Align</button>
+                                <button type='button' id='id_get_mutations' name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:120px;">
                                 Get mutations</button></div></div>
                 </div>
 
@@ -212,6 +213,7 @@
 
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/protein_alignment_autocomplete.js' %}"></script>
     <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>

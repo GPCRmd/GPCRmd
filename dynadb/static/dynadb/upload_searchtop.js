@@ -10,7 +10,12 @@ function dostuff(event) {
         processData: false,
         contentType: false,
         success: function(data) {
-            searchtop();
+            if (data.message==''){
+                searchtop();
+            }else{
+                alert(data.message);
+                $("#pdbchecker1").prop("disabled",false);
+            }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#pdbchecker1").prop("disabled",false);

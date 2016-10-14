@@ -10,7 +10,12 @@ function upload(event) {
         processData: false,
         contentType: false,
         success: function(data) {
-            sendpar();
+            if (data.message==''){
+                sendpar();
+            }else{
+                alert(data.message);
+                $("#pdbchecker2").prop("disabled",false);
+            }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown){
             $("#pdbchecker2").prop("disabled",false);
