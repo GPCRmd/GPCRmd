@@ -104,8 +104,8 @@
 		</div>
                 <br>
 	        <div class="row">
-			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic construct&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
-			<div class="col-md-6" style="height:30px;display:inline-block;">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
+			<div class="col-md-7" style="height:30px;display:inline-block;">
 			<input id="id_id_species" name="id_species" type="hidden" value=""/>
 <!--                         <input id="id_id_species_autocomplete" maxlength="200" name="id_species_autocomplete" type="text" style="width:300px" placeholder="Homo Sapiens (HUMAN)"/> -->
                         </div>
@@ -124,27 +124,31 @@
 
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Wild type sequence: Wild-type sequence of the protein in IUPAC one letter code.">Wild type sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" ></textarea></div>
+			<div class="col-md-7"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" ></textarea></div>
 		<br></div>
 <!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
                 <div class="row">
                         <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the wild type sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
-                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" style="width:300px" placeholder=""></textarea></div>
+                        <div class="col-md-7"><textarea cols="40" id="id_alignment" name="alignment" disabled autofocus rows="2" style="width:300px" placeholder=""></textarea></div>
                 <br></div>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_msequence" name="msequence" rows="2" style="width:300px" placeholder=""></textarea></div>
+			<div class="col-md-7"><textarea cols="40" id="id_msequence" name="msequence" disabled rows="2" style="width:300px" placeholder=""></textarea></div>
 		<br></div>
+               <br>
 
+	        <div class="row" style="height:30px">
 
-	        <div class="row" style="height:40px">
-                        <div class="col-md-12" style="text-align:center">
-                                <div class="col-md-5"style="height:30px"></div>
-                                <div class="col-md-5"style="height:30px">
-                                <button type='button' id='id_get_align' name='get_align' title="Perform an alignment between Wild type and Mutant sequence. The result will be displayed in the Sequence alignment box for editing and in pop up." style="width:120px;">
+                                <div class="col-md-1" style="height:30px"></div>
+                                <div class="col-md-3" style="height:30px"></div>
+                                <div class="col-md-7" style="height:30px;text-align: left">
+                                <button type='button' id='id_get_align' disabled name='get_align' title="Perform an alignment between Wild type and Mutant sequence. The result will be displayed in the Sequence alignment box for editing and in pop up." style="width:60px;" disabled>
                                 Align</button>
-                                <button type='button' id='id_get_mutations' name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:120px;">
-                                Get mutations</button></div></div>
+                                <button type='button' id='id_get_mutations'  name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:110px;" disabled>
+                                Get mutations</button>
+                                <button type='button' id='id_clean_mutations'  name='clean_mutations' title="Cleans assigned mutations and allows a new alignment." style="width:122px;" disabled>
+                                Clean mutations</button>
+                                </div>
                 </div>
 
                 <br>

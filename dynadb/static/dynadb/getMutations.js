@@ -2,6 +2,16 @@ $(document).ready(function(){
     $.fn.exists = function () {
       return this.length !== 0;
     };
+    
+    $.fn.clean_mutations = function() {
+        var protform = $(this).parents("[id|=protform]");
+        var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
+        protform.find("#mutationtable").resetTableRowFromFields()
+        msequence.prop("readonly",false);
+        msequence.set_restore_color();
+    };
+    
+    
     $.fn.resetTableRowFromFields = function() {
       var tr = $(this).find("tr:last-of-type");
       var tr_parent = $(tr).parent()
@@ -83,10 +93,13 @@ $(document).ready(function(){
   
     $(document).on('change',"[id='id_alignment'],[id|=id_form][id$='-alignment'],\
     [id='id_sequence'],[id|=id_form][id$='-sequence'],[id='id_msequence'],[id|=id_form][id$='-msequence']",
-                   function(){
-        var protform = $(this).parents("[id|=protform]");
-        protform.find("#mutationtable").resetTableRowFromFields()
-
+    function(){
+        $(this).clean_mutations();
+    });
+    
+    $(document).on('click',"[id='id_clean_mutations'],[id|=id_form][id$='-clean_mutations']",
+    function(){
+        $(this).clean_mutations();
     });
     
     
