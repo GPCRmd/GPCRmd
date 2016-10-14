@@ -10,9 +10,8 @@ $(document).ready(function(){
         var id_species = protform.find("[id='id_id_species'],[id|=id_form][id$='-id_species']");
         var species = protform.find("[id='id_id_species_autocomplete'],[id|=id_form][id$='-id_species_autocomplete']");
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
-        // var addbutton = protform.find("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
-        var addbuttonall = $("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
-        // var resetbutton = protform.find("[id='id_reset'],[id|=id_form][id$='-add_reset']");
+        var pprotform = $(protform).parent();
+        var addbutton = $(pprotform).children(":last-child").find("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
         var resetbuttonall = $("[id='id_reset'],[id|=id_form][id$='-reset']");
         var notuniprot = protform.find("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var notuniprotall = $("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
@@ -39,7 +38,7 @@ $(document).ready(function(){
         getdataall.prop("disabled",true);
         
         
-        addbuttonall.prop("disabled", true);
+        addbutton.prop("disabled", true);
         resetbuttonall.prop("disabled", true);
         notuniprotall.prop("disabled", true);
         notuniprot.prop("disabled", true);
@@ -119,7 +118,7 @@ $(document).ready(function(){
             self.prop("disabled",selfstate);
             notuniprot.prop("disabled",selfnotuniprotstate);
             
-            addbuttonall.prop("disabled", false);
+            addbutton.prop("disabled", false);
             resetbuttonall.prop("disabled", false);
             
             species.prop("readonly", true);

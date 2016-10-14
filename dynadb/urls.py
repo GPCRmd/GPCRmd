@@ -27,6 +27,7 @@ urlpatterns = [
     url(r'^thanks/$', views.get_name, name='thanks'),
     url(r'^admin/', admin.site.urls),
     url(r'^protein/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='protein'),
+    url(r'^protein/(?P<submission_id>[0-9]+)/delete/$', views.delete_protein, name='delete_protein'),
     url(r'^protein/get_data_upkb/?([A-Z0-9-]+)?$', views.protein_get_data_upkb, name='protein_get_data_upkb'),
     url(r'^protein/download_specieslist/$', views.download_specieslist, name='protein_download_specieslist'),
     url(r'^protein/get_specieslist/$', views.get_specieslist, name='protein_get_specieslist'),

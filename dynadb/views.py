@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -331,6 +331,16 @@ def PROTEINview(request, submission_id):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+def delete_protein(request,submission_id):
+    if request.method == "POST":
+        protein_num = request.POST["protein_num"]
+        
+        
+        response = HttpResponse('Success.',content_type='text/plain')
+    else:
+        response = HttpResponseForbidden()
+    return response
+    
 
 
 def query_protein(request, protein_id):

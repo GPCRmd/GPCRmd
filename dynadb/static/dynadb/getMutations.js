@@ -4,6 +4,7 @@ $(document).ready(function(){
     };
     $.fn.resetTableRowFromFields = function() {
       var tr = $(this).find("tr:last-of-type");
+      var tr_parent = $(tr).parent()
       var tr2 = tr.clone();
       $(this).find("tr").each(function () {
         if (!$(this).find("th").exists()) {
@@ -11,15 +12,15 @@ $(document).ready(function(){
         }
           
       });
-      tr = $(this).find("tr:last-of-type");
+
 
       $(tr2).find("td").each(function () {
           $(this).find(':input').each(function () {
               var name1 = $(this).attr('name');
-              var id1 = this.attr('id');
+              var id1 = $(this).attr('id');
               var namelab1 = name1.replace(/-[0-9]+$/,"-0");
               var idlab1 = id1.replace(/-[0-9]$/,"-0");
-              $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
+              $(this).attr({'placeholder':namelab1,'id':idlab1, 'name':namelab1});
               $(this).prop("readonly",false);
               $(this).val('');
               $(this).prop("disabled",true);
@@ -28,7 +29,7 @@ $(document).ready(function(){
           });
       
       });
-      tr2.insertAfter(tr);
+      tr_parent.append(tr2);
 
       
   

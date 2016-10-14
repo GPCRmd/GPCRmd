@@ -171,7 +171,7 @@
                 <div class=row style="text-align:center">
                         <table align='center'>
                         <tr><td>
-                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" onClick="addProtein();">+ Add Protein</button>
+                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
                         </td><td>
                                 <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
                         </td><td>
@@ -182,7 +182,7 @@
                 </div> 		
                 <br><br>
                 <div class=row>
-                          <input type="submit" value="Submit" />
+                          <input id="id_submit" name="submit" type="submit" value="Submit" />
                 </div>
                 <br>
     </div>
@@ -215,12 +215,13 @@
     <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
+    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
     <script src="{% static 'dynadb/delProtein.js' %}"></script>
     <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
     <script src="{% static 'dynadb/getMutations.js' %}"></script>
     <script src="{% static 'dynadb/changeMutant.js' %}"></script>
-    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
+    
     
 
 {% endblock %}
