@@ -81,6 +81,21 @@ def REFERENCEview(request, submission_id=None):
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
+def show_alig(request):
+    if request.method=='POST':
+        wtseq=request.POST.get('wtseq')
+        mutseq=request.POST.get('mutant')
+        result=align_wt_mut(wtseq,mutseq)
+        result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
+        key=randint(1,1000000)
+        request.session[key]=result
+        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def popup_alig(request, alignment_key):
+    alignment=request.session[int(alignment_key)]
+    return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
 def PROTEINview(request, submission_id):
     p= submission_id
@@ -512,8 +527,11 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['forcefieldv']=DyndbDynamics.objects.get(pk=dynamics_id).ffversion
     dyna_dic['link_2_model']=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id
     dyna_dic['description']=DyndbDynamics.objects.get(pk=dynamics_id).description
+    dyna_dic['timestep']=DyndbDynamics.objects.get(pk=dynamics_id).timestep
+    dyna_dic['delta']=DyndbDynamics.objects.get(pk=dynamics_id).delta
     dyna_dic['solventtype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_solvent_types.type_name
     dyna_dic['membranetype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_membrane_types.type_name
+
     for match in DyndbDynamicsComponents.objects.filter(id_dynamics=dynamics_id):
         dyna_dic['link_2_molecules'].append(match.id_molecule.id)
 
@@ -728,12 +746,13 @@ def upload_pdb(request):
         filename = fs.save(myfile.name, myfile)
         uploaded_file_url = fs.url(filename)
         request.session['newfilename']=uploaded_file_url
+        pdbname='/protwis/sites'+request.session['newfilename']
         if form.is_valid():
-            print ('valid form')
+            print('valid form')                     
         else:
             print ('invalid form')
             print (form.errors)
-        tojson={'chain': 'A',}
+        tojson={'chain': 'A','message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
@@ -746,16 +765,30 @@ def search_top(request):
         counter=0
         resultsdict=dict()
         for array in arrays:
-            array=array.split(',')
+            array=array.split(',') #array is a string with commas.
             prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
+
+            if array[3].replace(" ", "")=='' or not (array[3].isdigit()) or array[4].replace(" ", "")=='' or not (array[4].isdigit()):
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json') 
             start=int(array[3])
             stop=int(array[4])
-            chain=array[1]
-            segid=array[2]
+            if start>=stop:
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json') 
+            chain=array[1].replace(" ", "").upper() #avoid whitespace problems
+            segid=array[2].replace(" ", "").upper() #avoid whitespace problems
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
-            seq_res_from,seq_res_to=searchtop(pdbname,sequence, segid, start,stop,chain)
-            resultsdict[counter]=[seq_res_from,seq_res_to]
+            res=searchtop(pdbname,sequence, start,stop,chain,segid)
+            if isinstance(res,tuple):
+                seq_res_from,seq_res_to=res
+                resultsdict[counter]=[seq_res_from,seq_res_to]
+                resultsdict['message']=''
+            elif isinstance(res,str):
+                 resultsdict['message']=res
             counter+=1
 
     data = json.dumps(resultsdict)
@@ -768,7 +801,7 @@ def pdbcheck(request,combination_id):
     if request.method=='POST': #See pdbcheck.js
         results=dict()
         url=request.POST.get('url')
-        fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
+        #fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
         pdbname='/protwis/sites'+request.session['newfilename'] 
         sub_id=url[url.rfind('/model/')+7:-1] 
         results['strlist']=list()
@@ -778,32 +811,45 @@ def pdbcheck(request,combination_id):
         counter=0
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|')
+            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|') #title for the results pop-up table
+
+            for r in range(3,7):
+                if array[r].replace(" ", "")=='' or not array[r].isdigit():
+                    results={'type':'string_error','title':'Missing information or wrong information', 'message':'Residue or sequence range is not completely defined, or you did not used a number.'}
+                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
+                    data = json.dumps(tojson) #CHANGE TO results!!!!!!!!!!!!!!!!!!!!!!
+                    request.session[combination_id] = results
+                    return HttpResponse(data, content_type='application/json') 
+
             prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
             start=int(array[3])
             stop=int(array[4])
             seqstart=int(array[5])
             seqstop=int(array[6])
-            chain=array[1]
-            segid=array[2]
+            if seqstart>=seqstop:
+                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json')                 
+            chain=array[1].replace(" ", "").upper()
+            segid=array[2].replace(" ", "").upper()     
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
-            #sequence=sequence[seqstart-1:seqstop+1]
+            sequence=sequence[seqstart-1:seqstop]
+
             if stop-start<1:
-                results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value'}
-                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
+                results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value','message':''}
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
                 data = json.dumps(tojson)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
-            uniquetest=uniqueset(pdbname, segid, start, stop, chain)
 
+            uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
 
                 if isinstance(checkresult,tuple):
                     tablepdb,simplified_sequence,hexflag=checkresult
-                    guide=matchpdbfa(fastaname,simplified_sequence,tablepdb,hexflag)
-                    #guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag)
+                    guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
 
                     if isinstance(guide, list):
                         path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain)
@@ -814,28 +860,28 @@ def pdbcheck(request,combination_id):
                         results={'type':'tuple_error', 'title':'Mismatch found', 'mismatchlist':guide[1],'errmess':guide[0]}
                         request.session[combination_id] = results
                         request.session.modified = True
-                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
                     else: #PDB has insertions error
-                        results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide}
+                        results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide,'message':''}
                         request.session[combination_id] = results
                         request.session.modified = True
-                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
                 else: #checkpdb has an error
-                    results={'type':'string_error','title':'Corrupted resid numbering', 'errmess':checkresult} #prints the error resid.
+                    results={'type':'string_error','title':'Corrupted resid numbering or missing field in PDB', 'errmess':checkresult} #prints the error resid.
                     request.session[combination_id] = results
                     request.session.modified = True
-                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                     data = json.dumps(tojson)
                     return HttpResponse(data, content_type='application/json')
-            else:
+            else: #unique test failed
                 results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
                 request.session[combination_id] = results
                 request.session.modified = True
-                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                 data = json.dumps(tojson)
                 return HttpResponse(data, content_type='application/json')
 
@@ -849,7 +895,7 @@ def pdbcheck(request,combination_id):
 
         request.session[combination_id] = results
         request.session.modified = True
-        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
