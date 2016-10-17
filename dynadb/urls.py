@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url,patterns
+from django.conf.urls import url,patterns,include #antes: from django.conf.urls import url,patterns
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
@@ -51,6 +51,7 @@ urlpatterns = [
     #url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
     url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
+    url(r'^search/$', include('haystack.urls')),
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     url(r'^search_top/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
@@ -58,6 +59,7 @@ urlpatterns = [
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
+
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
 

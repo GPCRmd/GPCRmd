@@ -1,0 +1,199 @@
+0    [main] INFO  org.eclipse.jetty.server.Server  – jetty-8.1.10.v20130312
+50   [main] INFO  org.eclipse.jetty.deploy.providers.ScanningAppProvider  – Deployment monitor /protwis/sites/protwis/solr-4.10.2/example/contexts at interval 0
+69   [main] INFO  org.eclipse.jetty.deploy.DeploymentManager  – Deployable added: /protwis/sites/protwis/solr-4.10.2/example/contexts/solr-jetty-context.xml
+3959 [main] INFO  org.eclipse.jetty.webapp.StandardDescriptorProcessor  – NO JSP Support for /solr, did not find org.apache.jasper.servlet.JspServlet
+4061 [main] INFO  org.apache.solr.servlet.SolrDispatchFilter  – SolrDispatchFilter.init()
+4079 [main] INFO  org.apache.solr.core.SolrResourceLoader  – JNDI not configured for solr (NoInitialContextEx)
+4080 [main] INFO  org.apache.solr.core.SolrResourceLoader  – solr home defaulted to 'solr/' (could not find system property or JNDI)
+4081 [main] INFO  org.apache.solr.core.SolrResourceLoader  – new SolrResourceLoader for directory: 'solr/'
+4304 [main] INFO  org.apache.solr.core.ConfigSolr  – Loading container configuration from /protwis/sites/protwis/solr-4.10.2/example/solr/solr.xml
+4389 [main] INFO  org.apache.solr.core.CoresLocator  – Config-defined core root directory: /protwis/sites/protwis/solr-4.10.2/example/solr
+4400 [main] INFO  org.apache.solr.core.CoreContainer  – New CoreContainer 1606286799
+4400 [main] INFO  org.apache.solr.core.CoreContainer  – Loading cores into CoreContainer [instanceDir=solr/]
+4419 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting socketTimeout to: 0
+4419 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting urlScheme to: null
+4426 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting connTimeout to: 0
+4426 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting maxConnectionsPerHost to: 20
+4428 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting corePoolSize to: 0
+4428 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting maximumPoolSize to: 2147483647
+4429 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting maxThreadIdleTime to: 5
+4429 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting sizeOfQueue to: -1
+4429 [main] INFO  org.apache.solr.handler.component.HttpShardHandlerFactory  – Setting fairnessPolicy to: false
+4656 [main] INFO  org.apache.solr.update.UpdateShardHandler  – Creating UpdateShardHandler HTTP client with params: socketTimeout=0&connTimeout=0&retry=false
+4658 [main] INFO  org.apache.solr.logging.LogWatcher  – SLF4J impl is org.slf4j.impl.Log4jLoggerFactory
+4660 [main] INFO  org.apache.solr.logging.LogWatcher  – Registering Log Listener [Log4j (org.slf4j.impl.Log4jLoggerFactory)]
+4661 [main] INFO  org.apache.solr.core.CoreContainer  – Host Name: 
+4712 [main] INFO  org.apache.solr.core.CoresLocator  – Looking for core definitions underneath /protwis/sites/protwis/solr-4.10.2/example/solr
+4729 [main] INFO  org.apache.solr.core.CoresLocator  – Found core collection1 in /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/
+4731 [main] INFO  org.apache.solr.core.CoresLocator  – Found 1 core definitions
+4733 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – new SolrResourceLoader for directory: '/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/'
+4817 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrConfig  – Adding specified lib dirs to ClassLoader
+4823 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/juniversalchardet-1.0.3.jar' to classloader
+4824 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/xz-1.4.jar' to classloader
+4825 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/fontbox-1.8.4.jar' to classloader
+4825 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/tika-xmp-1.5.jar' to classloader
+4826 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/apache-mime4j-core-0.7.2.jar' to classloader
+4827 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/jdom-1.0.jar' to classloader
+4828 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/icu4j-53.1.jar' to classloader
+4829 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/rome-0.9.jar' to classloader
+4830 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/tagsoup-1.2.1.jar' to classloader
+4831 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/poi-3.10.1.jar' to classloader
+4832 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/commons-compress-1.7.jar' to classloader
+4832 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/vorbis-java-tika-0.1.jar' to classloader
+4833 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/bcprov-jdk15-1.45.jar' to classloader
+4834 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/bcmail-jdk15-1.45.jar' to classloader
+4835 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/aspectjrt-1.6.11.jar' to classloader
+4836 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/boilerpipe-1.1.0.jar' to classloader
+4837 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/apache-mime4j-dom-0.7.2.jar' to classloader
+4838 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/jempbox-1.8.4.jar' to classloader
+4839 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/poi-ooxml-3.10.1.jar' to classloader
+4840 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/isoparser-1.0-RC-1.jar' to classloader
+4841 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/dom4j-1.6.1.jar' to classloader
+4842 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/vorbis-java-core-0.1.jar' to classloader
+4843 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/xmpcore-5.1.2.jar' to classloader
+4844 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/tika-core-1.5.jar' to classloader
+4845 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/poi-scratchpad-3.10.1.jar' to classloader
+4846 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/pdfbox-1.8.4.jar' to classloader
+4847 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/metadata-extractor-2.6.2.jar' to classloader
+4848 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/xmlbeans-2.6.0.jar' to classloader
+4849 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/jhighlight-1.0.jar' to classloader
+4850 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/tika-parsers-1.5.jar' to classloader
+4851 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/poi-ooxml-schemas-3.10.1.jar' to classloader
+4852 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/extraction/lib/xercesImpl-2.9.1.jar' to classloader
+4857 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/dist/solr-cell-4.10.2.jar' to classloader
+4861 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/jackson-mapper-asl-1.9.13.jar' to classloader
+4862 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/mahout-math-0.6.jar' to classloader
+4863 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/attributes-binder-1.2.1.jar' to classloader
+4864 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/simple-xml-2.7.jar' to classloader
+4865 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/mahout-collections-1.0.jar' to classloader
+4866 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/jackson-core-asl-1.9.13.jar' to classloader
+4867 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/carrot2-mini-3.9.0.jar' to classloader
+4868 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/clustering/lib/hppc-0.5.2.jar' to classloader
+4871 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/dist/solr-clustering-4.10.2.jar' to classloader
+4875 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/langid/lib/langdetect-1.1-20120112.jar' to classloader
+4876 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/langid/lib/jsonic-1.2.7.jar' to classloader
+4879 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/dist/solr-langid-4.10.2.jar' to classloader
+4883 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/velocity/lib/velocity-tools-2.0.jar' to classloader
+4883 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/velocity/lib/velocity-1.7.jar' to classloader
+4884 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/velocity/lib/commons-collections-3.2.1.jar' to classloader
+4885 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/contrib/velocity/lib/commons-beanutils-1.8.3.jar' to classloader
+4889 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrResourceLoader  – Adding 'file:/protwis/sites/protwis/solr-4.10.2/dist/solr-velocity-4.10.2.jar' to classloader
+5087 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.update.SolrIndexConfig  – IndexWriter infoStream solr logging is enabled
+5094 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrConfig  – Using Lucene MatchVersion: 4.10.2
+5244 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.Config  – Loaded SolrConfig: solrconfig.xml
+5258 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.schema.IndexSchema  – Reading Solr Schema from /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf/schema.xml
+5299 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.schema.IndexSchema  – [collection1] Schema name=example
+5958 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.schema.IndexSchema  – unique key field: id
+5999 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.RestManager  – Registered ManagedResource impl org.apache.solr.rest.schema.analysis.ManagedWordSetResource for path /schema/analysis/stopwords/english
+6000 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.RestManager  – Registered ManagedResource impl org.apache.solr.rest.schema.analysis.ManagedSynonymFilterFactory$SynonymManager for path /schema/analysis/synonyms/english
+6152 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.schema.FileExchangeRateProvider  – Reloading exchange rates from file currency.xml
+6163 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.schema.FileExchangeRateProvider  – Reloading exchange rates from file currency.xml
+6350 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.CoreContainer  – Creating SolrCore 'collection1' using configuration from instancedir /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/
+6376 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – solr.NRTCachingDirectoryFactory
+6390 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – [collection1] Opening new SolrCore at /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/, dataDir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/
+6392 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.JmxMonitoredMap  – No JMX servers found, not exposing Solr information with JMX.
+6401 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – [collection1] Added SolrEventListener for newSearcher: org.apache.solr.core.QuerySenderListener{queries=[]}
+6401 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – [collection1] Added SolrEventListener for firstSearcher: org.apache.solr.core.QuerySenderListener{queries=[{q=static firstSearcher warming in solrconfig.xml}]}
+6425 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.CachingDirectoryFactory  – return new directory for /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data
+6433 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – New index directory detected: old=null new=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index/
+6439 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.CachingDirectoryFactory  – return new directory for /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index
+6465 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – created json: solr.JSONResponseWriter
+6469 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – adding lazy queryResponseWriter: solr.VelocityResponseWriter
+6470 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – created velocity: solr.VelocityResponseWriter
+6476 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – created xslt: solr.XSLTResponseWriter
+6476 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.response.XSLTResponseWriter  – xsltCacheLifetimeSeconds=5
+6624 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – no updateRequestProcessorChain defined as default, creating implicit default
+6633 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update: org.apache.solr.handler.UpdateRequestHandler
+6633 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update/json: org.apache.solr.handler.UpdateRequestHandler
+6634 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update/csv: org.apache.solr.handler.UpdateRequestHandler
+6634 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update/json/docs: org.apache.solr.handler.UpdateRequestHandler
+6642 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /select: solr.SearchHandler
+6642 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /query: solr.SearchHandler
+6645 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /get: solr.RealTimeGetHandler
+6645 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /export: solr.SearchHandler
+6646 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /browse: solr.SearchHandler
+6648 [coreLoadExecutor-5-thread-1] WARN  org.apache.solr.core.RequestHandlers  – Multiple requestHandler registered to the same name: /update ignoring: org.apache.solr.handler.UpdateRequestHandler
+6649 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update: solr.UpdateRequestHandler
+6649 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.extraction.ExtractingRequestHandler
+6650 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /update/extract: solr.extraction.ExtractingRequestHandler
+6650 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.FieldAnalysisRequestHandler
+6650 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /analysis/field: solr.FieldAnalysisRequestHandler
+6650 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.DocumentAnalysisRequestHandler
+6651 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /analysis/document: solr.DocumentAnalysisRequestHandler
+6657 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /admin/: solr.admin.AdminHandlers
+6662 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /admin/ping: solr.PingRequestHandler
+6669 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /debug/dump: solr.DumpRequestHandler
+6689 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /replication: solr.ReplicationHandler
+6689 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.SearchHandler
+6689 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /spell: solr.SearchHandler
+6690 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.SearchHandler
+6690 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /suggest: solr.SearchHandler
+6690 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.SearchHandler
+6690 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /tvrh: solr.SearchHandler
+6691 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.SearchHandler
+6691 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /terms: solr.SearchHandler
+6691 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – adding lazy requestHandler: solr.SearchHandler
+6691 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.RequestHandlers  – created /elevate: solr.SearchHandler
+6721 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.loader.XMLLoader  – xsltCacheLifetimeSeconds=60
+6726 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.loader.XMLLoader  – xsltCacheLifetimeSeconds=60
+6728 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.loader.XMLLoader  – xsltCacheLifetimeSeconds=60
+6730 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.loader.XMLLoader  – xsltCacheLifetimeSeconds=60
+6732 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.loader.XMLLoader  – xsltCacheLifetimeSeconds=60
+6756 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – Hard AutoCommit: if uncommited for 15000ms; 
+6757 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – Soft AutoCommit: disabled
+6832 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – SolrDeletionPolicy.onInit: commits: num=1
+	commit{dir=NRTCachingDirectory(MMapDirectory@/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index lockFactory=NativeFSLockFactory@/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index; maxCacheMB=48.0 maxMergeSizeMB=4.0),segFN=segments_1,generation=1}
+6833 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.SolrCore  – newest commit generation = 1
+6845 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.search.SolrIndexSearcher  – Opening Searcher@21c775e9[collection1] main
+6856 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – File-based storage initialized to use dir: /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6857 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.RestManager  – Initializing RestManager with initArgs: {storageDir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf}
+6859 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Reading _rest_managed.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6867 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Loaded LinkedHashMap at path _rest_managed.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6867 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Loaded initArgs {} for /rest/managed
+6868 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.RestManager  – Initializing 2 registered ManagedResources
+6868 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Reading _schema_analysis_stopwords_english.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6871 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Loaded LinkedHashMap at path _schema_analysis_stopwords_english.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6871 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Loaded initArgs {ignoreCase=true} for /schema/analysis/stopwords/english
+6872 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Loaded 35 words for /schema/analysis/stopwords/english
+6872 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Notified 1 observers of /schema/analysis/stopwords/english
+6873 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Reading _schema_analysis_synonyms_english.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6874 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResourceStorage  – Loaded LinkedHashMap at path _schema_analysis_synonyms_english.json using file:dir=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf
+6875 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Loaded initArgs {ignoreCase=true,format=solr} for /schema/analysis/synonyms/english
+6876 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Loaded 3 synonym mappings for /schema/analysis/synonyms/english
+6880 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.rest.ManagedResource  – Notified 1 observers of /schema/analysis/synonyms/english
+6880 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.component.SpellCheckComponent  – Initializing spell checkers
+6892 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.spelling.DirectSolrSpellChecker  – init: {name=default,field=text,classname=solr.DirectSolrSpellChecker,distanceMeasure=internal,accuracy=0.5,maxEdits=2,minPrefix=1,maxInspections=5,minQueryLength=4,maxQueryFrequency=0.01}
+6904 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.component.SpellCheckComponent  – No queryConverter defined, using default converter
+6906 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.component.SuggestComponent  – Initializing SuggestComponent
+6908 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.spelling.suggest.SolrSuggester  – init: {name=mySuggester,lookupImpl=FuzzyLookupFactory,dictionaryImpl=DocumentDictionaryFactory,field=cat,weightField=price,suggestAnalyzerFieldType=string}
+6948 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.spelling.suggest.SolrSuggester  – Dictionary loaded with params: {name=mySuggester,lookupImpl=FuzzyLookupFactory,dictionaryImpl=DocumentDictionaryFactory,field=cat,weightField=price,suggestAnalyzerFieldType=string}
+6953 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.component.QueryElevationComponent  – Loading QueryElevation from: /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/conf/elevate.xml
+7045 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.handler.ReplicationHandler  – Commits will be reserved for  10000
+7046 [searcherExecutor-6-thread-1] INFO  org.apache.solr.core.SolrCore  – QuerySenderListener sending requests to Searcher@21c775e9[collection1] main{StandardDirectoryReader(segments_1:1:nrt)}
+7061 [coreLoadExecutor-5-thread-1] INFO  org.apache.solr.core.CoreContainer  – registering core: collection1
+7071 [main] INFO  org.apache.solr.servlet.SolrDispatchFilter  – user.dir=/protwis/sites/protwis/solr-4.10.2/example
+7072 [main] INFO  org.apache.solr.servlet.SolrDispatchFilter  – SolrDispatchFilter.init() done
+7141 [main] INFO  org.eclipse.jetty.server.AbstractConnector  – Started SocketConnector@0.0.0.0:8983
+7169 [searcherExecutor-6-thread-1] INFO  org.apache.solr.core.SolrCore  – [collection1] webapp=null path=null params={q=static+firstSearcher+warming+in+solrconfig.xml&distrib=false&event=firstSearcher} hits=0 status=0 QTime=119 
+7170 [searcherExecutor-6-thread-1] INFO  org.apache.solr.core.SolrCore  – QuerySenderListener done.
+7170 [searcherExecutor-6-thread-1] INFO  org.apache.solr.handler.component.SpellCheckComponent  – Loading spell index for spellchecker: default
+7171 [searcherExecutor-6-thread-1] INFO  org.apache.solr.handler.component.SpellCheckComponent  – Loading spell index for spellchecker: wordbreak
+7171 [searcherExecutor-6-thread-1] INFO  org.apache.solr.handler.component.SuggestComponent  – Loading suggester index for: mySuggester
+7171 [searcherExecutor-6-thread-1] INFO  org.apache.solr.spelling.suggest.SolrSuggester  – reload()
+7174 [searcherExecutor-6-thread-1] INFO  org.apache.solr.spelling.suggest.SolrSuggester  – build()
+7191 [searcherExecutor-6-thread-1] INFO  org.apache.solr.core.SolrCore  – [collection1] Registered new searcher Searcher@21c775e9[collection1] main{StandardDirectoryReader(segments_1:1:nrt)}
+164629 [Thread-0] INFO  org.eclipse.jetty.server.Server  – Graceful shutdown SocketConnector@0.0.0.0:8983
+164639 [Thread-0] INFO  org.eclipse.jetty.server.Server  – Graceful shutdown o.e.j.w.WebAppContext{/solr,file:/protwis/sites/protwis/solr-4.10.2/example/solr-webapp/webapp/},/protwis/sites/protwis/solr-4.10.2/example/webapps/solr.war
+165821 [Thread-0] INFO  org.apache.solr.core.CoreContainer  – Shutting down CoreContainer instance=1606286799
+165823 [Thread-0] INFO  org.apache.solr.core.SolrCore  – [collection1]  CLOSING SolrCore org.apache.solr.core.SolrCore@6fa83ba4
+165832 [Thread-0] INFO  org.apache.solr.update.UpdateHandler  – closing DirectUpdateHandler2{commits=0,autocommit maxTime=15000ms,autocommits=0,soft autocommits=0,optimizes=0,rollbacks=0,expungeDeletes=0,docsPending=0,adds=0,deletesById=0,deletesByQuery=0,errors=0,cumulative_adds=0,cumulative_deletesById=0,cumulative_deletesByQuery=0,cumulative_errors=0,transaction_logs_total_size=0,transaction_logs_total_number=0}
+165832 [Thread-0] INFO  org.apache.solr.update.SolrCoreState  – Closing SolrCoreState
+165833 [Thread-0] INFO  org.apache.solr.update.DefaultSolrCoreState  – SolrCoreState ref count has reached 0 - closing IndexWriter
+165833 [Thread-0] INFO  org.apache.solr.update.DefaultSolrCoreState  – closing IndexWriter with IndexWriterCloser
+165848 [Thread-0] INFO  org.apache.solr.core.SolrCore  – [collection1] Closing main searcher on request.
+165853 [Thread-0] INFO  org.apache.solr.core.CachingDirectoryFactory  – Closing NRTCachingDirectoryFactory - 2 directories currently being tracked
+165854 [Thread-0] INFO  org.apache.solr.core.CachingDirectoryFactory  – looking to close /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data [CachedDir<<refCount=0;path=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data;done=false>>]
+165855 [Thread-0] INFO  org.apache.solr.core.CachingDirectoryFactory  – Closing directory: /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data
+165855 [Thread-0] INFO  org.apache.solr.core.CachingDirectoryFactory  – looking to close /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index [CachedDir<<refCount=0;path=/protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index;done=false>>]
+165856 [Thread-0] INFO  org.apache.solr.core.CachingDirectoryFactory  – Closing directory: /protwis/sites/protwis/solr-4.10.2/example/solr/collection1/data/index
+165858 [Thread-0] INFO  org.eclipse.jetty.server.handler.ContextHandler  – stopped o.e.j.w.WebAppContext{/solr,file:/protwis/sites/protwis/solr-4.10.2/example/solr-webapp/webapp/},/protwis/sites/protwis/solr-4.10.2/example/webapps/solr.war
