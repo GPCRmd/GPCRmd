@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -346,6 +346,16 @@ def PROTEINview(request, submission_id):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+def delete_protein(request,submission_id):
+    if request.method == "POST":
+        protein_num = request.POST["protein_num"]
+        
+        
+        response = HttpResponse('Success.',content_type='text/plain')
+    else:
+        response = HttpResponseForbidden()
+    return response
+    
 
 
 def query_protein(request, protein_id):
@@ -1162,6 +1172,22 @@ def SMALL_MOLECULEview2(request):
         fdbCN=dyndb_Other_Compound_Names()
 
         return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
+
+def generate_inchi(request):
+  if request.method == 'POST':
+    try:
+        if 'molsdf' in request.FILES.keys():
+            uploadfile = request.FILES['molsdf']
+            return JsonResponse({'test':'test'},safe=False)
+        else:
+            return HttpResponse('No file was selected.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    except ParsingError as e:
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      return response
+    except:
+      raise
+
+
 
 def SMALL_MOLECULEview(request, submission_id):
     def handle_uploaded_file(f,p):
