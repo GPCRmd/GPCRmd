@@ -1,0 +1,10 @@
+{{ object.inchi|safe }}
+{{ object.inchikey|safe }}
+{{ object.smiles|safe }}
+
+
+
+
+
+
+

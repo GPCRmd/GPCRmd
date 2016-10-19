@@ -6,6 +6,11 @@ from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf import settings
 from . import views
+from haystack.query import SearchQuerySet
+from haystack.views import SearchView
+from .forms import MainSearchForm
+
+sqs = SearchQuerySet().all()
 
 app_name= 'dynadb'
 urlpatterns = [
@@ -51,7 +56,7 @@ urlpatterns = [
     #url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
     url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
-    url(r'^search/$', include('haystack.urls')),
+    url(r'^search/$', SearchView(template='/protwis/sites/protwis/dynadb/templates/search/search.html', searchqueryset=sqs, form_class=MainSearchForm),name='haystack_search'), #url(r'^search/$', include('haystack.urls')), 
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     url(r'^search_top/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),

@@ -3,8 +3,9 @@
 {% block addon_css %}
   <style>
   .panel-body {
-    word-break:break-all
+    word-break:break-all;
 }
+  hr {color:red;}
     
   </style>
 {% endblock %}
@@ -22,11 +23,14 @@
             </tr>
         </table>
 
-        {% if query %}
+        {#% if query %#}
             <h3>Results</h3>
 
             {% for result in page.object_list %}
                 <p>{{ result.object.name }}</p>
+                <p>{{ result.object.id }}</p>
+                <p>{{ result.object.smiles}}</p> 
+                <hr style='color:red'><br><hr style='color:red'>
             {% empty %}
                 <p>No results found.</p>
             {% endfor %}
@@ -38,8 +42,8 @@
                     {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
                 </div>
             {% endif %}
-        {% else %}
+        {#% else %#}
             {# Show some example queries to run, maybe query syntax, something else? #}
-        {% endif %}
+        {#% endif %#}
     </form>
 {% endblock %}

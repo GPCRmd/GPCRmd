@@ -153,25 +153,11 @@
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="iupacname" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="sinchi" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="pubchem" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="sinchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
-
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="inchi" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="smiles" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="inchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="pub_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="species" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="pub_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="code" type="text_en" indexed="true" stored="true" multiValued="false" />
 

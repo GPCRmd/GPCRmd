@@ -29,6 +29,7 @@ from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyn
 from .pipe4_6_0 import *
 from time import sleep
 from random import randint
+from haystack.generic_views import SearchView
 # Create your views here.
 
 def REFERENCEview(request, submission_id=None):
@@ -345,7 +346,6 @@ def PROTEINview(request, submission_id):
         fdbOPN= dyndb_Other_Protein_NamesForm()
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
-
 
 
 def query_protein(request, protein_id):

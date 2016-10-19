@@ -137,7 +137,7 @@
     <field name="id" type="string" indexed="true" stored="true" multiValued="false" required="true"/>
     <field name="django_ct" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="django_id" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="_version_" type="long" indexed="true" stored ="true" multiValued="false"/>
+    <field name="_version_" type="long" indexed="true" stored ="true"/>
 
     <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
     <dynamicField name="*_s"  type="string"  indexed="true"  stored="true"/>
@@ -151,15 +151,29 @@
     <dynamicField name="*_coordinate"  type="tdouble" indexed="true"  stored="false"/>
 
 
-    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+    <field name="sinchi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="iupacname" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="sinchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="pubchem" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="smiles" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="inchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="inchi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="code" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="pub_date" type="date" indexed="true" stored="true" multiValued="false" />
 
     <field name="species" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-    <field name="code" type="text_en" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 

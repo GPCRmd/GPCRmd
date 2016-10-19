@@ -1,6 +1,41 @@
 from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
+from haystack.forms import SearchForm
+from haystack.query import SearchQuerySet
+
+class MainSearchForm(SearchForm):
+    #Compound = forms.CharField(required=False)
+    #Molecule = forms.CharField(required=False)
+    OPTIONS = (
+            ("A", "AND"),
+            ("O", "OR"),
+            ("N", "NOT"),
+            )
+    BooleanProtein = forms.ChoiceField(choices=OPTIONS,required=False)
+    Protein = forms.CharField(required=False)
+    other=forms.CharField(required=False)
+    def search(self):
+        # First, store the SearchQuerySet received from other processing.
+        sqs = super(MainSearchForm, self).search()
+        if not self.is_valid():
+            return self.no_query_found()
+
+        if self.cleaned_data['Protein']:
+            print(self.cleaned_data['BooleanProtein'])
+            if self.cleaned_data['BooleanProtein']=='A':
+                sqs = sqs.filter(name=self.cleaned_data['Protein'])
+            elif self.cleaned_data['BooleanProtein']=='O':
+                pass
+            else:
+                sqs = sqs.exclude(name=self.cleaned_data['Protein'])
+
+        if self.cleaned_data['other']:
+            sqs = sqs.filter(other_names=self.cleaned_data['other'])
+
+        return sqs
+
+
 
 class FileUploadForm(forms.Form):
     file_source = forms.FileField()

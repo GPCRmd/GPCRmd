@@ -1,0 +1,6 @@
+{{ object.pubchem_cid|safe }}
+{{ object.chembleid|safe }}
+{{ object.name|safe }}
+{{ object.sinchi|safe }}
+{{ object.sinchikey|safe }}
+{{ object.iupac_name|safe }}
