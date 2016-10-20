@@ -169,13 +169,14 @@
  			<div style="text-align:center">
 			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
 			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
-		        </div> 		
+		        </div>	
  			<div style="text-align:right;margin-right:5%">
-                                        <input type="submit" value="Validate" id="pdbchecker2" >  <!--This one sends data to pdbcheck view through AJAX. Newer.-->
-                                        <input type="submit" value="Autocomplete resid" id="pdbchecker1" >                                        
+                                        <input type="submit" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px"id="pdbchecker2" > <!--This one sends data to pdbcheck view through AJAX. Newer.-->
+                                        <input type="submit" value="Autocomplete resid" style="height:30px;margin: 15px 0px 0px 0px;width:100px" id="pdbchecker1" >                                        
 		        </div> 		
 		        </div><br>
 
+		<div class=row id='PRUEBA2'>
  			<div style="text-align:center">
              			<h4><a style="color:black" title="Do not include molecule types which are part of the general solvation environment">Other Molecules in the Complex</a></h4><br>
             		</div>
@@ -211,29 +212,23 @@
 			     <input type="button" value="- Remove Molecule"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">
 				<!--	<button onclick="addFields()"> + Add modeled residue </button>  -->
 		        </div> 		
+		        </div> 		
 
  			<div style="text-align:right;margin-right:5%">
-					<button onclick="addFields()"> Validate </button> 
+					<button onclick="addFields()" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button> 
+		        </div> 		
 		        </div> 		
 
 
 
 
-
-
-
-
-
-
-		        </div>
-     </div>
-        <br> <th><input type="submit" value="Submit" /> </th><br>   
+            		</div>
+        <th><input type="submit" value="Submit" /> </th><br>   
 <br><div>
 		       </div> 	
 </form>
 
 
-            		</div>
 
 </div>
 
