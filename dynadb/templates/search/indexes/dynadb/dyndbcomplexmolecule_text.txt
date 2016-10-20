@@ -1,0 +1,9 @@
+{{ object.id_molecule.smiles|safe }}
+{{ object.id_molecule.inchi|safe }}
+{{ object.id_molecule.inchikey|safe }}
+
+
+
+
+
+

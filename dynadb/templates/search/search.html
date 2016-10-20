@@ -5,8 +5,6 @@
   .panel-body {
     word-break:break-all;
 }
-  hr {color:red;}
-    
   </style>
 {% endblock %}
 {% block content %}
@@ -25,12 +23,15 @@
 
         {#% if query %#}
             <h3>Results</h3>
-
             {% for result in page.object_list %}
-                <p>{{ result.object.name }}</p>
-                <p>{{ result.object.id }}</p>
-                <p>{{ result.object.smiles}}</p> 
-                <hr style='color:red'><br><hr style='color:red'>
+                {% ifequal result.content_type 'dynadb.dyndbcomplexprotein'%}
+                    <a href=/dynadb/protein/id/{{ result.object.id }} > {{ result.object.id }} </a>
+                {%endifequal%}
+
+                {% ifequal result.content_type 'dynadb.dyndbcomplexmoleculemolecule'%}
+                     <a href=/dynadb/molecule/id/{{ result.object.id_molecule.id }} > {{ result.object.id_molecule.id }} </a>
+                {%endifequal%} 
+                <hr><br><hr>
             {% empty %}
                 <p>No results found.</p>
             {% endfor %}

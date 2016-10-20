@@ -5,34 +5,30 @@ from haystack.forms import SearchForm
 from haystack.query import SearchQuerySet
 
 class MainSearchForm(SearchForm):
-    #Compound = forms.CharField(required=False)
-    #Molecule = forms.CharField(required=False)
-    OPTIONS = (
-            ("A", "AND"),
-            ("O", "OR"),
-            ("N", "NOT"),
-            )
-    BooleanProtein = forms.ChoiceField(choices=OPTIONS,required=False)
-    Protein = forms.CharField(required=False)
-    other=forms.CharField(required=False)
+    #Compound_is_ligand = forms.BooleanField(required=False)
+    #Molecule_is_ligand = forms.BooleanField(required=False)
+    is_receptor=forms.BooleanField(required=False)
+
     def search(self):
         # First, store the SearchQuerySet received from other processing.
         sqs = super(MainSearchForm, self).search()
         if not self.is_valid():
             return self.no_query_found()
 
-        if self.cleaned_data['Protein']:
-            print(self.cleaned_data['BooleanProtein'])
-            if self.cleaned_data['BooleanProtein']=='A':
-                sqs = sqs.filter(name=self.cleaned_data['Protein'])
-            elif self.cleaned_data['BooleanProtein']=='O':
-                pass
-            else:
-                sqs = sqs.exclude(name=self.cleaned_data['Protein'])
+        if 'dynadb.dyndbcomplexprotein' in sqs[0].id:
+            if self.cleaned_data['is_receptor']==True:
+                    sqs = sqs.filter(is_receptor=self.cleaned_data['is_receptor'])
 
-        if self.cleaned_data['other']:
-            sqs = sqs.filter(other_names=self.cleaned_data['other'])
+            if self.cleaned_data['is_receptor']==False:
+                    sqs = sqs.filter(is_receptor=self.cleaned_data['is_receptor'])
 
+        '''
+        if self.cleaned_data['Compound_is_ligand']:
+                sqs = sqs.filter(is_receptor=self.cleaned_data['Compound_is_ligand']) 
+       
+        if self.cleaned_data['Molecule_is_ligand']:
+                sqs = sqs.filter(is_receptor=self.cleaned_data['Molecule_is_ligand'])
+        '''
         return sqs
 
 
