@@ -1,5 +1,6 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
+{% load static %}
 {% block addon_css %}
   <style>
   .panel-body {
@@ -11,7 +12,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> Download! </a></div>
+    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> <button type="button">FASTA download!</button></a></div>
     <div class="panel-body"><pre>{{answer.Protein_sequence}}</pre></div>
     </div>
     </div>
@@ -20,7 +21,11 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>+info</b></div>
     <div class="panel-body"> <b>Scientific name:</b> {{answer.scientific_name}} <br>
-    <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br> 
+    <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br>
+    <b>Mutations</b><br>
+    {% for mutation in answer.mutations %}
+        <p> Residue {{mutation.0}}: From {{mutation.1}}  to    {{mutation.2}} </p>
+    {%endfor%} 
     <b>Activity (Description, value, units):</b><br>
 
     {% for values in answer.activity %}

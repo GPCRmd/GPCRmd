@@ -44,10 +44,10 @@
              <h4>FILL IN THE PROTEIN FORM</h4>
 	    </div>
              <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
-             <p style="text-align: justify;">Protein information is linked to a canonical sequence obtained from UniProtKB/Swiss-Prot and identified by a UniProtKB accession number (AC).</p>
+             <p style="text-align: justify;">Protein information is linked to a cannonical sequence obtained from UniProtKB and identified by a UniProtKB accession number (AC).</p>
 
  
-	     <p style="text-align: justify;">Mutated proteins must be specified by providing wild type UniProtKB AC and the alignment between the cannonical wild type sequence and the mutated one in fasta format.<p>
+	     <p style="text-align: justify;">Mutated proteins must be specified by providing wild type UniProtKB AC and the alignment between the wild type sequence and the mutated one in fasta format.<p>
 
 	     <p style="text-align: justify;">Several proteins can be added in a single submission but at least one must be a G protein-coupled receptor (GPCR) whose sequence must have been deposited on GPCRdb. </p>
 
@@ -81,7 +81,7 @@
 		<br></div>
 
 	        <div class="row">
-			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers for cannonical sequences. Mutations are handled in a different field. ">UniProtKB AC:</a></label></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field. ">UniProtKB AC:</a></label></div>
 			<div class="col-md-6"><input id="id_uniprotkbac" maxlength="10" name="uniprotkbac" style="width:300px" type="text" placeholder=" P28222"/></div>
 		<br></div>
 			
@@ -104,8 +104,8 @@
 		</div>
                 <br>
 	        <div class="row">
-			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic construct&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
-			<div class="col-md-6" style="height:30px;display:inline-block;">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
+			<div class="col-md-7" style="height:30px;display:inline-block;">
 			<input id="id_id_species" name="id_species" type="hidden" value=""/>
 <!--                         <input id="id_id_species_autocomplete" maxlength="200" name="id_species_autocomplete" type="text" style="width:300px" placeholder="Homo Sapiens (HUMAN)"/> -->
                         </div>
@@ -123,27 +123,32 @@
 		</div><!--placeholder=" 5-hydroxytryptamine receptor 1B; Serotonin receptor 1B"-->
 
 	        <div class="row">
-			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Canonical sequence: Wild-type sequence of the protein in IUPAC one letter code.">Canonical sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" ></textarea></div>
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Wild type sequence: Wild-type sequence of the protein in IUPAC one letter code.">Wild type sequence:</a></label></div>
+			<div class="col-md-7"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" ></textarea></div>
 		<br></div>
 <!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
                 <div class="row">
-                        <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the cannonical sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
-                        <div class="col-md-6"><textarea cols="40" id="id_alignment" name="alignment" autofocus rows="2" disabled style="width:300px" placeholder=""></textarea></div>
+                        <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the wild type sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
+                        <div class="col-md-7"><textarea cols="40" id="id_alignment" name="alignment" disabled autofocus rows="2" style="width:300px" placeholder=""></textarea></div>
                 <br></div>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_msequence" name="msequence" disabled rows="2" style="width:300px" ></textarea></div>
+			<div class="col-md-7"><textarea cols="40" id="id_msequence" name="msequence" disabled rows="2" style="width:300px" placeholder=""></textarea></div>
 		<br></div>
+               <br>
 
+	        <div class="row" style="height:30px">
 
-	        <div class="row" style="height:40px">
-                        <div class="col-md-12" style="text-align:center">
-                                <div class="col-md-5"style="height:30px"></div>
-                                <div class="col-md-5"style="height:30px">
-
-                                <button type='button' id='id_get_mutations' name='get_mutations' disabled title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the canonical sequence from UniProtKB." style="width:120px;">
-                                Get mutations</button></div></div>
+                                <div class="col-md-1" style="height:30px"></div>
+                                <div class="col-md-3" style="height:30px"></div>
+                                <div class="col-md-7" style="height:30px;text-align: left">
+                                <button type='button' id='id_get_align' disabled name='get_align' title="Perform an alignment between Wild type and Mutant sequence. The result will be displayed in the Sequence alignment box for editing and in pop up." style="width:60px;" disabled>
+                                Align</button>
+                                <button type='button' id='id_get_mutations'  name='get_mutations' title="Mutations are identified after comparing the sequence supplied in the 'Sequence' field with the wild type sequence from UniProtKB." style="width:110px;" disabled>
+                                Get mutations</button>
+                                <button type='button' id='id_clean_mutations'  name='clean_mutations' title="Cleans assigned mutations and allows a new alignment." style="width:122px;" disabled>
+                                Clean mutations</button>
+                                </div>
                 </div>
 
                 <br>
@@ -154,8 +159,8 @@
             		</div>
 
                         <table id="mutationtable" align='center'>
-				<tr>	<th><label for="id_resid"><a title="Resid: Residue number that its mutated on cannonical protein.">Resid</a></label></th>
-					<th><label for="id_resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on cannonical protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
+				<tr>	<th><label for="id_resid"><a title="Resid: Residue number that its mutated on wild type protein.">Resid</a></label></th>
+					<th><label for="id_resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
 					<th><label for="id_resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
 				<tr> 	<td><input style="width:140px;" disabled id="id_resid" name="resid" type="number" /></td> <!--placeholder=" 95"-->
 					<td><input style="width:140px;" id="id_resletter_from" maxlength="1" disabled name="resletter_from" type="text"  /></td> <!--placeholder=" D" -->
@@ -171,7 +176,7 @@
                 <div class=row style="text-align:center">
                         <table align='center'>
                         <tr><td>
-                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" onClick="addProtein();">+ Add Protein</button>
+                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
                         </td><td>
                                 <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
                         </td><td>
@@ -182,7 +187,7 @@
                 </div> 		
                 <br><br>
                 <div class=row>
-                          <input type="submit" value="Submit" />
+                          <input id="id_submit" name="submit" type="submit" value="Submit" />
                 </div>
                 <br>
     </div>
@@ -212,15 +217,17 @@
 
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/protein_alignment_autocomplete.js' %}"></script>
     <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
+    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
     <script src="{% static 'dynadb/addProtein.js' %}"></script>
     <script src="{% static 'dynadb/delProtein.js' %}"></script>
     <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
     <script src="{% static 'dynadb/getMutations.js' %}"></script>
     <script src="{% static 'dynadb/changeMutant.js' %}"></script>
-    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
+    
     
 
 {% endblock %}

@@ -524,6 +524,8 @@ class DyndbDynamics(models.Model):
     id_dynamics_membrane_types = models.ForeignKey('DyndbDynamicsMembraneTypes', models.DO_NOTHING, db_column='id_dynamics_membrane_types', blank=True, null=True)
     id_dynamics_solvent_types = models.ForeignKey('DyndbDynamicsSolventTypes', models.DO_NOTHING, db_column='id_dynamics_solvent_types', blank=True, null=True)
     solvent_num = models.IntegerField(blank=True, null=True)
+    timestep = models.FloatField(blank=False, null=False)
+    delta = models.FloatField(blank=False, null=False)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)

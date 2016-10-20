@@ -18,8 +18,8 @@
     {%endfor%}
                               <br><b>IUPAC name</b>: {{answer.iupac_name}} <br>  
 
-                              <b>PUBCHEM link</b>: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> Pubchem Link</a> <br> 
-                              <b>ChEMBLE link</b>: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> ChEMBLE Link</a> <br>
+                              <b>PUBCHEM link</b>: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br> 
+                              <b>ChEMBLE link</b>: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
                               <b>InChIKey</b>:{{answer.sinchikey}} <br>
                               <b>InChI</b>:{{answer.sinchi}} <br>
     <b>Corresponding Molecules</b>:<br>
@@ -34,10 +34,14 @@
 
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Images of the SDF file</b></div>
-    {%for image in answer.imagelink%}
-        <div class="panel-body"> <img src={{image}} style="width:304px;height:228px;">
-    {%endfor%}
+    <div class="panel-heading"><b>Image of the compound</b></div>
+    <div class="panel-body">
+    {#for image in answer.imagelink#}
+    <img src="{{answer.imagelink}}" />
+    {#<img src="{% static "dynadb/2_mol_2_300.png" }" />#}
+    {#<img src="/files/Molecule/10_mol_5.png" />#}
+    {#<img src="/dynadb/files/Molecule/10_mol_5.png" />#}
+    {#endfor#}
 
 
     </div>

@@ -1,4 +1,4 @@
-﻿from django.conf.urls import patterns, include, url,handler404, handler500
+﻿from django.conf.urls import include, url,handler404, handler500
 from django.contrib import admin
 from django.conf import settings
 from protwis import views
@@ -13,6 +13,7 @@ urlpatterns = [
 #    url(r'^pruebaapp/', include('pruebaapp.urls')), 
     url(r'^', include('home.urls')),
     url(r'^accounts/', include('accounts.urls')),
+    url(r'^view/', include('view.urls')),
     url(r'^services/', include('api_' + settings.SITE_NAME + '.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^common/', include('common.urls')),
@@ -30,6 +31,7 @@ urlpatterns = [
     url(r'^structure/',include('structure.urls')),
     url(r'^construct/',include('construct.urls')),
     url(r'^sitesearch/',include('sitesearch.urls')),
+    url(r'^drugs/',include('drugs.urls')),
 ]
 
 handler404 = views.error404

@@ -2,8 +2,19 @@ $(document).ready(function(){
     $.fn.exists = function () {
       return this.length !== 0;
     };
+    
+    $.fn.clean_mutations = function() {
+        var protform = $(this).parents("[id|=protform]");
+        var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
+        protform.find("#mutationtable").resetTableRowFromFields()
+        msequence.prop("readonly",false);
+        msequence.set_restore_color();
+    };
+    
+    
     $.fn.resetTableRowFromFields = function() {
       var tr = $(this).find("tr:last-of-type");
+      var tr_parent = $(tr).parent()
       var tr2 = tr.clone();
       $(this).find("tr").each(function () {
         if (!$(this).find("th").exists()) {
@@ -11,15 +22,15 @@ $(document).ready(function(){
         }
           
       });
-      tr = $(this).find("tr:last-of-type");
+
 
       $(tr2).find("td").each(function () {
           $(this).find(':input').each(function () {
               var name1 = $(this).attr('name');
-              var id1 = this.id;
+              var id1 = $(this).attr('id');
               var namelab1 = name1.replace(/-[0-9]+$/,"-0");
               var idlab1 = id1.replace(/-[0-9]$/,"-0");
-              $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
+              $(this).attr({'placeholder':namelab1,'id':idlab1, 'name':namelab1});
               $(this).prop("readonly",false);
               $(this).val('');
               $(this).prop("disabled",true);
@@ -28,7 +39,7 @@ $(document).ready(function(){
           });
       
       });
-      tr2.insertAfter(tr);
+      tr_parent.append(tr2);
 
       
   
@@ -40,12 +51,12 @@ $(document).ready(function(){
       if ($(tr2).find("td :input").length != values.length) {
          alert('Error on .addTableRowFromFields: values array argument does not match the number of columns in <table>.');
          return false;
-      };
+      }
       i = 0;
       $(tr2).find("td").each(function () {
           $(this).find(':input').each(function () {
               var name1 = $(this).attr('name');
-              var id1 = this.id;
+              var id1 = $(this).attr('id');
               var matches = /-([0-9]+)$/.exec(id1)
               if (matches == null) {
                var id = id1 ;
@@ -56,10 +67,10 @@ $(document).ready(function(){
                var rowid = 1;
               } else {
                var rowid = Number(matches[1]) + 1;
-              };
+              }
               if (!create_row) {
                 rowid--;
-              };
+              }
               var namelab1 = name1.replace(/-[0-9]+$/,"-"+rowid);
               var idlab1 = id1.replace(/-[0-9]$/,"-"+rowid);
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
@@ -75,22 +86,29 @@ $(document).ready(function(){
         tr2.insertAfter(tr);
       } else {
         tr.replaceWith(tr2)
-      };
+      }
       
   
     };
   
     $(document).on('change',"[id='id_alignment'],[id|=id_form][id$='-alignment'],\
     [id='id_sequence'],[id|=id_form][id$='-sequence'],[id='id_msequence'],[id|=id_form][id$='-msequence']",
-                   function(){
-        var protform = $(this).parents("[id|=protform]");
-        protform.find("#mutationtable").resetTableRowFromFields()
-
+    function(){
+        $(this).clean_mutations();
+    });
+    
+    $(document).on('click',"[id='id_clean_mutations'],[id|=id_form][id$='-clean_mutations']",
+    function(){
+        $(this).clean_mutations();
     });
     
     
     $(document).on('click',"[id='id_get_mutations'],[id|=id_form][id$='-get_mutations']",function(){
+        var self = $(this);
+        $(this).prop("disabled",true);
         var protform = $(this).parents("[id|=protform]");
+        var ismutated = protform.find("[id='id_is_mutated'],[id|=id_form][id$='-is_mutated']");
+        $(ismutated).prop("disabled",true);
         var alignmentval = protform.find("[id='id_alignment'],[id|=id_form][id$='-alignment']").val();
         var sequenceval = protform.find("[id='id_sequence'],[id|=id_form][id$='-sequence']").val();
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
@@ -104,7 +122,7 @@ $(document).ready(function(){
         function(data){
           i = 0;
           msequence.prop("readonly",false);
-          msequence.val(data.mutsequence);
+          msequence.text(data.mutsequence);
           msequence.prop("readonly",true);
           msequence.prop("disabled",false);
           msequence.set_readonly_color();
@@ -113,7 +131,7 @@ $(document).ready(function(){
               protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to],false);
             } else {
               protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to]);
-            };
+            }
             i++;
           });
         }, 'json')
@@ -122,6 +140,10 @@ $(document).ready(function(){
            alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
 
         })
-
+        
+        .always(function(xhr,status,msg) {
+            $(self).prop("disabled",false);
+            $(ismutated).prop("disabled",false);
+        });
     });
 });

@@ -26,6 +26,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 INSTALLED_APPS = (
     'dynadb.apps.DynadbConfig',
     'accounts.apps.AccountsConfig',
+    'view.apps.ViewConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,6 +57,7 @@ INSTALLED_APPS = (
     'build_' + SITE_NAME,
     'construct',
     'tools',
+    'drugs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -92,8 +94,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = '/protwis/static/protwis'
 STATICFILES_DIRS = (os.sep.join([BASE_DIR, "static"]),)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/protwis/media/protwis'
+MEDIA_URL = '/files/'
+#past: MEDIA_URL = '/media/'
+MEDIA_ROOT = '/protwis/sites/files/'
+#past: MEDIA_ROOT = '/protwis/media/protwis'
 
 
 # Serializer
@@ -119,6 +123,7 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'protwis.context_processors.google_analytics'
             ],
         },
     },
@@ -182,6 +187,8 @@ if DEBUG:
            },
        }
     }
+
+SESSION_ENGINE="django.contrib.sessions.backends.file"
 
 #CACHE
 CACHES = {

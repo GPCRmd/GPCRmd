@@ -2,12 +2,13 @@
 from django.db import connection
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
+from django.core.files.storage import FileSystemStorage
 import re, os, pickle
 import time
 import json
@@ -23,10 +24,14 @@ from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetI
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
+from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
 #from .forms import NameForm, TableForm
-
+from .pipe4_6_0 import *
+from time import sleep
+from random import randint
 # Create your views here.
 
 def REFERENCEview(request, submission_id=None):
@@ -79,6 +84,21 @@ def REFERENCEview(request, submission_id=None):
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
+def show_alig(request):
+    if request.method=='POST':
+        wtseq=request.POST.get('wtseq')
+        mutseq=request.POST.get('mutant')
+        result=align_wt_mut(wtseq,mutseq)
+        result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
+        key=randint(1,1000000)
+        request.session[key]=result
+        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def popup_alig(request, alignment_key):
+    alignment=request.session[int(alignment_key)]
+    return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
 def PROTEINview(request, submission_id):
     p= submission_id
@@ -571,11 +591,22 @@ def PROTEINview(request, submission_id):
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+def delete_protein(request,submission_id):
+    if request.method == "POST":
+        protein_num = request.POST["protein_num"]
+        
+        
+        response = HttpResponse('Success.',content_type='text/plain')
+    else:
+        response = HttpResponseForbidden()
+    return response
+    
 
 
 def query_protein(request, protein_id):
     fiva=dict()
     actlist=list()
+    fiva['mutations']=list()
     fiva['models']=list()
     fiva['other_names']=list()
     fiva['activity']=list()
@@ -584,6 +615,9 @@ def query_protein(request, protein_id):
     fiva['cannonical']=DyndbProteinCannonicalProtein.objects.get(id_protein=protein_id).id_cannonical_proteins.id_protein.id
     fiva['is_mutated']=DyndbProtein.objects.get(pk=protein_id).is_mutated
     fiva['scientific_name']=DyndbProtein.objects.get(pk=protein_id).id_uniprot_species.scientific_name
+    
+    for match in DyndbProteinMutations.objects.filter(id_protein=protein_id):
+        fiva['mutations'].append( (match.resid,match.resletter_from, match.resletter_to) )
 
     for match in DyndbOtherProteinNames.objects.filter(id_protein=protein_id): #checked
         fiva['other_names'].append(match.other_names)
@@ -630,6 +664,7 @@ def query_protein(request, protein_id):
 def query_protein_fasta(request,protein_id):
     yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
     seq=getattr(yourseq,'sequence')
+    uniprot_id=DyndbProtein.objects.get(pk=protein_id).uniprotkbac
     count=0
     fseq=''
     for char in seq:
@@ -641,7 +676,7 @@ def query_protein_fasta(request,protein_id):
         count=count+1
 
     with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
-        fh.write('>'+protein_id+':\n')
+        fh.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
         fh.write(fseq)
     with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
         data=f.read()
@@ -652,6 +687,7 @@ def query_protein_fasta(request,protein_id):
             
 def query_molecule(request, molecule_id):
     molec_dic=dict()
+    molec_dic['inmodels']=list()
     molec_dic['link_2_compound']=list()
     molec_dic['sdf']=list()
     molec_dic['smiles']=DyndbMolecule.objects.get(pk=molecule_id).smiles
@@ -661,19 +697,38 @@ def query_molecule(request, molecule_id):
     molec_dic['inchikey']=DyndbMolecule.objects.get(pk=molecule_id).inchikey
     molec_dic['inchicol']=DyndbMolecule.objects.get(pk=molecule_id).inchicol
 
+    for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
+        molec_dic['inmodels'].append(match.id_model.id)
+
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0):
-        molec_dic['sdf'].append(molfile.id_files.filepath)
-    
+        #molec_dic['sdf'].append(molfile.id_files.filepath)
+        #intext=open('/protwis/sites/protwis/dynadb/3_mol_4.sdf','r')
+        intext=open(molfile.id_files.filepath,'r')
+        string=intext.read()
+        molec_dic['sdf']=string
     for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
         molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
 
     return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
 
+def query_molecule_sdf(request, molecule_id):
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
+        intext=open(molfile.id_files.filepath,'r')
+        string=intext.read()
+    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','w') as fh:
+        fh.write(string)
+    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+molecule_id+'_gpcrmd.sdf')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (molecule_id+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+molecule_id+'_gpcrmd.sdf')
+    return response
+            
 
 def query_compound(request,compound_id):
     comp_dic=dict()
     comp_dic['link_2_molecule']=list()
-    comp_dic['imagelink']=list()
+    #comp_dic['imagelink']=list()
     comp_dic['othernames']=list()
     for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
         comp_dic['othernames'].append(oname.other_names)
@@ -683,33 +738,42 @@ def query_compound(request,compound_id):
     comp_dic['chembleid']=DyndbCompound.objects.get(pk=compound_id).chembleid
     comp_dic['sinchi']=DyndbCompound.objects.get(pk=compound_id).sinchi
     comp_dic['sinchikey']=DyndbCompound.objects.get(pk=compound_id).sinchikey
-    #pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
-    #comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    try:
+    	pk2filesmolecule=DyndbCompound.objects.get(pk=compound_id).std_id_molecule.id
+    	comp_dic['imagelink']=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+    	comp_dic['imagelink']=comp_dic['imagelink'].replace("/protwis/sites/","/dynadb/") #this makes it work
+    except:
+        pass
+    #print (comp_dic['imagelink'])
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
-        for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
-            comp_dic['imagelink'].append(molfile.id_files.filepath)
+    #    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule.id).filter(type=2):
+    #        #comp_dic['imagelink'].append(molfile.id_files.filepath)
 
     return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
 
 
 def query_model(request,model_id):
     model_dic=dict()
-    model_dic['description']=DyndbModel.objects.get(pk=model_id).description
+    #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
     model_dic['pdbid']=DyndbModel.objects.get(pk=model_id).pdbid
     model_dic['type']=DyndbModel.objects.get(pk=model_id).type
-    model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id
+    #model_dic['link2protein']=DyndbModel.objects.get(pk=model_id).id_protein.id #NOT WORKING BECAUSE OF MISSING INFORMATION
+    model_dic['references']=list()
     model_dic['components']=list()
     model_dic['dynamics']=list()
     for match in DyndbModelComponents.objects.filter(id_model=model_id):
-        model_dic['components'].append(match.id_molecule,match.numberofmol)
+        model_dic['components'].append(match.id_molecule.id)
     for match in DyndbDynamics.objects.filter(id_model=model_id):
         model_dic['dynamics'].append(match.id)
+    for match in DyndbReferencesModel.objects.filter(id_model=model_id):
+        model_dic['references'].append( (match.id_references.doi, match.id_references.title) )
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
 
 def query_dynamics(request,dynamics_id):
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=list()
+    dyna_dic['files']=list()
     dyna_dic['references']=list()
     dyna_dic['related']=list()
     dyna_dic['soft']=DyndbDynamics.objects.get(pk=dynamics_id).software
@@ -718,8 +782,11 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['forcefieldv']=DyndbDynamics.objects.get(pk=dynamics_id).ffversion
     dyna_dic['link_2_model']=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id
     dyna_dic['description']=DyndbDynamics.objects.get(pk=dynamics_id).description
+    dyna_dic['timestep']=DyndbDynamics.objects.get(pk=dynamics_id).timestep
+    dyna_dic['delta']=DyndbDynamics.objects.get(pk=dynamics_id).delta
     dyna_dic['solventtype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_solvent_types.type_name
     dyna_dic['membranetype']=DyndbDynamics.objects.get(pk=dynamics_id).id_dynamics_membrane_types.type_name
+
     for match in DyndbDynamicsComponents.objects.filter(id_dynamics=dynamics_id):
         dyna_dic['link_2_molecules'].append(match.id_molecule.id)
 
@@ -728,6 +795,9 @@ def query_dynamics(request,dynamics_id):
     
     for match in DyndbReferencesDynamics.objects.filter(id_dynamics=dynamics_id):
         dyna_dic['references'].append(match.id_references.doi)
+
+    for match in DyndbFilesDynamics.objects.filter(id_dynamics=dynamics_id):
+        dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
     
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
 
@@ -922,7 +992,191 @@ def get_mutations_view(request):
       return response
     except:
       raise
-      
+
+
+def upload_pdb(request):
+    if request.method == 'POST':
+        form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
+        myfile = request.FILES["file_source"]
+        fs = FileSystemStorage()
+        filename = fs.save(myfile.name, myfile)
+        uploaded_file_url = fs.url(filename)
+        request.session['newfilename']=uploaded_file_url
+        pdbname='/protwis/sites'+request.session['newfilename']
+        if form.is_valid():
+            print('valid form')                     
+        else:
+            print ('invalid form')
+            print (form.errors)
+        tojson={'chain': 'A','message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def search_top(request):
+    if request.method=='POST':
+        url=request.POST.get('url')
+        pdbname='/protwis/sites'+request.session['newfilename'] 
+        sub_id=url[url.rfind('/model/')+7:-1] 
+        arrays=request.POST.getlist('bigarray[]')
+        counter=0
+        resultsdict=dict()
+        for array in arrays:
+            array=array.split(',') #array is a string with commas.
+            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
+
+            if array[3].replace(" ", "")=='' or not (array[3].isdigit()) or array[4].replace(" ", "")=='' or not (array[4].isdigit()):
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json') 
+            start=int(array[3])
+            stop=int(array[4])
+            if start>=stop:
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json') 
+            chain=array[1].replace(" ", "").upper() #avoid whitespace problems
+            segid=array[2].replace(" ", "").upper() #avoid whitespace problems
+            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
+            sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            res=searchtop(pdbname,sequence, start,stop,chain,segid)
+            if isinstance(res,tuple):
+                seq_res_from,seq_res_to=res
+                resultsdict[counter]=[seq_res_from,seq_res_to]
+                resultsdict['message']=''
+            elif isinstance(res,str):
+                 resultsdict['message']=res
+            counter+=1
+
+    data = json.dumps(resultsdict)
+    return HttpResponse(data, content_type='application/json')
+
+
+
+
+def pdbcheck(request,combination_id):
+    if request.method=='POST': #See pdbcheck.js
+        results=dict()
+        url=request.POST.get('url')
+        #fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
+        pdbname='/protwis/sites'+request.session['newfilename'] 
+        sub_id=url[url.rfind('/model/')+7:-1] 
+        results['strlist']=list()
+        results['pathlist']=list()
+        finalguide=[]
+        arrays=request.POST.getlist('bigarray[]')
+        counter=0
+        for array in arrays:
+            array=array.split(',')
+            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|') #title for the results pop-up table
+
+            for r in range(3,7):
+                if array[r].replace(" ", "")=='' or not array[r].isdigit():
+                    results={'type':'string_error','title':'Missing information or wrong information', 'message':'Residue or sequence range is not completely defined, or you did not used a number.'}
+                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
+                    data = json.dumps(tojson) #CHANGE TO results!!!!!!!!!!!!!!!!!!!!!!
+                    request.session[combination_id] = results
+                    return HttpResponse(data, content_type='application/json') 
+
+            prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
+            start=int(array[3])
+            stop=int(array[4])
+            seqstart=int(array[5])
+            seqstop=int(array[6])
+            if seqstart>=seqstop:
+                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
+                data = json.dumps(results)
+                return HttpResponse(data, content_type='application/json')                 
+            chain=array[1].replace(" ", "").upper()
+            segid=array[2].replace(" ", "").upper()     
+            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
+            sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            sequence=sequence[seqstart-1:seqstop]
+
+            if stop-start<1:
+                results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value','message':''}
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                data = json.dumps(tojson)
+                request.session[combination_id] = results
+                return HttpResponse(data, content_type='application/json')
+
+            uniquetest=unique(pdbname, chain!='',segid!='')
+            if uniquetest==True:
+                checkresult=checkpdb(pdbname,segid,start,stop,chain)
+
+                if isinstance(checkresult,tuple):
+                    tablepdb,simplified_sequence,hexflag=checkresult
+                    guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
+
+                    if isinstance(guide, list):
+                        path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain)
+                        results['pathlist'].append(path_to_repaired)
+                        segments=segment_id(path_to_repaired, segid, start, stop, chain)
+                        finalguide.append(guide)
+                    elif isinstance(guide, tuple):
+                        results={'type':'tuple_error', 'title':'Mismatch found', 'mismatchlist':guide[1],'errmess':guide[0]}
+                        request.session[combination_id] = results
+                        request.session.modified = True
+                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                        data = json.dumps(tojson)
+                        return HttpResponse(data, content_type='application/json')
+                    else: #PDB has insertions error
+                        results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide,'message':''}
+                        request.session[combination_id] = results
+                        request.session.modified = True
+                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                        data = json.dumps(tojson)
+                        return HttpResponse(data, content_type='application/json')
+                else: #checkpdb has an error
+                    results={'type':'string_error','title':'Corrupted resid numbering or missing field in PDB', 'errmess':checkresult} #prints the error resid.
+                    request.session[combination_id] = results
+                    request.session.modified = True
+                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                    data = json.dumps(tojson)
+                    return HttpResponse(data, content_type='application/json')
+            else: #unique test failed
+                results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
+                request.session[combination_id] = results
+                request.session.modified = True
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                data = json.dumps(tojson)
+                return HttpResponse(data, content_type='application/json')
+
+            counter=+1
+
+        if isinstance(finalguide, list) and len(finalguide)>0:
+            results['type']='fullrun'
+            results['table']=finalguide
+            results['seg']=segments
+            results['path']=path_to_repaired
+
+        request.session[combination_id] = results
+        request.session.modified = True
+        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+    else: #NOT POST, simply display of results in the POP UP window. See pdbcheck.js
+        fav_color = request.session[combination_id]
+        if fav_color['type']=='tuple_error':
+            return render(request,'dynadb/tuple_error.html', {'answer':fav_color})
+
+        elif fav_color['type']=='string_error':
+            return render(request,'dynadb/string_error.html', {'answer':fav_color})
+
+        elif fav_color['type']=='fullrun':
+            return render(request,'dynadb/fullrun.html', {'answer':fav_color})
+
+        else:
+            fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very bad alignment\n ','title':'Unknown error'}
+            return render(request,'dynadb/string_error.html', {'answer':fav_color})
+
+def servecorrectedpdb(request,pdbname):
+    with open('/tmp/'+pdbname,'r') as f:
+        data=f.read()
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+pdbname)[0])
+        response['Content-Disposition']="attachment;filename=%s" % (pdbname) #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
+    return response
 
 def MODELview(request, submission_id):
     # Function for saving files
@@ -1273,6 +1527,7 @@ def MODELview(request, submission_id):
         else:
             print("Errores en el form dyndb_Files\n ", fdbFile.errors.as_data())
 
+        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
 
         fdbPS={} 
         fdbPSobj={} 
@@ -1385,6 +1640,22 @@ def SMALL_MOLECULEview2(request,submission_id):
 #       fdbCN=dyndb_Other_Compound_Names()
 
 #       return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
+
+def generate_inchi(request):
+  if request.method == 'POST':
+    try:
+        if 'molsdf' in request.FILES.keys():
+            uploadfile = request.FILES['molsdf']
+            return JsonResponse({'test':'test'},safe=False)
+        else:
+            return HttpResponse('No file was selected.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    except ParsingError as e:
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      return response
+    except:
+      raise
+
+
 
 def SMALL_MOLECULEview(request, submission_id):
 
