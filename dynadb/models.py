@@ -401,6 +401,13 @@ class DyndbComplexExp(models.Model):
 
 
 class DyndbComplexMolecule(models.Model):
+#   COMPOUND_TYPE=(
+#       (0,'Orthosteric ligand'),
+#       (1,'Allosteric ligand'),
+#       (2,'Crystallographic waters'),
+#       (3,'Other')
+#   )
+    #type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
     id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp')
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
@@ -410,11 +417,18 @@ class DyndbComplexMolecule(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_complex_molecule'
 
 
 class DyndbComplexMoleculeMolecule(models.Model):
+    COMPOUND_TYPE=(
+        (0,'Orthosteric ligand'),
+        (1,'Allosteric ligand'),
+        (2,'Crystallographic waters'),
+        (3,'Other')
+    )
+    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
     id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',null=False)
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)
 
@@ -428,7 +442,6 @@ class DyndbComplexMoleculeMolecule(models.Model):
 class DyndbComplexProtein(models.Model):
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', null=True)
     id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp', null=True)
-    is_receptor = models.BooleanField()
 
     class Meta:
         managed = True
@@ -474,6 +487,13 @@ class DyndbSubmissionProtein(models.Model):
         db_table = 'dyndb_submission_protein'
 
 class DyndbSubmissionMolecule(models.Model):
+    COMPOUND_TYPE=(
+        (0,'Orthosteric ligand'),
+        (1,'Allosteric ligand'),
+        (2,'Crystallographic waters'),
+        (3,'Other')
+    )
+    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
     submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
     molecule_id = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='molecule_id', blank=True, null=True)
     not_in_model=models.NullBooleanField()
@@ -829,10 +849,10 @@ class DyndbModeledResidues(models.Model):
     resid_to = models.SmallIntegerField()
     seq_resid_from = models.SmallIntegerField()
     seq_resid_to = models.SmallIntegerField()
-    bonded_to_id_modeled_residues = models.ForeignKey('self', models.DO_NOTHING, db_column='bond_to_id_modeled_residues', null=True, related_name='DyndbModeledResidues_bond_to_id_modeled_residues_fky')
+    bonded_to_id_modeled_residues = models.ForeignKey('self', models.DO_NOTHING, db_column='bond_to_id_modeled_residues', blank=True, null=True, related_name='DyndbModeledResidues_bond_to_id_modeled_residues_fky')#!!!!
     pdbid = models.CharField(max_length=6, blank=False, null=True)
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0)
-    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
+    template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', blank=True, null=True, related_name='DyndbModeledResidues_template_id_protein_fky')
 
     class Meta:
         managed = True
@@ -905,7 +925,7 @@ class DyndbProtein(models.Model):
     uniprotkbac = models.CharField(max_length=10, blank=True, null=True)
     isoform = models.SmallIntegerField()
     is_mutated = models.BooleanField()
-    name = models.CharField(max_length=60)
+    name = models.TextField()
     update_timestamp = models.DateTimeField(null=True)
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)

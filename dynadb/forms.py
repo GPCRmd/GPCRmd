@@ -117,7 +117,8 @@ class dyndb_Files_Molecule(ModelForm):
 class dyndb_Complex_Exp(ModelForm):
     class Meta:
         model = DyndbComplexExp
-        fields = '__all__'
+       # fields = '__all__'
+        fields= ['creation_timestamp', 'update_timestamp']
 
 class dyndb_Complex_Protein(ModelForm):
     class Meta:
@@ -128,6 +129,7 @@ class dyndb_Complex_Molecule(ModelForm):
     class Meta:
         model = DyndbComplexMolecule
         fields = '__all__'
+        #fields=['id_complex_exp'] 
 
 class dyndb_Complex_Molecule_Molecule(ModelForm):
     class Meta:

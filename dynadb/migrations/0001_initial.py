@@ -397,6 +397,7 @@ class Migration(migrations.Migration):
             name='DyndbComplexMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_complex_exp',models.ForeignKey(db_column='id_complex_exp',  on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbComplexExp')),
                 ('update_timestamp', models.DateTimeField()),
                 ('creation_timestamp', models.DateTimeField()),
                 ('created_by_dbengine', models.CharField(max_length=40)),
