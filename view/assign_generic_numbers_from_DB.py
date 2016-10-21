@@ -53,7 +53,7 @@ def obtain_gen_numbering(dyn_id):
                 seq_num.append(t)
         num_scheme=Protein.objects.get(pk=prot_id).residue_numbering_scheme.slug
         if DyndbProtein.objects.get(id=dprot_id).is_mutated:
-            print("MUTATED")
+            #print("MUTATED")
             mutations=DyndbProteinMutations.objects.filter(id_protein=dprot_id)
             for mut in sorted(mutations, key=lambda m: m.id):
                 res_position =mut.resid #rememper that in the sequence, the position is res -1
@@ -62,19 +62,19 @@ def obtain_gen_numbering(dyn_id):
 
                 #### Testing - REMOVE THIS
 
-                res_position =48
-                res_from = "-"
-                res_to =  "!"
+                #res_position =48
+                #res_from = "-"
+                #res_to =  "!"
 
                 ##########################
 
                 if res_from == "-": # Double insertion would be --, right? And therefore I would have to add .xx1 and .xx2, wouldn't I? Then I have to modify this to take into account this situation!!
-                    print("insertion")
+                    #print("insertion")
                     gpcr_n = seq_num[res_position -2][1] 
                     if gpcr_n is None: # If it's None it means that it's outside of the helixes
                         seq_num.insert(res_position -1, (res_to, None))
                     else:
-                        print("Modifying gpcr num")
+                        #print("Modifying gpcr num")
                         if "gpcr" in num_scheme: 
                             if "." in gpcr_n: #Format n.nn x nn
                                 final_num= gpcr_num_insertion(gpcr_n)
@@ -96,7 +96,7 @@ def obtain_gen_numbering(dyn_id):
                         # continue with other num systems??
                   
                 elif res_to == "-": # Also here I should consider the case of more than one residue deleted
-                    print("deletion") 
+                    #print("deletion") 
                     if "gpcr" in num_scheme:
                         gpcr_n = seq_num[res_position -1][1]
                         if gpcr_n is None or "." not in gpcr_n: # If it's not in an helix or the numbering doesn't include the BWi
@@ -119,15 +119,22 @@ def obtain_gen_numbering(dyn_id):
                     seq_num[res_position -1] = (res_to, gpcr_n)
 
         else: # If the prot don't have mutations (seq = canonical seq)
-            print("NOT MUTATED")
+            #print("NOT MUTATED")
+            pass
 
         numbers_final = {}
+        seq_final=""
         i=1
         for e in seq_num:
             numbers_final[i] = e
+            seq_final += e[0]
             i+=1
-        for e in numbers_final:
-            print(e," - ", numbers_final[e])
-        return (numbers_final, num_scheme)
+        seq_db= DyndbProteinSequence.objects.get(id_protein=dprot_id).sequence
+        if seq_final == seq_db:
+            #ERROR!!!!
+            pass
+#        for e in numbers_final:
+#            print(e," - ", numbers_final[e])
+        return (numbers_final, num_scheme, seq_db)
     else:
         pass #RAISE ERROR
