@@ -22,7 +22,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel,DyndbComplexProtein,DyndbComplexMolecule,DyndbComplexMoleculeMolecule,DyndbComplexExp, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
@@ -346,6 +346,43 @@ def PROTEINview(request, submission_id):
         fdbOPN= dyndb_Other_Protein_NamesForm()
         return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
+
+
+def ComplexExpSearcher(request):
+    if request.method == 'POST':
+        user_protein = request.POST.get('protein')
+        user_molecule = request.POST.get('molecule')
+        complex_listfromProtein=list()
+        cmolecule_list=list()
+        complex_list_fromMolecule=list()
+        for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein.
+            complex_listfromProtein.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein.
+        for cmolecule in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule):
+            cmolecule_list.append(cmolecule.id_complex_molecule.id) #all complexmolecules which have the molecule the user has selected
+
+        for cmolecule in DyndbComplexMolecule.objects.all():
+            for cmolecule_id in cmolecule_list: 
+                if cmolecule_id==cmolecule.id:
+                    complex_list_fromMolecule.append(cmolecule.id_complex_exp.id) #all complexExp that contain the molecule the user desires
+
+        joinres=set(complex_list_fromMolecule).intersection(set(complex_listfromProtein)) #which complexExp id have the molecule and protein selected by the user
+        joinres=list(joinres)
+        joinres=[str(i) for i in joinres]
+        '''
+        for row in user_combination:
+            if row[0]=='AND':
+                previousresult_set.intersection(set(complex_exp_id_newlist))
+
+            if row[0]=='OR':
+                previousresult_set.add(set(complex_exp_id_newlist))
+
+            if row[0]=='NOT':
+                previousresult_set.sustract(set(complex_exp_id_newlist))
+        '''
+        joinres=','.join(joinres)
+        tojson={'result': joinres,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
 
 
 def query_protein(request, protein_id):

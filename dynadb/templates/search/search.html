@@ -25,7 +25,7 @@
             <h3>Results</h3>
             {% for result in page.object_list %}
                 {% ifequal result.content_type 'dynadb.dyndbcomplexprotein'%}
-                    <a href=/dynadb/protein/id/{{ result.object.id }} > {{ result.object.id }} </a>
+                    <a href=/dynadb/protein/id/{{ result.object.id_protein.id }} > {{ result.object.id_protein.id }} </a>
                 {%endifequal%}
 
                 {% ifequal result.content_type 'dynadb.dyndbcomplexmoleculemolecule'%}
@@ -47,4 +47,18 @@
             {# Show some example queries to run, maybe query syntax, something else? #}
         {#% endif %#}
     </form>
+
+
+    <form method="post" id="myform" action="." enctype="multipart/form-data">{% csrf_token %}
+        <input id="protein" type="text" name="name" placeholder="5-HT1B receptor"></input>
+        <input id="molecule" type="text" name="name" placeholder="Clozapine"></input>
+        <input type="button" value="Search Complex" name="search" id="ComplexSearch" />
+    </form> 
+
+    <h3>Results for Complex</h3>
+        <p id='resultsp'>No Complex results.</p>
+{% endblock %}
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
 {% endblock %}
