@@ -137,7 +137,15 @@ $(document).ready(function(){
         }, 'json')
 
         .fail(function(xhr,status,msg) {
-           alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+           if (xhr.readyState == 4) {
+                alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+           }
+           else if (xhr.readyState == 0) {
+                alert("Connection error");
+           }
+           else {
+                alert("Unknown error");
+           }
 
         })
         
