@@ -384,6 +384,29 @@ def ComplexExpSearcher(request):
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
+def ModelSearcher(request):
+    if request.method == 'POST':
+        user_complex_molecule = str(request.POST.get('cmolecule'))
+        model_list=list()
+        for model in DyndbModel.objects.filter(id_complex_molecule=user_complex_molecule):
+            model_list.append(str(model.id))
+
+        model_string=','.join(model_list)
+        tojson={'modelresult': model_string,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def DynamicSearcher(request):
+    if request.method == 'POST':
+        user_model = str(request.POST.get('cmodel'))
+        dyna_list=list()
+        for dyna in DyndbDynamics.objects.filter(id_model=user_model):
+            dyna_list.append(str(dyna.id))
+
+        dyna_string=','.join(dyna_list)
+        tojson={'dynaresult': dyna_string,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
 
 def query_protein(request, protein_id):
     fiva=dict()

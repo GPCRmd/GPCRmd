@@ -58,6 +58,8 @@ urlpatterns = [
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
     url(r'^search/$', SearchView(template='/protwis/sites/protwis/dynadb/templates/search/search.html', searchqueryset=sqs, form_class=MainSearchForm),name='haystack_search'), #url(r'^search/$', include('haystack.urls')),
     url(r'^complex_search/$', views.ComplexExpSearcher,name='ComplexExpSearcher'),
+    url(r'^model_search/$', views.ModelSearcher,name='ModelSearcher'),
+    url(r'^dynamics_search/$', views.DynamicSearcher,name='DynamicSearcher'),
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     url(r'^search_top/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),

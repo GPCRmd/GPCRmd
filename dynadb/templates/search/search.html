@@ -8,7 +8,7 @@
   </style>
 {% endblock %}
 {% block content %}
-    <h2>Search</h2>
+    <h2>Search for proteins, molecules or compounds.</h2>
 
     <form method="get" action=".">
         <table>
@@ -22,6 +22,7 @@
         </table>
 
         {#% if query %#}
+            <br><br>
             <h3>Results</h3>
             {% for result in page.object_list %}
                 {% ifequal result.content_type 'dynadb.dyndbcomplexprotein'%}
@@ -48,17 +49,42 @@
         {#% endif %#}
     </form>
 
-
+    <br><br><br><br><br><br>
+    <h3>Search your complexes.</h3>
     <form method="post" id="myform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="protein" type="text" name="name" placeholder="5-HT1B receptor"></input>
         <input id="molecule" type="text" name="name" placeholder="Clozapine"></input>
         <input type="button" value="Search Complex" name="search" id="ComplexSearch" />
     </form> 
-
+    <br><br>
     <h3>Results for Complex</h3>
         <p id='resultsp'>No Complex results.</p>
+
+
+    <br><br><br><br><br><br>
+    <h3>Search your models.</h3>
+    <form method="post" id="modelform" action="." enctype="multipart/form-data">{% csrf_token %}
+        <input id="cmolecule" type="text" name="name" placeholder="Which complexes you want to include in the search, like: 1"></input>
+        <input type="button" value="Search Models" name="search" id="ModelSearch" />
+    </form> 
+    <br><br>
+    <h3>Results for Model</h3>
+        <p id='resultsm'>No Model results.</p>
+
+    <br><br><br><br><br><br>
+    <h3>Search your Dynamics.</h3>
+    <form method="post" id="dynaform" action="." enctype="multipart/form-data">{% csrf_token %}
+        <input id="cmodel" type="text" name="name" placeholder="Which models you want to include in the search, like: 1"></input>
+        <input type="button" value="Search Dynamics" name="search" id="DynaSearch" />
+    </form> 
+    <br><br>
+    <h3>Results for Dynamics</h3>
+        <p id='resultsd'>No Dynamics results.</p>
+
 {% endblock %}
 
 {% block addon_js %}
     <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/model_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/dynamic_searcher.js' %}"></script>
 {% endblock %}
