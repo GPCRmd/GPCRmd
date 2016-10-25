@@ -5,63 +5,45 @@
   .panel-body {
     word-break:break-all;
 }
+  #myTable{
+      padding: 1px;
+      width: 80%;
+  }
+ #myTable  th, #myTable  td {
+      padding: 1px;
+      width: 20%
+  }
+
+  #floatdiv {
+    border-radius: 10px;
+    background-color: grey;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 40%;
+} 
+
   </style>
 {% endblock %}
 {% block content %}
-    <h2>Search for proteins, molecules or compounds.</h2>
 
-    <form method="get" action=".">
-        <table>
-            {{ form.as_table }}
-            <tr>
-                <td>&nbsp;</td>
-                <td>
-                    <input type="submit" value="Search">
-                </td>
-            </tr>
-        </table>
-
-        {#% if query %#}
-            <br><br>
-            <h3>Results</h3>
-            {% for result in page.object_list %}
-                {% ifequal result.content_type 'dynadb.dyndbcomplexprotein'%}
-                    <a href=/dynadb/protein/id/{{ result.object.id_protein.id }} > {{ result.object.id_protein.id }} </a>
-                {%endifequal%}
-
-                {% ifequal result.content_type 'dynadb.dyndbcomplexmoleculemolecule'%}
-                     <a href=/dynadb/molecule/id/{{ result.object.id_molecule.id }} > {{ result.object.id_molecule.id }} </a>
-                {%endifequal%} 
-                <hr><br><hr>
-            {% empty %}
-                <p>No results found.</p>
-            {% endfor %}
-
-            {% if page.has_previous or page.has_next %}
-                <div>
-                    {% if page.has_previous %}<a href="?q={{ query }}&amp;page={{ page.previous_page_number }}">{% endif %}&laquo; Previous{% if page.has_previous %}</a>{% endif %}
-                    |
-                    {% if page.has_next %}<a href="?q={{ query }}&amp;page={{ page.next_page_number }}">{% endif %}Next &raquo;{% if page.has_next %}</a>{% endif %}
-                </div>
-            {% endif %}
-        {#% else %#}
-            {# Show some example queries to run, maybe query syntax, something else? #}
-        {#% endif %#}
-    </form>
-
-    <br><br><br><br><br><br>
-    <h3>Search your complexes.</h3>
-    <form method="post" id="myform" action="." enctype="multipart/form-data">{% csrf_token %}
-        <input id="protein" type="text" name="name" placeholder="5-HT1B receptor"></input>
-        <input id="molecule" type="text" name="name" placeholder="Clozapine"></input>
-        <input type="button" value="Search Complex" name="search" id="ComplexSearch" />
+    <h3>Search for proteins, molecules or compounds.</h3>
+    <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
+        <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
+        <input type="button" value="Search Complex" name="search" id="Searcher" />
     </form> 
-    <br><br>
-    <h3>Results for Complex</h3>
-        <p id='resultsp'>No Complex results.</p>
 
+    <h3>Results</h3>
+        <p id='ajaxresults'>No results.</p>
 
     <br><br><br><br><br><br>
+
+    <h3>Table RESULTS</h3>
+        <br><br> <p id='tableresults'> No Complex results.</p> <br><br>
+    <h3></h3>
+    <br><br><br><br><br><br>
+
+
     <h3>Search your models.</h3>
     <form method="post" id="modelform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="cmolecule" type="text" name="name" placeholder="Which complexes you want to include in the search, like: 1"></input>
@@ -81,10 +63,36 @@
     <h3>Results for Dynamics</h3>
         <p id='resultsd'>No Dynamics results.</p>
 
+
+
+    <div id="floatdiv">
+    <div class="panel-body">
+    <center>
+    <table id="myTable">
+    <thead>
+    <tr>
+        <th>Boolean</th>
+        <th>Type</th>
+        <th>ID</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    </table>
+    <br>
+    <button id="tablesearch" type="button" value="search"> Search for complexes! </button>
+    </center>
+    </div>
+
+<br><br><br>
 {% endblock %}
 
 {% block addon_js %}
     <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
     <script src="{% static 'dynadb/model_searcher.js' %}"></script>
     <script src="{% static 'dynadb/dynamic_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/add_search.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxto.js' %}"></script>
+    <script src="{% static 'dynadb/tablesearch.js' %}"></script>
 {% endblock %}

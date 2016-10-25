@@ -30,6 +30,7 @@ from .pipe4_6_0 import *
 from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
+from haystack.query import SearchQuerySet
 # Create your views here.
 
 def REFERENCEview(request, submission_id=None):
@@ -348,7 +349,101 @@ def PROTEINview(request, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
 
+def autocomplete(request):
+    sqs = SearchQuerySet().all().auto_query(request.GET.get('q', ''))[0].text
+    print(SearchQuerySet().all().auto_query('P28222')[0].text)
+    suggestions = [result.title for result in sqs]
+    # Make sure you return a JSON object, not a bare list.
+    # Otherwise, you could be vulnerable to an XSS attack.
+    the_data = json.dumps({
+        'results': suggestions
+    })
+    return HttpResponse(the_data, content_type='application/json')
+
+def ajaxsearcher(request):
+    if request.method == 'POST':
+        reslist=list()
+        sqs=SearchQuerySet().all()
+        user_input = request.POST.get('cmolecule')
+        results=sqs.auto_query(user_input)
+        for res in results:
+            print(res.id)
+            reslist.append(res.id)
+        reslist.append('')
+        reslist=','.join(reslist)
+        tojson={'result': reslist,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+
+
 def ComplexExpSearcher(request):
+    if request.method == 'POST':
+        sortdic={'OR':1,'AND':2,'NOT':3}
+        arrays=request.POST.getlist('bigarray[]')
+        counter=0
+        setlist=list()
+        for array in arrays[1:]: #avoid table header with [1:]
+            array=array.split(',')
+            rowlist=list()
+            rowlist.append(sortdic[array[0]]) #first element in the list is the boolean opeartor.
+
+            if array[1]=='protein':
+                user_protein = array[2]
+                for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein.
+                    rowlist.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein.
+
+            elif array[1]=='molecule':
+                user_molecule = array[2]
+                cmolecule_list=list()
+                for cmolecule in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule):
+                    cmolecule_list.append(cmolecule.id_complex_molecule.id) #all complexmolecules which have the molecule the user has selected
+
+                for cmolecule in DyndbComplexMolecule.objects.all():
+                    for cmolecule_id in cmolecule_list: 
+                        if cmolecule_id==cmolecule.id:
+                            rowlist.append(cmolecule.id_complex_exp.id) #all complexExp that contain the molecule the user desires
+
+                
+            else:
+                user_compound = array[2]
+                for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
+                    
+
+            setlist.append(rowlist)
+
+        setlist.sort(key=lambda x: x[0])
+        print(setlist)
+        resultlist=set()
+        for row in setlist: #APPLY BOOLEAN OPERATORS.
+            rowset=set(row[1:]) #build a set with all elments of the list except the first, which is 'AND','OR', 'NOT'.
+            if row[0]==1: #OR selected
+                resultlist.update(rowset) #adds this ids to the result    
+            elif row[0]==2: #AND selected
+                resultlist=resultlist.intersection(rowset) #
+            else: #NOT selected
+                resultlist=resultlist.difference(rowset) #eliminate from resultlist the ids in this row
+
+        resultlist=list(resultlist)
+        resultlist=[str(i) for i in resultlist]
+        '''
+        for row in user_combination:
+            if row[0]=='AND':
+                previousresult_set.intersection(set(complex_exp_id_newlist))
+
+            if row[0]=='OR':
+                previousresult_set.add(set(complex_exp_id_newlist))
+
+            if row[0]=='NOT':
+                previousresult_set.sustract(set(complex_exp_id_newlist))
+        '''
+        resultlist=','.join(resultlist)
+        print('resultlist:' + resultlist)
+        tojson={'result': resultlist,'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
+def ComplexExpSearcher2(request):
     if request.method == 'POST':
         user_protein = request.POST.get('protein')
         user_molecule = request.POST.get('molecule')
