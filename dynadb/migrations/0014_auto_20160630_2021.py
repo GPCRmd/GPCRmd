@@ -24,12 +24,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dyndbcomplexcompound',
             name='id_complex_exp',
-            field=models.ForeignKey( null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbComplexExp'),#db_column='id_complex_exp',
+            field=models.ForeignKey( null=True, db_column='id_complex_exp', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbComplexExp'),
         ),
         migrations.AddField(
             model_name='dyndbcomplexcompound',
             name='id_compound',
-            field=models.ForeignKey( null=True, on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbCompound'),#db_column='id_compound',
+            field=models.ForeignKey( null=True, db_column='id_compound',on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbCompound'),#
         ),
         migrations.AddField(
             model_name='dyndbexpinteractiondata',
