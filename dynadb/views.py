@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
@@ -8,6 +9,7 @@ from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 from django.core.files.storage import FileSystemStorage
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import re, os, pickle
 import time
 import json
@@ -16,10 +18,12 @@ import requests
 import math
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
-from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
+from .uploadhandlers import TemporaryFileUploadHandlerMaxSize,TemporaryMoleculeFileUploadHandlerMaxSize
+from .molecule_properties_tools import open_molecule_file, check_implicit_hydrogens, check_non_accepted_bond_orders, generate_inchi, generate_inchikey, generate_smiles, get_net_charge, write_sdf, generate_png, stdout_redirected
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
@@ -29,7 +33,9 @@ from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyn
 from .pipe4_6_0 import *
 from time import sleep
 from random import randint
+
 # Create your views here.
+
 
 def REFERENCEview(request, submission_id=None):
  
@@ -1172,15 +1178,132 @@ def SMALL_MOLECULEview2(request):
         fdbCN=dyndb_Other_Compound_Names()
 
         return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
+        
+@csrf_exempt
+def generate_molecule_properties(request,submission_id):
+  request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+  return _generate_molecule_properties(request,submission_id)
 
-def generate_inchi(request):
+@csrf_protect
+def _generate_molecule_properties(request,submission_id):
+  url_prefix = "/dynadb/"
+  moleculepath = 'Molecule'
+  pngsize = 300
+  RecMet = False
+  formre = re.compile('^form-(\d+)-')
+  submission_folder = os.path.join(moleculepath,'mol'+str(submission_id))
+             
   if request.method == 'POST':
+    
     try:
-        if 'molsdf' in request.FILES.keys():
-            uploadfile = request.FILES['molsdf']
-            return JsonResponse({'test':'test'},safe=False)
+        
+        if 'molpostkey' in request.POST.keys():
+            if 'recmet' in request.POST.keys():
+                RecMet = True
+            if 'pngsize' in request.POST.keys():
+                pngsize = int(request.POST["pngsize"])
+            molpostkey = request.POST["molpostkey"]
+            if molpostkey in request.FILES.keys():
+                m = formre.search(molpostkey)
+                if m:
+                    molid = m.group(1)
+                else:
+                    molid = 0
+                uploadfile = request.FILES[molpostkey]
+                os.makedirs(os.path.join(settings.MEDIA_ROOT,submission_folder),exist_ok=True) 
+                molname = 'tmp_mol_'+str(molid)+'_'+str(submission_id)
+                logpath = os.path.join(submission_folder, molname+'.log')
+                logfile = open(os.path.join(settings.MEDIA_ROOT,logpath),'w')
+                try:
+                    mol = open_molecule_file(uploadfile,logfile)
+                except(ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                    logfile.close()
+                    return HttpResponse(e.args[0],status=422,reason='Unprocessable Entity',content_type='text/plain')
+                except:
+                    logfile.close()
+                    return HttpResponse('Cannot load molecule from uploaded file. Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                finally:
+                    uploadfile.close()
+                if check_implicit_hydrogens(mol):
+                    msg='Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                if check_non_accepted_bond_orders(mol):
+                    print(msg,file=logfile)
+                    logfile.close()
+                    msg='Molecule contains non-accepted bond orders. Please, provide a molecule with single, aromatic, double or triple bonds only.'
+                    return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                
+                data = dict()
+                data['download_url_log'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),logpath)
+                data['sinchi'] = dict()
+                try:
+                    print('Generating Standard InChI...',file=logfile)
+                    sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+                    data['sinchi']['sinchi'] = sinchi
+                    data['sinchi']['code'] = code
+                    print(msg,file=logfile)
+                    data['inchi'] = dict()
+                    print('Generating Fixed Hydrogens InChI...',file=logfile)
+                    inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+                    data['inchi']['inchi'] = inchi
+                    data['inchi']['code'] = code
+                    print(msg,file=logfile)
+                    data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+                    data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+
+                except:
+                    msg = 'Error while computing InChI.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    raise
+                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                try:
+                    print('Generating Smiles...',file=logfile)
+                    data['smiles'] = generate_smiles(mol,logfile)
+                except:
+                    msg = 'Error while computing Smiles.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    
+                data['charge'] = get_net_charge(mol)
+                mol.SetProp("_Name",molname)
+                sdfpath = os.path.join(submission_folder, molname+'.sdf')
+                write_sdf(mol,os.path.join(settings.MEDIA_ROOT,sdfpath))
+                data['download_url_sdf'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),sdfpath)
+                pngpath = os.path.join(submission_folder,molname+'_'+str(pngsize)+'.png')
+                print('Drawing molecule...',file=logfile)
+                try:
+                    generate_png(mol,os.path.join(settings.MEDIA_ROOT,pngpath),logfile,size=pngsize)
+                except:
+                    msg = 'Error while drawing molecule.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                print(url_prefix)
+                print(os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath))
+
+                data['download_url_png'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath)
+                print('Finished with molecule.',file=logfile)
+                logfile.close()
+                del mol
+                
+                return JsonResponse(data,safe=False)
+            else:
+                return HttpResponse('Unknown molecule file reference.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        elif request.upload_handlers[0].exception is not None:
+            try:
+                raise request.upload_handlers[0].exception
+            except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+                return HttpResponse(e.args[0],status=422,reason='Unprocessable Entity',content_type='text/plain')
+                
+                
+            
         else:
-            return HttpResponse('No file was selected.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse('No file was selected or cannot find molecule file reference.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        
     except ParsingError as e:
       response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
       return response
