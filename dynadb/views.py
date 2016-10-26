@@ -1663,121 +1663,129 @@ def _generate_molecule_properties(request,submission_id):
              
   if request.method == 'POST':
     
-    try:
+
+    data = dict()
+    data['download_url_log'] = None
+    if 'molpostkey' in request.POST.keys():
+        if 'recmet' in request.POST.keys():
+            RecMet = True
+        if 'pngsize' in request.POST.keys():
+            pngsize = int(request.POST["pngsize"])
+        molpostkey = request.POST["molpostkey"]
         
-        if 'molpostkey' in request.POST.keys():
-            if 'recmet' in request.POST.keys():
-                RecMet = True
-            if 'pngsize' in request.POST.keys():
-                pngsize = int(request.POST["pngsize"])
-            molpostkey = request.POST["molpostkey"]
-            if molpostkey in request.FILES.keys():
-                m = formre.search(molpostkey)
-                if m:
-                    molid = m.group(1)
-                else:
-                    molid = 0
-                uploadfile = request.FILES[molpostkey]
-                os.makedirs(os.path.join(settings.MEDIA_ROOT,submission_folder),exist_ok=True) 
-                molname = 'tmp_mol_'+str(molid)+'_'+str(submission_id)
-                logpath = os.path.join(submission_folder, molname+'.log')
-                logfile = open(os.path.join(settings.MEDIA_ROOT,logpath),'w')
-                try:
-                    mol = open_molecule_file(uploadfile,logfile)
-                except(ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
-                    logfile.close()
-                    return HttpResponse(e.args[0],status=422,reason='Unprocessable Entity',content_type='text/plain')
-                except:
-                    logfile.close()
-                    return HttpResponse('Cannot load molecule from uploaded file. Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                finally:
-                    uploadfile.close()
-                if check_implicit_hydrogens(mol):
-                    msg='Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
-                    print(msg,file=logfile)
-                    logfile.close()
-                    return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                if check_non_accepted_bond_orders(mol):
-                    print(msg,file=logfile)
-                    logfile.close()
-                    msg='Molecule contains non-accepted bond orders. Please, provide a molecule with single, aromatic, double or triple bonds only.'
-                    return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                
-                data = dict()
-                data['download_url_log'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),logpath)
-                data['sinchi'] = dict()
-                try:
-                    print('Generating Standard InChI...',file=logfile)
-                    sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
-                    data['sinchi']['sinchi'] = sinchi
-                    data['sinchi']['code'] = code
-                    print(msg,file=logfile)
-                    data['inchi'] = dict()
-                    print('Generating Fixed Hydrogens InChI...',file=logfile)
-                    inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
-                    data['inchi']['inchi'] = inchi
-                    data['inchi']['code'] = code
-                    print(msg,file=logfile)
-                    data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
-                    data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
 
-                except:
-                    msg = 'Error while computing InChI.'
-                    print(msg,file=logfile)
-                    logfile.close()
-                    raise
-                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                try:
-                    print('Generating Smiles...',file=logfile)
-                    data['smiles'] = generate_smiles(mol,logfile)
-                except:
-                    msg = 'Error while computing Smiles.'
-                    print(msg,file=logfile)
-                    logfile.close()
-                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    
-                data['charge'] = get_net_charge(mol)
-                mol.SetProp("_Name",molname)
-                sdfpath = os.path.join(submission_folder, molname+'.sdf')
-                write_sdf(mol,os.path.join(settings.MEDIA_ROOT,sdfpath))
-                data['download_url_sdf'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),sdfpath)
-                pngpath = os.path.join(submission_folder,molname+'_'+str(pngsize)+'.png')
-                print('Drawing molecule...',file=logfile)
-                try:
-                    generate_png(mol,os.path.join(settings.MEDIA_ROOT,pngpath),logfile,size=pngsize)
-                except:
-                    msg = 'Error while drawing molecule.'
-                    print(msg,file=logfile)
-                    logfile.close()
-                    return HttpResponse(msg+' Please, see log file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                print(url_prefix)
-                print(os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath))
-
-                data['download_url_png'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath)
-                print('Finished with molecule.',file=logfile)
-                logfile.close()
-                del mol
-                
-                return JsonResponse(data,safe=False)
+        
+        if molpostkey in request.FILES.keys():
+            m = formre.search(molpostkey)
+            if m:
+                molid = m.group(1)
             else:
-                return HttpResponse('Unknown molecule file reference.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-        elif request.upload_handlers[0].exception is not None:
-            try:
-                raise request.upload_handlers[0].exception
-            except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
-                return HttpResponse(e.args[0],status=422,reason='Unprocessable Entity',content_type='text/plain')
-                
-                
+                molid = 0
+            uploadfile = request.FILES[molpostkey]
+            os.makedirs(os.path.join(settings.MEDIA_ROOT,submission_folder),exist_ok=True) 
+            molname = 'tmp_mol_'+str(molid)+'_'+str(submission_id)
+            logpath = os.path.join(submission_folder, molname+'.log')
+            logfile = open(os.path.join(settings.MEDIA_ROOT,logpath),'w')
             
-        else:
-            return HttpResponse('No file was selected or cannot find molecule file reference.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-        
-    except ParsingError as e:
-      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
-      return response
-    except:
-      raise
+            data['download_url_log'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),logpath)
+            try:
+                mol = open_molecule_file(uploadfile,logfile)
+            except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                print(e.args[0],file=logfile)
+                logfile.close()
+                data['msg'] = e.args[0]
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            except:
+                logfile.close()
+                data['msg'] = 'Cannot load molecule from uploaded file. Please, see log file.'
+                print(data['msg'],file=logfile)
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            finally:
+                uploadfile.close()
+            if check_implicit_hydrogens(mol):
+                data['msg'] = 'Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
+                print(data['msg'],file=logfile)
+                logfile.close()
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            if check_non_accepted_bond_orders(mol):
+                data['msg'] = 'Molecule contains non-accepted bond orders. Please, provide a molecule with single, aromatic, double or triple bonds only.'
+                print(data['msg'],file=logfile)
+                logfile.close()
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            
+            
+            
+            data['sinchi'] = dict()
+            try:
+                print('Generating Standard InChI...',file=logfile)
+                sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+                data['sinchi']['sinchi'] = sinchi
+                data['sinchi']['code'] = code
+                print(msg,file=logfile)
+                data['inchi'] = dict()
+                print('Generating Fixed Hydrogens InChI...',file=logfile)
+                inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+                data['inchi']['inchi'] = inchi
+                data['inchi']['code'] = code
+                print(msg,file=logfile)
+                data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+                data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
 
+            except:
+                data['msg'] ='Error while computing InChI.'
+                print(data['msg'],file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            try:
+                print('Generating Smiles...',file=logfile)
+                data['smiles'] = generate_smiles(mol,logfile)
+            except:
+                msg = 'Error while computing Smiles.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                
+            data['charge'] = get_net_charge(mol)
+            mol.SetProp("_Name",molname)
+            sdfpath = os.path.join(submission_folder, molname+'.sdf')
+            write_sdf(mol,os.path.join(settings.MEDIA_ROOT,sdfpath))
+            data['download_url_sdf'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),sdfpath)
+            pngpath = os.path.join(submission_folder,molname+'_'+str(pngsize)+'.png')
+            print('Drawing molecule...',file=logfile)
+            try:
+                generate_png(mol,os.path.join(settings.MEDIA_ROOT,pngpath),logfile,size=pngsize)
+            except:
+                msg = 'Error while drawing molecule.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            print(url_prefix)
+            print(os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath))
+
+            data['download_url_png'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath)
+            print('Finished with molecule.',file=logfile)
+            logfile.close()
+            del mol
+            
+            return JsonResponse(data,safe=False)
+        else:
+            data['msg'] = 'Unknown molecule file reference.'
+            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+    elif request.upload_handlers[0].exception is not None:
+        try:
+            raise request.upload_handlers[0].exception
+        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+            data['msg'] = e.args[0]
+            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            
+            
+        
+    else:
+        data['msg'] = 'No file was selected or cannot find molecule file reference.'
+        return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
 
 
 def SMALL_MOLECULEview(request, submission_id):

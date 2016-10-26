@@ -13,6 +13,7 @@ $(document).ready(function(){
         var molform = $(this).parents("[id|=molform]");
         var molformid = $(molform).attr('id');
         var uploadmol = $(molform).find("[id='id_upload_mol'],[id|=id_form][id$='-upload_mol']");
+        var logfile = $(molform).find("[id='id_logfile'],[id|=id_form][id$='-logfile']");
         var stdform = $(molform).find("[id='id_stdform'],[id|=id_form][id$='-stdform']");
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
         var inchikey = $(molform).find("[id='id_inchikey'],[id|=id_form][id$='-inchikey']");
@@ -29,17 +30,38 @@ $(document).ready(function(){
         $(mainformclone).find("div[id|='molform']:not(#"+molformid+")").remove();
         
         var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
+        
+        
         if ($(molsdf).val() == "") {
+             $(self).prop('disabled',false);
              alert("No file selected.");
              return false;
         }
         
+        var extension = $(molsdf).val().substr( ($(molsdf).val().lastIndexOf('.') +1) ).toLowerCase();
+        switch(extension) {
+             case "mol":
+             case "sdf":
+             case "sd":
+             break;
+             default:
+                $(self).prop('disabled',false);
+                alert("Invalid extension.");
+                return false;
+        }
+        
+        
+        
         if ($(molsdf)[0].hasOwnProperty('files') && typeof molsdf[0].files[0] !== 'undefined' && molsdf[0].files[0].hasOwnProperty('size')) {
             if (molsdf[0].files[0].size > max_size) {
+                $(self).prop('disabled',false);
                 alert("Maximum size is 50 MB.");
                 return false;
             }
         }
+        
+        
+        
         var molsdfname = $(molsdf).attr('name');
         $(mainformclone).ajaxSubmit({
             url: "./generate_properties/",
@@ -66,12 +88,24 @@ $(document).ready(function(){
                 .attr("height",pngsize)
                 .attr("width",pngsize)
                 $(uploadmol).replaceWith($(newuploadmol));
-
+                logfile.attr("href",data.download_url_log);
+                logfile.show();
                 
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {
-                    alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+                    
+                    if (xhr.status==422) {
+                        var data = jQuery.parseJSON(xhr.responseText);
+                        if (data.download_url_png != null) {
+                            logfile.attr("href",data.download_url_png);
+                            logfile.show();
+                        }
+                        var responsetext = data.msg;
+                    } else {
+                        var responsetext = xhr.responseText;
+                    }
+                    alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+responsetext);
                 }
                 else if (xhr.readyState == 0) {
                     alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
@@ -82,6 +116,7 @@ $(document).ready(function(){
             },
             complete: function(xhr,status,msg){
                 $(self).prop('disabled',false);
+
             }
         });
     });
