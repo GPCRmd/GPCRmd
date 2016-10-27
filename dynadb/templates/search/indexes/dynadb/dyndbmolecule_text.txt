@@ -1,0 +1,6 @@
+{{ object.description }}
+{{ object.inchi }}
+{{ object.inchikey }}
+{{ object.inchicol }}
+{{ object.smiles }}
+

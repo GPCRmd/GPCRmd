@@ -23,6 +23,12 @@
     width: 40%;
 } 
 
+  .foo{
+      border: solid black 2px;
+      padding: 1px;
+      width: 20%
+}
+
   </style>
 {% endblock %}
 {% block content %}
@@ -30,21 +36,23 @@
     <h3>Search for proteins, molecules or compounds.</h3>
     <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
-        <input type="button" value="Search Complex" name="search" id="Searcher" />
+        <input type="button" value="Search" name="search" id="Searcher" />
     </form> 
-
+    <br>
     <h3>Results</h3>
         <p id='ajaxresults'>No results.</p>
 
     <br><br><br><br><br><br>
 
-    <h3>Table RESULTS</h3>
-        <br><br> <p id='tableresults'> No Complex results.</p> <br><br>
-    <h3></h3>
+    <h3>Results from table search</h3>
+        <h4>Complex results:</h4>
+        <br><br> <div id='tableresults'> No Complex results.</div> <br><br>
+        <h4>Model results:</h4>
+        <br><br> <div id='modelresults'> No Model results.</div> <br><br>
     <br><br><br><br><br><br>
 
 
-    <h3>Search your models.</h3>
+    <h3>Search models.</h3>
     <form method="post" id="modelform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="cmolecule" type="text" name="name" placeholder="Which complexes you want to include in the search, like: 1"></input>
         <input type="button" value="Search Models" name="search" id="ModelSearch" />
@@ -54,7 +62,7 @@
         <p id='resultsm'>No Model results.</p>
 
     <br><br><br><br><br><br>
-    <h3>Search your Dynamics.</h3>
+    <h3>Search Dynamics.</h3>
     <form method="post" id="dynaform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="cmodel" type="text" name="name" placeholder="Which models you want to include in the search, like: 1"></input>
         <input type="button" value="Search Dynamics" name="search" id="DynaSearch" />

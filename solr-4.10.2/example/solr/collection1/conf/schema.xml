@@ -153,9 +153,9 @@
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="content_auto" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+    <field name="id_compound" type="long" indexed="true" stored="true" multiValued="false" />
 
-    <field name="is_receptor" type="boolean" indexed="true" stored="true" multiValued="false" />
+    <field name="id_protein" type="long" indexed="true" stored="true" multiValued="false" />
 
   </fields>
 

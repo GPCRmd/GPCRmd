@@ -24,6 +24,17 @@ $("#tablesearch").click(function() {
             $("#tablesearch").prop("disabled",false);
             if (data.message==''){
                 $('#tableresults').text(data.result);
+                $('#modelresults').text(data.model);
+                if (data.compound_table.length>0){
+                    var table = $('<table></table>').addClass('foo');
+                    var header= $('<thead><tr><th>Complex</th><th>Compound</th><th>Molecule</th></tr></thead>');
+                    table.append(header);
+                    for(i=0; i<data.compound_table.length; i++){
+                        var row = $('<tr><td>'+data.compound_table[i][0]+'</td><td><a href=/dynadb/compound/id/'+data.compound_table[i][1]+'>'+data.compound_table[i][1]+'</a></td><td><a href=/dynadb/molecule/id/'+data.compound_table[i][2]+'>'+data.compound_table[i][2]+'</a></td></tr>'); // $('<tr></tr>').addClass('bar').text(data.compound_table[i]);
+                        table.append(row);
+                    }
+                    $('#tableresults').append(table);
+                } // endif (data.compound_table.length>0)
             }else{
                 alert(data.message);
             }

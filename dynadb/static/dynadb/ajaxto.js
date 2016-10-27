@@ -9,20 +9,15 @@ $("#Searcher").click(function() {
         success: function(data) {
             $("#Searcher").prop("disabled",false);
             if (data.message==''){
-                res = data.result.split(",");
                 var linkresult='';
-                for (var id in res){
-                    if (res[id]!=''){
-                        var trueid=res[id].split('.')[2];
-                        if (res[id].indexOf('moleculemolecule') !== -1){
-                            linkresult=linkresult+'<a href=/dynadb/molecule/id/'+trueid+'>'+trueid+'</a> <button class="molecule" type="button" name='+trueid+' >Add to complex search</button><br>';
-
-                        }else if (res[id].indexOf('protein') !== -1){
-                             linkresult=linkresult+'<a href=/dynadb/protein/id/'+trueid+'>'+trueid+'</a> <button class="protein" type="button" name='+trueid+' >Add to complex search</button><br>';
-                        }else{
-                             console.log('COMPOUND FOUND, PRINT TABLE');  
-                        }
-                    }
+                for(i=0; i<data.compound.length; i++){
+                    linkresult=linkresult+'<a href=/dynadb/compound/id/'+data.compound[i]+'> Compound'+data.compound[i]+'</a> <button class="compound" type="button" name='+data.compound[i]+' >Add to complex search</button><br>';
+                }
+                for(i=0; i<data.protein.length; i++){
+                    linkresult=linkresult+'<a href=/dynadb/protein/id/'+data.protein[i]+'> Protein:'+data.protein[i]+'</a> <button class="protein" type="button" name='+data.protein[i]+' >Add to complex search</button><br>';
+                }
+                for(i=0; i<data.molecule.length; i++){
+                    linkresult=linkresult+'<a href=/dynadb/molecule/id/'+data.molecule[i]+'> Molecule:'+data.molecule[i]+'</a> <button class="molecule" type="button" name='+data.molecule[i]+' >Add to complex search</button><br>';
                 }
                 $('#ajaxresults').html(linkresult);
             }else{
@@ -32,7 +27,7 @@ $("#Searcher").click(function() {
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#Searcher").prop("disabled",false);
             alert("Something unexpected happen.");
-        }
+        },
     });
 });
 

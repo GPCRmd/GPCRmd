@@ -22,7 +22,7 @@ from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel,DyndbComplexProtein,DyndbComplexMolecule,DyndbComplexMoleculeMolecule,DyndbComplexExp, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel,DyndbComplexProtein,DyndbComplexMolecule,DyndbComplexMoleculeMolecule,DyndbComplexExp, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames  ,DyndbComplexCompound              
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 #from .forms import NameForm, TableForm
@@ -362,16 +362,24 @@ def autocomplete(request):
 
 def ajaxsearcher(request):
     if request.method == 'POST':
+        moleculelist=list()
+        proteinlist=list()
+        compoundlist=list()
         reslist=list()
         sqs=SearchQuerySet().all()
         user_input = request.POST.get('cmolecule')
         results=sqs.auto_query(user_input)
         for res in results:
-            print(res.id)
-            reslist.append(res.id)
-        reslist.append('')
-        reslist=','.join(reslist)
-        tojson={'result': reslist,'message':''}
+            if 'compound' in str(res.id) and str(res.id_compound) not in compoundlist:
+                compoundlist.append(str(res.id_compound))
+            elif 'protein' in str(res.id) and str(res.id_protein) not in proteinlist:
+                proteinlist.append(str(res.id_protein))
+            elif 'molecule' in str(res.id):
+                mol_id=res.id.split('.')[2]
+                if str(mol_id) not in moleculelist: #molecule
+                    moleculelist.append(str(mol_id))
+
+        tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
@@ -379,19 +387,30 @@ def ajaxsearcher(request):
 
 def ComplexExpSearcher(request):
     if request.method == 'POST':
+        flag=0
         sortdic={'OR':1,'AND':2,'NOT':3}
         arrays=request.POST.getlist('bigarray[]')
         counter=0
         setlist=list()
-        for array in arrays[1:]: #avoid table header with [1:]
-            array=array.split(',')
+        compound_rows=list()
+        model_list=list()
+        for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
+            array=array.split(',') # [OR, protein, 1]
             rowlist=list()
             rowlist.append(sortdic[array[0]]) #first element in the list is the boolean opeartor.
 
             if array[1]=='protein':
                 user_protein = array[2]
+
+
+
                 for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein.
                     rowlist.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein.
+
+
+
+                for model in DyndbModel.objects.filter(id_protein=user_protein):
+                    model_list.append(str(model.id))
 
             elif array[1]=='molecule':
                 user_molecule = array[2]
@@ -406,14 +425,18 @@ def ComplexExpSearcher(request):
 
                 
             else:
+                flag=1
                 user_compound = array[2]
-                for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
-                    
+                for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound): #each complexcompound containing usercompound
+                    rowlist.append(comp.id_complex_exp.id)
+                    for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id): #all complexmole pointing to that complexExp (the one that includes the user compound)
+                        for cmolmol in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmol.id): #all comoplexmoleculemolecue point to that complexmolecule
+                            compound_rows.append([str(comp.id_complex_exp.id), str(comp.id_compound.id), str(cmolmol.id_molecule.id)] )
 
             setlist.append(rowlist)
 
+        show_list=list()
         setlist.sort(key=lambda x: x[0])
-        print(setlist)
         resultlist=set()
         for row in setlist: #APPLY BOOLEAN OPERATORS.
             rowset=set(row[1:]) #build a set with all elments of the list except the first, which is 'AND','OR', 'NOT'.
@@ -426,6 +449,10 @@ def ComplexExpSearcher(request):
 
         resultlist=list(resultlist)
         resultlist=[str(i) for i in resultlist]
+        if flag==1:
+            for row in compound_rows:
+                if row[0] in resultlist:
+                    show_list.append(row) #list with the rows whose compound was able to survive boolean selection
         '''
         for row in user_combination:
             if row[0]=='AND':
@@ -438,46 +465,10 @@ def ComplexExpSearcher(request):
                 previousresult_set.sustract(set(complex_exp_id_newlist))
         '''
         resultlist=','.join(resultlist)
-        print('resultlist:' + resultlist)
-        tojson={'result': resultlist,'message':''}
+        tojson={'result': resultlist,'compound_table':show_list,'model':model_list,'message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
-def ComplexExpSearcher2(request):
-    if request.method == 'POST':
-        user_protein = request.POST.get('protein')
-        user_molecule = request.POST.get('molecule')
-        complex_listfromProtein=list()
-        cmolecule_list=list()
-        complex_list_fromMolecule=list()
-        for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein.
-            complex_listfromProtein.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein.
-        for cmolecule in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule):
-            cmolecule_list.append(cmolecule.id_complex_molecule.id) #all complexmolecules which have the molecule the user has selected
-
-        for cmolecule in DyndbComplexMolecule.objects.all():
-            for cmolecule_id in cmolecule_list: 
-                if cmolecule_id==cmolecule.id:
-                    complex_list_fromMolecule.append(cmolecule.id_complex_exp.id) #all complexExp that contain the molecule the user desires
-
-        joinres=set(complex_list_fromMolecule).intersection(set(complex_listfromProtein)) #which complexExp id have the molecule and protein selected by the user
-        joinres=list(joinres)
-        joinres=[str(i) for i in joinres]
-        '''
-        for row in user_combination:
-            if row[0]=='AND':
-                previousresult_set.intersection(set(complex_exp_id_newlist))
-
-            if row[0]=='OR':
-                previousresult_set.add(set(complex_exp_id_newlist))
-
-            if row[0]=='NOT':
-                previousresult_set.sustract(set(complex_exp_id_newlist))
-        '''
-        joinres=','.join(joinres)
-        tojson={'result': joinres,'message':''}
-        data = json.dumps(tojson)
-        return HttpResponse(data, content_type='application/json')
 
 def ModelSearcher(request):
     if request.method == 'POST':
@@ -525,6 +516,11 @@ def query_protein(request, protein_id):
     for match in DyndbModel.objects.filter(id_protein=protein_id):
         fiva['models'].append(match.id)
 
+    for match in DyndbComplexProtein.objects.filter(id_protein=protein_id):
+        for match in DyndbComplexMolecule.objects.filter(id_complex_exp=match.id_complex_exp):
+            for match in DyndbModel.objects.filter(id_complex_molecule=match.id):
+                fiva['models'].append(match.id)
+
     fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
 
     numberoflines= math.ceil( ( len(fiva['Protein_sequence']) + (4 * ( len(fiva['Protein_sequence']) /50 ))) /54)
@@ -557,7 +553,6 @@ def query_protein(request, protein_id):
         for match2 in DyndbProteinActivity.objects.filter(pk=match.id):
             fiva['activity'].append((match2.rvalue,match2.units,match2.description))
 
-    print(fiva['activity'])
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
 

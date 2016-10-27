@@ -1,4 +1,4 @@
-$(document).on('click', '.protein, .molecule', function(){
+$(document).on('click', '.protein, .molecule, .compound', function(){
     var text = $(this).attr("name");
     var myclass= $(this).attr("class");
     console.log(text,myclass);

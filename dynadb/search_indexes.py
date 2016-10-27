@@ -1,13 +1,13 @@
 import datetime
 from haystack import indexes
-from dynadb.models import DyndbProtein,DyndbMolecule,DyndbComplexProtein,DyndbCompound,DyndbOtherProteinNames,DyndbComplexCompound,DyndbComplexMoleculeMolecule
+from dynadb.models import DyndbProtein,DyndbMolecule,DyndbComplexProtein,DyndbCompound,DyndbOtherProteinNames,DyndbComplexCompound,DyndbComplexMoleculeMolecule, DyndbOtherCompoundNames,DyndbOtherProteinNames
 from django.utils import timezone
 
-
+'''
 class ComplexProteinIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     is_receptor=indexes.BooleanField(model_attr='is_receptor')
-    content_auto = indexes.EdgeNgramField(use_template=True)
+    #content_auto = indexes.EdgeNgramField(use_template=True)
     def get_model(self):
         return DyndbComplexProtein
 
@@ -17,22 +17,48 @@ class ComplexProteinIndex(indexes.SearchIndex, indexes.Indexable):
 
 class ComplexMoleculeMoleculeIndex(indexes.SearchIndex, indexes.Indexable): 
     text = indexes.CharField(document=True, use_template=True)
-    content_auto = indexes.EdgeNgramField(use_template=True)
+    #content_auto = indexes.EdgeNgramField(use_template=True)
     def get_model(self):
         return DyndbComplexMoleculeMolecule
 
     def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
+'''
 
-class ComplexCompoundIndex(indexes.SearchIndex, indexes.Indexable): 
+class MoleculeIndex(indexes.SearchIndex, indexes.Indexable): 
     text = indexes.CharField(document=True, use_template=True)
-
     def get_model(self):
-        return DyndbComplexCompound
+        return DyndbMolecule
 
     def index_queryset(self, using=None):
         """Used when the entire index for model is updated."""
         return self.get_model().objects.all()
 
+
+class OtherProteinNamesIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    id_protein=indexes.IntegerField() #INTEGER OR CHAR?
+    def prepare_id_protein (self,obj):
+        return obj.id_protein.id
+
+    def get_model(self):
+        return DyndbOtherProteinNames
+
+    def index_queryset(self, using=None):
+        """Used when the entire index for model is updated."""
+        return self.get_model().objects.all()
+
+class OtherCompoundNamesIndex(indexes.SearchIndex, indexes.Indexable):
+    text = indexes.CharField(document=True, use_template=True)
+    id_compound=indexes.IntegerField() #INTEGER OR CHAR?
+    def prepare_id_compound (self,obj):
+        return obj.id_compound.id
+
+    def get_model(self):
+        return DyndbOtherCompoundNames
+
+    def index_queryset(self, using=None):
+        """Used when the entire index for model is updated."""
+        return self.get_model().objects.all()
 

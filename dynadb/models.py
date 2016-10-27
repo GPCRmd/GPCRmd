@@ -375,8 +375,8 @@ class DyndbComplexCompound(models.Model):
         (2,'Crystallographic waters'),
         (3,'Other')
     )
-    id_complex_exp = models.ForeignKey('DyndbComplexExp', models.DO_NOTHING,  null=True)#db_column='id_complex_exp',
-    id_compound = models.ForeignKey('DyndbCompound', models.DO_NOTHING, null=True) # db_column='id_compound',
+    id_complex_exp = models.ForeignKey('DyndbComplexExp', models.DO_NOTHING,  null=True, db_column='id_complex_exp')
+    id_compound = models.ForeignKey('DyndbCompound', models.DO_NOTHING, null=True,db_column='id_compound') # ,
     type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
 
     class Meta:
