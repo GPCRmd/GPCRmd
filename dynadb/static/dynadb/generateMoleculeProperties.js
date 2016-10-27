@@ -97,8 +97,8 @@ $(document).ready(function(){
                     
                     if (xhr.status==422) {
                         var data = jQuery.parseJSON(xhr.responseText);
-                        if (data.download_url_png != null) {
-                            logfile.attr("href",data.download_url_png);
+                        if (data.download_url_log != null) {
+                            logfile.attr("href",data.download_url_log);
                             logfile.show();
                         }
                         var responsetext = data.msg;
