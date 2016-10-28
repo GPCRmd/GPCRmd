@@ -33,6 +33,29 @@
 {% endblock %}
 {% block content %}
 
+
+<!--<div class="container-fluid">
+  <h1>Grid</h1>
+  <p>This example demonstrates a 50%/50% split on small, medium and large devices. On extra small devices, it will stack (100% width).</p>      
+  <p>Resize the browser window to see the effect.</p>      
+  <div class="row">
+    <div class="col-sm-4" style="background-color:yellow;">
+
+
+    </div>
+    <div class="col-sm-4" style="background-color:pink;">
+
+
+  
+    </div>
+    <div class="col-sm-4" style="background-color:pink;">
+
+
+  
+    </div>
+  </div>
+</div> -->
+
     <h3>Search for proteins, molecules or compounds.</h3>
     <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
         <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
@@ -89,6 +112,7 @@
     </tbody>
     </table>
     <br>
+    <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">Exact Match<br>
     <button id="tablesearch" type="button" value="search"> Search for complexes! </button>
     </center>
     </div>

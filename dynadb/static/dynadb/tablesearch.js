@@ -15,9 +15,10 @@ $("#tablesearch").click(function() {
         })
         bigarray.push(postarray);
     })
+    var exactboo=$('#exactmatch').prop('checked');
     $.ajax({
         type: "POST",
-        data: {  "bigarray[]": bigarray},
+        data: {  "bigarray[]": bigarray, 'exactmatch':exactboo},
         url: "/dynadb/complex_search/",
         dataType: "json",
         success: function(data) {

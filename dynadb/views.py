@@ -391,6 +391,7 @@ def ComplexExpSearcher(request):
         sortdic={'OR':1,'AND':2,'NOT':3}
         arrays=request.POST.getlist('bigarray[]')
         counter=0
+        rememberlist=list()
         setlist=list()
         compound_rows=list()
         model_list=list()
@@ -398,16 +399,12 @@ def ComplexExpSearcher(request):
             array=array.split(',') # [OR, protein, 1]
             rowlist=list()
             rowlist.append(sortdic[array[0]]) #first element in the list is the boolean opeartor.
-
+            rememberlist.append([array[1],int(array[2])])
             if array[1]=='protein':
                 user_protein = array[2]
 
-
-
-                for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein.
+                for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein): #pick all Protein complexes that include the given protein. DyndbComplexProtein.objects.filter(id_protein=user_protein).filter(is_receptor=[array[3])
                     rowlist.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein.
-
-
 
                 for model in DyndbModel.objects.filter(id_protein=user_protein):
                     model_list.append(str(model.id))
@@ -446,6 +443,23 @@ def ComplexExpSearcher(request):
                 resultlist=resultlist.intersection(rowset) #
             else: #NOT selected
                 resultlist=resultlist.difference(rowset) #eliminate from resultlist the ids in this row
+
+        if request.POST.get('exactmatch')=='true':
+            for exp_id in resultlist:
+                for cmolecule in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
+                    for molecule in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
+                        a=[i[1] for i in rememberlist if i[0]=='molecule']
+                        print('mollist',a)
+                        if molecule.id_molecule.id not in [i[1] for i in rememberlist if i[0]=='molecule']:
+                             print(molecule.id_molecule.id)
+                             resultlist=resultlist.difference(set([exp_id]))
+                
+                for cprotein in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id):
+                    b=[i[1] for i in rememberlist if i[0]=='protein']
+                    print('prolist',b)
+                    if cprotein.id_protein.id not in [i[1] for i in rememberlist if i[0]=='protein']:
+                        print(cprotein.id_protein.id)
+                        resultlist=resultlist.difference(set([exp_id]))
 
         resultlist=list(resultlist)
         resultlist=[str(i) for i in resultlist]
@@ -601,6 +615,7 @@ def query_molecule(request, molecule_id):
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
         molec_dic['sdf']=string
+
     for result in DyndbCompound.objects.filter(std_id_molecule=molecule_id):
         molec_dic['link_2_compound'].append(result.id) #pick the pk of the compounds pointing to the queried molecule
 

@@ -19,7 +19,7 @@
                               <b>InChIKey</b>:{{answer.inchikey}} <br>
                               <b>InChI</b>:{{answer.inchi}} <br>
                               <b>InChIcol</b>:{{answer.inchicol}} <br>
-                              <b>Related compounds</b>:
+                              <b>Corresponding compounds</b>:
     {%for compoundlink in answer.link_2_compound%}
        <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
