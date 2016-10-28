@@ -11,13 +11,13 @@ $("#Searcher").click(function() {
             if (data.message==''){
                 var linkresult='';
                 for(i=0; i<data.compound.length; i++){
-                    linkresult=linkresult+'<a href=/dynadb/compound/id/'+data.compound[i]+'> Compound'+data.compound[i]+'</a> <button class="compound" type="button" name='+data.compound[i]+' >Add to complex search</button><br>';
+                    linkresult=linkresult+'<li> '+ data.compound[i][1]+'  <a href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound'+data.compound[i][0]+'</a> <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+' >Add to complex search</button><br></li>';
                 }
                 for(i=0; i<data.protein.length; i++){
-                    linkresult=linkresult+'<a href=/dynadb/protein/id/'+data.protein[i]+'> Protein:'+data.protein[i]+'</a> <button class="protein" type="button" name='+data.protein[i]+' >Add to complex search</button><br>';
+                    linkresult=linkresult+'<li> '+ data.protein[i][1]+'  <a href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein:'+data.protein[i][0]+'</a> <button class="protein" type="button" value="receptor" name='+data.protein[i][0]+' >Add to complex search</button><br></li>';
                 }
                 for(i=0; i<data.molecule.length; i++){
-                    linkresult=linkresult+'<a href=/dynadb/molecule/id/'+data.molecule[i]+'> Molecule:'+data.molecule[i]+'</a> <button class="molecule" type="button" name='+data.molecule[i]+' >Add to complex search</button><br>';
+                    linkresult=linkresult+'<li> '+ data.molecule[i][1]+'  <a href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule:'+data.molecule[i][0]+'</a> <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+' >Add to complex search</button><br></li>';
                 }
                 $('#ajaxresults').html(linkresult);
             }else{

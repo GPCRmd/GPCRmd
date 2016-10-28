@@ -371,13 +371,13 @@ def ajaxsearcher(request):
         results=sqs.auto_query(user_input)
         for res in results:
             if 'compound' in str(res.id) and str(res.id_compound) not in compoundlist:
-                compoundlist.append(str(res.id_compound))
+                compoundlist.append([str(res.id_compound),str(res.name),str(res.iupac_name)])
             elif 'protein' in str(res.id) and str(res.id_protein) not in proteinlist:
-                proteinlist.append(str(res.id_protein))
+                proteinlist.append([str(res.id_protein),str(res.name)])
             elif 'molecule' in str(res.id):
                 mol_id=res.id.split('.')[2]
                 if str(mol_id) not in moleculelist: #molecule
-                    moleculelist.append(str(mol_id))
+                    moleculelist.append([str(mol_id),str(res.inchikey)]) #define inchikey in searchindex
 
         tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
         data = json.dumps(tojson)

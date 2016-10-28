@@ -4,16 +4,23 @@ $("#tablesearch").click(function() {
         var postarray=[];
         var counter=0;
         $('td', this).each(function () {
-            if (counter>0){
-                var value = $(this).text(); //var value = $(this).text();
-                postarray.push(value);
-            } else {  
+            if (counter==0){
                 var drop=$(this).find(":selected").text();
                 postarray.push(drop);
+            } else {
+                if (counter===3){
+                    var isligrec=$('.ligandreceptor').prop('checked');
+                    postarray.push(isligrec);
+                }else{
+                var value = $(this).text(); //var value = $(this).text();
+                console.log(value,counter)
+                postarray.push(value);
+                }
             }
             counter=counter+1;
         })
         bigarray.push(postarray);
+        console.log(bigarray);
     })
     var exactboo=$('#exactmatch').prop('checked');
     $.ajax({

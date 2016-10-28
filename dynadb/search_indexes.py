@@ -28,6 +28,7 @@ class ComplexMoleculeMoleculeIndex(indexes.SearchIndex, indexes.Indexable):
 
 class MoleculeIndex(indexes.SearchIndex, indexes.Indexable): 
     text = indexes.CharField(document=True, use_template=True)
+    inchikey=indexes.CharField(model_attr='inchikey')
     def get_model(self):
         return DyndbMolecule
 
@@ -39,8 +40,12 @@ class MoleculeIndex(indexes.SearchIndex, indexes.Indexable):
 class OtherProteinNamesIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     id_protein=indexes.IntegerField() #INTEGER OR CHAR?
+    name=indexes.CharField()
     def prepare_id_protein (self,obj):
         return obj.id_protein.id
+
+    def prepare_name (self,obj):
+        return obj.id_protein.name
 
     def get_model(self):
         return DyndbOtherProteinNames
@@ -52,6 +57,16 @@ class OtherProteinNamesIndex(indexes.SearchIndex, indexes.Indexable):
 class OtherCompoundNamesIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
     id_compound=indexes.IntegerField() #INTEGER OR CHAR?
+    name=indexes.CharField()
+    iupac_name=indexes.CharField()
+
+    def prepare_name (self,obj):
+        return obj.id_compound.name
+
+    def prepare_iupac_name (self,obj):
+        return obj.id_compound.iupac_name
+
+
     def prepare_id_compound (self,obj):
         return obj.id_compound.id
 
