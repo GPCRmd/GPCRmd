@@ -27,12 +27,14 @@ def retreive_protein_names_uniprot(acnum,size_limit=5242880,buffer_size=512000,r
       response.raise_for_status()
       encoding = response.encoding
       proteindesc = re.compile('^DE\s+')
-      fullrecname = re.compile('^DE\s+RecName:\s+Full=(.*);')
-      shortrecname = re.compile('^DE\s+RecName:\s+Short=(.*);')
-      fullaltname = re.compile('^DE\s+AltName:\s+Full=(.*);')
-      shortaltname = re.compile('^DE\s+AltName:\s+Short=(.*);')
-      fullname = re.compile('^DE\s+Full=(.*);')
-      shortname = re.compile('^DE\s+Short=(.*);')
+      fullrecname = re.compile('^DE\s+RecName:\s+Full=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      shortrecname = re.compile('^DE\s+RecName:\s+Short=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      fullaltname = re.compile('^DE\s+AltName:\s+Full=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      shortaltname = re.compile('^DE\s+AltName:\s+Short=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      fullname = re.compile('^DE\s+Full=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      shortname = re.compile('^DE\s+Short=(.*?)(\s+\{ECO:\d{6}\d+\|?.*\})?;')
+      includes = re.compile('^DE\s+Includes:')
+      contains = re.compile('^DE\s+Contains:')
       data['RecName'] = []
       data['AltName'] = []
       data['RecName'].append({'Full' : [], 'Short' : []})
@@ -73,6 +75,8 @@ def retreive_protein_names_uniprot(acnum,size_limit=5242880,buffer_size=512000,r
               if proteindesc.match(line):
                   defound = True
                   #parser
+                  if includes.match(line) or contains.match(line):
+                      return
                   fullrecnamematch = fullrecname.match(line)
                   if fullrecnamematch:
                       data['RecName'][-1]['Full'].append(fullrecnamematch.group(1).strip())

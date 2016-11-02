@@ -13,7 +13,7 @@ function addSmalmol() {
 		$(itemfirst).find(':input').each(function() {
 		var name1 = $(this).attr('name');
 		var namelab1="form-"+ll+"-"+name1;
-		var idlab1 ="id-form-"+0+"-"+name1;
+		var idlab1 ="id_form-"+0+"-"+name1;
 		var forlab ="id_form-"+ll+"-"+name1;
 		$(this).attr({'placeholder':namelab1, 'id':idlab1, 'for':idlab1, 'name':namelab1});
 		});

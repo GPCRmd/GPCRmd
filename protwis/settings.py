@@ -129,6 +129,9 @@ TEMPLATES = [
     },
 ]
 
+MAX_UPLOAD_SIZE=2147483648
+
+
 if DEBUG:
    TEMPLATES[0]['OPTIONS']['debug'] = True
    #VOLVER A PONER EN TRUE

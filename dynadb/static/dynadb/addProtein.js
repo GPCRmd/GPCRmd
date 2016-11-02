@@ -1,5 +1,5 @@
 
-var l = 0;
+
 
 $(document).ready(function(){
     $.fn.exists = function () {
