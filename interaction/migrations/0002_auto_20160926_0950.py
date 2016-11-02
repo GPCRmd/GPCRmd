@@ -26,27 +26,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='structureligandinteraction',
             name='structure',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Structure'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Structure',null=True),
         ),
         migrations.AddField(
             model_name='residuefragmentinteraction',
             name='fragment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Fragment'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Fragment',null=True),
         ),
         migrations.AddField(
             model_name='residuefragmentinteraction',
             name='interaction_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.ResidueFragmentInteractionType'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.ResidueFragmentInteractionType',null=True),
         ),
         migrations.AddField(
             model_name='residuefragmentinteraction',
             name='rotamer',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Rotamer'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='structure.Rotamer',null=True),
         ),
         migrations.AddField(
             model_name='residuefragmentinteraction',
             name='structure_ligand_pair',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.StructureLigandInteraction'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.StructureLigandInteraction',null=True),
         ),
         migrations.AddField(
             model_name='residuefragmentatom',
@@ -56,16 +56,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='residuefragmentatom',
             name='structureligandpair',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.StructureLigandInteraction'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='interaction.StructureLigandInteraction',null=True),
         ),
         migrations.AddField(
             model_name='proteinligandinteraction',
             name='ligand',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ligand.Ligand'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ligand.Ligand',null=True),
         ),
         migrations.AddField(
             model_name='proteinligandinteraction',
             name='protein',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='protein.ProteinConformation'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='protein.ProteinConformation',null=True),
         ),
     ]
