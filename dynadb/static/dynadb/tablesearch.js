@@ -1,4 +1,13 @@
 $("#tablesearch").click(function() {
+    $('#tableresults').html('Complex Results:');
+    $('#modelresults').html('Models Results');
+    var exactboo=$('#exactmatch').prop('checked');
+    if (exactboo==true){
+       $('#myTable').find('.tableselect').each(function() {
+             $(this).val('and');
+       })
+
+    }
     var bigarray=[];
     $("#myTable tr").each(function () {
         var postarray=[];
@@ -9,44 +18,88 @@ $("#tablesearch").click(function() {
                 postarray.push(drop);
             } else {
                 if (counter===3){
-                    var isligrec=$('.ligandreceptor').prop('checked');
+                    var isligrec=$(this).find('[type=checkbox]').prop('checked');
                     postarray.push(isligrec);
                 }else{
                 var value = $(this).text(); //var value = $(this).text();
-                console.log(value,counter)
                 postarray.push(value);
                 }
             }
             counter=counter+1;
         })
         bigarray.push(postarray);
-        console.log(bigarray);
     })
-    var exactboo=$('#exactmatch').prop('checked');
+
+
+
+    var restype=$('#result_type').val();
+    var ff=$('#fftype').val();
+    var tstep=$('#tstep').val();
+    var is_apoform=$('#apoform').prop('checked');
     $.ajax({
         type: "POST",
-        data: {  "bigarray[]": bigarray, 'exactmatch':exactboo},
+        data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'is_apo':is_apoform},
         url: "/dynadb/complex_search/",
         dataType: "json",
         success: function(data) {
             $("#tablesearch").prop("disabled",false);
             if (data.message==''){
-                $('#tableresults').text(data.result);
-                $('#modelresults').text(data.model);
+
+                //Results are complexes, which have no link
+                if (data.result.length>0){
+                    $('#tableresults').html('Complex Results:');
+                    $('#tableresults').append("<ul id='complexes'></ul>");
+                    var cl=data.result.split(',');
+                    listc='';
+                    for(i=0; i<cl.length; i++){
+                        $("#complexes").append("<li>"+cl[i]+"</li>");
+                    }
+                }//endif
+
+
+                //Results are models
+                if (data.model.length>0){
+                    $('#modelresults').html('Models Results');
+                    $('#modelresults').append("<ul id='modres'></ul>");
+                    var rl=data.model.split(',');
+                    linkr='';
+                    for(i=0; i<rl.length; i++){
+                        $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i]+">"+rl[i]+" </a>" +"</li>");
+                    }
+
+                }//endif
+
+
+                if (data.dynlist.length>0){
+                    $('#dynresults').html('Dynamics Results');
+                    $('#dynresults').append("<ul id='dynres'></ul>");
+                    var dl=data.dynlist.split(',');
+                    linkd='';
+                    for(i=0; i<dl.length; i++){
+                        $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i]+">"+dl[i]+" </a>" +"</li>");
+                    }
+
+                } //endif
+
+
+
+                //compound table
                 if (data.compound_table.length>0){
                     var table = $('<table></table>').addClass('foo');
                     var header= $('<thead><tr><th>Complex</th><th>Compound</th><th>Molecule</th></tr></thead>');
                     table.append(header);
                     for(i=0; i<data.compound_table.length; i++){
-                        var row = $('<tr><td>'+data.compound_table[i][0]+'</td><td><a href=/dynadb/compound/id/'+data.compound_table[i][1]+'>'+data.compound_table[i][1]+'</a></td><td><a href=/dynadb/molecule/id/'+data.compound_table[i][2]+'>'+data.compound_table[i][2]+'</a></td></tr>'); // $('<tr></tr>').addClass('bar').text(data.compound_table[i]);
+                        var row = $('<tr><td>'+data.compound_table[i][0]+'</td><td><a href=/dynadb/compound/id/'+data.compound_table[i][1]+'>'+data.compound_table[i][1]+'</a></td><td><a href=/dynadb/molecule/id/'+data.compound_table[i][2]+'>'+data.compound_table[i][2]+'</a></td></tr>');
                         table.append(row);
                     }
                     $('#tableresults').append(table);
-                } // endif (data.compound_table.length>0)
+                } // endif
+
             }else{
                 alert(data.message);
             }
         },
+
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#tablesearch").prop("disabled",false);
             alert("Something unexpected happen.");
@@ -87,5 +140,7 @@ $.ajaxSetup({
 $(document).on('click', '#deleterow', function(e){
   e.preventDefault();
   $(this).closest('tr').remove();
+  $('#myTable').find('.tableselect:first').val('or');
+  $('#myTable').find('.tableselect:first').prop('disabled', 'disabled');
 });
 

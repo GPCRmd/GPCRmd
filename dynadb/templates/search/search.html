@@ -15,13 +15,18 @@
   }
 
   #floatdiv {
+    overflow-y:auto;
+    max-height:400px;
+    overflow:auto;
+    white-space: nowrap;
     border-radius: 10px;
     background-color: grey;
     position: fixed;
     bottom: 0;
     right: 0;
     width: 40%;
-} 
+}
+
 
   .foo{
       border: solid black 2px;
@@ -29,32 +34,23 @@
       width: 20%
 }
 
+   #hidden{
+    width: 90%;
+}
+
+#dynfil{
+    width: 70%
+    border-collapse: collapse;
+}
+   #dynfil, #dynfil td{
+    background-color: #4CAF50;
+    padding:7px;
+    border: solid black 5px;
+}
+
   </style>
 {% endblock %}
 {% block content %}
-
-
-<!--<div class="container-fluid">
-  <h1>Grid</h1>
-  <p>This example demonstrates a 50%/50% split on small, medium and large devices. On extra small devices, it will stack (100% width).</p>      
-  <p>Resize the browser window to see the effect.</p>      
-  <div class="row">
-    <div class="col-sm-4" style="background-color:yellow;">
-
-
-    </div>
-    <div class="col-sm-4" style="background-color:pink;">
-
-
-  
-    </div>
-    <div class="col-sm-4" style="background-color:pink;">
-
-
-  
-    </div>
-  </div>
-</div> -->
 
     <h3>Search for proteins, molecules or compounds.</h3>
     <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
@@ -65,34 +61,10 @@
     <h3>Results</h3>
         <p id='ajaxresults'>No results.</p>
 
+        <br><br> <div id='tableresults'> Complex Results </div> <br><br>
+        <br><br> <div id='modelresults'> Models Results </div> <br><br>
+        <br><br> <div id='dynresults'> Dynamics Results </div> <br><br>
     <br><br><br><br><br><br>
-
-    <h3>Results from table search</h3>
-        <h4>Complex results:</h4>
-        <br><br> <div id='tableresults'> No Complex results.</div> <br><br>
-        <h4>Model results:</h4>
-        <br><br> <div id='modelresults'> No Model results.</div> <br><br>
-    <br><br><br><br><br><br>
-
-
-    <h3>Search models.</h3>
-    <form method="post" id="modelform" action="." enctype="multipart/form-data">{% csrf_token %}
-        <input id="cmolecule" type="text" name="name" placeholder="Which complexes you want to include in the search, like: 1"></input>
-        <input type="button" value="Search Models" name="search" id="ModelSearch" />
-    </form> 
-    <br><br>
-    <h3>Results for Model</h3>
-        <p id='resultsm'>No Model results.</p>
-
-    <br><br><br><br><br><br>
-    <h3>Search Dynamics.</h3>
-    <form method="post" id="dynaform" action="." enctype="multipart/form-data">{% csrf_token %}
-        <input id="cmodel" type="text" name="name" placeholder="Which models you want to include in the search, like: 1"></input>
-        <input type="button" value="Search Dynamics" name="search" id="DynaSearch" />
-    </form> 
-    <br><br>
-    <h3>Results for Dynamics</h3>
-        <p id='resultsd'>No Dynamics results.</p>
 
 
 
@@ -112,9 +84,30 @@
     </tbody>
     </table>
     <br>
-    <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">Exact Match<br>
-    <button id="tablesearch" type="button" value="search"> Search for complexes! </button>
+    Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">
+    Return:
+    <select id="result_type"><option value="complex">Complex</option><option value="model">Model</option><option value="dynamics">Dynamics</option></select>
+    <div id='hiddenmodel'>
+    <br><br>
+    Is it an apoform? <input id="apoform" type="checkbox" name="apo" value="apo">
+    <br><br>
+    </div>
+
+
+    <div id='hidden'>
+    <br><br>
+    <table id='dynfil'>
+    <tbody>
+    <tr><td>Time Delta < </td><td><input id='tstep' type="text" name="tstep"></td></tr>
+    <tr><td>Force Field</td><td><select id="fftype"><option value="amber">AMBER</option><option value="charmm">CHARMM</option></select></td></tr>
+    <tr><td>Duration</td><td></td></tr>
+ 
+    </table>
+    <br><br>
+    </div>
+    <br><br><br><button id="tablesearch" type="button" value="search"> Search! </button>
     </center>
+
     </div>
 
 <br><br><br>

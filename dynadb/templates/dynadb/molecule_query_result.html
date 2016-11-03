@@ -19,11 +19,13 @@
                               <b>InChIKey</b>:{{answer.inchikey}} <br>
                               <b>InChI</b>:{{answer.inchi}} <br>
                               <b>InChIcol</b>:{{answer.inchicol}} <br>
-                              <b>Corresponding compounds</b>:
+                              <b>Corresponding compound</b>:
+
     {%for compoundlink in answer.link_2_compound%}
        <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
-                              <br><b> Models in which this molecule appears </b>:
+
+    <br><b> Models in which this molecule appears </b>:
     {%for model in answer.inmodels%}
         <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
     {%endfor%}

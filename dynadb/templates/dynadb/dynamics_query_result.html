@@ -20,20 +20,29 @@
                               <b>Membrane type</b>: {{answer.membranetype}} <br>
                               <b>Time step</b>: {{answer.timestep}} <br>
                               <b>Delta</b>: {{answer.delta}} <br>
-    <b>Dynamics Components</b>:
-    {% for url in answer.link_2_molecules %}
-        <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
-    {% endfor %}
+
+
+    {% if answer.link_2_molecules %}
+        <b>Dynamics Components</b>:
+        {% for url in answer.link_2_molecules %}
+            <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
+        {% endfor %}
+    {% endif %}
+
     <br>
-    <b>Dynamics References</b>:
-    {% for doi in answer.references %}    
-        {{doi}},
-    {% endfor %}
+    {% if answer.references %}
+        <b>Dynamics References</b>:
+        {% for doi in answer.references %}    
+            {{doi}},
+        {% endfor %}
+    {% endif %}
     <br>
+    {% if answer.related %}
     <b>Related Dynamics</b>:
-    {% for dyn in answer.related %}
-        <a href= /dynadb/dynamics/id/{{dyn}}>{{dyn}}</a>,
-    {% endfor %}
+        {% for dyn in answer.related %}
+            <a href= /dynadb/dynamics/id/{{dyn}}>{{dyn}}</a>,
+        {% endfor %}
+    {% endif %}
     <br>
     </div></div></div>
 
