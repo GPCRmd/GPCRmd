@@ -3,6 +3,6 @@ mol_sw=[["D2.50","Allosteric sodium binding site",""],["D3.32","",""],["I3.40","
 
 cons_classA=[["N1.50", "98%",""], ["D2.50", "90%",""], ["R3.50", "95%",""],["W4.50", "97%",""],["P5.50", "78%",""], ["P6.50", "99%",""], ["P7.50", "88%",""]]
 
-motifs=[["PIF","P5.50",False,""],["PIF","I3.40",False,""],["PIF","F6.44",False,""],["DRY","D3.49",False,""],["DRY","R3.50",False,""],["DRY","Y3.51",False,""],["NPxxY","N7.49",False,""],["NPxxY","P7.50",False,""],["NPxxY","Y7.53",False,""]]
+motifs=[["PIF","P5.50",False,""],["PIF","I3.40",False,""],["PIF","F6.44",False,""],["DRY","D3.49",False,""],["DRY","R3.50",False,""],["DRY","Y3.51",False,""],["NPxxY","N7.49",False,""],["NPxxY","P7.50",False,""],["NPxxY","x7.51",False,""],["NPxxY","x7.52",False,""],["NPxxY","Y7.53",False,""]]
 
 motname_li=["PIF","DRY","NPxxY"]

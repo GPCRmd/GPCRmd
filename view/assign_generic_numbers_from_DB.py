@@ -33,7 +33,7 @@ def gpcr_num_insertion(gpcr_n):
 def obtain_gen_numbering(dyn_id):
     """Given the id of the table dyndb_dynamics, obtains the generic numbering of the associated protein and returns a dict of residue position-generic number plus the name of the used numbering scheme/method and the sequence of the protein."""
     mod_res_li=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics=dyn_id)
-    dprot_id_set=set([e.id_protein for e in mod_res_li]) #I have to pass throuch the dyndb_modeled_residues table because for the moment the id_protein field of the table dyndb_model is empty, but otherwise we could pass directly from dyndb_model to dyndb_protein, and we wouldn't need the if-else.
+    dprot_id_set=set([e.id_protein for e in mod_res_li]) #I have to pass through the dyndb_modeled_residues table because for the moment the id_protein field of the table dyndb_model is empty, but otherwise we could pass directly from dyndb_model to dyndb_protein, and we wouldn't need the if-else.
     if len(dprot_id_set) == 1:
         dprot_id=list(dprot_id_set)[0]
         #dprot_id = 2 # PROVA: aquesta està mutada - BORRAR AIXÒ

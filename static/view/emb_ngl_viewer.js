@@ -1,26 +1,60 @@
 $(document).ready(function(){
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
+
+    function obtainInputedGPCRnum(pre_sel) {
+        var gpcr = "((\\d{1,2}\\.\\d{1,2}(x\\d{2,3})?)|(\\d{1,2}x\\d{2,3}))";
+        var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
+        var re = new RegExp(gpcr_range,"g");
+        var res = pre_sel.match(re); 
+        return(res);
+    }
+
     function inputText(gpcr_pdb_dict){
         var pre_sel = $(".sel_input").val();
-        var nums_array = pre_sel.match(/(\d{1,2}\.\d{1,2}(x\d{2,3})?)|(\d{1,2}x\d{2,3})/g);
-        if (nums_array == null){
+        var gpcr_ranges=obtainInputedGPCRnum(pre_sel);
+        if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
-            sel = pre_sel
+            sel = ""
             to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-            $("#alert").attr("class","alert alert-danger row").html(to_add);
+            $("#alert").attr("class","alert alert-danger row").append(to_add);
         } else {
-            for (i in nums_array) {
-                var gpcr_n = nums_array[i];
-                if(gpcr_pdb_dict[gpcr_n] != undefined) {
-                    var res_n=gpcr_pdb_dict[gpcr_n];                   
-                } else if (bw_dict[gpcr_n] != undefined) {
-                    res_n=bw_dict[gpcr_n];                   
-                } else if (gpcrdb_dict[gpcr_n] != undefined){
-                    res_n=gpcrdb_dict[gpcr_n];                   
-                } else {res_n=undefined;}
-                pre_sel = pre_sel.replace(gpcr_n, res_n);
-                sel=pre_sel
+            for (i in gpcr_ranges) {
+                var gpcr_pair_str = gpcr_ranges[i];
+                var gpcr_pair=gpcr_pair_str.split(new RegExp('\s*\-\s*','g'));
+                var chain_pair=[]
+                var res_pair=[]
+                for (n in gpcr_pair){
+                    var gpcr_n=gpcr_pair[n];  
+                    if(gpcr_pdb_dict[gpcr_n] != undefined) {
+                        var res_chain=gpcr_pdb_dict[gpcr_n];  
+                    } else if (bw_dict[gpcr_n] != undefined) {
+                        var res_chain=bw_dict[gpcr_n];  
+                    } else if (gpcrdb_dict[gpcr_n] != undefined){
+                        var res_chain=gpcrdb_dict[gpcr_n];                   
+                    } else {
+                        res_chain=undefined;
+                        chain_pair=false
+                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found.</div>'
+                        $("#alert").append(to_add);
+                        break
+                    }
+                    res_pair[res_pair.length]=res_chain[0];
+                    chain_pair[chain_pair.length]=res_chain[1];
+                }
+                if (chain_pair){
+                    if ($("#chains").text() == "") {
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]
+                    } else if (chain_pair[0]==chain_pair[1]){
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
+                    } else {
+                        pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + " or -"+res_pair[1]+":" +chain_pair[1]+")";
+                    }
+                    pre_sel = pre_sel.replace(gpcr_pair_str, pos_range);
+                } else {
+                    pre_sel="";
+                }
+            sel=pre_sel;
             }
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
@@ -33,6 +67,7 @@ $(document).ready(function(){
         sel_enc = encode(sel);
         return sel_enc
     };
+
     function clickRep (id, newRep, clicked) {
         if ( clicked == 1 ) {
             var index = $.inArray(newRep,rep);
@@ -40,7 +75,6 @@ $(document).ready(function(){
                 rep[rep.length]=newRep;
             }
             url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
-            //$("iframe").attr("src", url);
             $(id).addClass("active");
             return  2;
         } else {
@@ -49,7 +83,6 @@ $(document).ready(function(){
                 rep.splice(index, 1);
             }
             url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
-            //$("iframe").attr("src", url);
             $(id).removeClass("active");
             return  1;
         }
@@ -117,6 +150,7 @@ $(document).ready(function(){
             var yp = Number(patt.exec(y));
             return xp - yp });
         high_pre=uniq(high_pre);
+        alert(high_pre)
         return (high_pre);
     }
 
@@ -124,12 +158,11 @@ $(document).ready(function(){
         var bw_dict={};
         var gpcrdb_dict={};
         for (gen_num in gpcr_pdb_dict) {
-            res_num=gpcr_pdb_dict[gen_num];
             split=gen_num.split(new RegExp('[\.x]','g'));
             bw = split[0]+"."+ split[1];
             db = split[0]+"x"+ split[2];
-            bw_dict[bw]=res_num;
-            gpcrdb_dict[db]=res_num;
+            bw_dict[bw]=gpcr_pdb_dict[gen_num];
+            gpcrdb_dict[db]=gpcr_pdb_dict[gen_num];
         }  
         return [bw_dict,gpcrdb_dict]
     }
@@ -144,6 +177,14 @@ $(document).ready(function(){
         }
         return [cp, high_pre,sel_enc] 
     }
+
+    $('input:text').on('keyup blur', function() {
+        var maxlength =100;
+        var val = $(this).val();
+        if (val.length > maxlength) {
+            $(this).val(val.slice(0, maxlength));
+        }
+    });
 
     var struc = $(".str_file").attr("id");
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
@@ -183,8 +224,8 @@ $(document).ready(function(){
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
-        url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option) + "&pd=" + encode(high_pre);
-        $("iframe").attr("src", url);
+        url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + encode(high_pre));
+        //$("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){

@@ -68,10 +68,10 @@
             		</div><br>   -->
 
         <div class="container-fluid" style="padding-top:15px">
-            <div class=row><p class=str_file id = {{structure_file}}>{{structure_name}}</p></div>
+            <div class=row><p class="str_file" id = {{structure_file}} > {{structure_name}} <span id="chains">{{chains}}</span></p></div>
 
               
-<!-- ============= New buttons =========== -->
+<!-- ============= Comp buttonss =========== -->
             <div class="row">
                 <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
                 {% for long_n, short_n in compounds %}
@@ -80,44 +80,16 @@
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec">Clear</button>
             </div>
-<!-- ============= Old buttons ===========
-            <div class="row" >
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-                  <button  class="btn btn-block btn-default" id="iframe_r" >Receptor</button>
-               </div>
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button  class="btn btn-block btn-default" id="iframe_w">Water</button>
-               </div>
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button  class="btn btn-block btn-default" id="iframe_lip">Lipids</button>
-               </div>
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button  class="btn btn-block btn-default" id="iframe_i">Ions</button>
-               </div>
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button title="{{ ligandname }}" class="btn btn-block btn-default" id="iframe_lig">Ligand</button>
-               </div>
-            </div>
-            <div class="row" >
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button  class="btn btn-block btn-default" id="iframe_all" style="background-color:#f2f2f2">All</button>
-               </div>
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px">  
-                  <button  class="btn btn-block btn-default" id="iframe_clear" style="background-color:#fde8ec">Clear</button>
-               </div>
-            </div>
-
- ======================================== -->
             <div class="row">
                 <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-	              <input class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+	              <input class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
                 </div>
                 <div class="col-sm-2 radio" style="margin-top:0; paddinf-left:3px;padding-bottom:5px" >
         	        <label><input  type="radio" name="sel_high" class="sel" value="sel" checked>Select</label>
 	                <label><input  type="radio" name="sel_high" class="high" value="high">Highlight</label>
                 </div>
             </div>
-            <div id="alert"></div>
+            <div id="alert"> </div>
 <!-- ============= Predefined views =========== -->
            {% if gpcr_pdb != "no" %}
                 <div class="row" style="background-color:#F3F3F3;margin-bottom:5px;padding-top:10px;padding-right:10px;padding-left:10px;border-radius:10px;">
