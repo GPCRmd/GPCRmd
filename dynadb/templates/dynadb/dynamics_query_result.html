@@ -13,14 +13,33 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Dynamics Info:</b> {{answer.description}} </div>
     <div class="panel-body">
-                              <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br>  
-                              <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> 
-                              <b>Model</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
-                              <b>Solvent type</b>: {{answer.solventtype}} <br>
-                              <b>Membrane type</b>: {{answer.membranetype}} <br>
-                              <b>Time step</b>: {{answer.timestep}} <br>
-                              <b>Delta</b>: {{answer.delta}} <br>
+    {%if answer.soft%}
+    <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br>
+    {%endif%}
 
+    {%if answer.forcefield%}
+    <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> 
+    {%endif%}
+
+    {%if answer.link_2_model%}
+    <b>Model</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
+    {%endif%}
+
+    {%if answer.solventtype%}
+    <b>Solvent type</b>: {{answer.solventtype}} <br>
+    {%endif%}
+
+    {%if answer.membranetype%}
+    <b>Membrane type</b>: {{answer.membranetype}} <br>
+    {%endif%}
+
+    {%if answer.timestep%}
+    <b>Time step</b>: {{answer.timestep}} <br>
+    {%endif%}
+
+    {%if answer.delta%}
+    <b>Delta</b>: {{answer.delta}} <br>
+    {%endif%}
 
     {% if answer.link_2_molecules %}
         <b>Dynamics Components</b>:
@@ -30,12 +49,14 @@
     {% endif %}
 
     <br>
-    {% if answer.references %}
-        <b>Dynamics References</b>:
-        {% for doi in answer.references %}    
-            {{doi}},
-        {% endfor %}
-    {% endif %}
+    {% if answer.references %} 
+        <br><b>References in which this dynamic is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+        {%endfor%}
+        </ul>
+    {% endif %} 
     <br>
     {% if answer.related %}
     <b>Related Dynamics</b>:

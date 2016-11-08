@@ -12,20 +12,44 @@
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>Compound Name:</b> {{answer.name}} </div>
-    <div class="panel-body"> <b>Other Names</b>: 
-    {%for oname in answer.othernames%}
-        {{oname}},
-    {%endfor%}
-                              <br><b>IUPAC name</b>: {{answer.iupac_name}} <br>  
+    <div class="panel-body"> 
+    {%if answer.othernames%}
+        <b>Other Names</b>: 
+        {%for oname in answer.othernames%}
+            {{oname}},
+        {%endfor%}
+    {%endif%}
 
-                              <b>PUBCHEM link</b>: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br> 
-                              <b>ChEMBLE link</b>: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
-                              <b>InChIKey</b>:{{answer.sinchikey}} <br>
-                              <b>InChI</b>:{{answer.sinchi}} <br>
-    <b>Corresponding Molecules</b>:<br>
-    {% for url in answer.link_2_molecule %}
-        <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
-    {% endfor %}
+    {%if answer.iupac_name%}
+    <br><b>IUPAC name</b>: {{answer.iupac_name}} <br>  
+    {%endif%}
+    {%if answer.pubchem_cid%}
+    <b>PUBCHEM link</b>: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br>
+    {%endif%}
+    {%if answer.chembleid%} 
+    <b>ChEMBLE link</b>: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
+    {%endif%}
+    {%if answer.sinchikey%}
+    <b>InChIKey</b>:{{answer.sinchikey}} <br>
+    {%endif%}
+    {%if answer.sinchi%}
+    <b>InChI</b>:{{answer.sinchi}} <br>
+    {%endif%}
+    {%if answer.link_2_molecule%}
+        <b>Corresponding Molecules</b>:<br>
+        {% for url in answer.link_2_molecule %}
+            <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
+        {% endfor %}
+    {%endif%}
+    {% if answer.references %} 
+        <br><b>References in which this compound is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}} , {{reference.3}} </li>
+        {%endfor%}
+        </ul>
+    {% endif %} 
+
     </div>
 
 
@@ -36,12 +60,8 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Image of the compound</b></div>
     <div class="panel-body">
-    {#for image in answer.imagelink#}
     <img src="{{answer.imagelink}}" />
-    {#<img src="{% static "dynadb/2_mol_2_300.png" }" />#}
-    {#<img src="/files/Molecule/10_mol_5.png" />#}
-    {#<img src="/dynadb/files/Molecule/10_mol_5.png" />#}
-    {#endfor#}
+
 
 
     </div>

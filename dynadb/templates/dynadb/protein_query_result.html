@@ -20,7 +20,8 @@
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>+info</b></div>
-    <div class="panel-body"> <b>Scientific name:</b> {{answer.scientific_name}} <br>
+    <div class="panel-body"> 
+    <b>Scientific name:</b> {{answer.scientific_name}} <br>
     <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br>
     {% if answer.mutations %}
         <b>Mutations</b><br>
@@ -48,10 +49,22 @@
     <br>
     <b>Corresponding Cannonical Protein:</b> <a href='/dynadb/protein/id/{{answer.cannonical}}'>{{answer.cannonical}}</a> <br>
 
-    <b>You can find this protein in the following models:</b>
-    {% for link in answer.model %}
-        <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
-    {% endfor %}
+    {%if answer.model%}
+        <b>You can find this protein in the following models:</b>
+        {% for link in answer.model %}
+            <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
+        {% endfor %}
+    {% endif %}
+
+    {% if answer.references %} 
+        <br><b>References in which this protein is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+        {%endfor%}
+        </ul>
+    {% endif %} 
+
     </div>
 
 </div>

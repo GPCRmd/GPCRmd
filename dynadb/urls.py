@@ -45,6 +45,7 @@ urlpatterns = [
     url(r'^compound/id/(?P<compound_id>[0-9]+)/$',views.query_compound, name='query_compound'),
     url(r'^model/id/(?P<model_id>[0-9]+)/$',views.query_model, name='query_model'),
     url(r'^dynamics/id/(?P<dynamics_id>[0-9]+)/$',views.query_dynamics, name='query_dynamics'),
+    url(r'^complex/id/(?P<complex_id>[0-9]+)/$',views.query_complex, name='query_complex'),
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/(?P<submission_id>[0-9]+)/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='PROTEINfilled'),

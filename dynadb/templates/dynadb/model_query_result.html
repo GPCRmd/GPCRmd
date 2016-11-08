@@ -38,15 +38,11 @@
 
     {% if answer.references %} 
         <br><b>References in which this model is mentioned</b>:<br>
+        <ul>
         {%for reference in answer.references%}
-           {%if reference.0 and reference.1 %}
-               Title: {{reference.1}} DOI: {{reference.0}}
-           {%elif reference.0%}
-                DOI: {{reference.0}}
-           {%elif reference.1%}
-                Title: {{reference.1}}
-           {%endif%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
         {%endfor%}
+        </ul>
     {% endif %} 
 
 
