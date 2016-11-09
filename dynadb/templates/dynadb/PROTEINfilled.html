@@ -121,6 +121,7 @@
 		<textarea cols="40" id="id_other_names" name="other_names" readonly rows="2"  value="{{o.other_names}}" style="width:300px"></textarea></div>
 		</div><!--placeholder=" 5-hydroxytryptamine receptor 1B; Serotonin receptor 1B"-->
 
+            {% for o in dictprot.items %}
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_sequence"><a title="Wild type sequence: Wild-type sequence of the protein in IUPAC one letter code.">Wild type sequence:</a></label></div>
 			<div class="col-md-7"><textarea cols="40" id="id_sequence" name="sequence" readonly rows="2" style="width:300px" value="{{o.sequence}}"></textarea></div>
@@ -129,6 +130,7 @@
                 <div class="row">
                         <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_alignment"><a title="Sequence alignment: alignment in fasta format between the wild type sequence (1st sequence entry in fasta) and the mutant one (2nd sequence entry in fasta).">Sequence alignment:</a></label></div>
                         <div class="col-md-7"><textarea cols="40" id="id_alignment" name="alignment" disabled autofocus rows="2" style="width:300px"  value="{{o.alignment}}" placeholder=""></textarea></div>
+                {% endfor %}
                 <br></div>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
@@ -179,7 +181,7 @@
                         </td><td>
                                 <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
                         </td><td>
-                                <button type="button" id="id_reset" name="reset"  style="height:30px;width:140px;margin-left:5px;margin-right:5px;">Clean Protein</button>
+                                <button type="button" id="id_reset" name="reset"  style="height:30px;width:140px;margin-left:5px;margin-right:5px;">Clean form</button>
                         </td></tr>
                         </table>
                         

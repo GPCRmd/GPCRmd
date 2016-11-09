@@ -24,7 +24,7 @@ from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetI
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames                
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -109,6 +109,7 @@ def PROTEINview(request, submission_id):
             pickle.dump(request.POST, handle)
         action="/".join(["/dynadb/PROTEINfilled",submission_id," "])
         now=timezone.now()
+        print("REQUEST.POST\n",request.POST,"\n")
 #####  inintPF dictionary containing fields of the form dynadb_ProteinForm not
 #####  available in the request.POST
 #####
@@ -121,6 +122,7 @@ def PROTEINview(request, submission_id):
         form=re.compile('form-')
         dictpost=request.POST
         dictprot={}
+        dictprotinit={}
         dictOPN={}
         indexl=[]
         nummutl={} # Dictionary of index lists designating the mutation line for every mutated protein
@@ -130,15 +132,20 @@ def PROTEINview(request, submission_id):
                 if index not in indexl:
                     indexl.append(index)
                     dictprot[index]={} #a dictprot dictionary is created per each protein in the form
+                    dictprotinit[index]={} #a dictprot dictionary is created per each protein in the form
                 nkey="-".join(key.split("-")[2:])   # HTML labels (keys in dictpost) modified by JavaScript are reset to match the key in the models 
             else: 
                 if len(indexl)==0:
                     index=0
                     indexl.append(0)
                     dictprot[0]={}
+                    dictprotinit[0]={} #a dictprot dictionary is created per each protein in the form
                 nkey=key # the keys does not have to be modifyied as a single protein has been submitted in the html form and labels match the models 
             dictprot[index][nkey]=val 
+            dictprotinit[index][key]=val 
 
+        print("DICTPROT\n",dictprot,"\n")
+    #    return HttpResponse("HOLA PIPOL")
 ####   List of dictionaries used for filling tables
         fdbPF={}
         fdbSP={}
@@ -578,7 +585,8 @@ def PROTEINview(request, submission_id):
                     print("!!!!!!Errores despues del fdbCaP[",ii,"]\n",iii1,"\n") 
 
             # redirect to a new URL:
-        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id} )
+        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
+ #       return HttpResponseRedirect(request, '/dynadb/PROTEINfilled.html', {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
 
         
     # if a GET (or any other method) we'll create a blank form
@@ -1178,6 +1186,262 @@ def servecorrectedpdb(request,pdbname):
         response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
     return response
 
+def MODELreuseREQUESTview(request):
+
+    # Dealing with POST data
+    if request.method == 'POST':
+        print(request.POST.dict())
+        print("len requestPOST",len(request.POST['Choose_reused_model']))
+        if request.POST['Choose_reused_model']== '':
+            print("NO MODEL", request.POST.dict()['Choose_reused_model'])
+            if request.POST['Choose_submission_id']== '':
+                print("NO Submission_id ", request.POST.dict()['Choose_submission_id'])
+                request.POST['Choose_submission_id']='0'
+                request.POST['Choose_reused_model']='0'
+                print("NO Submission_id ", request.POST.dict()['Choose_submission_id'])
+            else:
+                request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
+            print(request.POST['Choose_reused_model'])
+        else:
+            a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
+            if request.POST['Choose_reused_model'] != a:
+                print("MIRA",a, request.POST['Choose_reused_model'])
+
+                request.POST['Choose_reused_model']=a
+                submission_id=str(request.POST['Choose_submission_id'])
+                model_id=str(request.POST['Choose_reused_model'])
+                return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
+
+
+     #  qMODRES=DyndbModeledResidues.objects.filter(id_model=request.POST.dict()['Choose_reused_model'])
+     #  rowsMR=qMODRES.values('chain','segid','resid_from','resid_to','seq_resid_from','seq_resid_to','bonded_to_id_modeled_residues_id','source_type','pdbid')
+     #  for i in list(range(0,len(rowsMR))):
+     #      if rowsMR[i]['segid']=='':
+     #          rowsMR[i]['segid']="-"
+     #  qMODCOMP=DyndbModelComponents.objects.filter(id_model=request.POST.dict()['Choose_reused_model'])
+     #  qMODCOMP=qMODCOMP.order_by('id_molecule')
+     #  rowsMC=qMODCOMP.values('resname','id_molecule','numberofmol','type')
+     #  with open('/protwis/sites/protwis/dynadb/MODELreuseREQUESTPOST.txt', 'wb') as handle:
+     #      pickle.dump(request.POST, handle)
+     #  action="/".join(["/dynadb/modelreuse",submission_id,""])
+     #  reuse_model=request.POST['Choose_reused_model']
+     #  print(request.POST)
+            # redirect to a new URL:
+#        return render(request, 'dynadb/MODELreuse.html', {'submission_id':submission_id} )
+        if request.POST['Choose_submission_id']=='0' and request.POST['Choose_reused_model']=='0':
+            message="Please provide either a Complex ID or a Submission ID corresponding to the system to be reused"
+            Context={'value':0,'CHoose_submission_id':message,'CHoose_reused_model':message}
+            print(Context)
+            return render(request,'dynadb/MODELreuseREQUEST.html', Context)
+        if request.POST['Choose_submission_id']=='':
+            request.POST['Choose_submission_id']=DyndbSubmissionModel.objects.filter(model_id=request.POST.dict()['Choose_reused_model']).values_list('submission_id',flat=True)[0]
+            print("NO Submission_id")
+        print(request.POST.dict())
+        submission_id=str(request.POST['Choose_submission_id'])
+        model_id=str(request.POST['Choose_reused_model'])
+        return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':""} )
+    else:
+
+        return render(request,'dynadb/MODELreuseREQUEST.html', {})
+
+def MODELrowview(request):
+    form=[1,2,3]
+    qMODEL=DyndbModeledResidues.objects.filter(id_model=1)
+    rows=qMODEL.values('chain','segid','resid_from','resid_to','seq_resid_from','seq_resid_to','bonded_to_id_modeled_residues_id','source_type','pdbid')
+    qMODCOMP=DyndbModelComponents.objects.filter(id_model=1)
+    qMODCOMP=qMODCOMP.order_by('id_molecule')
+    rowsMC=qMODCOMP.values('resname','id_molecule','numberofmol','type')
+    for i in list(range(0,len(rows))):
+        if rows[i]['segid']=='':
+            rows[i]['segid']="-"
+    return render(request,'dynadb/MODELreuseCOMMON.html', {'rows':rows})
+
+
+def MODELreuseview(request, submission_id, model_id  ):
+    qModel=DyndbModel.objects.filter(id=model_id)
+    p=qModel
+    Typeval=p.values()[0]['type']
+    Type=p.model.MODEL_TYPE[Typeval][1]
+    STypeval=p.values()[0]['source_type']
+    SType=p.model.SOURCE_TYPE[STypeval][1]
+    print("QMODEL ",p)
+    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
+    lformps=list(range(0,len(qMODRES)))
+    q0MODRES=qMODRES[0]
+    rowsMR=qMODRES
+    lmrstype=[]
+    for l in qMODRES:
+        mrstype=l.SOURCE_TYPE[l.source_type][1]
+        lmrstype.append(mrstype)
+    qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id)
+    qMODCOMP=qMODCOMP.order_by('id')
+    lmtype=[]
+    lformmc=list(range(0,len(qMODCOMP)))
+    lcompname=[]
+    l_ord_mol=[]
+    d=0
+    for l in qMODCOMP:
+        d=d+1
+        print("query list element",l.id," ",d)
+        mtype=l.MOLECULE_TYPE[l.type][1]
+        lmtype.append(mtype)
+        qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.id_molecule_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+        lcompname.append(qName)
+        l_ord_mol.append(d)
+    print(lmtype)
+    print(l_ord_mol)
+    rowsMC=qMODCOMP.values('resname','id_molecule_id','numberofmol','type')
+    print("OOO\n",rowsMC)
+
+    with open('/protwis/sites/protwis/dynadb/MODELreuseREQUESTPOST.txt', 'wb') as handle:
+        pickle.dump(request.POST, handle)
+    action="/".join(["/dynadb/modelreuse",submission_id,""])
+    reuse_model=model_id
+    print(rowsMR.values)
+
+    if request.method == 'POST':
+        return HttpResponseRedirect("/".join(["/dynadb/MODELreuse",submission_id,""]), {'submission_id':submission_id} )
+    else:
+        fdbMF = dyndb_Model()
+        fdbPS = dyndb_Modeled_Residues()
+        fdbMC = dyndb_Model_Components()
+        return render(request,'dynadb/MODELreuse.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id})
+
+def PROTEINreuseview(request, submission_id, model_id ):
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
+    print(qSub)
+    int_id=[]
+    int_id0=[]
+    alias=[]
+    mseq=[]
+    wseq=[]
+    MUTations=[]
+    sci_na_codel=[]
+    qPROT=[]
+    for l in qSub:
+        sci_name=list(DyndbUniprotSpecies.objects.filter(id= l.protein_id.id_uniprot_species_id).values_list('scientific_name','code')[0])
+        sci_na_code=("").join([sci_name[0]," (",sci_name[1],")"])
+        sci_na_codel.append(sci_na_code)
+        qprot=DyndbProtein.objects.filter(id=l.protein_id_id)[0]
+        qPROT.append(qprot)
+        int_id.append(l.int_id +1) 
+        int_id0.append(l.int_id) 
+#        MUT=qPROT.values('id','is_mutated')
+        qSEQ=DyndbProteinSequence.objects.filter(id_protein=l.protein_id).values_list('sequence',flat=True)[0]
+        if l.protein_id.is_mutated: 
+#            MUT.values('is_mutated').filter(id=tt)[0]['is_mutated']:
+            llsm=qSEQ
+            mseq.append(llsm)
+            qpCp=DyndbProteinCannonicalProtein.objects.filter(id_protein=l.protein_id).values_list('id_cannonical_proteins',flat=True)[0]
+            llsw=DyndbProteinSequence.objects.filter(id_protein=qpCp).values_list('sequence',flat=True)[0]
+            qPMut=DyndbProteinMutations.objects.filter(id_protein=l.protein_id)
+            MUTations.append(qPMut)
+        else:
+            llsw=qSEQ
+            mseq.append('')
+            MUTations.append('')
+        wseq.append(llsw) 
+        qALIAS=DyndbOtherProteinNames.objects.filter(id_protein=l.protein_id)
+        llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+        alias.append(llo) 
+
+#   for tt in qPROT.values_list('id',flat=True):
+#       qALIAS=DyndbOtherProteinNames.objects.filter(id_protein=tt)
+#       llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+#       alias.append(llo) 
+#       print("AQUI", tt,alias)
+#       qSEQ=DyndbProteinSequence.objects.filter(id_protein=tt).values_list('sequence',flat=True)[0]
+#       if MUT.values('is_mutated').filter(id=tt)[0]['is_mutated']:
+#           llsm=qSEQ
+#           mseq.append(llsm)
+#           qpCp=DyndbProteinCannonicalProtein.objects.filter(id_protein=tt).values_list('id_cannonical_proteins',flat=True)[0]
+#           llsw=DyndbProteinSequence.objects.filter(id_protein=qpCp).values_list('sequence',flat=True)[0]
+#           qPMut=DyndbProteinMutations.objects.filter(id_protein=tt)
+#           MUTations.append(qPMut)
+#       else:
+#           llsw=qSEQ
+#           mseq.append('')
+#           MUTations.append('')
+#       wseq.append(llsw) 
+
+    return render(request,'dynadb/PROTEINreuse.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id})
+
+def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
+    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).order_by('int_id')
+    print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
+    labtypel=[]
+    int_id=[]
+    int_id0=[]
+    alias=[]
+    qCOMP=[]
+    qMOL=[]
+    imp=[]
+    Type=[]
+    for l in qSub:
+        labtype=l.COMPOUND_TYPE[l.type][1]
+        labtypel.append(labtype) 
+        if  not l.not_in_model:
+            imp.append(True)
+        else:
+            imp.append(False)
+
+        int_id.append(l.int_id+1)
+        int_id0.append(l.int_id)
+        typt=l.type
+        Type.append(typt)
+        qmol=DyndbMolecule.objects.filter(id=l.molecule_id.id)[0]
+        qMOL.append(qmol)
+        qCOMPtt=DyndbCompound.objects.filter(id=qmol.id_compound.id)[0] # VERIFICAR!!!!!!!!!!!!!!!!!!!
+        qALIAS=DyndbOtherCompoundNames.objects.filter(id_compound=qmol.id_compound.id)
+        llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+        alias.append(llo) 
+        qCOMP.append(qCOMPtt) 
+    print(alias)
+    print(qCOMP)
+    print(qMOL)
+
+
+#       qMOL=DyndbMolecule.objects.filter(id__in=qSub.values_list('molecule_id',flat=True)).order_by('DyndbSubmissionMolecule.int_id')
+#   for tt in qMOL.values_list('id',flat=True):
+#       if  not qSub.filter(molecule_id=tt).values_list('not_in_model',flat=True)[0]:
+#           imp.append(True)
+#       else:
+#           imp.append(False)	              
+#       qALIAS=DyndbOtherCompoundNames.objects.filter(id_compound=qMOL.filter(id=tt).values_list('id_compound',flat=True)[0])
+#       llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+#       alias.append(llo) 
+#       qCOMP.append(qCOMPtt) 
+#       print("AQUI", tt,alias)
+
+    return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
+
+def DYNAMICSreuseview(request, submission_id, model_id ):
+    qDS=DyndbDynamics.objects.filter(submission_id=submission_id)
+    ddown={}
+    ddown['id_dynamics_methods']= DyndbDynamicsMethods.objects.filter(id=qDS.values_list('id_dynamics_methods',flat=True)[0]).values_list('type_name',flat=True)[0]
+    ddown['id_assay_types']= DyndbAssayTypes.objects.filter(id=qDS.values_list('id_assay_types',flat=True)[0]).values_list('type_name',flat=True)[0]
+    ddown['id_dynamics_membrane_types']=DyndbDynamicsMembraneTypes.objects.filter(id=qDS.values_list('id_dynamics_membrane_types',flat=True)[0]).values_list('type_name',flat=True)[0]
+    ddown['id_dynamics_solvent_types']=DyndbDynamicsSolventTypes.objects.filter(id=qDS.values_list('id_dynamics_solvent_types',flat=True)[0]).values_list('type_name',flat=True)[0]
+    print(qDS.values()[0])
+    compl=[]
+    dctypel=[]
+    for tt in qDS.values_list('id',flat=True):
+        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).order_by('id')
+        compl.append(qDC)
+        d=0
+        l_ord_mol=[]
+        lcompname=[]
+        for l in qDC:
+            dctype=qDC.model.MOLECULE_TYPE[l.type][1]
+            dctypel.append(dctype)
+            d=d+1
+            qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.id_molecule_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+            lcompname.append(qName)
+            l_ord_mol.append(d)
+
+#    return HttpResponse(qDS.values_list()[0])
+    return render(request,'dynadb/DYNAMICSreuse.html', {'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
+
 def MODELview(request, submission_id):
     # Function for saving files
     def handle_uploaded_file(f,p,name):
@@ -1282,30 +1546,30 @@ def MODELview(request, submission_id):
 ######## 
         ########   Query for obtaining molecules submitted in the current submission!!!!
         qSMol=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).filter(not_in_model=False).exclude(int_id=None)
-        molid_typel=dict(list(set(qSMol.values_list('molecule_id','type'))))
+        molid_typel=dict(qSMol.values_list('molecule_id','type'))
         #molid_typel=dict(set(qSMol.values_list('molecule_id','type')))
         lmol_in_modelbs =qSMol.values_list('molecule_id',flat=True)
-        lmol_in_model=list(set(lmol_in_modelbs)) ###Creating a list with unique elements Complex Exp Complex Compound and Complex Molecule only care about the type of element involved in the model, not about the number of elements
+        lmol_in_model=list(set(lmol_in_modelbs)) ###Creating a list with unique elements Complex Exp Complex Compound and Complex Molecule only cares about the type of element involved in the model, not about the number of elements
  
         ########   Query for obtaining Proteins submitted in the current submission!!!!
         qSProt=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None)
         lprot_in_model=qSProt.values_list('protein_id',flat=True)
-        lprot_in_model=list(set(lprot_in_model))  ###Creating a list with unique elements Complex Exp Complex Compound and Complex Molecule only care about the type of element involved in the model, not about the number of elements
+        lprot_in_model=list(set(lprot_in_model))  ###Creating a list with unique elements Complex Exp Complex Compound and Complex Molecule only care about the type of element involved in the model, not about the number of elements. Actually repeated elements should not be submitted. This is just for assuring it
 
         ########   Query for obtaining Proteins submitted in the current submission!!!!
         qM=DyndbMolecule.objects.filter(id__in=lmol_in_model)
-        comptomol=dict(list(set(qM.values_list('id_compound','id'))))
+        comptomol=dict(list(set(qM.values_list('id_compound','id')))) #needed to get the list of compounds involved in the submission
         lcomp_in_modelbs=qM.values_list('id_compound',flat=True)  
         lcomp_in_model=list(set(lcomp_in_modelbs)) ####Creating a list with unique elements Complex Exp Complex Compound and Complex Molecule only care about the type of element involved in the model, not about the number of elements
 
 
-########   Check if the complex is already in the GPCRmd DB 
-            # Complex stand for the protein and molecule disregarding the number of items involved in the model
-            #lists for creating the query targeting the COMPLEX_EXP matching the current that is being submitted if it exist previously in the database!!!!!
-            # COMPLEX_EXP involves proteins and Compounds in the Model. COMPLEX_MOLECULE involves proteins and the specific form of the compounds (molecules) in the model
-        scolmol=[]
-        FromMOL=[]
-        where=[]
+########   Check if the Complex_Exp and the Complex_Molecule are already in the GPCRmd DB. IT IS NEEDED A VERY COMPLEX QUERY IN RAW SQL
+            # Complex stand for the sets of proteins (and compounds/molecules) disregarding the number of items involved in the model
+            #lists for creating the query targeting the COMPLEX_EXP and COMPLEX_MOLECULE (if it proceeds... note a complex molecule does not make sense in a complex exp involving only proteins) matching the current one being submitted if it exist previously in the database!!!!!
+            # COMPLEX_EXP involves proteins and may involve (if they exist) Compounds in the Model. COMPLEX_MOLECULE involves proteins and the specific form of the compounds (molecules) in the model (Complex_Molecule only makes sense if there are molecules in the model)
+        scol=[] #SELECT clause of the QUERY
+        From=[] #FROM clause of the QUERY
+        where=[]   #WHERE clause of the QUERY
         p=0
         
         for pid in lprot_in_model:
@@ -1313,104 +1577,153 @@ def MODELview(request, submission_id):
             tp=("").join(["t",str(p)])
             if pid==lprot_in_model[0]:
                 tinit=tp
-                scolmol.append(("").join(["SELECT ",tp,".id_complex_exp, ",tp,".id_protein"]))
-                FromMOL.append(("").join(["FROM dyndb_complex_protein AS ",tp]))
+                scol.append(("").join(["SELECT ",tp,".id_complex_exp "]))
+                #scolmol.append(("").join(["SELECT ",tp,".id_complex_exp, ",tp,".id_protein"]))
+                From.append(("").join(["FROM dyndb_complex_protein AS ",tp]))
                 where.append(("").join(["WHERE ",tp,".id_protein = ", str(pid)]))
             else:
-                scolmol.append(("").join([", ",tp,".id_protein "]))
-                FromMOL.append(("").join([" INNER JOIN dyndb_complex_protein AS ",tp," ON ",tinit,".id_complex_exp = ", tp,".id_complex_exp "]))
+                #scolmol.append(("").join([", ",tp,".id_protein "]))
+                From.append(("").join([" INNER JOIN dyndb_complex_protein AS ",tp," ON ",tinit,".id_complex_exp = ", tp,".id_complex_exp "]))
                 where.append(("").join([" AND ",tp,".id_protein = ", str(pid)]))
 
-        scolComp=scolmol[:]
-        FromComp=FromMOL[:]
-        whereComp=where[:]
-        s=p
         
-        ### important dyndb_complex_molecule will be used for obtaining the id_complex_exp linked with the set of molecules 
-        p=p+1
-        tcm=("").join(["t",str(p)])
-        scolmol.append(("").join([", ",tcm,".id_complex_exp"]))
-        FromMOL.append(("").join(["LEFT OUTER JOIN dyndb_complex_molecule AS ", tcm, " ON ", tcm,".id_complex_exp = t1.id_complex_exp" ] ))
-        
-        if len(lmol_in_model)==0: #If there is not any molecule in the model the query is based in the proteins
+        if len(lmol_in_model)==0: #If there is not any molecule in the model the query is based in the proteins (QUERYp)
             where.append(("AND tcm.id_complex_exp IS NULL;"))
-            SELp=(" ").join(scolmol)
-            FROMp=(" ").join(FromMOL)
+            SELp=(" ").join(scol)
+            FROMp=(" ").join(From)
             WHEREp=(" ").join(where)
-            QUERYp=(" ").join([SEL,FROM,WHERE])
+            QUERYp=(" ").join([SELp,FROMp,WHEREp]) #QUERY when no molecule is involved in the model
 
             with connection.cursor() as cursor:
-                cursor.execute(QUERY)
+                cursor.execute(QUERYp)
                 row=cursor.fetchall()
                 if len(list(row))==0:
                     rowl=[]
                 else:
-                    rowl=list(row[0]) 
+                    for line in row:# row may contain one or several hits!! let's obtain their corresponding id_complex_exp(line[0])
+                        ROWLp.append(line[0]) 
+                    # Let's get the id_complex_exp of complexes involving just the same proteins in our submission and NO ONE ELSE!!!!! There should be only one result
+                    p=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLp).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
+                    if(len(p)>1):# Complexes involving exactly the same proteins in our submission is higher than one
+                        response = HttpResponse('Several complex_exp entries for the same set of proteins and no molecules exist in the DB... Please Report that error to the GPCRdb administrator',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        #return response
+                    elif(len(p)==1):
+                        ce=p[0]['id_complex_exp']
+                        rowl=[ce] #Complex exp
 
-        else: # otherwise molecules should be included in the query. Two queries are needed... Complex_Compound and Complex_Molecule 
-            for mid in lmol_in_model:  #Query Complex_molecule
-                p=p+1
-                tp=("").join(["t",str(p)])
-                scolmol.append(("").join([", ",tp,".id_molecule"]))
-                FromMOL.append(("").join([" LEFT OUTER JOIN dyndb_complex_molecule_molecule AS ", tp, " ON ",tcm,".id = ", tp,".id_complex_molecule"]))
-                where.append(("").join([" AND ",tp,".id_molecule = ", str(mid)]))
-                if mid==lmol_in_model[-1]:
-                    scolmol.append(("").join([", ",tp,".id_complex_molecule"])) 
-                    where.append(";")
-        
-            SEL=(" ").join(scolmol)
-            FROM=(" ").join(FromMOL)
-            WHERE=(" ").join(where)
-            QUERY=(" ").join([SEL,FROM,WHERE])
-            print(QUERY)
-        
-            for cid in lcomp_in_model: #Query complex_compound
+
+        else: # otherwise molecules should be included in the query. Two queries are needed... Complex_Compound (QUERYComp) and Complex_Molecule (QUERY)
+
+            scolComp=scol[:]
+            FromComp=From[:]
+            whereComp=where[:]
+            s=p
+            
+            for cid in lcomp_in_model: #Query complex_compound IT IS NEEDED WHEN NO COMPLEX_MOLECULE involving the exact type of molecules in the submission exist but COMPLEX_EXP involving COMPOUNDS in the submission does 
                 s=s+1
                 sp=("").join(["t",str(s)])
-                scolComp.append(("").join([", ",sp,".id_compound"]))
+                #scolComp.append(("").join([", ",sp,".id_compound"]))
                 FromComp.append(("").join([" LEFT OUTER JOIN dyndb_complex_compound AS ", sp, " ON ",tinit,".id_complex_exp = ", sp,".id_complex_exp"]))
                 whereComp.append(("").join([" AND ",sp,".id_compound = ", str(cid)]))
                 if cid==lcomp_in_model[-1]:
-                    where.append(";")
+                    whereComp.append(";")
         
             SELComp=(" ").join(scolComp)
             FROMComp=(" ").join(FromComp)
             WHEREComp=(" ").join(whereComp)
             QUERYComp=(" ").join([SELComp,FROMComp,WHEREComp])
-        
-            with connection.cursor() as cursor:
-                cursor.execute(QUERY)
-                row=cursor.fetchall()
-                if len(list(row))==0:
-                    rowl=[]
-                else:
-                    rowl=list(row[0]) 
-        
+
+   ##### MAKING THE COMPOUND-WISE QUERY 
+            ROWLCompp=[]
+            ROWLCompe=[]
+            #the QUERYComp is needed in order to check if the Complex_Exp exists regardless the specific Complex_molecule does
             with connection.cursor() as cursor:
                 cursor.execute(QUERYComp)
                 rowComp=cursor.fetchall()
                 if len(list(rowComp))==0:
                     rowCompl=[]
                 else:
-                    rowCompl=list(rowComp[0]) 
- 
+                    for line in rowComp:# rowComp may contain one or several hits!! let's obtain their corresponding id_complex_exp(line[0] and id_complex_molecule (line[-1])
+                        ROWLCompe.append(line[0]) 
+                    # id_complex_exp of complexes with the same exactly the same compounds in our submission
+                    cec=DyndbComplexCompound.objects.filter(id_complex_exp__in=ROWLCompe).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lcomp_in_model))
+                    # id_complex_exp of complexes with the same number of protein than our submission
+                    cep=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLCompe).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
+                    if(len(cec)<len(cep)):# Complexes with the same number of molecules than our submission is lower than complexes with the same number of proteins than our submission. There should be only one. Then complex_exp value is taken from the DyndbComplexCompound query "c"
+                        rowCompl=[cec[0]['id_complex_exp']]
+                    else:# Number of Complexes involving the same number of proteins than our submission is lower or equal than the number of complexes involving the same number of compounds considered in our submission. Only one Complex involving the same number of proteins must exist. if 'equal' just a single complex_exp and complex_molecule exist
+                        rowCompl=[cep[0]['id_complex_exp']]
+        
+      # for el in row:
+      #     elok=DyndbComplexMolecule_Molecule.filter(
         CE_exists=False
         CM_exists=False
         if len(lmol_in_model)==0: #Protein_Protein Complex
             
-            if len(rowl) > 0: #A Complex_Exp exists for the current model. The query in rowl only consider proteins!!!!
-                print("COMPLEX_EXP: ", rowl[0],"\nCOMPLEX_MOLECULE (MOLECULES+PROTEINS) ", rowl[-1]) 
-                print("This Model has a Complex MOLECULE, A complex Compound and a Complex EXP stored in the database")
-                CE_exists=True
-                CEpk=rowl[0]
-#                CM_exists=True## The entries in Complex_Compound and Complex_Molecule do not have to be registered
+            if len(row) > 0: #A Complex_Exp exists for the current model. The query in rowl only consider proteins!!!!
+                print("COMPLEX_EXP: ", ce,"\nCOMPLEX_MOLECULE (MOLECULES+PROTEINS) None No molecule " ) 
+                print("This Model has a Complex EXP but neither a Complex MOLECULE nor A complex Compound and stored in the database")
+                CE_exists=True #The entries in Complex_Exp and Complex_Molecule do not have to be registered
+                CEpk=rowl[0] #defined in the block making the QUERYp and its processing:
 
         if len(lmol_in_model)>0: #There are molecules in the model!!!!
+
             if len(rowCompl) > 0: #The corresponding complex_compound is in the GPCRmd database
                 print("COMPLEX_EXP: ", rowCompl[0],"\n")
                 CE_exists=True # If Complex_Exp exists Complex_Compound exist for sure
                 CEpk=rowCompl[0]
-                CEpk=rowCompl[0]
+                ##### MAKING THE MOLECULE-WISE QUERY 
+
+                scolmol=[] #SELECT clause of the QUERY
+                FromMOL=[] #FROM clause of the QUERY
+                where=[]   #WHERE clause of the QUERY
+                p=1
+                ### importantly dyndb_complex_molecule will be used for obtaining the id_complex_exp linked with the set of molecules 
+             
+                tp=("").join(["t",str(p)])
+                tcm=tp
+                scolmol.append(("").join(["SELECT ",tp,".id_complex_exp "]))
+                FromMOL.append(("").join(["FROM dyndb_complex_molecule AS ",tp]))
+                where.append(("").join(["WHERE ",tp,".id_complex_exp = ",str(CEpk)]))
+                for mid in lmol_in_model:  #Part of the Query involving molecules present in the Complex
+                    p=p+1
+                    tp=("").join(["t",str(p)])
+                    #scolmol.append(("").join([", ",tp,".id_molecule"]))
+                    FromMOL.append(("").join([" LEFT OUTER JOIN dyndb_complex_molecule_molecule AS ", tp, " ON ",tcm,".id = ", tp,".id_complex_molecule"]))
+                    where.append(("").join([" AND ",tp,".id_molecule = ", str(mid)]))
+                    if mid==lmol_in_model[-1]:
+                        scolmol.append(("").join([", ",tp,".id_complex_molecule"])) 
+                        where.append(";")
+         
+                SEL=(" ").join(scolmol)
+                FROM=(" ").join(FromMOL)
+                WHERE=(" ").join(where)
+                QUERY=(" ").join([SEL,FROM,WHERE])
+                print(QUERY)
+                ROWLp=[]#list of complex_exp matching the set of proteins in the QUERY
+                ROWLm=[]#list of complex_molecules matching the  set of Molecules from the QUERY
+                with connection.cursor() as cursor:
+                    cursor.execute(QUERY)
+                    row=cursor.fetchall()
+                    if len(list(row))==0:
+                        rowl=[]
+                    else:
+                        for line in row:# row may contain one or several hits!! let's obtain their corresponding id_complex_exp(line[0] and id_complex_molecule (line[-1])
+                            ROWLp.append(line[0]) 
+                            ROWLm.append(line[-1]) 
+                        # id_complex_molecule of complexes with the same number of molecules than our submission
+                        a=DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule__in=ROWLm).values('id_complex_molecule').annotate(num=Count('id_complex_molecule')).filter(num=len(lmol_in_model))
+                        # id_complex_exp of complexes with the same number of protein than our submission
+                        p=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLp).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
+                        if(len(a)<len(p)):# Complexes with the same number of molecules than our submission is lower than complexes with the same number of proteins than our submission. 
+                      #  actually one single complex_molecule involving the same number of molecules exist
+                            ce=DyndbComplexMolecule.objects.filter(id=a[0]['id_complex_molecule']).values()[0]['id_complex_exp_id']
+                            cm=a[0]['id_complex_molecule']
+                            rowl=[ce,cm]
+                        else:# Number of Complexes involving the same number of proteins than our submission is lower or equal than the number of complexes involving the same number of molecules than our submission. Only one Complex involving the same number of proteins must exist. if 'equal' just a single complex_exp and complex_molecule exist
+                            cm=DyndbComplexMolecule.objects.filter(id_complex_exp=p[0]['id_complex_exp']).values()[0]['id']  
+                            ce=p[0]['id_complex_exp']
+                            rowl=[ce,cm]
                 if len(rowl) >0: # The Complex_molecule is also in the GPCRmd database
                     print("COMPLEX_MOLECULE: ", rowl[-1],"\n The current Complex molecule already exists in the database")
                     CM_exists=True
@@ -1593,6 +1906,9 @@ def SMALL_MOLECULEview2(request,submission_id):
     print("REQUEST SESSIONS",request.path)
 #    print("REQUEST SESSION id",request.session.id)
     if request.method == 'POST':
+
+        with open('/protwis/sites/protwis/dynadb/MOLinfo.txt', 'wb') as handle:
+            pickle.dump(request.POST, handle)
         author="jmr"   #to be modified with author information. To initPF dict
         action="/".join(["/dynadb/MOLECULEfilled2",submission_id,""])
         now=timezone.now()
@@ -1602,9 +1918,6 @@ def SMALL_MOLECULEview2(request,submission_id):
         initCF={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
         initON={'other_names': onames,'id_compound':None} 
         
-        fdbMF=dyndb_CompoundForm(request.POST)
-        for key,value in initCF.items():
-            initCF[key]=value
 
         return HttpResponse(request.session.items())
 
@@ -3645,3 +3958,350 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission_id):
+
+    def handle_uploaded_file(f,p,name):
+        print("file name = ", f.name , "path =", p)
+        f.name=name
+        print("NEW name = ", f.name , "path =", p)
+        path=p+"/"+f.name
+        with open(path, 'wb+') as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+
+    author="jmr"   #to be modified with author information. To initPF dict
+    action="/".join(["/dynadb/MOLECULEfilled",str(submission_id),""])
+    now=timezone.now()
+    onames="Pepito; Juanito; Herculito" #to be modified... scripted
+    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+    initON={'other_names': onames,'id_compound':None} 
+    dicpost=postd_single_molecule
+#    dicfiles=request.FILES
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+    ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
+    ft=DyndbFileTypes.objects.all()
+    dict_ext_id={}
+    for l in ft:
+        dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+
+    d_fmolec_t={'Image':'0','Molecule':'1'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+
+    dictmol={}
+    fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
+    dictON={}
+    fieldsON=["other_names"]
+    dictcomp={}
+    fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+    dictfmol={} 
+    fieldsPMod={"is_present"}
+    dictPMod={}
+    form=re.compile('form-')
+    indexl=[]
+    print("!!!!!indexl== ",indexl)
+    nl=0 #counter of pairs in dicpost.items()
+    for key,val in dicpost.items():
+        nl=nl+1
+        if form.search(key):
+            index=int(key.split("-")[1])
+            if index not in indexl:
+                indexl.append(index)
+                dictmol[index]={}
+                dictON[index]={}
+                dictcomp[index]={}
+                dictPMod[index]={}
+            nkey="-".join(key.split("-")[2:])  
+            #dictmol[index]["-".join(key.split("-")[2:])]=val
+        else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+            if len(indexl)==0:
+                index=0
+                indexl.append(0)
+                dictmol[0]={}
+                dictON[0]={}
+                dictcomp[0]={}
+                dictPMod[index]={}
+            nkey=key
+       # print("indexl==V ",indexl)
+            #dictmol[0][key]=val
+            #dictON[0][key]=val
+            #dictfmol[0][key]=val
+        print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+        dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
+        dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
+        for k,v in dfieldtype.items():
+            if nkey in v:
+                dfielddict[k][index][nkey]=val
+                print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+                print ("\n key ", nl, "dfielddict == ", dfielddict)
+                break
+       #     else:
+       #         print("OJO!!! key== ",key, " no en Lista== ", v)
+        print ("\n key ", nl, "dfielddict == ", dfielddict)
+        continue 
+
+    print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+    indexfl=[]
+#    if len(dicfiles) == 0:
+#        response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+#        return response
+########### FILES!!!!!!
+#   for key,val in dicfiles.items():
+#       if form.search(key):
+#           indexf=int(key.split("-")[1])
+#           nkey="-".join(key.split("-")[2:])  
+#           if indexf not in indexfl:
+#               indexfl.append(indexf)
+#               dictfmol[indexf]={}
+#           #dictmol[index]["-".join(key.split("-")[2:])]=val
+#       else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+#           if len(indexfl)==0:
+#               indexf=0
+#               indexfl.append(0)
+#               dictfmol[0]={}
+#           nkey=key
+#       dictfmol[indexf][nkey]=val
+#   print("INDEXFL", indexfl)
+
+    fdbMF={}
+    fdbMFobj={}
+    fdbCF={}
+    fdbCFobj={}
+    fdbON={}
+    fdbONobj={}
+    dON={}
+    on=0
+    print("ANTES SORT",indexfl, indexl)
+    if len(indexl) > 1:
+        indexfli=list(map(int,indexfl))
+        indexli=list(map(int,indexl))
+        indexfl=sorted(indexfli)
+        indexl=sorted(indexli)
+    print(indexfl, indexl)
+    dicfmole={}
+    fdbF={}
+    fdbFobj={}
+    fdbFM={}
+    fdbSM={}
+    fdbFMobj={}
+
+    for ii in indexl:
+        fdbCF[ii]={}
+        fdbCFobj[ii]={}
+        fdbMF[ii]={}
+        fdbSM[ii]={}
+        fdbMFobj[ii]={}
+        fdbON[ii]={}
+        fdbONobj[ii]={}
+        dON[ii]={}
+         
+        #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
+
+        qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'])
+        qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+
+        if len(qMF.values())==1: #there is a entry matching this molecule
+
+            if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+                dictPMod[ii]['not_in_model']=False
+            else:
+                dictPMod[ii]['not_in_model']=True
+
+            dictPMod[ii]['int_id']=ii
+            dictPMod[ii]['submission_id']=submission_id
+            MFpk=qMF.values_list('pk',flat=True)[0]
+            dictPMod[ii]['molecule_id']=MFpk
+            fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+
+            if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
+                fdbSM[ii].save()
+            else:    
+                iii1=fdbSM[ii].errors.as_data()
+                print("fdbSM",ii," no es valido")
+                print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+
+            if ii==indexl[-1]:#if ii is the last element of the list indexl
+                print("Molecule #", ii, "has been found in our database")
+                break
+            else:
+                print("Molecule #", ii, "has been found in our database")
+                continue
+
+        elif len(qMF.values())>1:
+            response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+            return response
+            
+ # check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
+        if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
+            print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
+        elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
+            response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
+            return response
+        elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
+       
+     #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
+       
+            #### DyndbCompound
+
+            for key,val in initCF.items():
+                if key not in dictcomp[ii].keys():
+                    dictcomp[ii][key]=val
+            fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
+            if fdbCF[ii].is_valid():
+                fdbCFobj[ii]=fdbCF[ii].save()
+                CFpk=fdbCFobj[ii].pk
+            else:
+                print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_data())
+       
+            #### DyndbOtherCompoundNames 
+            ONlist=dictON[ii]["other_names"].split(";")
+       
+            for el in ONlist:
+                on=on+1
+                dON[ii][on]={}
+                dON[ii][on]["other_names"]=el
+                dON[ii][on]["id_compound"]=CFpk
+                fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
+                if fdbON[ii][on].is_valid():
+                    fdbON[ii][on].save()
+                else:
+                    print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
+### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
+
+# DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
+        
+            INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+ #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+            
+            if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved
+                print("The molecule ",ii, "is actually the standard molecule")
+            else:
+                print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
+                auxdictmol={}
+                for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
+                    if key in dfieldtype[0]:
+                        auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+  
+                for key,val in initMF.items():
+                    if key not in auxdictmol.keys():
+                        auxdictmol[key]=val  ##### completion of the dictionary
+                auxdictmol['id_compound']=CFpk
+                fdbMFaux=dyndb_Molecule(auxdictmol)
+                if fdbMFaux.is_valid():
+                    fdbMFobj=fdbMFaux.save()
+                    MFauxpk=fdbMFobj.pk
+                else:
+                    print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+  
+            #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
+                auxdictPMod={}
+                auxdictPMod['not_in_model']=True
+                auxdictPMod['int_id']=None
+                auxdictPMod['submission_id']=submission_id
+                auxdictPMod['molecule_id']=MFauxpk
+                fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
+  
+                if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
+                    fdbSMaux.save()
+                else:    
+                    iii1=fdbSMaux[ii].errors.as_data()
+                    print("fdbSMaux",ii," no es valido")
+                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+
+       #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule table
+
+                for key,val in initMF.items():
+                    if key not in dictmol[ii].keys():
+                        dictmol[ii][key]=val
+                dictmol[ii]['id_compound']=CFpk
+                fdbMF[ii]=dyndb_Molecule(dictmol[ii])
+                if fdbMF[ii].is_valid():
+                    fdbMFobj[ii]=fdbMF[ii].save()
+                    MFpk=fdbMFobj[ii].pk
+                else:
+                    print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+            
+                if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+                    dictPMod[ii]['not_in_model']=False
+                else:
+                    dictPMod[ii]['not_in_model']=True
+                dictPMod[ii]['int_id']=ii
+                dictPMod[ii]['submission_id']=submission_id
+                dictPMod[ii]['molecule_id']=MFpk
+                fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+                if fdbSM[ii].is_valid():
+                    fdbSM[ii].save()
+                else:    
+                    iii1=fdbSM[ii].errors.as_data()
+                    print("fdbSM",ii," no es valido")
+                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+
+            if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved 
+                fdbCFobj[ii]['std_id_molecule']=MFpk
+            else:
+                fdbCFobj[ii]['std_id_molecule']=MFauxpk
+            fdbCFobj[ii].save()
+
+        if len(qMF.values())==1:
+            print("Your molecule is already present in our database")               
+        elif len(qMF.values())>1:
+            response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+            return response
+        elif len(qMF.values())==0:
+            pass
+########################   FILES!!!!!!!!!!!!!!!!!!
+#               direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
+#               print("\nDirectorio a crear ", direct)
+#               if not os.path.exists(direct):
+#                   os.makedirs(direct)
+#            
+#               fdbF[ii]={}
+#               fdbFobj[ii]={}
+#               for key,val in dictfmol[ii].items():
+#                   fext="".join(val.name.split(".")[1:])
+#                   print("val ",val, " ;val split",fext," Tambien id", dict_ext_id[fext])
+#                   #print("val ",val, " ;val split",fext," Tambien id")
+#                   if fext in dict_ext_id.keys():
+#                       initFiles['id_file_types']=dict_ext_id[fext]
+#                       initFiles['filename']=val.name
+#                       initFiles['filepath']=direct
+#                       initFiles['description']="sdf/mol2 requested in the molecule form"
+#            
+#                       fdbF[ii][key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+#                       dicfmole[ii]={}
+#                       fdbFM[ii]={}
+#                       if fdbF[ii][key].is_valid():
+#                           fdbFobj[ii][key]=fdbF[ii][key].save()
+#                           newname=str(fdbFobj[ii][key].pk)+"_mol_"+str(submission_id)+"."+fext
+#                           handle_uploaded_file(dictfmol[ii][key],direct,newname)
+#                           completepath=direct+"/"+newname
+#                           fdbFobj[ii][key].filename=newname   #rename filename in the database after saving the initial name
+#                           fdbFobj[ii][key].filepath=completepath   #rename filename in the database after saving the initial name
+#                           fdbFobj[ii][key].save() 
+#                           dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
+#                           dicfmole[ii]['id_molecule']=MFpk
+#                           dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
+#                           fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
+#                           if fdbFM[ii][key].is_valid():
+#                               fdbFM[ii][key].save()
+#                           else:
+#                               print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
+#                       else:
+#                           print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
+#                   else:
+#                       print("This extension is not valid for submission")
+
+#        return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
+                        
+                       
+
+        # check whether it's valid:
+#   else:
+
+#       fdbMF = dyndb_Molecule()
+#       fdbCF=dyndb_CompoundForm()
+#       fdbON=dyndb_Other_Compound_Names()
+#       fdbF = dyndb_Files()
+#       fdbFM = dyndb_Files_Molecule()
+#       fdbMM = dyndb_Complex_Molecule_Molecule()
+
+#       return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})

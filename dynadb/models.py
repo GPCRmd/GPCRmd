@@ -485,6 +485,7 @@ class DyndbSubmissionProtein(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_submission_protein'
+        unique_together = (('submission_id', 'protein_id'),('submission_id', 'int_id'),)
 
 class DyndbSubmissionMolecule(models.Model):
     COMPOUND_TYPE=(
@@ -502,15 +503,16 @@ class DyndbSubmissionMolecule(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_submission_molecule'
-
+        unique_together = (('submission_id', 'molecule_id'),('submission_id', 'int_id'),)
 
 class DyndbSubmissionModel(models.Model):
     submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
     model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='model_id', blank=True, null=True) 
 
     class Meta:
-        managed = False
+        managed =True 
         db_table = 'dyndb_submission_model'
+        unique_together = (('submission_id', 'model_id'),)
 
 class DyndbDynamics(models.Model):
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model', blank=True, null=True)
@@ -541,11 +543,10 @@ class DyndbDynamics(models.Model):
 class DyndbDynamicsComponents(models.Model):
     MOLECULE_TYPE=(
         (0,'Ions'),
-        (1,'Ligand'),
-        (2,'Membrane'),
-        (3,'Water'),
-        (4,'Other')
-    )
+        (1,'Membrane'),
+        (2,'Water'),
+        (3,'Other')
+    )    
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
     id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics', null=True)
     resname = models.CharField(max_length=4)
@@ -814,6 +815,7 @@ class DyndbModel(models.Model):
         (4,'Other')
     )
 
+    name =  models.TextField(max_length=100,null=False,blank=False) 
     type = models.SmallIntegerField(choices=MODEL_TYPE, default=0) 
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING,  db_column='id_protein',blank=True, null=True) 
     id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',blank=True, null=True) 
