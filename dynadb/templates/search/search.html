@@ -106,7 +106,7 @@
         <br>
         Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">
         Return:
-        <select id="result_type"><option value="complex">Complex</option><option value="model">Model</option><option value="dynamics">Dynamics</option></select>
+        <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Model</option><option value="dynamics">Dynamics</option></select>
         <div id='hiddenmodel'>
         <br><br>
         Is it an apoform? <input id="apoform" type="checkbox" name="apo" value="apo">
@@ -147,6 +147,7 @@
 {% endblock %}
 
 {% block addon_js %}
+
     <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
     <script src="{% static 'dynadb/model_searcher.js' %}"></script>
     <script src="{% static 'dynadb/dynamic_searcher.js' %}"></script>

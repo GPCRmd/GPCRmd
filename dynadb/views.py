@@ -459,18 +459,18 @@ def ComplexExpSearcher(request):
                 for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound): #each complexcompound containing usercompound
                     if array[3]=='true': #has to be ligand
                         if comp.type==0 or comp.type==1:
-                            #print('IT IS LIGAND!')
                             rowlist.append(comp.id_complex_exp.id)
                             for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id): #all complexmole pointing to that complexExp (the one that includes the user compound)
                                 for cmolmol in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmol.id): #all comoplexmoleculemolecue pointing to that complexmolecule
                                     compound_rows.append([str(comp.id_complex_exp.id), str(comp.id_compound.id), str(cmolmol.id_molecule.id)] )
+                                    flag=1
                     else: #it is not a ligand
                         if comp.type==2 or comp.type==3:
                             rowlist.append(comp.id_complex_exp.id)       
                             for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id): 
                                 for cmolmol in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmol.id):
                                     compound_rows.append([str(comp.id_complex_exp.id), str(comp.id_compound.id), str(cmolmol.id_molecule.id)] )
-
+                                    flag=1
             setlist.append(rowlist) #CAREFUL! IT CAN APPEND AN EMPTY LIST!!!
 
 
@@ -487,7 +487,6 @@ def ComplexExpSearcher(request):
                     for molecule in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
                         a=[i[1] for i in rememberlist if i[0]=='molecule'] #list with all molecules the user selected to search.
                         if molecule.id_molecule.id not in a:
-                             print(molecule.id_molecule.id)
                              resultlist=resultlist.difference(set([exp_id])) #eliminate the exp_id which have more molecules than the user has demand.
                 
                 for cprotein in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id):
@@ -497,21 +496,40 @@ def ComplexExpSearcher(request):
                         resultlist=resultlist.difference(set([exp_id]))
 
                 for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id):
-                    c=[i[1] for i in rememberlist if i[0]=='compound']
+                    c=[i[1] for i in rememberlist if i[0]=='compound'] 
+                    #if the user has searched for the molecule corresponding to the compound, it should be enough.
+                    #hack the remeber list, to make the corresponding compounds appear in it, as if the user has included it by him/herself.
+                    a=[i[1] for i in rememberlist if i[0]=='molecule'] #every molecule in this list has matched all conditions, otherwise resultlist will be empty cause intersection step and we will not be inside this for loop.
+                    for mol in a:
+                        c.append(DyndbMolecule.objects.get(pk=mol).id_compound.id)  
                     if ccomp.id_compound.id not in c:
                             resultlist=resultlist.difference(set([exp_id]))
 
-
+  
         resultlist=list(resultlist)
+        complex_list_names=[]
+        for exp_id in resultlist:
+            liglist=[]
+            receptorlist=[]
+
+            for match in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=1):
+                liglist.append(match.id_compound.name)
+
+            for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id).filter(is_receptor=True):
+                receptorlist.append(rmatch.id_protein.name)
+
+            complex_list_names.append([exp_id, receptorlist, liglist])
+
         resultlist=[str(i) for i in resultlist]
         if flag==1:
             for row in compound_rows:
                 if row[0] in resultlist: #row[0] is the exp id. row=[expid, compound.id, molecule.id]
                     show_list.append(row) #list with the rows whose compound were able to survive boolean selection
 
+        print(show_list)
         if request.POST.get('restype')=='complex':
             resultlist=','.join(resultlist)
-            tojson={'result': resultlist,'compound_table':show_list,'model':model_list,'dynlist':dynlist,'message':''}
+            tojson={'result': complex_list_names,'compound_table':show_list,'model':model_list,'dynlist':dynlist,'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
@@ -607,8 +625,27 @@ def ComplexExpSearcher(request):
                 sofset.add(dyn.id)
             dynlist=dynlist.intersection(sofset)
 
-        print(dynlist)
 
+        apolist=[]
+        dynresult=[]
+        for dynid in dynlist:
+            #apolist.append(DyndbDynamics.objects.get(pk=dynid).id_model.id_protein.id)
+            for result in DyndbDynamics.objects.filter(pk=dynid):
+                #expid=result.id_model.id_complex_molecule.id_complex_exp.id
+                expid=1
+                liglist=[]
+                receptorlist=[]
+
+                for match in DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=1):
+                    liglist.append(match.id_compound.name)
+
+                for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=expid).filter(is_receptor=True):
+                    receptorlist.append(rmatch.id_protein.name)
+
+
+                dynresult.append([dynid, receptorlist,liglist]) #just in case one model has more than one receptor/ligand.                
+        
+        print (dynresult)        
         dynlist=list(dynlist)
         dynlist=[str(i) for i in dynlist]
         dynlist=','.join(dynlist)
@@ -617,212 +654,6 @@ def ComplexExpSearcher(request):
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
-def ComplexExpSearcherTunning(request):
-    if request.method == 'POST':
-        flag=0
-        sortdic={'OR':1,'AND':2,'NOT':3,'AND NOT':4, 'OR NOT':5, ' ':1}
-        arrays=request.POST.getlist('bigarray[]')
-        print(arrays)
-        counter=0
-        rememberlist=list()
-        setlist=list()
-        compound_rows=list()
-        model_list=list()
-        dynlist=list()
-        model_protein=list() #save here the PROTEINS the user has used to search and its boolean. 
-        for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
-            array=array.split(',') # example [OR, protein, 1,true] [boolean operator, type, id, is receptor/is ligand]
-            if array[3]=='false':
-                array[3]=False
-            rowlist=list()
-            rowlist.append(sortdic[array[0]]) #first element in the list is the boolean opeartor.
-            rememberlist.append([array[1],int(array[2])])
-
-            ##################COMPLEX SEARCH#############
-            if array[1]=='protein':
-                user_protein = array[2]
-                model_protein.append([sortdic[array[0]],array[2]])
-                for cprotein in DyndbComplexProtein.objects.filter(id_protein=user_protein).filter(is_receptor=array[3]):
-                    rowlist.append(cprotein.id_complex_exp.id) #now we have all ComplexExp which include this protein and the boolean Operator
-
-            elif array[1]=='molecule':
-                user_molecule = array[2]
-                for cmolecule in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule):
-                    for cmolecule in DyndbComplexMolecule.objects.filter(id=cmolecule.id_complex_molecule.id):
-                        rowlist.append(cmolecule.id_complex_exp.id) #all complexExp that contain the molecule the user desires                    
-
-            else: # it is a compound
-                flag=1
-                user_compound = array[2]
-                for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound): #each complexcompound containing usercompound
-                    rowlist.append(comp.id_complex_exp.id)
-                    for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id): #all complexmole pointing to that complexExp (the one that includes the user compound)
-                        for cmolmol in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmol.id): #all comoplexmoleculemolecue point to that complexmolecule
-                            compound_rows.append([str(comp.id_complex_exp.id), str(comp.id_compound.id), str(cmolmol.id_molecule.id)] )
-
-            setlist.append(rowlist)
-
-        print(setlist)
-
-        show_list=list()
-        setlist.sort(key=lambda x: x[0])
-        counter=counter-1
-        orset=set()
-        andset=set()
-        notset=set()
-        for row in setlist: #APPLY BOOLEAN OPERATORS.
-            rowset=row[1:] #list with all elements except the first, which is 'AND','OR', 'NOT'. ['AND',2,3,1]
-            if row[0]==1: #OR selected
-                orset.update(rowset) #adds this ids to the result    
-            elif row[0]==2: #AND selected
-                andset.update(rowset) #
-            else: #NOT selected
-                notset.update(rowset) #eliminate from resultlist the ids in this row
-
-        print('anf',andset,'not',notset,'or',orset)
-        if len(andset)>0:
-            if len(orset)>0:
-                setpreNOT=orset.intersection(andset)
-            else:
-                setpreNOT=andset
-        else:
-            setpreNOT=orset
-        resultlist=setpreNOT.difference(notset)
-
-        if request.POST.get('exactmatch')=='true':
-            for exp_id in resultlist:
-                for cmolecule in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
-                    for molecule in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
-                        a=[i[1] for i in rememberlist if i[0]=='molecule'] #list with all molecules the user selected to search.
-                        if molecule.id_molecule.id not in a:
-                             print(molecule.id_molecule.id)
-                             resultlist=resultlist.difference(set([exp_id])) #eliminate the exp_id which have more molecules than the user has demand.
-                
-                for cprotein in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id):
-                    b=[i[1] for i in rememberlist if i[0]=='protein']
-                    if cprotein.id_protein.id not in b:
-                        print(cprotein.id_protein.id)
-                        resultlist=resultlist.difference(set([exp_id]))
-
-                for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id):
-                    c=[i[1] for i in rememberlist if i[0]=='compound']
-                    if ccomp.id_compound.id not in c:
-                            resultlist=resultlist.difference(set([exp_id]))
-
-
-        resultlist=list(resultlist)
-        resultlist=[str(i) for i in resultlist]
-        if flag==1:
-            for row in compound_rows:
-                if row[0] in resultlist:
-                    show_list.append(row) #list with the rows whose compound was able to survive boolean selection
-
-        if request.POST.get('restype')=='complex':
-            resultlist=','.join(resultlist)
-            tojson={'result': resultlist,'compound_table':show_list,'model':model_list,'dynlist':dynlist,'message':''}
-            data = json.dumps(tojson)
-            return HttpResponse(data, content_type='application/json')
-
-        #############MODEL SEARCH############
-        setOR=set()
-        setAND=set()
-        setNOT=set()
-        modelresult=[]
-
-        if request.POST.get('is_apo')=='true':
-            for protein_id in [proteins[1] for proteins in model_protein if proteins[0]==1]: #use only proteins with OR clause, AND makes no sense as in apoforms there is only protein.
-                for mod in DyndbModel.objects.filter(id_protein=protein_id):
-                    modelresult.append([mod.id , DyndbProtein.objects.get(id=protein_id).name])
-                    
-
-        else:
-            for exp_id in resultlist:
-                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
-                    for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                        liglist=[]
-                        receptorlist=[]
-                        for match in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=1):
-                            liglist.append[match.id_compound.name]
-
-                        for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id).filter(is_receptor=True):
-                            receptorlist.append(rmatch.id_protein.name)
-
-
-                        modelresult.append([mod.id, receptorlist,liglist]) #just in case one model has more than one receptor/ligand.
-        print(modelresult)
-
-        '''
-        for mol in model_protein:
-            for model in DyndbModel.objects.filter(id_protein=mol[1]):
-                if model_protein[0]==1:
-                    setOR.add(model.id) #RETURN all models with protein 1 or protein 2
-                elif model_protein[0]==2:
-                    setAND.add(model.id) #AND makes no sense here, as one model can only have one protein in the protein_id field.
-                else:
-                    setNOT.add(model.id) #return any model NOT having protein 3
-       
-        if len(setAND)>0:  
-            setpreNOT=setOR.intersection(setAND)
-        else:
-            setpreNOT=setOR
-
-        result=setpreNOT.difference(setNOT)
-        '''
-        resultmodellist=[i[0] for i in modelresult] #format to use in dynamics search
-        if request.POST.get('restype')=='model':
-            #resultlist=','.join(resultlist)
-            #resultmodellist=[str(i) for i in resultmodellist]
-            #resultmodellist=','.join(resultmodellist)
-            tojson={'result': resultlist,'compound_table':show_list,'model':modelresult,'dynlist':dynlist,'message':''}
-            data = json.dumps(tojson)
-            return HttpResponse(data, content_type='application/json')
-
-        #########DYNAMICS SEARCH############
-        dynlist=set()
-        ffset=set()
-        tstepset=set()
-        solset=set()
-        memset=set()
-        methodset=set()
-        sofset=set()
-        for model_id in resultmodellist:
-            for dyn in DyndbDynamics.objects.filter(id_model=1): #BE AWARE OF THIS! SHOULD BE id_model=model_id!!!!!!!!!!
-                dynlist.add(dyn.id)
-
-        if request.POST.get('ff')!='':
-            for dyn in DyndbDynamics.objects.filter(ff=request.POST.get('ff')):
-                ffset.add(dyn.id)
-        dynlist=dynlist.intersection(ffset)
-
-        if request.POST.get('tstep')!='':
-            for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
-                tstepset.add(dyn.id)
-        dynlist=dynlist.intersection(tstepset)
-
-        if request.POST.get('sol')!='':
-            for dyn in DyndbDynamics.objects.filter(id_dynamics_solvent_types=request.POST.get('sol') ):
-                memset.add(dyn.id)
-        dynlist=dynlist.intersection(memset)
-
-        if request.POST.get('mem')!='':
-            for dyn in DyndbDynamics.objects.filter(id_dynamics_membrane_types=request.POST.get('mem') ):
-                memset.add(dyn.id)
-        dynlist=dynlist.intersection(memset)
-
-        if request.POST.get('method')!='':
-            for dyn in DyndbDynamics.objects.filter(id_dynamics_methods=request.POST.get('method') ):
-                methodset.add(dyn.id)
-        dynlist=dynlist.intersection(methodset)
-
-        if request.POST.get('sof')!='':
-            for dyn in DyndbDynamics.objects.filter(software=request.POST.get('sof')):
-                sofset.add(dyn.id)
-        dynlist=dynlist.intersection(sofset)
-
-        dynlist=','.join(dynlist)
-        tojson={'result':resultlist ,'compound_table':show_list,'model':model_list,'dynlist':dynlist,'message':''}
-        data = json.dumps(tojson)
-        return HttpResponse(data, content_type='application/json')
 
 ##############################################################################################################################################
 ##############################################################################################################################################

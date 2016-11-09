@@ -1,6 +1,8 @@
 //MAIN SEARCHER, sends ajax call to auto_query function. Returns: link to result + Add to table button
-$("#Searcher").click(function() {
+$("#Searcher").click(function(e) {
+    e.preventDefault(); //not helping, still GET error sometimes...
     var p=$("#protein22").val();
+    $("#Searcher").prop('disabled', true);
     $.ajax({
         type: "POST",
         data: { cmolecule: p},
@@ -62,3 +64,15 @@ $.ajaxSetup({
         }
     }
 }); 
+
+
+$(document).on('keypress', function (event) {
+    if (event.keyCode == 13) {
+       event.preventDefault();
+       if ( $('#protein22').is(":focus") ){
+           $('#Searcher').click(); //add .delay(200)?
+       }else{
+           $('#tablesearch').click();
+       }
+    }
+});
