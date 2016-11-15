@@ -62,6 +62,7 @@ urlpatterns = [
     url(r'^ajaxsearch/',views.ajaxsearcher,name='ajaxsearcher'),
     url(r'^autocomplete/',views.autocomplete,name='autocomplete'),
     url(r'^complex_search/$', views.ComplexExpSearcher,name='ComplexExpSearcher'),
+    url(r'^advanced_search/$', views.NiceSearcher,name='NiceSearcher'),
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     url(r'^search_top/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),

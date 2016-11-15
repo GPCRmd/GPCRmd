@@ -1,6 +1,0 @@
-{{ object.id_compound.pubchem_cid|safe }}
-{{ object.id_compound.chembleid|safe }}
-{{ object.id_compound.name|safe }}
-{{ object.id_compound.sinchi|safe }}
-{{ object.id_compound.sinchikey|safe }}
-{{ object.id_compound.iupac_name|safe }}

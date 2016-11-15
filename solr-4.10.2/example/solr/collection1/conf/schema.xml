@@ -153,9 +153,9 @@
 
     <field name="inchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
-
     <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+    <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="iupac_name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
