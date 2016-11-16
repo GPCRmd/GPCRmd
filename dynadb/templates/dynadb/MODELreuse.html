@@ -13,7 +13,7 @@
      
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 3:<br>Complex Information</h3>
+        	<h3 > Reuse Complex <br> Complex Information</h3>
          </div> 
      </div>
 
@@ -21,12 +21,16 @@
      <div class="col-md-12 panel panel-primary">
          <div class="panel-body">
             <div style="text-align:center"> 
-             <h4>FILL IN THE COMPLEX FORM</h4>
+             <h4>CHECK THE COMPLEX INFO</h4>
             </div>
-             <p style="text-align: justify;" >Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
+             <p style="text-align: justify;" >Please, find here the information on the complex you have requested to be reused in your simulation submission. Make sure the data contained here matches the one corresponding to your simulation.</p>
+             <p style="text-align: justify;" >Information appearing in the ‘Residues assignment and protein coordinate sources’ section must be identical to the one concerning your simulation. Resname, Mol name, Num of mol and Type fields in the ‘Other Molecules in the Complex” section must match data in your simulation as well. </p>
+
+             <p style="text-align: justify;"> If a perfect match exists, please click the 'Check Protein Information' and 'Check Small Molecule Information' links at the bottom of the form to confirm matching of further system details. Otherwise, you have to submit your simulation as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following the whole Submission index. </p>
+<!--              <p style="text-align: justify;" >Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
              <p style="text-align: justify;" >Contains structural information about proteins or “molecular complexes” in PDB format similar to the PDB database: structure and coordinates of protein, ligand and/or  molecules crystallized with proteins, crystallized or user-predicted stable waters and ions.</p>
 
-             <p style="text-align: justify;">Note, do not include coordinates of solvent, ions, membrane lipids or other molecules which are part of the general solvation environment specially if their coordinates are randomly generated. </p>
+             <p style="text-align: justify;">Note, do not include coordinates of solvent, ions, membrane lipids or other molecules which are part of the general solvation environment specially if their coordinates are randomly generated. </p> -->
          </div>
      </div>
 
@@ -183,14 +187,14 @@
 {% endfor %}   </tbody> </table>
 			<br>
 		        <script src="{% static 'dynadb/addFields.js' %}"></script>		
- 			<div style="text-align:center">
+<!-- 			<div style="text-align:center">
 			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
 			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
 		        </div>	
  			<div style="text-align:right;margin-right:5%">
-                                        <input type="submit" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px"id="pdbchecker2" > <!--This one sends data to pdbcheck view through AJAX. Newer.-->
+                                        <input type="submit" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px"id="pdbchecker2" > 
                                         <input type="submit" value="Autocomplete resid" style="height:30px;margin: 15px 0px 0px 0px;width:100px" id="pdbchecker1" >                                        
-		        </div> 		
+		        </div> 	--> 	
 		        </div><br>
 
 		<div class=row id='PRUEBA2'>
@@ -232,25 +236,24 @@
 						</tr> {% endfor %}
                         </tbody>
 			</table>
-			<br>
- 			<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
+	               <br>
+ 		<!--  	<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
 			     <input type="button" value="+ Add Molecule"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();"><br>
 			     <input type="button" value="- Remove Molecule"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">
-				<!--	<button onclick="addFields()"> + Add modeled residue </button>  -->
-		        </div> 		
 		        </div> 		
 
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button> 
 		        </div> 		
-		        </div> 		
 
 
 
 
-        <th><input type="submit" value="Submit" /> </th><br>   
+        <th><input type="submit" value="Submit" /> </th><br>   -->
 <br><div>
 		       </div> 	
+		        </div> 		
+		        </div> 		
 </form>
 
 

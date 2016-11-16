@@ -9,10 +9,10 @@ $(document).ready(function(){
     $.fn.formrenum = function (new_form_num) {
         //Jquery function for changing labels for all the HTML input elements
         var new_form_num_1 = new_form_num + 1;
-        var protnumb = "PROTEIN  #" + new_form_num_1;
-        var idlabnod = "protform-" + new_form_num;
+        var protnumb = "SMALL MOLECULE #" + new_form_num_1;
+        var idlabnod = "molform-" + new_form_num;
         $(this).attr('id',idlabnod);
-        $(this).find("#protlabnum").text(protnumb);
+        $(this).find("#molnumb").text(protnumb);
         $(this).find(':input,:button').each(function() {
             var name1 = $(this).attr('name');
             var id1 = $(this).attr('id');
@@ -31,9 +31,11 @@ $(document).ready(function(){
     
     $(document).on('click',"[id='id_add_protein'],[id|=id_form][id$='-add_protein']",function(){
         var form_num = 0;
-        var item = $(this).parents("[id|=protform]");
+        var item = $(this).parents("[id|=molform]");
         var item_parent = $(item).parent();
-        if ($(item).attr('id') === "protform") {
+        console.log("item "+item.attr('id'))
+        console.log("$(item) "+$(item).attr('id'))
+        if ($(item).attr('id') === "molform") {
             $(item).formrenum(form_num);
                     
 
@@ -48,11 +50,11 @@ $(document).ready(function(){
 
         
         $(newitem).formrenum(next_form_num);
-        $(newitem).resetProteinByButton();
+        $(newitem).resetMoleculeByButton();
         //Insert after last protform
         $(item_parent).append(newitem);
         
-        $("#id_form-"+next_form_num+"-id_species").species_autocomplete();
+     //   $("#id_form-"+next_form_num+"-id_species").species_autocomplete();
         $("#id_form-"+next_form_num+"-del_protein").prop("disabled",false);
         var receptor = $("#id_form-"+next_form_num+"-receptor");
         receptor.prop("disabled",false);

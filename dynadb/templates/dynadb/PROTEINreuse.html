@@ -32,7 +32,8 @@
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3>
+<!--        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3> -->
+        	<h3 > Reuse Complex <br> Protein Information</h3>
          </div> 
      </div>
 
@@ -41,15 +42,21 @@
          <div class="panel-body">
 
             <div style="text-align:center"> 
-             <h4>FILL IN THE PROTEIN FORM</h4>
+             <h4>CHECK THE PROTEIN INFO</h4>
 	    </div>
-             <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
+          <p style="text-align: justify;"> Please, note that this form shows the description of the proteins involved in the complex you have selected to be reused. The information contained here must not be modified. </p>
+          <p style="text-align: justify;"> Confirm that the set of proteins involved in the chosen complex is exactly that one you have used in your simulations. When mutant proteins appear in the form, pay special attention to the Protein Mutations section!!! Mutations in your simulation must exactly match the ones in this form for each mutated protein.</p>
+       <p style="text-align: justify;">If one of the proteins in your simulation is not present in this form, please click the ‘New Submission’ button in the initial ‘Simulation Submission’ page and enter your simulations as a new system from scratch.</p>
+
+
+
+<!--            <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
              <p style="text-align: justify;">Protein information is linked to a cannonical sequence obtained from UniProtKB and identified by a UniProtKB accession number (AC).</p>
 
  
 	     <p style="text-align: justify;">Mutated proteins must be specified by providing wild type UniProtKB AC and the alignment between the wild type sequence and the mutated one in fasta format.<p>
 
-	     <p style="text-align: justify;">Several proteins can be added in a single submission but at least one must be a G protein-coupled receptor (GPCR) whose sequence must have been deposited on GPCRdb. </p>
+	     <p style="text-align: justify;">Several proteins can be added in a single submission but at least one must be a G protein-coupled receptor (GPCR) whose sequence must have been deposited on GPCRdb. </p> -->
 
          </div>
      </div>
@@ -87,7 +94,7 @@
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div>
 			<div class="col-md-3"><input id="id_isoform" name="form-{{int0}}-isoform" type="number" style="width:140px" value="{{o.isoform}}" readonly/></div>
-			<div class="col-md-3" style="margin-left:1.5%"><!-- jQuery static/retrieve_data.js --><button style="width:140px;" type=button id="id_get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
+			<div class="col-md-3" style="margin-left:1.5%"><!-- jQuery static/retrieve_data.js --><button style="width:140px;"  disabled type=button id="id_get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
 		<br></div>
 		<div class="row" style="padding:10px 0px 0px 0px">
                         <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_is_not_uniprot"><a title="Not in UniprotKB: NOT RECOMENDED. This value must be checked if the protein sequence is not found in UniProtKB. This protein could be difficult to find in future queries!">Not in UniprotKB?</a></label></div>
@@ -212,7 +219,7 @@
 		<p style="margin-right:10%;margin-left:40%;padding:5px 5px 5px 5px"><button style="width:120px;" onclick="addFields()" title="Manually requested mutations in the Receptor Mutation section are applied after clicking herein. 'Sequence' field is automatically updated with the mutated sequence."> Apply mutations</button></p>
 	</div> -->
 			<br>
-                <div class=row style="text-align:center">
+<!--                <div class=row style="text-align:center">
                         <table align='center'>
                         <tr><td>
                                 <button type="button" id="id_add_protein" name="form-{{int0}}-add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
@@ -227,7 +234,7 @@
                 <br><br>
                 <div class=row>
                           <input id="id_submit" name="form-{{int0}}-submit" type="submit" value="Submit" />
-                </div>
+                </div> -->
                 <br>
     </div> 
   </div>

@@ -84,8 +84,11 @@
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." > Complex Type:</a></label></div>
 				<div class="col-md-6" style="height:30px"><select id="id_type" name="type" placeholder="   "  style="width:300px" >
-					<option value="0">Protein Apoform </option>
-					<option value="1"> Protein-Protein or Protein-Ligand Complex</option>
+                                      {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
+		<!--			<option value="0">Protein Apoform </option>
+					<option value="1"> Protein-Protein or Protein-Ligand Complex</option> -->
 				</select></div>
 		<br></div>
 
@@ -102,11 +105,14 @@
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_source_type"><a title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment." >Source Type:</a></label></div>
 				<div class="col-md-6" style="height:30px"><select id="id_source_type" name="source_type" placeholder="   "  style="width:300px" >
-					<option value="0">X-ray</option>
+                                      {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
+		<!--			<option value="0">X-ray</option>
 					<option value="1">NMR</option>
 					<option value="2">Docking</option>
 					<option value="3">MD</option>
-					<option value="4">Other</option>
+					<option value="4">Other</option>-->
 				</select></div>
 		<br></div>
 
@@ -154,13 +160,16 @@
                               <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked placeholder=" "/></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" name="pdbidps" type="text"  style="width:50px" placeholder=" 4IAR.A  "/></td>
 				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps" readonly name="source_typeps" style="width:50px" >	
-					<option value="0" selected="selected">X-ray</option>
+                                      {% for i in fdbPS.Meta.model.SOURCE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
+			<!--		<option value="0" selected="selected">X-ray</option>
 					<option value="1">NMR</option>
 					<option value="2">Ab-initio</option>
 					<option value="3">Threading</option>
 					<option value="4">Homology</option>
 					<option value="5">Threading</option>
-					<option value="6">Other Computational Methods</option>
+					<option value="6">Other Computational Methods</option> -->
 				</select></td>
 <!--				<td style="padding:5px 5px 5px 5px"><input id="id_template_id_model" style="width:60px"  name="template_id_model" type=text></td>   -->
 				</tr></tbody></table> 
@@ -198,11 +207,14 @@
 					<td style="padding:5px 5px 5px 5px"><input id="id_namemc" maxlength="60" name="namemc" type="text" style="width:70px" placeholder=" Clozapine" /></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_typemc" name="typemc" style="width:60px">
-						<option value="0" >Ions</option>
+                                              {% for i in fdbMC.Meta.model.MOLECULE_TYPE %}
+                                                <option value="{{i.0}}"> {{i.1}}</option>
+                                              {% endfor %}
+					<!--	<option value="0" >Ions</option>
 						<option value="1" selected="selected">Ligand</option>
 						<option value="2">Lipid</option>
 						<option value="3">Water</option>
-						<option value="4">Other</option>
+						<option value="4">Other</option>-->
 						</select></td></tr>
                         </tbody>
 			</table>

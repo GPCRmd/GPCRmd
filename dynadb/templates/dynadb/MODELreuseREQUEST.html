@@ -10,6 +10,22 @@
  width:100%;
 }
 
+
+input[type=submit] {
+      background-color: #F0F0F0;
+      border: 2px solid #4CAF50;
+
+      color: #337ac1;
+      text-align: center;
+      text-decoration: none;
+      border: 1px solid #337ac1;
+      border-radius: 12px;
+}
+input[type=submit]:hover{
+    background-color: #337ac1;
+    color:white;
+    }
+
 .decob button:link, .decob button:visited {
     background-color: #F0F0F0;
     color: #337ac1;
@@ -100,12 +116,12 @@
 	        <div class="row">
 			<div class="col-md-8 col-md-offset-4" style="text-align:left">
 			    <div class="row">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database. If the Submission ID and Complex ID values  do not designate the same System, the Submission ID will be taken as the correct value and the corresponding Complex ID value will be displayed here after posting.">Complex ID:</a> </label></div>
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><a title="Choose a previous complex from the GPCRmd database. If the Submission ID and Complex ID values  do not designate the same System, the Submission ID will be taken as the correct value and the corresponding Complex ID value will be displayed here after posting.">Complex ID:</a> </div>
 			        <div class="col-md-4"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" placeholder="previous complex"> </input></div> 
                             {% if value == 0 %} <div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 			    </div>
                             <div class="row">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </p></div>
 			        <div class="col-md-4"><input style="width:130px" id="Choose_submission_id" name="Choose_submission_id" rows="1" placeholder="Previous Complex"> </input></div> 
                             {% if value == 0 %} <div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 		            </div><br>
@@ -120,8 +136,7 @@
                 </div>
       <div class="col-md-12 panel panel-primary deco" id="mirar" >
   	  <div class="panel-body decob" id="selection-">
-        	<a id='selection-button' href="/accounts/memberpage/" class="btn btn-lg btn-block deco " >Retrieve the specified model to be reused</a>
-        	<input type="submit"><a id='selection-button' href="" class="btn btn-lg btn-block deco " >Retrieve the specified model to be reused</a></button>
+        	<input type="submit" class="btn btn-lg btn-block " value="Retrieve the specified model to be reused"> 
         	<a id='selection-button' href="/accounts/memberpage/"  class="btn btn-lg btn-block "> Back to index </a>
       	  </div>
       </div>

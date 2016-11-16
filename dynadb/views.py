@@ -1672,6 +1672,16 @@ def MODELview(request, submission_id):
                 print("COMPLEX_EXP: ", rowCompl[0],"\n")
                 CE_exists=True # If Complex_Exp exists Complex_Compound exist for sure
                 CEpk=rowCompl[0]
+                #### CHECK if the COMPOUND_TYPE PRIORITY OF THE COMPLEX_COMPOUND TYPE HAS TO BE UPDATED 
+                qCompType=DyndbComplexCompound.objects.filter(id_complex_exp=CEpk)
+                for l in qCompType.values_list('id_compound','type').order_by('id_compound'):
+                    sub_molec_type=qSMol.filter(molecule_id__in=DyndbMolecule.objects.filter(id_compound=l[0]).values_list('id',flat=True)).values_list('type',flat=True)
+                    min_molec_type =min(sub_molec_type)
+                    print("MIN MOLEC ",min_molec_type,"complex_compound", l[0])
+                    if min_molec_type < l[0]:
+                        DyndbComplexCompound.objects.filter(id_compound=l[0]).filter(id_complex_exp=CEpk).update(type=min_molec_type)
+                        print("updated value" )
+
                 ##### MAKING THE MOLECULE-WISE QUERY 
 
                 scolmol=[] #SELECT clause of the QUERY
@@ -2006,7 +2016,7 @@ def SMALL_MOLECULEview(request, submission_id):
         dictcomp={}
         fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
         dictfmol={} 
-        fieldsPMod={"is_present"}
+        fieldsPMod={"is_present","type"}
         dictPMod={}
         form=re.compile('form-')
         indexl=[]
@@ -2306,13 +2316,14 @@ def SMALL_MOLECULEview(request, submission_id):
     else:
 
         fdbMF = dyndb_Molecule()
+        fdbSub = dyndb_Submission_Molecule()
         fdbCF=dyndb_CompoundForm()
         fdbON=dyndb_Other_Compound_Names()
         fdbF = dyndb_Files()
         fdbFM = dyndb_Files_Molecule()
         fdbMM = dyndb_Complex_Molecule_Molecule()
 
-        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
+        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 
 def DYNAMICSview(request, submission_id):
 
@@ -2562,9 +2573,14 @@ def DYNAMICSview(request, submission_id):
 
     else:
         dd=dyndb_Dynamics()
-        ddC=dyndb_Dynamics_Components()
+        ddC =dyndb_Dynamics_Components()
+        qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
+        qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
+        qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
+        qAT =DyndbAssayTypes.objects.all().order_by('id')
 
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'submission_id' : submission_id})
+
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'submission_id' : submission_id})
 ##############################################################################################################
 
 

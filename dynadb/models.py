@@ -491,7 +491,7 @@ class DyndbSubmissionMolecule(models.Model):
     COMPOUND_TYPE=(
         (0,'Orthosteric ligand'),
         (1,'Allosteric ligand'),
-        (2,'Crystallographic waters'),
+        (2,'Crystallographic waters, lipids or ions'),
         (3,'Other')
     )
     type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 

@@ -25,6 +25,7 @@
             <div style="text-align:center"> 
              <h4>FILL IN THE SMALL MOLECULE FORM</h4>
 	    </div>
+             
              <p >Please, provide information of all non-protein molecules in your system.</p>
              <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
 
@@ -58,10 +59,14 @@
 	        <div class="row">
 		<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Type: Type of the compound that forms part of a complex.">Type:</a></label></div>
 		<div class="col-md-4"><select id="id_type" name="type" rows="2" style="width:300px" placeholder=" Allosteric Ligand" style="width:300px">
-                                <option value="1">Orthosteric ligand</option>
+
+                              {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
+                                <option value="{{i.0}}"> {{i.1}}</option>
+                              {% endfor %}
+                           <!--     <option value="1">Orthosteric ligand</option>
                                 <option value="2">Allosteric ligand</option>
                                 <option value="3">Cristallographic waters</option>
-                                <option value="4">Other</option>
+                                <option value="4">Other</option> -->
                         </select></div>
 		</div><br>
 	        <div class="row">
@@ -131,7 +136,7 @@
 		</div>
 
 	        <div class="row">
-			<div class="col-md-4" style="height:30px"></div><div class="col-md-4"><button title="Retrieve compound information searching by Standard InChIKey." style="width:180px;text-align:center;margin-right:5%" type="button" ="Retrieve the the standard form for this compound from the database or from external sources." onclick=" "> Retrieve data </button></div><div class="col-md-4"></div>
+			<div class="col-md-4" style="height:30px"></div><div class="col-md-4"><button title="Retrieve compound information searching by Standard InChIKey." style="width:180px;text-align:center;margin-right:5%" id="id_retrieve_data" name="retrieve_data"  type="button" ="Retrieve the the standard form for this compound from the database or from external sources." onclick=" "> Retrieve data </button></div><div class="col-md-4"></div>
 		</div><br>
 
 
@@ -151,14 +156,14 @@
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pubchem_cid"><a title="PubChem cid: PubChem chemical identifier">PubChem cid:</a></label></div>
 			<div class="col-md-3"><input id="id_pubchem_cid" name="pubchem_cid"  style="width:145px;margin-right:4%" type="number" /></div> <!--placeholder=" 2818" -->
-	 		<div class="col-md-3"><button style="width:145px;text-align:center;margin-left:4%;" type="button" >Update</button></div>
+	 		<div class="col-md-3"><button  name="update_pubchem_cid" id="id_update_pubchem_cid" style="width:145px;text-align:center;margin-left:4%;" type="button" >Update</button></div>
 		</div>
 			
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_chembleid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
 			<div class="col-md-3"><input id="id_chembleid" name="chembleid" type="number" style="width:145px;margin-right:4%"/></div> <!--  placeholder=" 42"-->
-			<div class="col-md-3"><button style="width:145px;text-align:center;margin-left:4%" type="button" >Update</button></div>
+			<div class="col-md-3"><button name="update_chembleid" id="id_update_chembleid" style="width:145px;text-align:center;margin-left:4%" type="button" >Update</button></div>
 		</div>
 
 
@@ -194,15 +199,15 @@
 			<br>
  		 	<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<input type="button" value="+ Add molecule"  style="height:30px;width:160px" onClick="addSmalmol();">
+			     		<button type="button" value="+ Add molecule" id="id_add_protein"  name="add_protein"  style="height:30px;width:160px" > + Add molecule </button>
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
+			     		<input type="button" value="- Remove molecule"  id="id_del_protein"  name="del_protein" style="height:30px;width:160px" onClick="delSmalmol();">
 		        	</div> 		
 			<br><br>
 
   </div><br>
-        <th><input type="submit" value="Submit" /> </th><br>   
+        <th><input type="submit" value="Submit"  id="id_submit"  name="submit" /> </th><br>   
 </form>
 </div><br>
    </div>  
@@ -237,6 +242,7 @@
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/generateInChi.js' %}"></script>
     <script src="{% static 'dynadb/addSmalmol.js' %}"></script>
+    <script src="{% static 'dynadb/addSmalmolNew.js' %}"></script>
     <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
 
 {% endblock %}

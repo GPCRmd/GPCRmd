@@ -13,7 +13,8 @@
      
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>
+        	<h3 > Reuse Complex <br> Small Molecule Information</h3>
+        <!--	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>-->
          </div> 
      </div>
      
@@ -23,12 +24,16 @@
              
 <!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
             <div style="text-align:center"> 
-             <h4>FILL IN THE SMALL MOLECULE FORM</h4>
+             <h4>CHECK THE SMALL MOLECULE INFO</h4>
 	    </div>
-             <p >Please, provide information of all non-protein molecules in your system.</p>
-             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
 
-<p style="text-align: justify">Note, only molecule structures that have coordinates coming from experimental data or that are crucial for the setting of the simulation must be included in complex by checking the field “Important for the biological process” (e. g. crystalized-like waters or very stable ions, but not water molecules or ions with randomly generated coordinates). Otherwise chemical structures must be included into the dynamics form (step 4).</p>
+             <p style="text-align: justify">Please, check that all non-protein molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulky waters or ions randomly generated), are included in the list of molecules shown in this Small Molecule form. In addition, the checkbox field “Important for the biological process” concerning every aforementioned molecule must appear in the form as a checked field. If both conditions are fulfilled the set of non-protein molecules in your system is in good agreement with the ones in the complex to be reused. Then, you have to add new molecules appearing in your simulations whose coordinates have been randomly generated and remove molecules from the form which are not used in your simulations. Importantly, molecules to be added or removed must have the checkbox field “Important for the biological process” unchecked.</p>
+             <p style="text-align: justify">Note that, if the set of molecules which are “Important for the biological process” in the form does not match the ones in your simulation, you have to submit it as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following all the steps in the Submission index.</p>
+
+
+<!--             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
+
+<p style="text-align: justify">Note, only molecule structures that have coordinates coming from experimental data or that are crucial for the setting of the simulation must be included in complex by checking the field “Important for the biological process” (e. g. crystalized-like waters or very stable ions, but not water molecules or ions with randomly generated coordinates). Otherwise chemical structures must be included into the dynamics form (step 4).</p>-->
 
          </div>
      </div>
@@ -204,15 +209,15 @@
 			<br>
  		 	<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<input type="button" value="+ Add molecule"  style="height:30px;width:160px" onClick="addSmalmol();">
+			     		<input type="button" value="+ Add molecule" id="id_add_molecule" name="form-{{int0}}-add_molecule" style="height:30px;width:160px" onClick="addSmalmolNew();">
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
+			     		<input type="button" value="- Remove molecule" id="id_del_molecule" name="form-{{int0}}-del_molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
 		        	</div> 		
 			<br><br>
 
   </div><br>
-        <th><input type="submit" value="Submit" /> </th><br>   
+        <th><input id="id_submit" name="form-{{int0}}-submit" type="submit" value="Submit" /> </th><br>   
 </div><br>
    </div>  
 {%endif%} {%endfor%}
