@@ -391,7 +391,6 @@ def ajaxsearcher(request):
                     try:
                         comp=DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                         compname=DyndbMolecule.objects.get(pk=mol_id).id_compound.name
-                        print(compname)
                         pk2filesmolecule=DyndbCompound.objects.get(pk=comp).std_id_molecule.id
                         imagepath=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
                         imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
@@ -428,6 +427,7 @@ def ComplexExpSearcher(request):
             rowlist=list()
             rememberlist.append([array[1],int(array[2])])
 
+
             ################## COMPLEX SEARCH #############
             if array[1]=='protein':
                 user_protein = array[2]
@@ -446,16 +446,13 @@ def ComplexExpSearcher(request):
                             flag=1
 
                 else: #it is not a ligand, normal/enviromental molecule
-                    '''
-                    previous version
-                    for cmolecule in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule):
-                        for cmolecule in DyndbComplexMolecule.objects.filter(id=cmolecule.id_complex_molecule.id):
-                            rowlist.append(cmolecule.id_complex_exp.id) #all complexExp that contain the molecule the user desires                    
-                    '''
                     user_compound=DyndbMolecule.objects.get(pk=user_molecule).id_compound.id
                     for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound): 
                         if comp.type==2 or comp.type==3:
                             rowlist.append(comp.id_complex_exp.id)
+                            #Ok, that molecule (or its corresponding compound is acting as a ligand), but is the MOLECULE (protonated clozapine, for example) present? if you translate every molecule into compound, you won't be able to search for the presence of that molecule, only by its corresponging comopound
+                            #is there ANY complexMolecule which has this complexExp id ¡AND! the user MOLECULE!
+                            
                             compound_rows.append([str(comp.id_complex_exp.id), str(comp.id_compound.id), str(user_molecule)] )
                             flag=1
             else: # it is a compound
@@ -486,11 +483,21 @@ def ComplexExpSearcher(request):
 
         resultlist=andset
 
+        #if the user has search for the compound, he should not need to include the molecule as well, and viceversa.
+        c=[i[1] for i in rememberlist if i[0]=='compound']
+        a=[i[1] for i in rememberlist if i[0]=='molecule'] #list with all molecules the user selected to search.
+        for csearch in c:
+            for molfromcomp in DyndbMolecule.objects.filter(id_compound=csearch):
+                if molfromcomp.id not in a:
+                    a.append(str(molfromcomp.id))
+
+        for mol in a:
+            c.append(DyndbMolecule.objects.get(pk=mol).id_compound.id)  
+
         if request.POST.get('exactmatch')=='true':
             for exp_id in resultlist:
                 for cmolecule in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
                     for molecule in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
-                        a=[i[1] for i in rememberlist if i[0]=='molecule'] #list with all molecules the user selected to search.
                         if molecule.id_molecule.id not in a:
                              resultlist=resultlist.difference(set([exp_id])) #eliminate the exp_id which have more molecules than the user has demand.
                 
@@ -500,14 +507,8 @@ def ComplexExpSearcher(request):
                         resultlist=resultlist.difference(set([exp_id]))
 
                 for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id):
-                    c=[i[1] for i in rememberlist if i[0]=='compound'] 
-                    #if the user has searched for the molecule corresponding to the compound, it should be enough.
-                    #hack the remeber list, to make the corresponding compounds appear in it, as if the user has included it by him/herself.
-                    a=[i[1] for i in rememberlist if i[0]=='molecule'] #every molecule in this list has matched all conditions, otherwise resultlist will be empty cause intersection step and we will not be inside this for loop.
-                    for mol in a:
-                        c.append(DyndbMolecule.objects.get(pk=mol).id_compound.id)  
                     if ccomp.id_compound.id not in c:
-                            resultlist=resultlist.difference(set([exp_id]))
+                        resultlist=resultlist.difference(set([exp_id]))
 
   
         resultlist=list(resultlist)
@@ -530,7 +531,6 @@ def ComplexExpSearcher(request):
                 if row[0] in resultlist: #row[0] is the exp id. row=[expid, compound.id, molecule.id]
                     show_list.append(row) #list with the rows whose compound were able to survive boolean selection
 
-        print(show_list)
         if request.POST.get('restype')=='complex':
             resultlist=','.join(resultlist)
             tojson={'result': complex_list_names,'compound_table':show_list,'model':model_list,'dynlist':dynlist,'message':''}
@@ -542,15 +542,6 @@ def ComplexExpSearcher(request):
         setAND=set()
         setNOT=set()
         modelresult=[]
-        '''
-        previous version
-        else:
-            for exp_id in resultlist:
-                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
-                    for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id): 
-                        modelresult.append(mod.id)
-
-        '''
         if request.POST.get('is_apo')=='true':
             for protein_id in [proteins[1] for proteins in model_protein if proteins[0]==1]:
                 for mod in DyndbModel.objects.filter(id_protein=protein_id): #if id_protein column is NOT empty, is because it is an apoform.
@@ -579,9 +570,6 @@ def ComplexExpSearcher(request):
         resultmodellist=[i[0] for i in modelresult] #format to use in dynamics search
 
         if request.POST.get('restype')=='model':
-            #resultlist=','.join(resultlist)
-            #resultmodellist=[str(i) for i in resultmodellist]
-            #resultmodellist=','.join(resultmodellist)
             tojson={'result': resultlist,'compound_table':show_list,'model':modelresult,'dynlist':dynlist,'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
@@ -683,8 +671,6 @@ def NiceSearcher(request):
 
     def prepare_to_boolean(resultdic):
         list_of_lists=[[] for i in range(len(resultdic))]
-        print(list_of_lists)
-        print(resultdic)
         for keys in sorted(resultdic):
             list_of_lists[keys[0]]=([ keys[1],resultdic[keys] ])
         return list_of_lists
@@ -748,8 +734,6 @@ def NiceSearcher(request):
                     if comp.type==2 or comp.type==3:
                         rowlist.append(comp.id_complex_exp.id)
 
-        print(table_row,'  :  ',rowlist)
-
         return rowlist
        
 
@@ -782,9 +766,6 @@ def NiceSearcher(request):
             else:
                 rowdict[ (len(rowdict), arrays[counter][0]) ]= [ arrays[counter][2],arrays[counter][3],arrays[counter][4] ] #id,type,isligand/isreceptor
                 counter+=1
-
-        for ke in sorted(rowdict):
-            print(ke,'   :   ',rowdict[ke])
 
 
         results=dict()
@@ -823,30 +804,28 @@ def NiceSearcher(request):
         for csearch in c:
             for molfromcomp in DyndbMolecule.objects.filter(id_compound=csearch):
                 if molfromcomp.id not in a:
-                    a.appends(molfromcomp.id) #add to the user search the molecules corresponding to the entered compound.
+                    a.append(str(molfromcomp.id)) #add to the user search the molecules corresponding to the entered compound.
         #if the user has searched for the molecule corresponding to the compound, it should be enough.
         #hack the remeber list, to make the corresponding compounds appear in it, as if the user has included it by him/herself.
         for mol in a:
-            c.append(DyndbMolecule.objects.get(pk=mol).id_compound.id) 
+            c.append(str(DyndbMolecule.objects.get(pk=mol).id_compound.id)) 
 
 
         for exp_id in resultlist:
+
             for cmolecule in DyndbComplexMolecule.objects.filter(id_complex_exp=exp_id):
                 for molecule in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
-                    if molecule.id_molecule.id not in a:
+                    if str(molecule.id_molecule.id) not in a:
                          resultlist=resultlist.difference(set([exp_id])) #eliminate the exp_id which have more molecules than the user has demand.
             for cprotein in DyndbComplexProtein.objects.filter(id_complex_exp=exp_id):
                 b=[i[1] for i in rememberlist if i[0]=='protein']
-                if cprotein.id_protein.id not in b:
+                if str(cprotein.id_protein.id) not in b:
                     resultlist=resultlist.difference(set([exp_id]))
 
             for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=exp_id):
+                if str(ccomp.id_compound.id) not in c:
+                    resultlist=resultlist.difference(set([exp_id]))
 
-            #every molecule in this list has matched all conditions, otherwise resultlist will be empty
-            #because intersection step and we will not be inside this for loop.
-
-                if ccomp.id_compound.id not in c:
-                        resultlist=resultlist.difference(set([exp_id]))
 
     resultlist=list(resultlist)
     complex_list_names=list()
