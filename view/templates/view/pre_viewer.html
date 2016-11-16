@@ -1,0 +1,68 @@
+<head><style>
+.long input {
+ width:100%;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} 
+<form action="{% url 'accounts:login' %}" method="post">
+{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+            <h3 >Ex. page pre-viewer</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+<!--             <div style="text-align:center"> 
+             <h4 >FILL IN THE LOGIN FORM</h4>
+            </div> -->
+             <p style="text-align: justify;">Select the dyn you want to open.</p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pprotform"class="col-md-7 "> 
+  <div id="protform" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+
+<!-- modifica a partir de aqui -->
+<div style="margin:10px">
+  <div class=row > 
+        <ul>
+        {% for idn in dyn_ids %}
+            <li><a href="/view/{{ idn }}/" >Dyn {{ idn }}</a></li>
+        {% endfor %}
+        </ul>
+  </div>
+</div>
+<!-- hasta aqui -->
+
+
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}
