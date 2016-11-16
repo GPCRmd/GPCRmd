@@ -17,14 +17,26 @@ def modify_helix_num(seq_num, aa, num, helix_pos, exp, exp2, rel_to_50):
             seq_num[i]=(aa,new_gpcr_n)
 
 
+def gpcr_num_insertion(gpcr_n):
+    """Adds the +1 to the GPCR generic num when there is an insertion. 
+    Takes into account that the position previous to the insertion may also be an insertion"""
+    exp=re.compile("x")
+    (bw, gpcr)=exp.split(gpcr_n)
+    if len(gpcr) > 2:
+        new_gpcr= gpcr[:2]+str(int(gpcr[2]) +1)
+        final_num = bw + "x" + new_gpcr 
+    else:
+        final_num=gpcr_n+"1"
+    return final_num
+
+
 def obtain_gen_numbering(dyn_id):
-    """Given the id of the table dyndb_dynamics, obtains the generic numbering of the associated protein and returns a dict of sequence number-generic number plus the name of the used numbering scheme/method"""
-    model_id=DyndbModel.objects.get(dyndbdynamics=dyn_id).id
-    mod_res_li=DyndbModeledResidues.objects.filter(id_model=model_id)
-    dprot_id_set=set([e.id_protein for e in mod_res_li]) #I have to pass throuch the dyndb_modeled_residues table because for the moment the id_protein field of the table dyndb_model is empty, but otherwise we could pass directly from dyndb_model to dyndb_protein, and we wouldn't need the if-else.
+    """Given the id of the table dyndb_dynamics, obtains the generic numbering of the associated protein and returns a dict of residue position-generic number plus the name of the used numbering scheme/method and the sequence of the protein."""
+    mod_res_li=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics=dyn_id)
+    dprot_id_set=set([e.id_protein for e in mod_res_li]) #I have to pass through the dyndb_modeled_residues table because for the moment the id_protein field of the table dyndb_model is empty, but otherwise we could pass directly from dyndb_model to dyndb_protein, and we wouldn't need the if-else.
     if len(dprot_id_set) == 1:
         dprot_id=list(dprot_id_set)[0]
-        dprot_id = 2 # PROVA: aquesta està mutada - BORRAR AIXÒ
+        #dprot_id = 2 # PROVA: aquesta està mutada - BORRAR AIXÒ
         uniprot_id=DyndbProtein.objects.get(id=dprot_id).uniprotkbac
         prot_id=Protein.objects.get(accession=uniprot_id).id
         # Now, from the prot id, obtain the generic numbering. In the case of mutated prots, this will be modified
@@ -40,36 +52,32 @@ def obtain_gen_numbering(dyn_id):
                 seq_num.append(t)
         num_scheme=Protein.objects.get(pk=prot_id).residue_numbering_scheme.slug
         if DyndbProtein.objects.get(id=dprot_id).is_mutated:
-            print("MUTATED")
             mutations=DyndbProteinMutations.objects.filter(id_protein=dprot_id)
-            for mut in mutations:
+            for mut in sorted(mutations, key=lambda m: m.id):
                 res_position =mut.resid #rememper that in the sequence, the position is res -1
                 res_from = mut.resletter_from
                 res_to =  mut.resletter_to
 
                 #### Testing - REMOVE THIS
 
-                res_position =98
-                res_from = "V"
-                res_to =  "-"
+                #res_position =48
+                #res_from = "-"
+                #res_to =  "!"
 
                 ##########################
 
-                if res_from == "-": # Double insertion would be --, right? And therefore I would have to add .xx1 and .xx2, wouldn't I? Then I have to modify this to take into account this situation!!
-                    print("insertion")
+                if res_from == "-": # Would this work for double insertions?
                     gpcr_n = seq_num[res_position -2][1] 
                     if gpcr_n is None: # If it's None it means that it's outside of the helixes
                         seq_num.insert(res_position -1, (res_to, None))
                     else:
-                        print("Modifying gpcr num")
                         if "gpcr" in num_scheme: 
                             if "." in gpcr_n: #Format n.nn x nn
-                                exp=re.compile("x")
-                                (bw, gpcr)=exp.split(gpcr_n)
-                                gpcr = "x"+gpcr+"1"
-                                final_num=bw + gpcr
+                                final_num= gpcr_num_insertion(gpcr_n)
                                 seq_num.insert(res_position -1 , (res_to, final_num))
                                 #Now we need to modify the rest of bw num of the helix
+                                exp=re.compile("x")
+                                (bw, gpcr)=exp.split(gpcr_n)
                                 exp2=re.compile("\.")
                                 (helix_pos, bw_pos) = exp2.split(bw)
                                 if int(bw_pos) < 50:
@@ -79,14 +87,18 @@ def obtain_gen_numbering(dyn_id):
                                     for (aa, num) in seq_num[res_position-1:]:
                                         modify_helix_num(seq_num, aa, num, helix_pos, exp, exp2, "plus") 
                             else: #Format nxnn
-                                seq_num.insert(res_position -1 , (res_to, gpcr_n + "1"))
-                        # continue with other num systems??
+                                final_num= gpcr_num_insertion(gpcr_n)
+                                seq_num.insert(res_position -1 , (res_to, final_num))
+
+                        else:
+                            error = "Error: GPCR generic numbering cannot be used."
+                            return error                                
+                            # continue with other num systems?? I could do it with ballesteros!
                   
-                elif res_to == "-": # Also here I should consider the case of more than one residue deleted
-                    print("deletion") 
+                elif res_to == "-": # Would this work for double deletions?
                     if "gpcr" in num_scheme:
                         gpcr_n = seq_num[res_position -1][1]
-                        if gpcr_n is None or "." not in gpcr_n: # If it's not in an helix or the numbering doesn't include the BWi
+                        if gpcr_n is None or "." not in gpcr_n: # If it's not in an helix or the numbering doesn't include the BW
                             del seq_num[res_position -1]
                         else:
                             exp=re.compile("x")
@@ -100,21 +112,28 @@ def obtain_gen_numbering(dyn_id):
                                 for (aa, num) in seq_num[res_position:]:
                                     modify_helix_num(seq_num, aa, num, helix_pos, exp, exp2, "minus")
                             del seq_num[res_position -1]
+                    else:
+                        error = "Error: GPCR generic numbering cannot be used."
+                        return error                              
+                        # continue with other num systems?? I could do it with ballesteros!
 
                 else: #SNP - Does not affect GPCR num
                     gpcr_n = seq_num[res_position -1][1] 
                     seq_num[res_position -1] = (res_to, gpcr_n)
 
-        else: # If the prot don't have mutations (seq = canonical seq)            
-            print("NOT MUTATED")
-
         numbers_final = {}
+        seq_final=""
         i=1
         for e in seq_num:
             numbers_final[i] = e
+            seq_final += e[0]
             i+=1
-        for e in numbers_final:
-            print(e," - ", numbers_final[e])
-        return (numbers_final, num_scheme)
+        seq_db= DyndbProteinSequence.objects.get(id_protein=dprot_id).sequence
+        if seq_final == seq_db:
+            return (numbers_final, num_scheme, seq_db)
+        else:
+            error = "Error: GPCR generic numbering cannot be used."
+            return error
     else:
-        pass #RAISE ERROR
+        error = "Error: GPCR generic numbering cannot be used."
+        return error
