@@ -5,14 +5,14 @@ import sys
 from .customized_errors import ParsingError,MultipleMoleculesinSDF,InvalidMoleculeFileExtension
 from django.conf import settings
 from subprocess import Popen, PIPE
-from rdkit import Chem
-from rdkit.Chem import rdinchi 
-from rdkit import rdBase
-from rdkit.Chem import Draw
+from rdkit.Chem import ForwardSDMolSupplier, AssignAtomChiralTagsFromStructure, MolToSmiles, InchiToInchiKey, GetFormalCharge, RemoveHs, MolFromInchi, MolFromSmiles, SDWriter
+from rdkit.Chem import MolFromInchi, AddHs, EditableMol, SanitizeMol
+from rdkit.Chem.rdinchi import MolToInchi
+from rdkit.rdBase import EnableLog
 from rdkit.Chem.Draw.MolDrawing import DrawingOptions
 from rdkit.Chem import rdForceFieldHelpers
 from rdkit.Chem import rdDistGeom
-from rdkit.Chem import Draw
+from rdkit.Chem.Draw import MolToFile, PrepareMolForDrawing
 from rdkit.Chem.Draw.MolDrawing import DrawingOptions
 from contextlib import contextmanager
 from rdkit import RDLogger 
@@ -28,11 +28,11 @@ MOLECULE_EXTENSION_TYPES = {'sdf':'sdf','sd':'sdf','mol':'mol'}
 
 inchiheaderre = re.compile(r'InChI=')
 
-rdBase.EnableLog('rdApp.debbug')
-rdBase.EnableLog('rdApp.info')
-rdBase.EnableLog('rdApp.warning')
-rdBase.EnableLog('rdApp.error')
-rdBase.EnableLog('rdApp.critical')
+EnableLog('rdApp.debbug')
+EnableLog('rdApp.info')
+EnableLog('rdApp.warning')
+EnableLog('rdApp.error')
+EnableLog('rdApp.critical')
 
 
 
@@ -71,7 +71,7 @@ def stdout_redirected(to=os.devnull, stdout=None):
 
 
 
-def open_molecule_file(uploadedfile,logfile):
+def open_molecule_file(uploadedfile,logfile=os.devnull):
     
     #charset = 'utf-8'
     #if "charset" in uploadedfile and uploadedfile.charset is not None:
@@ -94,7 +94,7 @@ def open_molecule_file(uploadedfile,logfile):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             print('Loading molecule...')
             if filetype == 'sdf' or filetype == 'mol':
-                suppl = Chem.ForwardSDMolSupplier(uploadedfile,removeHs=False)
+                suppl = ForwardSDMolSupplier(uploadedfile,removeHs=False)
                 mol = next(suppl)
                 try:
                     next(suppl)
@@ -112,18 +112,17 @@ def open_molecule_file(uploadedfile,logfile):
                     else:
                         raise ParsingError("Invalid MDL Mol file.")
             print('Assigning chirality from struture...')
-            Chem.AssignAtomChiralTagsFromStructure(mol,replaceExistingTags=False)
+            AssignAtomChiralTagsFromStructure(mol,replaceExistingTags=False)
             print('Finished loading molecule.')
 
     return mol
 def generate_inchi(mol, FixedH=False, RecMet=False):
-    logger = RDLogger.logger()
     options = "-DoNotAddH"
     if FixedH:
         options += " -FixedH"
     if RecMet:
         options += " -RecMet"
-    inchi,code,msg,log,aux = rdinchi.MolToInchi(mol,options=options)
+    inchi,code,msg,log,aux = MolToInchi(mol,options=options)
     
     if code == 0:
         msg = ''
@@ -165,44 +164,89 @@ def cannonicalize_smiles_openbabel(smiles,obabelcmd = "/usr/bin/obabel"):
     smi = wspc.sub("",smi)
     return (smi,smierr)
 
-def generate_smiles(mol,logfile):
+def generate_smiles(mol,logfile=os.devnull):
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
-            smi = Chem.MolToSmiles(mol,isomericSmiles=True,canonical=False)
+            smi = MolToSmiles(mol,isomericSmiles=True,canonical=False)
     smi,smierr = cannonicalize_smiles_openbabel(smi)
-    print(smierr,file=logfile)
+    if isinstance(logfile,str):
+        with open(logfile, 'a') as to_file:
+            print(smierr,file=to_file)
+    else:
+        print(smierr,file=logfile)
+        
     return smi
                                           
 def generate_inchikey(inchi):
-    return Chem.InchiToInchiKey(inchi)
+    return InchiToInchiKey(inchi)
 
 def get_net_charge(mol):
-    return Chem.GetFormalCharge(mol)
+    return GetFormalCharge(mol)
     
     
 def get_charge_from_inchi(inchi,removeHs=False):
-    mol = Chem.MolFromInchi(inchi)
-    netc = Chem.GetFormalCharge(mol)
+    mol = MolFromInchi(inchi,removeHs=removeHs)
+    netc = GetFormalCharge(mol)
+    del mol
     return netc
 
-def generate_png(mol,pngpath,logfile,size=300):
+def generate_png(mol,pngpath,logfile=os.devnull,size=300):
     with stdout_redirected(to=sys.stdout,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
-            nhmol = Chem.RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
+            nhmol = RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
             op = DrawingOptions()
             op.atomLabelFontSize = size/25
-            Draw.MolToFile(Draw.PrepareMolForDrawing(nhmol,forceCoords=True,addChiralHs=True),\
+            MolToFile(PrepareMolForDrawing(nhmol,forceCoords=True,addChiralHs=True),\
                 pngpath,fitImage=True,size=(size, size),options=op)
 
+def neutralize_inchi(inchi):
+    pmid = re.compile(r'/p([^/]*?)/')
+    pend = re.compile(r'/p([^/]*?)$')
+    
+    m = pmid.search(inchi)
+    if m:
+        newinchi = inchi
+        newinchi = pmid.sub('/',newinchi)
+    else:
+        m = pend.search(inchi)
+        if m:
+            newinchi = inchi + '/'
+            newinchi = pmid.sub('',newinchi)
+        else:
+            return inchi
+    return newinchi
+    
+def neutralize_inchikey(inchikey):
+    return inchikey[:-1]+'N'
+    
+def validate_inchikey(inchikey):
+    inchikeyre = re.compile(r'^[A-Z]{14}[-][A-Z]{10}[-][A-Z]$')
+    return bool(inchikeyre.search(inchikey))
+    
+def standarize_mol_by_inchi(mol,neutralize=True):
+    newmol = AddHs(mol)
+    sinchi,code,msg = generate_inchi(newmol, FixedH=False, RecMet=False)
+    if neutralize:
+        nsinchi = neutralize_inchi(sinchi)
+    else:
+        nsinchi = sinchi
+    newmol = MolFromInchi(nsinchi,removeHs=False)
+    newmol = AddHs(newmol,explicitOnly=True)
+    return newmol
+def compare_eq_inchi_without_protonation(inchi1,inchi2):
+    return bool(neutralize_inchi(inchi1) == neutralize_inchi(inchi2))
+    
+def compare_eq_inchikey_without_protonation(inchikey1,inchikey2):
+    return bool(neutralize_inchikey(inchikey1) == neutralize_inchikey(inchikey2))
 
 def write_sdf(mol,path):
-    writer = Chem.SDWriter(path)
+    writer = SDWriter(path)
     writer.write(mol)
     writer.close()
 
 def get_charge_from_smiles(smi):
-    mol = Chem.MolFromSmiles(smi)
-    netc = Chem.GetFormalCharge(mol)
+    mol = MolFromSmiles(smi)
+    netc = GetFormalCharge(mol)
     return netc
 
 def check_implicit_hydrogens(mol):
@@ -218,12 +262,13 @@ def check_non_accepted_bond_orders(mol):
     return False
     
 
-def standarize_inchi(inchi):
+def remove_inchi_non_standard_layers(inchi,fake_standard=False):
     ver1 = re.compile(r'^1/')
     fix = re.compile(r'/f.*$')
     rec = re.compile(r'/r.*$')
     sinchi = inchiheaderre.sub('', inchi)
-    sinchi = ver1.sub('1S/', inchi)
+    if fake_standard:
+        sinchi = ver1.sub('1S/', inchi)
     sinchi = fix.sub('', sinchi)
     sinchi = rec.sub('', sinchi)
     return sinchi
@@ -249,80 +294,11 @@ def convertimplicttosdf(imol,sdffile):
 
     return (imol,msg)
 
-    
+def remove_isotopes(mol,sanitize=True):
+    edmol = EditableMol(mol)
+    for atom in mol.GetAtoms():
+        atom.SetIsotope(0)
+        if sanitize:
+            SanitizeMol(mol)
 
-
-
-
-
-#ext = ext.lower()
-#ext = ext.strip('.')
-#sinchierr=None
-#inchierr=None
-#smierr=None
-#pngerr=None
-#netcerr=None
-#wspc = re.compile(r'\s+')
-
-    #Chem.AssignAtomChiralTagsFromStructure(mol,replaceExistingTags=False)
-    #print('Implicit hydrogens:')
-    #print(check_implicit_hydrogens(mol))
-    
-    #nhmol = Chem.RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
-    
-    #print('Standard InChI generation:')
-    #sinchi,code,msg,log,aux = rdinchi.MolToInchi(mol,options='-DoNotAddH')
-    #if code == 0:
-        #print(sinchi)
-    #if code == 1:
-        #print(sinchi)
-        #print(msg)
-    #else:
-        #print(msg)
-    #print('InChI generation:')
-    #inchi,code,msg,log,aux = rdinchi.MolToInchi(mol,options='-FixedH -DoNotAddH')
-    #if code == 0:
-        #print(inchi)
-    #if code == 1:
-        #print(inchi)
-        #print(msg)
-    #else:
-        #print(msg)
-    
-    #print('SMILES generation:')
-    #smi = Chem.MolToSmiles(mol,isomericSmiles=True,canonical=False)
-    #print(smi)
-    #smi2,smierr= cannonicalize_smiles_openbabel(smi,obabelcmd)
-    #print(smi2)
-    
-    #print('PNG generation:')
-    #size = 300
-    #op = DrawingOptions()
-    #op.atomLabelFontSize = size/25
-    #Draw.MolToFile(Draw.PrepareMolForDrawing(nhmol,forceCoords=True,addChiralHs=True), os.path.join(pngpath,"CLZ.png"),fitImage=True,size=(size, size),options=op)
-    #print('Net charge:')
-    #netc=Chem.GetFormalCharge(mol)
-    #print(netc)
-    #sinchikey = Chem.InchiToInchiKey(sinchi)
-    #print("Standard keyed InChI:")
-    #print(sinchikey)
-    #inchikey = Chem.InchiToInchiKey(inchi)
-    #print("Keyed InChI:")
-    #print(inchikey)
-    #sinchi2 = standarize_inchi(inchi)
-    #print('InChI standaritzation:')
-    #print(sinchi2)
-    #print("Net charge from InChI")
-    #netc = get_charge_from_inchi(inchi)
-    #print(netc)
-    #print("Net charge from smiles")
-    #netc = get_charge_from_smiles(smi)
-    #print(netc)
-    
-    #suppl = Chem.SDMolSupplier('../test/ferrocene.sdf',removeHs=False)
-    #imol = next(suppl)
-    #convertimplicttosdf(imol,'../test/ferrocene3.sdf')
-
-    
-    
         
