@@ -1209,13 +1209,22 @@ def MODELreuseREQUESTview(request):
                 request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
             print(request.POST['Choose_reused_model'])
         else:
-            a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
-            if request.POST['Choose_reused_model'] != a:
-                print("MIRA",a, request.POST['Choose_reused_model'])
-
-                request.POST['Choose_reused_model']=a
+            if request.POST['Choose_submission_id']== '':
+                qS=DyndbSubmissionModel.objects.filter(model_id=request.POST['Choose_reused_model']).values_list('submission_id',flat=True)[0]
+                request.POST['Choose_submission_id']=qS
                 submission_id=str(request.POST['Choose_submission_id'])
                 model_id=str(request.POST['Choose_reused_model'])
+                return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
+           
+            else:
+                a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
+                print(a, type(a))
+                if request.POST['Choose_reused_model'] != a:
+                    print("MIRA",a, request.POST['Choose_reused_model'])
+                    request.POST['Choose_reused_model']=a
+                submission_id=str(request.POST['Choose_submission_id'])
+                model_id=str(request.POST['Choose_reused_model'])
+                #return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
                 return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
 
 
@@ -1445,8 +1454,16 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
             lcompname.append(qName)
             l_ord_mol.append(d)
 
+    dd=dyndb_Dynamics()
+    ddC =dyndb_Dynamics_Components()
+    qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
+    qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
+    qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
+    qAT =DyndbAssayTypes.objects.all().order_by('id')
+
+
 #    return HttpResponse(qDS.values_list()[0])
-    return render(request,'dynadb/DYNAMICSreuse.html', {'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
+    return render(request,'dynadb/DYNAMICSreuse.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
 
 def MODELview(request, submission_id):
     # Function for saving files

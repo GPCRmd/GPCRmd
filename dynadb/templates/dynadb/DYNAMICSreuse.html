@@ -40,6 +40,46 @@
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-lg-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+<!-- 			<div style="text-align:center">
+            			<h4><br>Select Complex</h4><br>    
+             			<h4><br>Complex Information</h4><br>
+            		</div>   -->
+
+ 			<div style="text-align:center">
+<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
+             			<h4><br>Complex Information</h4><br>
+<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
+            		</div>
+                <div class="row">
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
+	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
+	        <div class="row">
+			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+			    <div class="row">
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
+				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
+                            </div>{% if message|length > 0 %}  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>{% endif %}
+			    <div class="row">
+			<!--	<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
+
+			        <div class="col-md-8"><input style="width:130px" id="Choose_submission_id" value="{{submission_id}}" name="Choose_submission_id" rows="1" readonly ></input></div> -->
+		            </div><br>
+                            </div>
+				
+		<br>
+		</div></div> 
+		</div></div></div>
 <div id="pdynform"class="col-md-7 "> 
   <div id="dynform" class="col-md-12 panel panel-primary"> 
     <div class="panel-body">
@@ -54,8 +94,11 @@
 
 		<div class="row">
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
-			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px" readonly>
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px" >
 		        	<option value="{{qDS.values.0.id_dynamics_methods}}">{{ddown.id_dynamics_methods}}</option>
+                                      {% for i in qDMeth.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
 		 <!--       	<option value="1">Molecular Mechanics (MM)               </option>
 		        	<option value="2">Quantum Mechanics/Molecular Mechanics </option>
 		        	<option value="3">NMR                           </option>
@@ -70,29 +113,32 @@
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" value=" {{qDS.values.0.software}}" readonly /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" value=" {{qDS.values.0.software}}" /></td></tr></div>
 		<br></div>	
 
 	        <div class="row">
 	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_sversion"> <a title="Software version: Version of the software used to compute the simulations."> Software version: </a></label></th></div>
-			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p" value=" {{qDS.values.0.sversion}}" readonly  /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p" value=" {{qDS.values.0.sversion}}"   /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" value=" {{qDS.values.0.ff}}" readonly  /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" value=" {{qDS.values.0.ff}}"  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
 	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
-			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  value=" {{qDS.values.0.ffversion}}" readonly/></td></tr></div>
+			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  value=" {{qDS.values.0.ffversion}}" /></td></tr></div>
 		<br></div>
 
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"  readonly > 
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"   > 
 		        	<option value="{{qDS.values.0.id_assay_types}}">{{ddown.id_assay_types}}</option>
+                                      {% for i in qAT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
 			  <!--      <option value="1">Orthosteric binding/unbinding</option>
 			        <option value="2">Activation/Inactivation/Modulation</option>
 			        <option value="3">Oligomerization</option>
@@ -107,8 +153,11 @@
 
 	        <div class="row">
 	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px" readonly ><br>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px" ><br>
 		        	<option value="{{qDS.values.0.id_dynamics_membrane_types}}">{{ddown.id_dynamics_membrane_types}}</option>
+                                      {% for i in qDMT.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
 <!--        			<option value="1">Implicit</option>
 			        <option value="2">Homogeneous</option>
 			        <option value="3">Heterogeneous</option> -->
@@ -117,8 +166,11 @@
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. "> Solvent type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" readonly style="width:300px"  readonly >
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px"  >
                                 <option value="{{qDS.values.0.id_dynamics_solvent_types}}">{{ddown.id_dynamics_solvent_types}}</option>
+                                      {% for i in qDST.values %}
+                                        <option value="{{i.id}}"> {{i.type_name}}</option>
+                                      {% endfor %}
 			  <!--      <option value="1">Implicit</option>
 		        	<option value="2">TIP3P</option>
 			        <option value="3">TIP4P</option>
@@ -131,12 +183,12 @@
 
 	        <div class="row">
         		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" style="width:300px"  readonly value={{qDS.values.0.solvent_num}} /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_solvent_num" name="solvent_num" type="number" style="width:300px"   value={{qDS.values.0.solvent_num}} /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
 	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
-			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" readonly > {{qDS.values.0.description}}</textarea></div>
+			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" > {{qDS.values.0.description}}</textarea></div>
 		<br></div><br>
 
 
@@ -200,17 +252,20 @@
 
                                 <tbody id="pElement1-0">
                                         {% for i in compl.0 %}
-                                        <tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" readonly value="{{i.resname}}" type="text" /></td>
+                                        <tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname"  value="{{i.resname}}" type="text" /></td>
                                         {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" value="{{d}}" readonly type="text"/></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" value="{{d}}"  type="text"/></td>
 					{%endif%}{%endfor%}
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" type="text" readonly  value="{{i.id_molecule_id}}" name="id_molecule">
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" type="text"   value="{{i.id_molecule_id}}" name="id_molecule">
 						</select></td>
                                         {% for name in lcompname %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" readonly style="width:70px" value="{{name}}"/></td>{%endif%}{%endfor%}
-					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" readonly style="width:70px"  value="{{i.numberofmol}}" /></td>
-					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" readonly style="width:60px">
+					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text"  style="width:70px" value="{{name}}"/></td>{%endif%}{%endfor%}
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number"  style="width:70px"  value="{{i.numberofmol}}" /></td>
+					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type"  style="width:60px">
 						<option value="{{i.type}}">{% for type in dctypel %}{% if forloop.counter == forloop.parentloop.counter %}{{type}}{%endif%}{%endfor%}</option>
+                                      {% for i in ddC.Meta.model.MOLECULE_TYPE %}
+                                        <option value="{{i.0}}"> {{i.1}}</option>
+                                      {% endfor %}
 						</select></td></tr> {%endfor%}
 				</tbody>
 			</table>
