@@ -19,12 +19,14 @@ import requests
 import math
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V
-from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension,DownloadGenericError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
 from .uploadhandlers import TemporaryFileUploadHandlerMaxSize,TemporaryMoleculeFileUploadHandlerMaxSize
-from .molecule_properties_tools import open_molecule_file, check_implicit_hydrogens, check_non_accepted_bond_orders, generate_inchi, generate_inchikey, generate_smiles, get_net_charge, write_sdf, generate_png, stdout_redirected
+from .molecule_properties_tools import open_molecule_file, check_implicit_hydrogens, check_non_accepted_bond_orders, generate_inchi, generate_inchikey, generate_smiles, get_net_charge, write_sdf, generate_png, stdout_redirected, neutralize_inchikey, standarize_mol_by_inchi,validate_inchikey,remove_isotopes
+from rdkit.Chem import MolFromInchi,MolFromSmiles
+from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein
@@ -36,6 +38,7 @@ from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertF
 from .pipe4_6_0 import *
 from time import sleep
 from random import randint
+
 
 # Create your views here.
 
@@ -1994,16 +1997,14 @@ def generate_molecule_properties(request,submission_id):
 
 @csrf_protect
 def _generate_molecule_properties(request,submission_id):
-  url_prefix = "/dynadb/"
-  moleculepath = 'Molecule'
   pngsize = 300
   RecMet = False
   formre = re.compile('^form-(\d+)-')
-  submission_folder = os.path.join(moleculepath,'mol'+str(submission_id))
+  
              
   if request.method == 'POST':
-    
-
+    submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+    submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
     data = dict()
     data['download_url_log'] = None
     if 'molpostkey' in request.POST.keys():
@@ -2013,8 +2014,6 @@ def _generate_molecule_properties(request,submission_id):
             pngsize = int(request.POST["pngsize"])
         molpostkey = request.POST["molpostkey"]
         
-
-        
         if molpostkey in request.FILES.keys():
             m = formre.search(molpostkey)
             if m:
@@ -2022,12 +2021,30 @@ def _generate_molecule_properties(request,submission_id):
             else:
                 molid = 0
             uploadfile = request.FILES[molpostkey]
-            os.makedirs(os.path.join(settings.MEDIA_ROOT,submission_folder),exist_ok=True) 
-            molname = 'tmp_mol_'+str(molid)+'_'+str(submission_id)
-            logpath = os.path.join(submission_folder, molname+'.log')
-            logfile = open(os.path.join(settings.MEDIA_ROOT,logpath),'w')
-            
-            data['download_url_log'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),logpath)
+            os.makedirs(submission_path,exist_ok=True)
+            logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
+            sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+            pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+            sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+            pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngnameref))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,sdfnameref))
+            except:
+                pass
+            logfile = open(os.path.join(submission_path,logname),'w')
+            data['download_url_log'] = join_path(submission_url,logname,url=True)
             try:
                 mol = open_molecule_file(uploadfile,logfile)
             except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
@@ -2088,24 +2105,40 @@ def _generate_molecule_properties(request,submission_id):
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
                 
             data['charge'] = get_net_charge(mol)
-            mol.SetProp("_Name",molname)
-            sdfpath = os.path.join(submission_folder, molname+'.sdf')
-            write_sdf(mol,os.path.join(settings.MEDIA_ROOT,sdfpath))
-            data['download_url_sdf'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),sdfpath)
-            pngpath = os.path.join(submission_folder,molname+'_'+str(pngsize)+'.png')
+            
+            try:
+                mol.SetProp("_Name",sdfname)
+                write_sdf(mol,os.path.join(submission_path,sdfname))
+                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+
+            except:
+                try:
+                    os.remove(os.path.join(submission_path,sdfname))
+                except:
+                    pass
+                msg = 'Error while storing SDF file.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
             print('Drawing molecule...',file=logfile)
             try:
-                generate_png(mol,os.path.join(settings.MEDIA_ROOT,pngpath),logfile,size=pngsize)
+                generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
             except:
+                try:
+                    os.remove(os.path.join(submission_path,sdfname))
+                except:
+                    pass
+                try:
+                    os.remove(os.path.join(submission_path,pngname))
+                except:
+                    pass
                 msg = 'Error while drawing molecule.'
                 print(msg,file=logfile)
                 logfile.close()
                 data['msg'] = msg+' Please, see log file.'
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            print(url_prefix)
-            print(os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath))
-
-            data['download_url_png'] = os.path.join(url_prefix,settings.MEDIA_URL.replace('/', '',1),pngpath)
+            data['download_url_png'] = join_path(submission_url,pngname,url=True)
             print('Finished with molecule.',file=logfile)
             logfile.close()
             del mol
@@ -2127,7 +2160,364 @@ def _generate_molecule_properties(request,submission_id):
         data['msg'] = 'No file was selected or cannot find molecule file reference.'
         return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
 
+def get_compound_info_pubchem(request,submission_id):
+    pngsize=300
+    search_by='inchi'
+    retrieve_type='parent'
+    
+    
+    if request.method == 'POST':
+        submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
+        data = dict()
+        errdata = dict()
+        if 'molid' in request.POST.keys():
+            molid = request.POST['molid']
+        else:
+            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        os.makedirs(submission_path,exist_ok=True)
+        pngname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+        sdfname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+        try:
+            os.remove(os.path.join(submission_path,sdfname))
+        except:
+            pass
+        try:
+            os.remove(os.path.join(submission_path,pngname))
+        except:
+            pass
+        if 'update_from_id' in request.POST.keys():
+            update_from_id = True
+            cids = [int(request.POST['update_from_id'])]
+        else:
+            update_from_id = False
+            if 'search_by' in request.POST.keys():
+                search_by = request.POST['search_by']
+            if 'retrieve_type' in request.POST.keys():
+                retrieve_type = request.POST['retrieve_type']
+                if retrieve_type not in CIDS_TYPES:
+                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+            neutralize = False
+            if 'neutralize' in request.POST.keys():
+                neutralize = True
+            if 'inchi' in request.POST.keys() and (search_by == 'sinchi' or search_by == 'sinchikeynoiso'):
+                inchi = request.POST['inchi']
+                mol = MolFromInchi(inchi,removeHs=False)
+                if mol is None:
+                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                remove_isotopes(mol)
+                mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
+                sinchi,code,msg = generate_inchi(mol, FixedH=False, RecMet=False)
+                del mol
+                if search_by == 'sinchi':
+                    search_value = sinchi
+                    search_property = 'inchi'
+                elif search_by == 'sinchikeynoiso':
+                    search_value = generate_inchikey(sinchi)
+                    search_property = 'inchikey'
+                
+                
+            
+                
+            elif 'sinchikey' in request.POST.keys() and search_by == 'sinchikey':
+                sinchikey = request.POST['sinchikey']
+                if not validate_inchikey(sinchikey):
+                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                
+                if neutralize:
+                    nsinchikey = neutralize_inchikey(sinchikey)
+                else:
+                    nsinchikey = sinchikey
+                search_value = nsinchikey
+                search_property = 'inchikey'
+                
+            elif 'smiles' in request.POST.keys() and search_by == 'smiles': 
+                smiles = request.POST['smiles']
+                mol = MolFromSmiles(smiles,sanitize=True)
+                
+                if mol is None or smiles == '':
+                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                remove_isotopes(mol)
+                if neutralize:
+                    mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
+                smiles =  generate_smiles(mol)
+                del mol
+                search_value = smiles
+                search_property = 'smiles'        
 
+            else:
+                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            
+        data['pubchem_cid'] = None
+        data['chembl_id'] = None
+        data['name'] = None
+        data['iupac_name'] = None
+        data['synonyms'] = None
+        data['download_url_sdf'] = None
+        data['download_url_png'] = None
+        
+        
+        try:
+            
+            if not update_from_id:
+            
+                datapubchem,errdata = retreive_compound_data_pubchem_post_json(search_property,search_value,operation='cids',extras={'cids_type':retrieve_type})
+                #datapubchem["IdentifierList"]["CID"] = [0]
+                if 'Error' in errdata.keys():    
+                    raise DownloadGenericError(errdata['reason'])
+                elif datapubchem["IdentifierList"]["CID"] == [0]:
+                    datapubchem = None
+                    errdata['Error'] = True
+                    errdata['ErrorType'] = 'HTTPError'
+                    errdata['status_code'] = 404
+                    errdata['reason'] = 'Not found.'
+                    raise DownloadGenericError(errdata['reason'])
+                
+                cids = datapubchem["IdentifierList"]["CID"]   
+            data['pubchem_cid'] = cids
+            
+            if len(cids) == 1:
+                time.sleep(5)
+                datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='property',outputproperty='IUPACName')
+                if 'Error' in errdata.keys():
+                    raise DownloadGenericError(errdata['reason'])
+                data['iupac_name'] = datapubchem["PropertyTable"]["Properties"][0]["IUPACName"]
+
+                time.sleep(5)
+                datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='synonyms')
+                if 'Error' in errdata.keys():
+                    raise DownloadGenericError(errdata['reason'])
+                lastidx = len(datapubchem["InformationList"]["Information"][0]["Synonym"])
+                if (lastidx > 51):
+                    lastidx = 51
+                data['synonyms'] = ';'.join(datapubchem["InformationList"]["Information"][0]["Synonym"][1:lastidx])
+                data['name'] = datapubchem["InformationList"]["Information"][0]["Synonym"][0]
+                del datapubchem
+
+                time.sleep(5)
+                
+                datapubchem,errdata = retreive_compound_sdf_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,sdfname),in3D=True)
+                if 'Error' in errdata.keys():
+                    if errdata['ErrorType'] == 'HTTPError' and (errdata['status_code'] == 404 or errdata['status_code'] == 410):
+                        time.sleep(5)
+                        datapubchem,errdata = retreive_compound_sdf_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,sdfname),in3D=False)
+                        if 'Error' in errdata.keys():
+                            raise DownloadGenericError(errdata['reason'])
+                    else:
+                        raise DownloadGenericError(errdata['reason'])
+                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+
+                time.sleep(5)
+                
+                datapubchem,errdata = retreive_compound_png_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,pngname),width=pngsize,height=pngsize)
+                if 'Error' in errdata.keys():
+                    raise DownloadGenericError(errdata['reason'])
+                data['download_url_png'] = join_path(submission_url,pngname,url=True)
+                return JsonResponse(data,safe=False)
+            elif len(cids) > 1:
+                    return JsonResponse(data,safe=False)
+        except DownloadGenericError:
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
+            return pubchem_errdata_2_response(errdata,data=datapubchem)
+        except:
+            raise
+        
+def get_compound_info_chembl(request,submission_id):
+    pngsize=300
+    search_by='inchi'
+    retrieve_type='parent'
+    id_only=False
+    similarity = 100
+    min_similarity = 70
+    max_similarity = 100
+    if request.method == 'POST':
+        submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
+        data = dict()
+        errdata = dict()
+        if 'molid' in request.POST.keys():
+            molid = request.POST['molid']
+        else:
+            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        os.makedirs(submission_path,exist_ok=True)
+        pngname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+        sdfname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+        try:
+            os.remove(os.path.join(submission_path,sdfname))
+        except:
+            pass
+        try:
+            os.remove(os.path.join(submission_path,pngname))
+        except:
+            pass
+        
+        if 'update_from_id' in request.POST.keys():
+            update_from_id = True
+            cids = [int(request.POST['update_from_id'])]
+        else:
+            update_from_id = False
+            if 'id_only' in request.POST.keys():
+                id_only = True
+            if 'search_by' in request.POST.keys():
+                search_by = request.POST['search_by']
+            if 'similarity' in request.POST.keys():
+                try:
+                    similarity = int(request.POST['similarity'])
+                except ValueError:
+                    return HttpResponse("'similarity' filed with invalid value.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                except:
+                    raise
+                if similarity > max_similarity:
+                    return HttpResponse("Maximum similarity is "+str(max_similarity)+"% .",status=422,reason='Unprocessable Entity',content_type='text/plain')
+
+                elif similarity < min_similarity:
+                    return HttpResponse("Minimal allowed similarity is "+str(min_similarity)+"% ."+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+
+            if 'retrieve_type' in request.POST.keys():
+                retrieve_type = request.POST['retrieve_type']
+                if retrieve_type not in CIDS_TYPES:
+                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+            neutralize = False
+            if 'neutralize' in request.POST.keys():
+                neutralize = True
+            if 'inchi' in request.POST.keys() and (search_by == 'sinchi' or search_by == 'sinchikeynoiso'):
+                inchi = request.POST['inchi']
+                mol = MolFromInchi(inchi,removeHs=False)
+                if mol is None:
+                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                remove_isotopes(mol)
+                mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
+                sinchi,code,msg = generate_inchi(mol, FixedH=False, RecMet=False)
+                del mol
+                search_value = generate_inchikey(sinchi)
+                search_property = 'inchikey'
+                
+            elif 'sinchikey' in request.POST.keys() and search_by == 'sinchikey':
+                sinchikey = request.POST['sinchikey']
+                if not validate_inchikey(sinchikey):
+                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                
+                if neutralize:
+                    nsinchikey = neutralize_inchikey(sinchikey)
+                else:
+                    nsinchikey = sinchikey
+                search_value = nsinchikey
+                search_property = 'inchikey'
+                
+            elif 'smiles' in request.POST.keys() and search_by == 'smiles': 
+                smiles = request.POST['smiles']
+                mol = MolFromSmiles(smiles,sanitize=True)
+                remove_isotopes(mol)
+                if mol is None or smiles == '':
+                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                if neutralize:
+                    mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
+                    smiles =  generate_smiles(mol)
+                del mol
+                search_value = smiles
+                search_property = 'smiles'        
+
+            else:
+                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            
+        data['chembl_id'] = None
+        data['name'] = None
+        data['synonyms'] = None
+        data['download_url_sdf'] = None
+        data['download_url_png'] = None
+        
+        
+        try:
+            
+            if not update_from_id:
+            
+                datachembl,errdata = retreive_molecule_chembl_similarity_json(search_value,similarity=similarity)
+                if 'Error' in errdata.keys():    
+                    raise DownloadGenericError(errdata['reason'])
+                try:
+                    cids = get_chembl_molecule_ids(datachembl,parents=bool(retrieve_type == 'parent'))
+                except ParsingError as e:
+                    return HttpResponse('Problem downloading from ChEMBL:'\
+                    +'\n'+e.msg,status=502,content_type='text/plain')
+            data['chembl_id'] = cids
+            
+            if len(cids) < 2 and not id_only:
+                time.sleep(5)
+                datachembl,errdata = retreive_molecule_chembl_id_json('CHEMBL'+str(cids[0]))
+                if 'Error' in errdata.keys():    
+                        raise DownloadGenericError(errdata['reason'])
+
+                try:
+                    print(datachembl)
+                    prefname,aliases = get_chembl_prefname_synonyms(datachembl)
+                except ParsingError as e:
+                    return HttpResponse('Problem downloading from ChEMBL:'\
+                    +'\n'+e.msg,status=502,content_type='text/plain')
+                lastidx = len(aliases)
+                if lastidx > 50:
+                    lastidx = 50
+                data['synonyms'] = ';'.join(aliases[0:lastidx])
+                data['name'] = prefname
+                del datachembl
+
+         
+
+                time.sleep(5)
+                
+                datachembl,errdata = retreive_compound_png_chembl('CHEMBL'+str(cids[0]),outputfile=os.path.join(submission_path,pngname),dimensions=pngsize)
+                if 'Error' in errdata.keys():
+                    raise DownloadGenericError(errdata['reason'])
+                data['download_url_png'] = join_path(submission_url,pngname,url=True)
+                return JsonResponse(data,safe=False)
+            else:
+                return JsonResponse(data,safe=False)
+        except DownloadGenericError:
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
+            return chembl_errdata_2_response(errdata,data=datachembl)
+        except:
+            raise  
+            
+def open_pubchem(request):
+    if request.method == 'POST':
+        if 'cids' in request.POST.keys():
+            cids = request.POST['cids'].split(',')
+            query = ''
+            for cid in cids:
+                query += str(cid)+'[CompoundID] OR '
+            query = query[:query.rfind(' OR ')]
+            return render(request,'dynadb/open_pubchem.html',{'query':query,'action':'https://www.ncbi.nlm.nih.gov/pccompound/'})
+            
+def open_chembl(request):
+    chembl_root_url = 'https://www.ebi.ac.uk/chembl'
+    chembl_index_php = chembl_root_url+'/index.php'
+    chembl_submission_url = chembl_root_url + '/compound/ids'
+    field_name = 'compound_list'
+    if request.method == 'POST':
+        if 'cids' in request.POST.keys():
+            data = dict()
+            cids = request.POST['cids'].split(',')
+            querylines = ['CHEMBL'+str(cid) for cid in cids]
+            query = '\n'.join(querylines)
+            data[field_name] = query
+            chembl_results_url_no_domain, errdata = chembl_get_compound_id_query_result_url(data,chembl_submission_url=chembl_submission_url)
+            chembl_results_url = chembl_index_php + chembl_results_url_no_domain
+            return render(request,'dynadb/open_chembl.html',{'query':query,\
+            'action':chembl_submission_url,'chembl_root_url':chembl_root_url,'chembl_results_url':chembl_results_url,'field_name':field_name})
+            
 def SMALL_MOLECULEview(request, submission_id):
 
     def handle_uploaded_file(f,p,name):
@@ -4122,6 +4512,159 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
+def get_file_paths(objecttype,url=False,submission_id=None):
+    url_prefix = "/dynadb/"
+    filepathdict = dict()
+    #define objects
+    filepathdict['molecule'] = dict()
+    filepathdict['model'] = dict()
+    filepathdict['dynamics'] = dict()
+    #define main folders
+    filepathdict['molecule']['main'] = "Molecule"
+    filepathdict['model']['main'] = "Model"
+    filepathdict['dynamics']['main'] = "Dynamics"
+    #define submission folders
+    filepathdict['molecule']['submission'] = "mol"
+    filepathdict['model']['submission'] = "model"
+    filepathdict['dynamics']['submission'] = "dyn"
+    
+    if url:
+        root = join_path(url_prefix,settings.MEDIA_URL,relative=False,url=url)
+    else:
+        root = settings.MEDIA_ROOT
+        
+    path = join_path(root,filepathdict[objecttype]['main'],relative=False,url=url)
+    if submission_id is not None:
+        submission_folder = filepathdict[objecttype]['submission']+str(submission_id)
+        path = join_path(path,submission_folder,relative=False,url=url)
+    if url:
+        path += '/'
+    else:
+        path += os.path.sep
+    return path
+
+def get_file_name_dict():
+    filenamedict = dict()
+    #define objects
+    filenamedict['molecule'] = dict()
+    filenamedict['model'] = dict()
+    filenamedict['dynamics'] = dict()
+    #define part(icles)
+    filenamedict['molecule']['part'] = "mol"
+    filenamedict['model']['part'] = "model"
+    filenamedict['dynamics']['part'] = None
+    #define subtypes
+    filenamedict['molecule']['subtypes'] = dict()
+    filenamedict['molecule']['subtypes']["image"] = dict()
+    filenamedict['molecule']['subtypes']["molecule"] = dict()
+    filenamedict['molecule']['subtypes']["log"] = dict()
+    
+    filenamedict['model']['subtypes'] = dict()
+    filenamedict['model']['subtypes']["pdb"] = dict()
+    filenamedict['model']['subtypes']["log"] = dict()
+    
+    filenamedict['dynamics']['subtypes'] = dict()
+    filenamedict['dynamics']['subtypes']["pdb"] = dict()
+    filenamedict['dynamics']['subtypes']["topology"] = dict()
+    filenamedict['dynamics']['subtypes']["trajectory"] = dict()
+    filenamedict['dynamics']['subtypes']["parameters"] = dict()
+    filenamedict['dynamics']['subtypes']["other"] = dict()
+    filenamedict['dynamics']['subtypes']["log"] = dict()
+
+    #define file ext(ensions)
+    filenamedict['molecule']['subtypes']["image"]["ext"] = ["png"]
+    filenamedict['molecule']['subtypes']["molecule"]["ext"] = ["sdf","mol"]
+    filenamedict['molecule']['subtypes']["log"]["ext"] = ["log"]
+    
+    filenamedict['model']['subtypes']["pdb"]["ext"] = ["pdb"]
+    filenamedict['model']['subtypes']["log"]["ext"] = ["log"]
+    
+    filenamedict['dynamics']['subtypes']["pdb"]["ext"] = ["pdb"]
+    filenamedict['dynamics']['subtypes']["topology"]["ext"] = ["psf","prmtop","top"]
+    filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["dcd","xtc"]
+    filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
+    filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
+    filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
+    
+    #define subtype part(icles)
+    filenamedict['dynamics']['subtypes']["pdb"]["part"] = "dyn"
+    filenamedict['dynamics']['subtypes']["topology"]["part"] = "dyn"
+    filenamedict['dynamics']['subtypes']["trajectory"]["part"] = "trj"
+    filenamedict['dynamics']['subtypes']["parameters"]["part"] = "prm"
+    filenamedict['dynamics']['subtypes']["other"]["part"] = "oth"
+    filenamedict['dynamics']['subtypes']["log"]["part"] = "dyn"
+    
+    return filenamedict
+
+def get_file_name_particles(objecttype,ext=None,forceext=False,subtype=None,imgsize=300):
+    filenamedict = get_file_name_dict()
+    extf = ext.lower()
+    subtypes = filenamedict[objecttype].keys()
+    if len(subtypes) > 1:
+        if subtype is None:
+            raise ValueError("a subtype must be specified for objecttype '"+objecttype+"'.")
+        else:
+            exts = filenamedict[objecttype]['subtypes'][subtype]["ext"]
+            if filenamedict[objecttype]['part'] is None:
+                part = filenamedict[objecttype]['subtypes'][subtype]['part']
+            else:
+                part = filenamedict[objecttype]['part']
+        
+    else:
+        subtype = subtypes.pop()
+        exts = filenamedict[objecttype]['subtypes'][subtype]["ext"]
+    if len(exts) > 1:
+        if ext is None:
+            raise ValueError("a file extension must be specified for objecttype '"+objecttype+":"+subtype+"' using 'ext' keyword.")
+        elif not forceext and extf not in exts :
+            raise ValueError(extf+" is not a valid file extension for objecttype '"+objecttype+":"+subtype+"'.\
+            To force the use of this extension use the 'forceext' keyword.")
+    if subtype == "image":
+        sizepart='_'+str(imgsize)
+    else:
+        sizepart = ''
+    return(part,sizepart,extf)
+
+def get_file_name_submission(objecttype,submission_id,formid,ref=False,ext=None,forceext=False,subtype=None,imgsize=300):
+
+    part,sizepart,extf = get_file_name_particles(objecttype,ext=ext,forceext=forceext,subtype=subtype,imgsize=imgsize)
+    if ref:
+        refpart='ref_'
+    else:
+        refpart=''
+    filename = 'tmp_'+part+'_'+str(formid)+'_'+refpart+str(submission_id)+sizepart+'.'+extf
+    return filename
+    
+def get_file_name(objecttype,fileid,objectid,ext=None,forceext=False,subtype=None,imgsize=300):
+
+    part,sizepart,extf = get_file_name_particles(objecttype,ext=ext,forceext=forceext,subtype=subtype,imgsize=imgsize)
+    filename = str(fileid)+'_'+part+'_'+str(objectid)+sizepart+'.'+extf
+    return filename
+
+
+    
+        
+def join_path(*args,relative=False,url=False):
+    path = ''
+    first_slashre = re.compile(r'^[/\\]+')
+    if relative:
+        first_slash = ''
+    else:
+        if url:
+            first_slash = '/'
+        else:
+            first_slash = os.path.sep 
+    for arg in args:
+        arg_no_slash = first_slashre.sub('',arg)
+        path = os.path.join(path,arg_no_slash)
+    if url:
+        path = path.replace(os.path.sep,'/')
+    path = first_slash+path
+    return path
+    
+    
+    
+    
 def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission_id):
 
     def handle_uploaded_file(f,p,name):

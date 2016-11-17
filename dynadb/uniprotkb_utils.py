@@ -1,5 +1,4 @@
 import re
-import sys
 import time
 import requests
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
@@ -50,7 +49,7 @@ def retreive_protein_names_uniprot(acnum,size_limit=5242880,buffer_size=512000,r
       while True:
         try:
           chunk = next(chunks)
-          size += sys.getsizeof(chunk)
+          size += len(chunk)
           if size > size_limit:
                 raise StreamSizeLimitError('Response too large.')
           if time.time() - start > recieve_timeout:
@@ -217,7 +216,7 @@ def retreive_data_uniprot(acnum,isoform=None,columns='id,entry name,reviewed,pro
         try:
           
           chunk = next(chunks)
-          size += sys.getsizeof(chunk)
+          size += len(chunk)
           if size > size_limit:
                 raise StreamSizeLimitError('Response too large.')
           if time.time() - start > recieve_timeout:
@@ -323,7 +322,7 @@ def retreive_fasta_seq_uniprot(acnum,size_limit=102400,buffer_size=512000,reciev
         try:
           
           chunk = next(chunks)
-          size += sys.getsizeof(chunk)
+          size += len(chunk)
           if size > size_limit:
                 raise StreamSizeLimitError('Response too large.')
           if time.time() - start > recieve_timeout:

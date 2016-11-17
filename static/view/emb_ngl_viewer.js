@@ -21,7 +21,7 @@ $(document).ready(function(){
         } else {
             for (i in gpcr_ranges) {
                 var gpcr_pair_str = gpcr_ranges[i];
-                var gpcr_pair=gpcr_pair_str.split(new RegExp('\s*\-\s*','g'));
+                var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
                 var chain_pair=[]
                 var res_pair=[]
                 for (n in gpcr_pair){
@@ -129,30 +129,67 @@ $(document).ready(function(){
             return seen.hasOwnProperty(item) ? false : (seen[item] = true);
         });
     }
-    function obtainPredefPositions(){
-        var high_pre=[];
-        $(".high_pd.active").each(function(){
+
+///////////////
+    function getSelectedPosLists(selector){
+        var selPosList=[];
+        $(selector).each(function(){
             range = $(this).attr("id");
             if (range != "None"){
                 if (range.indexOf(",") > -1){
                     range_li=range.split(",");
                     for (num in range_li){
-                        high_pre[high_pre.length]=" " + range_li[num];
+                        selPosList[selPosList.length]=" " + range_li[num];
                     }
                 } else{
-                    high_pre[high_pre.length]=" " + range;
+                    selPosList[selPosList.length]=" " + range;
                 }
             }
         })
-        high_pre.sort(function(x,y){
+
+        selPosList.sort(function(x,y){
             var patt = /\d+/;
             var xp = Number(patt.exec(x));
             var yp = Number(patt.exec(y));
             return xp - yp });
-        high_pre=uniq(high_pre);
-        alert(high_pre)
-        return (high_pre);
+        selPosList=uniq(selPosList);
+        return (selPosList);
     }
+
+    function obtainPredefPositions(){
+        var high_pre={"A":[], "B":[], "C":[], "F":[]};
+        high_pre["A"]=getSelectedPosLists(".high_pdA.active");
+        high_pre["B"]=getSelectedPosLists(".high_pdB.active");
+        high_pre["C"]=getSelectedPosLists(".high_pdC.active");
+        high_pre["F"]=getSelectedPosLists(".high_pdF.active");
+        return (high_pre)
+    }
+//////////////
+
+
+    // function obtainPredefPositions(){
+    //     var high_pre=[];
+    //     $(".high_pd.active").each(function(){
+    //         range = $(this).attr("id");
+    //         if (range != "None"){
+    //             if (range.indexOf(",") > -1){
+    //                 range_li=range.split(",");
+    //                 for (num in range_li){
+    //                     high_pre[high_pre.length]=" " + range_li[num];
+    //                 }
+    //             } else{
+    //                 high_pre[high_pre.length]=" " + range;
+    //             }
+    //         }
+    //     })
+    //     high_pre.sort(function(x,y){
+    //         var patt = /\d+/;
+    //         var xp = Number(patt.exec(x));
+    //         var yp = Number(patt.exec(y));
+    //         return xp - yp });
+    //     high_pre=uniq(high_pre);
+    //     return (high_pre);
+    // }
 
     function obtainDicts(gpcr_pdb_dict){
         var bw_dict={};
@@ -178,6 +215,35 @@ $(document).ready(function(){
         return [cp, high_pre,sel_enc] 
     }
 
+    function disableMissingClasses(){
+        $("li.cons_nav").each(function(){ 
+            if ($(this).attr("id") == "False"){
+                $(this).addClass("disabled")
+            }
+        })
+        $("a.cons_nav").each(function(){ 
+            if ($(this).attr("id") == "False"){
+                $(this).removeAttr("data-toggle").removeAttr("href").attr("title","Class not avaliable");
+            }
+        })         
+    }
+
+    function obtainLegend(legend_el){
+        var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"}
+        var legend="";
+        if (legend_el.length > 1){
+            for (el in legend_el){
+                var add=color_dict[legend_el[el]];
+                legend+=add;
+            }
+            var legend_fin = "<span style='margin-top:5px'>" + legend + "</span>";
+            $("#legend").html(legend_fin)
+        } else {
+            $("#legend").html("")
+        }
+    }
+
+
     $('input:text').on('keyup blur', function() {
         var maxlength =100;
         var val = $(this).val();
@@ -185,6 +251,9 @@ $(document).ready(function(){
             $(this).val(val.slice(0, maxlength));
         }
     });
+
+    disableMissingClasses();
+
 
     var struc = $(".str_file").attr("id");
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
@@ -201,7 +270,6 @@ $(document).ready(function(){
         dicts_result=obtainDicts(gpcr_pdb_dict); 
         bw_dict = dicts_result[0];
         gpcrdb_dict=dicts_result[1];
-
     }
 
     var rad_option="sel";
@@ -209,7 +277,10 @@ $(document).ready(function(){
         rad_option=$(this).attr("value");
     });
 
-    click_unclick(".high_pd");
+    click_unclick(".high_pdA");
+    click_unclick(".high_pdB");
+    click_unclick(".high_pdC");
+    click_unclick(".high_pdF");
     click_unclick(".rep_elements");
     seeReceptor=click_unclick_specialRec("#receptor");
     $("#btn_all").click(function(){
@@ -218,14 +289,24 @@ $(document).ready(function(){
     $("#btn_clear").click(function(){
         $(".rep_elements").removeClass("active");
     });
- 
+
+
     $("#submit").click(function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
-        url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + encode(high_pre));
-        //$("iframe").attr("src", url);
+        var pd = "n";
+        var legend_el=[];
+        for (key in high_pre){
+            if (high_pre[key].length > 0){
+                pd = "y"
+                legend_el[legend_el.length]=key;
+            }
+        }
+        obtainLegend(legend_el);
+        url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
+       $("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){
@@ -237,7 +318,14 @@ $(document).ready(function(){
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
-        var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + encode(high_pre);
+        var pd = "n";
+        for (key in high_pre){
+            if (high_pre[key].length > 0){
+                pd = "y"
+                break
+            }
+        }                
+        var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]);
         $(this).attr("href", url_mdsrv);
     });    
 

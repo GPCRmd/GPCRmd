@@ -1,3 +1,5 @@
+class DownloadGenericError(Exception):
+    pass
 class StreamSizeLimitError(Exception):
     pass
 class StreamTimeoutError(Exception):
