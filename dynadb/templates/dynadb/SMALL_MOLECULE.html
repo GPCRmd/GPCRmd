@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<form id="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
 
  <!-- description column -->
  <div class="col-md-4">
@@ -45,8 +45,9 @@
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div id="pmolform"class="col-md-7 "> 
-  <div id="molform" class="col-md-12 panel panel-primary"> 
+<div id="pmolform" class="col-md-7 "> 
+  <div id="molform" class="col-md-12 panel panel-primary">
+  <form id="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
     <div  class="panel-body">
             <div id="molnumb" style="text-align:right;color:black" > 
              <h4>SMALL MOLECULE #1</h4>

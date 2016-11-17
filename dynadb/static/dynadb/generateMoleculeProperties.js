@@ -16,7 +16,7 @@ $(document).ready(function() {
         uploadmol_html.attr('name',uploadmol.attr('name'));
         var self = $(this);
         $(self).prop('disabled',true);
-        var mainform = $("#small_molecule");
+        var currentform = $(molform).find("#small_molecule");
         var molformid = $(molform).attr('id');
         var logfile = $(molform).find("[id='id_logfile'],[id|=id_form][id$='-logfile']");
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
@@ -24,11 +24,6 @@ $(document).ready(function() {
         var sinchikey = $(molform).find("[id='id_sinchikey'],[id|=id_form][id$='-sinchikey']");
         var net_charge = $(molform).find("[id='id_net_charge'],[id|=id_form][id$='-net_charge']");
         var smiles = $(molform).find("[id='id_smiles'],[id|=id_form][id$='-smiles']");
-
-        
-        
-        var mainformclone = $(mainform).clone();
-        $(mainformclone).find("div[id|='molform']:not(#"+molformid+")").remove();
         
         var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
         
@@ -61,10 +56,14 @@ $(document).ready(function() {
             }
         }
         
-        
+        inchi.val('');
+        inchikey.val('');
+        sinchikey.val('');
+        net_charge.val('');
+        smiles.val('');
         
         var molsdfname = $(molsdf).attr('name');
-        $(mainformclone).ajaxSubmit({
+        $(currentform).ajaxSubmit({
             url: "./generate_properties/",
             type: 'POST',
             data: {'molpostkey':molsdfname,'pngsize':pngsize},
