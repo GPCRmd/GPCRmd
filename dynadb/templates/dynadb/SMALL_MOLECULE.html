@@ -80,16 +80,16 @@
 			<a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a></div>
       		</div><br>
 
-
+                <div class="row">
                         <table align='center'>
 				<tr><th style="width:80px;text-align:center"><label for="id_upload_mol"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
 					<th style="width:80px;text-align:center"><label for="id_stdform"><a title="Graphical representation of the standard form of the molecule">Standard form</a></label></th>
 
-				<tr><td style="padding:5px 5px 5px 5px"><textarea rows="3" style="width:200px;" id="id_upload_mol"  name="upload_mol"/></textarea></td>
-					<td style="padding:5px 5px 5px 5px"><textarea rows="3" style="width:200px;" id="id_stdform" name="stdform"/></textarea></td>
+				<tr><td style="padding:5px 5px 5px 5px"><textarea rows="3" style="resize:none;width:300px;height:300px" id="id_upload_mol"  name="upload_mol"/></textarea></td>
+					<td style="padding:5px 5px 5px 5px"><textarea rows="3" style="resize:none;width:300px;height:300px" id="id_stdform" name="stdform"/></textarea></td>
 				</tr>
 			</table><br>
-
+                </div>
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
 			<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_inchi" name="inchi" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->	
@@ -128,13 +128,79 @@
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div>
-			<div class="col-md-9"><label for="id_is_not_in_databases"><a title="Check this field if you could not find the compound in these databases "> The compound is not available in PubChem and ChEMBL: </a></label></div><div class="col-md-1"><input id="id_is_not_in_databases" name="is_not_in_databases" type="checkbox" /></div>
+			<div class="col-md-9"><label for="id_is_not_in_databases"><a title="Check this field if you could not find the compound in these databases "> The compound is not available in PubChem and ChEMBL: </a></label></div><div class="col-md-1"><input id="id_is_not_in_databases" name="is_not_in_databases" type="checkbox" value="1"/></div>
 		</div>
+		<div style="text-align:center"> 
+               <h4><br>PubChem search settings</h4>
+               </div><br>
+               <div class="row">
+                    <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_search_by_pubchem"><a title="Search by: Molecule identifier chosen for searching the compound in external databases."> Search by:</a></label></div>
+                        <div class="col-md-6">
+                        <select id="id_search_by_pubchem" name="search_by_pubchem">
+                        <option selected value="sinchi">Standard InChI</option>
+                        <option value="sinchikeynoiso">Standard InChIKey</option>
+                        <option value="smiles">Smiles</option>
+                        </select>
+                        </div>
+               </div>
+               <div class="row">
+                    <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_retrieve_type_pubchem"><a title="Retrieve type: Criteria for searching the compound in PubChem."> Retrieve:</a></label></div>
+                        <div class="col-md-6">
+                        <select id="id_retrieve_type_pubchem" name="retrieve_type_pubchem">
+                        <option selected value="parent">Parent molecule</option>
+                        <option value="original">Closest match</option>
 
-	        <div class="row" style="text-align:left;height:30px">
+                        </select>
+                        </div>
+               </div>
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"></div>
+                        <div class="col-md-3"><label for="id_neutralize_pubchem"><a title="Neutralize the molecule by protonation/deprotonation before searching in database (recommended).">Neutralize: </a></label></div><div class="col-md-1">
+                        <input id="id_neutralize_pubchem" name="neutralize_pubchem" type="checkbox" checked value="1"/></div>
+                </div>
+<!--	        <div class="row" style="text-align:left;height:30px">
 			<div class="col-md-4" style="height:30px"></div><div class="col-md-7" style="text-align:left"><button id=id_get_mol_info name=get_mol_info title="Retrieve compound information searching by Standard InChIKey." style="width:46%;height:30px" type="button">Retrieve data</button>
-			<button id="id_clear_molecule" name="clear_molecule" title="Clears the molecule form" style="width:46%;height:30px" type="button">Clear molecule</button></div>
-		</div><br>
+			<button id="id_reset" name="reset" title="Clears the molecule form" style="width:46%;height:30px" type="button">Clear molecule</button></div>
+		</div><br>-->
+		
+		                <div style="text-align:center"> 
+               <h4><br>ChEMBL search settings</h4>
+               </div><br>
+               <div class="row">
+                    <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_search_by_chembl"><a title="Search by: Molecule identifier chosen for searching the compound in external databases."> Search by:</a></label></div>
+                        <div class="col-md-6">
+                        <select id="id_search_by_chembl" name="search_by_chembl">
+                        <option selected value="smiles">Smiles</option>
+                        <option value="sinchikeynoiso">Standard InChIKey</option>
+                        </select>
+                        </div>
+               </div>
+               <div class="row">
+                        <div class="col-md-1"style="height:30px"></div>
+                        <div class="col-md-3"><label for="id_similarity_chembl"><a title="Similariry: Similarity score for SMILES search in CHEMBL. Min 70%.">Similarity:</a></label></div>
+                        <div class="col-md-3">
+                        <input id="id_similarity_chembl" style="width:40%" name="similarity" type="number" min=70 max=100 value="100"/><label>%</label>
+                        </div>
+               </div>
+               <div class="row">
+                    <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_retrieve_type_chembl"><a title="Retrieve type: Criteria for searching the compound in ChEMBL."> Retrieve:</a></label></div>
+                        <div class="col-md-6">
+                        <select id="id_retrieve_type_chembl" name="retrieve_type_chembl">
+                        <option selected value="parent">Parent molecule</option>
+                        <option value="original">Closest match</option>
+
+                        </select>
+                        </div>
+               </div>
+                <div class="row">
+                        <div class="col-md-1"style="height:30px"></div>
+                        <div class="col-md-3"><label for="id_neutralize_chembl"><a title="Neutralize the molecule by protonation/deprotonation before searching in database (recommended).">Neutralize: </a></label></div><div class="col-md-1">
+                        <input id="id_neutralize_chembl" name="neutralize_chembl" type="checkbox" checked value="1"/></div>
+                </div>
+                <div class="row" style="text-align:left;height:30px">
+                        <div class="col-md-4" style="height:30px"></div><div class="col-md-7" style="text-align:left"><button id=id_get_mol_info name=get_mol_info title="Retrieve compound information searching by Standard InChIKey." style="width:46%;height:30px" type="button">Retrieve data</button>
+                        <button id="id_reset" name="reset" title="Clears the molecule form" style="width:46%;height:30px" type="button">Clear molecule</button></div>
+                </div><br>
 
 
 
@@ -196,10 +262,10 @@
 			<br>
  		 	<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<input type="button" value="+ Add molecule"  style="height:30px;width:160px" onClick="addSmalmol();">
+			     		<input id="id_add_molecule" name="add_molecule" type="button" value="+ Add molecule"  style="height:30px;width:160px" onClick="addSmalmol();">
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
+			     		<input id="id_del_protein" name="del_protein" type="button" value="- Remove molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
 		        	</div> 		
 			<br><br>
 
@@ -235,11 +301,14 @@
 
 {% endblock content %}
 
-{% block addon_js %} 
+{% block addon_js %}
+<!--    <script src="{% static 'dynadb/test.js' %}"></script>-->
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/notInDatabases.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
-    <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
+    <script src="{% static 'dynadb/getMoleculeInfo.js' %}"></script>
     <script src="{% static 'dynadb/resetMolecule.js' %}"></script>
+    <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
     <script src="{% static 'dynadb/addSmalmol.js' %}"></script>
     <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
 

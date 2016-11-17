@@ -26,6 +26,10 @@ $(document).ready(function() {
         var chemblid = $(molform).find("[id='id_chemblid'],[id|=id_form][id$='-chemblid']");
         var updatepubchem = $(molform).find("[id='id_update_from_pubchem'],[id|=id_form][id$='-update_from_pubchem']");
         var updatechembl = $(molform).find("[id='id_update_from_chembl'],[id|=id_form][id$='-update_from_chembl']");
+        var neutralize = $(molform).find("[id^='id_neutralize'],[id|=id_form][id*='-neutralize']");
+        var retrieve_type = $(molform).find("[id^='id_retrieve_type'],[id|=id_form][id*='-retrieve_type']");
+        var search_by = $(molform).find("[id^='id_search_by'],[id|=id_form][id*='-search_by']");
+        var similarity = $(molform).find("[id^='id_search_by'],[id|=id_form][id*='-search_by']");
         
         if($(this).prop('checked')) {
             name.set_restore_color();
@@ -42,6 +46,9 @@ $(document).ready(function() {
         updatepubchem.prop("disabled",$(this).prop('checked'));
         updatechembl.prop("disabled",$(this).prop('checked'));
         
+        neutralize.prop("disabled",$(this).prop('checked'));
+        retrieve_type.prop("disabled",$(this).prop('checked'));
+        search_by.prop("disabled",$(this).prop('checked'));
         
         get_mol_info.prop("disabled",$(this).prop('checked'));
 
