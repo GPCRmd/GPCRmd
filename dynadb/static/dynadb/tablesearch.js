@@ -23,8 +23,13 @@ $("#tablesearch").click(function() {
 
                 }else{
                     if (counter==4){
-                        var isligrec=$(this).find('[type=checkbox]').prop('checked');
-                        postarray.push(isligrec);
+                        if (postarray[2]=='protein') {
+                            var isligrec=$(this).find('[type=checkbox]').prop('checked');
+                            postarray.push(isligrec);
+                        }else{
+                            var drop=$(this).find(":selected").val();
+                            postarray.push(drop);  
+                        }
                     }else if (counter==5) {
                         var drop=$(this).find(":selected").text();
                         postarray.push(drop);
@@ -50,8 +55,14 @@ $("#tablesearch").click(function() {
                     postarray.push(drop);
                 } else {
                     if (counter==3){
-                        var isligrec=$(this).find('[type=checkbox]').prop('checked');
-                        postarray.push(isligrec);
+                        if(postarray[1]=='protein'){
+                            var isligrec=$(this).find('[type=checkbox]').prop('checked');
+                            postarray.push(isligrec);    
+                        }else{
+                            var drop=$(this).find(":selected").val();
+                            postarray.push(drop); 
+                        }
+
                     } else {
                         var value = $(this).text(); //var value = $(this).text();
                         postarray.push(value);
@@ -62,7 +73,7 @@ $("#tablesearch").click(function() {
             bigarray.push(postarray);
         })
     } //else ends
-    console.log(openpar,closingpar);
+    console.log(bigarray);
     for (i=0;i<openpar.length;i++){
         if (openpar[i]=='(' && openpar[i+1]=='('){
             flag=2;
@@ -179,20 +190,6 @@ $("#tablesearch").click(function() {
                             }
 
                         } //endif
-
-
-
-                        //compound table
-                        if (data.compound_table.length>0){
-                            var table = $('<table></table>').addClass('foo');
-                            var header= $('<thead><tr><th>Complex</th><th>Compound</th><th>Molecule</th></tr></thead>');
-                            table.append(header);
-                            for(i=0; i<data.compound_table.length; i++){
-                                var row = $('<tr><td>'+data.compound_table[i][0]+'</td><td><a href=/dynadb/compound/id/'+data.compound_table[i][1]+'>'+data.compound_table[i][1]+'</a></td><td><a href=/dynadb/molecule/id/'+data.compound_table[i][2]+'>'+data.compound_table[i][2]+'</a></td></tr>');
-                                table.append(row);
-                            }
-                            $('#tableresults').append(table);
-                        } // endif
 
                     }else{
                         alert(data.message);
