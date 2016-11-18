@@ -244,17 +244,122 @@ $(document).ready(function(){
     }
 
 
-    $('input:text').on('keyup blur', function() {
-        var maxlength =100;
-        var val = $(this).val();
-        if (val.length > maxlength) {
-            $(this).val(val.slice(0, maxlength));
-        }
-    });
+    function maxInputLength(select, maxlength){
+        $(select).on('keyup blur', function() {
+            // var maxlength =4;
+            var val = $(this).val();
+            if (val.length > maxlength) {
+                $(this).val(val.slice(0, maxlength));
+            }
+        });
+    }
 
+    maxInputLength('#inputdist',4);
+    maxInputLength('input.sel_input',100);
     disableMissingClasses();
 
 
+///    
+    var comp_lg=[];
+    var comp_sh=[];
+    $(".comp").each(function(){
+        var comp_l=$(this).text();
+        var comp_s=$(this).attr("id");
+        comp_lg[comp_lg.length]=comp_l;
+        comp_sh[comp_sh.length]=comp_s;
+    })
+
+    var select="";
+    for (comp_n in comp_lg){
+        var option='<option value="'+comp_sh[comp_n]+'">'+comp_lg[comp_n]+'</option>';
+        select += option;
+    }
+    var first=true;
+    var i=1
+    $("#add_btn").click(function(){ 
+        var row='<span class="dist_sel" id=row'+i+'><br>\
+                  <span id="tick" ></span>\
+                  <span id="always" style="margin-left:14px">\
+                    Show residues within \
+                    <input class="form-control input-sm" id="inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
+                      &#8491; of\
+                        <select id="comp" name="comp">' + select + '</select>\
+                  </span>';
+        $("#show_within").append(row);
+        i+=1;
+        if (first){
+            $("#rm_btn").css("visibility","visible");
+            first=false;
+        }
+    });
+    
+    $("#rm_btn").click(function(){ 
+        $("#row"+(i-1)).remove();
+        i -=1;
+        if (i ==1){
+            $("#rm_btn").css("visibility","hidden");
+            first=true;
+        }
+    });
+
+
+    function obtainDistSel(){
+        var dist_of=[];
+        $(".sel_within").find(".dist_sel").each(function(){ 
+            var inp=$(this).find("input").val();
+            if (inp && /^[\d.]+$/.test(inp)) {
+                var comp=$(this).find("select").val();
+                dist_of[dist_of.length]=[inp,comp];
+            }
+
+        });       
+        return (encode(dist_of))
+    }
+
+
+    $(".sel_within").on("blur", ".dist_sel" ,function(){
+        var inp=$(this).find("input").val();
+        if (inp && /^[\d.]+$/.test(inp)) {
+            $(this).find("#tick").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
+            $(this).find("#always").attr("style","");
+        } else {
+            if ($(this).find("#tick").attr("class")=="glyphicon glyphicon-ok"){
+                $(this).find("#tick").attr({"class":"","style":""});
+                $(this).find("#always").attr("style","margin-left:14px");
+            }
+        }
+    });    
+////
+    // var click_n=0;
+    // var seq_pos_1
+    // $(".seq_sel").click(function(){
+    //     alert(click_n);
+    //     if (click_n=0){
+    //         $(this).css("background-color","#E8E8E8");
+    //         var seq_pos_1 = $(this).attr("id");
+    //         click_n=1;
+    //     } else {
+    //         click_n=0;
+    //     }
+    // })
+
+    // $(".seq_sel").mouseenter(function(){
+    //     if (click_n=1) {
+    //         var seq_pos_2 = $(this).attr("id");
+    //         var i = seq_pos_1;
+    //         while (i <= seq_pos_2){
+    //             var mid_id="#" + String(i)
+    //             $(mid_id).css("background-color","#E8E8E8");
+    //             i++
+    //         }
+    //     }
+    // });
+
+
+
+
+
+///
     var struc = $(".str_file").attr("id");
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
@@ -304,6 +409,7 @@ $(document).ready(function(){
                 legend_el[legend_el.length]=key;
             }
         }
+        var dist_of=obtainDistSel();  // For the dist selection
         obtainLegend(legend_el);
         url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
        $("iframe").attr("src", url);
@@ -324,7 +430,8 @@ $(document).ready(function(){
                 pd = "y"
                 break
             }
-        }                
+        }
+        // var dist_of=obtainDistSel(); // For the dist selection
         var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]);
         $(this).attr("href", url_mdsrv);
     });    
