@@ -1,4 +1,4 @@
-from dynadb.models import DyndbComplexCompound, DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule
+from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbProteinCannonicalProtein,  DyndbComplexCompound
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 from haystack.forms import SearchForm
@@ -157,6 +157,11 @@ class dyndb_Cannonical_ProteinsForm(ModelForm):
         model = DyndbCannonicalProteins
         fields = '__all__'
 
+class dyndb_Protein_Cannonical_Protein(ModelForm):
+    class Meta:
+        model = DyndbProteinCannonicalProtein
+        fields = '__all__'
+
 class dyndb_Protein_MutationsForm(ModelForm):
     class Meta:
         model = DyndbProteinMutations
@@ -216,7 +221,8 @@ class dyndb_Files_Molecule(ModelForm):
 class dyndb_Complex_Exp(ModelForm):
     class Meta:
         model = DyndbComplexExp
-        fields = '__all__'
+       # fields = '__all__'
+        fields= ['creation_timestamp', 'update_timestamp']
 
 class dyndb_Complex_Protein(ModelForm):
     class Meta:
@@ -227,10 +233,11 @@ class dyndb_Complex_Molecule(ModelForm):
     class Meta:
         model = DyndbComplexMolecule
         fields = '__all__'
+        #fields=['id_complex_exp'] 
 
 class dyndb_Complex_Molecule_Molecule(ModelForm):
     class Meta:
-        model = DyndbComplexCompound
+        model = DyndbComplexMoleculeMolecule
         fields = '__all__'
 
 class dyndb_Complex_Compound(ModelForm):

@@ -40,11 +40,8 @@ $(document).ready(function() {
         
         getdata.prop("disabled", $(this).prop('checked'));
         uniprotkbac.prop("disabled", $(this).prop('checked'));
-        species.prop("disabled", !$(this).prop('checked'));
         isoform.prop("disabled", $(this).prop('checked'));
-        name.prop("disabled", !$(this).prop('checked'));
-        aliases.prop("disabled", !$(this).prop('checked'));
-        sequence.prop("disabled",!$(this).prop('checked'));
+
         
         species.prop("readonly", !$(this).prop('checked'));
         name.prop("readonly", !$(this).prop('checked'));

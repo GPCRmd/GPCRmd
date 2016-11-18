@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'construct',
     'tools',
     'haystack',
+    'drugs',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -132,10 +133,14 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'protwis.context_processors.google_analytics'
             ],
         },
     },
 ]
+
+MAX_UPLOAD_SIZE=2147483648
+
 
 if DEBUG:
    TEMPLATES[0]['OPTIONS']['debug'] = True

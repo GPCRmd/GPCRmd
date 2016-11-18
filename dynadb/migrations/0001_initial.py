@@ -365,11 +365,16 @@ class Migration(migrations.Migration):
             name='DyndbComplexCompound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_complex_exp', models.ForeignKey('DyndbComplexExp', models.DO_NOTHING, db_column='id_complex_exp',null=False)),
+            #    ('id_complex_exp_id', models.IntegerField(blank=True, null=True)),
+                ('id_compound',models.ForeignKey('DyndbCompound', models.DO_NOTHING,  db_column='id_compound',null=True)),
+            #    ('id_compound_id', models.IntegerField(blank=True, null=True)),
                 ('type', models.TextField()),
             ],
             options={
                 'managed': True,
                 'db_table': 'dyndb_complex_compound',
+                'unique_together' : (('id_complex_exp', 'id_compound'),),
             },
         ),
         migrations.CreateModel(
@@ -392,6 +397,7 @@ class Migration(migrations.Migration):
             name='DyndbComplexMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_complex_exp',models.ForeignKey(db_column='id_complex_exp',  on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbComplexExp')),
                 ('update_timestamp', models.DateTimeField()),
                 ('creation_timestamp', models.DateTimeField()),
                 ('created_by_dbengine', models.CharField(max_length=40)),
@@ -408,8 +414,8 @@ class Migration(migrations.Migration):
             name='DyndbComplexMoleculeMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-    ('id_complex_molecule', models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule',null=False)),
-    ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)),
+                ('id_complex_molecule', models.ForeignKey('DyndbComplexMolecule', models.DO_NOTHING, db_column='id_complex_molecule',null=False)),
+                ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=False)),
 		
                 ('resname', models.CharField(blank=True, max_length=4, null=True)),
                 ('number', models.IntegerField(blank=True, null=True)),
@@ -459,6 +465,10 @@ class Migration(migrations.Migration):
                 ('last_update_by_dbengine', models.CharField(max_length=40)),
                 ('created_by', models.IntegerField(blank=True, null=True)),
                 ('last_update_by', models.IntegerField(blank=True, null=True)),
+                ('id_ligand',models.ForeignKey(db_column='id_ligand', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.Ligand', blank=True,null=True)),
+                ('sinchi', models.TextField(null=True)),
+                ('sinchikey', models.CharField(db_index=True, max_length=27, null=True)),
+                ('std_id_molecule',models.ForeignKey(db_column='std_id_molecule', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbMolecule')),
             ],
             options={
                 'managed': False,
@@ -722,8 +732,8 @@ class Migration(migrations.Migration):
                 ('description', models.CharField(blank=True, max_length=80, null=True)),
                 ('net_charge', models.SmallIntegerField(blank=True, null=True)),
                 ('inchi', models.TextField()),
-                ('sinchikey', models.CharField(max_length=27)),
-                ('inchikey', models.CharField(max_length=27)),
+               # ('sinchikey', models.CharField(max_length=27)),
+                ('inchikey', models.CharField(db_index=True, max_length=27, null=True)),
                 ('inchicol', models.SmallIntegerField()),
                 ('smiles', models.TextField(blank=True, null=True)),
                 ('update_timestamp', models.DateTimeField(blank=True, null=True)),
@@ -732,10 +742,12 @@ class Migration(migrations.Migration):
                 ('last_update_by_dbengine', models.CharField(max_length=40)),
                 ('created_by', models.IntegerField(blank=True, null=True)),
                 ('last_update_by', models.IntegerField(blank=True, null=True)),
+                ('id_compound',models.ForeignKey(db_column='id_compound', on_delete=django.db.models.deletion.DO_NOTHING, to='dynadb.DyndbCompound')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_molecule',
+                'unique_together' : (('inchikey', 'inchicol'),),
             },
         ),
         migrations.CreateModel(
