@@ -33,7 +33,7 @@ $(document).ready(function(){
 
     
     function doAlways(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-    resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+    resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
     smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
     notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
     neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 
@@ -87,8 +87,6 @@ $(document).ready(function(){
         addbutton.prop("disabled", false);
         resetbuttonall.prop("disabled", false);
         uploadmolbutton.prop("disabled", false);
-        uploadmol.prop("disabled", false);
-        stdform.prop("disabled", false);
         
         neutralize_pubchem.prop("disabled",notindbs.prop('checked'));
         retrieve_type_pubchem.prop("disabled",notindbs.prop('checked'));
@@ -116,7 +114,7 @@ $(document).ready(function(){
     }
     
     function ChemblGetInfo(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-    resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+    resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
     smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
     notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
     neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 
@@ -247,7 +245,7 @@ $(document).ready(function(){
         
         .always(function(xhr) {
             doAlways(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-            resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+            resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
             smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
             notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
             neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 
@@ -286,8 +284,6 @@ $(document).ready(function(){
         var addbutton = $(pmolform).children(":last-child").find("[id='id_add_molecule'],[id|=id_form][id$='-add_molecule']");
         var resetbuttonall = $("[id='id_reset'],[id|=id_form][id$='-reset']");
         var uploadmolbutton = $("[id='id_upload_button'],[id|=id_form][id$='-upload_button']");
-        var uploadmol = $(molform).find("[id='id_upload_mol'],[id|=id_form][id$='-upload_mol']");
-        
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
         var inchikey = $(molform).find("[id='id_inchikey'],[id|=id_form][id$='-inchikey']");
         var sinchikey = $(molform).find("[id='id_sinchikey'],[id|=id_form][id$='-sinchikey']");
@@ -348,8 +344,6 @@ $(document).ready(function(){
         notindbsall.prop("disabled", true);
         notindbs.prop("disabled", true);
         uploadmolbutton.prop("disabled", true);
-        uploadmol.prop("disabled", true);
-        stdform.prop("disabled", true);
         
         neutralize_pubchem.prop("disabled",true);
         retrieve_type_pubchem.prop("disabled",true);
@@ -494,7 +488,7 @@ $(document).ready(function(){
                     }
                     
                     ChemblGetInfo(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-                    resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+                    resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
                     smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
                     notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
                     neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 
@@ -502,7 +496,7 @@ $(document).ready(function(){
                 
                 } else {
                     doAlways(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-                    resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+                    resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
                     smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
                     notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
                     neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 
@@ -513,7 +507,7 @@ $(document).ready(function(){
         } else {
             if (dochembl) {
                     ChemblGetInfo(self, pngsize, molform, stdform, stdform_html, getmolinfo, molformidx, pmolform, addbutton, 
-                    resetbuttonall, uploadmolbutton, uploadmol, inchi, inchikey, sinchikey, net_charge, 
+                    resetbuttonall, uploadmolbutton, inchi, inchikey, sinchikey, net_charge, 
                     smiles, name, iupac_name, aliases, pubchemcid, chemblid, updatepubchem, updatechembl, 
                     notindbs, notindbsall, neutralize_pubchem, retrieve_type_pubchem, search_by_pubchem, 
                     neutralize_chembl, retrieve_type_chembl, search_by_chembl, similarity_chembl, disablestatesinfo, 

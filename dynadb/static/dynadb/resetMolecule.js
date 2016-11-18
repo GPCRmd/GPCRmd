@@ -67,10 +67,14 @@ $(document).ready(function(){
     
     $.fn.resetMoleculeByButton = function (clean_ids) {
         var molform = $(this).parents("[id|=molform]");
-        var uploadmol = $(molform).find("[id='id_upload_mol'],[id|=id_form][id$='-upload_mol']");
-        var uploadmol_html = $(uploadmol_global_html).clone();
-        uploadmol_html.attr('id',uploadmol.attr('id'));
-        uploadmol_html.attr('name',uploadmol.attr('name'));
+        var uploadmol1 = $(molform).find("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']");
+        var uploadmol1_html = $(uploadmol1_global_html).clone();
+        uploadmol1_html.attr('id',uploadmol1.attr('id'));
+        uploadmol1_html.attr('name',uploadmol1.attr('name'));
+        var uploadmol2 = $(molform).find("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']");
+        var uploadmol2_html = $(uploadmol2_global_html).clone();
+        uploadmol2_html.attr('id',uploadmol2.attr('id'));
+        uploadmol2_html.attr('name',uploadmol2.attr('name'));
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
         var inchikey = $(molform).find("[id='id_inchikey'],[id|=id_form][id$='-inchikey']");
         var sinchikey = $(molform).find("[id='id_sinchikey'],[id|=id_form][id$='-sinchikey']");
@@ -85,9 +89,12 @@ $(document).ready(function(){
         net_charge.val('');
         smiles.val('');
         
-        var newuploadmol = $(uploadmol_html).clone()
-        $(uploadmol).replaceWith($(newuploadmol));
-        uploadmol = $(newuploadmol);
+        var newuploadmol = $(uploadmol1_html).clone()
+        $(uploadmol1).replaceWith($(newuploadmol));
+        uploadmol1 = $(newuploadmol);
+        var newuploadmol = $(uploadmol2_html).clone()
+        $(uploadmol2).replaceWith($(newuploadmol));
+        uploadmol2 = $(newuploadmol);
         
         mol_type.val(type_default);
         is_present.prop('checked',is_present_default);
