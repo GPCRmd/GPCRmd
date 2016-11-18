@@ -9,6 +9,8 @@ from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirec
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
 from defusedxml.ElementTree import DefusedXMLParser as xmlparser
+from io import BytesIO
+from .molecule_properties_tools import open_molecule_file
 
 CIDS_TYPES = {'all', 'active', 'inactive', 'standardized', \
 
@@ -233,7 +235,7 @@ def retreive_compound_data_pubchem_txt(searchproperty,searchvalue,outputproperty
     response.close()
     return data
 def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,width=300,height=300):
-    URL = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/'
+    URL = 'https://www.ebi.ac.uk/chembl/compound/inspect/'
     errdata = dict()
     data = None
     do_not_skip_on_debug = False
@@ -246,10 +248,7 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
 
         
         response = requests.get(URL+'/'.join(args)+'/PNG?'+str(width)+'x'+str(height),timeout=30,stream=True,verify=True)
-        if response.status_code != 404:
-            response.raise_for_status()
-        else:
-            outputfile = None
+        response.raise_for_status()
         if outputfile:
             fileh = open(outputfile,'wb')
         else:
@@ -333,14 +332,11 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
             recordtype='2d'
         
         response = requests.get(URL+'/'.join(args)+'/SDF?record_type='+recordtype,timeout=30,stream=True,verify=True)
-        if response.status_code != 404:
-            response.raise_for_status()
-        else:
-            outputfile = None
+        response.raise_for_status()
         if outputfile:
-            fileh = open(outputfile,'wb')
+            fileh = open(outputfile,'w+b')
         else:
-            data = b''
+            fileh = BytesIO(b'')
         size = 0
         start = time.time()
         chunks = response.iter_content(chunk_size=524288)
@@ -350,15 +346,19 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
                 raise StreamSizeLimitError('response too large')
             if time.time() - start > RECIEVE_TIMEOUT:
                 raise StreamTimeoutError('timeout reached')
-            if outputfile:
-                fileh.write(chunk)
-            else:
-                data += chunk
+            fileh.write(chunk)
+
         response.close()
-        if outputfile:
+        if not outputfile:
+            data = fileh.read()
             fileh.close()
-        else:
-            return(data,errdata) 
+        fileh.seek(0)
+        mol = open_molecule_file(fileh,filetype='sdf')
+        del mol
+
+        return(data,errdata)
+           
+          
     except HTTPError:
       errdata['Error'] = True
       errdata['ErrorType'] = 'HTTPError'
@@ -384,7 +384,10 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
       errdata['Error'] = True
       errdata['ErrorType'] = 'StreamTimeoutError'
       errdata['reason'] = str(e)
-
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
     except:
       errdata['Error'] = True
       errdata['ErrorType'] = 'Internal'
@@ -574,11 +577,7 @@ def retreive_compound_png_chembl(chemblid,dimensions=300,outputfile=None):
     try:
         if check_chembl_up():   
             response = requests.get(URL+str(chemblid)+'?dimensions='+str(dimensions)+'&format=png'+'&ignoreCoords=0'+'&engine=indigo',timeout=30,stream=True,verify=True)
-            if response.status_code != 404:
-                response.raise_for_status()
-            else:
-                response.close()
-                return None
+            response.raise_for_status()
             if outputfile:
                 fileh = open(outputfile,'wb')
             else:
@@ -763,6 +762,10 @@ def chembl_get_compound_id_query_result_url(postdata,chembl_submission_url='http
       errdata['Error'] = True
       errdata['ErrorType'] = 'StreamTimeoutError'
       errdata['reason'] = str(e)
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
     except:
       errdata['Error'] = True
       errdata['ErrorType'] = 'Internal'
@@ -780,3 +783,4 @@ def chembl_get_compound_id_query_result_url(postdata,chembl_submission_url='http
         pass
       if not (settings.DEBUG and do_not_skip_on_debug):
         return(results_url,errdata)
+        

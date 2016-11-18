@@ -71,29 +71,32 @@ def stdout_redirected(to=os.devnull, stdout=None):
 
 
 
-def open_molecule_file(uploadedfile,logfile=os.devnull):
+def open_molecule_file(uploadedfile,logfile=os.devnull,filetype=None):
     
     #charset = 'utf-8'
     #if "charset" in uploadedfile and uploadedfile.charset is not None:
             #charset = uploadedfile.charset
-    if "filetype" not in uploadedfile or uploadedfile.filetype is None:
-        basename, ext = os.path.splitext(uploadedfile.name)
-        ext = ext.lower()
-        ext = ext.strip('.')
-        if ext in MOLECULE_EXTENSION_TYPES.keys():
-            filetype = MOLECULE_EXTENSION_TYPES[ext]
-            uploadedfile.filetype = filetype
-        else:
-            raise InvalidMoleculeFileExtension(ext=ext)
-    else:
-        filetype = uploadedfile.filetype
+    if filetype is None:
+        if "filetype" not in uploadedfile or uploadedfile.filetype is None:
+            basename, ext = os.path.splitext(uploadedfile.name)
+            ext = ext.lower()
+            ext = ext.strip('.')
+            if ext in MOLECULE_EXTENSION_TYPES.keys():
+                filetype = MOLECULE_EXTENSION_TYPES[ext]
+                uploadedfile.filetype = filetype
+            else:
+                raise InvalidMoleculeFileExtension(ext=ext)
         
-    uploadedfile.seek(0)
-    membuffer = io.StringIO()
+        else:
+            filetype = uploadedfile.filetype
+        
+    
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             print('Loading molecule...')
+            uploadedfile.seek(0)
             if filetype == 'sdf' or filetype == 'mol':
+                
                 suppl = ForwardSDMolSupplier(uploadedfile,removeHs=False)
                 mol = next(suppl)
                 try:
