@@ -748,105 +748,106 @@ def NiceSearcher(request):
                 for comp in DyndbComplexCompound.objects.filter(id_compound=user_compound): #each complexcompound containing usercompound
                     if table_row[2]=='orto': #ortoligand
                         if comp.type==0:
-                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id)
+                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id):
                                 rowlist.append(cmol.id)
 
                     else: #alosteric ligand
                         if comp.type==1:
-                            for cmol2 in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id)
+                            for cmol2 in DyndbComplexMolecule.objects.filter(id_complex_exp=comp.id_complex_exp.id):
                                 rowlist.append(cmol2.id)
 
             ############################
 
 
-            elif return_type=='model':
-                if table_row[0]=='protein':
-                    for cprotein in DyndbComplexProtein.objects.filter(id_protein=table_row[1]).filter(is_receptor=table_row[2]):
-                        for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=cprotein.id_complex_exp.id):
-                            for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                rowlist.append(mod.id) #this model HAS, for sure, the protein, maybe it has more. exact match will solve that.
+        elif return_type=='model':
+            if table_row[0]=='protein':
+                for cprotein in DyndbComplexProtein.objects.filter(id_protein=table_row[1]).filter(is_receptor=table_row[2]):
+                    for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=cprotein.id_complex_exp.id):
+                        for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                            rowlist.append(mod.id) #this model HAS, for sure, the protein, maybe it has more. exact match will solve that.
 
-                elif table_row[0]=='molecule':
-                    user_molecule = table_row[1]
-                    if table_row[2]=='orto' or table_row[2]=='all': #orthoesteric ligand
-                        for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=0): 
-                            for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id)
-                                rowlist.append(models.id)
+            elif table_row[0]=='molecule':
+                user_molecule = table_row[1]
+                if table_row[2]=='orto' or table_row[2]=='all': #orthoesteric ligand
+                    for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=0): 
+                        for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id):
+                            rowlist.append(models.id)
 
-                    if table_row[2]=='alos' or table_row[2]=='all': #alosteric ligand
-                        for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=1):
-                            for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id)
-                                rowlist.append(models.id)
+                if table_row[2]=='alos' or table_row[2]=='all': #alosteric ligand
+                    for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=1):
+                        for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id):
+                            rowlist.append(models.id)
 
-                    if table_row[2]=='other' or table_row[2]=='all':
-                        for modcomp in DyndbModelComponents.objects.filter(id_molecule=user_molecule):
-                            if int(modcomp.type) in [0,2,3,4]:
-                                rowlist.append(modcomp.id_model.id)
+                if table_row[2]=='other' or table_row[2]=='all':
+                    for modcomp in DyndbModelComponents.objects.filter(id_molecule=user_molecule):
+                        if int(modcomp.type) in [0,2,3,4]:
+                            rowlist.append(modcomp.id_model.id)
 
-                else: #implement compound!
-                    user_compound=table_row[1]
-                    if table_row[2]=='orto' or table_row[2]=='all':
-                        for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
-                            if ccomp.type==0:
-                                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
-                                    for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                        rowlist.append(models.id)
+            else: #implement compound!
+                user_compound=table_row[1]
+                if table_row[2]=='orto' or table_row[2]=='all':
+                    for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
+                        if ccomp.type==0:
+                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
+                                for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                                    rowlist.append(models.id)
 
-                    if table_row[2]=='alos' or table_row[2]=='all':
-                        for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
-                            if ccomp.type==1:
-                                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
-                                    for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                        rowlist.append(models.id)
+                if table_row[2]=='alos' or table_row[2]=='all':
+                    for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
+                        if ccomp.type==1:
+                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
+                                for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                                    rowlist.append(models.id)
 
 
             #######################
 
-            else: #return Dynamics
-                if table_row[0]=='protein':
-                    for cprotein in DyndbComplexProtein.objects.filter(id_protein=table_row[1]).filter(is_receptor=table_row[2]):
-                        for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=cprotein.id_complex_exp.id):
-                            for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                for dyn in DyndbDynamics.objects.filter(id_model=mod.id): #this model HAS, for sure, the protein, maybe it has more. exact match will solve that.
-                                    rowlist.append(dyn.id)
+        else: #return Dynamics
+            if table_row[0]=='protein':
+                for cprotein in DyndbComplexProtein.objects.filter(id_protein=table_row[1]).filter(is_receptor=table_row[2]):
+                    for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=cprotein.id_complex_exp.id):
+                        for mod in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                            for dyn in DyndbDynamics.objects.filter(id_model=mod.id): #this model HAS, for sure, the protein, maybe it has more. exact match will solve that.
+                                rowlist.append(dyn.id)
 
-                elif table_row[0]=='molecule':
-                    user_molecule = table_row[1]
-                    if table_row[2]=='orto' or table_row[2]=='all': #orthoesteric ligand
-                        for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=0): 
-                            for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id):
-                                for dyn in DyndbDynamics.objects.filter(id_model=models.id):
-                                    rowlist.append(dyn.id)
+            elif table_row[0]=='molecule':
+                user_molecule = table_row[1]
+                if table_row[2]=='orto' or table_row[2]=='all': #orthoesteric ligand
+                    for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=0): 
+                        for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id):
+                            for dyn in DyndbDynamics.objects.filter(id_model=models.id):
+                                rowlist.append(dyn.id)
 
-                    if table_row[2]=='alos' or table_row[2]=='all': #alosteric ligand
-                        for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=1):
-                            for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id)
-                                for dyn in DyndbDynamics.objects.filter(id_model=models.id):
-                                    rowlist.append(dyncomp.id_dynamics.id)
-
-                    if table_row[2]=='other' or table_row[2]=='all':
-                        for dyncomp in DyndbDynamicsComponents.objects.filter(id_molecule=user_molecule):
-                            if int(dyncomp.type) in [0,2,3,4]:
+                if table_row[2]=='alos' or table_row[2]=='all': #alosteric ligand
+                    for comp in DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule).filter(type=1):
+                        for models in DyndbModel.objects.filter(id_complex_molecule=comp.id_complex_molecule.id):
+                            for dyn in DyndbDynamics.objects.filter(id_model=models.id):
                                 rowlist.append(dyncomp.id_dynamics.id)
 
-                else:
-                    user_compound=table_row[1]
-                    if table_row[2]=='orto' or table_row[2]=='all':
-                        for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
-                            if ccomp.type==0:
-                                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
-                                    for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                        for dyn in DyndbDynamics.objects.filter(id_model=models.id):
-                                            rowlist.append(dyn.id)
+                if table_row[2]=='other' or table_row[2]=='all':
+                    for dyncomp in DyndbDynamicsComponents.objects.filter(id_molecule=user_molecule):
+                        if int(dyncomp.type) in [0,2,3,4]:
+                            rowlist.append(dyncomp.id_dynamics.id)
 
-                    if table_row[2]=='alos' or table_row[2]=='all':
-                        for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
-                            if ccomp.type==1:
-                                for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
-                                    for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
-                                        for dyn in DyndbDynamics.objects.filter(id_model=models.id):
-                                            rowlist.append(dyn.id)
-            return rowlist
+            else:
+                user_compound=table_row[1]
+                if table_row[2]=='orto' or table_row[2]=='all':
+                    for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
+                        if ccomp.type==0:
+                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
+                                for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                                    for dyn in DyndbDynamics.objects.filter(id_model=models.id):
+                                        rowlist.append(dyn.id)
+
+                if table_row[2]=='alos' or table_row[2]=='all':
+                    for ccomp in DyndbComplexCompound.objects.filter(id_compound=user_compound):
+                        if ccomp.type==1:
+                            for cmol in DyndbComplexMolecule.objects.filter(id_complex_exp=ccomp.id_complex_exp.id):
+                                for models in DyndbModel.objects.filter(id_complex_molecule=cmol.id):
+                                    for dyn in DyndbDynamics.objects.filter(id_model=models.id):
+                                        rowlist.append(dyn.id)
+
+        return rowlist
        
 
     ##########################################################################################################################################
