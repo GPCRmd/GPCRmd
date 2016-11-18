@@ -16,13 +16,18 @@ $(document).ready(function(){
     search_by_chembl_default = $("[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']").val();
     similarity_chembl_default =  $("[id='id_similarity_chembl'],[id|=id_form][id$='-similarity_chembl']").val();
     
-    $(document).on('change',"[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']",function(){
+    $.fn.changeSimilarityStateOnSearchByChange = function () {
+        var molform = $(this).parents("[id|=molform]");
         var similarity_chembl = $(molform).find("[id='id_similarity_chembl'],[id|=id_form][id$='-similarity_chembl']");
         if ($(this).val() == 'sinchikeynoiso' || $(this).val() == 'sinchikey' ) {
             similarity_chembl.prop('disabled',true);
         } else {
             similarity_chembl.prop('disabled',false);
         }
+    }
+    
+    $(document).on('change',"[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']",function(){
+        $(this).changeSimilarityStateOnSearchByChange();
     });
     
 
@@ -131,11 +136,11 @@ $(document).ready(function(){
                 data['neutralize'] = '1'
             }
             if (search_by_chembl.val() == 'sinchikeynoiso') {
-                data[inchi.attr("name")] = inchi.val();
+                data['inchi'] = inchi.val();
             } else if (search_by_chembl.val() == 'sinchikey') {
-                data[sinchikey.attr("name")] = sinchikey.val();
+                data['sinchikey'] = sinchikey.val();
             } else if (search_by_chembl.val() == 'smiles') {
-                data[smiles.attr("name")] = smiles.val();
+                data['smiles'] = smiles.val();
                 data['similarity'] = similarity_chembl.val();
             }
         
@@ -392,11 +397,11 @@ $(document).ready(function(){
                 }
                 
                 if (search_by_pubchem.val() == 'sinchi' || search_by_pubchem.val() == 'sinchikeynoiso') {
-                    data[inchi.attr("name")] = inchi.val();
+                    data['inchi'] = inchi.val();
                 } else if (search_by_pubchem.val() == 'sinchikey') {
-                    data[sinchikey.attr("name")] = sinchikey.val();
+                    data['sinchikey'] = sinchikey.val();
                 } else if (search_by_pubchem.val() == 'smiles') {
-                    data[smiles.attr("name")] = smiles.val();
+                    data['smiles'] = smiles.val();
                 }
             
             } else {
