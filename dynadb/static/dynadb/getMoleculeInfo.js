@@ -40,8 +40,8 @@ $(document).ready(function(){
     disablestatespubchem, disablestateschembl) {
         
         notindbs.prop("disabled", false);
-        self.prop("disabled", false);
-        var selfstate = self.prop("disabled");
+//         self.prop("disabled", false);
+//         var selfstate = self.prop("disabled");
         var selfnotindbsstate = notindbs.prop("disabled");
         var i = 0;
         getmolinfo.each(function() {
@@ -81,7 +81,7 @@ $(document).ready(function(){
             }
             i++;
         });
-        self.prop("disabled",selfstate);
+//         self.prop("disabled",selfstate);
         notindbs.prop("disabled",selfnotindbsstate);
         
         addbutton.prop("disabled", false);
@@ -294,8 +294,8 @@ $(document).ready(function(){
         var aliases = $(molform).find("[id='id_other_names'],[id|=id_form][id$='-other_names']");
         var pubchemcid = $(molform).find("[id='id_pubchem_cid'],[id|=id_form][id$='-pubchem_cid']");
         var chemblid = $(molform).find("[id='id_chemblid'],[id|=id_form][id$='-chemblid']");
-        var updatepubchem = $(molform).find("[id='id_update_from_pubchem'],[id|=id_form][id$='-update_from_pubchem']");
-        var updatechembl = $(molform).find("[id='id_update_from_chembl'],[id|=id_form][id$='-update_from_chembl']");
+        var updatepubchem = $("[id='id_update_from_pubchem'],[id|=id_form][id$='-update_from_pubchem']");
+        var updatechembl = $("[id='id_update_from_chembl'],[id|=id_form][id$='-update_from_chembl']");
         var notindbs = $(molform).find("[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']");
         var notindbsall = $("[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']");
         var neutralize_pubchem = $(molform).find("[id='id_neutralize_pubchem'],[id|=id_form][id$='-neutralize_pubchem']");
