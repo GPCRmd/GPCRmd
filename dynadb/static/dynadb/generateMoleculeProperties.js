@@ -67,6 +67,8 @@ $(document).ready(function() {
         sinchikey.val('');
         net_charge.val('');
         smiles.val('');
+        self.resetCompoundInfo();
+        
         
         var molsdfname = $(molsdf).attr('name');
         $(currentform).ajaxSubmit({
@@ -76,7 +78,7 @@ $(document).ready(function() {
             dataType:'json',
             success: function(data) {
 
-                self.resetCompoundInfo();
+                
                 inchi.val(data.inchi.inchi);
                 inchikey.val(data.inchikey);
                 sinchikey.val(data.sinchikey);
