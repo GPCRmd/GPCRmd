@@ -159,12 +159,11 @@ $(document).ready(function(){
         
         $.post("./get_compound_info_chembl/",data=data,
         function(data){
-        alert(data);
-        datajson = jQuery.parseJSON(data);
+
         
-        if (datajson.chembl_id.length > 1) {  
+        if (data.chembl_id.length > 1) {  
             alert('Several PubChem CompoundIDs match this molecule.\nA pop-up will open in order to show them.');
-            $.post('../open_chembl/', {cids:datajson.chembl_id.join()}, function (data) {
+            $.post('../open_chembl/', {cids:data.chembl_id.join()}, function (data) {
                 var win=window.open('about:blank');
                 win.document.open();
                 win.document.write(data);
@@ -197,11 +196,11 @@ $(document).ready(function(){
             });
         } else {
             if (!chembl_id_only) {
-                name.val(datajson.name);
-                iupac_name.val(datajson.iupac_name);
-                aliases.val(datajson.synonyms);
+                name.val(data.name);
+                iupac_name.val(data.iupac_name);
+                aliases.val(data.synonyms);
                 var newstdform = $("<img>")
-                .attr("src",datajson.download_url_png+'?'+(new Date()).getTime())
+                .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(stdform).attr("id"))
                 .attr("name",$(stdform).attr("name"))
                 .attr("height",pngsize)
@@ -210,13 +209,13 @@ $(document).ready(function(){
                 $(stdform).replaceWith(newstdform);
                 stdform = newstdform;
             }
-            chemblid.val(datajson.chembl_id[0]);
+            chemblid.val(data.chembl_id[0]);
 
             
         }
         
 
-        }, 'text')
+        }, 'json')
         .fail(function(xhr,status,msg) {
         if (xhr.readyState == 4) {
                 alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
@@ -405,12 +404,10 @@ $(document).ready(function(){
             var chembl_id_only = true;
             $.post("./get_compound_info_pubchem/",data=data,
             function(data){
-            alert(data);
-            datajson = jQuery.parseJSON(data);
             
-            if (datajson.pubchem_cid.length > 1) {  
+            if (data.pubchem_cid.length > 1) {  
                 alert('Several PubChem CompoundIDs match this molecule.\nA pop-up will open in order to show them.');
-                $.post('../open_pubchem/', {cids:datajson.pubchem_cid.join()}, function (data) {
+                $.post('../open_pubchem/', {cids:data.pubchem_cid.join()}, function (data) {
                     var win=window.open('about:blank');
                     win.document.open();
                     win.document.write(data);
@@ -440,12 +437,12 @@ $(document).ready(function(){
                 
                 });
             } else {
-                name.val(datajson.name);
-                iupac_name.val(datajson.iupac_name);
-                aliases.val(datajson.synonyms);
-                pubchemcid.val(datajson.pubchem_cid[0]);
+                name.val(data.name);
+                iupac_name.val(data.iupac_name);
+                aliases.val(data.synonyms);
+                pubchemcid.val(data.pubchem_cid[0]);
                 var newstdform = $("<img>")
-                .attr("src",datajson.download_url_png+'?'+(new Date()).getTime())
+                .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(stdform).attr("id"))
                 .attr("name",$(stdform).attr("name"))
                 .attr("height",pngsize)
@@ -455,7 +452,7 @@ $(document).ready(function(){
             }
             
 
-            }, 'text')
+            }, 'json')
             .fail(function(xhr,status,msg) {
             chembl_id_only = false;
             if (xhr.readyState == 4) {
