@@ -57,8 +57,9 @@ $(document).ready(function(){
         retrieve_type_chembl.val(retrieve_type_chembl_default);
         search_by_chembl.val(search_by_chembl_default);
         similarity_chembl.val(similarity_chembl_default);
-        search_by_chembl.changeSimilarityStateOnSearchByChange();
-        
+        if (!notindbs.prop("checked")) {
+            search_by_chembl.changeSimilarityStateOnSearchByChange();
+        }
         
 
 

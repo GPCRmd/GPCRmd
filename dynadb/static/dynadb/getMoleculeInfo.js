@@ -95,6 +95,7 @@ $(document).ready(function(){
         retrieve_type_chembl.prop("disabled",notindbs.prop('checked'));
         search_by_chembl.prop("disabled",notindbs.prop('checked'));
         similarity_chembl.prop("disabled",notindbs.prop('checked'));
+        search_by_chembl.changeSimilarityStateOnSearchByChange();
         
         name.prop("readonly", true);
         iupac_name.prop("readonly", true);
