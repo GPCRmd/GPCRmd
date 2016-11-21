@@ -2346,25 +2346,27 @@ def get_compound_info_chembl(request,submission_id):
             molid = request.POST['molid']
         else:
             return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        if 'id_only' in request.POST.keys():
+                id_only = True
         os.makedirs(submission_path,exist_ok=True)
         pngname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
         sdfname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
-        try:
-            os.remove(os.path.join(submission_path,sdfname))
-        except:
-            pass
-        try:
-            os.remove(os.path.join(submission_path,pngname))
-        except:
-            pass
+        
+        if not id_only:
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
         
         if 'update_from_id' in request.POST.keys():
             update_from_id = True
             cids = [int(request.POST['update_from_id'])]
         else:
             update_from_id = False
-            if 'id_only' in request.POST.keys():
-                id_only = True
             if 'search_by' in request.POST.keys():
                 search_by = request.POST['search_by']
             if 'similarity' in request.POST.keys():

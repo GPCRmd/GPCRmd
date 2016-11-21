@@ -153,6 +153,8 @@ $(document).ready(function(){
             aliases.val('Retrieving...');
             iupac_name.val('Retrieving...');
         
+        } else {
+            data['id_only'] = '1';
         }
         
         
