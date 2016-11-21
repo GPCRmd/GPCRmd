@@ -222,7 +222,7 @@ def retreive_compound_data_pubchem_txt(searchproperty,searchvalue,outputproperty
     response.close()
     return data
 def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,width=300,height=300):
-    URL = 'https://www.ebi.ac.uk/chembl/compound/inspect/'
+    URL = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/'
     errdata = dict()
     data = None
     do_not_skip_on_debug = False
