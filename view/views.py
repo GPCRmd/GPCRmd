@@ -202,11 +202,14 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class):
     pos_gnum = numbers[current_class]
     for pos in result:
         if pos[0] != "-": #Consider only num in the pdb
-            seq_pos.append([pos[0][0],pos[0][2]]);
             db_pos=pos[1][1]
-            if pos_gnum[db_pos][1]: #If exist GPCR num for this position
-                gpcr_pdb[pos_gnum[db_pos][1]]=[pos[0][2],chain_name]
-                gpcr_aa[pos_gnum[db_pos][1]]=[pos_gnum[db_pos][0], chain_name]
+            gnum_or_nth=""
+            this_gnum = pos_gnum[db_pos][1]
+            if this_gnum: #If exist GPCR num for this position
+                gpcr_pdb[this_gnum]=[pos[0][2],chain_name]
+                gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
+                gnum_or_nth=this_gnum
+            seq_pos.append([pos[0][0],pos[0][2],gnum_or_nth]);
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
     for name in other_classes:
