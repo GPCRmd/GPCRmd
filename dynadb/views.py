@@ -2694,7 +2694,7 @@ def get_compound_info_chembl(request,submission_id):
                     cids = get_chembl_molecule_ids(datachembl,parents=bool(retrieve_type == 'parent'))
                 except ParsingError as e:
                     return HttpResponse('Problem downloading from ChEMBL:'\
-                    +'\n'+e.msg,status=502,content_type='text/plain')
+                    +'\n'+e.args[0],status=502,content_type='text/plain')
             data['chembl_id'] = cids
             
             if len(cids) == 0:
@@ -2710,7 +2710,7 @@ def get_compound_info_chembl(request,submission_id):
                     prefname,aliases = get_chembl_prefname_synonyms(datachembl)
                 except ParsingError as e:
                     return HttpResponse('Problem downloading from ChEMBL:'\
-                    +'\n'+e.msg,status=502,content_type='text/plain')
+                    +'\n'+e.args[0],status=502,content_type='text/plain')
                 lastidx = len(aliases)
                 if lastidx > 50:
                     lastidx = 50

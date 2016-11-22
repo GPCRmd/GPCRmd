@@ -6,7 +6,7 @@ from .customized_errors import ParsingError,MultipleMoleculesinSDF,InvalidMolecu
 from django.conf import settings
 from subprocess import Popen, PIPE
 from rdkit.Chem import ForwardSDMolSupplier, AssignAtomChiralTagsFromStructure, MolToSmiles, InchiToInchiKey, GetFormalCharge, RemoveHs, MolFromInchi, MolFromSmiles, SDWriter
-from rdkit.Chem import MolFromInchi, AddHs, EditableMol, SanitizeMol
+from rdkit.Chem import MolFromInchi, AddHs, EditableMol, SanitizeMol, Kekulize, Mol, MolToMolBlock
 from rdkit.Chem.rdinchi import MolToInchi
 from rdkit.rdBase import EnableLog
 from rdkit.Chem.Draw.MolDrawing import DrawingOptions
@@ -166,18 +166,53 @@ def cannonicalize_smiles_openbabel(smiles,obabelcmd = "/usr/bin/obabel"):
     smi = stdout.decode('UTF-8')
     smi = wspc.sub("",smi)
     return (smi,smierr)
+    
+def generate_smiles_openbabel(molblock,obabelcmd = "/usr/bin/obabel"):
+    wspc = re.compile("\s+")
+    if which("obabel"):
+        obabelcmd = "obabel"
+    smierr=None
+    p = Popen([obabelcmd,"-imol", "-ocan"],bufsize=-1,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate(input=molblock.encode('UTF-8'))
+    if stderr:
+        smierr = stderr.decode('UTF-8')
+        smierr = smierr.strip()
+    smi = stdout.decode('UTF-8')
+    smi = wspc.sub("",smi)
+    return (smi,smierr)
 
-def generate_smiles(mol,logfile=os.devnull):
+def generate_smiles2(mol,logfile=os.devnull):
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
-            smi = MolToSmiles(mol,isomericSmiles=True,canonical=False)
+            molnoar = Mol(mol)
+            try:
+                Kekulize(molnoar,clearAromaticFlags=True)
+            except:
+                pass
+            smi = MolToSmiles(molnoar,isomericSmiles=True,kekuleSmiles=True,canonical=False)
+            
     smi,smierr = cannonicalize_smiles_openbabel(smi)
     if isinstance(logfile,str):
         with open(logfile, 'a') as to_file:
             print(smierr,file=to_file)
     else:
-        print(smierr,file=logfile)
-        
+        print(smierr,file=logfile)   
+    return smi
+    
+def generate_smiles(mol,logfile=os.devnull):
+    with stdout_redirected(to=logfile,stdout=sys.stderr):
+        with stdout_redirected(to=logfile,stdout=sys.stdout):
+            mol2 = Mol(mol) 
+            mol2.SetProp("_Name","")
+            molblock = MolToMolBlock(mol2,includeStereo=True)
+            del mol2
+            
+    smi,smierr = generate_smiles_openbabel(molblock)
+    if isinstance(logfile,str):
+        with open(logfile, 'a') as to_file:
+            print(smierr,file=to_file)
+    else:
+        print(smierr,file=logfile)   
     return smi
                                           
 def generate_inchikey(inchi):
