@@ -2248,6 +2248,8 @@ def _generate_molecule_properties(request,submission_id):
              
   if request.method == 'POST':
     submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+    print(request.POST)
+    print(request.FILES)
     submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
     data = dict()
     data['download_url_log'] = None
@@ -2377,6 +2379,7 @@ def _generate_molecule_properties(request,submission_id):
                     os.remove(os.path.join(submission_path,pngname))
                 except:
                     pass
+                raise
                 msg = 'Error while drawing molecule.'
                 print(msg,file=logfile)
                 logfile.close()
@@ -2907,8 +2910,16 @@ def SMALL_MOLECULEview(request, submission_id):
              
             #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
 
-            qMF=DyndbMolecule.objects.filter(inchikey=dicfmole[ii]['inchikey']).filter(inchi=dicfmole[ii]['inchi'])
-            qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'])
+                                                #generation of the sinchi
+            #dictcomp[ii]['sinchi']=    
+
+            if dictcomp[ii]['pubchem_cid']!='':
+                qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            elif dictcomp[ii]['chembleid']!='':
+                qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            else: 
+                qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
 
             if len(qMF.values())==1: #there is a entry matching this molecule
 
