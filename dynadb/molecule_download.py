@@ -640,8 +640,9 @@ def get_chembl_molecule_ids(datachembl,parents=False):
     ids = []
     try:
         for molecule in datachembl["molecules"]:
-            if parents and "molecule_hierarchy" in molecule.keys() and "parent_chembl_id" in molecule["molecule_hierarchy"].keys():
-                chembl_id = molecule["molecule_hierarchy"]["parent_chembl_id"]
+            if parents and "molecule_hierarchy" in molecule.keys() and molecule["molecule_hierarchy"]:
+                if "parent_chembl_id" in molecule["molecule_hierarchy"][0].keys():
+                    chembl_id = molecule["molecule_hierarchy"][0]["parent_chembl_id"]
             else:
                 chembl_id =  molecule["molecule_chembl_id"]
             ids.append(int(chembl_id.replace('CHEMBL','')))
