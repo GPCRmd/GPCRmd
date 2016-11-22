@@ -212,6 +212,7 @@ $(document).ready(function(){
         } else {
             high_pre = obtainPredefPositions();
         }
+        // sel_ranges=obtainSelectedAtSeq();
         return [cp, high_pre,sel_enc] 
     }
 
@@ -244,17 +245,219 @@ $(document).ready(function(){
     }
 
 
-    $('input:text').on('keyup blur', function() {
-        var maxlength =100;
-        var val = $(this).val();
-        if (val.length > maxlength) {
-            $(this).val(val.slice(0, maxlength));
-        }
-    });
+    function maxInputLength(select, maxlength){
+        $(select).on('keyup blur', function() {
+            // var maxlength =4;
+            var val = $(this).val();
+            if (val.length > maxlength) {
+                $(this).val(val.slice(0, maxlength));
+            }
+        });
+    }
 
+    maxInputLength('#inputdist',4);
+    maxInputLength('input.sel_input',100);
     disableMissingClasses();
 
 
+///    
+    var comp_lg=[];
+    var comp_sh=[];
+    $(".comp").each(function(){
+        var comp_l=$(this).text();
+        var comp_s=$(this).attr("id");
+        comp_lg[comp_lg.length]=comp_l;
+        comp_sh[comp_sh.length]=comp_s;
+    })
+
+    var select="";
+    for (comp_n in comp_lg){
+        var option='<option value="'+comp_sh[comp_n]+'">'+comp_lg[comp_n]+'</option>';
+        select += option;
+    }
+    var first=true;
+    var i=1
+    $("#add_btn").click(function(){ 
+        var row='<span class="dist_sel" id=row'+i+'><br>\
+                  <span id="tick" ></span>\
+                  <span id="always" style="margin-left:14px">\
+                    Show residues within \
+                    <input class="form-control input-sm" id="inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
+                      &#8491; of\
+                        <select id="comp" name="comp">' + select + '</select>\
+                  </span>';
+        $("#show_within").append(row);
+        i+=1;
+        if (first){
+            $("#rm_btn").css("visibility","visible");
+            first=false;
+        }
+    });
+    
+    $("#rm_btn").click(function(){ 
+        $("#row"+(i-1)).remove();
+        i -=1;
+        if (i ==1){
+            $("#rm_btn").css("visibility","hidden");
+            first=true;
+        }
+    });
+
+
+    function obtainDistSel(){
+        var dist_of=[];
+        $(".sel_within").find(".dist_sel").each(function(){ 
+            var inp=$(this).find("input").val();
+            if (inp && /^[\d.]+$/.test(inp)) {
+                var comp=$(this).find("select").val();
+                dist_of[dist_of.length]=[inp,comp];
+            }
+
+        });       
+        return (encode(dist_of))
+    }
+
+
+    $(".sel_within").on("blur", ".dist_sel" ,function(){
+        var inp=$(this).find("input").val();
+        if (inp && /^[\d.]+$/.test(inp)) {
+            $(this).find("#tick").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
+            $(this).find("#always").attr("style","");
+        } else {
+            if ($(this).find("#tick").attr("class")=="glyphicon glyphicon-ok"){
+                $(this).find("#tick").attr({"class":"","style":""});
+                $(this).find("#always").attr("style","margin-left:14px");
+            }
+        }
+    });    
+////
+
+
+    function clickSelRange(class_str){
+        return class_str.match(/(\d)+/g)
+
+    }
+
+    function selectFromSeq(){
+        var click_n=1;
+        var seq_pos_1;
+        var seq_pos_fin;
+        var pos_li=[]
+        $(".seq_sel").click(function(){    
+            // alert("click");
+            if (click_n==1){
+                var range=$(this).attr("class"); 
+                if(range.indexOf("-") == -1){     //Start a new selection
+                    $(this).css("background-color","blue");
+                    seq_pos_1 = $(this).attr("id");
+                    click_n=2;
+                } else {      // Remove an old selection
+                    var selRange= clickSelRange(range);
+                    i=Number(selRange[0]);
+                    end=Number(selRange[1]);
+                    // alert(typeof i);
+                    while (i <= end) {
+                        var mid_id="#" + String(i)
+                        $(mid_id).css("background-color","");
+                        $(mid_id).attr("class", "seq_sel")
+                        i++
+                    }
+                }
+            } else  {
+                // Finish a selection
+                click_n=1;
+                seq_pos_fin = Number($(this).attr("id"));
+                var i = Number(seq_pos_1);
+                while (i <= seq_pos_fin){
+                    var mid_id="#" + String(i)
+                    $(mid_id).css("background-color","grey");
+                    $(mid_id).children().css("background-color","");
+                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin);
+                    i++
+                }
+
+            }
+        })
+    
+        $(".seq_sel").hover(function(){
+            if (click_n==2) {
+                var seq_pos_2 = Number($(this).attr("id"));
+                var i = Number(seq_pos_1);
+                while (i <= seq_pos_2){
+                    var mid_id="#" + String(i)
+                    $(mid_id).children().css("background-color","blue");
+                    i++
+                }
+            }
+        }, function(){
+            if (click_n==2) {
+                var seq_pos_2 = Number($(this).attr("id"));
+                var i = Number(seq_pos_1);
+                while (i <= seq_pos_2){
+                    var mid_id="#" + String(i)
+                    $(mid_id).children().css("background-color","");
+                    i++
+                }
+            }
+        });
+    }
+    selectFromSeq();
+
+
+    function joinContiguousRanges(sel_ranges){
+        var sel_ranges_def=[]
+        var o_max;
+        var o_min;
+        sel_ranges=uniq(sel_ranges);
+        for (p in sel_ranges) {
+            var my_range_str=sel_ranges[p];
+            var my_range = clickSelRange(my_range_str);
+            var my_min=my_range[0];
+            var my_max=my_range[1];
+            if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is 1
+                sel_ranges_def[sel_ranges_def.length -1]= o_min+"-"+my_max;
+                o_max = my_max;
+            } else {
+                sel_ranges_def[sel_ranges_def.length]=my_range_str;
+                o_max = my_max;
+                o_min = my_min;
+            }
+        }
+        return sel_ranges_def
+    }
+
+    function obtainSelectedAtSeq(){
+        var sel_ranges=[]
+        $(".seq_sel.sel").each(function(){
+            var sel_range=clickSelRange($(this).attr("class"));
+            sel_ranges[sel_ranges.length]=sel_range[0]+"-"+sel_range[1];
+        });
+        return(sel_ranges);
+    }
+    $("#addToSel").click(function(){ 
+        sel_ranges=obtainSelectedAtSeq();
+        sel_ranges_ok=joinContiguousRanges(sel_ranges);
+        var pos_str=""
+        p=0;
+        while (p < (sel_ranges_ok.length -1)) {
+            pos_str += sel_ranges_ok[p] + " or "
+            p ++
+        }
+        pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
+        act_val=$(".sel_input").val();
+        var or=""
+        if (act_val){
+            or = " or "
+        }
+        var fin_val = act_val + or + "protein and ("+ pos_str +")";
+        $(".sel_input").val(fin_val)
+
+    });    
+
+
+
+
+///
     var struc = $(".str_file").attr("id");
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
@@ -282,6 +485,7 @@ $(document).ready(function(){
     click_unclick(".high_pdC");
     click_unclick(".high_pdF");
     click_unclick(".rep_elements");
+    click_unclick("#col_btn");
     seeReceptor=click_unclick_specialRec("#receptor");
     $("#btn_all").click(function(){
         $(".rep_elements").addClass("active");
@@ -289,6 +493,7 @@ $(document).ready(function(){
     $("#btn_clear").click(function(){
         $(".rep_elements").removeClass("active");
     });
+
 
 
     $("#submit").click(function(){
@@ -304,9 +509,11 @@ $(document).ready(function(){
                 legend_el[legend_el.length]=key;
             }
         }
+        var dist_of=obtainDistSel();  // For the dist selection
         obtainLegend(legend_el);
         url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
-       $("iframe").attr("src", url);
+        alert(url);
+       // $("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){
@@ -324,9 +531,14 @@ $(document).ready(function(){
                 pd = "y"
                 break
             }
-        }                
+        }
+        // var dist_of=obtainDistSel(); // For the dist selection
         var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]);
         $(this).attr("href", url_mdsrv);
     });    
 
 });
+
+// SOLVE:
+//          Presentation
+//          Solve error: Conserved positions are showing pos + 1 !!!

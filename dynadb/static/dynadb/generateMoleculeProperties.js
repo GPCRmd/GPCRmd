@@ -1,22 +1,28 @@
-var uploadmol_global_html = '';
+var uploadmol1_global_html = '';
+var uploadmol2_global_html = '';
 
 $(document).ready(function() {
     $.fn.exists = function () {
         return this.length !== 0;
     };
     
-    uploadmol_global_html = $("[id='id_upload_mol'],[id|=id_form][id$='-upload_mol']").clone();
+    uploadmol1_global_html = $("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']").clone();
+    uploadmol2_global_html = $("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']").clone();
     $(document).on('click',"[id='id_upload_button'],[id|=id_form][id$='-upload_button']",function(){
         var max_size = 52428800;
         var pngsize = 300;
         var molform = $(this).parents("[id|=molform]");
-        var uploadmol = $(molform).find("[id='id_upload_mol'],[id|=id_form][id$='-upload_mol']");
-        var uploadmol_html = $(uploadmol_global_html).clone();
-        uploadmol_html.attr('id',uploadmol.attr('id'));
-        uploadmol_html.attr('name',uploadmol.attr('name'));
+        var uploadmol1 = $(molform).find("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']");
+        var uploadmol1_html = $(uploadmol1_global_html).clone();
+        uploadmol1_html.attr('id',uploadmol1.attr('id'));
+        uploadmol1_html.attr('name',uploadmol1.attr('name'));
+        var uploadmol2 = $(molform).find("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']");
+        var uploadmol2_html = $(uploadmol2_global_html).clone();
+        uploadmol2_html.attr('id',uploadmol2.attr('id'));
+        uploadmol2_html.attr('name',uploadmol2.attr('name'));
         var self = $(this);
         $(self).prop('disabled',true);
-        var mainform = $("#small_molecule");
+        var currentform = $(molform).find("#small_molecule");
         var molformid = $(molform).attr('id');
         var logfile = $(molform).find("[id='id_logfile'],[id|=id_form][id$='-logfile']");
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
@@ -24,11 +30,6 @@ $(document).ready(function() {
         var sinchikey = $(molform).find("[id='id_sinchikey'],[id|=id_form][id$='-sinchikey']");
         var net_charge = $(molform).find("[id='id_net_charge'],[id|=id_form][id$='-net_charge']");
         var smiles = $(molform).find("[id='id_smiles'],[id|=id_form][id$='-smiles']");
-
-        
-        
-        var mainformclone = $(mainform).clone();
-        $(mainformclone).find("div[id|='molform']:not(#"+molformid+")").remove();
         
         var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
         
@@ -61,17 +62,23 @@ $(document).ready(function() {
             }
         }
         
+        inchi.val('');
+        inchikey.val('');
+        sinchikey.val('');
+        net_charge.val('');
+        smiles.val('');
+        self.resetCompoundInfo();
         
         
         var molsdfname = $(molsdf).attr('name');
-        $(mainformclone).ajaxSubmit({
+        $(currentform).ajaxSubmit({
             url: "./generate_properties/",
             type: 'POST',
             data: {'molpostkey':molsdfname,'pngsize':pngsize},
             dataType:'json',
             success: function(data) {
 
-                self.resetCompoundInfo();
+                
                 inchi.val(data.inchi.inchi);
                 inchikey.val(data.inchikey);
                 sinchikey.val(data.sinchikey);
@@ -80,14 +87,24 @@ $(document).ready(function() {
                 
                 var newuploadmol = $("<img>")
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
-                .attr("id",$(uploadmol).attr("id"))
-                .attr("name",$(uploadmol).attr("name"))
+                .attr("id",$(uploadmol1).attr("id"))
+                .attr("name",$(uploadmol1).attr("name"))
                 .attr("height",pngsize)
                 .attr("width",pngsize);
-                $(uploadmol).replaceWith($(newuploadmol));
+                $(uploadmol1).replaceWith($(newuploadmol));
                 logfile.attr("href",data.download_url_log);
                 logfile.show();
-                uploadmol = $(newuploadmol);
+                uploadmol1 = $(newuploadmol);
+                newuploadmol = $("<img>")
+                .attr("src",data.download_url_png+'?'+(new Date()).getTime())
+                .attr("id",$(uploadmol2).attr("id"))
+                .attr("name",$(uploadmol2).attr("name"))
+                .attr("height",pngsize)
+                .attr("width",pngsize);
+                $(uploadmol2).replaceWith($(newuploadmol));
+                logfile.attr("href",data.download_url_log);
+                logfile.show();
+                uploadmol2 = $(newuploadmol);
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {

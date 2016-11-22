@@ -27,7 +27,7 @@ from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetI
 from .uploadhandlers import TemporaryFileUploadHandlerMaxSize,TemporaryMoleculeFileUploadHandlerMaxSize
 from .molecule_properties_tools import open_molecule_file, check_implicit_hydrogens, check_non_accepted_bond_orders, generate_inchi, generate_inchikey, generate_smiles, get_net_charge, write_sdf, generate_png, stdout_redirected, neutralize_inchikey, standarize_mol_by_inchi,validate_inchikey,remove_isotopes
 from rdkit.Chem import MolFromInchi,MolFromSmiles
-from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl
+from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein
@@ -2590,25 +2590,27 @@ def get_compound_info_chembl(request,submission_id):
             molid = request.POST['molid']
         else:
             return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        if 'id_only' in request.POST.keys():
+                id_only = True
         os.makedirs(submission_path,exist_ok=True)
         pngname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
         sdfname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
-        try:
-            os.remove(os.path.join(submission_path,sdfname))
-        except:
-            pass
-        try:
-            os.remove(os.path.join(submission_path,pngname))
-        except:
-            pass
+        
+        if not id_only:
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
         
         if 'update_from_id' in request.POST.keys():
             update_from_id = True
             cids = [int(request.POST['update_from_id'])]
         else:
             update_from_id = False
-            if 'id_only' in request.POST.keys():
-                id_only = True
             if 'search_by' in request.POST.keys():
                 search_by = request.POST['search_by']
             if 'similarity' in request.POST.keys():
@@ -2658,9 +2660,9 @@ def get_compound_info_chembl(request,submission_id):
             elif 'smiles' in request.POST.keys() and search_by == 'smiles': 
                 smiles = request.POST['smiles']
                 mol = MolFromSmiles(smiles,sanitize=True)
-                remove_isotopes(mol)
                 if mol is None or smiles == '':
                     return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                remove_isotopes(mol)
                 if neutralize:
                     mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
                     smiles =  generate_smiles(mol)
@@ -2692,6 +2694,9 @@ def get_compound_info_chembl(request,submission_id):
                     +'\n'+e.msg,status=502,content_type='text/plain')
             data['chembl_id'] = cids
             
+            if len(cids) == 0:
+                return HttpResponseNotFound("Cannot find entry for this molecule in ChEMBL.")
+            
             if len(cids) < 2 and not id_only:
                 time.sleep(5)
                 datachembl,errdata = retreive_molecule_chembl_id_json('CHEMBL'+str(cids[0]))
@@ -2699,7 +2704,6 @@ def get_compound_info_chembl(request,submission_id):
                         raise DownloadGenericError(errdata['reason'])
 
                 try:
-                    print(datachembl)
                     prefname,aliases = get_chembl_prefname_synonyms(datachembl)
                 except ParsingError as e:
                     return HttpResponse('Problem downloading from ChEMBL:'\
@@ -2711,13 +2715,18 @@ def get_compound_info_chembl(request,submission_id):
                 data['name'] = prefname
                 del datachembl
 
-         
-
                 time.sleep(5)
-                
-                datachembl,errdata = retreive_compound_png_chembl('CHEMBL'+str(cids[0]),outputfile=os.path.join(submission_path,pngname),dimensions=pngsize)
+                molregno,errdata = chembl_get_molregno_from_html('CHEMBL'+str(cids[0]))
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
+                time.sleep(5)
+                datachembl,errdata = retreive_compound_sdf_chembl(molregno,getmol_url='/chembl/download_helper/getmol/',outputfile=os.path.join(submission_path,sdfname))
+                if 'Error' in errdata.keys():
+                    raise DownloadGenericError(errdata['reason'])
+                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+                time.sleep(5)
+                datachembl,errdata = retreive_compound_png_chembl('CHEMBL'+str(cids[0]),outputfile=os.path.join(submission_path,pngname),dimensions=pngsize)
+
                 data['download_url_png'] = join_path(submission_url,pngname,url=True)
                 return JsonResponse(data,safe=False)
             else:

@@ -13,9 +13,7 @@ $(document).ready(function() {
     
     $("[readonly]").set_readonly_color();
     
-    
-    
-    $(document).on('change',"[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']",function(){
+    $.fn.OnChangeIsNotInDatabases = function () {
         var molform = $(this).parents("[id|=molform]");
         var is_not_in_databases = $(molform).find("[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']");
         var get_mol_info = $(molform).find("[id='id_get_mol_info'],[id|=id_form][id$='-get_mol_info']");
@@ -52,7 +50,11 @@ $(document).ready(function() {
         
         get_mol_info.prop("disabled",$(this).prop('checked'));
 
-        $("[readonly]").set_readonly_color();
+        molform.find("[readonly]").set_readonly_color();
+    }
+    
+    $(document).on('change',"[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']",function(){
+        $(this).OnChangeIsNotInDatabases();
 
     });
     

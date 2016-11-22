@@ -9,6 +9,23 @@
     background-color:#F3F3F3 !important; 
 }
 
+/*#checkbox_lab {
+  display: block; N
+  padding-right: 15px;
+  text-indent: -15px;
+  background-color: blue; N
+}
+
+#checkbox_inp{
+  width: 13px; N
+  height: 13px; N
+  padding: 0; N
+  margin:5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  *overflow: hidden;  
+}*/
 </style>
 </head>
 <body>
@@ -79,21 +96,63 @@
             <div class="row">
                 <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
                 {% for long_n, short_n in compounds %}
-                  <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                  <button   style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec">Clear</button>
             </div>
+<!-- ============= Input selection =========== -->
             <div class="row">
                 <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-	              <input class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
+	              <input value="" class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
                 </div>
-                <div class="col-sm-2 radio" style="margin-top:0; paddinf-left:3px;padding-bottom:5px" >
+                <div class="col-sm-2 radio" style="margin-top:0; paddinf-left:3px;" >
         	        <label><input  type="radio" name="sel_high" class="sel" value="sel" checked>Select</label>
 	                <label><input  type="radio" name="sel_high" class="high" value="high">Highlight</label>
                 </div>
             </div>
             <div id="alert"> </div>
+<!-- ============= Sequence selection =========== -->
+            <div class="row" style="">
+            <button style="padding:5px" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
+            </div>
+            <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+              <button  class="btn btn-link" id="addToSel" ><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
+              <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                {% for seq,pos,gnum in seq_pos %}
+                <div id="{{pos}}" title="{{gnum}}" class="seq_sel" style="float: left;text-align:center;font-size:10px;margin-bottom:5px">
+                  <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{seq}}</div>
+                  <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                </div>            
+                {% endfor %}
+              </div> 
+            </div>
+
+<!-- ============= Residues within x A of y =========== --> 
+            <div class="row">
+                <div class="sel_within" style="margin-right:5px;margin-left:0;margin-bottom:15px;margin-top:10px">
+                  <span class="dist_sel" id="row0">
+                    <span id="tick" ></span>
+                    <span id="always" style="margin-left:14px">
+                 <!-- <label id="checkbox_lab"><input id="checkbox_inp" type="checkbox" name="dist" value="dist"> -->Show residues within 
+
+                    <input class="form-control input-sm" id="inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                      &#8491; of
+                        <select id="comp" name="comp">
+                           {% for long_n, short_n in compounds %}
+                           <option   value="{{short_n}}">{{long_n}}</option>
+                           {% endfor %}
+                        </select>
+                    </span>
+                  </span>
+                  <!-- </label> -->
+                  <span id="show_within"></span>
+                  <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                  <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
+                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-minus-sign"></span></button>
+                  <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
+                </div>
+            </div>
 <!-- ============= Predefined views =========== -->
            {% if gpcr_pdb != "no" %}
                 <ul class="nav nav-tabs" id="allclasses">
@@ -156,10 +215,12 @@
                     </div>                                                  
                </div>
             {% endif %}
+
 <!-- ======================================== -->
+
             <div class="row" >
                <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px"> 
-                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#f2f2f2">Submit</button>
+                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#f2f2f2">Apply</button>
                </div>
      	    </div>
 
@@ -174,7 +235,7 @@
           {% if traj_list %}
             <div class="panel panel-default" >
                 <div class="panel-body">
-                  <div><p style="color:#337ac1;">Select a trajectory</p></div>
+                  <div><p style="color:#337ac1;">Select trajectory</p></div>
 		    <div class="checkbox" >
 			{% for traj in traj_list %}
 			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" value="{{traj.0}}">{{traj.1}}</label></span>
