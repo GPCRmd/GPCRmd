@@ -41,8 +41,9 @@ $(document).ready(function(){
         });
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
+        notuniprot.isNotUniprotChange();
         return true;
-    };
+    }
     $(document).on('click',"[id='id_reset'],[id|=id_form][id$='-reset']", function(){
         $(this).resetProteinByButton();
     });

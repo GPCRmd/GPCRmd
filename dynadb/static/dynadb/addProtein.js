@@ -48,7 +48,7 @@ $(document).ready(function(){
 
         
         $(newitem).formrenum(next_form_num);
-        $(newitem).resetProteinByButton();
+        $(newitem).children(":first").resetProteinByButton();
         //Insert after last protform
         $(item_parent).append(newitem);
         
