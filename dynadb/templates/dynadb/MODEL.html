@@ -84,7 +84,7 @@
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." > Complex Type:</a></label></div>
 				<div class="col-md-6" style="height:30px"><select id="id_type" name="type" placeholder="   "  style="width:300px" >
-                                      {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
+                                      {% for i in fdbMF.Meta.model.MODEL_TYPE %}
                                         <option value="{{i.0}}"> {{i.1}}</option>
                                       {% endfor %}
 		<!--			<option value="0">Protein Apoform </option>
