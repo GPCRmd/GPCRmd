@@ -1115,6 +1115,21 @@ def NiceSearcher(request):
             arrays_def.append(array)
 
     ##########################################################################################################################################
+    def exactmatchtest(arrays,return_type,resultlist):
+        rowdict=dealwithquery(arrays)
+        for keys,values in rowdict.items():
+            if keys[1]=='NOT':
+                pass
+
+
+        if return_type=='Complex':
+            pass
+        elif return_type=='Model':
+            pass
+        else:       
+            pass
+
+    ##########################################################################################################################################
 
     def prepare_to_boolean(resultdic):
         list_of_lists=[[] for i in range(len(resultdic))]
@@ -1310,8 +1325,7 @@ def NiceSearcher(request):
        
 
     ##########################################################################################################################################
-
-    def main(arrays,return_type):
+    def dealwithquery(arrays):
         listofdic=[]
         counter=0
         rowdict=dict()
@@ -1340,7 +1354,12 @@ def NiceSearcher(request):
                 rowdict[ (len(rowdict), arrays[counter][0]) ]= [ arrays[counter][2],arrays[counter][3],arrays[counter][4] ] #id,type,isligand/isreceptor
                 counter+=1
 
+        return rowdict
 
+    ##########################################################################################################################################
+
+    def main(arrays,return_type):
+        rowdict=dealwithquery(arrays)
         results=dict()
         for keys,values in rowdict.items():
             #we need to differentiate between list of lists, and simples lists
@@ -1410,6 +1429,7 @@ def NiceSearcher(request):
 
             complex_list_names.append([exp_id, receptorlist, liglist])
 
+        exactmatchtest(arrays_def,return_type,resultlist)
 
         tojson={'result': complex_list_names,'model':model_list,'dynlist':dynlist,'message':''}
         data = json.dumps(tojson)
@@ -2079,6 +2099,7 @@ def search_top(request):
 
 def pdbcheck(request,combination_id):
     if request.method=='POST': #See pdbcheck.js
+        print('checkpoint1')
         results=dict()
         url=request.POST.get('url')
         #fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
@@ -2091,8 +2112,7 @@ def pdbcheck(request,combination_id):
         counter=0
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|') #title for the results pop-up table
-
+            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: |') #title for the results pop-up table
             for r in range(3,7):
                 if array[r].replace(" ", "")=='' or not array[r].isdigit():
                     results={'type':'string_error','title':'Missing information or wrong information', 'message':'Residue or sequence range is not completely defined, or you did not used a number.'}
@@ -2100,7 +2120,7 @@ def pdbcheck(request,combination_id):
                     data = json.dumps(tojson) #CHANGE TO results!!!!!!!!!!!!!!!!!!!!!!
                     request.session[combination_id] = results
                     return HttpResponse(data, content_type='application/json') 
-
+            print('checkpoint2')
             prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
             start=int(array[3])
             stop=int(array[4])
@@ -2122,11 +2142,11 @@ def pdbcheck(request,combination_id):
                 data = json.dumps(tojson)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
-
+            print('checkpoint3')
             uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
-
+                print(checkresult)
                 if isinstance(checkresult,tuple):
                     tablepdb,simplified_sequence,hexflag=checkresult
                     guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
@@ -2191,7 +2211,7 @@ def pdbcheck(request,combination_id):
             return render(request,'dynadb/fullrun.html', {'answer':fav_color})
 
         else:
-            fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very bad alignment\n ','title':'Unknown error'}
+            fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very poor alignment\n ','title':'Unknown error'}
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
 def servecorrectedpdb(request,pdbname):
