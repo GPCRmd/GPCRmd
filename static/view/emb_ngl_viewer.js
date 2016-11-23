@@ -1,4 +1,11 @@
 $(document).ready(function(){
+    $(".sel_input").val("")
+    $("#show_within").empty();
+    $("#inputdist").val("")
+    // $("#rad_sel").click(function(){alert("!!")});
+    // $("#rad_high").attr("checked",false).checkboxradio("refresh");
+    // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
+    
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
 
     function obtainInputedGPCRnum(pre_sel) {
@@ -64,6 +71,7 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
+        // alert(sel);
         sel_enc = encode(sel);
         return sel_enc
     };
@@ -164,6 +172,12 @@ $(document).ready(function(){
         high_pre["F"]=getSelectedPosLists(".high_pdF.active");
         return (high_pre)
     }
+
+    $("#clear_conspos").click(function(){;
+        $(".high_pd.active").each(function(){
+            $(this).removeClass("active");
+        });
+    });    
 //////////////
 
 
@@ -261,6 +275,17 @@ $(document).ready(function(){
 
 
 ///    
+
+    $(".section_pan").click(function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        if(upOrDown.indexOf("in") > -1){
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-down");
+        } else {
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
+        }
+    });
+
     var comp_lg=[];
     var comp_sh=[];
     $(".comp").each(function(){
@@ -512,8 +537,8 @@ $(document).ready(function(){
         var dist_of=obtainDistSel();  // For the dist selection
         obtainLegend(legend_el);
         url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
-        alert(url);
-       // $("iframe").attr("src", url);
+        // alert(url);
+       $("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){
@@ -539,6 +564,3 @@ $(document).ready(function(){
 
 });
 
-// SOLVE:
-//          Presentation
-//          Solve error: Conserved positions are showing pos + 1 !!!
