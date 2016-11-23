@@ -1,11 +1,15 @@
-var s;
-s = 0;
 
 function addModeledelement1() {
 	"use strict";
-	s += 1;
+	//:ws += 1;
+        var itemfirst = document.getElementById("pElement1");
+        var s=itemfirst.childElementCount;
+
+        console.log("s " + s);
+        console.log("s " + s);
 	var ss = s - 1;	 //alert(l + " l=1 primer ciclo de cambio");
 	if (s==1) {
+                if (document.getElementById("Element1") != null){
 		var itemfirst = document.getElementById("Element1");
 		var idlabnod1= "Element1_0";
 		itemfirst.id = idlabnod1;
@@ -17,7 +21,7 @@ function addModeledelement1() {
 		$(this).attr({'placeholder':namelab1, 'id':idlab1, 'for':idlab1, 'name':namelab1});
 		});
 		s=2;
-		ss=1;
+		ss=1;}
 	} 
 		var item = document.getElementById("Element1_0");
                 var itemparent = document.getElementById("pElement1");

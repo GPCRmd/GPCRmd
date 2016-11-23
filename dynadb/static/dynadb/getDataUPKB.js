@@ -10,9 +10,8 @@ $(document).ready(function(){
         var id_species = protform.find("[id='id_id_species'],[id|=id_form][id$='-id_species']");
         var species = protform.find("[id='id_id_species_autocomplete'],[id|=id_form][id$='-id_species_autocomplete']");
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
-        // var addbutton = protform.find("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
-        var addbuttonall = $("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
-        // var resetbutton = protform.find("[id='id_reset'],[id|=id_form][id$='-add_reset']");
+        var pprotform = $(protform).parent();
+        var addbutton = $(pprotform).children(":last-child").find("[id='id_add_protein'],[id|=id_form][id$='-add_protein']");
         var resetbuttonall = $("[id='id_reset'],[id|=id_form][id$='-reset']");
         var notuniprot = protform.find("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var notuniprotall = $("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
@@ -39,7 +38,7 @@ $(document).ready(function(){
         getdataall.prop("disabled",true);
         
         
-        addbuttonall.prop("disabled", true);
+        addbutton.prop("disabled", true);
         resetbuttonall.prop("disabled", true);
         notuniprotall.prop("disabled", true);
         notuniprot.prop("disabled", true);
@@ -66,8 +65,8 @@ $(document).ready(function(){
         sequence.set_restore_color();
         
         name.val('Retrieving...');
-        aliases.text('Retrieving...');
-        sequence.text('Retrieving...');
+        aliases.val('Retrieving...');
+        sequence.val('Retrieving...');
         
         $.post("../get_data_upkb/",
         {
@@ -77,8 +76,8 @@ $(document).ready(function(){
           uniprotkbac.val(data.Entry);
           isoform.val(data.Isoform);
           name.val(data.Name);
-          aliases.text(data.Aliases);
-          sequence.text(data.Sequence);
+          aliases.val(data.Aliases);
+          sequence.val(data.Sequence);
           species.val(data.Organism);
           id_species.val(data.speciesid);
           self.prop("disabled", true);
@@ -89,10 +88,18 @@ $(document).ready(function(){
         }, 'json')
 
         .fail(function(xhr,status,msg) {
-           alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+           if (xhr.readyState == 4) {
+                alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+           }
+           else if (xhr.readyState == 0) {
+                alert("Connection error");
+           }
+           else {
+                alert("Unknown error");
+           }
            name.val('');
-           aliases.text('');
-           sequence.text('');
+           aliases.val('');
+           sequence.val('');
            species.val('');
            id_species.val('');
            notuniprot.prop("disabled", false);
@@ -119,7 +126,7 @@ $(document).ready(function(){
             self.prop("disabled",selfstate);
             notuniprot.prop("disabled",selfnotuniprotstate);
             
-            addbuttonall.prop("disabled", false);
+            addbutton.prop("disabled", false);
             resetbuttonall.prop("disabled", false);
             
             species.prop("readonly", true);

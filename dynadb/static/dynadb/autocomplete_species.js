@@ -4,7 +4,7 @@ $(document).ready(function(){
     };
     $.widget( "ui.species_autocomplete", {
       _create: function() {
-        var self = this;
+        var self = $(this);
         var page = "../get_specieslist/"
         var input1 = this.element,
           id = input1.attr("id")+"_autocomplete",
@@ -19,8 +19,10 @@ $(document).ready(function(){
           .attr("type","text")
           .val( "" )
           .css('width','300px')
-          .prop("disabled",true)
-          .insertAfter(input1)
+          .prop("readonly",true)
+          .insertAfter(input1);
+          
+          $(input2).set_readonly_color();
           
           
 //           .addClass("ui-widget ui-widget-content ui-corner-left");
