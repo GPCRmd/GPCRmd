@@ -42,9 +42,9 @@
     {%endif%}
 
     {% if answer.link_2_molecules %}
-        <b>Dynamics Components</b>:
+        <b>Dynamics Components</b>: <br>
         {% for url in answer.link_2_molecules %}
-            <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
     {% endif %}
 

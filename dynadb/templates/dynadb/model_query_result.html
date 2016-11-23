@@ -20,21 +20,30 @@
     {% endif %}
 
     {% if answer.type%} 
-      <b>Model type</b>:{{answer.type}} <br>
+      <b>Model type</b>:<br> {{answer.type}} <br>
     {% endif %}
-    <b>Protein(s) involved</b>:<a href=/dynadb/compound/id/{{answer.link2protein}}>{{answer.link2protein}} <br></a>
+    <br>
+    {%if answer.link2protein%}
+    <b>Protein(s) involved</b>:<br>
+    {%for link in answer.link2protein%}
+        <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+    {%endfor%}
+    {%endif%}
+    <br>
+    {% if answer.components%} 
+        <b>Molecules used in this model</b>:<br>
+        {%for compoundlink in answer.components %}
+           <a href= /dynadb/molecule/id/{{compoundlink.0}}><img src="{{compoundlink.1}}" height="200" width="200"/></a>
+        {%endfor%}
+    {% endif %} 
+    <br>
     <b>Dynamic(s) in which this model appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
        <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
     <br>
-    {% if answer.components%} 
-        <b>Molecules used in this model</b>:<br>
-        {%for compoundlink in answer.components %}
-           <a href= /dynadb/molecule/id/{{compoundlink}}>{{compoundlink}}</a>,
-        {%endfor%}
-    {% endif %} 
+
 
     {% if answer.references %} 
         <br><b>References in which this model is mentioned</b>:<br>

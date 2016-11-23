@@ -13,13 +13,13 @@ $("#Searcher").click(function(e) {
             if (data.message==''){
                 var linkresult='';
                 for(i=0; i<data.compound.length; i++){
-                    linkresult=linkresult+'<li> <a href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound: '+data.compound[i][1]+'<br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></a>   <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+' >Add to complex search</button><br></li>';
+                    linkresult=linkresult+'<li> <a href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound: '+data.compound[i][1]+'<br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></a>   <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+'%'+data.compound[i][1].replace(' ','!')+' >Add to complex search</button><br></li>';
                 }
                 for(i=0; i<data.protein.length; i++){
-                    linkresult=linkresult+'<li>   <a href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein: '+data.protein[i][1]+'</a>   <button class="protein" type="button" value="receptor" name='+data.protein[i][0]+' >Add to complex search</button><br></li>';
+                    linkresult=linkresult+'<li>   <a href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein: '+data.protein[i][1]+'</a>   <button class="protein" type="button" value="receptor" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' >Add to complex search</button><br></li>';
                 }
                 for(i=0; i<data.molecule.length; i++){
-                    linkresult=linkresult+'<li>  <a href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule: '+data.molecule[i][3]+'<br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/></a>   <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+' >Add to complex search</button><br></li>';
+                    linkresult=linkresult+'<li>  <a href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule: '+data.molecule[i][3]+'<br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/></a>   <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+'%'+data.molecule[i][3].replace(' ','!')+' >Add to complex search</button><br></li>';
                 }
                 $('#ajaxresults').html(linkresult);
             }else{

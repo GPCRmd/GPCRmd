@@ -14,33 +14,39 @@
     <div class="panel-heading"><b>Compound Name:</b> {{answer.name}} </div>
     <div class="panel-body"> 
     {%if answer.othernames%}
-        <b>Other Names</b>: 
+        <b>Other Names</b>:<br> 
         {%for oname in answer.othernames%}
-            {{oname}},
+            <li style="margin-left:39px">{{oname}}</li>
         {%endfor%}
     {%endif%}
-
+    <br>
     {%if answer.iupac_name%}
-    <br><b>IUPAC name</b>: {{answer.iupac_name}} <br>  
+    <b>IUPAC name</b>:<br> {{answer.iupac_name}} <br>  
     {%endif%}
+    <br>
     {%if answer.pubchem_cid%}
-    <b>PUBCHEM link</b>: <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br>
+    <b>PUBCHEM link</b>:<br> <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br>
     {%endif%}
+    <br>
     {%if answer.chembleid%} 
-    <b>ChEMBLE link</b>: <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
+    <b>ChEMBLE link</b>:<br> <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
     {%endif%}
+    <br>
     {%if answer.sinchikey%}
-    <b>InChIKey</b>:{{answer.sinchikey}} <br>
+    <b>InChIKey</b>:<br>{{answer.sinchikey}} <br>
     {%endif%}
+    <br>
     {%if answer.sinchi%}
-    <b>InChI</b>:{{answer.sinchi}} <br>
+    <b>InChI</b>:<br>{{answer.sinchi}} <br>
     {%endif%}
+    <br>
     {%if answer.link_2_molecule%}
         <b>Corresponding Molecules</b>:<br>
         {% for url in answer.link_2_molecule %}
             <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
         {% endfor %}
     {%endif%}
+    <br>
     {% if answer.references %} 
         <br><b>References in which this compound is mentioned</b>:<br>
         <ul>

@@ -16,37 +16,37 @@
     <div class="panel-heading"><b>Molecule Info:</b></div>
     <div class="panel-body">  
     {% if answer.smiles %}
-    <b>Smiles</b>: {{answer.smiles}} <br>  
+    <b>Smiles</b>:<br> {{answer.smiles}} <br>  
     {%endif%}
-
+<br>
     {% if answer.netcharge %}
-        <b>Netcharge</b>:{{answer.netcharge}} <br>
+        <b>Netcharge</b>:<br>{{answer.netcharge}} <br>
     {%endif%}
-
+<br>
     {% if answer.inchikey %}
-        <b>InChIKey</b>:{{answer.inchikey}} <br>
+        <b>InChIKey</b>:<br>{{answer.inchikey}} <br>
     {%endif%}
-
+<br>
     {% if answer.inchi %}
-        <b>InChI</b>:{{answer.inchi}} <br>
+        <b>InChI</b>:<br>{{answer.inchi}} <br>
     {%endif%}
-
+<br>
     {% if answer.inchicol %}
-        <b>InChIcol</b>:{{answer.inchicol}} <br>
+        <b>InChIcol</b>:<br>{{answer.inchicol}} <br>
     {%endif%}
-
+<br>
     {% if answer.link_2_compound %}
-        <b>Corresponding compound</b>: 
+        <b>Corresponding compound</b>:<br> 
            <a href= /dynadb/compound/id/{{answer.link_2_compound}}>{{answer.link_2_compound}}</a>, 
     {%endif%}
-
+<br>
     {% if answer.inmodels %}
-        <br><b> Models in which this molecule appears </b>:
+        <br><b> Models in which this molecule appears </b>:<br>
         {%for model in answer.inmodels%}
             <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
         {%endfor%}
     {%endif%}
-
+<br>
     {% if answer.references %} 
         <br><b>References in which this molecule is mentioned</b>:<br>
         <ul>
@@ -61,6 +61,13 @@
     </div>
     </div>   
 
-
+<div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Image of the Molecule (Standard form):</b></div>
+    <div class="panel-body">  
+    <img src="{{answer.imagelink}}" />
+    </div>
+    </div>
+    </div>   
 {% endblock content %}
 

@@ -158,7 +158,7 @@ $("#tablesearch").click(function() {
                             var cl=data.result;
                             listc='';
                             for(i=0; i<cl.length; i++){
-                                $("#complexes").append("<li> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a>  Composed by receptor: "+cl[i][1]+", and ligand "+ cl[i][2]+". </li>");
+                                $("#complexes").append("<li> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a>  Composed by <b>receptor</b>: "+cl[i][1]+", and <b>ligand</b> "+ cl[i][2]+". </li>");
                             }
                         }//endif
 
@@ -179,14 +179,14 @@ $("#tablesearch").click(function() {
 
                         }//endif
 
-
+                        //Results are dynamics
                         if (data.dynlist.length>0 && restype=='dynamics'){
                             $("#ajaxresults").html('Dynamics Results');
                             $("#ajaxresults").append("<ul id='dynres'></ul>");
-                            var dl=data.dynlist.split(',');
+                            var dl=data.dynlist
                             linkd='';
                             for(i=0; i<dl.length; i++){
-                                $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i]+">"+dl[i]+" </a>" +"</li>");
+                                $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</li>");
                             }
 
                         } //endif
@@ -265,10 +265,10 @@ $("#tablesearch").click(function() {
                         if (data.dynlist.length>0 && restype=='dynamics'){
                             $("#ajaxresults").html('Dynamics Results');
                             $("#ajaxresults").append("<ul id='dynres'></ul>");
-                            var dl=data.dynlist.split(',');
+                            var dl=data.dynlist;
                             linkd='';
                             for(i=0; i<dl.length; i++){
-                                $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i]+">"+dl[i]+" </a>" +"</li>");
+                                 $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</li>");
                             }
 
                         } //endif
