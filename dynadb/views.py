@@ -3130,6 +3130,18 @@ def SMALL_MOLECULEview(request, submission_id):
 
         return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 
+def delete_molecule(request,submission_id):
+    if request.method == "POST":
+        molecule_num = request.POST["molecule_num"]
+        
+        
+        response = HttpResponse('Success.',content_type='text/plain')
+    else:
+        response = HttpResponseForbidden()
+    return response
+
+
+
 def DYNAMICSview(request, submission_id):
 
     def handle_uploaded_file(f,p,name):
