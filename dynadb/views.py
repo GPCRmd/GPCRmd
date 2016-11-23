@@ -2814,7 +2814,7 @@ def SMALL_MOLECULEview(request, submission_id):
         dictPMod={}
         form=re.compile('form-')
         indexl=[]
-        print("!!!!!indexl== ",indexl)
+       # print("!!!!!indexl== ",indexl)
         nl=0 #counter of pairs in dicpost.items()
         for key,val in dicpost.items():
             nl=nl+1
@@ -2841,21 +2841,21 @@ def SMALL_MOLECULEview(request, submission_id):
                 #dictmol[0][key]=val
                 #dictON[0][key]=val
                 #dictfmol[0][key]=val
-            print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+            #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
             dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
             dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
             for k,v in dfieldtype.items():
                 if nkey in v:
                     dfielddict[k][index][nkey]=val
-                    print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
-                    print ("\n key ", nl, "dfielddict == ", dfielddict)
+                  #  print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+                  #  print ("\n key ", nl, "dfielddict == ", dfielddict)
                     break
            #     else:
            #         print("OJO!!! key== ",key, " no en Lista== ", v)
             print ("\n key ", nl, "dfielddict == ", dfielddict)
             continue 
 
-        print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+        #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
         indexfl=[]
         if len(dicfiles) == 0:
             response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
@@ -2875,7 +2875,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     dictfmol[0]={}
                 nkey=key
             dictfmol[indexf][nkey]=val
-        print("INDEXFL", indexfl)
+      #  print("INDEXFL", indexfl)
         fdbMF={}
         fdbMFobj={}
         fdbCF={}
@@ -2884,13 +2884,13 @@ def SMALL_MOLECULEview(request, submission_id):
         fdbONobj={}
         dON={}
         on=0
-        print("ANTES SORT",indexfl, indexl)
+     #   print("ANTES SORT",indexfl, indexl)
         if len(indexl) > 1:
             indexfli=list(map(int,indexfl))
             indexli=list(map(int,indexl))
             indexfl=sorted(indexfli)
             indexl=sorted(indexli)
-        print(indexfl, indexl)
+        #print(indexfl, indexl)
         dicfmole={}
         fdbF={}
         fdbFobj={}
@@ -2991,8 +2991,11 @@ def SMALL_MOLECULEview(request, submission_id):
 
 #### DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
             
-                INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+                molid=ii 
+                INFOstdMOL=generate_molecule_properties2(submission_id,molid,dicpost,dicfiles) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
      #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+                print("COMPROBAR ",INFOstdMOL)
+                
                 
                 if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved
                     print("The molecule ",ii, "is actually the standard molecule")
@@ -5277,3 +5280,150 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #       fdbMM = dyndb_Complex_Molecule_Molecule()
 
 #       return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
+
+def generate_molecule_properties2(submission_id,molid,POST,FILES):
+    pngsize = 300
+    RecMet = False
+    formre = re.compile('^form-(\d+)-')
+    
+               
+#  if method == 'POST':
+    submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+    print(POST)
+    submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
+    data = dict()
+    data['download_url_log'] = None
+    if 'molpostkey' in POST.keys():
+        if 'recmet' in POST.keys():
+            RecMet = True
+        if 'pngsize' in POST.keys():
+            pngsize = int(POST["pngsize"])
+        molpostkey = POST["molpostkey"]
+        
+        if molpostkey in FILES.keys():
+            m = formre.search(molpostkey)
+            if m:
+                molid = m.group(1)
+            else:
+                molid = 0
+            uploadfile = FILES[molpostkey]
+            os.makedirs(submission_path,exist_ok=True)
+            logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
+            sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+            pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+            sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+            pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+            try:
+                os.remove(os.path.join(submission_path,sdfname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngname))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,pngnameref))
+            except:
+                pass
+            try:
+                os.remove(os.path.join(submission_path,sdfnameref))
+            except:
+                pass
+            logfile = open(os.path.join(submission_path,logname),'w')
+            data['download_url_log'] = join_path(submission_url,logname,url=True)
+            try:
+                mol = open_molecule_file(uploadfile,logfile) # EL objeto mol es necesario para trabajar en RD KIT
+            
+            except:
+                print ("mol object has not been generated") 
+                pass
+            
+            data['sinchi'] = dict()
+            try:
+                print('Generating Standard InChI...',file=logfile)
+                sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+                data['sinchi']['sinchi'] = sinchi
+                data['sinchi']['code'] = code
+                print(msg,file=logfile)
+                data['inchi'] = dict()
+                print('Generating Fixed Hydrogens InChI...',file=logfile)
+                inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+                data['inchi']['inchi'] = inchi
+                data['inchi']['code'] = code
+                print(msg,file=logfile)
+                data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+                data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+
+            except:
+                data['msg'] ='Error while computing InChI.'
+                print(data['msg'],file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            try:
+                print('Generating Smiles...',file=logfile)
+                data['smiles'] = generate_smiles(mol,logfile)
+            except:
+                msg = 'Error while computing Smiles.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                
+            data['charge'] = get_net_charge(mol)
+            
+            try:
+                mol.SetProp("_Name",sdfname)
+                write_sdf(mol,os.path.join(submission_path,sdfname))
+                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+
+            except:
+                try:
+                    os.remove(os.path.join(submission_path,sdfname))
+                except:
+                    pass
+                msg = 'Error while storing SDF file.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            print('Drawing molecule...',file=logfile)
+            try:
+                generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
+            except:
+                try:
+                    os.remove(os.path.join(submission_path,sdfname))
+                except:
+                    pass
+                try:
+                    os.remove(os.path.join(submission_path,pngname))
+                except:
+                    pass
+                raise
+                msg = 'Error while drawing molecule.'
+                print(msg,file=logfile)
+                logfile.close()
+                data['msg'] = msg+' Please, see log file.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            data['download_url_png'] = join_path(submission_url,pngname,url=True)
+            print('Finished with molecule.',file=logfile)
+            logfile.close()
+            del mol
+            
+            return JsonResponse(data,safe=False)
+        else:
+            data['msg'] = 'Unknown molecule file reference.'
+            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+    elif upload_handlers[0].exception is not None:
+        try:
+            raise upload_handlers[0].exception
+        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+            data['msg'] = e.args[0]
+            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            
+            
+        
+    else:
+        data['msg'] = 'No file was selected or cannot find molecule file reference.'
+        return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+
