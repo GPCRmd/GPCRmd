@@ -24,12 +24,28 @@
     {% endif %}
     <br>
     {%if answer.link2protein%}
-    <b>Protein(s) involved</b>:<br>
-    {%for link in answer.link2protein%}
-        <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
-    {%endfor%}
+        <b>Protein(s) involved</b>:<br>
+            {%for link in answer.link2protein%}
+                <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            {%endfor%}
     {%endif%}
     <br>
+
+
+    {% if answer.ortoligands %}
+        <b>Orthosteric ligand(s)</b>:<br>
+        {% for url in answer.ortoligands %}
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+        {% endfor %}
+    {% endif %}
+    <br>
+    {% if answer.aloligands %}
+        <b>Allosteric ligand(s)</b>:<br>
+        {% for url in answer.aloligands %}
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+        {% endfor %}
+    {% endif %}
+
     {% if answer.components%} 
         <b>Molecules used in this model</b>:<br>
         {%for compoundlink in answer.components %}
