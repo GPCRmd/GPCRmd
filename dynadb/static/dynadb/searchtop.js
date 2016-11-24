@@ -37,7 +37,17 @@ function searchtop() {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#pdbchecker1").prop("disabled",false);
-                alert('Error ocurred: PDB file numbering is corrupted (50,51,32); or resid interval is too short.');
+                if (XMLHttpRequest.readyState == 4) {
+                    var responsetext = XMLHttpRequest.responseText;
+
+                    alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                }
+                else if (XMLHttpRequest.readyState == 0) {
+                    alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                }
+                else {
+                    alert("Unknown error");
+                }
         }
     });
 }
