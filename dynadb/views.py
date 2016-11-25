@@ -1040,21 +1040,30 @@ def search_top(request):
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
-
+            
             if array[3].replace(" ", "")=='' or not (array[3].isdigit()) or array[4].replace(" ", "")=='' or not (array[4].isdigit()):
-                results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
-                data = json.dumps(results)
-                return HttpResponse(data, content_type='application/json') 
-            start=int(array[3])
-            stop=int(array[4])
+                try:
+                    start = int(array[3],16)
+                    stop = int(array[4],16)
+                except ValueError:
+                    results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
+                    data = json.dumps(results)
+                    return HttpResponse(data, content_type='application/json')
+            else:
+                start=int(array[3])
+                stop=int(array[4])
+            
             if start>=stop:
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].replace(" ", "").upper() #avoid whitespace problems
             segid=array[2].replace(" ", "").upper() #avoid whitespace problems
+            
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
+            print(str(protid))
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
@@ -1063,8 +1072,9 @@ def search_top(request):
             elif isinstance(res,str):
                  resultsdict['message']=res
             counter+=1
-
+            
     data = json.dumps(resultsdict)
+    
     return HttpResponse(data, content_type='application/json')
 
 
@@ -1084,7 +1094,7 @@ def pdbcheck(request,combination_id):
         counter=0
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: '+array[10]+'|') #title for the results pop-up table
+            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]) #title for the results pop-up table
 
             for r in range(3,7):
                 if array[r].replace(" ", "")=='' or not array[r].isdigit():
@@ -1095,8 +1105,12 @@ def pdbcheck(request,combination_id):
                     return HttpResponse(data, content_type='application/json') 
 
             prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
-            start=int(array[3])
-            stop=int(array[4])
+            try:
+                start=int(array[3])
+                stop=int(array[4])
+            except ValueError:
+                start=int(array[3],16)
+                stop=int(array[4],16)
             seqstart=int(array[5])
             seqstop=int(array[6])
             if seqstart>=seqstop:
@@ -1108,7 +1122,7 @@ def pdbcheck(request,combination_id):
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
             sequence=sequence[seqstart-1:seqstop]
-
+            
             if stop-start<1:
                 results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value','message':''}
                 tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
@@ -1194,6 +1208,80 @@ def servecorrectedpdb(request,pdbname):
         response['Content-Disposition']="attachment;filename=%s" % (pdbname) #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
         response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
     return response
+
+@csrf_exempt
+def pdbcheck_molecule(request,submission_id):
+  request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+  return _pdbcheck_molecule(request,submission_id)
+
+
+@csrf_protect
+def _pdbcheck_molecule(request,submission_id):
+    postkeys_mc = {'resname','molecule','id_molecule','numberofmol'}
+    prefix_mc='formmc'
+    postkeys_ps = {'chain','segid','resid_from','resid_to'}
+    prefix_ps='formps'
+    
+    if request.method == 'POST':
+            submission_path = get_file_paths("model",url=False,submission_id=submission_id)
+            submission_url = get_file_paths("model",url=True,submission_id=submission_id)
+            data = dict()
+            data['download_url_log'] = None
+            if  'file_source' in request.FILES.keys():
+                uploadfile = request.FILES['file_source']
+                fieldset_mc = dict()
+                fieldset_ps = dict()
+                for key in request.POST.keys():
+                    if key.find(prefix_mc) == 0:
+                        
+                        fieldsplit = key.split('-')
+                        fieldname = fieldsplit[2]
+                        if fieldname in postkeys_mc:
+                            num = int(fieldsplit[1])
+                            if num not in fieldset_mc.keys():
+                                fieldset_mc[num] = dict()    
+                            fieldset_mc[num][fieldname] = request.POST[key].replace(" ","")
+                            
+                    elif key.find(prefix_ps) == 0:
+                            
+                        fieldsplit = key.split('-')
+                        fieldname = fieldsplit[2]
+                        if fieldname in postkeys_ps:
+                            num = int(fieldsplit[1])
+                            if num not in fieldset_ps.keys():
+                                fieldset_ps[num] = dict()
+                            fieldset_ps[num][fieldname] = request.POST[key].replace(" ","")
+                                    
+                    elif key in postkeys_mc:
+                        if 0 not in fieldset_mc.keys():
+                            fieldset_mc[0] = dict()
+                        fieldset_mc[0][key] = request.POST[key].replace(" ","")
+                    elif key in postkeys_ps:
+                        if 0 not in fieldset_ps.keys():
+                            fieldset_ps[0] = dict()
+                        fieldset_ps[0][key] = request.POST[key].replace(" ","") 
+
+                if fieldset_mc == dict() or fieldset_ps == dict():
+                    return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                for num in fieldset_mc.keys():
+                    if fieldset_mc[num].keys() != postkeys_mc:
+                        return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                for num in fieldset_ps.keys():
+                    if fieldset_ps[num].keys() != postkeys_ps:
+                        return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        
+                print(fieldset_ps)
+                
+                        
+                    
+                            
+                os.makedirs(submission_path,exist_ok=True)
+                logname = get_file_name_submission("model",submission_id,0,ext="log",forceext=False,subtype="log")
+                pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+                logfile = open(os.path.join(submission_path,logname),'w')
+                data['download_url_log'] = join_path(submission_url,logname,url=True)
+        
+                return JsonResponse({'msg':'Success'})
 
 def MODELreuseREQUESTview(request):
 
