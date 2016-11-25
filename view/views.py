@@ -11,20 +11,22 @@ from Bio import PDB
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the range that consist in the residue number at the same +1. This is because NGL selections requires a range, not a single number."""
-    (pos_range_l,chain)=gpcr_pdb[my_pos]
-    pos_range_r=int()
-    pos_range=""
-    n=1
-    pdb_positions_all = gpcr_pdb.values()
-    pdb_positions_inchain = [p[0] for p in pdb_positions_all if p[1]==chain]
-    while pos_range=="":
-        if pos_range_l + n in pdb_positions_inchain:
-            pos_range = (str(pos_range_l)+"-"+str(pos_range_l +n))
-            break
-        else:
-            n+=1
-        if n > len(pdb_positions_inchain):  
-            return False
+    (ext_range,chain)=gpcr_pdb[my_pos]
+    ext_range=str(ext_range)
+    pos_range=ext_range+"-"+ext_range
+    # pos_range_r=int()
+    # pos_range=""
+    # n=1
+    # pdb_positions_all = gpcr_pdb.values()
+    # pdb_positions_inchain = [p[0] for p in pdb_positions_all if p[1]==chain]
+    # while pos_range=="":
+    #     if pos_range_l + n in pdb_positions_inchain:
+    #         pos_range = (str(pos_range_l)+"-"+str(pos_range_l +n))
+    #         break
+    #     else:
+    #         n+=1
+    #     if n > len(pdb_positions_inchain):  
+    #         return False
     return pos_range
                               
 def create_conserved_pos_list(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li, multiple_chains,chain_name):
@@ -193,18 +195,19 @@ def obtain_prot_chains(pdb_name):
             chain_name_li.append(chain.id)
     return chain_name_li
 
-def obtain_rel_dicts(result,numbers,chain_name,current_class):
+def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,gpcr_pdb,gpcr_aa,gnum_classes_rel):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
-    gpcr_pdb={}
-    gpcr_aa={}
-    gnum_classes_rel={}
     pos_gnum = numbers[current_class]
     for pos in result:
         if pos[0] != "-": #Consider only num in the pdb
             db_pos=pos[1][1]
-            if pos_gnum[db_pos][1]: #If exist GPCR num for this position
-                gpcr_pdb[pos_gnum[db_pos][1]]=[pos[0][2],chain_name]
-                gpcr_aa[pos_gnum[db_pos][1]]=[pos_gnum[db_pos][0], chain_name]
+            gnum_or_nth=""
+            this_gnum = pos_gnum[db_pos][1]
+            if this_gnum: #If exist GPCR num for this position
+                gpcr_pdb[this_gnum]=[pos[0][2],chain_name]
+                gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
+                gnum_or_nth=this_gnum
+            seq_pos.append([pos[0][0],pos[0][2],gnum_or_nth]);
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
     for name in other_classes:
@@ -217,7 +220,7 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class):
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
-    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok)
+    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
     """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
@@ -350,17 +353,23 @@ def index(request, dyn_id):
                     gpcr_n_ex=pos_gnum[1]
                     break
             if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
+                seq_pos=[]
+                gpcr_pdb={}
+                gpcr_aa={}
+                gnum_classes_rel={}
                 for chain_name in chain_name_li:
                     checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=99999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
                         tablepdb,pdb_sequence,hexflag=checkpdb_res
                         result=matchpdbfa(db_seq,pdb_sequence, tablepdb, hexflag)
                         if isinstance(result, list):
-                            (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok)=obtain_rel_dicts(result,numbers,chain_name,current_class)
+                            (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos, gpcr_pdb,gpcr_aa,gnum_classes_rel)
                             (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
                             obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
                 motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
                 find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
+                for e in sorted(gpcr_pdb):
+                    print(e, gpcr_pdb[e])
                 # for gpcr_class in cons_pos_dict:
                 #     print(gpcr_class)
                 #     for cons_pos_li in cons_pos_dict[gpcr_class]:
@@ -384,7 +393,8 @@ def index(request, dyn_id):
                     "gpcr_class" : current_class,
                     "active_class" : active_class,
                     "chains" : chain_str,
-                    "gpcr_pdb": gpcr_pdb_js}
+                    "gpcr_pdb": gpcr_pdb_js,
+                    "seq_pos": seq_pos}
                 return render(request, 'view/index.html', context)
        #Cannot use gpcr numbering:
         context={

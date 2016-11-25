@@ -79,87 +79,147 @@
             <div class="row">
                 <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
                 {% for long_n, short_n in compounds %}
-                  <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                  <button   style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec">Clear</button>
             </div>
+<!-- ============= Input selection =========== -->
+            <div id="selection_all" style="margin-bottom:5px">
             <div class="row">
-                <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-	              <input class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
-                </div>
-                <div class="col-sm-2 radio" style="margin-top:0; paddinf-left:3px;padding-bottom:5px" >
-        	        <label><input  type="radio" name="sel_high" class="sel" value="sel" checked>Select</label>
-	                <label><input  type="radio" name="sel_high" class="high" value="high">Highlight</label>
-                </div>
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
+                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#selection">Atom selection </span></button>-->
             </div>
-            <div id="alert"> </div>
+            <div id="selection" class="collapse" style="padding-right:15px;padding-left:15px">
+              <div class="row" style="margin-top:10px;">
+                  <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
+	                <input value="" class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
+                  </div>
+                  <div class="col-sm-2 radio" style="margin-top:0; paddinf-left:3px;" >
+          	        <label><input  type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" checked>Select</label>
+	                  <label><input  type="radio" name="sel_high" id="rad_high" class="high" value="high">Highlight</label>
+                  </div>
+              </div>
+              <div id="alert"> </div>
+<!-- ============= Sequence selection =========== -->
+              <div class="row" style="">
+              <button style="padding:5px;margin-left:3px" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
+              </div>
+              <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                <button  class="btn btn-link" id="addToSel" ><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
+                <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                  {% for seq,pos,gnum in seq_pos %}
+                  <div id="{{pos}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px">
+                    <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{seq}}</div>
+                    <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                  </div>            
+                  {% endfor %}
+                </div> 
+              </div>
+            </div>
+            </div>
+
 <!-- ============= Predefined views =========== -->
            {% if gpcr_pdb != "no" %}
+            <div id="cons_pos_box_all" style="margin-top:5px;margin-bottom:5px">
+            <div class="row">
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>               
+                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
+            </div>
+            <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
                 <ul class="nav nav-tabs" id="allclasses">
                  <li class="GPCRclass {{active_class.A.0}} cons_nav" id="{{show_class.A}}"><a id="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
                   <li class="GPCRclass {{active_class.B.0}} cons_nav" id="{{show_class.B}}"><a id="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
                   <li class="GPCRclass {{active_class.C.0}} cons_nav" id="{{show_class.C}}"><a id="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC">Class C</a></li>
                   <li class="GPCRclass {{active_class.F.0}} cons_nav" id="{{show_class.F}}"><a id="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF">Class F</a></li>
                 </ul>
-                <div class="tab-content">
+                <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                     <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
-                        <div class="row" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                         {% if show_class.A %}
                             {% if mol_sw %}
                                 <p>Molecular switches</p>
 	                                {% for pos in mol_sw %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                   {% endfor %}
 	                                {% for pos in motifs_def %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                   {% endfor %}
                             {% endif %}
                             {% if cons_classA %}
                                 <p>Most conserved</p>
 	                                {% for pos in cons_classA %}
-                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pdA btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
                                   {% endfor %}
                             {% endif %}
                         {% endif %}
-                        </div>
                     </div>
                     <div id="classB" class="tab-pane {{active_class.B.1}}">
-                        <div class="row" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                           {% if cons_classB %}
                             <p>Most conserved</p>
                             {% for pos in cons_classB %}
-                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pdB btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
                             {% endfor %}   
                           {% endif %}                         
-                        </div>
                     </div>  
                     <div id="classC" class="tab-pane {{active_class.C.1}}">
-                        <div class="row" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                           {% if cons_classC %}
                             <p>Most conserved</p>
                             {% for pos in cons_classC %}
-                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pdC btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
                            {% endfor %}
                           {% endif %}
-                        </div>
                     </div>  
                     <div id="classF" class="tab-pane {{active_class.F.1}}">
-                        <div class="row" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                           {% if cons_classF %}
                             <p>Most conserved</p>
                             {% for pos in cons_classF %}
-                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pdF btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
                            {% endfor %}
                           {% endif %}
-                        </div>
-                    </div>                                                  
+                    </div>
+                    <button class="btn btn-link pull-right" id="clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear all</button>
                </div>
+            </div>
+            </div>
             {% endif %}
+
+<!-- ============= Residues within x A of y =========== --> 
+           <div id="res_distances_all" style="margin-top:5px;margin-bottom:10px">
+           <div class="row">
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#res_distances"><span>Residue Distances </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#res_distances">Residue Distances</button>-->
+            </div>
+            <div id="res_distances" class="row collapse">
+                <div class="sel_within" style="margin-right:5px;margin-left:0;margin-bottom:5px;margin-top:10px">
+                  <span class="dist_sel" id="row0">
+                    <span id="tick" ></span>
+                    <span id="always" style="margin-left:14px">
+                 <!-- <label id="checkbox_lab"><input id="checkbox_inp" type="checkbox" name="dist" value="dist"> -->Show residues within 
+
+                    <input class="form-control input-sm" id="inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                      &#8491; of
+                        <select id="comp" name="comp">
+                           {% for long_n, short_n in compounds %}
+                           <option   value="{{short_n}}">{{long_n}}</option>
+                           {% endfor %}
+                        </select>
+                    </span>
+                  </span>
+                  <!-- </label> -->
+                  <span id="show_within"></span>
+                  <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                  <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
+                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-minus-sign"></span></button>
+                  <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
+                </div>
+            </div>
+            </div>
+
 <!-- ======================================== -->
+
             <div class="row" >
                <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px"> 
-                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#f2f2f2">Submit</button>
+                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#f2f2f2">Apply</button>
                </div>
      	    </div>
 
@@ -174,7 +234,7 @@
           {% if traj_list %}
             <div class="panel panel-default" >
                 <div class="panel-body">
-                  <div><p style="color:#337ac1;">Select a trajectory</p></div>
+                  <div><p style="color:#337ac1;">Select trajectory</p></div>
 		    <div class="checkbox" >
 			{% for traj in traj_list %}
 			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" value="{{traj.0}}">{{traj.1}}</label></span>

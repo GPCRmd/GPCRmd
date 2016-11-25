@@ -9,6 +9,10 @@ from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirec
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
 from defusedxml.ElementTree import DefusedXMLParser as xmlparser
+from io import BytesIO
+from .molecule_properties_tools import open_molecule_file
+from html.parser import HTMLParser
+
 
 CIDS_TYPES = {'all', 'active', 'inactive', 'standardized', \
 
@@ -62,27 +66,13 @@ def pubchem_errdata_2_response(errdata,data=None):
 
 def chembl_errdata_2_response(errdata,data=None):
     if 'Error' in errdata.keys():
-          if data is not None:
-              if 'Fault'not in data.keys():
-                  data = None
-              else:
-                  if 'Code' not in data['Fault'].keys():
-                      data['Fault']['Code'] = 'unknown'
-                  if 'Message' not in data['Fault'].keys():
-                      data['Message']['Code'] = 'None'
-                  if 'Details' not in data['Fault'].keys():
-                      data['Fault']['Details'] = ['None']
           if errdata['ErrorType'] == 'HTTPError':
             if errdata['status_code'] == 404 or errdata['status_code'] == 410:
                 msg = 'No data found for this molecule in ChEMBL.\n'
-                if data is not None:
-                    msg += 'Code: '+data['Fault']['Code']+'\nMessage: '+data['Fault']['Message']+'\nDetails: '+'\n'.join(data['Fault']['Details'])
                 response = HttpResponseNotFound(msg,content_type='text/plain')
             else:
               msg = 'Problem downloading from ChEMBL:\nStatus: '+str(errdata['status_code']) \
                 +'\n'+errdata['reason']+'\n'
-              if data is not None:
-                msg += 'Code: '+data['Fault']['Code']+'\nMessage: '+data['Fault']['Message']+'\nDetails: '+'\n'.join(data['Fault']['Details'])
               response = HttpResponse(msg,status=502,content_type='text/plain')
           elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError' \
             or errdata['ErrorType'] == 'ParsingError':
@@ -126,7 +116,6 @@ def retreive_compound_data_pubchem_post_json(searchproperty,searchvalue,outputpr
             extrasstr = '?' + '&'.join(extraargs)
         postdata = {str(searchproperty) : str(searchvalue)} 
         response = requests.post(URL+'/'.join(args)+'/JSON'+extrasstr,data=postdata,timeout=30,stream=False,verify=True)
-        print(URL+'/'.join(args)+'/JSON'+extrasstr)
         data = response.json()
         response.raise_for_status()
         
@@ -246,10 +235,7 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
 
         
         response = requests.get(URL+'/'.join(args)+'/PNG?'+str(width)+'x'+str(height),timeout=30,stream=True,verify=True)
-        if response.status_code != 404:
-            response.raise_for_status()
-        else:
-            outputfile = None
+        response.raise_for_status()
         if outputfile:
             fileh = open(outputfile,'wb')
         else:
@@ -333,14 +319,11 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
             recordtype='2d'
         
         response = requests.get(URL+'/'.join(args)+'/SDF?record_type='+recordtype,timeout=30,stream=True,verify=True)
-        if response.status_code != 404:
-            response.raise_for_status()
-        else:
-            outputfile = None
+        response.raise_for_status()
         if outputfile:
-            fileh = open(outputfile,'wb')
+            fileh = open(outputfile,'w+b')
         else:
-            data = b''
+            fileh = BytesIO(b'')
         size = 0
         start = time.time()
         chunks = response.iter_content(chunk_size=524288)
@@ -350,15 +333,19 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
                 raise StreamSizeLimitError('response too large')
             if time.time() - start > RECIEVE_TIMEOUT:
                 raise StreamTimeoutError('timeout reached')
-            if outputfile:
-                fileh.write(chunk)
-            else:
-                data += chunk
+            fileh.write(chunk)
+
         response.close()
-        if outputfile:
+        if not outputfile:
+            data = fileh.read()
             fileh.close()
-        else:
-            return(data,errdata) 
+        fileh.seek(0)
+        mol = open_molecule_file(fileh,filetype='sdf')
+        del mol
+
+        return(data,errdata)
+           
+          
     except HTTPError:
       errdata['Error'] = True
       errdata['ErrorType'] = 'HTTPError'
@@ -384,7 +371,10 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
       errdata['Error'] = True
       errdata['ErrorType'] = 'StreamTimeoutError'
       errdata['reason'] = str(e)
-
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
     except:
       errdata['Error'] = True
       errdata['ErrorType'] = 'Internal'
@@ -574,11 +564,7 @@ def retreive_compound_png_chembl(chemblid,dimensions=300,outputfile=None):
     try:
         if check_chembl_up():   
             response = requests.get(URL+str(chemblid)+'?dimensions='+str(dimensions)+'&format=png'+'&ignoreCoords=0'+'&engine=indigo',timeout=30,stream=True,verify=True)
-            if response.status_code != 404:
-                response.raise_for_status()
-            else:
-                response.close()
-                return None
+            response.raise_for_status()
             if outputfile:
                 fileh = open(outputfile,'wb')
             else:
@@ -654,14 +640,15 @@ def get_chembl_molecule_ids(datachembl,parents=False):
     ids = []
     try:
         for molecule in datachembl["molecules"]:
-            if parents and "molecule_hierarchy" in molecule.keys() and "parent_chembl_id" in molecule["molecule_hierarchy"].keys():
-                chembl_id = molecule["molecule_hierarchy"]["parent_chembl_id"]
+            if parents and "molecule_hierarchy" in molecule.keys() and molecule["molecule_hierarchy"]:
+                if "parent_chembl_id" in molecule["molecule_hierarchy"].keys():
+                    chembl_id = molecule["molecule_hierarchy"]["parent_chembl_id"]
             else:
                 chembl_id =  molecule["molecule_chembl_id"]
             ids.append(int(chembl_id.replace('CHEMBL','')))
         ids = list_unique(ids)
     except:
-        raise ParsingError("Cannot parse ChEMBL molecule information-")
+        raise ParsingError("Cannot parse ChEMBL molecule information.")
     return ids
 
 def get_chembl_prefname_synonyms(moljson):
@@ -763,6 +750,10 @@ def chembl_get_compound_id_query_result_url(postdata,chembl_submission_url='http
       errdata['Error'] = True
       errdata['ErrorType'] = 'StreamTimeoutError'
       errdata['reason'] = str(e)
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
     except:
       errdata['Error'] = True
       errdata['ErrorType'] = 'Internal'
@@ -780,3 +771,266 @@ def chembl_get_compound_id_query_result_url(postdata,chembl_submission_url='http
         pass
       if not (settings.DEBUG and do_not_skip_on_debug):
         return(results_url,errdata)
+        
+def chembl_get_compound_id_query_result_url(postdata,chembl_submission_url='https://www.ebi.ac.uk/chembl/compound/ids'):
+    results_url = None
+    do_not_skip_on_debug = False
+    SIZE_LIMIT = 512000
+    RECIEVE_TIMEOUT = 120
+    errdata = dict()
+    try:
+        response = requests.post(chembl_submission_url,data=postdata,timeout=30,stream=False,verify=True)
+        response.raise_for_status()
+        encoding = response.encoding
+        chunks = response.iter_content(chunk_size=524288)
+        target = ChemblResultsUrl()
+        parser = xmlparser(target=target)
+        
+        size = 0
+        start = time.time()
+        for chunk in chunks:
+            size += len(chunk)
+            if size > SIZE_LIMIT:
+                raise StreamSizeLimitError('response too large')
+            if time.time() - start > RECIEVE_TIMEOUT:
+                raise StreamTimeoutError('timeout reached')
+            chunk = chunk.decode(encoding)
+            parser.feed(chunk)
+            if not target.keep_parsing:
+                break
+        
+        results_url = parser.close()
+        
+        if results_url is None:
+            raise ParsingError("No query result url found.")
+        results_url = results_url.replace(':','/')
+        return(results_url,errdata)
+    
+    except HTTPError:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'HTTPError'
+      errdata['status_code'] = response.status_code
+      errdata['reason'] = response.reason
+    except ConnectionError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ConnectionError'
+      errdata['reason'] = 'Cannot connect.'
+    except Timeout as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Timeout'
+      errdata['reason'] = 'Timeout exceeded.'
+    except TooManyRedirects as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'TooManyRedirects'
+      errdata['reason'] = 'Too many redirects.'
+    except StreamSizeLimitError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamSizeLimitError'
+      errdata['reason'] = str(e)
+    except StreamTimeoutError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamTimeoutError'
+      errdata['reason'] = str(e)
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
+    except:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Internal'
+      errdata['reason'] = ''
+      do_not_skip_on_debug = True
+      raise
+    finally:
+      try:
+        parser.close()
+      except:
+        pass
+      try:
+        response.close()
+      except:
+        pass
+      if not (settings.DEBUG and do_not_skip_on_debug):
+        return(results_url,errdata)
+
+
+class ChemblUrlInspectCompoundDownloadMolHTMLParser(HTMLParser):
+    def __init__(self,*args,getmol_url='/chembl/download_helper/getmol/',**kwargs):
+        self.getmol_url = getmol_url
+        self.url = None
+        self.keep_parsing = True
+        super(ChemblUrlInspectCompoundDownloadMolHTMLParser, self).__init__(*args, **kwargs)
+    def handle_starttag(self, tag, attrs):
+        if tag == 'a':
+            for attr in attrs:
+                
+                if (attr[0] == 'href') and (attr[1].find(self.getmol_url) > -1):
+                   self.url = attr[1]
+                   self.keep_parsing = False
+
+def chembl_get_molregno_from_html(chemblid,getmol_url='/chembl/download_helper/getmol/'):
+    URL = "https://www.ebi.ac.uk/chembl/compound/inspect/"
+    molregno = None
+    do_not_skip_on_debug = False
+    SIZE_LIMIT = 512000
+    RECIEVE_TIMEOUT = 120
+    errdata = dict()
+    try:
+        response = requests.get(URL+chemblid,timeout=30,stream=False,verify=True)
+        response.raise_for_status()
+        encoding = response.encoding
+        chunks = response.iter_content(chunk_size=524288)
+        parser = ChemblUrlInspectCompoundDownloadMolHTMLParser(getmol_url=getmol_url)
+        
+        size = 0
+        start = time.time()
+        for chunk in chunks:
+            size += len(chunk)
+            if size > SIZE_LIMIT:
+                raise StreamSizeLimitError('response too large')
+            if time.time() - start > RECIEVE_TIMEOUT:
+                raise StreamTimeoutError('timeout reached')
+            chunk = chunk.decode(encoding)
+            parser.feed(chunk)
+            if not parser.keep_parsing:
+                break
+        parser.close()
+        href_url = parser.url
+        m = re.search(re.escape(getmol_url)+r'(\d+)',href_url)
+        if m:
+            molregno = int(m.group(1))
+        if molregno is None:
+            raise ParsingError("Molecule structure molregno not found.")
+        return(molregno,errdata)
+    
+    except HTTPError:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'HTTPError'
+      errdata['status_code'] = response.status_code
+      errdata['reason'] = response.reason
+    except ConnectionError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ConnectionError'
+      errdata['reason'] = 'Cannot connect.'
+    except Timeout as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Timeout'
+      errdata['reason'] = 'Timeout exceeded.'
+    except TooManyRedirects as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'TooManyRedirects'
+      errdata['reason'] = 'Too many redirects.'
+    except StreamSizeLimitError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamSizeLimitError'
+      errdata['reason'] = str(e)
+    except StreamTimeoutError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamTimeoutError'
+      errdata['reason'] = str(e)
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
+    except:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Internal'
+      errdata['reason'] = ''
+      do_not_skip_on_debug = True
+      raise
+    finally:
+      try:
+        parser.close()
+      except:
+        pass
+      try:
+        response.close()
+      except:
+        pass
+      if not (settings.DEBUG and do_not_skip_on_debug):
+        return(molregno,errdata)
+        
+def retreive_compound_sdf_chembl(molregno,getmol_url='/chembl/download_helper/getmol/',outputfile=None):
+    DOMAIN_URL = 'https://www.ebi.ac.uk'
+    errdata = dict()
+    data = None
+    do_not_skip_on_debug = False
+    SIZE_LIMIT = 52428800
+    RECIEVE_TIMEOUT = 120
+    args = []
+    try:
+        
+        response = requests.get(DOMAIN_URL+getmol_url+str(molregno),timeout=30,stream=True,verify=True)
+        response.raise_for_status()
+        if outputfile:
+            fileh = open(outputfile,'w+b')
+        else:
+            fileh = BytesIO(b'')
+        size = 0
+        start = time.time()
+        chunks = response.iter_content(chunk_size=524288)
+        for chunk in chunks:
+            size += len(chunk)
+            if size > SIZE_LIMIT:
+                raise StreamSizeLimitError('response too large')
+            if time.time() - start > RECIEVE_TIMEOUT:
+                raise StreamTimeoutError('timeout reached')
+            fileh.write(chunk)
+
+        response.close()
+        if not outputfile:
+            data = fileh.read()
+            fileh.close()
+        fileh.seek(0)
+        mol = open_molecule_file(fileh,filetype='sdf')
+        del mol
+
+        return(data,errdata)
+           
+          
+    except HTTPError:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'HTTPError'
+      errdata['status_code'] = response.status_code
+      errdata['reason'] = response.reason
+    except ConnectionError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ConnectionError'
+      errdata['reason'] = 'Cannot connect.'
+    except Timeout as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Timeout'
+      errdata['reason'] = 'Timeout exceeded.'
+    except TooManyRedirects as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'TooManyRedirects'
+      errdata['reason'] = 'Too many redirects.'
+    except StreamSizeLimitError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamSizeLimitError'
+      errdata['reason'] = str(e)
+    except StreamTimeoutError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'StreamTimeoutError'
+      errdata['reason'] = str(e)
+    except ParsingError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'ParsingError'
+      errdata['reason'] = str(e)
+    except:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'Internal'
+      errdata['reason'] = ''
+      do_not_skip_on_debug = True
+      raise
+    finally:
+      try:
+        response.close()
+      except:
+        pass
+      try:
+        fileh.close()
+      except:
+        pass
+      if not (settings.DEBUG and do_not_skip_on_debug):
+        return(data,errdata)

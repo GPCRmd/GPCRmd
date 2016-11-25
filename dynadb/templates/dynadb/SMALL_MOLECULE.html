@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<form id="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
 
  <!-- description column -->
  <div class="col-md-4">
@@ -45,8 +45,9 @@
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div id="pmolform"class="col-md-7 "> 
-  <div id="molform" class="col-md-12 panel panel-primary"> 
+<div id="pmolform" class="col-md-7 "> 
+  <div id="molform" class="col-md-12 panel panel-primary">
+  <form id="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
     <div  class="panel-body">
             <div id="molnumb" style="text-align:right;color:black" > 
              <h4>SMALL MOLECULE #1</h4>
@@ -87,11 +88,9 @@
 
                 <div class="row">
                         <table align='center'>
-				<tr><th style="width:80px;text-align:center"><label for="id_upload_mol"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_stdform"><a title="Graphical representation of the standard form of the molecule">Standard form</a></label></th>
-
-				<tr><td style="padding:5px 5px 5px 5px"><textarea rows="3" style="resize:none;width:300px;height:300px" id="id_upload_mol"  name="upload_mol"/></textarea></td>
-					<td style="padding:5px 5px 5px 5px"><textarea rows="3" style="resize:none;width:300px;height:300px" id="id_stdform" name="stdform"/></textarea></td>
+				<tr><th style="width:80px;text-align:center"><label for="id_upload_mol-1"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
+					
+				<tr><td style="padding:5px 5px 5px 5px"><div style="border:1px inset #000000;border-radius:5px;width:300px;height:300px" id="id_upload_mol-1"  name="upload_mol-1"/></div></td>
 				</tr>
 			</table><br>
                 </div>
@@ -258,6 +257,16 @@
 			<div class="col-md-12"style="height:30px"><p style="font-size:11px;text-align:justify;margin-left:10%;margin-right:14%">Please check the retrieved information is correct. If it is not correct, optionally provide a more suitable PubChem CID or ChEMBL ID and press update to retrieve data again from these databases.</p></div>
 		</div><br>
 
+               <div class="row">
+                        <table align='center'>
+                                <tr><th style="width:80px;text-align:center"><label for="id_upload_mol-2"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
+                                        <th style="width:80px;text-align:center"><label for="id_stdform"><a title="Graphical representation of the standard form of the molecule">Standard form</a></label></th>
+
+                                <tr><td style="padding:5px 5px 5px 5px"><div style="border:1px inset #000000;border-radius:5px;width:300px;height:300px" id="id_upload_mol-2"  name="upload_mol-2"/></div></td>
+                                        <td style="padding:5px 5px 5px 5px"><div style="border:1px inset #000000;border-radius:5px;width:300px;height:300px" id="id_stdform" name="stdform"/></textarea></td>
+                                </tr>
+                        </table><br>
+                </div>
 
 
 
@@ -267,10 +276,10 @@
 			<br>
  		 	<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<button type="button" value="+ Add molecule" id="id_add_protein"  name="add_protein"  style="height:30px;width:160px" > + Add molecule </button>
+			     		<button type="button" value="+ Add molecule" id="id_add_molecule"  name="add_molecule"  style="height:30px;width:160px" > + Add molecule </button>
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove molecule"  id="id_del_protein"  name="del_protein" style="height:30px;width:160px" onClick="delSmalmol();">
+			     		<input type="button" value="- Remove molecule"  id="id_del_molecule"  name="del_molecule" style="height:30px;width:160px" disabled>
 		        	</div> 		
 			<br><br>
 
@@ -307,16 +316,14 @@
 {% endblock content %}
 
 {% block addon_js %}
-<!--    <script src="{% static 'dynadb/test.js' %}"></script>-->
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/notInDatabases.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/getMoleculeInfo.js' %}"></script>
     <script src="{% static 'dynadb/resetMolecule.js' %}"></script>
     <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
-    <script src="{% static 'dynadb/addSmalmol.js' %}"></script>
-    <script src="{% static 'dynadb/addSmalmolNew.js' %}"></script>
-    <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
+    <script src="{% static 'dynadb/addSmallMol.js' %}"></script>
+    <script src="{% static 'dynadb/delSmallMol.js' %}"></script>
 
 {% endblock %}
 
