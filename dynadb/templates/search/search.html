@@ -27,7 +27,7 @@
   }
 
   #floatdiv {
-    width:40%;
+    width:48%;
     overflow-y:auto;
     max-height:400px;
     overflow:auto;
@@ -66,13 +66,14 @@
 
 
  <div class="row">
-  <div class="col-sm-7">
+  <div class="col-sm-6">
     <div class="panel panel-info">
       <div class="panel-heading">
             <br>
             <center><h3>Search for proteins, molecules or compounds.</h3>
             <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
                 <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
+ <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option></select>
                 <input type="button" value="Search" name="search" id="Searcher" />
             </form> 
             </center>
@@ -89,7 +90,7 @@
 
 
 
-  <div class="col-sm-5">
+  <div class="col-sm-6">
 
     <div class="panel panel-primary class" id="floatdiv">
         <div class="panel-heading"> <h4>Search for complexes, models or dynamics</h4> <button id="gotoadvsearch" type="button" value="Advanced Search"> Advanced Search</button>  </div>

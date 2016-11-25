@@ -637,18 +637,21 @@ def ajaxsearcher(request):
         proteinlist=list()
         compoundlist=list()
         reslist=list()
+        return_type=request.POST["return_type"]
+        print(return_type)
         sqs=SearchQuerySet().all()
         user_input = request.POST.get('cmolecule')
         if len(user_input)==0:
             tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
+
         results=sqs.auto_query(user_input)
         for res in results:
             if 'compound' in str(res.id) and str(res.id_compound) not in [i[0] for i in compoundlist]:
                 try:
                     pk2filesmolecule=DyndbCompound.objects.get(pk=res.id_compound).std_id_molecule.id
-                    imagepath=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath #WARNING: id_molecule=2!!
+                    imagepath=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
                     imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                     compoundlist.append([ str(res.id_compound),str(res.name),str(res.iupac_name),imagepath ])
                 except IndexError:
@@ -670,13 +673,139 @@ def ajaxsearcher(request):
                         comp=DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                         compname=DyndbMolecule.objects.get(pk=mol_id).id_compound.name
                         moleculelist.append([str(mol_id),str(res.inchikey),'',compname]) #define inchikey in searchindex
-                    
-        tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
-        data = json.dumps(tojson)
-        return HttpResponse(data, content_type='application/json')
+
+        if return_type=='protein':
+            tojson={'compound':[], 'protein':proteinlist,'molecule':[], 'message':''}
+            data = json.dumps(tojson)
+            return HttpResponse(data, content_type='application/json')
+
+        elif return_type=='molecule':
+            tojson={'compound':[], 'protein':[],'molecule':moleculelist, 'message':''}
+            data = json.dumps(tojson)
+            return HttpResponse(data, content_type='application/json')
+
+        elif return_type=='compound':
+            tojson={'compound':compoundlist, 'protein':[],'molecule':[], 'message':''}
+            data = json.dumps(tojson)
+            return HttpResponse(data, content_type='application/json')
+
+        else: #no filter
+            tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
+            data = json.dumps(tojson)
+            return HttpResponse(data, content_type='application/json')
 
 ###################################################################################################################################
 ###################################################################################################################################
+
+
+def emptysearcher(request):
+    if request.method == 'POST':
+        if request.POST.get('restype')=='model':
+            modelresult=[]
+            if request.POST.get('is_apo')=='true':
+                for model in DyndbModel.objects.all():
+                    if model.id_protein != None:
+                        modelresult.append([model.id , DyndbProtein.objects.get(pk=model.id_protein.id).name ]) #modelresult.append(mod.id)
+                        tojson={'model':modelresult,'dynlist':[],'message':''}
+                        data = json.dumps(tojson)
+                        return HttpResponse(data, content_type='application/json')
+            else:
+                for model in DyndbModel.objects.all():
+                    if model.id_protein==None:
+                        expid=model.id_complex_molecule.id_complex_exp.id
+                        liglist=[]
+                        receptorlist=[]
+
+                        for match in DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=1):
+                            liglist.append(match.id_compound.name)
+
+                        for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=expid):
+                            if type(rmatch.id_protein.receptor_id_protein.id)==int:
+                                receptorlist.append(rmatch.id_protein.name)
+
+                        modelresult.append([model.id,receptorlist,liglist])
+
+                    else:
+                        modelresult.append([model.id , DyndbProtein.objects.get(pk=model.id_protein.id).name ]) #modelresult.append(mod.id)
+                tojson={'model':modelresult,'dynlist':[],'message':''}
+                data = json.dumps(tojson)
+                return HttpResponse(data, content_type='application/json')
+
+        else: #dynamics
+            dynlist=set()
+            if request.POST.get('is_apo')=='true':
+                for model in DyndbModel.objects.all():
+                    if model.id_protein  != None:
+                        for dyn in DyndbDynamics.objects.filter(id_model=model.id):
+                            dynlist.add(dyn.id)
+            else:
+                for dyn in DyndbDynamics.objects.all():
+                    dynlist.add(dyn.id)
+
+            ffset=set()
+            tstepset=set()
+            solset=set()
+            memset=set()
+            methodset=set()
+            sofset=set()
+
+            if request.POST.get('ff')!='':
+                for dyn in DyndbDynamics.objects.filter(ff=request.POST.get('ff')):
+                    ffset.add(dyn.id)
+                dynlist=dynlist.intersection(ffset)
+
+            if request.POST.get('tstep')!='':
+                for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
+                    tstepset.add(dyn.id)
+                dynlist=dynlist.intersection(tstepset)
+
+            if request.POST.get('sol')!='':
+                for dyn in DyndbDynamics.objects.filter(id_dynamics_solvent_types=request.POST.get('sol') ):
+                    memset.add(dyn.id)
+                dynlist=dynlist.intersection(memset)
+
+            if request.POST.get('mem')!='':
+                for dyn in DyndbDynamics.objects.filter(id_dynamics_membrane_types=request.POST.get('mem') ):
+                    memset.add(dyn.id)
+                dynlist=dynlist.intersection(memset)
+
+            if request.POST.get('method')!='':
+                for dyn in DyndbDynamics.objects.filter(id_dynamics_methods=request.POST.get('method') ):
+                    methodset.add(dyn.id)
+                dynlist=dynlist.intersection(methodset)
+
+            if request.POST.get('sof')!='':
+                for dyn in DyndbDynamics.objects.filter(software=request.POST.get('sof')):
+                    sofset.add(dyn.id)
+                dynlist=dynlist.intersection(sofset)
+
+        dynresult=[]
+        if request.POST.get('is_apo')=='true':
+            for dynid in dynlist:
+                protid=DyndbDynamics.objects.get(pk=dynid).id_model.id_protein.id
+                dynresult.append([dynid , DyndbProtein.objects.get(pk=protid).name]) #modelresult.append(mod.id)
+        
+        else:
+            for dynid in dynlist:
+                expid=DyndbDynamics.objects.get(pk=dynid).id_model.id_complex_molecule.id_complex_exp.id
+                print(expid)
+                liglist=[]
+                receptorlist=[]
+
+                for match in DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=1):
+                    liglist.append(match.id_compound.name)
+
+                for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=expid):
+                    if type(rmatch.id_protein.receptor_id_protein.id)==int:
+                        receptorlist.append(rmatch.id_protein.name)
+
+
+                dynresult.append([dynid, receptorlist,liglist]) #just in case one model has more than one receptor/ligand. 
+
+        tojson={'dynlist':dynresult,'model':[],'message':''}
+        data = json.dumps(tojson)
+        return HttpResponse(data, content_type='application/json')
+
 ###################################################################################################################################
 ###################################################################################################################################
 
@@ -1079,7 +1208,7 @@ def ComplexExpSearcher(request):
                     liglist=[]
                     receptorlist=[]
 
-                    for match in DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=exp_id).filter(type=1):
+                    for match in DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=0) | DyndbComplexCompound.objects.filter(id_complex_exp=expid).filter(type=1):
                         liglist.append(match.id_compound.name)
 
                     for rmatch in DyndbComplexProtein.objects.filter(id_complex_exp=expid):
@@ -2169,18 +2298,19 @@ def upload_pdb(request):
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
-def search_top(request):
+def search_top(request,submission_id):
     if request.method=='POST':
-        url=request.POST.get('url')
+        #url=request.POST.get('url')
         pdbname='/protwis/sites'+request.session['newfilename'] 
-        sub_id=url[url.rfind('/model/')+7:-1] 
+        sub_id=submission_id #url[url.rfind('/model/')+7:-1] 
         arrays=request.POST.getlist('bigarray[]')
+        print('CP1')
         counter=0
         resultsdict=dict()
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
-
+            print('CP2')
             if array[3].replace(" ", "")=='' or not (array[3].isdigit()) or array[4].replace(" ", "")=='' or not (array[4].isdigit()):
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
                 data = json.dumps(results)
@@ -2191,11 +2321,15 @@ def search_top(request):
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
+            print('CP3')
             chain=array[1].replace(" ", "").upper() #avoid whitespace problems
             segid=array[2].replace(" ", "").upper() #avoid whitespace problems
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            print(sequence)
+            print('CP3.9')
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
+            print(res)
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
                 resultsdict[counter]=[seq_res_from,seq_res_to]
@@ -2210,13 +2344,12 @@ def search_top(request):
 
 
 
-def pdbcheck(request,combination_id):
+def pdbcheck(request,submission_id):
     if request.method=='POST': #See pdbcheck.js
+        combination_id='submission_id'+submission_id
+        sub_id=submission_id
         results=dict()
-        url=request.POST.get('url')
-        #fastaname='/protwis/sites/protwis/dynadb/1fat.fa'
         pdbname='/protwis/sites'+request.session['newfilename'] 
-        sub_id=url[url.rfind('/model/')+7:-1] 
         results['strlist']=list()
         results['pathlist']=list()
         finalguide=[]
@@ -2224,7 +2357,7 @@ def pdbcheck(request,combination_id):
         counter=0
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]+'| Template ID model: |') #title for the results pop-up table
+            results['strlist'].append('Protein: '+str(array[0])+' Start:'+str(array[3])+' Stop: '+str(array[4]))
             for r in range(3,7):
                 if array[r].replace(" ", "")=='' or not array[r].isdigit():
                     results={'type':'string_error','title':'Missing information or wrong information', 'message':'Residue or sequence range is not completely defined, or you did not used a number.'}
@@ -2232,7 +2365,6 @@ def pdbcheck(request,combination_id):
                     data = json.dumps(tojson) #CHANGE TO results!!!!!!!!!!!!!!!!!!!!!!
                     request.session[combination_id] = results
                     return HttpResponse(data, content_type='application/json') 
-            print('checkpoint2')
             prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
             start=int(array[3])
             stop=int(array[4])
@@ -2254,7 +2386,6 @@ def pdbcheck(request,combination_id):
                 data = json.dumps(tojson)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
-            print('checkpoint3')
             uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
@@ -2312,6 +2443,7 @@ def pdbcheck(request,combination_id):
         return HttpResponse(data, content_type='application/json')
 
     else: #NOT POST, simply display of results in the POP UP window. See pdbcheck.js
+        combination_id='submission_id'+submission_id
         fav_color = request.session[combination_id]
         if fav_color['type']=='tuple_error':
             return render(request,'dynadb/tuple_error.html', {'answer':fav_color})

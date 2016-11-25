@@ -1,5 +1,9 @@
 
 function searchtop() {
+    //works when autocomplete is clicked. fills the 'seq from' and 'seq to' fields automatically.
+    var url=window.location.href;
+    var subid=url.indexOf("/model/");
+    subid=url.slice(subid+7,-1);
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -12,8 +16,8 @@ function searchtop() {
 
     $.ajax({
         type: "POST",
-        data: { "bigarray[]": bigarray,"url": window.location.href},
-        url: "/dynadb/search_top/",
+        data: { "bigarray[]": bigarray},
+        url: "/dynadb/search_top/"+subid+"/",
         dataType: "json",
         success: function(data) {
             $("#pdbchecker1").prop("disabled",false);
@@ -37,7 +41,7 @@ function searchtop() {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#pdbchecker1").prop("disabled",false);
-                alert('Error ocurred: PDB file numbering is corrupted (50,51,32); or resid interval is too short.');
+                alert('Something unexpected happen. Check if your chain matches the one in your PDB.', XMLHttpRequest,textStatus,errorThrown);
         }
     });
 }

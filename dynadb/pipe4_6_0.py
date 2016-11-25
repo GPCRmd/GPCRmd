@@ -68,7 +68,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	onlyaa='' #ignore the resids, pick the aa and that is it.
 	for minilist in seqplain:
 		onlyaa=onlyaa+minilist[0]
-	print(seqplain,onlyaa)
+	#print(seqplain,onlyaa)
 	return (seqplain,onlyaa,hexflag)
 
 
@@ -87,7 +87,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 
 	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
-	print(bestalig)
+	#print(bestalig)
 	biglist=list()
 	counterepair=1
 	i=0
@@ -348,6 +348,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		return result
 	else:
 		tablepdb,simplified_sequence,hexflag=result
+
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
 	'''
 	The resulting alignment should be like:

@@ -1,4 +1,5 @@
 function upload(event) {
+    //fired when validate is clicked, performs a PDB checking.
     $("#pdbchecker2").prop("disabled",true);
     event.preventDefault();
     var data = new FormData($('#myform').get(0));

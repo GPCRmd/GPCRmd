@@ -2,10 +2,12 @@
 $("#Searcher").click(function(e) {
     e.preventDefault(); //not helping, still GET error sometimes...
     var p=$("#protein22").val();
+    var return_type=$("#simpletype").find(":selected").val();
+    console.log(return_type);
     $("#Searcher").prop('disabled', true);
     $.ajax({
         type: "POST",
-        data: { cmolecule: p},
+        data: { cmolecule: p, return_type:return_type},
         url: "/dynadb/ajaxsearch/",
         dataType: "json",
         success: function(data) {
