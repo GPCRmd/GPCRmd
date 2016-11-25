@@ -58,6 +58,7 @@ urlpatterns = [
     url(r'^MOLECULEfilled/(?P<submission_id>[0-9]+)/$', views.SMALL_MOLECULEview, name='MOLECULEfilled'),
     url(r'^MOLECULEfilled2/$', views.SMALL_MOLECULEview2, name='MOLECULEfilled2'),
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
+    url(r'^model/(?P<submission_id>[0-9]+)/check_pdb_molecules/$', views.pdbcheck_molecule, name='pdbcheck_molecule'),
     url(r'^modelreuse/(?P<submission_id>-?[0-9]+)/(?P<model_id>[0-9]+)/$', views.MODELreuseview, name='modelreuse'),
     url(r'^proteinreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.PROTEINreuseview, name='proteinreuse'),
 #    url(r'^moleculereuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.SMALL_MOLECULEreuseview, name='moleculereuse'),

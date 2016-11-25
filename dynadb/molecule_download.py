@@ -648,7 +648,7 @@ def get_chembl_molecule_ids(datachembl,parents=False):
             ids.append(int(chembl_id.replace('CHEMBL','')))
         ids = list_unique(ids)
     except:
-        raise ParsingError("Cannot parse ChEMBL molecule information-")
+        raise ParsingError("Cannot parse ChEMBL molecule information.")
     return ids
 
 def get_chembl_prefname_synonyms(moljson):
