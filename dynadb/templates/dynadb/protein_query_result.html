@@ -12,7 +12,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> <button type="button">FASTA download!</button></a></div>
+    <div class="panel-heading"><b>Protein Name:</b> {{answer.Protein_name}}. <b> Cannonical Uniprot Accesion Number:</b> <a href= http://www.uniprot.org/uniprot/{{answer.Uniprot_id}}>{{answer.Uniprot_id}}</a>.<a href=fasta> <button type="button">FASTA download!</button></a></div>
     <div class="panel-body"><pre>{{answer.Protein_sequence}}</pre></div>
     </div>
     </div>
@@ -20,30 +20,51 @@
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>+info</b></div>
-    <div class="panel-body"> <b>Scientific name:</b> {{answer.scientific_name}} <br>
+    <div class="panel-body"> 
+    <b>Scientific name:</b> {{answer.scientific_name}} <br>
     <b>Is this protein a mutant?</b> {{answer.is_mutated}} <br>
-    <b>Mutations</b><br>
-    {% for mutation in answer.mutations %}
-        <p> Residue {{mutation.0}}: From {{mutation.1}}  to    {{mutation.2}} </p>
-    {%endfor%} 
-    <b>Activity (Description, value, units):</b><br>
+    {% if answer.mutations %}
+        <b>Mutations</b><br>
+        {% for mutation in answer.mutations %}
+            <p> Residue {{mutation.0}}: From {{mutation.1}}  to    {{mutation.2}} </p>
+        {%endfor%} 
+    {% endif %}
 
-    {% for values in answer.activity %}
+    {% if answer.activity %}
+        <b>Activity (Description, value, units):</b><br>
 
-        {{values.2}},{{values.1}},{{values.0}}<br>
+        {% for values in answer.activity %}
 
-    {% endfor %}
+            {{values.2}},{{values.1}},{{values.0}}<br>
 
-    <b>Alternative names:</b>
-    {% for name in answer.other_names %}
-        {{name}},
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    {% if answer.other_names %}
+        <b>Alternative names:</b>
+        {% for name in answer.other_names %}
+            {{name}},
+        {% endfor %}
+    {% endif %}
     <br>
     <b>Corresponding Cannonical Protein:</b> <a href='/dynadb/protein/id/{{answer.cannonical}}'>{{answer.cannonical}}</a> <br>
-    <b>You can find this protein in the following models:</b>
-    {% for link in answer.model %}
-        <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
-    {% endfor %}
+
+    {%if answer.model%}
+        <b>You can find this protein in the following models:</b>
+        {% for link in answer.model %}
+            <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
+        {% endfor %}
+    {% endif %}
+
+    {% if answer.references %} 
+        <br><b>References in which this protein is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+        {%endfor%}
+        </ul>
+    {% endif %} 
+
     </div>
 
 </div>

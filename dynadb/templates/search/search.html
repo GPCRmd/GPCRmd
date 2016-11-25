@@ -1,0 +1,161 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+
+   #content{
+    width:100%;
+   }
+
+  .panel-body {
+    word-break:break-all;
+}
+
+  #ajaxresults{
+      padding: 20px;
+  }
+
+  #myTable{
+      padding: 1px;
+      width: 100%;
+  }
+
+
+ #myTable  th, #myTable  td {
+      padding: 1px;
+      width: 14%
+  }
+
+  #floatdiv {
+    width:48%;
+    overflow-y:auto;
+    max-height:400px;
+    overflow:auto;
+    position: fixed;
+}
+
+  #gotoadvsearch{
+   color:white;
+   background-color:black;
+}
+
+
+  .foo{
+      border: solid black 2px;
+      padding: 1px;
+      width: 20%
+}
+
+   #hidden{
+    width: 90%;
+}
+
+#dynfil{
+    width: 70%
+    border-collapse: collapse;
+}
+   #dynfil, #dynfil td{
+    background-color: #4CAF50;
+    padding:7px;
+    border: solid black 5px;
+}
+
+  </style>
+{% endblock %}
+{% block content %}
+
+
+ <div class="row">
+  <div class="col-sm-6">
+    <div class="panel panel-info">
+      <div class="panel-heading">
+            <br>
+            <center><h3>Search for proteins, molecules or compounds.</h3>
+            <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
+                <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
+ <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option></select>
+                <input type="button" value="Search" name="search" id="Searcher" />
+            </form> 
+            </center>
+            <br>
+    </div>
+      <div class="panel-body">
+            <p id='ajaxresults'>No results.</p>
+            <br><br><br><br><br><br><br><br><br><br><br>
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+  <div class="col-sm-6">
+
+    <div class="panel panel-primary class" id="floatdiv">
+        <div class="panel-heading"> <h4>Search for complexes, models or dynamics</h4> <button id="gotoadvsearch" type="button" value="Advanced Search"> Advanced Search</button>  </div>
+        <div class="panel-body">
+        <center>
+
+        <table id="myTable">
+        <thead>
+        <tr>
+            <th>Boolean</th>
+            <th>Type</th>
+            <th>ID</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        </table>
+        <br>
+        Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">
+        Return:
+        <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Model</option><option value="dynamics">Dynamics</option></select>
+        <div id='hiddenmodel'>
+        <br><br>
+        Is it an apoform? <input id="apoform" type="checkbox" name="apo" value="apo">
+        <br><br>
+        </div>
+
+
+        <div id='hidden'>
+        <br><br>
+        Model is an apoform? <input id="apoform_dyn" type="checkbox" name="apo" value="apo">
+        <table id='dynfil'>
+        <tbody>
+        <tr><td>Time step < </td><td><input id='tstep' type="text" name="tstep"></td></tr>
+        <tr><td>Force Field</td><td><select id="fftype"><option selected="selected" value=""> </option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option></select></td></tr>
+        <tr><td>Software used</td><td><select id="soft"><option selected="selected" value=""> </option><option value="ACEMD">ACEMD</option><option value="OTHER">OTHER</option></select></td></tr>
+        <tr><td>Membrane type</td><td><select id="memtype"><option selected="selected" value=""> </option><option value="1">Implicit</option><option value="2">Homogeneous</option><option value="3">Heterogeneous</option></select></td></tr>
+        <tr><td>method</td><td><select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics</option><option value="2">QM/MM</option><option value="3">NMR</option><option value="4">Monte Carlo simulation</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option></select></td></tr>
+        <tr><td>Solvent type</td><td><select id="soltype"><option selected="selected" value=""> </option> <option value="1">Implicit</option><option value="2">TIP3P</option><option value="3">TIP4P</option><option value="4">TIPS</option><option value="5">SPC</option><option value="6">SPC/E</option><option value="7">Other</option></select></td></tr>
+        </table>
+        <br><br>
+        </div>
+        <br><br><br><button id="tablesearch" type="button" value="search"> Search! </button>
+        </center>
+
+    </div> <!--panel body-->
+
+  </div> <!--panel class-->
+
+
+
+</div> <!--second col-->
+
+
+
+<br><br><br>
+{% endblock %}
+
+{% block addon_js %}
+
+    <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/model_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/dynamic_searcher.js' %}"></script>
+    <script src="{% static 'dynadb/add_search.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxto.js' %}"></script>
+    <script src="{% static 'dynadb/tablesearch.js' %}"></script>
+{% endblock %}

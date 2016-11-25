@@ -1,0 +1,56 @@
+{% extends "home/base.html" %} 
+{% load static %}
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+  .panel-body {
+    word-break:break-all
+}
+  
+  </style>
+{% endblock %}
+{% block content %}
+    <div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Complex Structure Info:</b> </div>
+    <div class="panel-body">
+
+{% if answer.proteins %}
+    <b>Proteins used in this complex</b>:<br>
+    {%for proid in answer.proteins%}
+       <a href= /dynadb/proteins/id/{{proid.0}}>{{proid.1}}</a>, 
+    {%endfor%}
+    <br>
+{% endif %} 
+
+{% if answer.molecules %} 
+    <b>Molecules used in this complex</b>:<br>
+    {%for molid in answer.molecules %}
+       <a href= /dynadb/molecule/id/{{molid}}>{{molid}}</a>,
+    {%endfor%}
+    <br>
+{% endif %} 
+
+{% if answer.compounds %} 
+    <b>Compounds used in this complex</b>:<br>
+    {%for comid in answer.compounds %}
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a>,
+    {%endfor%}
+     <br>
+{% endif %} 
+
+{% if answer.models %} 
+    <b>Models in which this complex is used: </b>:<br>
+    {% for modid in answer.models %}
+       <a href= /dynadb/model/id/{{modid}}>{{modid}}</a>,
+    {% endfor %}
+     <br>
+{% endif %} 
+
+
+
+    </div>
+    </div>
+    </div>
+
+{%endblock content %}

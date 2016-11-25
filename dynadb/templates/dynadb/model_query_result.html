@@ -13,32 +13,62 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Model Info:</b></div>
-    <div class="panel-body">  <b>Description</b>: {{answer.description}} <br>  
-                              <b>PDB ID</b>:{{answer.pdbid}} <br>
-                              <b>Model type</b>:{{answer.type}} <br>
-                              <b>Corresponding protein</b>:<a href=/dynadb/compound/id/{{answer.link2protein}}>{{answer.link2protein}} <br></a>
-                              <b>Dynamics in which this model appears</b>:<br>
+    <div class="panel-heading"><b>Model Info:</b> {{answer.description}} </div>
+    <div class="panel-body">
+    {% if answer.pdbid%} 
+      <b>PDB ID</b>:{{answer.pdbid}} <br>
+    {% endif %}
+
+    {% if answer.type%} 
+      <b>Model type</b>:<br> {{answer.type}} <br>
+    {% endif %}
+    <br>
+    {%if answer.link2protein%}
+        <b>Protein(s) involved</b>:<br>
+            {%for link in answer.link2protein%}
+                <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            {%endfor%}
+    {%endif%}
+    <br>
+
+
+    {% if answer.ortoligands %}
+        <b>Orthosteric ligand(s)</b>:<br>
+        {% for url in answer.ortoligands %}
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+        {% endfor %}
+    {% endif %}
+    <br>
+    {% if answer.aloligands %}
+        <b>Allosteric ligand(s)</b>:<br>
+        {% for url in answer.aloligands %}
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+        {% endfor %}
+    {% endif %}
+
+    {% if answer.components%} 
+        <b>Molecules used in this model</b>:<br>
+        {%for compoundlink in answer.components %}
+           <a href= /dynadb/molecule/id/{{compoundlink.0}}><img src="{{compoundlink.1}}" height="200" width="200"/></a>
+        {%endfor%}
+    {% endif %} 
+    <br>
+    <b>Dynamic(s) in which this model appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
        <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
     {%endfor%}
     <br>
-    <b>Molecules used in this model</b>:<br>
-    {%for compoundlink in answer.components%}
-       <a href= /dynadb/molecule/id/{{compoundlink}}>{{compoundlink}}</a>,
-    {%endfor%}
-    
-    <br><b>References in which this model is mentioned</b>:<br>
-    {%for reference in answer.references%}
-       {%if reference.0 and reference.1 %}
-           Title: {{reference.1}} DOI: {{reference.0}}
-       {%elif reference.0%}
-            DOI: {{reference.0}}
-       {%elif reference.1%}
-            Title: {{reference.1}}
-       {%endif%}
-    {%endfor%}
+
+
+    {% if answer.references %} 
+        <br><b>References in which this model is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+        {%endfor%}
+        </ul>
+    {% endif %} 
 
 
     </div>
