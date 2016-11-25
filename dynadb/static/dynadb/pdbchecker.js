@@ -18,7 +18,13 @@ function sendpar() {
                 goon=false;
             }
         }
-        if (parseInt(bigarray[i][3],10)>=parseInt(bigarray[i][4],10)){
+//      if there is a number that is not zero, remove all zeros on left except the one that next to an 'x' or 'X'  
+        bigarray[i][3] = bigarray[i][3].trim().replace('^(?!0+$)0+(?![xX])');
+        bigarray[i][4] = bigarray[i][4].trim().replace('^(?!0+$)0+(?![xX])');
+//      parseInt: If the first non-whitespace character is 0, the number is in octal (only in old browsers). 
+//      If the two first non-whitespace characters are '0x' or '0X', the number is in hexadecimal.
+//      Otherwise, the number is in decimal. A base can be forced by adding an extra parameter.
+        if (parseInt(bigarray[i][3])>=parseInt(bigarray[i][4])){
             alert('Res from is bigger than or equal to Res to');
             goon=false;
         }
@@ -45,8 +51,20 @@ function sendpar() {
                 }
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
+                if (XMLHttpRequest.readyState == 4) {
+                    var responsetext = XMLHttpRequest.responseText;
+
+                    alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                }
+                else if (XMLHttpRequest.readyState == 0) {
+                    alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                }
+                else {
+                    alert("Unknown error");
+                }
+            },
+            complete: function(XMLHttpRequest, textStatus, errorThrown) {
                 $("#pdbchecker2").prop("disabled",false);
-                alert("Something unexpected happen.");
             }
         });
     }else{
