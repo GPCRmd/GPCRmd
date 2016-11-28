@@ -656,12 +656,14 @@ def get_chembl_prefname_synonyms(moljson):
     syn_list = moljson["molecule_synonyms"]
     aliases = []
     aliases_lc = set()
-    aliases_lc.add(prefname.lower())
+    if prefname is not None:
+        aliases_lc.add(prefname.lower())
     for syn in syn_list:
-        lcsyn = syn["synonyms"].lower()
-        if lcsyn not in aliases_lc:
-            aliases.append(syn["synonyms"])
-            aliases_lc.add(lcsyn)
+        if syn is not None:
+            lcsyn = syn["synonyms"].lower()
+            if lcsyn not in aliases_lc:
+                aliases.append(syn["synonyms"])
+                aliases_lc.add(lcsyn)
     return prefname,aliases
 
 
