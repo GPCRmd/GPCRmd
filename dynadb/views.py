@@ -1040,18 +1040,23 @@ def search_top(request):
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
-            
-            if array[3].replace(" ", "")=='' or not (array[3].isdigit()) or array[4].replace(" ", "")=='' or not (array[4].isdigit()):
-                try:
+            start=array[3].strip()
+            stop=array[4].strip()
+            try:
+                if start == '' or not (start.isdigit()):
                     start = int(array[3],16)
-                    stop = int(array[4],16)
-                except ValueError:
-                    results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
-                    data = json.dumps(results)
-                    return HttpResponse(data, content_type='application/json')
-            else:
-                start=int(array[3])
-                stop=int(array[4])
+                else:
+                    start=int(array[3])
+                if stop =='' or not (stop.isdigit()):
+                    stop = int(array[4],16)           
+                else:
+                    stop=int(array[4])
+            except ValueError:
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
+                data = json.dumps(results)
+                return HttpResponse('Missing or incorrect information in the "Res from" or "Res to" fields.\nMaybe some whitespace?',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                
+                
             
             if start>=stop:
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
@@ -1095,30 +1100,39 @@ def pdbcheck(request,combination_id):
         for array in arrays:
             array=array.split(',')
             results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]) #title for the results pop-up table
+            
+            
+            chain=array[1].replace(" ", "").upper()
+            segid=array[2].replace(" ", "").upper()
+  
 
             for r in range(3,7):
-                if array[r].replace(" ", "")=='' or not array[r].isdigit():
-                    results={'type':'string_error','title':'Missing information or wrong information', 'message':'Residue or sequence range is not completely defined, or you did not used a number.'}
-                    tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop, 'error':'now we are screwed', 'message':'surely we are',}
-                    data = json.dumps(tojson) #CHANGE TO results!!!!!!!!!!!!!!!!!!!!!!
-                    request.session[combination_id] = results
-                    return HttpResponse(data, content_type='application/json') 
+                current_value = array[r].strip()
+                if current_value == '' or not current_value.isdigit():
+                    try:
+                        if r == 3:
+                            start = int(current_value,16)
+                        elif r == 4 :
+                            stop = int(current_value,16)
+                        else:
+                            raise ValueError
+                    except:
+                        return HttpResponse('Residue definition "'+str(current_value)+'" is invalid or empty.\n',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                else:
+                    if r == 3:
+                        start = int(current_value)
+                    if r == 4:
+                        stop = int(current_value)
 
             prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
-            try:
-                start=int(array[3])
-                stop=int(array[4])
-            except ValueError:
-                start=int(array[3],16)
-                stop=int(array[4],16)
+
             seqstart=int(array[5])
             seqstop=int(array[6])
             if seqstart>=seqstop:
                 results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')                 
-            chain=array[1].replace(" ", "").upper()
-            segid=array[2].replace(" ", "").upper()     
+   
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
             sequence=sequence[seqstart-1:seqstop]
@@ -1269,7 +1283,8 @@ def _pdbcheck_molecule(request,submission_id):
                 for num in fieldset_ps.keys():
                     if fieldset_ps[num].keys() != postkeys_ps:
                         return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                        
+                
+                
                 print(fieldset_ps)
                 
                         
