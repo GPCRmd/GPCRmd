@@ -1062,8 +1062,8 @@ def search_top(request):
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
-            chain=array[1].replace(" ", "").upper() #avoid whitespace problems
-            segid=array[2].replace(" ", "").upper() #avoid whitespace problems
+            chain=array[1].strip().upper() #avoid whitespace problems
+            segid=array[2].strip().upper() #avoid whitespace problems
             
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
             print(str(protid))
@@ -1102,8 +1102,8 @@ def pdbcheck(request,combination_id):
             results['strlist'].append('Protein: '+array[0]+' Chain: '+ array[1]+'| SEGID: '+array[2]+'| ResFrom: '+array[3]+'| Resto: '+array[4]+'| SeqResFrom: '+array[5]+'| SeqResTo: '+array[6]+'| Bond?: '+array[7]+'| PDB ID: '+array[8]+'| Source type: '+array[9]) #title for the results pop-up table
             
             
-            chain=array[1].replace(" ", "").upper()
-            segid=array[2].replace(" ", "").upper()
+            chain=array[1].strip().upper()
+            segid=array[2].strip().upper()
   
 
             for r in range(3,7):
@@ -1254,7 +1254,7 @@ def _pdbcheck_molecule(request,submission_id):
                             num = int(fieldsplit[1])
                             if num not in fieldset_mc.keys():
                                 fieldset_mc[num] = dict()    
-                            fieldset_mc[num][fieldname] = request.POST[key].replace(" ","")
+                            fieldset_mc[num][fieldname] = request.POST[key].strip()
                             
                     elif key.find(prefix_ps) == 0:
                             
@@ -1264,16 +1264,16 @@ def _pdbcheck_molecule(request,submission_id):
                             num = int(fieldsplit[1])
                             if num not in fieldset_ps.keys():
                                 fieldset_ps[num] = dict()
-                            fieldset_ps[num][fieldname] = request.POST[key].replace(" ","")
+                            fieldset_ps[num][fieldname] = request.POST[key].strip()
                                     
                     elif key in postkeys_mc:
                         if 0 not in fieldset_mc.keys():
                             fieldset_mc[0] = dict()
-                        fieldset_mc[0][key] = request.POST[key].replace(" ","")
+                        fieldset_mc[0][key] = request.POST[key].strip()
                     elif key in postkeys_ps:
                         if 0 not in fieldset_ps.keys():
                             fieldset_ps[0] = dict()
-                        fieldset_ps[0][key] = request.POST[key].replace(" ","") 
+                        fieldset_ps[0][key] = request.POST[key].strip() 
 
                 if fieldset_mc == dict() or fieldset_ps == dict():
                     return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
