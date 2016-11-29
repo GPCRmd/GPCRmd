@@ -31,16 +31,24 @@
     <br>
 {% endif %} 
 
-{% if answer.compounds %} 
-    <b>Compounds used in this complex</b>:<br>
-    {%for comid in answer.compounds %}
-       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a>,
+{% if answer.compoundsorto %} 
+    <b>Orthosteric ligand(s) in this complex</b>:<br>
+    {%for comid in answer.compoundsorto %}
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a> 
+    {%endfor%}
+     <br>
+{% endif %} 
+
+{% if answer.compoundsalo %} 
+    <b>Allosteric ligand(s) in this complex</b>:<br>
+    {%for comid in answer.compoundsalo %}
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a>
     {%endfor%}
      <br>
 {% endif %} 
 
 {% if answer.models %} 
-    <b>Models in which this complex is used: </b>:<br>
+    <b>Complex structures in which this complex is used: </b>:<br>
     {% for modid in answer.models %}
        <a href= /dynadb/model/id/{{modid}}>{{modid}}</a>,
     {% endfor %}

@@ -1952,28 +1952,29 @@ def query_compound(request,compound_id,incall=False):
 def query_complex(request, complex_id,incall=False):
     plist=list()
     mlist=list()
-    clist=list()
+    clistorto=list()
+    clistalo=list()
     model_list=list()
     comdic=dict()
     for cprotein in DyndbComplexProtein.objects.filter(id_complex_exp=complex_id): 
-        plist.append([cprotein.id_protein.id, cprotein.id_protein.uniprotkbac])
+        plist.append([cprotein.id_protein.id, cprotein.id_protein.name])
 
     for cmolecule in DyndbComplexMolecule.objects.filter(id_complex_exp=complex_id):
         for model in DyndbModel.objects.filter(id_complex_molecule=cmolecule.id):
             model_list.append(model.id) 
-        for cmolmol in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmolecule.id):
-            mlist.append(cmolmol.id_molecule.id)
     
     for ccompound in DyndbComplexCompound.objects.filter(id_complex_exp=complex_id):
         pk2filesmolecule=DyndbCompound.objects.get(pk=ccompound.id_compound.id).std_id_molecule.id
         imagelink=DyndbFilesMolecule.objects.filter(id_molecule=2).filter(type=2)[0].id_files.filepath #WARNING: id_molecule=pk2filesmolecule
         imagelink=imagelink.replace("/protwis/sites/","/dynadb/") #this makes it work
-        clist.append([ccompound.id_compound.id,imagelink])
-
+        if ccompound.type==0:
+            clistorto.append([ccompound.id_compound.id,imagelink])
+        else:
+            clistalo.append([ccompound.id_compound.id,imagelink])
     #for match in DyndbReferencesCompound.objects.filter(id_compound=compound_id):
         #comp_dic['references'].append([match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url])
 
-    comdic={'proteins':plist,'molecules': mlist,'compounds': clist, 'models':model_list}
+    comdic={'proteins':plist,'molecules': mlist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
