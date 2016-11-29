@@ -24,7 +24,7 @@
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 >Title?</h3>
+        	<h3 >GPCR viewer</h3>
          </div> 
      </div>
 
@@ -33,7 +33,7 @@
          <div class="panel-body">
 
             <div style="text-align:center"> 
-             <h4 >GPCR VIEWER</h4>
+             <!--<h4 >GPCR VIEWER</h4>-->
 	    </div>
              <p style="text-align: justify;">Please indicate what you want to display in your molecular representation.</p>
 
@@ -82,7 +82,7 @@
                   <button   style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
-                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec">Clear</button>
+                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8">Clear</button>
             </div>
 <!-- ============= Input selection =========== -->
             <div id="selection_all" style="margin-bottom:5px">
@@ -108,10 +108,10 @@
               <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                 <button  class="btn btn-link" id="addToSel" ><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
                 <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
-                  {% for seq,pos,gnum in seq_pos %}
-                  <div id="{{pos}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px">
-                    <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{seq}}</div>
-                    <div style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                  {% for seq,pos,gnum,chain,index in seq_pos %}
+                  <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                    <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
+                    <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
                   </div>            
                   {% endfor %}
                 </div> 
@@ -119,7 +119,7 @@
             </div>
             </div>
 
-<!-- ============= Predefined views =========== -->
+<!-- ============= Predefined views of cons pos =========== -->
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" style="margin-top:5px;margin-bottom:5px">
             <div class="row">
@@ -183,14 +183,15 @@
             </div>
             {% endif %}
 
-<!-- ============= Residues within x A of y =========== --> 
+<!-- ============= Distances =========== --> 
            <div id="res_distances_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#res_distances"><span>Residue Distances </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#res_distances">Residue Distances</button>-->
             </div>
             <div id="res_distances" class="row collapse">
-                <div class="sel_within" style="margin-right:5px;margin-left:0;margin-bottom:5px;margin-top:10px">
+<!-- ============= Residues within x A of y =========== --> 
+                <div class="sel_within" style="margin-right:5px;margin-left:0;margin-bottom:15px;margin-top:10px">
                   <span class="dist_sel" id="row0">
                     <span id="tick" ></span>
                     <span id="always" style="margin-left:14px">
@@ -209,17 +210,27 @@
                   <span id="show_within"></span>
                   <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
                   <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
-                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-minus-sign"></span></button>
+                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
                   <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
                 </div>
-            </div>
-            </div>
+<!-- ============= Compute distances =========== --> 
+
+		<span style="margin-left:14px;margin-bottom:15px">Compute distance between 
+                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+			and
+                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                </span>
+                <button id="gotoDistPg" class="btn btn-default" style="padding:5px;margin-left:10px" >Obtain result</button>
+                <!--<a href="/view/distances/50-100" class="btn btn-default" role="button" id="gotoDistPg" style="padding:5px;margin-left:10px">Obtain result</a>-->
+
 
 <!-- ======================================== -->
+            </div>
+            </div>
 
             <div class="row" >
                <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px"> 
-                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#f2f2f2">Apply</button>
+                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                </div>
      	    </div>
 

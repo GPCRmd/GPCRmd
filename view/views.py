@@ -7,7 +7,9 @@ from view.data import *
 import re
 import json
 from Bio.PDB import *
-from Bio import PDB                                                     
+from Bio import PDB
+#import mdtraj as md 
+#import numpy as np
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the range that consist in the residue number at the same +1. This is because NGL selections requires a range, not a single number."""
@@ -195,8 +197,11 @@ def obtain_prot_chains(pdb_name):
             chain_name_li.append(chain.id)
     return chain_name_li
 
-def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,gpcr_pdb,gpcr_aa,gnum_classes_rel):
+def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
+    chain_nm_seq_pos=""
+    if multiple_chains:
+        chain_nm_seq_pos=chain_name
     pos_gnum = numbers[current_class]
     for pos in result:
         if pos[0] != "-": #Consider only num in the pdb
@@ -207,7 +212,8 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,gpcr_pdb,gp
                 gpcr_pdb[this_gnum]=[pos[0][2],chain_name]
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
-            seq_pos.append([pos[0][0],pos[0][2],gnum_or_nth]);
+            seq_pos.append([pos[0][0],pos[0][2],gnum_or_nth,chain_nm_seq_pos,seq_pos_n]);
+            seq_pos_n+=1
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
     for name in other_classes:
@@ -220,7 +226,7 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,gpcr_pdb,gp
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
-    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos)
+    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
     """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
@@ -333,8 +339,8 @@ def index(request, dyn_id):
         comp_li=obtain_compounds(dyn_id)
         paths_list=[e.id_files.filepath for e in dynfiles]
         (structure_file,structure_name, traj_list)=obtain_dyn_files(paths_list)
-        # structure_file="Dynamics/test.pdb"########################### REMOVE
-        # structure_name="test.pdb" ################################### REMOVE
+        #structure_file="Dynamics/test.pdb"########################### REMOVE
+        #structure_name="test.pdb" ################################### REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file   
         chain_name_li=obtain_prot_chains(pdb_name)
         multiple_chains=False
@@ -354,6 +360,7 @@ def index(request, dyn_id):
                     break
             if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
                 seq_pos=[]
+                seq_pos_n=1
                 gpcr_pdb={}
                 gpcr_aa={}
                 gnum_classes_rel={}
@@ -363,18 +370,14 @@ def index(request, dyn_id):
                         tablepdb,pdb_sequence,hexflag=checkpdb_res
                         result=matchpdbfa(db_seq,pdb_sequence, tablepdb, hexflag)
                         if isinstance(result, list):
-                            (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos, gpcr_pdb,gpcr_aa,gnum_classes_rel)
+                            (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
                             (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
                             obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
                 motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
                 find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
-                for e in sorted(gpcr_pdb):
-                    print(e, gpcr_pdb[e])
-                # for gpcr_class in cons_pos_dict:
-                #     print(gpcr_class)
-                #     for cons_pos_li in cons_pos_dict[gpcr_class]:
-                #         print(cons_pos_li)
-                #     print("\n")
+                #for e in sorted(gpcr_pdb):
+                #    print(e, gpcr_pdb[e])
+
 
 
                 gpcr_pdb_js=json.dumps(gpcr_pdb) 
@@ -406,7 +409,7 @@ def index(request, dyn_id):
             "gpcr_pdb": "no"}
         return render(request, 'view/index.html', context)
 
-#PROVA:
+#TEST:
 def pre_viewer(request):
     all_dyn=DyndbDynamics.objects.all()
     dyn_ids=[dyn.id for dyn in all_dyn]
@@ -415,3 +418,15 @@ def pre_viewer(request):
         "dyn_ids" : dyn_ids
     }
     return render(request, 'view/pre_viewer.html', context)
+
+#Will be the pg for the dist plot
+def distances(request, dist_str):
+    pos_from,pos_to=re.findall("\d+",dist_str) 
+ #   traj=md.load("/protwis/sites/files/Dynamics/14_trj_1_1.dcd", top="/protwis/sites/files/Dynamics/12_dyn_1.pdb")
+ #   from_to=np.array([[pos_from,pos_to]]) 
+ #   dist=md.compute_distances(traj, from_to) 
+    context={
+        "range" : "from " + pos_from+" to "+pos_to#,
+#        "distances" : #dist
+    }
+    return render(request, 'view/distances.html', context)

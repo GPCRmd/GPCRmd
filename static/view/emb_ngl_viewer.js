@@ -50,7 +50,7 @@ $(document).ready(function(){
                     chain_pair[chain_pair.length]=res_chain[1];
                 }
                 if (chain_pair){
-                    if ($("#chains").text() == "") {
+                    if (chains_str == "") {
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]
                     } else if (chain_pair[0]==chain_pair[1]){
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
@@ -178,32 +178,7 @@ $(document).ready(function(){
             $(this).removeClass("active");
         });
     });    
-//////////////
 
-
-    // function obtainPredefPositions(){
-    //     var high_pre=[];
-    //     $(".high_pd.active").each(function(){
-    //         range = $(this).attr("id");
-    //         if (range != "None"){
-    //             if (range.indexOf(",") > -1){
-    //                 range_li=range.split(",");
-    //                 for (num in range_li){
-    //                     high_pre[high_pre.length]=" " + range_li[num];
-    //                 }
-    //             } else{
-    //                 high_pre[high_pre.length]=" " + range;
-    //             }
-    //         }
-    //     })
-    //     high_pre.sort(function(x,y){
-    //         var patt = /\d+/;
-    //         var xp = Number(patt.exec(x));
-    //         var yp = Number(patt.exec(y));
-    //         return xp - yp });
-    //     high_pre=uniq(high_pre);
-    //     return (high_pre);
-    // }
 
     function obtainDicts(gpcr_pdb_dict){
         var bw_dict={};
@@ -358,10 +333,7 @@ $(document).ready(function(){
 ////
 
 
-    function clickSelRange(class_str){
-        return class_str.match(/(\d)+/g)
 
-    }
 
     function selectFromSeq(){
         var click_n=1;
@@ -373,18 +345,18 @@ $(document).ready(function(){
             if (click_n==1){
                 var range=$(this).attr("class"); 
                 if(range.indexOf("-") == -1){     //Start a new selection
-                    $(this).css("background-color","blue");
+                    $(this).css("background-color","#337ab7"); 
                     seq_pos_1 = $(this).attr("id");
                     click_n=2;
                 } else {      // Remove an old selection
-                    var selRange= clickSelRange(range);
+                    var selRange= range.match(/(\d)+/g);
                     i=Number(selRange[0]);
                     end=Number(selRange[1]);
                     // alert(typeof i);
                     while (i <= end) {
                         var mid_id="#" + String(i)
-                        $(mid_id).css("background-color","");
-                        $(mid_id).attr("class", "seq_sel")
+                        $(mid_id).css("background-color","#f2f2f2");
+                        $(mid_id).attr("class", "seq_sel");
                         i++
                     }
                 }
@@ -395,22 +367,22 @@ $(document).ready(function(){
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_fin){
                     var mid_id="#" + String(i)
-                    $(mid_id).css("background-color","grey");
+                    $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
-                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin);
+                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
                     i++
                 }
 
             }
         })
-    
+   
         $(".seq_sel").hover(function(){
             if (click_n==2) {
                 var seq_pos_2 = Number($(this).attr("id"));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
                     var mid_id="#" + String(i)
-                    $(mid_id).children().css("background-color","blue");
+                    $(mid_id).children().css("background-color","#337ab7");
                     i++
                 }
             }
@@ -428,57 +400,104 @@ $(document).ready(function(){
     }
     selectFromSeq();
 
+    function fromIdsToPositions(id_l, id_r){
+        var pos_l=$(id_l).children("#ss_pos").text();
+        var pos_r=$(id_r).children("#ss_pos").text();
+        return [pos_l, pos_r]
+    }
+
+    function fromIdsToPositionsInChain(id_l, id_r){
+        var pos_l=$(id_l).children("#ss_pos").text();
+        var pos_r=$(id_r).children("#ss_pos").text();
+        var chain_l = $(id_l).children("#ss_pos").attr("class");            
+        var chain_r = $(id_r).children("#ss_pos").attr("class");
+        if (chain_l==chain_r){
+            var pos_chain_str=pos_l + "-" +pos_r+":"+chain_l;
+        } else {
+            var pos_chain_str=pos_l + "-:"+chain_l + " or -"+pos_r+":" +chain_r;
+        }
+        return pos_chain_str;
+    }
+
 
     function joinContiguousRanges(sel_ranges){
         var sel_ranges_def=[]
         var o_max;
         var o_min;
         sel_ranges=uniq(sel_ranges);
-        for (p in sel_ranges) {
-            var my_range_str=sel_ranges[p];
-            var my_range = clickSelRange(my_range_str);
-            var my_min=my_range[0];
-            var my_max=my_range[1];
-            if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is 1
-                sel_ranges_def[sel_ranges_def.length -1]= o_min+"-"+my_max;
-                o_max = my_max;
-            } else {
-                sel_ranges_def[sel_ranges_def.length]=my_range_str;
-                o_max = my_max;
-                o_min = my_min;
+        if (chains_str == ""){
+            for (p in sel_ranges) {
+                var my_range_str=sel_ranges[p];
+                var my_range = my_range_str.match(/(\d)+/g);
+                var my_min=my_range[0];
+                var my_max=my_range[1];
+                if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is old last +1
+                    var pos_lr=fromIdsToPositions("#"+o_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length -1]= pos_lr[0]+"-"+pos_lr[1];
+                    o_max = my_max;
+                } else {
+                    var pos_lr=fromIdsToPositions("#"+my_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length]=pos_lr[0]+"-"+pos_lr[1];
+                    o_max = my_max;
+                    o_min = my_min;
+               }
+            }
+        } else { 
+            for (p in sel_ranges) {
+                var my_range_str=sel_ranges[p];
+                var my_range = my_range_str.match(/(\d)+/g);
+                var my_min=my_range[0];
+                var my_max=my_range[1];
+                if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is old last +1
+                    var pos_chain_str=fromIdsToPositionsInChain("#"+o_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length -1]= pos_chain_str;
+                    o_max = my_max;
+                } else {
+                    var pos_chain_str=fromIdsToPositionsInChain("#"+my_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length]=pos_chain_str;
+                    o_max = my_max;
+                    o_min = my_min;
+               }
             }
         }
         return sel_ranges_def
     }
 
+
+
+
     function obtainSelectedAtSeq(){
         var sel_ranges=[]
         $(".seq_sel.sel").each(function(){
-            var sel_range=clickSelRange($(this).attr("class"));
-            sel_ranges[sel_ranges.length]=sel_range[0]+"-"+sel_range[1];
+            var class_str=$(this).attr("class");
+            var id_range= class_str.match(/(\d)+/g);
+//            var sel_range=clickSelRange($(this).attr("class"));
+            sel_ranges[sel_ranges.length]=id_range[0]+"-"+id_range[1];
         });
         return(sel_ranges);
     }
+
+
     $("#addToSel").click(function(){ 
         sel_ranges=obtainSelectedAtSeq();
-        sel_ranges_ok=joinContiguousRanges(sel_ranges);
-        var pos_str=""
-        p=0;
-        while (p < (sel_ranges_ok.length -1)) {
-            pos_str += sel_ranges_ok[p] + " or "
-            p ++
+        if (sel_ranges.length > 0){
+            sel_ranges_ok=joinContiguousRanges(sel_ranges);
+            var pos_str=""
+            p=0;
+            while (p < (sel_ranges_ok.length -1)) {
+                pos_str += sel_ranges_ok[p] + " or "
+                p ++
+            }
+            pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
+            var act_val=$(".sel_input").val();
+            var or=""
+            if (act_val){
+                or = " or "
+            }
+            var fin_val = act_val + or + "protein and ("+ pos_str +")";
+            $(".sel_input").val(fin_val)
         }
-        pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
-        act_val=$(".sel_input").val();
-        var or=""
-        if (act_val){
-            or = " or "
-        }
-        var fin_val = act_val + or + "protein and ("+ pos_str +")";
-        $(".sel_input").val(fin_val)
-
     });    
-
 
 
 
@@ -490,6 +509,7 @@ $(document).ready(function(){
     var sel_enc = encode(sel);
     $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel=" + sel_enc);
     $("#receptor").addClass("active");
+    var chains_str = $("#chains").text();
 
     var gpcr_pdb_dict = $(".gpcr_pdb").attr("id");
     var bw_dict,gpcrdb_dict
@@ -519,6 +539,10 @@ $(document).ready(function(){
         $(".rep_elements").removeClass("active");
     });
 
+    $("#gotoDistPg").click(function(){
+        newwindow=window.open('/view/distances/50-100','','width=900,height=900');
+    //    if (window.focus) {newwindow.focus()}
+    });
 
 
     $("#submit").click(function(){
