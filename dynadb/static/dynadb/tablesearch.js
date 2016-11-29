@@ -1,3 +1,63 @@
+function ShowResults(data, restype,is_apoform){
+    var tablestr='';
+    if (restype=='complex' &&  data.result.length>0 ){
+        var cl=data.result;
+        for(i=0; i<cl.length; i++){
+            tablestr=tablestr+"<tr><td> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Composed by receptor: "+cl[i][1]+", and ligand "+ cl[i][2]+". </td><tr>";
+        }
+    }//endif
+
+    //Results are models
+    if ( restype=='model'  && data.model.length>0){
+        var rl=data.model
+        for(i=0; i<rl.length; i++){
+            if (is_apoform==false){
+                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Complex Structure with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </td></tr>";
+            }else{
+                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> With protein: "+rl[i][1]+" </td></tr>";
+            }
+        }
+    }//endif
+
+
+    if (restype=='dynamics' && data.dynlist.length>0  ){
+        var dl=data.dynlist;
+        for(i=0; i<dl.length; i++){
+            if (is_apoform==false){
+                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</td></tr>";
+            }else{
+                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Dynamics with receptor: "+dl[i][1]+"</td></tr>";
+            }
+        }
+    } //endif
+
+
+
+    return tablestr;
+
+}//end of function definition
+
+function CreateTable(){
+    if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
+        table = $('#ajaxresults22').DataTable();
+    }
+    else {
+        table = $('#ajaxresults22').DataTable( {
+            "sPaginationType" : "full_numbers",
+            "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+            "oLanguage": {
+                "oPaginate": {
+                    "sPrevious": "<",
+                    "sNext": ">",
+                    "sFirst": "<<",
+                    "sLast": ">>",
+                 }
+            }
+        } );
+    }   
+}
+
+
 $("#tablesearch").click(function() {
     var exactboo=$('#exactmatch').prop('checked');
     var bigarray=[];
@@ -5,8 +65,7 @@ $("#tablesearch").click(function() {
     var closingpar=[]
     var flag=0; //means no errors
     $("#tablesearch").prop("disabled",true);
-
-    if ($('#gotoadvsearch').html().length==13){
+    if ($('#gotoadvsearch').html().length==19){
         var typeofsearch='advanced';
         $("#myTable tr").each(function () {
             var postarray=[];
@@ -118,7 +177,6 @@ $("#tablesearch").click(function() {
         flagsms='Mismatching parenthesis!';
     }
 
-    //console.log(bigarray);
     var restype=$('#result_type').val();
     var ff=$('#fftype').val();
     var tstep=$('#tstep').val();
@@ -133,11 +191,9 @@ $("#tablesearch").click(function() {
         var is_apoform=$('#apoform_dyn').prop('checked');
     }
 
-    console.log(bigarray.length,restype);
-
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
 
-    if(bigarray.length==1 && (restype=='model' || restype=='dynamics')){ //empty
+    if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
         $.ajax({
             type: "POST",
             data: {'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform},
@@ -146,37 +202,56 @@ $("#tablesearch").click(function() {
             success: function(data) {
                 $("#tablesearch").prop("disabled",false);
                 if (data.message==''){
-                    $('#ajaxresults').html('No results.');
-
+                    $('#ajaxresults22 tbody').empty();
+                    /*var tablestr='';
                     //Results are models
                     if (data.model.length>0 && restype=='model'){
-                        $('#ajaxresults').html('Models Results');
-                        $('#ajaxresults').append("<ul id='modres'></ul>");
                         var rl=data.model
                         linkr='';
                         for(i=0; i<rl.length; i++){
                             if (rl[i].length>2){
-                                $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Model ID:"+rl[i][0] +"</a> Model with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </li>");
+                                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Complex Structure with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </td></tr>";
                             }else{
-                                $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform model ID:"+rl[i][0]+"</a> With protein: "+rl[i][1]+" </li>");
+                                tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> With protein: "+rl[i][1]+" </td></tr>";
                             }
 
                         }
+                        
 
                     }//endif
 
                     //Results are dynamics
                     if (data.dynlist.length>0 && restype=='dynamics'){
-                        $("#ajaxresults").html('Dynamics Results');
-                        $("#ajaxresults").append("<ul id='dynres'></ul>");
                         var dl=data.dynlist
                         linkd='';
                         for(i=0; i<dl.length; i++){
-                            $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</li>");
+                            tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> </td><td> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</td></tr>";
                         }
 
                     } //endif
-
+                    */
+                tablestr=ShowResults(data, restype,is_apoform);
+                $('#ajaxresults22 tbody').append(tablestr);
+                CreateTable();
+                /*
+                if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
+                    table = $('#ajaxresults22').DataTable();
+                }
+                else {
+                    table = $('#ajaxresults22').DataTable( {
+                        "sPaginationType" : "full_numbers",
+                        "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+                        "oLanguage": {
+                            "oPaginate": {
+                                "sPrevious": "<",
+                                "sNext": ">",
+                                "sFirst": "<<",
+                                "sLast": ">>",
+                             }
+                        }
+                    } );
+                }   
+                */
                 }else{
                     alert(data.message);
                 }
@@ -196,7 +271,7 @@ $("#tablesearch").click(function() {
     if (bigarray.length>1 || restype=='complex'){
 
         ///////////////////////////////////////////SIMPLE SEARCH //////////////////////////////////////////////////////////
-        if ($('#gotoadvsearch').html().length!=13){ //simple search selected
+        if ($('#gotoadvsearch').html().length==21){ //simple search selected
             if ( (is_apoform==true && bigarray.length>2) || (is_apoform==true && bigarray[1][1]!='protein' ) ){
                 flag=1;
             }
@@ -210,30 +285,27 @@ $("#tablesearch").click(function() {
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
                         if (data.message==''){
-                            $('#ajaxresults').html('No results.');
+                            $('#ajaxresults22 tbody').empty();
+                            /*
+                            var tablestr='';
                             //Results are complexes
                             if (data.result.length>0 && restype=='complex'){
-
-                                $('#ajaxresults').html('Complex Results:');
-                                $('#ajaxresults').append("<ul id='complexes'></ul>");
                                 var cl=data.result;
                                 listc='';
                                 for(i=0; i<cl.length; i++){
-                                    $("#complexes").append("<li> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a>  Composed by <b>receptor</b>: "+cl[i][1]+", and <b>ligand</b> "+ cl[i][2]+". </li>");
+                                    tablestr=tablestr+"<tr><td> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Composed by <b>receptor</b>: "+cl[i][1]+", and <b>ligand</b> "+ cl[i][2]+". </td></tr>";
                                 }
                             }//endif
 
                             //Results are models
                             if (data.model.length>0 && restype=='model'){
-                                $('#ajaxresults').html('Models Results');
-                                $('#ajaxresults').append("<ul id='modres'></ul>");
                                 var rl=data.model
                                 linkr='';
                                 for(i=0; i<rl.length; i++){
                                     if (is_apoform==false){
-                                        $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Model ID:"+rl[i][0] +"</a> Model with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </li>");
+                                        tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a></td><td> Model with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </td></tr>";
                                     }else{
-                                        $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform model ID:"+rl[i][0]+"</a> With protein: "+rl[i][1]+" </li>");
+                                        tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a></td><td> With protein: "+rl[i][1]+" </td></tr>";
                                     }
 
                                 }
@@ -242,16 +314,36 @@ $("#tablesearch").click(function() {
 
                             //Results are dynamics
                             if (data.dynlist.length>0 && restype=='dynamics'){
-                                $("#ajaxresults").html('Dynamics Results');
-                                $("#ajaxresults").append("<ul id='dynres'></ul>");
                                 var dl=data.dynlist
                                 linkd='';
                                 for(i=0; i<dl.length; i++){
-                                    $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</li>");
+                                    tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</td></tr>";
                                 }
 
                             } //endif
-
+                            */
+                        tablestr=ShowResults(data,restype,is_apoform);
+                        $('#ajaxresults22 tbody').append(tablestr);
+                        CreateTable();
+                        /*
+                        if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
+                            table = $('#ajaxresults22').DataTable();
+                        }
+                        else {
+                            table = $('#ajaxresults22').DataTable( {
+                                "sPaginationType" : "full_numbers",
+                                "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+                                "oLanguage": {
+                                    "oPaginate": {
+                                        "sPrevious": "<",
+                                        "sNext": ">",
+                                        "sFirst": "<<",
+                                        "sLast": ">>",
+                                     }
+                                }
+                            } );
+                        }   
+                        */
                         }else{
                             alert(data.message);
                         }
@@ -293,30 +385,27 @@ $("#tablesearch").click(function() {
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
                         if (data.message==''){
-                            $('#ajaxresults').html('No results.');
+                            $('#ajaxresults22 tbody').empty();
+                            /*
+                            var tablestr='';
                             //Results are complexes
                             if (data.result.length>0 && restype=='complex'){
-
-                                $('#ajaxresults').html('Complex Results:');
-                                $('#ajaxresults').append("<ul id='complexes'></ul>");
                                 var cl=data.result;
                                 listc='';
                                 for(i=0; i<cl.length; i++){
-                                    $("#complexes").append("<li> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a>  Composed by receptor: "+cl[i][1]+", and ligand "+ cl[i][2]+". </li>");
+                                    tablestr="<tr><td> <a href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Composed by receptor: "+cl[i][1]+", and ligand "+ cl[i][2]+". </td><tr>";
                                 }
                             }//endif
 
                             //Results are models
                             if (data.model.length>0 && restype=='model'){
-                                $('#ajaxresults').html('Models Results');
-                                $('#ajaxresults').append("<ul id='modres'></ul>");
                                 var rl=data.model
                                 linkr='';
                                 for(i=0; i<rl.length; i++){
                                     if (is_apoform==false){
-                                        $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Model ID:"+rl[i][0] +"</a> Model with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </li>");
+                                        tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Complex Structure with receptor: "+rl[i][1]+", and ligand: "+rl[i][2]+" </td></tr>";
                                     }else{
-                                        $("#modres").append("<li>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform model ID:"+rl[i][0]+"</a> With protein: "+rl[i][1]+" </li>");
+                                        tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> With protein: "+rl[i][1]+" </td></tr>";
                                     }
 
                                 }
@@ -325,16 +414,37 @@ $("#tablesearch").click(function() {
 
 
                             if (data.dynlist.length>0 && restype=='dynamics'){
-                                $("#ajaxresults").html('Dynamics Results');
-                                $("#ajaxresults").append("<ul id='dynres'></ul>");
                                 var dl=data.dynlist;
                                 linkd='';
                                 for(i=0; i<dl.length; i++){
-                                     $("#dynres").append("<li>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</li>");
+                                     tablestr=tablestr+"<tr><td>"+ "<a href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Dynamics with receptor: "+dl[i][1]+ ",and ligand:"+ dl[i][2]+"</td></tr>";
                                 }
 
                             } //endif
+                            */
 
+                        tablestr=ShowResults(data,restype,is_apoform);
+                        $('#ajaxresults22 tbody').append(tablestr);
+                        CreateTable();
+                        /*
+                        if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
+                            table = $('#ajaxresults22').DataTable();
+                        }
+                        else {
+                            table = $('#ajaxresults22').DataTable( {
+                                "sPaginationType" : "full_numbers",
+                                "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+                                "oLanguage": {
+                                    "oPaginate": {
+                                        "sPrevious": "<",
+                                        "sNext": ">",
+                                        "sFirst": "<<",
+                                        "sLast": ">>",
+                                     }
+                                }
+                            } );
+                        }   
+                        */
                         }else{
                             alert(data.message);
                             $("#tablesearch").prop("disabled",false);

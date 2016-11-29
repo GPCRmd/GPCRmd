@@ -13,14 +13,14 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Model Info:</b> {{answer.description}} </div>
+    <div class="panel-heading"><b>Complex Structure Info:</b> {{answer.description}} </div>
     <div class="panel-body">
     {% if answer.pdbid%} 
       <b>PDB ID</b>:{{answer.pdbid}} <br>
     {% endif %}
 
     {% if answer.type%} 
-      <b>Model type</b>:<br> {{answer.type}} <br>
+      <b>Complex Structure type</b>:<br> {{answer.type}} <br>
     {% endif %}
     <br>
     {%if answer.link2protein%}
@@ -47,13 +47,13 @@
     {% endif %}
 
     {% if answer.components%} 
-        <b>Molecules used in this model</b>:<br>
+        <b>Molecules used in this complex structure</b>:<br>
         {%for compoundlink in answer.components %}
            <a href= /dynadb/molecule/id/{{compoundlink.0}}><img src="{{compoundlink.1}}" height="200" width="200"/></a>
         {%endfor%}
     {% endif %} 
     <br>
-    <b>Dynamic(s) in which this model appears</b>:<br>
+    <b>Dynamic(s) in which this complex structure appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
        <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
@@ -62,7 +62,7 @@
 
 
     {% if answer.references %} 
-        <br><b>References in which this model is mentioned</b>:<br>
+        <br><b>References in which this complex structure is mentioned</b>:<br>
         <ul>
         {%for reference in answer.references%}
               <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>

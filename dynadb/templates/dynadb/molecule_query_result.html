@@ -41,7 +41,7 @@
     {%endif%}
 <br>
     {% if answer.inmodels %}
-        <br><b> Models in which this molecule appears </b>:<br>
+        <br><b> Complex structures in which this molecule appears </b>:<br>
         {%for model in answer.inmodels%}
             <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
         {%endfor%}

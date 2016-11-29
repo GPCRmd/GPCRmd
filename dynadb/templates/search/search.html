@@ -3,6 +3,106 @@
 {% block addon_css %}
   <style>
 
+#ajaxresults22_paginate{
+    margin: 50px 1px 50px 1px;
+
+}
+
+#ajaxresults22{
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#ajaxresults22 td, ajaxresults22 tr{
+    border-bottom: 15px solid transparent;
+    border-top: 15px solid transparent;
+    white-space: nowrap
+}
+
+.paginate_button {
+    background-color: #00e6e6;
+    box-sizing: border-box;
+    <!--display: inline-block;-->
+    min-width: 1.5em;
+    padding: 0.1px 15px;
+    margin-left: 5px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    *cursor: hand;
+    color: #333 !important;
+    border: 1px solid black;
+    border-radius: 8px;
+
+}
+
+.paginate_button.current{
+    background-color: blue;
+    box-sizing: border-box;
+    <!--display: inline-block;-->
+    min-width: 1.5em;
+    padding: 0.1px 15px;
+    margin-left: 5px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    *cursor: hand;
+    color: #333 !important;
+    border: 1px solid black;
+    border-radius: 8px;
+
+}
+
+
+.paginate_button_disabled {
+    background-color: #1a75ff;
+    box-sizing: border-box;
+    <!--display: inline-block;-->
+    min-width: 1.5em;
+    padding: 0.1px 15px;
+    margin-left: 5px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    *cursor: hand;
+    color: #333 !important;
+    border: 1px solid black;
+    border-radius: 8px;
+}
+.paginate_button:hover {
+    box-sizing: border-box;
+    background-color: #3333cc;
+    <!--display: inline-block;-->
+    min-width: 1.5em;
+    padding: 0.1px 15px;
+    margin-left: 5px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    *cursor: hand;
+    color: #333 !important;
+    border: 1px solid black;
+    border-radius: 8px;
+
+}
+.paginate_active {
+    background-color: white;
+    box-sizing: border-box;
+    <!--display: inline-block;-->
+    min-width: 1.5em;
+    padding: 0.1px 15px;
+    margin-left: 5px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    *cursor: hand;
+    color: #333 !important;
+    border: 1px solid black;
+    border-radius: 8px;
+
+}
+
    #content{
     width:100%;
    }
@@ -23,7 +123,6 @@
 
  #myTable  th, #myTable  td {
       padding: 1px;
-      width: 14%
   }
 
   #floatdiv {
@@ -32,11 +131,6 @@
     max-height:400px;
     overflow:auto;
     position: fixed;
-}
-
-  #gotoadvsearch{
-   color:white;
-   background-color:black;
 }
 
 
@@ -49,7 +143,7 @@
    #hidden{
     width: 90%;
 }
-
+/*
 #dynfil{
     width: 70%
     border-collapse: collapse;
@@ -59,7 +153,7 @@
     padding:7px;
     border: solid black 5px;
 }
-
+*/
   </style>
 {% endblock %}
 {% block content %}
@@ -74,13 +168,14 @@
             <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
                 <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
  <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option></select>
-                <input type="button" value="Search" name="search" id="Searcher" />
+                <!--<input type="button" value="Search" name="search" id="Searcher" /><span class="glyphicon glyphicon-search">-->
+                <button id="Searcher" type="button" value="Search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
             </form> 
             </center>
             <br>
     </div>
       <div class="panel-body">
-            <p id='ajaxresults'>No results.</p>
+            <table id='ajaxresults22'> <thead><tr> <th> Results: </th> <th>        </th></tr> </thead> <tbody> <tr><td>No results</td></tr> </tbody> </table>
             <br><br><br><br><br><br><br><br><br><br><br>
       </div>
     </div>
@@ -92,8 +187,16 @@
 
   <div class="col-sm-6">
 
-    <div class="panel panel-primary class" id="floatdiv">
-        <div class="panel-heading"> <h4>Search for complexes, models or dynamics</h4> <button id="gotoadvsearch" type="button" value="Advanced Search"> Advanced Search</button>  </div>
+        <div class="panel panel-primary class" id="floatdiv">
+            <div class="panel-heading"> <center><h4>Search for complexes, complex structures or dynamics</h4></center>
+                <!--<ul id="gotoadvsearch" class="nav nav-tabs">
+                <li><a href="#">Menu 1</a></li>
+                <li><a href="#">Menu 2</a></li>
+                <li><a href="#">Menu 3</a></li>
+                </ul>-->
+                <center><button id="gotoadvsearch" class="btn btn-info" type="button" value="Advanced Search">Go to Advanced Search</button></center>
+            </div>
+
         <div class="panel-body">
         <center>
 
@@ -103,16 +206,17 @@
             <th>Boolean</th>
             <th>Type</th>
             <th>ID</th>
-            <th></th>
+            <th></th><!--IS RECEPTOR -->
+            <th></th><!--name-->
+            <th></th><!--REMOVE-->
         </tr>
         </thead>
         <tbody>
         </tbody>
         </table>
         <br>
-        Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch">
-        Return:
-        <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Model</option><option value="dynamics">Dynamics</option></select>
+        Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> <br><br>
+        Return: <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Complex Structure</option><option value="dynamics">Dynamics</option></select>
         <div id='hiddenmodel'>
         <br><br>
         Is it an apoform? <input id="apoform" type="checkbox" name="apo" value="apo">
@@ -122,19 +226,20 @@
 
         <div id='hidden'>
         <br><br>
-        Model is an apoform? <input id="apoform_dyn" type="checkbox" name="apo" value="apo">
-        <table id='dynfil'>
+        Is it an apoform? <input id="apoform_dyn" type="checkbox" name="apo" value="apo"> <br><br>
+
+        <table id='dynfil' class='table table-striped'>
         <tbody>
-        <tr><td>Time step < </td><td><input id='tstep' type="text" name="tstep"></td></tr>
+        <tr><td>Time step (smaller than:) </td><td><input id='tstep' type="text" name="tstep"></td></tr>
         <tr><td>Force Field</td><td><select id="fftype"><option selected="selected" value=""> </option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option></select></td></tr>
         <tr><td>Software used</td><td><select id="soft"><option selected="selected" value=""> </option><option value="ACEMD">ACEMD</option><option value="OTHER">OTHER</option></select></td></tr>
         <tr><td>Membrane type</td><td><select id="memtype"><option selected="selected" value=""> </option><option value="1">Implicit</option><option value="2">Homogeneous</option><option value="3">Heterogeneous</option></select></td></tr>
-        <tr><td>method</td><td><select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics</option><option value="2">QM/MM</option><option value="3">NMR</option><option value="4">Monte Carlo simulation</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option></select></td></tr>
+        <tr><td>Method</td><td><select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics</option><option value="2">QM/MM</option><option value="3">NMR</option><option value="4">Monte Carlo simulation</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option></select></td></tr>
         <tr><td>Solvent type</td><td><select id="soltype"><option selected="selected" value=""> </option> <option value="1">Implicit</option><option value="2">TIP3P</option><option value="3">TIP4P</option><option value="4">TIPS</option><option value="5">SPC</option><option value="6">SPC/E</option><option value="7">Other</option></select></td></tr>
         </table>
         <br><br>
         </div>
-        <br><br><br><button id="tablesearch" type="button" value="search"> Search! </button>
+        <br><br><br><button id="tablesearch" type="button" value="search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
         </center>
 
     </div> <!--panel body-->
@@ -158,4 +263,13 @@
     <script src="{% static 'dynadb/add_search.js' %}"></script>
     <script src="{% static 'dynadb/ajaxto.js' %}"></script>
     <script src="{% static 'dynadb/tablesearch.js' %}"></script>
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.12/js/jquery.dataTables.js"></script>
+    <script>
+    $.extend( true, $.fn.dataTable.defaults, {
+       "searching": false,
+       "ordering": false
+    } );
+
+    </script>
+
 {% endblock %}
