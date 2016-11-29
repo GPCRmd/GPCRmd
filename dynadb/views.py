@@ -725,8 +725,6 @@ def emptysearcher(request):
 
                         modelresult.append([model.id,receptorlist,liglist])
 
-                    else:
-                        modelresult.append([model.id , DyndbProtein.objects.get(pk=model.id_protein.id).name ]) #modelresult.append(mod.id)
                 tojson={'model':modelresult,'dynlist':[],'message':''}
                 data = json.dumps(tojson)
                 return HttpResponse(data, content_type='application/json')
@@ -735,12 +733,14 @@ def emptysearcher(request):
             dynlist=set()
             if request.POST.get('is_apo')=='true':
                 for model in DyndbModel.objects.all():
-                    if model.id_protein  != None:
+                    if model.id_protein != None:
                         for dyn in DyndbDynamics.objects.filter(id_model=model.id):
                             dynlist.add(dyn.id)
             else:
-                for dyn in DyndbDynamics.objects.all():
-                    dynlist.add(dyn.id)
+                for model in DyndbModel.objects.all():
+                    if model.id_protein == None:
+                        for dyn in DyndbDynamics.objects.filter(id_model=model.id):
+                            dynlist.add(dyn.id)
 
             ffset=set()
             tstepset=set()
@@ -788,7 +788,7 @@ def emptysearcher(request):
         else:
             for dynid in dynlist:
                 expid=DyndbDynamics.objects.get(pk=dynid).id_model.id_complex_molecule.id_complex_exp.id
-                print(expid)
+                print('expid of the resulting dynamics',expid)
                 liglist=[]
                 receptorlist=[]
 
@@ -1523,10 +1523,10 @@ def NiceSearcher(request):
                         for dyncomp in DyndbDynamicsComponents.objects.filter(id_molecule=molecule.id):
                             if int(dyncomp.type) in [0,1,2,3,4]:
                                 rowlist.append(dyncomp.id_dynamics.id)
-                        #for modcomp in DyndbModelComponents.objects.filter(id_molecule=molecule.id):
-                        #    if int(modcomp.type) in [0,2,3,4]:
-                        #        for dyid in DyndbDynamics.objects.filter(id_model=modcomp.id_model.id):
-                        #            rowlist.append(dyncomp.id_dynamics.id)
+                        for modcomp in DyndbModelComponents.objects.filter(id_molecule=molecule.id):
+                           if int(modcomp.type) in [0,2,3,4]:
+                               for dyid in DyndbDynamics.objects.filter(id_model=modcomp.id_model.id):
+                                       rowlist.append(dyncomp.id_dynamics.id)
 
         return rowlist
        
@@ -2050,7 +2050,9 @@ def query_dynamics(request,dynamics_id):
         dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
 
     for match in DyndbModelComponents.objects.filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
+        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']]
+        if candidatecomp not in dyna_dic['link_2_molecules'] : 
+            dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
 
     cmol_id=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id_complex_molecule.id
     for match in DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=cmol_id):

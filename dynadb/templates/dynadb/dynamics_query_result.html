@@ -1,12 +1,11 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% block addon_css %}
-  <style>
-  .panel-body {
-    word-break:break-all
-}
-    
-  </style>
+    <style>
+    .panel-body {
+        word-break:break-all
+    }    
+    </style>
 {% endblock %}
 {% block content %}
     <div class="container">
@@ -22,7 +21,7 @@
     {%endif%}
 
     {%if answer.link_2_model%}
-    <b>Model</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
+    <b>Complex Structure</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
     {%endif%}
 
     {%if answer.solventtype%}
