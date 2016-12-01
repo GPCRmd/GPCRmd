@@ -68,7 +68,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	onlyaa='' #ignore the resids, pick the aa and that is it.
 	for minilist in seqplain:
 		onlyaa=onlyaa+minilist[0]
-
+	#print(seqplain,onlyaa)
 	return (seqplain,onlyaa,hexflag)
 
 
@@ -348,6 +348,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		return result
 	else:
 		tablepdb,simplified_sequence,hexflag=result
+
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
 	'''
 	The resulting alignment should be like:

@@ -14,25 +14,60 @@
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>Molecule Info:</b></div>
-    <div class="panel-body">  <b>Smiles</b>: {{answer.smiles}} <br>  
-                              <b>Netcharge</b>:{{answer.netcharge}} <br>
-                              <b>InChIKey</b>:{{answer.inchikey}} <br>
-                              <b>InChI</b>:{{answer.inchi}} <br>
-                              <b>InChIcol</b>:{{answer.inchicol}} <br>
-                              <b>Related compounds</b>:
-    {%for compoundlink in answer.link_2_compound%}
-       <a href= /dynadb/compound/id/{{compoundlink}}>{{compoundlink}}</a>, 
-    {%endfor%}
-                              <br><b> Models in which this molecule appears </b>:
-    {%for model in answer.inmodels%}
-        <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
-    {%endfor%}
+    <div class="panel-body">  
+    {% if answer.smiles %}
+    <b>Smiles</b>:<br> {{answer.smiles}} <br>  
+    {%endif%}
+<br>
+    {% if answer.netcharge %}
+        <b>Netcharge</b>:<br>{{answer.netcharge}} <br>
+    {%endif%}
+<br>
+    {% if answer.inchikey %}
+        <b>InChIKey</b>:<br>{{answer.inchikey}} <br>
+    {%endif%}
+<br>
+    {% if answer.inchi %}
+        <b>InChI</b>:<br>{{answer.inchi}} <br>
+    {%endif%}
+<br>
+    {% if answer.inchicol %}
+        <b>InChIcol</b>:<br>{{answer.inchicol}} <br>
+    {%endif%}
+<br>
+    {% if answer.link_2_compound %}
+        <b>Corresponding compound</b>:<br> 
+           <a href= /dynadb/compound/id/{{answer.link_2_compound}}>{{answer.link_2_compound}}</a>, 
+    {%endif%}
+<br>
+    {% if answer.inmodels %}
+        <br><b> Complex structures in which this molecule appears </b>:<br>
+        {%for model in answer.inmodels%}
+            <a href= /dynadb/model/id/{{model}}>{{model}}</a>,
+        {%endfor%}
+    {%endif%}
+<br>
+    {% if answer.references %} 
+        <br><b>References in which this molecule is mentioned</b>:<br>
+        <ul>
+        {%for reference in answer.references%}
+              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+        </ul>
+        {%endfor%}
+    {% endif %} 
 
     <br><center><a href=sdf><button type="button">Download the SDF file</button></a></center>
     </div>
     </div>
     </div>   
 
-
+<div class="container">
+    <div class="panel panel-info">
+    <div class="panel-heading"><b>Image of the Molecule (Standard form):</b></div>
+    <div class="panel-body">  
+    <img src="{{answer.imagelink}}" />
+    </div>
+    </div>
+    </div>   
 {% endblock content %}
 

@@ -57,6 +57,7 @@ INSTALLED_APPS = (
     'build_' + SITE_NAME,
     'construct',
     'tools',
+    'haystack',
     'drugs',
     'graphos',
 )
@@ -100,6 +101,15 @@ MEDIA_URL = '/files/'
 MEDIA_ROOT = '/protwis/sites/files/'
 #past: MEDIA_ROOT = '/protwis/media/protwis'
 
+
+#Search Engine
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
+        'URL': 'http://127.0.0.1:8983/solr/collection_gpcrmd'
+    },
+}
 
 # Serializer
 

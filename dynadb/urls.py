@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url,patterns
+from django.conf.urls import url,patterns,include #antes: from django.conf.urls import url,patterns
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf import settings
 from . import views
+from haystack.query import SearchQuerySet
+from haystack.views import SearchView
+from .forms import MainSearchForm
+
+sqs = SearchQuerySet().all()
 
 app_name= 'dynadb'
 urlpatterns = [
@@ -43,6 +48,7 @@ urlpatterns = [
     url(r'^compound/id/(?P<compound_id>[0-9]+)/$',views.query_compound, name='query_compound'),
     url(r'^model/id/(?P<model_id>[0-9]+)/$',views.query_model, name='query_model'),
     url(r'^dynamics/id/(?P<dynamics_id>[0-9]+)/$',views.query_dynamics, name='query_dynamics'),
+    url(r'^complex/id/(?P<complex_id>[0-9]+)/$',views.query_complex, name='query_complex'),
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/(?P<submission_id>[0-9]+)/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='PROTEINfilled'),
@@ -65,17 +71,24 @@ urlpatterns = [
     url(r'^modelrow/$', views.MODELrowview, name='modelrow'),
     url(r'^modelreuserequest/$', views.MODELreuseREQUESTview, name='modelreuserequest'),
     url(r'^MODELfilled/(?P<submission_id>[0-9]+)/$', views.MODELview, name='MODELfilled'),
-    #url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
-    url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
+    url(r'^ajax_pdbchecker/(?P<submission_id>[0-9]+)/$', views.pdbcheck, name='pdbcheck'), #keep this one in a merge
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
+    url(r'^search/$', SearchView(template='/protwis/sites/protwis/dynadb/templates/search/search.html', searchqueryset=sqs, form_class=MainSearchForm),name='haystack_search'),
+    #url(r'^search/$',views.autocomplete , name='autocomplete'),
+    url(r'^ajaxsearch/',views.ajaxsearcher,name='ajaxsearcher'),
+    url(r'^empty_search/',views.emptysearcher,name='emptysearcher'),
+    url(r'^autocomplete/',views.autocomplete,name='autocomplete'),
+    url(r'^complex_search/$', views.ComplexExpSearcher,name='ComplexExpSearcher'),
+    url(r'^advanced_search/$', views.NiceSearcher,name='NiceSearcher'),
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
-    url(r'^search_top/$',views.search_top,name='search_top'),
+    url(r'^search_top/(?P<submission_id>[0-9]+)/$',views.search_top,name='search_top'), #keep this one in a merge
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSreuseview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
+
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
 

@@ -1,5 +1,8 @@
 
 function sendpar() {
+    var url=window.location.href;
+    var subid=url.indexOf("/model/");
+    subid=url.slice(subid+7,-1);
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -10,6 +13,7 @@ function sendpar() {
         bigarray.push(postarray);
     })
     var goon=true;
+
     counter=1;
     for (i=0,lenout=bigarray.length;i<lenout;i++){
         for (j=counter,len=bigarray.length;j<len;j++){
@@ -37,14 +41,13 @@ function sendpar() {
     if (goon==true){
         $.ajax({
             type: "POST",
-            data: { "bigarray[]": bigarray,"url": window.location.href},
-            //data: { "id_prot": postarray[0],"chain": postarray[1], "segid": postarray[2], "restart": postarray[3], "restop": postarray[4], "seqstart": postarray[5], "seqstop": postarray[6], "url": window.location.href },
-            url: "/dynadb/ajax_pdbchecker/"+'c'+bigarray[0][0]+'_'+bigarray[0][1]+'_'+bigarray[0][2]+'_'+bigarray[0][3]+'_'+bigarray[0][4]+'_'+bigarray[0][5]+'_'+bigarray[0][6],
+            data: { "bigarray[]": bigarray},
+            url:"/dynadb/ajax_pdbchecker/"+subid+"/",
             dataType: "json",
             success: function(data) {
                 $("#pdbchecker2").prop("disabled",false);
                 if (data.message==''){
-                    newwindow=window.open('/dynadb/ajax_pdbchecker/'+'c'+bigarray[0][0]+'_'+bigarray[0][1]+'_'+bigarray[0][2]+'_'+bigarray[0][3]+'_'+bigarray[0][4]+'_'+bigarray[0][5]+'_'+bigarray[0][6],'','height=500,width=700');
+                    newwindow=window.open('/dynadb/ajax_pdbchecker/'+subid);
                     if (window.focus) {newwindow.focus()}
                 }else{
                     alert(data.message);
