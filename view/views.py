@@ -1,18 +1,24 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering
 from dynadb.pipe4_6_0 import *
 from view.data import *
 import re
 import json
+import urllib
 from Bio.PDB import *
 from Bio import PDB
-#import mdtraj as md 
-#import numpy as np
+
+import mdtraj as md 
+import numpy as np
+from graphos.sources.simple import SimpleDataSource
+from graphos.renderers.gchart import LineChart
+
+
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
-    """Given a position in GPCR generic numbering, returns the range that consist in the residue number at the same +1. This is because NGL selections requires a range, not a single number."""
+    """Given a position in GPCR generic numbering, returns the range that consist in the residue number twice. This is necessary because NGL selections require a range, not a single number."""
     (ext_range,chain)=gpcr_pdb[my_pos]
     ext_range=str(ext_range)
     pos_range=ext_range+"-"+ext_range
@@ -32,7 +38,7 @@ def find_range_from_cons_pos(my_pos, gpcr_pdb):
     return pos_range
                               
 def create_conserved_pos_list(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li, multiple_chains,chain_name):
-    """Given the GPCR num of a position of our seq, checks if it's one of the conserved residues, and if it has been mutated"""
+    """Given the GPCR num of a position of our seq, checks if it's one of the GPCR conserved residues, and if it has been mutated"""
     my_pos_bw=my_pos.split("x")[0]
     add_chain_name=""
     if multiple_chains:
@@ -169,32 +175,33 @@ def find_missing_pos_in_motif_otherclass(motifs, motname_li,dict_class,current_c
     return motifs_def
 
 
-def obtain_dyn_files(paths_list):
+def obtain_dyn_files(paths_dict):
     """Given a list of files related to a dynamic, separates them in structure files and trajectory files."""
     structure_file=""
     structure_name=""
     traj_list=[]
     p=re.compile("(/protwis/sites/files/)(.*)")
     p2=re.compile("[\.\w]*$")
-    for path in paths_list:
+    for f_id , path in paths_dict.items():
         myfile=p.search(path).group(2)
         myfile_name=p2.search(path).group()
         if myfile_name.endswith(".pdb"): #, ".ent", ".mmcif", ".cif", ".mcif", ".gro", ".sdf", ".mol2"))
             structure_file=myfile
+            structure_file_id=f_id
             structure_name=myfile_name
         elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
-            traj_list.append((myfile, myfile_name))    
-    return (structure_file,structure_name, traj_list)
+            traj_list.append((myfile, myfile_name, f_id))
+    return (structure_file,structure_file_id,structure_name, traj_list)
 
 def obtain_prot_chains(pdb_name):
     """Given a structure file, returns a list of protein chains"""
     pdb = PDBParser(PERMISSIVE=True, QUIET=True).get_structure("ref", pdb_name)
     chain_name_li=[]
     for chain in pdb.get_chains(): 
-        a=chain.get_residues()
-        ex=list(a)[0]
-        if PDB.is_aa(ex): 
-            chain_name_li.append(chain.id)
+        for residue in chain:
+            if PDB.is_aa(residue): 
+                chain_name_li.append(chain.id)
+                break
     return chain_name_li
 
 def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
@@ -337,68 +344,73 @@ def index(request, dyn_id):
         return render(request, 'view/index_error.html', {"error":error} )
     else:
         comp_li=obtain_compounds(dyn_id)
-        paths_list=[e.id_files.filepath for e in dynfiles]
-        (structure_file,structure_name, traj_list)=obtain_dyn_files(paths_list)
+        paths_dict={}
+        for e in dynfiles:
+            paths_dict[e.id_files.id]=e.id_files.filepath
+       # paths_list=[e.id_files.filepath for e in dynfiles]
+        (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
         #structure_file="Dynamics/test.pdb"########################### REMOVE
         #structure_name="test.pdb" ################################### REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file   
         chain_name_li=obtain_prot_chains(pdb_name)
-        multiple_chains=False
-        chain_str=""
-        if len(chain_name_li) > 1:
-            multiple_chains=True
-            chain_str="(Chains: "+", ".join(chain_name_li)+")"
-        gen_num_res=obtain_gen_numbering(dyn_id)
-        if isinstance(gen_num_res, tuple):
-            (numbers, num_scheme, db_seq, current_class) = gen_num_res
-            current_class=findGPCRclass(num_scheme)
-            # current_class="B" ######## !!!!!!!!!!!!!!!!!!!!!!!!! REMOVE THIIIS!!!!!!!!!!!!!!!!!!!
-            gpcr_n_ex=""
-            for pos_gnum in numbers[current_class].values():
-                if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
-                    gpcr_n_ex=pos_gnum[1]
-                    break
-            if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
-                seq_pos=[]
-                seq_pos_n=1
-                gpcr_pdb={}
-                gpcr_aa={}
-                gnum_classes_rel={}
-                for chain_name in chain_name_li:
-                    checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=99999, chain=chain_name)
-                    if isinstance(checkpdb_res, tuple):
-                        tablepdb,pdb_sequence,hexflag=checkpdb_res
-                        result=matchpdbfa(db_seq,pdb_sequence, tablepdb, hexflag)
-                        if isinstance(result, list):
-                            (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
-                            (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
-                            obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
-                motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
-                find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
-                #for e in sorted(gpcr_pdb):
-                #    print(e, gpcr_pdb[e])
+        if len(chain_name_li) > 0:
+            multiple_chains=False
+            chain_str=""
+            if len(chain_name_li) > 1:
+                multiple_chains=True
+                chain_str="(Chains: "+", ".join(chain_name_li)+")"
+            gen_num_res=obtain_gen_numbering(dyn_id)
+            if isinstance(gen_num_res, tuple):
+                (numbers, num_scheme, db_seq, current_class) = gen_num_res
+                current_class=findGPCRclass(num_scheme)
+                # current_class="B" ######## !!!!!!!!!!!!!!!!!!!!!!!!! REMOVE THIS!!!!!!!!!!!!!!!!!!!
+                gpcr_n_ex=""
+                for pos_gnum in numbers[current_class].values():
+                    if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
+                        gpcr_n_ex=pos_gnum[1]
+                        break
+                if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
+                    seq_pos=[]
+                    seq_pos_n=1
+                    gpcr_pdb={}
+                    gpcr_aa={}
+                    gnum_classes_rel={}
+                    for chain_name in chain_name_li:
+                        checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=99999, chain=chain_name)
+                        if isinstance(checkpdb_res, tuple):
+                            tablepdb,pdb_sequence,hexflag=checkpdb_res
+                            result=matchpdbfa(db_seq,pdb_sequence, tablepdb, hexflag)
+                            if isinstance(result, list):
+                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
+                                obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
+                    motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
+                    find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
+                    for e in seq_pos:
+                        print (e)
 
 
 
-                gpcr_pdb_js=json.dumps(gpcr_pdb) 
-                context={
-                    "structure_file":structure_file, 
-                    "structure_name":structure_name , 
-                    "traj_list":traj_list, 
-                    "compounds" : comp_li,
-                    "show_class" : show_class,
-                    "mol_sw" : cons_pos_dict["A"][1],
-                    "cons_classA" : cons_pos_dict["A"][0],
-                    "motifs_def" : motifs_dict_def["A"],
-                    "cons_classB" : cons_pos_dict["B"][0],
-                    "cons_classC" : cons_pos_dict["C"][0],
-                    "cons_classF" : cons_pos_dict["F"][0],
-                    "gpcr_class" : current_class,
-                    "active_class" : active_class,
-                    "chains" : chain_str,
-                    "gpcr_pdb": gpcr_pdb_js,
-                    "seq_pos": seq_pos}
-                return render(request, 'view/index.html', context)
+                    gpcr_pdb_js=json.dumps(gpcr_pdb) 
+                    context={
+                        "structure_file":structure_file, 
+                        "structure_name":structure_name, 
+                        "structure_file_id":structure_file_id,
+                        "traj_list":traj_list, 
+                        "compounds" : comp_li,
+                        "show_class" : show_class,
+                        "mol_sw" : cons_pos_dict["A"][1],
+                        "cons_classA" : cons_pos_dict["A"][0],
+                        "motifs_def" : motifs_dict_def["A"],
+                        "cons_classB" : cons_pos_dict["B"][0],
+                        "cons_classC" : cons_pos_dict["C"][0],
+                        "cons_classF" : cons_pos_dict["F"][0],
+                        "gpcr_class" : current_class,
+                        "active_class" : active_class,
+                        "chains" : chain_str,
+                        "gpcr_pdb": gpcr_pdb_js,
+                        "seq_pos": seq_pos}
+                    return render(request, 'view/index.html', context)
        #Cannot use gpcr numbering:
         context={
             "structure_file":structure_file, 
@@ -419,14 +431,38 @@ def pre_viewer(request):
     }
     return render(request, 'view/pre_viewer.html', context)
 
-#Will be the pg for the dist plot
-def distances(request, dist_str):
-    pos_from,pos_to=re.findall("\d+",dist_str) 
- #   traj=md.load("/protwis/sites/files/Dynamics/14_trj_1_1.dcd", top="/protwis/sites/files/Dynamics/12_dyn_1.pdb")
- #   from_to=np.array([[pos_from,pos_to]]) 
- #   dist=md.compute_distances(traj, from_to) 
+
+
+def distances(request, dist_str,struc_id,traj_id):
+    struc_path = DyndbFiles.objects.get(id=struc_id).filepath
+    traj_path = DyndbFiles.objects.get(id=traj_id).filepath
+    traj=md.load(traj_path, top=struc_path) 
+    dist_li=re.findall("\d+-\d+",dist_str)
+    frames=[]
+    axis_lab=[["Frame"]]
+    for dist_pair in dist_li:
+        pos_from,pos_to=re.findall("\d+",dist_pair) 
+        from_to=np.array([[pos_from,pos_to]]) 
+        dist=md.compute_distances(traj, from_to) 
+        if frames == []:
+            frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
+            data=np.append(frames,dist, axis=1).tolist()
+        else:
+            data=np.append(data,dist, axis=1).tolist()
+        var_lab="dist "+pos_from+"-"+pos_to
+        axis_lab[0].append(var_lab)
+
+    data_fin=axis_lab + data
+    # DataSource object
+    data_source = SimpleDataSource(data=data_fin)
+    # Chart object
+    chart = LineChart(data_source,options={'title': "Residue Distance"})
     context={
-        "range" : "from " + pos_from+" to "+pos_to#,
-#        "distances" : #dist
+
+        'chart': chart
     }
     return render(request, 'view/distances.html', context)
+
+
+
+

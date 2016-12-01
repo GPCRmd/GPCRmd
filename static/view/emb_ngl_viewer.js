@@ -1,7 +1,6 @@
 $(document).ready(function(){
-    $(".sel_input").val("")
-    $("#show_within").empty();
-    $("#inputdist").val("")
+    $(".sel_input, #inputdist, #dist_from, #dist_to").val("")
+    $("#show_within, #show_dist").empty();
     // $("#rad_sel").click(function(){alert("!!")});
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
@@ -249,7 +248,7 @@ $(document).ready(function(){
     disableMissingClasses();
 
 
-///    
+///    Res within xA of compounf  ///
 
     $(".section_pan").click(function(){
         var target=$(this).attr("data-target");
@@ -330,10 +329,92 @@ $(document).ready(function(){
             }
         }
     });    
+
+///   Dist between residues  ///
+
+    var first_dist=true;
+    var i_dist=1
+    $("#add_btn2").click(function(){ 
+        if (i_dist < 20){
+            var row_d='<span class="dist_pair" id=row2_'+i_dist+'><br>\
+                  <span id="tick2" ></span>\
+                  <span id="always2" style="margin-left:14px">\
+                     Compute distance between \
+                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+			and\
+                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+                  </span>';
+            $("#show_dist").append(row_d);
+            i_dist+=1;
+            if (first_dist){
+                $("#rm_btn2").css("visibility","visible");
+                first_dist=false;
+           }
+        }
+    });
+    
+    $("#rm_btn2").click(function(){ 
+        $("#row2_"+(i_dist-1)).remove();
+        i_dist -=1;
+        if (i_dist ==1){
+            $("#rm_btn2").css("visibility","hidden");
+            first_dist=true;
+        }
+    });
+
+
+    $(".dist_btw").on("blur", ".dist_pair" ,function(){
+        var d_from=$(this).find("#dist_from").val();
+        var d_to=$(this).find("#dist_to").val();
+        if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
+            $(this).find("#tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
+            $(this).find("#always2").attr("style","");
+            $(this).addClass("d_ok");
+        } else {
+            if ($(this).find("#tick2").attr("class")=="glyphicon glyphicon-ok"){
+                $(this).find("#tick2").attr({"class":"","style":""});
+                $(this).find("#always2").attr("style","margin-left:14px");
+                $(this).removeClass("d_ok");
+            }
+        }
+    }); 
+
+    function obtainDistToComp(){
+        var distToComp="";
+        $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
+            var d_from=$(this).find("#dist_from").val();
+            var d_to=$(this).find("#dist_to").val();
+            distToComp += d_from+"-"+d_to+"a";
+        });
+        if (distToComp){
+            return (encode(distToComp.slice(0, -1)))
+        } else {
+            return ""
+        }
+    }
+
+    function checkTrajUsedInDistComputatiion(res_ids){
+        if (res_ids){
+            var traj_id = $(".trajForDist:checked").val();
+            if (traj_id){
+                $("#traj_id_"+traj_id)[0].checked=true;
+                return (traj_id)
+            }
+        }
+        return (false)
+    }
+
+    $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
+        var res_ids = obtainDistToComp();
+        var traj_id=checkTrajUsedInDistComputatiion(res_ids);
+        if (traj_id){
+            var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
+            newwindow=window.open(dist_url,'','width=870,height=400');
+        }
+
+    });
+
 ////
-
-
-
 
     function selectFromSeq(){
         var click_n=1;
@@ -502,7 +583,10 @@ $(document).ready(function(){
 
 
 ///
-    var struc = $(".str_file").attr("id");
+    var struc_info = $(".str_file").attr("id");
+    var struc_info = struc_info.split(",");
+    var struc = struc_info[0];
+    var struc_id = struc_info[1];
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
@@ -520,7 +604,7 @@ $(document).ready(function(){
         gpcrdb_dict=dicts_result[1];
     }
 
-    var rad_option="sel";
+    var rad_option="high";
     $( "input[type=radio]" ).on( "click", function(){
         rad_option=$(this).attr("value");
     });
@@ -539,10 +623,7 @@ $(document).ready(function(){
         $(".rep_elements").removeClass("active");
     });
 
-    $("#gotoDistPg").click(function(){
-        newwindow=window.open('/view/distances/50-100','','width=900,height=900');
-    //    if (window.focus) {newwindow.focus()}
-    });
+
 
 
     $("#submit").click(function(){
@@ -559,6 +640,7 @@ $(document).ready(function(){
             }
         }
         var dist_of=obtainDistSel();  // For the dist selection
+        var distToComp = obtainDistToComp();
         obtainLegend(legend_el);
         url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
         // alert(url);
@@ -566,6 +648,8 @@ $(document).ready(function(){
     });
 
     $("#to_mdsrv").click(function(){
+         var distToComp = obtainDistToComp();
+         var traj_id=checkTrajUsedInDistComputatiion(distToComp);
          var traj = [];
          $(".traj_element:checked").each(function(){
              traj[traj.length]=$(this).attr("value");

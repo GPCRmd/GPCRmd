@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'construct',
     'tools',
     'drugs',
+    'graphos',
 )
 
 MIDDLEWARE_CLASSES = (

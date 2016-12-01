@@ -1,9 +1,26 @@
-<div>Page under constuction </div>
-<div>{{range}}</div>
-<div>
-<ul>
-{% for dist in distances %}
-<li>{{dist.0}}</li>
-{% endfor %}
-</ul>
-</div>
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+    </script>
+<style></style>
+</head>
+
+<body>
+
+{% load staticfiles %} 
+
+
+{% block content %} 
+{% csrf_token %}
+
+
+{{ chart.as_html }}
+
+{% block addon_js %} 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+{% endblock %}
+
+{% endblock content %} 
+</body>
