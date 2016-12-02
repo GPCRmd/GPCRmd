@@ -622,7 +622,10 @@ def delete_protein(request,submission_id):
 
 def autocomplete(request):
     other_names= SearchQuerySet().autocomplete(other_names=request.GET.get('q', ''))[:5]
+    main_names= SearchQuerySet().autocomplete(mainnames=request.GET.get('q', ''))[:5]
     suggestions = [result.other_names for result in other_names]
+    suggestions2= [result.name for result in main_names]
+    suggestions+=suggestions2
     data = json.dumps({
         'results': suggestions
     })
@@ -645,6 +648,22 @@ def ajaxsearcher(request):
         results=sqs.auto_query(user_input)
         for res in results:
             if 'compound' in str(res.id) and str(res.id_compound) not in [i[0] for i in compoundlist]:
+
+                for mol in DyndbMolecule.objects.filter(id_compound=res.id_compound):
+                    if str(mol.id) not in [i[0] for i in moleculelist]: #molecule
+                        mol_id=mol.id
+                        try:
+                            comp=DyndbMolecule.objects.get(pk=mol_id).id_compound.id
+                            compname=DyndbMolecule.objects.get(pk=mol_id).id_compound.name
+                            pk2filesmolecule=DyndbCompound.objects.get(pk=comp).std_id_molecule.id
+                            imagepath=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                            imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
+                            moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname]) #define inchikey in searchindex
+                        except IndexError:
+                            comp=DyndbMolecule.objects.get(pk=mol_id).id_compound.id
+                            compname=DyndbMolecule.objects.get(pk=mol_id).id_compound.name
+                            moleculelist.append([str(mol_id),str(res.inchikey),'',compname]) #define inchikey in searchindex                    
+
                 try:
                     pk2filesmolecule=DyndbCompound.objects.get(pk=res.id_compound).std_id_molecule.id
                     imagepath=DyndbFilesMolecule.objects.filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
