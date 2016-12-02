@@ -17,7 +17,7 @@
 #ajaxresults22 td, ajaxresults22 tr{
     border-bottom: 15px solid transparent;
     border-top: 15px solid transparent;
-    white-space: nowrap
+    white-space: nowrap;
 }
 
 .paginate_button {
@@ -38,7 +38,7 @@
 }
 
 .paginate_button.current{
-    background-color: blue;
+    background-color: #005ce6;
     box-sizing: border-box;
     <!--display: inline-block;-->
     min-width: 1.5em;
@@ -48,7 +48,7 @@
     text-decoration: none !important;
     cursor: pointer;
     *cursor: hand;
-    color: #333 !important;
+    color: white !important;
     border: 1px solid black;
     border-radius: 8px;
 
@@ -103,29 +103,39 @@
 
 }
 
-   #content{
+#content{
     width:100%;
-   }
+}
 
-  .panel-body {
+.panel-body {
     word-break:break-all;
 }
 
-  #ajaxresults{
-      padding: 20px;
-  }
+#ajaxresults{
+    padding: 20px;
+}
 
-  #myTable{
-      padding: 1px;
-      width: 100%;
-  }
+#myTable{
+    padding: 1px;
+    width: 100%;
+}
 
 
- #myTable  th, #myTable  td {
-      padding: 1px;
-  }
+#myTable  th, #myTable  td {
+    padding: 1px;
+    text-align:center; 
+    vertical-align:middle;
+}
 
-  #floatdiv {
+
+#haystacksearch{
+    max-width: 100px;
+    height: 800px;
+    overflow-x: scroll;
+    display: inline-block;
+}
+
+#floatdiv {
     width:48%;
     overflow-y:auto;
     max-height:400px;
@@ -134,26 +144,19 @@
 }
 
 
-  .foo{
-      border: solid black 2px;
-      padding: 1px;
-      width: 20%
+.foo{
+    border: solid black 2px;
+    padding: 1px;
+    width: 20%
 }
 
-   #hidden{
+#hidden{
     width: 90%;
 }
-/*
-#dynfil{
-    width: 70%
-    border-collapse: collapse;
+
+kbd{
+    background-color:blue;
 }
-   #dynfil, #dynfil td{
-    background-color: #4CAF50;
-    padding:7px;
-    border: solid black 5px;
-}
-*/
   </style>
 {% endblock %}
 {% block content %}
@@ -161,7 +164,7 @@
 
  <div class="row">
   <div class="col-sm-6">
-    <div class="panel panel-info">
+    <div class="panel panel-info" div="haystacksearch">
       <div class="panel-heading">
             <br>
             <center><h3>Search for proteins, molecules or compounds.</h3>
@@ -175,7 +178,7 @@
             <br>
     </div>
       <div class="panel-body">
-            <table id='ajaxresults22'> <thead><tr> <th> Results: </th> <th>        </th></tr> </thead> <tbody> <tr><td>No results</td></tr> </tbody> </table>
+            <table id='ajaxresults22'> <thead><tr> <th> Results: </th> <th>        </th></tr> </thead> <tbody> <tr><td>No results</td><td> </td></tr> </tbody> </table>
             <br><br><br><br><br><br><br><br><br><br><br>
       </div>
     </div>
@@ -189,15 +192,10 @@
 
         <div class="panel panel-primary class" id="floatdiv">
             <div class="panel-heading"> <center><h4>Search for complexes, complex structures or dynamics</h4></center>
-                <!--<ul id="gotoadvsearch" class="nav nav-tabs">
-                <li><a href="#">Menu 1</a></li>
-                <li><a href="#">Menu 2</a></li>
-                <li><a href="#">Menu 3</a></li>
-                </ul>-->
                 <center><button id="gotoadvsearch" class="btn btn-info" type="button" value="Advanced Search">Go to Advanced Search</button></center>
             </div>
 
-        <div class="panel-body">
+        <div id='crazycolor' class="panel-body">
         <center>
 
         <table id="myTable">
@@ -219,14 +217,17 @@
         Return: <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Complex Structure</option><option value="dynamics">Dynamics</option></select>
         <div id='hiddenmodel'>
         <br><br>
-        Is it an apoform? <input id="apoform" type="checkbox" name="apo" value="apo">
+
+        <select id="search_type"><option  value="apo">Only apoforms</option><option value="com">Only complexes</option><option selected="selected" value="both">Both</option></select>
+
         <br><br>
         </div>
 
 
         <div id='hidden'>
         <br><br>
-        Is it an apoform? <input id="apoform_dyn" type="checkbox" name="apo" value="apo"> <br><br>
+
+        <select id="search_type_dyn"><option  value="apo">Only apoforms</option><option value="com">Only complexes</option><option selected="selected" value="both">Both</option></select>
 
         <table id='dynfil' class='table table-striped'>
         <tbody>
