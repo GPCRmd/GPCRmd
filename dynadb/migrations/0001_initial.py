@@ -596,6 +596,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('filename', models.CharField(max_length=80, unique=True)),
+                ('id_file_types', models.ForeignKey(to='DyndbFileTypes',  on_delete=django.db.models.deletion.DO_NOTHING, db_column='id_file_types', null=True )),
                 ('description', models.CharField(blank=True, max_length=40, null=True)),
                 ('update_timestamp', models.DateTimeField()),
                 ('creation_timestamp', models.DateTimeField()),

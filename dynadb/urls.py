@@ -49,6 +49,7 @@ urlpatterns = [
     url(r'^molecule/(?P<submission_id>[0-9]+)/$', views.SMALL_MOLECULEview, name='molecule'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/delete/$', views.delete_molecule, name='delete_molecule'),
     url(r'^moleculereuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.SMALL_MOLECULEreuseview, name='moleculereuse'),
+    url(r'^molecule/(?P<submission_id>[0-9]+)/submitpost/$', views.submitpost_view, name='submitpost'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/generate_properties/$', views.generate_molecule_properties, name='generate_molecule_properties'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/get_compound_info_pubchem/$', views.get_compound_info_pubchem, name='get_compound_info_pubchem'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/get_compound_info_chembl/$', views.get_compound_info_chembl, name='get_compound_info_chembl'),

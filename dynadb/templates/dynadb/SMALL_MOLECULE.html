@@ -9,7 +9,8 @@
 
 
  <!-- description column -->
- <div class="col-md-4">
+ <div id="MOLECULE_f" class="LLL">
+    <div>
      
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
@@ -72,7 +73,7 @@
 		</div><br>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-6"><label for="id_is_present"><a title="Important for the biological process: Check this field if the molecule is considered as a biologically relevant component of the system. Remember that only molecules that have coordinates coming from experimental data or that are crucial for the experimental hypothesis must be considered 'important' (Provide coordinates information in step 3). Otherwise they must be included into the 'Dynamics form'(step 4), i.e. solvent and lipid membrane molecules, ions and other molecules whose coordinates are randomly generated or not specified when building the system.">Important for the biological process:</a></label></div>
-			<div class="col-md-2"><input id="id_is_present" name="is_present" type="checkbox" /></div> <!--  # !!!! is_present = NOT (not_in_Model)!!!!! table dyndb_submission_molecule!!!! -->
+			<div class="col-md-2"><input id="id_is_present" name="is_present" type="checkbox" value="{{TTT.is_present}}"/></div> <!--  # !!!! is_present = NOT (not_in_Model)!!!!! table dyndb_submission_molecule!!!! -->
 		</div><br>
                
 		<div class="row" >
@@ -96,7 +97,7 @@
                 </div>
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
-			<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_inchi" name="inchi" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->	
+			<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_inchi" name="inchi"  value="{{TTT.inchi.name}}" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->	
 		<br></div>
 
 	        <div class="row">
@@ -279,21 +280,28 @@
 			     		<button type="button" value="+ Add molecule" id="id_add_molecule"  name="add_molecule"  style="height:30px;width:160px" > + Add molecule </button>
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove molecule"  id="id_del_molecule"  name="del_molecule" style="height:30px;width:160px" disabled>
+			     		<input type="button" value="- Remove molecule"  id="id_del_molecule"  name="del_molecule" style="height:30px;width:160px" disabled/>
+			</div> 
+                        </div>	<br>	
+ 		 	<div style="text-align:center">
+   	<br>	
+	 			<div class="col-md-4 col-md-offset-4" style="text-align:center">
+			     		<button type="button" value="passMoleculePOST" id="id_passMoleculePOST"  name="passMoleculePOST"  style="height:30px;width:160px" > SEND POST </button>
 		        	</div> 		
-			<br><br>
 
   </div><br>
-        <th><input type="submit" value="Submit"  id="id_submit"  name="submit" /> </th><br>   
+<!--        <th><input type="submit" value="Submit"  id="id_submit"  name="submit" /> </th><br>   -->
 </form>
 </div><br>
    </div>  
    </div>  
 
-
-
 <div class="col-md-7 col-md-offset-4"> 
-      <div class="col-md-12 panel panel-primary">
+      <div class="col-md-12 panel panel-primary"> 
+                <div class="panel-body" id="selection-">
+
+			     		<button type="button" value="passAllMoleculePOST" id="id_passAllMoleculePOST"  class="btn btn-success btn-lg btn-block has-spinner" name="passAllMoleculePOST"   > SEND ALL POSTS </button>
+		        	</div> 		
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/model/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 3: Complex Information </a>
@@ -310,7 +318,7 @@
 
 
 
-
+</div>
 </div>
 
 {% endblock content %}
@@ -324,6 +332,7 @@
     <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
     <script src="{% static 'dynadb/addSmallMol.js' %}"></script>
     <script src="{% static 'dynadb/delSmallMol.js' %}"></script>
+    <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script>
 
 {% endblock %}
 

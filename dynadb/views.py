@@ -14,6 +14,7 @@ from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import re, os, pickle
 import time
+import sys
 import json
 import mimetypes
 import requests
@@ -993,6 +994,55 @@ def get_specieslist(request):
   response = HttpResponse(datajson, content_type="application/json")
   return response
 
+def submitpost_view(request,submission_id):
+    if request.method == 'POST':
+    #    print(request.POST.items())
+    #    print(request.POST)
+    #    with open('/protwis/sites/protwis/dynadb/MOLECULEpost.txt', 'wb') as handle:
+    #        pickle.dump(request.POST, handle)
+
+        indexl=[]
+        for x in list(request.POST.keys()):
+            try:
+                index=int(x.split('-')[1])
+                print(x," ", index)
+                if index not in indexl:
+                    indexl.append(index)
+            except:
+                print("NO NO")
+                index=0
+                if index not in indexl:
+                    indexl.append(index)
+                pass
+        indexl.sort()
+        print("\n\n\n",indexl,"\n\n\n")
+       
+        SMALL_MOLECULEfunction(request.POST, index, submission_id)
+    #   for index in indexl:
+    #        SMALL_MOLECULEfunction(request.POST, index, submission_id)
+    #   try:
+    #       data = request.POST['inchi']
+    #        print("\nINCHI\n",data)
+    #   except:
+    #       pass 
+    #    print("PIPOL",request.POST.keys())
+    #    for items in request.POST.items():
+    #        print ("ITEM ", items)
+    #    print(len(request.POST))
+        return HttpResponseRedirect("/".join(["/dynadb/molecule",submission_id,""]), {'submission_id':submission_id, 'POST':request.POST })
+    else:
+        submission_id=submission_id
+        fdbMF = dyndb_Molecule()
+        fdbSub = dyndb_Submission_Molecule()
+        fdbCF=dyndb_CompoundForm()
+        fdbON=dyndb_Other_Compound_Names()
+        fdbF = dyndb_Files()
+        fdbFM = dyndb_Files_Molecule()
+        fdbMM = dyndb_Complex_Molecule_Molecule()
+
+        return render(request,'dynadb/PROTEIN.html', {'submission_id' : submission_id})
+        ###return render(request,'dynadb/SMALL_MOLECULE.html', {'submission_id' : submission_id})
+        #return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
   
 def get_mutations_view(request):
   if request.method == 'POST':
@@ -2774,362 +2824,410 @@ def open_chembl(request):
             return render(request,'dynadb/open_chembl.html',{'query':query,\
             'action':chembl_submission_url,'chembl_root_url':chembl_root_url,'chembl_results_url':chembl_results_url,'field_name':field_name})
             
-def SMALL_MOLECULEview(request, submission_id):
-
-    def handle_uploaded_file(f,p,name):
-        print("file name = ", f.name , "path =", p)
-        f.name=name
-        print("NEW name = ", f.name , "path =", p)
-        path=p+"/"+f.name
-        with open(path, 'wb+') as destination:
-            for chunk in f.chunks():
-                destination.write(chunk)
-
-    author="jmr"   #to be modified with author information. To initPF dict
-    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
-    now=timezone.now()
-    onames="Pepito; Juanito; Herculito" #to be modified... scripted
-    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
-    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
-    initON={'other_names': onames,'id_compound':None} 
-    dicpost=request.POST
-    dicfiles=request.FILES
-    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
-    ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
-    ft=DyndbFileTypes.objects.all()
-    dict_ext_id={}
-    for l in ft:
-        dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
-
-    d_fmolec_t={'Image':'0','Molecule':'1'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
-    if request.method == 'POST':
-        dictmol={}
-        fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
-        dictON={}
-        fieldsON=["other_names"]
-        dictcomp={}
-        fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
-        dictfmol={} 
-        fieldsPMod={"is_present","type"}
-        dictPMod={}
-        form=re.compile('form-')
-        indexl=[]
-       # print("!!!!!indexl== ",indexl)
-        nl=0 #counter of pairs in dicpost.items()
-        for key,val in dicpost.items():
-            nl=nl+1
-            if form.search(key):
-                index=int(key.split("-")[1])
-                if index not in indexl:
-                    indexl.append(index)
-                    dictmol[index]={}
-                    dictON[index]={}
-                    dictcomp[index]={}
-                    dictPMod[index]={}
-                nkey="-".join(key.split("-")[2:])  
-                #dictmol[index]["-".join(key.split("-")[2:])]=val
-            else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
-                if len(indexl)==0:
-                    index=0
-                    indexl.append(0)
-                    dictmol[0]={}
-                    dictON[0]={}
-                    dictcomp[0]={}
-                    dictPMod[index]={}
-                nkey=key
-           # print("indexl==V ",indexl)
-                #dictmol[0][key]=val
-                #dictON[0][key]=val
-                #dictfmol[0][key]=val
-            #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
-            dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
-            dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
-            for k,v in dfieldtype.items():
-                if nkey in v:
-                    dfielddict[k][index][nkey]=val
-                  #  print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
-                  #  print ("\n key ", nl, "dfielddict == ", dfielddict)
-                    break
-           #     else:
-           #         print("OJO!!! key== ",key, " no en Lista== ", v)
-            print ("\n key ", nl, "dfielddict == ", dfielddict)
-            continue 
-
-        #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
-        indexfl=[]
-        if len(dicfiles) == 0:
-            response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
-            return response
-        for key,val in dicfiles.items():
-            if form.search(key):
-                indexf=int(key.split("-")[1])
-                nkey="-".join(key.split("-")[2:])  
-                if indexf not in indexfl:
-                    indexfl.append(indexf)
-                    dictfmol[indexf]={}
-                #dictmol[index]["-".join(key.split("-")[2:])]=val
-            else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
-                if len(indexfl)==0:
-                    indexf=0
-                    indexfl.append(0)
-                    dictfmol[0]={}
-                nkey=key
-            dictfmol[indexf][nkey]=val
-      #  print("INDEXFL", indexfl)
-        fdbMF={}
-        fdbMFobj={}
-        fdbCF={}
-        fdbCFobj={}
-        fdbON={}
-        fdbONobj={}
-        dON={}
-        on=0
-     #   print("ANTES SORT",indexfl, indexl)
-        if len(indexl) > 1:
-            indexfli=list(map(int,indexfl))
-            indexli=list(map(int,indexl))
-            indexfl=sorted(indexfli)
-            indexl=sorted(indexli)
-        #print(indexfl, indexl)
-        dicfmole={}
-        fdbF={}
-        fdbFobj={}
-        fdbFM={}
-        fdbSM={}
-        fdbFMobj={}
-
-        for ii in indexl:
-            fdbCF[ii]={}
-            fdbCFobj[ii]={}
-            fdbMF[ii]={}
-            fdbSM[ii]={}
-            fdbMFobj[ii]={}
-            fdbON[ii]={}
-            fdbONobj[ii]={}
-            dON[ii]={}
-             
-            #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
-
-            qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'])
-                                                #generation of the sinchi
-            #dictcomp[ii]['sinchi']=    
-
-            if dictcomp[ii]['pubchem_cid']!='':
-                qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
-            elif dictcomp[ii]['chembleid']!='':
-                qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
-            else: 
-                qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
-
-            if len(qMF.values())==1: #there is a entry matching this molecule
-
-                if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
-                    dictPMod[ii]['not_in_model']=False
-                else:
-                    dictPMod[ii]['not_in_model']=True
-
-                dictPMod[ii]['int_id']=ii
-                dictPMod[ii]['submission_id']=submission_id
-                MFpk=qMF.values_list('pk',flat=True)[0]
-                dictPMod[ii]['molecule_id']=MFpk
-                fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
-
-                if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
-                    fdbSM[ii].save()
-                else:    
-                    iii1=fdbSM[ii].errors.as_data()
-                    print("fdbSM",ii," no es valido")
-                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-
-                if ii==indexl[-1]:#if ii is the last element of the list indexl
-                    print("Molecule #", ii, "has been found in our database")
-                    break
-                else:
-                    print("Molecule #", ii, "has been found in our database")
-                    continue
-
-            elif len(qMF.values())>1:
-                response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
-                return response
-                
-#### check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
-            if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
-                print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
-            elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
-                response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
-                return response
-            elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
-           
-         #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
-           
-                #### DyndbCompound
-
-                for key,val in initCF.items():
-                    if key not in dictcomp[ii].keys():
-                        dictcomp[ii][key]=val
-                fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
-                if fdbCF[ii].is_valid():
-                    fdbCFobj[ii]=fdbCF[ii].save()
-                    CFpk=fdbCFobj[ii].pk
-                else:
-                    print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_data())
-           
-                #### DyndbOtherCompoundNames 
-                ONlist=dictON[ii]["other_names"].split(";")
-           
-                for el in ONlist:
-                    on=on+1
-                    dON[ii][on]={}
-                    dON[ii][on]["other_names"]=el
-                    dON[ii][on]["id_compound"]=CFpk
-                    fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
-                    if fdbON[ii][on].is_valid():
-                        fdbON[ii][on].save()
-                    else:
-                        print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
-   #### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
-
-#### DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
-            
-                molid=ii 
-                INFOstdMOL=generate_molecule_properties2(submission_id,molid,dicpost,dicfiles) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
-     #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
-                print("COMPROBAR ",INFOstdMOL)
-                
-                
-                if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved
-                    print("The molecule ",ii, "is actually the standard molecule")
-                else:
-                    print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
-                    auxdictmol={}
-                    for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
-                        if key in dfieldtype[0]:
-                            auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
-      
-                    for key,val in initMF.items():
-                        if key not in auxdictmol.keys():
-                            auxdictmol[key]=val  ##### completion of the dictionary
-                    auxdictmol['id_compound']=CFpk
-                    fdbMFaux=dyndb_Molecule(auxdictmol)
-                    if fdbMFaux.is_valid():
-                        fdbMFobj=fdbMFaux.save()
-                        MFauxpk=fdbMFobj.pk
-                    else:
-                        print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
-      
-                #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
-                    auxdictPMod={}
-                    auxdictPMod['not_in_model']=True
-                    auxdictPMod['int_id']=None
-                    auxdictPMod['submission_id']=submission_id
-                    auxdictPMod['molecule_id']=MFauxpk
-                    fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
-      
-                    if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
-                        fdbSMaux.save()
-                    else:    
-                        iii1=fdbSMaux[ii].errors.as_data()
-                        print("fdbSMaux",ii," no es valido")
-                        print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-
-           #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule table
-
-                    for key,val in initMF.items():
-                        if key not in dictmol[ii].keys():
-                            dictmol[ii][key]=val
-                    dictmol[ii]['id_compound']=CFpk
-                    fdbMF[ii]=dyndb_Molecule(dictmol[ii])
-                    if fdbMF[ii].is_valid():
-                        fdbMFobj[ii]=fdbMF[ii].save()
-                        MFpk=fdbMFobj[ii].pk
-                    else:
-                        print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
-                
-                    if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
-                        dictPMod[ii]['not_in_model']=False
-                    else:
-                        dictPMod[ii]['not_in_model']=True
-                    dictPMod[ii]['int_id']=ii
-                    dictPMod[ii]['submission_id']=submission_id
-                    dictPMod[ii]['molecule_id']=MFpk
-                    fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
-                    if fdbSM[ii].is_valid():
-                        fdbSM[ii].save()
-                    else:    
-                        iii1=fdbSM[ii].errors.as_data()
-                        print("fdbSM",ii," no es valido")
-                        print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-
-                if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved 
-                    fdbCFobj[ii]['std_id_molecule']=MFpk
-                else:
-                    fdbCFobj[ii]['std_id_molecule']=MFauxpk
-                fdbCFobj[ii].save()
-
-            if len(qMF.values())==1:
-                print("Your molecule is already present in our database")               
-            elif len(qMF.values())>1:
-                response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
-                return response
-            elif len(qMF.values())==0:
-                direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
-                print("\nDirectorio a crear ", direct)
-                if not os.path.exists(direct):
-                    os.makedirs(direct)
-             
-                fdbF[ii]={}
-                fdbFobj[ii]={}
-                for key,val in dictfmol[ii].items():
-                    fext="".join(val.name.split(".")[1:])
-                    print("val ",val, " ;val split",fext," Tambien id", dict_ext_id[fext])
-                    #print("val ",val, " ;val split",fext," Tambien id")
-                    if fext in dict_ext_id.keys():
-                        initFiles['id_file_types']=dict_ext_id[fext]
-                        initFiles['filename']=val.name
-                        initFiles['filepath']=direct
-                        initFiles['description']="sdf/mol2 requested in the molecule form"
-             
-                        fdbF[ii][key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
-                        dicfmole[ii]={}
-                        fdbFM[ii]={}
-                        if fdbF[ii][key].is_valid():
-                            fdbFobj[ii][key]=fdbF[ii][key].save()
-                            newname=str(fdbFobj[ii][key].pk)+"_mol_"+str(submission_id)+"."+fext
-                            handle_uploaded_file(dictfmol[ii][key],direct,newname)
-                            completepath=direct+"/"+newname
-                            fdbFobj[ii][key].filename=newname   #rename filename in the database after saving the initial name
-                            fdbFobj[ii][key].filepath=completepath   #rename filename in the database after saving the initial name
-                            fdbFobj[ii][key].save() 
-                            dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
-                            dicfmole[ii]['id_molecule']=MFpk
-                            dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
-                            fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
-                            if fdbFM[ii][key].is_valid():
-                                fdbFM[ii][key].save()
-                            else:
-                                print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
-                        else:
-                            print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
-                    else:
-                        print("This extension is not valid for submission")
-
-        return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
-                        
-                       
-
-        # check whether it's valid:
-    else:
-
-        fdbMF = dyndb_Molecule()
-        fdbSub = dyndb_Submission_Molecule()
-        fdbCF=dyndb_CompoundForm()
-        fdbON=dyndb_Other_Compound_Names()
-        fdbF = dyndb_Files()
-        fdbFM = dyndb_Files_Molecule()
-        fdbMM = dyndb_Complex_Molecule_Molecule()
-
-        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
-
+#   def SMALL_MOLECULEview(request, submission_id):
+#   
+#       def handle_uploaded_file(f,p,name):
+#           print("file name = ", f.name , "path =", p)
+#           f.name=name
+#           print("NEW name = ", f.name , "path =", p)
+#           path=p+"/"+f.name
+#           with open(path, 'wb+') as destination:
+#               for chunk in f.chunks():
+#                   destination.write(chunk)
+#   
+#       print(request.POST.keys())
+#       author="jmr"   #to be modified with author information. To initPF dict
+#       action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
+#       now=timezone.now()
+#       onames="Pepito; Juanito; Herculito" #to be modified... scripted
+#       initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+#       initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+#       initON={'other_names': onames,'id_compound':None} 
+#       dicpost=request.POST
+#       dicfiles=request.FILES
+#       initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+#       ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
+#       ft=DyndbFileTypes.objects.all()
+#       dict_ext_id={}
+#       for l in ft:
+#           dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+#   
+#       d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+#       if request.method == 'POST':
+#           dictmol={}
+#           fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
+#           dictON={}
+#           fieldsON=["other_names"]
+#           dictcomp={}
+#           fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+#           dictfmol={} 
+#           fieldsPMod={"is_present","type"}
+#           dictPMod={}
+#           form=re.compile('form-')
+#           indexl=[]
+#          # print("!!!!!indexl== ",indexl)
+#           nl=0 #counter of pairs in dicpost.items()
+#           for key,val in dicpost.items():
+#               nl=nl+1
+#               if form.search(key):
+#                   index=int(key.split("-")[1])
+#                   if index not in indexl:
+#                       indexl.append(index)
+#                       dictmol[index]={}
+#                       dictON[index]={}
+#                       dictcomp[index]={}
+#                       dictPMod[index]={}
+#                   nkey="-".join(key.split("-")[2:])  
+#                   #dictmol[index]["-".join(key.split("-")[2:])]=val
+#               else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+#                   if len(indexl)==0:
+#                       index=0
+#                       indexl.append(0)
+#                       dictmol[0]={}
+#                       dictON[0]={}
+#                       dictcomp[0]={}
+#                       dictPMod[index]={}
+#                   nkey=key
+#              # print("indexl==V ",indexl)
+#                   #dictmol[0][key]=val
+#                   #dictON[0][key]=val
+#                   #dictfmol[0][key]=val
+#               #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+#               dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
+#               dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
+#               for k,v in dfieldtype.items():
+#                   if nkey in v:
+#                       dfielddict[k][index][nkey]=val
+#                     #  print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+#                     #  print ("\n key ", nl, "dfielddict == ", dfielddict)
+#                       break
+#              #     else:
+#              #         print("OJO!!! key== ",key, " no en Lista== ", v)
+#               print ("\n key ", nl, "dfielddict == ", dfielddict)
+#               continue 
+#           indexl.sort()
+#           print(indexl)
+#           #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+#           indexfl=[]
+#           if len(dicfiles) == 0:
+#               response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+#               return response
+#           for key,val in dicfiles.items():
+#               if form.search(key):
+#                   indexf=int(key.split("-")[1])
+#                   nkey="-".join(key.split("-")[2:])  
+#                   if indexf not in indexfl:
+#                       indexfl.append(indexf)
+#                       dictfmol[indexf]={}
+#                   #dictmol[index]["-".join(key.split("-")[2:])]=val
+#               else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+#                   if len(indexfl)==0:
+#                       indexf=0
+#                       indexfl.append(0)
+#                       dictfmol[0]={}
+#                   nkey=key
+#               dictfmol[indexf][nkey]=val
+#         #  print("INDEXFL", indexfl)
+#           fdbMF={}
+#           fdbMFobj={}
+#           fdbCF={}
+#           fdbCFobj={}
+#           fdbON={}
+#           fdbONobj={}
+#           dON={}
+#           on=0
+#        #   print("ANTES SORT",indexfl, indexl)
+#           if len(indexl) > 1:
+#               indexfli=list(map(int,indexfl))
+#               indexli=list(map(int,indexl))
+#               indexfl=sorted(indexfli)
+#               indexl=sorted(indexli)
+#           #print(indexfl, indexl)
+#           dicfmole={}
+#           fdbF={}
+#           fdbFobj={}
+#           fdbFM={}
+#           fdbSM={}
+#           fdbFMobj={}
+#           Std_id_mol_update=[]
+#   
+#           for ii in indexl:
+#               Std_id_mol_update.append(True)
+#               print("len(Std_id_mol_update)= ",len(Std_id_mol_update), "ii", ii, "indexl ",indexl)
+#               fdbCF[ii]={}
+#               fdbCFobj[ii]={}
+#               fdbMF[ii]={}
+#               fdbSM[ii]={}
+#               fdbMFobj[ii]={}
+#               fdbON[ii]={}
+#               fdbONobj[ii]={}
+#               dON[ii]={}
+#                
+#               #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
+#   
+#               qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'].split('=')[1])
+#               print("\nQuery Molecule antes aux\n ",qMF.filter(id__gt=7).values())
+#                                                   #generation of the sinchi
+#               #dictcomp[ii]['sinchi']=    
+#   
+#               if dictcomp[ii]['pubchem_cid']!='':
+#                   qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+#               elif dictcomp[ii]['chembleid']!='':
+#                   qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+#               else: 
+#                   qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+#               if len(qMF.values())==1: #there is a entry matching this molecule
+#                   if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+#                       dictPMod[ii]['not_in_model']=False
+#                   else:
+#                       dictPMod[ii]['not_in_model']=True
+#   
+#                   dictPMod[ii]['int_id']=ii
+#                   dictPMod[ii]['submission_id']=submission_id
+#                   MFpk=qMF.values_list('id',flat=True)[0]
+#                   dictPMod[ii]['molecule_id']=MFpk
+#                   fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+#   
+#                   if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
+#                       fdbSM[ii].save()
+#                   else:    
+#                       iii1=fdbSM[ii].errors.as_data()
+#                       print("fdbSM",ii," no es valido")
+#                       print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#   
+#                   if ii==indexl[-1]:#if ii is the last element of the list indexl
+#                       print("Molecule #", ii, "has been found in our database")
+#                       break
+#                   else:
+#                       print("Molecule #", ii, "has been found in our database")
+#                       continue
+#   
+#               elif len(qMF.values())>1:
+#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                   return response
+#   
+#   #########   Use of functions retrieving std_molecule info from external sources!!!! It is needed for updatingi
+#               molid=ii 
+#               submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+#               sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+#   
+#               path_namef=("").join([submission_path, sdfnameref])
+#               INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+#               sinchi_fixed=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+#               INFOstdMOL['sinchi']['sinchi']=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+#               INFOstdMOL['inchi']['inchi']=INFOstdMOL['inchi']['inchi'].split('=')[1]
+#                   
+#   #### check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
+#               if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
+#                   print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
+#                   CFpk=qCFStdFormExist.values_list('id',flat=True)[0]
+#                   Std_id_mol_update[ii]=False
+#               elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
+#                   response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
+#                   return response
+#               elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
+#                   Std_id_mol_update[ii]=True
+#            #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
+#              
+#                   #### DyndbCompound
+#   
+#                   for key,val in initCF.items():
+#                       if key not in dictcomp[ii].keys():
+#                           dictcomp[ii][key]=val
+#                       if key == "sinchi":
+#                           dictcomp[ii][key]=sinchi_fixed
+#                   fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
+#                   if fdbCF[ii].is_valid():
+#                       fdbCFobj[ii]=fdbCF[ii].save()
+#                       CFpk=fdbCFobj[ii].pk
+#                   else:
+#                       print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_data())
+#              
+#                   #### DyndbOtherCompoundNames 
+#                   ONlist=dictON[ii]["other_names"].split(";")
+#              
+#                   for el in ONlist:
+#                       on=on+1
+#                       dON[ii][on]={}
+#                       dON[ii][on]["other_names"]=el
+#                       dON[ii][on]["id_compound"]=CFpk
+#                       fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
+#                       if fdbON[ii][on].is_valid():
+#                           fdbON[ii][on].save()
+#                       else:
+#                           print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
+#      #### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
+#   
+#   #### DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
+#                   if 'msg' in INFOstdMOL.keys():
+#                       HttpResponse(INFOstdMOL['msg']) 
+#        #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+#                   print("COMPROBAR ",INFOstdMOL)
+#                   
+#                   
+#                   if INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'].split('=')[1]: #Both molecules are the standard molecule so one entry is saved
+#                       print("The molecule ",ii, "is actually the standard molecule")
+#                       dictmol[ii]['description']="Standard form"
+#                   else:
+#                       auxdictmol={}
+#                       print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
+#                       for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
+#                           print("AQUI ",key,val)
+#                           if type(val)==dict:
+#                               auxdictmol[key]=val[key]
+#                               print("auxdictmol inchi ", auxdictmol[key] )
+#                                #   "Problem while generating inchi:\n"+ msg   
+#                           
+#                           if key in dfieldtype['0']:
+#                               if key == 'inchikey':
+#                                   auxdictmol[key]=val.split('=')[1]  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+#                                   nrep_inchikey=len(DyndbMolecule.objects.filter(inchikey=val))
+#                                   if nrep_inchikey >= 1:
+#                                       auxdictmol['inchicol']=nrep_inchikey+1
+#                                   else:
+#                                       auxdictmol['inchicol']=1
+#                               elif key == 'inchi':
+#                                   auxdictmol['inchi']=INFOstdMOL['inchi']['inchi']
+#                               elif key == 'description':
+#                                   auxdictmol['description']="Standard form"
+#                               else:
+#                                   auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+#                      
+#                       for key,val in initMF.items():
+#                           if key not in auxdictmol.keys():
+#                               auxdictmol[key]=val  ##### completion of the dictionary
+#                       auxdictmol['id_compound']=CFpk
+#                       fdbMFaux=dyndb_Molecule(auxdictmol)
+#                       if fdbMFaux.is_valid():
+#                           fdbMFobj=fdbMFaux.save()
+#                           MFauxpk=fdbMFobj.pk
+#                       else:
+#                           print("Errores en el form dyndb_Molecule\n ", fdbMFaux.errors.as_data())
+#         
+#                   #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
+#                       auxdictPMod={}
+#                       auxdictPMod['not_in_model']=True
+#                       auxdictPMod['int_id']=None
+#                       auxdictPMod['submission_id']=submission_id
+#                       auxdictPMod['molecule_id']=MFauxpk
+#                       fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
+#         
+#                       if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
+#                           fdbSMaux.save()
+#                       else:    
+#                           iii1=fdbSMaux.errors.as_data()
+#                           print("fdbSMaux",ii," no es valido")
+#                           print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#   
+#              #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule 
+#                       # In this block the condition INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'] is false. Then the std molecule pk is MFauxpk and the flag Std_id_mol_update is set
+#                       # to False in order to avoid subsequents updates when the molecule in the form (not standard) would be entried.
+#                       DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFauxpk) 
+#                       Std_id_mol_update[ii]=False
+#   
+#   #___________________________________________________________________________________
+#   #           The code enclosed in this section is not dependent on whether the Compound has an entry in the database!!!  
+#   
+#               for key,val in initMF.items():
+#                   if key not in dictmol[ii].keys():
+#                       dictmol[ii][key]=val
+#               dictmol[ii]['id_compound']=CFpk
+#               dictmol[ii]['inchi']=dictmol[ii]['inchi'].split('=')[1]
+#               fdbMF[ii]=dyndb_Molecule(dictmol[ii])
+#               if fdbMF[ii].is_valid():
+#                   fdbMFobj[ii]=fdbMF[ii].save()
+#                   MFpk=fdbMFobj[ii].pk
+#               else:
+#                   print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+#   
+#              #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule
+#              # if the Std_id_mol_update flag is set to True the molecule in the form is the standard one and the std_id_molecule field in DyndbCompound should be update with MFpk
+#               if Std_id_mol_update[ii]:
+#                   DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFpk) 
+#                   Std_id_mol_update[ii]=False
+#              
+#               if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+#                   dictPMod[ii]['not_in_model']=False
+#               else:
+#                   dictPMod[ii]['not_in_model']=True
+#               dictPMod[ii]['int_id']=ii
+#               dictPMod[ii]['submission_id']=submission_id
+#               dictPMod[ii]['molecule_id']=MFpk
+#               fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+#               if fdbSM[ii].is_valid():
+#                   fdbSM[ii].save()
+#               else:    
+#                   iii1=fdbSM[ii].errors.as_data()
+#                   print("fdbSM",ii," no es valido")
+#                   print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#   #________________________________________________________________________________
+#   
+#   
+#               print("\nQuery Molecule antes de la evaluacion \n ",qMF.filter(id__gt=7).values())
+#               if len(qMF.values())==1:
+#                   print("Your molecule is already present in our database")               
+#               elif len(qMF.values())>1:
+#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                   return response
+#               elif len(qMF.values())==0:
+#                   direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
+#                   print("\nDirectorio a crear ", direct)
+#                   if not os.path.exists(direct):
+#                       os.makedirs(direct)
+#                
+#                   fdbF[ii]={}
+#                   fdbFobj[ii]={}
+#                   for key,val in dictfmol[ii].items():
+#                       fext="".join(val.name.split(".")[1:])
+#                       print("val ",val, " ;val split",fext," Tambien id", dict_ext_id[fext])
+#                       #print("val ",val, " ;val split",fext," Tambien id")
+#                       if fext in dict_ext_id.keys():
+#                           initFiles['id_file_types']=dict_ext_id[fext]
+#                           initFiles['filename']=val.name
+#                           initFiles['filepath']=direct
+#                           initFiles['description']="sdf/mol2 requested in the molecule form"
+#                
+#                           fdbF[ii][key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+#                           dicfmole[ii]={}
+#                           fdbFM[ii]={}
+#                           if fdbF[ii][key].is_valid():
+#                               fdbFobj[ii][key]=fdbF[ii][key].save()
+#                               newname=str(fdbFobj[ii][key].pk)+"_mol_"+str(submission_id)+"."+fext
+#                               handle_uploaded_file(dictfmol[ii][key],direct,newname)
+#                               completepath=direct+"/"+newname
+#                               fdbFobj[ii][key].filename=newname   #rename filename in the database after saving the initial name
+#                               fdbFobj[ii][key].filepath=completepath   #rename filename in the database after saving the initial name
+#                               fdbFobj[ii][key].save() 
+#                               dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
+#                               dicfmole[ii]['id_molecule']=MFpk
+#                               dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
+#                               fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
+#                               if fdbFM[ii][key].is_valid():
+#                                   fdbFM[ii][key].save()
+#                               else:
+#                                   print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
+#                           else:
+#                               print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
+#                       else:
+#                           print("This extension is not valid for submission")
+#   
+#           return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
+#                           
+#                          
+#   
+#           # check whether it's valid:
+#       else:
+#   
+#           fdbMF = dyndb_Molecule()
+#           fdbSub = dyndb_Submission_Molecule()
+#           fdbCF=dyndb_CompoundForm()
+#           fdbON=dyndb_Other_Compound_Names()
+#           fdbF = dyndb_Files()
+#           fdbFM = dyndb_Files_Molecule()
+#           fdbMM = dyndb_Complex_Molecule_Molecule()
+#   
+#           return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
+    
 def delete_molecule(request,submission_id):
     if request.method == "POST":
         molecule_num = request.POST["molecule_num"]
@@ -4956,24 +5054,69 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             for chunk in f.chunks():
                 destination.write(chunk)
 
+    def molec_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
+        print("inside the function molec_file_table")
+        print(dname)
+        fdbF={}
+        fdbFobj={}
+        
+       ######  
+       # ft=DyndbFileTypes.objects.all()
+       # dict_ext_id={}
+       # for l in ft:
+       #     dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+       # d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+       ##############
+        for key,val  in dname.items():
+             print("val\n", val)
+             fext="".join(val['path'].split(".")[1:])
+             initFiles['id_file_types']=dict_ext_id[fext]
+             initFiles['url']=val['url']
+             initFiles['filename']="".join(val['path'].split("/")[-1])
+             initFiles['filepath']=val['path']
+             if key == "dnamesdf":
+                 initFiles['description']="sdf/mol2 requested in the molecule form"
+             else:
+                 initFiles['description']="png image file of the molecule"
+             print("HOLA initFiles", initFiles)
+    
+             fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+             dicfmole={}
+             fdbFM={}
+             if fdbF[key].is_valid():
+                 fdbFobj[key]=fdbF[key].save()
+                 if initFiles['id_file_types']==19:
+                     dicfmole['type']=d_fmolec_t['Image 300px'] #Molecule
+                 elif initFiles['id_file_types']==20:
+                     dicfmole['type']=d_fmolec_t['Molecule'] #Molecule
+                 dicfmole['id_molecule']=MFpk
+                 dicfmole['id_files']=fdbFobj[key].pk
+                 fdbFM[key]=dyndb_Files_Molecule(dicfmole)
+                 if fdbFM[key].is_valid():
+                     fdbFM[key].save()
+                 else:
+                     print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[key].errors.as_data())
+             else:
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_data())
+
     author="jmr"   #to be modified with author information. To initPF dict
-    action="/".join(["/dynadb/MOLECULEfilled",str(submission_id),""])
+#    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
     now=timezone.now()
     onames="Pepito; Juanito; Herculito" #to be modified... scripted
     initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
     initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
     initON={'other_names': onames,'id_compound':None} 
     dicpost=postd_single_molecule
-#    dicfiles=request.FILES
+    #dicfiles=request.FILES
     initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
     ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
     ft=DyndbFileTypes.objects.all()
     dict_ext_id={}
     for l in ft:
         dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
-
-    d_fmolec_t={'Image':'0','Molecule':'1'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
-
+        print (l.__dict__['extension'].rstrip())
+    d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+#    if request.method == 'POST':
     dictmol={}
     fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
     dictON={}
@@ -4981,11 +5124,11 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
     dictcomp={}
     fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
     dictfmol={} 
-    fieldsPMod={"is_present"}
+    fieldsPMod={"is_present","type"}
     dictPMod={}
     form=re.compile('form-')
     indexl=[]
-    print("!!!!!indexl== ",indexl)
+   # print("!!!!!indexl== ",indexl)
     nl=0 #counter of pairs in dicpost.items()
     for key,val in dicpost.items():
         nl=nl+1
@@ -5012,26 +5155,29 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             #dictmol[0][key]=val
             #dictON[0][key]=val
             #dictfmol[0][key]=val
-        print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+        #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
         dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
         dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
         for k,v in dfieldtype.items():
             if nkey in v:
                 dfielddict[k][index][nkey]=val
-                print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
-                print ("\n key ", nl, "dfielddict == ", dfielddict)
+              #  print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+              #  print ("\n key ", nl, "dfielddict == ", dfielddict)
                 break
        #     else:
        #         print("OJO!!! key== ",key, " no en Lista== ", v)
-        print ("\n key ", nl, "dfielddict == ", dfielddict)
+        #print ("\n key ", nl, "dfielddict == ", dfielddict)
         continue 
-
-    print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+    indexl.sort()
+    print(indexl)
+    #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
     indexfl=[]
-#    if len(dicfiles) == 0:
-#        response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
-#        return response
-########### FILES!!!!!!
+
+#######################################
+  #  if len(dicfiles) == 0:
+  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+  #      return response
+
 #   for key,val in dicfiles.items():
 #       if form.search(key):
 #           indexf=int(key.split("-")[1])
@@ -5046,9 +5192,8 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #               indexfl.append(0)
 #               dictfmol[0]={}
 #           nkey=key
-#       dictfmol[indexf][nkey]=val
-#   print("INDEXFL", indexfl)
-
+#    dictfmol[index][nkey]=val
+  #  print("INDEXFL", indexfl)
     fdbMF={}
     fdbMFobj={}
     fdbCF={}
@@ -5059,19 +5204,22 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
     on=0
     print("ANTES SORT",indexfl, indexl)
     if len(indexl) > 1:
-        indexfli=list(map(int,indexfl))
+     #   indexfli=list(map(int,indexfl))
         indexli=list(map(int,indexl))
-        indexfl=sorted(indexfli)
+     #   indexfl=sorted(indexfli)
         indexl=sorted(indexli)
-    print(indexfl, indexl)
+    #print(indexfl, indexl)
     dicfmole={}
     fdbF={}
     fdbFobj={}
     fdbFM={}
     fdbSM={}
     fdbFMobj={}
+    Std_id_mol_update={}
 
     for ii in indexl:
+        Std_id_mol_update[ii]=True
+        print("len(Std_id_mol_update)= ",len(Std_id_mol_update), "ii", ii, "indexl ",indexl)
         fdbCF[ii]={}
         fdbCFobj[ii]={}
         fdbMF[ii]={}
@@ -5083,11 +5231,18 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
          
         #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
 
-        qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'])
-        qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+        qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'].split('=')[1])
+        print("\nQuery Molecule antes aux\n ",qMF.filter(id__gt=7).values())
+                                            #generation of the sinchi
+        #dictcomp[ii]['sinchi']=    
 
+        if dictcomp[ii]['pubchem_cid']!='':
+            qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+        elif dictcomp[ii]['chembleid']!='':
+            qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+        else: 
+            qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
         if len(qMF.values())==1: #there is a entry matching this molecule
-
             if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
                 dictPMod[ii]['not_in_model']=False
             else:
@@ -5095,7 +5250,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 
             dictPMod[ii]['int_id']=ii
             dictPMod[ii]['submission_id']=submission_id
-            MFpk=qMF.values_list('pk',flat=True)[0]
+            MFpk=qMF.values_list('id',flat=True)[0]
             dictPMod[ii]['molecule_id']=MFpk
             fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
 
@@ -5116,15 +5271,44 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
         elif len(qMF.values())>1:
             response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
             return response
+
+#####   Use of functions retrieving std_molecule info from external sources!!!! It is needed for updatingi
+        molid=ii 
+        print ("\nmolid=",molid)
+        submission_path_nofile = get_file_paths("molecule",url=False,submission_id=submission_id)
+        submission_url_nofile = get_file_paths("molecule",url=True,submission_id=submission_id)
+        namerefsdf = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+        namerefpng = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image")
+        namesdf = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+        namepng = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image")
+
+        print("antes INFOstdMOL")
+        path_namefsdf=("").join([submission_path_nofile, namesdf])
+        path_namefpng=("").join([submission_path_nofile, namepng])
+        path_namefrefsdf=("").join([submission_path_nofile, namerefsdf])
+        path_namefrefpng=("").join([submission_path_nofile, namerefpng])
+        url_namefrefsdf=("").join([submission_url_nofile, namerefsdf])
+        url_namefrefpng=("").join([submission_url_nofile, namerefpng])
+        url_namefsdf=("").join([submission_url_nofile, namesdf])
+        url_namefpng=("").join([submission_url_nofile, namepng])
+
+        INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+        print("AAAAa",INFOstdMOL.items())
+        sinchi_fixed=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+        INFOstdMOL['sinchi']['sinchi']=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+        INFOstdMOL['inchi']['inchi']=INFOstdMOL['inchi']['inchi'].split('=')[1]
             
- # check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
+########     check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
         if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
             print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
+            CFpk=qCFStdFormExist.values_list('id',flat=True)[0]	
+            Std_id_mol_update[ii]=False
         elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
             response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
             return response
         elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
-       
+            Std_id_mol_update[ii]=True
+            print("No compound entry has been found in GPCRmd DB")
      #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
        
             #### DyndbCompound
@@ -5132,6 +5316,8 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             for key,val in initCF.items():
                 if key not in dictcomp[ii].keys():
                     dictcomp[ii][key]=val
+                if key == "sinchi":
+                    dictcomp[ii][key]=sinchi_fixed
             fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
             if fdbCF[ii].is_valid():
                 fdbCFobj[ii]=fdbCF[ii].save()
@@ -5154,30 +5340,59 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                     print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
 ### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
 
-# DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
-        
-            INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+####      DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
+
+            print("COMPROBAR ",INFOstdMOL)
+            if 'msg' in INFOstdMOL.keys():
+                print("HttpResponse(INFOstdMOL['msg'])" )
+                print("HttpResponse(", INFOstdMOL['msg'], ")" )
+                return HttpResponseRedirect(INFOstdMOL['msg']) 
  #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+            print("COMPROBAR ",INFOstdMOL)
             
-            if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved
+            
+            if INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'].split('=')[1]: #Both molecules are the standard molecule so one entry is saved
                 print("The molecule ",ii, "is actually the standard molecule")
+                dictmol[ii]['description']="Standard form"
             else:
-                print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
                 auxdictmol={}
+                print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
                 for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
-                    if key in dfieldtype[0]:
-                        auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
-  
+                    print("\nAQUI ",key,val)
+                    if type(val)==dict:
+                        auxdictmol[key]=val[key]
+                        print("\nauxdictmol inchi ", auxdictmol[key] )
+                         #   "Problem while generating inchi:\n"+ msg   
+                    
+                    if key == 'charge':
+                        auxdictmol['net_charge']=val 
+                    if key in dfieldtype['0']:
+                        if key == 'inchikey':
+                            auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+                            nrep_inchikey=len(DyndbMolecule.objects.filter(inchikey=val))
+                            if nrep_inchikey >= 1:
+                                auxdictmol['inchicol']=nrep_inchikey+1
+                            else:
+                                auxdictmol['inchicol']=1
+                        elif key == 'sinchi':
+                            auxdictmol['sinchi']=INFOstdMOL['sinchi']['sinchi']
+                        elif key == 'inchi':
+                            auxdictmol['inchi']=INFOstdMOL['inchi']['inchi']
+                        else:
+                            auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+               
                 for key,val in initMF.items():
                     if key not in auxdictmol.keys():
                         auxdictmol[key]=val  ##### completion of the dictionary
                 auxdictmol['id_compound']=CFpk
+                auxdictmol['description']="Standard form"
                 fdbMFaux=dyndb_Molecule(auxdictmol)
+                print("\n\n resultado auxdicmol", auxdictmol  )
                 if fdbMFaux.is_valid():
-                    fdbMFobj=fdbMFaux.save()
-                    MFauxpk=fdbMFobj.pk
+                    fdbMFauxobj=fdbMFaux.save()
+                    MFauxpk=fdbMFauxobj.pk
                 else:
-                    print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+                    print("Errores en el form dyndb_Molecule\n ", fdbMFaux.errors.as_data())
   
             #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
                 auxdictPMod={}
@@ -5190,51 +5405,435 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                 if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
                     fdbSMaux.save()
                 else:    
-                    iii1=fdbSMaux[ii].errors.as_data()
+                    iii1=fdbSMaux.errors.as_data()
                     print("fdbSMaux",ii," no es valido")
                     print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
 
-       #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule table
+                dnameref={'dnamesdf':{'path':path_namefrefsdf,'url':url_namefrefsdf},'dnamepng':{'path':path_namefrefpng,'url':url_namefrefpng}}
+                print("AUX",dnameref)
 
-                for key,val in initMF.items():
-                    if key not in dictmol[ii].keys():
-                        dictmol[ii][key]=val
-                dictmol[ii]['id_compound']=CFpk
-                fdbMF[ii]=dyndb_Molecule(dictmol[ii])
-                if fdbMF[ii].is_valid():
-                    fdbMFobj[ii]=fdbMF[ii].save()
-                    MFpk=fdbMFobj[ii].pk
-                else:
-                    print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
-            
-                if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
-                    dictPMod[ii]['not_in_model']=False
-                else:
-                    dictPMod[ii]['not_in_model']=True
-                dictPMod[ii]['int_id']=ii
-                dictPMod[ii]['submission_id']=submission_id
-                dictPMod[ii]['molecule_id']=MFpk
-                fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
-                if fdbSM[ii].is_valid():
-                    fdbSM[ii].save()
-                else:    
-                    iii1=fdbSM[ii].errors.as_data()
-                    print("fdbSM",ii," no es valido")
-                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+                oooref=molec_file_table(dnameref,MFauxpk)
+       #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule 
+                # In this block the condition INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'] is false. Then the std molecule pk is MFauxpk and the flag Std_id_mol_update is set
+                # to False in order to avoid subsequents updates when the molecule in the form (not standard) would be entried.
+                DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFauxpk) 
+                Std_id_mol_update[ii]=False
 
-            if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved 
-                fdbCFobj[ii]['std_id_molecule']=MFpk
-            else:
-                fdbCFobj[ii]['std_id_molecule']=MFauxpk
-            fdbCFobj[ii].save()
+#________________________________________________________________________________
+   #       The code enclosed in this section is not dependent on whether the Compound has an entry in the database!!!  
+        print("\n\n")
+        for key,val in initMF.items():
+            if key not in dictmol[ii].keys():
+                dictmol[ii][key]=val
+                print(dictmol[ii][key], val)
+        dictmol[ii]['id_compound']=CFpk
+        aaa=dictmol[ii]['inchi'].split('=')[1]
+        print(aaa)
+        dictmol[ii]['inchi']=aaa
+       #####AQUI ME QUEDE!!!! 
+        fdbMF[ii]=dyndb_Molecule(dictmol[ii])
+        if fdbMF[ii].is_valid():
+            fdbMFobj[ii]=fdbMF[ii].save()
+            MFpk=fdbMFobj[ii].pk
+        else:
+            print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
 
-        if len(qMF.values())==1:
-            print("Your molecule is already present in our database")               
-        elif len(qMF.values())>1:
-            response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
-            return response
-        elif len(qMF.values())==0:
-            pass
+        dname={'dnamesdf':{'path':path_namefsdf,'url':url_namefsdf},'dnamepng':{'path':path_namefpng,'url':url_namefpng}}
+        print(dname)
+        ooo= molec_file_table(dname,MFpk)
+       #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule
+       # if the Std_id_mol_update flag is set to True the molecule in the form is the standard one and the std_id_molecule field in DyndbCompound should be update with MFpk
+        if Std_id_mol_update[ii]:
+            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFpk) 
+            Std_id_mol_update[ii]=False
+       
+        if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+            dictPMod[ii]['not_in_model']=False
+        else:
+            dictPMod[ii]['not_in_model']=True
+        dictPMod[ii]['int_id']=ii
+        dictPMod[ii]['submission_id']=submission_id
+        dictPMod[ii]['molecule_id']=MFpk
+        fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+        if fdbSM[ii].is_valid():
+            fdbSM[ii].save()
+        else:    
+            iii1=fdbSM[ii].errors.as_data()
+            print("fdbSM",ii," no es valido")
+            print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#_____________________________________________________________________________
+
+
+   #      print("\nQuery Molecule antes de la evaluacion \n ",qMF.filter(id__gt=7).values())
+   #    if len(qMF.values())==1:
+   #        print("Your molecule is already present in our database")               
+   #    elif len(qMF.values())>1:
+   #        response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+   #        return response
+   #    elif len(qMF.values())==0:
+   #        fdbF[ii]={}
+   #        fdbFobj[ii]={}
+   #        dname={'dnamesdf':{'path':path_namefsdf,'url':url_namefsdf},'dnamepng':{'path':path_namefpng,'url':url_namefpng}}
+   #        print(dname)
+   #        ooo= molec_file_table(dname)
+   #        dnameref={'dnamesdf':{'path':path_namefrefsdf,'url':url_namefrefsdf},'dnamepng':{'path':path_namereffpng,'url':url_namefrefpng}}
+   #        oooref=molec_file_table(dnameref)
+   ##       direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
+    #       print("\nDirectorio a crear ", direct)
+    #       if not os.path.exists(direct):
+    #           os.makedirs(direct)
+         
+
+
+    #   path_namefsdf=("").join([submission_path_nofile, namesdf])
+    #   path_namefpng=("").join([submission_path_nofile, namepng])
+    #   path_namefrefsdf=("").join([submission_path_nofile, namerefsdf])
+    #   path_namefrefpng=("").join([submission_path_nofile, namerefpng])
+    #   url_namereffsdf=("").join([submission_url_nofile, namerefsdf])
+    #   url_namereffpng=("").join([submission_url_nofile, namerefpng])
+    #   url_namefsdf=("").join([submission_url_nofile, namesdf])
+    #   url_namefpng=("").join([submission_url_nofile, namepng])
+
+
+
+
+
+
+     ##     for key,val in dictfmol[ii].items():
+     ##         fext="".join(val.name.split(".")[1:])
+     ##         print("val ",val, " ;val split",fext," Tambien id", dict_ext_id[fext])
+     ##         #print("val ",val, " ;val split",fext," Tambien id")
+     ##         if fext in dict_ext_id.keys():
+     ##             initFiles['id_file_types']=dict_ext_id[fext]
+     ##             initFiles['url']=dict_ext_id[fext]
+     ##             initFiles['filename']=val.name
+     ##             initFiles['filepath']=direct
+     ##             initFiles['description']="sdf/mol2 requested in the molecule form"
+     ##  
+     ##             fdbF[ii][key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+     ##             dicfmole[ii]={}
+     ##             fdbFM[ii]={}
+     ##             if fdbF[ii][key].is_valid():
+     ##                 fdbFobj[ii][key]=fdbF[ii][key].save()
+     ##                 newname=str(fdbFobj[ii][key].pk)+"_mol_"+str(submission_id)+"."+fext
+     ##                 handle_uploaded_file(dictfmol[ii][key],direct,newname)
+     ##                 completepath=direct+"/"+newname
+     ##                 fdbFobj[ii][key].filename=newname   #rename filename in the database after saving the initial name
+     ##                 fdbFobj[ii][key].filepath=completepath   #rename filename in the database after saving the initial name
+     ##                 fdbFobj[ii][key].save() 
+     ##                 dicfmole[ii]['type']=d_fmolec_t['Molecule'] #Molecule
+     ##                 d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+     ##                 dicfmole[ii]['id_molecule']=MFpk
+     ##                 dicfmole[ii]['id_files']=fdbFobj[ii][key].pk
+     ##                 fdbFM[ii][key]=dyndb_Files_Molecule(dicfmole[ii])
+     ##                 if fdbFM[ii][key].is_valid():
+     ##                     fdbFM[ii][key].save()
+     ##                 else:
+     ##                     print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[ii][key].errors.as_data())
+     ##             else:
+     ##                 print("Errores en el form dyndb_Files\n ", fdbF[ii][key].errors.as_data())
+     ##         else:
+     ##             print("This extension is not valid for submission")
+     #
+
+    #return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
+                        
+    
+
+
+
+
+#        def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission_id):
+#        
+#            def handle_uploaded_file(f,p,name):
+#                print("file name = ", f.name , "path =", p)
+#                f.name=name
+#                print("NEW name = ", f.name , "path =", p)
+#                path=p+"/"+f.name
+#                with open(path, 'wb+') as destination:
+#                    for chunk in f.chunks():
+#                        destination.write(chunk)
+#                               
+#            author="jmr"   #to be modified with author information. To initPF dict
+#            action="/".join(["/dynadb/MOLECULEfilled",str(submission_id),""])
+#            now=timezone.now()
+#            onames="Pepito; Juanito; Herculito" #to be modified... scripted
+#            initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+#            initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+#            initON={'other_names': onames,'id_compound':None} 
+#            dicpost=postd_single_molecule
+#        #    dicfiles=request.FILES
+#            initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+#            ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
+#            ft=DyndbFileTypes.objects.all()
+#            dict_ext_id={}
+#            for l in ft:
+#                dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+#        
+# dd           d_fmolec_t={'Image':'0','Molecule':'1'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+ #   d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+#        
+#            dictmol={}
+#            fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
+#            dictON={}
+#            fieldsON=["other_names"]
+#            dictcomp={}
+#            fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+#            dictfmol={} 
+#            fieldsPMod={"is_present","type"}
+#            dictPMod={}
+#            form=re.compile('form-')
+#            indexl=[]
+#            print("!!!!!indexl== ",indexl)
+#            nl=0 #counter of pairs in dicpost.items()
+#            for key,val in dicpost.items():
+#                nl=nl+1
+#                if form.search(key):
+#                    index=int(key.split("-")[1])
+#                    if index not in indexl:
+#                        indexl.append(index)
+#                        dictmol[index]={}
+#                        dictON[index]={}
+#                        dictcomp[index]={}
+#                        dictPMod[index]={}
+#                    nkey="-".join(key.split("-")[2:])  
+#                    #dictmol[index]["-".join(key.split("-")[2:])]=val
+#                else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+#                    if len(indexl)==0:
+#                        index=0
+#                        indexl.append(0)
+#                        dictmol[0]={}
+#                        dictON[0]={}
+#                        dictcomp[0]={}
+#                        dictPMod[index]={}
+#                    nkey=key
+#               # print("indexl==V ",indexl)
+#                    #dictmol[0][key]=val
+#                    #dictON[0][key]=val
+#                    #dictfmol[0][key]=val
+#                print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+#                dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
+#                dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
+#                for k,v in dfieldtype.items():
+#                    if nkey in v:
+#                        dfielddict[k][index][nkey]=val
+#                        print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+#                        print ("\n key ", nl, "dfielddict == ", dfielddict)
+#                        break
+#               #     else:
+#               #         print("OJO!!! key== ",key, " no en Lista== ", v)
+#                print ("\n key ", nl, "dfielddict == ", dfielddict)
+#                continue 
+#        
+#            print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+#            indexfl=[]
+#        #    if len(dicfiles) == 0:
+#        #        response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+#        #        return response
+#        ########### FILES!!!!!!
+#        #   for key,val in dicfiles.items():
+#        #       if form.search(key):
+#        #           indexf=int(key.split("-")[1])
+#        #           nkey="-".join(key.split("-")[2:])  
+#        #           if indexf not in indexfl:
+#        #               indexfl.append(indexf)
+#        #               dictfmol[indexf]={}
+#        #           #dictmol[index]["-".join(key.split("-")[2:])]=val
+#        #       else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+#        #           if len(indexfl)==0:
+#        #               indexf=0
+#        #               indexfl.append(0)
+#        #               dictfmol[0]={}
+#        #           nkey=key
+#        #       dictfmol[indexf][nkey]=val
+#        #   print("INDEXFL", indexfl)
+#        
+#            fdbMF={}
+#            fdbMFobj={}
+#            fdbCF={}
+#            fdbCFobj={}
+#            fdbON={}
+#            fdbONobj={}
+#            dON={}
+#            on=0
+#            print("ANTES SORT",indexfl, indexl)
+#            if len(indexl) > 1:
+#                indexfli=list(map(int,indexfl))
+#                indexli=list(map(int,indexl))
+#                indexfl=sorted(indexfli)
+#                indexl=sorted(indexli)
+#            print(indexfl, indexl)
+#            dicfmole={}
+#            fdbF={}
+#            fdbFobj={}
+#            fdbFM={}
+#            fdbSM={}
+#            fdbFMobj={}
+#        
+#            for ii in indexl:
+#                fdbCF[ii]={}
+#                fdbCFobj[ii]={}
+#                fdbMF[ii]={}
+#                fdbSM[ii]={}
+#                fdbMFobj[ii]={}
+#                fdbON[ii]={}
+#                fdbONobj[ii]={}
+#                dON[ii]={}
+#                 
+#                #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
+#        
+#                qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'])
+#                qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+#        
+#                if len(qMF.values())==1: #there is a entry matching this molecule
+#        
+#                    if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+#                        dictPMod[ii]['not_in_model']=False
+#                    else:
+#                        dictPMod[ii]['not_in_model']=True
+#        
+#                    dictPMod[ii]['int_id']=ii
+#                    dictPMod[ii]['submission_id']=submission_id
+#                    MFpk=qMF.values_list('pk',flat=True)[0]
+#                    dictPMod[ii]['molecule_id']=MFpk
+#                    fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+#        
+#                    if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
+#                        fdbSM[ii].save()
+#                    else:    
+#                        iii1=fdbSM[ii].errors.as_data()
+#                        print("fdbSM",ii," no es valido")
+#                        print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#        
+#                    if ii==indexl[-1]:#if ii is the last element of the list indexl
+#                        print("Molecule #", ii, "has been found in our database")
+#                        break
+#                    else:
+#                        print("Molecule #", ii, "has been found in our database")
+#                        continue
+#        
+#                elif len(qMF.values())>1:
+#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                    return response
+#                    
+#         # check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
+#                if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
+#                    print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
+#                elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
+#                    response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
+#                    return response
+#                elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
+#               
+#             #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
+#               
+#                    #### DyndbCompound
+#        
+#                    for key,val in initCF.items():
+#                        if key not in dictcomp[ii].keys():
+#                            dictcomp[ii][key]=val
+#                    fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
+#                    if fdbCF[ii].is_valid():
+#                        fdbCFobj[ii]=fdbCF[ii].save()
+#                        CFpk=fdbCFobj[ii].pk
+#                    else:
+#                        print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_data())
+#               
+#                    #### DyndbOtherCompoundNames 
+#                    ONlist=dictON[ii]["other_names"].split(";")
+#               
+#                    for el in ONlist:
+#                        on=on+1
+#                        dON[ii][on]={}
+#                        dON[ii][on]["other_names"]=el
+#                        dON[ii][on]["id_compound"]=CFpk
+#                        fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
+#                        if fdbON[ii][on].is_valid():
+#                            fdbON[ii][on].save()
+#                        else:
+#                            print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
+#        ### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
+#        
+#        # DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
+#                
+#                    INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+#         #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+#                    
+#                    if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved
+#                        print("The molecule ",ii, "is actually the standard molecule")
+#                    else:
+#                        print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
+#                        auxdictmol={}
+#                        for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
+#                            if key in dfieldtype[0]:
+#                                auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+#          
+#                        for key,val in initMF.items():
+#                            if key not in auxdictmol.keys():
+#                                auxdictmol[key]=val  ##### completion of the dictionary
+#                        auxdictmol['id_compound']=CFpk
+#                        fdbMFaux=dyndb_Molecule(auxdictmol)
+#                        if fdbMFaux.is_valid():
+#                            fdbMFobj=fdbMFaux.save()
+#                            MFauxpk=fdbMFobj.pk
+#                        else:
+#                            print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+#          
+#                    #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
+#                        auxdictPMod={}
+#                        auxdictPMod['not_in_model']=True
+#                        auxdictPMod['int_id']=None
+#                        auxdictPMod['submission_id']=submission_id
+#                        auxdictPMod['molecule_id']=MFauxpk
+#                        fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
+#          
+#                        if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
+#                            fdbSMaux.save()
+#                        else:    
+#                            iii1=fdbSMaux[ii].errors.as_data()
+#                            print("fdbSMaux",ii," no es valido")
+#                            print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#        
+#               #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule table
+#        
+#                        for key,val in initMF.items():
+#                            if key not in dictmol[ii].keys():
+#                                dictmol[ii][key]=val
+#                        dictmol[ii]['id_compound']=CFpk
+#                        fdbMF[ii]=dyndb_Molecule(dictmol[ii])
+#                        if fdbMF[ii].is_valid():
+#                            fdbMFobj[ii]=fdbMF[ii].save()
+#                            MFpk=fdbMFobj[ii].pk
+#                        else:
+#                            print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+#                    
+#                        if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+#                            dictPMod[ii]['not_in_model']=False
+#                        else:
+#                            dictPMod[ii]['not_in_model']=True
+#                        dictPMod[ii]['int_id']=ii
+#                        dictPMod[ii]['submission_id']=submission_id
+#                        dictPMod[ii]['molecule_id']=MFpk
+#                        fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+#                        if fdbSM[ii].is_valid():
+#                            fdbSM[ii].save()
+#                        else:    
+#                            iii1=fdbSM[ii].errors.as_data()
+#                            print("fdbSM",ii," no es valido")
+#                            print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+#        
+#                    if INFOstdMOL['inchi']==dictmol[ii]['inchi']: #Both molecules are the standard molecule so one entry is saved 
+#                        fdbCFobj[ii]['std_id_molecule']=MFpk
+#                    else:
+#                        fdbCFobj[ii]['std_id_molecule']=MFauxpk
+#                    fdbCFobj[ii].save()
+#        
+#                if len(qMF.values())==1:
+#                    print("Your molecule is already present in our database")               
+#                elif len(qMF.values())>1:
+#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                    return response
+#                elif len(qMF.values())==0:
+#                    pass
 ########################   FILES!!!!!!!!!!!!!!!!!!
 #               direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
 #               print("\nDirectorio a crear ", direct)
@@ -5293,149 +5892,643 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 
 #       return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 
-def generate_molecule_properties2(submission_id,molid,POST,FILES):
+def generate_molecule_properties2(submission_id,molid):
     pngsize = 300
     RecMet = False
     formre = re.compile('^form-(\d+)-')
-    
+    data={}
+    data['sinchi']={}
+    data['inchi']={}
                
 #  if method == 'POST':
     submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
-    print(POST)
     submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
-    data = dict()
-    data['download_url_log'] = None
-    if 'molpostkey' in POST.keys():
-        if 'recmet' in POST.keys():
-            RecMet = True
-        if 'pngsize' in POST.keys():
-            pngsize = int(POST["pngsize"])
-        molpostkey = POST["molpostkey"]
-        
-        if molpostkey in FILES.keys():
-            m = formre.search(molpostkey)
-            if m:
-                molid = m.group(1)
-            else:
-                molid = 0
-            uploadfile = FILES[molpostkey]
-            os.makedirs(submission_path,exist_ok=True)
-            logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
-            sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
-            pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-            sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
-            pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-            try:
-                os.remove(os.path.join(submission_path,sdfname))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,pngname))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,pngnameref))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,sdfnameref))
-            except:
-                pass
-            logfile = open(os.path.join(submission_path,logname),'w')
-            data['download_url_log'] = join_path(submission_url,logname,url=True)
-            try:
-                mol = open_molecule_file(uploadfile,logfile) # EL objeto mol es necesario para trabajar en RD KIT
-            
-            except:
-                print ("mol object has not been generated") 
-                pass
-            
-            data['sinchi'] = dict()
-            try:
-                print('Generating Standard InChI...',file=logfile)
-                sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
-                data['sinchi']['sinchi'] = sinchi
-                data['sinchi']['code'] = code
-                print(msg,file=logfile)
-                data['inchi'] = dict()
-                print('Generating Fixed Hydrogens InChI...',file=logfile)
-                inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
-                data['inchi']['inchi'] = inchi
-                data['inchi']['code'] = code
-                print(msg,file=logfile)
-                data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
-                data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+    sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+    uploadfile=open(os.path.join(submission_path,sdfnameref),'rb')
+    mol = open_molecule_file(uploadfile) # EL objeto mol es necesario para trabajar en RD KIT
 
-            except:
-                data['msg'] ='Error while computing InChI.'
-                print(data['msg'],file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            try:
-                print('Generating Smiles...',file=logfile)
-                data['smiles'] = generate_smiles(mol,logfile)
-            except:
-                msg = 'Error while computing Smiles.'
-                print(msg,file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+    try:
+        sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+        print("\nSINCHI",code)
+        if code > 1:
+             data['msg'] ='Error while computing Standard InChI:\n'+msg
+             return(data)
+        data['sinchi']['sinchi'] = sinchi
+        data['sinchi']['code'] = code
+        data['inchi'] = dict()
+        inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+        print("\nINCHI",code)
+        if code > 1:
+             data['msg'] ='Error while computing InChI:\n'+msg
+             return(data)
+        data['inchi']['inchi'] = inchi
+        data['inchi']['code'] = code
+        print(" data['inchi']['code'] = code")
+    except:
+        data['msg'] ='Error while computing InChI.'
+     #   return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+    print("AAAAAAAAAAAAAAAAAA\n")
+
+    data['smiles'] = generate_smiles(mol,logfile=sys.stdout)
+    print(data['smiles'], "= generate_smiles(mol,logfile=sys.stdout)")
+    print("AAAAAAAAAAAAAAAAAA\n")
+    data['charge'] = get_net_charge(mol)
+    print("data['charge'] = get_net_charge(mol)")
+        
+    try:    
+        data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+        print("   data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])")
+        data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+        print("data['inchikey'] = generate_inchikey(data['inchi']['inchi'])")
+        data['inchicol'] = 1
+        data['inchicol'] = 1
+    except:
+        data['msg'] ='Error while computing InChIKey.'
+        #print(data['msg'],file=logfile)
+        #logfile.close()
+       # data['msg'] = msg+' Please, see log file.'
+     #   return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+
+    uploadfile.close()
+    
+    return data
+
+
+#           logfile = open(os.path.join(submission_path,logname),'w')
+#           mol = open_molecule_file(uploadfile,logfile)
+
+#   data = dict()
+#   data['download_url_log'] = None
+#   if 'molpostkey' in POST.keys():
+#       if 'recmet' in POST.keys():
+#           RecMet = True
+#       if 'pngsize' in POST.keys():
+#           pngsize = int(POST["pngsize"])
+#       molpostkey = POST["molpostkey"]
+#       
+#       if molpostkey in FILES.keys():
+#           m = formre.search(molpostkey)
+#           if m:
+#               molid = m.group(1)
+#           else:
+#               molid = 0
+#           uploadfile =  FILES[molpostkey]  # path_namef
+#           os.makedirs(submission_path,exist_ok=True)
+#           logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
+#           sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+#           pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+#           submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+#           sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+#           pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+#           try:
+#               os.remove(os.path.join(submission_path,sdfname))
+#           except:
+#               pass
+#           try:
+#               os.remove(os.path.join(submission_path,pngname))
+#           except:
+#               pass
+#           try:
+#               os.remove(os.path.join(submission_path,pngnameref))
+#           except:
+#               pass
+#           try:
+#               os.remove(os.path.join(submission_path,sdfnameref))
+#           except:
+#               pass
+#           logfile = open(os.path.join(submission_path,logname),'w')
+#           data['download_url_log'] = join_path(submission_url,logname,url=True)
+#           try:
+#           
+#           except:
+#               print ("mol object has not been generated") 
+#               pass
+#           
+#           data['sinchi'] = dict()
+#           try:
+#               print('Generating Standard InChI...',file=logfile)
+#               sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+#               data['sinchi']['sinchi'] = sinchi
+#               data['sinchi']['code'] = code
+#               print(msg,file=logfile)
+#               data['inchi'] = dict()
+#               print('Generating Fixed Hydrogens InChI...',file=logfile)
+#               inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+#               data['inchi']['inchi'] = inchi
+#               data['inchi']['code'] = code
+#               print(msg,file=logfile)
+#               data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+#               data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+
+#           except:
+#               data['msg'] ='Error while computing InChI.'
+#               print(data['msg'],file=logfile)
+#               logfile.close()
+#               data['msg'] = msg+' Please, see log file.'
+#               return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#           try:
+#               print('Generating Smiles...',file=logfile)
+#               data['smiles'] = generate_smiles(mol,logfile)
+#               data['charge'] = get_net_charge(mol)
+#           except:
+#               msg = 'Error while computing Smiles.'
+#               print(msg,file=logfile)
+#               logfile.close()
+#               data['msg'] = msg+' Please, see log file.'
+#               return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#               
+#           data['charge'] = get_net_charge(mol)
+#           
+#           try:
+#               mol.SetProp("_Name",sdfname)
+#               write_sdf(mol,os.path.join(submission_path,sdfname))
+#               data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+
+#           except:
+#               try:
+#                   os.remove(os.path.join(submission_path,sdfname))
+#               except:
+#                   pass
+#               msg = 'Error while storing SDF file.'
+#               print(msg,file=logfile)
+#               logfile.close()
+#               data['msg'] = msg+' Please, see log file.'
+#               return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#           print('Drawing molecule...',file=logfile)
+#           try:
+#               generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
+#           except:
+#               try:
+#                   os.remove(os.path.join(submission_path,sdfname))
+#               except:
+#                   pass
+#               try:
+#                   os.remove(os.path.join(submission_path,pngname))
+#               except:
+#                   pass
+#               raise
+#               msg = 'Error while drawing molecule.'
+#               print(msg,file=logfile)
+#               logfile.close()
+#               data['msg'] = msg+' Please, see log file.'
+#               return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#           data['download_url_png'] = join_path(submission_url,pngname,url=True)
+#           print('Finished with molecule.',file=logfile)
+#           logfile.close()
+#           del mol
+#           
+#           return JsonResponse(data,safe=False)
+#       else:
+#           data['msg'] = 'Unknown molecule file reference.'
+#           return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#   elif upload_handlers[0].exception is not None:
+#       try:
+#           raise upload_handlers[0].exception
+#       except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+#           data['msg'] = e.args[0]
+#           return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+#           
+#           
+#       
+#   else:
+#       data['msg'] = 'No file was selected or cannot find molecule file reference.'
+#       return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+def SMALL_MOLECULEview(request, submission_id):
+
+    def handle_uploaded_file(f,p,name):
+        print("file name = ", f.name , "path =", p)
+        f.name=name
+        print("NEW name = ", f.name , "path =", p)
+        path=p+"/"+f.name
+        with open(path, 'wb+') as destination:
+            for chunk in f.chunks():
+                destination.write(chunk)
+
+    def molec_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
+        print("inside the function molec_file_table")
+        print(dname)
+        fdbF={}
+        fdbFobj={}
+        
+       ######  
+       # ft=DyndbFileTypes.objects.all()
+       # dict_ext_id={}
+       # for l in ft:
+       #     dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+       # d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+       ##############
+        for key,val  in dname.items():
+             print("val\n", val)
+             fext="".join(val['path'].split(".")[1:])
+             initFiles['id_file_types']=dict_ext_id[fext]
+             initFiles['url']=val['url']
+             initFiles['filename']="".join(val['path'].split("/")[-1])
+             initFiles['filepath']=val['path']
+             if key == "dnamesdf":
+                 initFiles['description']="sdf/mol2 requested in the molecule form"
+             else:
+                 initFiles['description']="png image file of the molecule"
+             print("HOLA initFiles", initFiles)
+    
+             fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+             dicfmole={}
+             fdbFM={}
+             if fdbF[key].is_valid():
+                 fdbFobj[key]=fdbF[key].save()
+                 if initFiles['id_file_types']==19:
+                     dicfmole['type']=d_fmolec_t['Image 300px'] #Molecule
+                 elif initFiles['id_file_types']==20:
+                     dicfmole['type']=d_fmolec_t['Molecule'] #Molecule
+                 dicfmole['id_molecule']=MFpk
+                 dicfmole['id_files']=fdbFobj[key].pk
+                 fdbFM[key]=dyndb_Files_Molecule(dicfmole)
+                 if fdbFM[key].is_valid():
+                     fdbFM[key].save()
+                 else:
+                     print("Errores en el form dyndb_Files_Molecule\n ", fdbFM[key].errors.as_data())
+             else:
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_data())
+
+    author="jmr"   #to be modified with author information. To initPF dict
+#    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
+    now=timezone.now()
+    onames="Pepito; Juanito; Herculito" #to be modified... scripted
+    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+    initON={'other_names': onames,'id_compound':None} 
+    dicpost=request.POST
+    #dicfiles=request.FILES
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+    ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
+    ft=DyndbFileTypes.objects.all()
+    dict_ext_id={}
+    for l in ft:
+        dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+        print (l.__dict__['extension'].rstrip())
+    d_fmolec_t={'Molecule':'0','Image 100px':'1','Image 300px':'2'} ######VOY POR AQUI!!!!!!!!!!!!!!!!!!!!!!!
+    if request.method == 'POST':
+        dictmol={}
+        fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
+        dictON={}
+        fieldsON=["other_names"]
+        dictcomp={}
+        fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+        dictfmol={} 
+        fieldsPMod={"is_present","type"}
+        dictPMod={}
+        form=re.compile('form-')
+        indexl=[]
+    #  # print("!!!!!indexl== ",indexl)
+        nl=0 #counter of pairs in dicpost.items()
+        for key,val in dicpost.items():
+            nl=nl+1
+            if form.search(key):
+                index=int(key.split("-")[1])
+                if index not in indexl:
+                    indexl.append(index)
+                    dictmol[index]={}
+                    dictON[index]={}
+                    dictcomp[index]={}
+                    dictPMod[index]={}
+                nkey="-".join(key.split("-")[2:])  
+                #dictmol[index]["-".join(key.split("-")[2:])]=val
+            else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+                if len(indexl)==0:
+                    index=0
+                    indexl.append(0)
+                    dictmol[0]={}
+                    dictON[0]={}
+                    dictcomp[0]={}
+                    dictPMod[index]={}
+                nkey=key
+           # print("indexl==V ",indexl)
+                #dictmol[0][key]=val
+                #dictON[0][key]=val
+                #dictfmol[0][key]=val
+            #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+            dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
+            dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
+            for k,v in dfieldtype.items():
+                if nkey in v:
+                    dfielddict[k][index][nkey]=val
+                  #  print("Index ", index, "Indexl", indexl, " key== ",key, " Lista== ", v, " nkey", nkey)
+                  #  print ("\n key ", nl, "dfielddict == ", dfielddict)
+                    break
+           #     else:
+           #         print("OJO!!! key== ",key, " no en Lista== ", v)
+            #print ("\n key ", nl, "dfielddict == ", dfielddict)
+            continue 
+        indexl.sort()
+        print(indexl)
+        #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
+        indexfl=[]
+ 
+###########################################
+   #  #  if len(dicfiles) == 0:
+   #  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+   #  #      return response
+ 
+##      for key,val in dicfiles.items():
+##          if form.search(key):
+##              indexf=int(key.split("-")[1])
+##              nkey="-".join(key.split("-")[2:])  
+##              if indexf not in indexfl:
+##                  indexfl.append(indexf)
+##                  dictfmol[indexf]={}
+##              #dictmol[index]["-".join(key.split("-")[2:])]=val
+##          else: # the keys does not have to be modifyied as a single simulation has been submitted in the html form
+##              if len(indexfl)==0:
+##                  indexf=0
+##                  indexfl.append(0)
+##                  dictfmol[0]={}
+##              nkey=key
+##       dictfmol[index][nkey]=val
+   #  #  print("INDEXFL", indexfl)
+        fdbMF={}
+        fdbMFobj={}
+        fdbCF={}
+        fdbCFobj={}
+        fdbON={}
+        fdbONobj={}
+        dON={}
+        on=0
+        print("ANTES SORT",indexfl, indexl)
+        if len(indexl) > 1:
+         #   indexfli=list(map(int,indexfl))
+            indexli=list(map(int,indexl))
+         #   indexfl=sorted(indexfli)
+            indexl=sorted(indexli)
+        #print(indexfl, indexl)
+        dicfmole={}
+        fdbF={}
+        fdbFobj={}
+        fdbFM={}
+        fdbSM={}
+        fdbFMobj={}
+        Std_id_mol_update={}
+ 
+        for ii in indexl:
+            Std_id_mol_update[ii]=True
+            print("len(Std_id_mol_update)= ",len(Std_id_mol_update), "ii", ii, "indexl ",indexl)
+            fdbCF[ii]={}
+            fdbCFobj[ii]={}
+            fdbMF[ii]={}
+            fdbSM[ii]={}
+            fdbMFobj[ii]={}
+            fdbON[ii]={}
+            fdbONobj[ii]={}
+            dON[ii]={}
+             
+            #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!!
+ 
+            qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'].split('=')[1])
+            print("\nQuery Molecule antes aux\n ",qMF.filter(id__gt=7).values())
+                                                #generation of the sinchi
+            #dictcomp[ii]['sinchi']=    
+ 
+            if dictcomp[ii]['pubchem_cid']!='':
+                qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            elif dictcomp[ii]['chembleid']!='':
+                qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            else: 
+                qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+            if len(qMF.values())==1: #there is a entry matching this molecule
+                if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+                    dictPMod[ii]['not_in_model']=False
+                else:
+                    dictPMod[ii]['not_in_model']=True
+ 
+                dictPMod[ii]['int_id']=ii
+                dictPMod[ii]['submission_id']=submission_id
+                MFpk=qMF.values_list('id',flat=True)[0]
+                dictPMod[ii]['molecule_id']=MFpk
+                fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+ 
+                if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
+                    fdbSM[ii].save()
+                else:    
+                    iii1=fdbSM[ii].errors.as_data()
+                    print("fdbSM",ii," no es valido")
+                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+ 
+                if ii==indexl[-1]:#if ii is the last element of the list indexl
+                    print("Molecule #", ii, "has been found in our database")
+                    break
+                else:
+                    print("Molecule #", ii, "has been found in our database")
+                    continue
+ 
+            elif len(qMF.values())>1:
+                response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+                return response
+ 
+#########   Use of functions retrieving std_molecule info from external sources!!!! It is needed for updatingi
+            molid=ii 
+            print ("\nmolid=",molid)
+            submission_path_nofile = get_file_paths("molecule",url=False,submission_id=submission_id)
+            submission_url_nofile = get_file_paths("molecule",url=True,submission_id=submission_id)
+            namerefsdf = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+            namerefpng = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image")
+            namesdf = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+            namepng = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image")
+ 
+            print("antes INFOstdMOL")
+            path_namefsdf=("").join([submission_path_nofile, namesdf])
+            path_namefpng=("").join([submission_path_nofile, namepng])
+            path_namefrefsdf=("").join([submission_path_nofile, namerefsdf])
+            path_namefrefpng=("").join([submission_path_nofile, namerefpng])
+            url_namefrefsdf=("").join([submission_url_nofile, namerefsdf])
+            url_namefrefpng=("").join([submission_url_nofile, namerefpng])
+            url_namefsdf=("").join([submission_url_nofile, namesdf])
+            url_namefpng=("").join([submission_url_nofile, namepng])
+ 
+            INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+            print("AAAAa",INFOstdMOL.items())
+            sinchi_fixed=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+            INFOstdMOL['sinchi']['sinchi']=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
+            INFOstdMOL['inchi']['inchi']=INFOstdMOL['inchi']['inchi'].split('=')[1]
                 
-            data['charge'] = get_net_charge(mol)
-            
-            try:
-                mol.SetProp("_Name",sdfname)
-                write_sdf(mol,os.path.join(submission_path,sdfname))
-                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
-
-            except:
-                try:
-                    os.remove(os.path.join(submission_path,sdfname))
-                except:
-                    pass
-                msg = 'Error while storing SDF file.'
-                print(msg,file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            print('Drawing molecule...',file=logfile)
-            try:
-                generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
-            except:
-                try:
-                    os.remove(os.path.join(submission_path,sdfname))
-                except:
-                    pass
-                try:
-                    os.remove(os.path.join(submission_path,pngname))
-                except:
-                    pass
-                raise
-                msg = 'Error while drawing molecule.'
-                print(msg,file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            data['download_url_png'] = join_path(submission_url,pngname,url=True)
-            print('Finished with molecule.',file=logfile)
-            logfile.close()
-            del mol
-            
-            return JsonResponse(data,safe=False)
-        else:
-            data['msg'] = 'Unknown molecule file reference.'
-            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-    elif upload_handlers[0].exception is not None:
-        try:
-            raise upload_handlers[0].exception
-        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
-            data['msg'] = e.args[0]
-            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            
-            
-        
+############     check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
+            if len(qCFStdFormExist.values())==1: #The compound and the standard form of the current molecule is in the database (Only fill the current non standard molecule)
+                print("Compound entry matching SInChIKey and SInChI has been found in GPCRmd database")
+                CFpk=qCFStdFormExist.values_list('id',flat=True)[0]	
+                Std_id_mol_update[ii]=False
+            elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
+                response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator")
+                return response
+            elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
+                Std_id_mol_update[ii]=True
+                print("No compound entry has been found in GPCRmd DB")
+         #### No compound entry has been found in GPCRmd DB.Keep track of the Compound in the DyndbCompound table and the aliases in the DyndbOtherCompoundNames
+           
+                #### DyndbCompound
+ 
+                for key,val in initCF.items():
+                    if key not in dictcomp[ii].keys():
+                        dictcomp[ii][key]=val
+                    if key == "sinchi":
+                        dictcomp[ii][key]=sinchi_fixed
+                fdbCF[ii]=dyndb_CompoundForm(dictcomp[ii]) 
+                if fdbCF[ii].is_valid():
+                    fdbCFobj[ii]=fdbCF[ii].save()
+                    CFpk=fdbCFobj[ii].pk
+                else:
+                    print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_data())
+           
+                #### DyndbOtherCompoundNames 
+                ONlist=dictON[ii]["other_names"].split(";")
+           
+                for el in ONlist:
+                    on=on+1
+                    dON[ii][on]={}
+                    dON[ii][on]["other_names"]=el
+                    dON[ii][on]["id_compound"]=CFpk
+                    fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
+                    if fdbON[ii][on].is_valid():
+                        fdbON[ii][on].save()
+                    else:
+                        print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_data())
+#### ## Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
+ 
+########      DyndbCompound and DyndbOtherCompoundNames tables have been filled. Then entries for the std molecule should be registered in DyndbMolecule and DyndbSubmissionMolecule
+ 
+                print("COMPROBAR ",INFOstdMOL)
+                if 'msg' in INFOstdMOL.keys():
+                    print("HttpResponse(INFOstdMOL['msg'])" )
+                    print("HttpResponse(", INFOstdMOL['msg'], ")" )
+                    return HttpResponseRedirect(INFOstdMOL['msg']) 
+  ####### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
+                print("COMPROBAR ",INFOstdMOL)
+                
+                
+                if INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'].split('=')[1]: #Both molecules are the standard molecule so one entry is saved
+                    print("The molecule ",ii, "is actually the standard molecule")
+                    dictmol[ii]['description']="Standard form"
+                else:
+                    auxdictmol={}
+                    print("The molecule ",ii, "is not the standard molecule. The standard one will be saved right now!!!!")
+                    for key,val in INFOstdMOL.items():# HAY QUE INTRODUCIR LOS DATOS DEL SCRIPT PARA PODER CREAR UN DICCIONARIO PARA LA INSTANCIA!!!
+                        print("\nAQUI ",key,val)
+                        if type(val)==dict:
+                            auxdictmol[key]=val[key]
+                            print("\nauxdictmol inchi ", auxdictmol[key] )
+                             #   "Problem while generating inchi:\n"+ msg   
+                        
+                        if key == 'charge':
+                            auxdictmol['net_charge']=val 
+                        if key in dfieldtype['0']:
+                            if key == 'inchikey':
+                                auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+                                nrep_inchikey=len(DyndbMolecule.objects.filter(inchikey=val))
+                                if nrep_inchikey >= 1:
+                                    auxdictmol['inchicol']=nrep_inchikey+1
+                                else:
+                                    auxdictmol['inchicol']=1
+                            elif key == 'sinchi':
+                                auxdictmol['sinchi']=INFOstdMOL['sinchi']['sinchi']
+                            elif key == 'inchi':
+                                auxdictmol['inchi']=INFOstdMOL['inchi']['inchi']
+                            else:
+                                auxdictmol[key]=val  ###dictionary for the entry corresponding to the standard molecule in the table DyndbMolecule  
+                   
+                    for key,val in initMF.items():
+                        if key not in auxdictmol.keys():
+                            auxdictmol[key]=val  ##### completion of the dictionary
+                    auxdictmol['id_compound']=CFpk
+                    auxdictmol['description']="Standard form"
+                    fdbMFaux=dyndb_Molecule(auxdictmol)
+                    print("\n\n resultado auxdicmol", auxdictmol  )
+                    if fdbMFaux.is_valid():
+                        fdbMFauxobj=fdbMFaux.save()
+                        MFauxpk=fdbMFauxobj.pk
+                    else:
+                        print("Errores en el form dyndb_Molecule\n ", fdbMFaux.errors.as_data())
+      
+                #### Entry in DyndbSubmissionMolecule corresponding to the standard molecule 
+                    auxdictPMod={}
+                    auxdictPMod['not_in_model']=True
+                    auxdictPMod['int_id']=None
+                    auxdictPMod['submission_id']=submission_id
+                    auxdictPMod['molecule_id']=MFauxpk
+                    fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
+      
+                    if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
+                        fdbSMaux.save()
+                    else:    
+                        iii1=fdbSMaux.errors.as_data()
+                        print("fdbSMaux",ii," no es valido")
+                        print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+ 
+                    dnameref={'dnamesdf':{'path':path_namefrefsdf,'url':url_namefrefsdf},'dnamepng':{'path':path_namefrefpng,'url':url_namefrefpng}}
+                    print("AUX",dnameref)
+ 
+                    oooref=molec_file_table(dnameref,MFauxpk)
+           #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule 
+                    # In this block the condition INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'] is false. Then the std molecule pk is MFauxpk and the flag Std_id_mol_update is set
+                    # to False in order to avoid subsequents updates when the molecule in the form (not standard) would be entried.
+                    DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFauxpk) 
+                    Std_id_mol_update[ii]=False
+ 
+##___________________________________________________________________________________
+    #  #       The code enclosed in this section is not dependent on whether the Compound has an entry in the database!!!  
+            print("\n\n")
+            for key,val in initMF.items():
+                if key not in dictmol[ii].keys():
+                    dictmol[ii][key]=val
+                    print(dictmol[ii][key], val)
+            dictmol[ii]['id_compound']=CFpk
+            aaa=dictmol[ii]['inchi'].split('=')[1]
+            print(aaa)
+            dictmol[ii]['inchi']=aaa
+           #####AQUI ME QUEDE!!!! 
+            fdbMF[ii]=dyndb_Molecule(dictmol[ii])
+            if fdbMF[ii].is_valid():
+                fdbMFobj[ii]=fdbMF[ii].save()
+                MFpk=fdbMFobj[ii].pk
+            else:
+                print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_data())
+ 
+            dname={'dnamesdf':{'path':path_namefsdf,'url':url_namefsdf},'dnamepng':{'path':path_namefpng,'url':url_namefpng}}
+            print(dname)
+            ooo= molec_file_table(dname,MFpk)
+           #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule
+           # if the Std_id_mol_update flag is set to True the molecule in the form is the standard one and the std_id_molecule field in DyndbCompound should be update with MFpk
+            if Std_id_mol_update[ii]:
+                DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFpk) 
+                Std_id_mol_update[ii]=False
+           
+            if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
+                dictPMod[ii]['not_in_model']=False
+            else:
+                dictPMod[ii]['not_in_model']=True
+            dictPMod[ii]['int_id']=ii
+            dictPMod[ii]['submission_id']=submission_id
+            dictPMod[ii]['molecule_id']=MFpk
+            fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
+            if fdbSM[ii].is_valid():
+                fdbSM[ii].save()
+            else:    
+                iii1=fdbSM[ii].errors.as_data()
+                print("fdbSM",ii," no es valido")
+                print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+ 
+ 
+ 
+ 
+        return HttpResponseRedirect("/".join(["/dynadb/MOLECULEfilled",submission_id,""]), {'submission_id':submission_id })
+                               
+                              
+       
+               # check whether it's valid:
     else:
-        data['msg'] = 'No file was selected or cannot find molecule file reference.'
-        return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+       
+        fdbMF = dyndb_Molecule()
+        fdbSub = dyndb_Submission_Molecule()
+        fdbCF=dyndb_CompoundForm()
+        fdbON=dyndb_Other_Compound_Names()
+        fdbF = dyndb_Files()
+        fdbFM = dyndb_Files_Molecule()
+        fdbMM = dyndb_Complex_Molecule_Molecule()
+       
+        return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
 

@@ -494,7 +494,7 @@ class DyndbSubmissionMolecule(models.Model):
         (2,'Crystallographic waters, lipids or ions'),
         (3,'Other')
     )
-    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
+    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0, null=True, blank=True)#modified by juanma 
     submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
     molecule_id = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='molecule_id', blank=True, null=True)
     not_in_model=models.NullBooleanField()
@@ -715,9 +715,10 @@ class DyndbFiles(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     filepath = models.CharField(max_length=520, blank=True, null=True)
+    url = models.CharField(max_length=520, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_files'
 
 
