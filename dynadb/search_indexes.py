@@ -21,6 +21,7 @@ class MoleculeIndex(indexes.SearchIndex, indexes.Indexable):
 
 class OtherProteinNamesIndex(indexes.SearchIndex, indexes.Indexable):
     text = indexes.CharField(document=True, use_template=True)
+    other_names = indexes.EdgeNgramField(model_attr='other_names')
     id_protein=indexes.IntegerField() #INTEGER OR CHAR?
     name=indexes.CharField()
     def prepare_id_protein (self,obj):

@@ -5,6 +5,14 @@
     .panel-body {
         word-break:break-all
     }    
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .bs-example{
+	    margin: 20px;
+    }
     </style>
 {% endblock %}
 {% block content %}
@@ -64,12 +72,42 @@
 
     {% if answer.link_2_molecules %}
         
-        <b>Dynamics Components</b>: <br>
+        <b>Dynamics Components</b>:  <button id='showall' type="button" class="btn btn-info">Show all</button> <br>
+        <div id='carouselhide'>
+        <div class="col-lg-12 text-center"></div>
+        <div class="col-lg-12">
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+          <!-- Wrapper for slides -->
+          <div class="carousel-inner" role="listbox">
+        {% for url in answer.link_2_molecules %}
+            {% if forloop.counter == 1  %}
+            <div class="item active"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%else%}
+            <div class="item"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%endif%}
+
+        {% endfor %}
+          </div></div>
+
+          <!-- Left and right controls -->
+          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div></div></div>
+        
+        <div id='hideall'>
         {% for url in answer.link_2_molecules %}
             <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
+        <div>
     {% endif %}
-
+    <br>
     <br>
     {% if answer.references %} 
         <br><b>References in which this dynamic is mentioned</b>:<br>
@@ -103,4 +141,25 @@
     </div>
 
 {% endblock content %}
+
+{% block addon_js %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script>
+var counter=0;
+$('#hideall').hide();
+$("#showall").click(function(){
+    counter+=1;
+    if (counter%2==0){
+        $('#hideall').hide();
+        $('#carouselhide').show();
+        $('#showall').text('show all');
+    }else{
+        $('#carouselhide').hide();
+        $('#hideall').show();
+        $('#showall').text('show carousel');
+    }
+})
+</script>
+{% endblock%}
 

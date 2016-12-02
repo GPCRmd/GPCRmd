@@ -210,6 +210,9 @@ $("#tablesearch").click(function() {
         $.ajax({
             type: "POST",
             data: {'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform},
+            headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            },
             url: "/dynadb/empty_search/",
             dataType: "json",
             success: function(data) {
@@ -255,6 +258,9 @@ $("#tablesearch").click(function() {
         $.ajax({
             type: "POST",
             data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+            headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            },
             url: "/dynadb/advanced_search/",//"/dynadb/complex_search/",
             dataType: "json",
             success: function(data) {
@@ -285,6 +291,9 @@ $("#tablesearch").click(function() {
         $.ajax({
             type: "POST",
             data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+            headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            },
             url: "/dynadb/advanced_search/",
             dataType: "json",
             success: function(data) {

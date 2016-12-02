@@ -74,7 +74,7 @@ urlpatterns = [
     url(r'^ajax_pdbchecker/(?P<submission_id>[0-9]+)/$', views.pdbcheck, name='pdbcheck'), #keep this one in a merge
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
     url(r'^search/$', SearchView(template='/protwis/sites/protwis/dynadb/templates/search/search.html', searchqueryset=sqs, form_class=MainSearchForm),name='haystack_search'),
-    #url(r'^search/$',views.autocomplete , name='autocomplete'),
+    url(r'^autocomplete/',views.autocomplete , name='autocomplete'),
     url(r'^ajaxsearch/',views.ajaxsearcher,name='ajaxsearcher'),
     url(r'^empty_search/',views.emptysearcher,name='emptysearcher'),
     url(r'^autocomplete/',views.autocomplete,name='autocomplete'),

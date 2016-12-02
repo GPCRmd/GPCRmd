@@ -29,6 +29,9 @@ $("#Searcher").click(function(e) {
     $.ajax({
         type: "POST",
         data: { cmolecule: p, return_type:return_type},
+        headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        },
         url: "/dynadb/ajaxsearch/",
         dataType: "json",
         success: function(data) {
