@@ -3,6 +3,7 @@ $('#hiddenmodel').hide();
 var counter=0;
 
 $(document).on('click', '.protein, .molecule, .compound', function(){
+    $('[data-toggle="tooltip"]').tooltip();
     if (counter%2==0){
         var text = $(this).attr("name");
         var nameandid=text.split('%');
@@ -14,12 +15,12 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
         var ligrec= $(this).attr("value");
         $('#myTable').find('thead').html('<tr><th>Boolean</th><th>Type</th><th>ID</th> <th></th> <th>Name</th> <th></th> </tr>');
         if (myclass=='protein'){
-            $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="some"> Is '+ligrec+' </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+            $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="some"> Is '+ligrec+' </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
         }else{
             if($('#result_type').find(":selected").text()=='Complex Structure' ||$('#result_type').find(":selected").text()=='Dynamics'){
-                $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option><option value="all">All</option></select> </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option><option value="all">All</option></select> </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
             }else{
-                $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option></select> </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option></select> </td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
             }
 
         }
@@ -36,18 +37,20 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
         var ligrec= $(this).attr("value");
         $('#myTable').find('thead').html('<tr><th>Boolean</th><th>  </th><th>Type</th><th>ID</th> <th></th> <th></th> <th>Name</th> </tr>');
         if (myclass=='protein'){
-            $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+myclass+'</td><td>'+text+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="some"> Is '+ligrec+' </td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+            $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+myclass+'</td><td>'+text+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="some"> Is '+ligrec+' </td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
         }else{
             if($('#result_type').find(":selected").text()=='Complex Structure' ||$('#result_type').find(":selected").text()=='Dynamics'){
-                $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>    <td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option></option><option value="all">All</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash" ></span> </button></td></tr>');
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>    <td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option></option><option value="all">All</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash" ></span> </button></td></tr>');
             }else{
-                $('#myTable').find('tbody').append('<tr title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm">  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+truename+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+myclass+'</td><td>'+text+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+truename+'</td><td><button id="deleterow" class="btn btn-danger btn-sm">  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
 
             }
         }
         $('#myTable').find('.tableselect:first').empty().append('<option selected="selected" value=" "> </option>');
     }
 });
+
+
 
 
 

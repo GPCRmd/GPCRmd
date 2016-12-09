@@ -34,10 +34,6 @@ function ShowResults(data, restype,is_apoform){
     return tablestr;
 
 }//end of function definition
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 function CreateTable(){
     if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
         table = $('#ajaxresults22').DataTable();
@@ -58,8 +54,6 @@ function CreateTable(){
     }   
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 $("#tablesearch").click(function() {
     $('#ajaxresults22').DataTable().clear().draw();
@@ -193,15 +187,10 @@ $("#tablesearch").click(function() {
     var method=$('#method').val();
     var sol=$('#soltype').val();
     if (restype=='model'){
-        var is_apoform=$('#search_type').find(":selected").val();
+        var is_apoform=$('input[name=radiosearch]:checked', '#hiddenmodel').val();
     }
     if (restype=='dynamics'){
-        var is_apoform=$('#search_type_dyn').find(":selected").val();
-    }
-
-    if (flag!=0){
-        alert(flagsms);
-        return false;
+        var is_apoform=$('input[name=radiosearch1]:checked', '#hidden').val();
     }
 
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
@@ -219,13 +208,11 @@ $("#tablesearch").click(function() {
                 $("#tablesearch").prop("disabled",false);
                 if (data.message==''){
                     $('#ajaxresults22 tbody').empty();
+                    //$('#ajaxresults22').DataTable().clear().draw(); this new, uncommented before
                     tablestr=ShowResults(data, restype,is_apoform);
                     $('#ajaxresults22').DataTable().destroy()
-                    setTimeout(function() {
-                        $('#ajaxresults22 tbody').append(tablestr);
-                        CreateTable();
-                    }, 500);
-
+                    $('#ajaxresults22 tbody').append(tablestr);
+                    CreateTable();
 
                 }else{
                     alert(data.message);
@@ -237,94 +224,123 @@ $("#tablesearch").click(function() {
                 alert("Something unexpected happen.");
             }
         }); //end of ajax call
-        return true;
+
     }
 
     if (bigarray.length==1 && restype=='complex'){
-        alert('Complex search does not work if there is not any protein or molecule.You have to add proteins, molecules or compounds from the left to search for complexes.');
+        alert('Complex search does not work if there is not any protein or molecule.');
         $("#tablesearch").prop("disabled",false);
         return false;
     }
 
-    /////////////////////////////////////////// SIMPLE SEARCH //////////////////////////////////////////////////////////
-    if ($('#gotoadvsearch').html().length==21){
+    if (bigarray.length>1 || restype=='complex'){
 
-
-        for (i=1;i<bigarray.length;i++){
-            bigarray[i].splice(1, 0, " ");
-            bigarray[i].splice(5, 0, "");        
-
-
-        $.ajax({
-            type: "POST",
-            data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
-            headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            },
-            url: "/dynadb/advanced_search/",//"/dynadb/complex_search/",
-            dataType: "json",
-            success: function(data) {
-                $("#tablesearch").prop("disabled",false);
-                if (data.message==''){
-                    $('#ajaxresults22 tbody').empty(); //this new
-                    tablestr=ShowResults(data,restype,is_apoform);
-                    $('#ajaxresults22').DataTable().destroy() //this new
-                    $('#ajaxresults22 tbody').append(tablestr);
-                    CreateTable();
-
-                }else{
-                    alert(data.message);
-                }
-            },
-
-            error: function(XMLHttpRequest, textStatus, errorThrown) {
-                $("#tablesearch").prop("disabled",false);
-                alert("Something unexpected happen.");
+        ///////////////////////////////////////////SIMPLE SEARCH //////////////////////////////////////////////////////////
+        if ($('#gotoadvsearch').html().length==21){
+            if ( (is_apoform==true && bigarray.length>2) || (is_apoform==true && bigarray[1][1]!='protein' ) ){
+                flag=1;
             }
-        });
-        return true;
-    }
+            if (bigarray.length>1 && flag==0){ //minimun length is 1 because of the table header
 
-
-    ///////////////////////////////////////////ADV SEARCH //////////////////////////////////////////////////////////
-    }else{
-        $.ajax({
-            type: "POST",
-            data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
-            headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            },
-            url: "/dynadb/advanced_search/",
-            dataType: "json",
-            success: function(data) {
-                $("#tablesearch").prop("disabled",false);
-                if (data.message==''){
-                    $('#ajaxresults22 tbody').empty(); //this new
-                    tablestr=ShowResults(data,restype,is_apoform);
-                    $('#ajaxresults22').DataTable().destroy() //this new
-                    $('#ajaxresults22 tbody').append(tablestr);
-                    CreateTable();
-                }else{
-                    alert(data.message);
-                    $("#tablesearch").prop("disabled",false);
+                console.log('before',bigarray);
+                for (i=1;i<bigarray.length;i++){
+                    bigarray[i].splice(1, 0, " ");
+                    bigarray[i].splice(5, 0, "");        
                 }
-            },
 
-            error: function(XMLHttpRequest, textStatus, errorThrown) {
+                console.log('after',bigarray);
+                $.ajax({
+                    type: "POST",
+                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+                    headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    url: "/dynadb/advanced_search/",//"/dynadb/complex_search/",
+                    dataType: "json",
+                    success: function(data) {
+                        $("#tablesearch").prop("disabled",false);
+                        if (data.message==''){
+                            $('#ajaxresults22 tbody').empty(); //this new
+                            //$('#ajaxresults22').DataTable().clear().draw();
+                            tablestr=ShowResults(data,restype,is_apoform);
+                            $('#ajaxresults22').DataTable().destroy() //this new
+                            $('#ajaxresults22 tbody').append(tablestr);
+                            CreateTable();
+
+                        }else{
+                            alert(data.message);
+                        }
+                    },
+
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $("#tablesearch").prop("disabled",false);
+                        alert("Something unexpected happen.");
+                    }
+                });
+
+            }else {
                 $("#tablesearch").prop("disabled",false);
-                alert("Something unexpected happen.");
+                if (flag==1){
+                    alert('Apoforms are composed by a single protein. Try again.'); 
+                }else{
+                    alert('You have to add proteins, molecules or compounds from the left to search for complexes.');
+                }
             }
-        });
-        return true;
-    }//end of the "advanced search" else.
 
+
+        ///////////////////////////////////////////ADV SEARCH //////////////////////////////////////////////////////////
+        }else{
+            if (is_apoform==true) { //only allow proteins and OR'S
+                for (i=1;i<bigarray.length;i++){
+                    if ( (bigarray[i][0]!='OR' && (bigarray[i][0]!=' ' && bigarray[i][0]!='') ) || bigarray[i][2]!='protein'){
+                        flagsms='Apoform search only allows OR search with protein type';
+                        flag=5;
+                    }
+                }
+                $("#tablesearch").prop("disabled",false);
+            }
+            console.log('adv',bigarray);
+            if (flag==0){
+                $.ajax({
+                    type: "POST",
+                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+                    headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    url: "/dynadb/advanced_search/",
+                    dataType: "json",
+                    success: function(data) {
+                        $("#tablesearch").prop("disabled",false);
+                        if (data.message==''){
+                            $('#ajaxresults22 tbody').empty(); //this new
+                            tablestr=ShowResults(data,restype,is_apoform);
+                            $('#ajaxresults22').DataTable().destroy() //this new
+                            $('#ajaxresults22 tbody').append(tablestr);
+                            CreateTable();
+                            //$('#ajaxresults22 tbody').empty();
+                            //$('#ajaxresults22').DataTable().clear().draw();
+                            //tablestr=ShowResults(data,restype,is_apoform);
+                            //$('#ajaxresults22 tbody').append(tablestr);
+                            //CreateTable();
+                        }else{
+                            alert(data.message);
+                            $("#tablesearch").prop("disabled",false);
+                        }
+                    },
+
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $("#tablesearch").prop("disabled",false);
+                        alert("Something unexpected happen.");
+                    }
+                });
+            }else{//if flag 0
+                alert(flagsms);
+                $("#tablesearch").prop("disabled",false);
+            }
+        }//end of the "advanced search" else.
+
+    }//bigarray.lentgh >1
 });
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function getCookie(name) {
     var cookieValue = null;

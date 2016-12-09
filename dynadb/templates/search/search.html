@@ -170,10 +170,13 @@ kbd{
             <br>
             <center><h3>Search for proteins, molecules or compounds.</h3>
             <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
-                <input id="protein22" type="text" name="name" placeholder="5-HT1B receptor"></input>
- <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option></select>
-                <!--<input type="button" value="Search" name="search" id="Searcher" /><span class="glyphicon glyphicon-search">-->
-                <button id="Searcher" type="button" value="Search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
+
+                <input id="protein22" type="text" class="form-control" name="name" placeholder="5-HT1B receptor"></input>
+                <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option><option value="complex">Complex*</option><option value="model">Complex Structure *</option><option value="dynamics">Dynamics *</option></select>
+<button id="Searcher" type="button" value="Search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
+                <br><input id="idsearch" type="checkbox" value="">Search by ID <br>  * only works with ID search.
+                
+
             </form> 
             </center>
             <br>
@@ -214,22 +217,27 @@ kbd{
         </tbody>
         </table>
         <br>
-        Exact Match: <input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> <br><br>
+        <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br><br>
         Return: <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Complex Structure</option><option value="dynamics">Dynamics</option></select>
+
+
         <div id='hiddenmodel'>
-        <br><br>
-
-        <select id="search_type"><option  value="apo">Only apoforms</option><option value="com">Only complexes</option><option selected="selected" value="both">Both</option></select>
-
-        <br><br>
+            <br>
+            <label><input type="radio" name="radiosearch" value="apo"> Only apoform </label>
+            <label><input type="radio" name="radiosearch" value="com"> Only complexes </label>
+            <label><input type="radio" name="radiosearch" value="both" checked="checked" > Both </label>
+            <br><br>
         </div>
 
 
         <div id='hidden'>
-        <br><br>
-
-        <select id="search_type_dyn"><option  value="apo">Only apoforms</option><option value="com">Only complexes</option><option selected="selected" value="both">Both</option></select>
-
+            <br>
+            <div id="search_type_dyn">
+              <label><input type="radio" name="radiosearch1" value="apo"> Only apoform </label>
+              <label><input type="radio" name="radiosearch1" value="com"> Only complexes </label>
+              <label><input type="radio" name="radiosearch1" value="both" checked="checked"> Both </label>
+            </div>
+        <br>
         <table id='dynfil' class='table table-striped'>
         <tbody>
         <tr><td>Time step (smaller than:) </td><td><input id='tstep' type="text" name="tstep"></td></tr>

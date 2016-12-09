@@ -1,8 +1,5 @@
 
 function sendpar() {
-    var url=window.location.href;
-    var subid=url.indexOf("/model/");
-    subid=url.slice(subid+7,-1);
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -42,12 +39,12 @@ function sendpar() {
         $.ajax({
             type: "POST",
             data: { "bigarray[]": bigarray},
-            url:"/dynadb/ajax_pdbchecker/"+subid+"/",
+            url:"./ajax_pdbchecker/",
             dataType: "json",
             success: function(data) {
                 $("#pdbchecker2").prop("disabled",false);
                 if (data.message==''){
-                    newwindow=window.open('/dynadb/ajax_pdbchecker/'+subid);
+                    newwindow=window.open('./ajax_pdbchecker/');
                     if (window.focus) {newwindow.focus()}
                 }else{
                     alert(data.message);
