@@ -336,7 +336,21 @@ def findGPCRclass(num_scheme):
         active_class["F"]=["active","in active"]
     return current_class
 
+
 def index(request, dyn_id):
+    if request.is_ajax() and request.POST:
+        rmsd_data= { 
+                  "rmsdStr": request.POST.get("rmsdStr"),
+                  "rmsdTraj": request.POST.get("rmsdTraj"),
+                  "rmsdFrames": request.POST.get("rmsdFrames"),
+                  "rmsdRefFr": request.POST.get("rmsdRefFr"),
+                  "rmsdRefTraj": request.POST.get("rmsdRefTraj"),
+                  "rmsdSel": request.POST.get("rmsdSel")
+                }
+        request.session['rmsd_data']=rmsd_data
+        data_rt = json.dumps({})
+        return HttpResponse(data_rt, content_type='view/'+dyn_id)
+
     #dyn_id =1 #EXAMPLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -351,7 +365,7 @@ def index(request, dyn_id):
         (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
         #structure_file="Dynamics/test.pdb"########################### REMOVE
         #structure_name="test.pdb" ################################### REMOVE
-        pdb_name = "/protwis/sites/files/"+structure_file   
+        pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
         if len(chain_name_li) > 0:
             multiple_chains=False
@@ -386,12 +400,7 @@ def index(request, dyn_id):
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
                     motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
                     find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
-                    for e in seq_pos:
-                        print (e)
-
-
-
-                    gpcr_pdb_js=json.dumps(gpcr_pdb) 
+                    gpcr_pdb_js=json.dumps(gpcr_pdb)
                     context={
                         "structure_file":structure_file, 
                         "structure_name":structure_name, 
@@ -465,4 +474,78 @@ def distances(request, dist_str,struc_id,traj_id):
 
 
 
+def rmsd(request):
+    if request.session.get('rmsd_data', False):
+        error_li=[]
+        rmsd_data=request.session['rmsd_data']
+        struc_path = "/protwis/sites/files/" + rmsd_data["rmsdStr"]
+        traj_path = "/protwis/sites/files/" + rmsd_data["rmsdTraj"]
+        traj_sel=rmsd_data["rmsdSel"]
+        ref_traj_path = "/protwis/sites/files/" + rmsd_data["rmsdRefTraj"]
+        ref_frame =  rmsd_data["rmsdRefFr"]
+        traj_frame_rg=rmsd_data["rmsdFrames"]
+        if traj_sel == "bck":
+            set_sel="alpha"
+        elif traj_sel == "noh":
+            set_sel="heavy"
+        elif traj_sel == "min":
+            set_sel="minimal"
+        elif traj_sel == "all_atoms":
+            set_sel="all"
+        try:
+            traj=md.load(traj_path, top=struc_path)
+        except Exception:
+            error_msg="File can't be loaded."
+            return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
+        num_frames=traj.n_frames
+        if traj_path == ref_traj_path:
+            ref_traj=traj
+            ref_num_frames=num_frames
+        else:
+            try:
+                ref_traj=md.load(ref_traj_path, top=struc_path)
+            except Exception:
+                error_msg="File can't be loaded."
+                return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
+            ref_num_frames=ref_traj.n_frames
+        if  int(ref_frame) > ref_num_frames:
+            small_error = "The reference trajectory has no frame " + ref_frame +". The reference frame has been set to "+ str(ref_num_frames) +", the last frame of that trajectory."
+            error_li.append(small_error)
+            ref_frame = ref_num_frames
+        if traj_frame_rg == "all_frames":
+            fr_from=1
+            fr_to=num_frames
+        else:
+            fr_li=traj_frame_rg.split("-")
+            fr_from=int(fr_li[0])
+            fr_to=int(fr_li[1])
+            if fr_to > num_frames:
+                small_error ="The trajectory analysed has no frame " + str(fr_to) +". The final frame has been set to "+ str(num_frames) +", the last frame of that trajectory."
+                error_li.append(small_error)
+                fr_to = num_frames
+            traj=traj[fr_from -1:fr_to]
+            #ref_traj=ref_traj[fr_from -1 :fr_to]
+            num_frames=traj.n_frames
+        print("\n\n\n from: ",fr_from," to: ",fr_to,"\n\n\n")
+        selection=traj.topology.select_atom_indices(set_sel)
+        try:
+            rmsds = md.rmsd(traj, ref_traj, (int(ref_frame)-1),atom_indices=selection).reshape((num_frames,1))
+            frames=np.arange(fr_from,fr_to+1,dtype=np.int32).reshape((num_frames,1))
+            data=np.append(frames,rmsds, axis=1).tolist()
+        except Exception:
+            error_msg="RMSD can't be calculated."
+            return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
+        data_fin=[["Frame","RMSD"]] + data
+        data_source = SimpleDataSource(data=data_fin)
+        chart = LineChart(data_source,options={'title': "RMSD"})
+        del request.session['rmsd_data'] # Necessary or not?
+        context={
+            'chart': chart,
+            'error_li' : error_li
+        }
+        return render(request, 'view/rmsd.html', context)
+
+    else:
+        error_msg="Data not found."
+        return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
 

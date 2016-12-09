@@ -90,14 +90,15 @@
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#selection">Atom selection </span></button>-->
             </div>
-            <div id="selection" class="collapse" style="padding-right:15px;padding-left:15px">
-              <div class="row" style="margin-top:10px;">
+            <div id="selection" class="collapse" style="padding-right:15px;">
+             <div style="padding-left:15px">
+               <div class="row" style="margin-top:10px;">
                   <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
 	                <input value="" class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
                   </div>
                   <div class="col-sm-2 radio" style="margin-top:0; " >
-	                <label><input  type="radio" name="sel_high" id="rad_high" class="high" value="high" checked>Highlight</label>
-          	        <label><input  type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" >Select</label>
+	                <label><input class="sel_high" type="radio" name="sel_high" id="rad_high" class="high" value="high" checked>Highlight</label>
+          	        <label><input class="sel_high" type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" >Select</label>
                   </div>
               </div>
               <div id="alert"> </div>
@@ -116,6 +117,34 @@
                   {% endfor %}
                 </div> 
               </div>
+             </div>
+
+<!-- ============= Residues within x A of y =========== --> 
+               <div class="row">
+                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;margin-top:20px">
+                  <span class="dist_sel" id="row0">
+                    <span id="tick" ></span>
+                    <span id="always" style="margin-left:14px">
+                 <!-- <label id="checkbox_lab"><input id="checkbox_inp" type="checkbox" name="dist" value="dist"> -->Show residues within 
+
+                    <input class="form-control input-sm" id="inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                      &#8491; of
+                        <select id="comp" name="comp">
+                           {% for long_n, short_n in compounds %}
+                           <option   value="{{short_n}}">{{long_n}}</option>
+                           {% endfor %}
+                        </select>
+                    </span>
+                  </span>
+                  <!-- </label> -->
+                  <span id="show_within"></span>
+                  <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                  <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
+                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
+                  <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
+                </div>
+               </div>
+
             </div>
             </div>
 
@@ -183,39 +212,19 @@
             </div>
             {% endif %}
 
-<!-- ============= Distances =========== --> 
-           <div id="res_distances_all" style="margin-top:5px;margin-bottom:10px">
+<!-- ============= Analysis =========== --> 
+          {% if traj_list %}
+           <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#res_distances"><span>Residue Distances </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
-                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#res_distances">Residue Distances</button>-->
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
             </div>
-            <div id="res_distances" class="row collapse">
-<!-- ============= Residues within x A of y =========== --> 
-                <div class="sel_within" style="margin-right:5px;margin-left:0;margin-bottom:15px;margin-top:10px">
-                  <span class="dist_sel" id="row0">
-                    <span id="tick" ></span>
-                    <span id="always" style="margin-left:14px">
-                 <!-- <label id="checkbox_lab"><input id="checkbox_inp" type="checkbox" name="dist" value="dist"> -->Show residues within 
+            <div id="analysis" class="row collapse">
 
-                    <input class="form-control input-sm" id="inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-                      &#8491; of
-                        <select id="comp" name="comp">
-                           {% for long_n, short_n in compounds %}
-                           <option   value="{{short_n}}">{{long_n}}</option>
-                           {% endfor %}
-                        </select>
-                    </span>
-                  </span>
-                  <!-- </label> -->
-                  <span id="show_within"></span>
-                  <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-                  <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
-                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
-                  <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
-                </div>
 <!-- ============= Compute distances =========== --> 
-                {% if traj_list %}
-                <div class="dist_btw" style="margin-right:5px;margin-left:0;margin-top:10px">
+
+              <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Distance</div>
+               <div id="analysis_dist" class="collapse">
+                <div class="dist_btw" style="margin-right:5px;margin-left:0;">
                   <span class="dist_pair" id="row2_0">
                     <span id="tick2" ></span>
                     <span id="always2" style="margin-left:14px">
@@ -230,28 +239,99 @@
                   <span id="show_dist"></span>
                   <button id="add_btn2" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
                   <button id="rm_btn2" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
-                  <button id="gotoDistPg" class="btn btn-default" style="padding:5px;margin-left:10px" >Obtain result</button>
+                  
                 </div>
                 <div style="margin-left:18px;margin-bottom:15px">
-                 At
+                 At trajectory: 
                    <span style="margin-left:5px">
-                   {% for traj in traj_list %}
-                       <label class="radio-inline">
-                       <input class="trajForDist" type="radio" name="trajForDist" value={{traj.2}} >{{traj.1}}
-                       </label>
-                    {% endfor %}
+                        <select id="" name="dist_traj">
+                           <option disabled selected value> </option>
+                           {% for traj in traj_list %}
+                           <option class="trajForDist" name="trajForDist" value="{{traj.2}}">{{traj.1}}</option>
+                           {% endfor %}
+                        </select>
                    </span>
+                <button id="gotoDistPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
                 </div>
+                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="dist_alert"> </div>
+               </div>
+<!-- ============= RMSD Analysis =========== --> 
+            <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>
+              <div class="collapse" id="analysis_rmsd">
+                <div style="margin-left:18px;margin-bottom:10px;">
+                 Trajectory: 
+                        <select id="rmsd_traj" name="rmsd_traj">
+                           <option disabled selected value> </option>
+                           {% for traj in traj_list %}
+                           <option   value="{{traj.0}}">{{traj.1}}</option>
+                           {% endfor %}
+                        </select>
 
-<!--		<span style="margin-left:14px;margin-bottom:15px">Compute distance between 
-                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-			and
-                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-                </span>
-                <button id="gotoDistPg" class="btn btn-default" style="padding:5px;margin-left:10px" >Obtain result</button>-->
-                <!--<a href="/view/distances/50-100" class="btn btn-default" role="button" id="gotoDistPg" style="padding:5px;margin-left:10px">Obtain result</a>-->
+                </div>
+                <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                   <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                   </div>
+                   <div id="rmsd_sel_frames_id" class="col-md-10" >
+                      <div class="row">
+                         <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
+                              All
+                      </div>
+                      <div class="row" >
+                         <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
+                             From 
+                             <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                             to 
+                             <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                      </div>
+                      <div id="rmsd_sel_frames_error" class="row" >
+                      </div>
+                    </div>
+                </div>
+                <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                    Reference: frame 
+                        <input placeholder=1 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                        from trajectory 
+                        <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
+                           <option disabled selected value> </option>
+                           {% for traj in traj_list %}
+                           <option   value="{{traj.0}}">{{traj.1}}</option>
+                           {% endfor %}
+                        </select>
+                      <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >
+                      </div>
+                </div>
+                <div id="rmsd_sel_id" style="margin-left:18px;margin-bottom:20px"> 
+                   <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                   </div>
+                   <div class="col-md-10" >
+                      <div title="Protein alpha carbons." class="row">
+                         <input type="radio" name="rmsd_sel" value="bck" checked> Backbone
+                      </div>
+                      <div title="All non-hydrogen protein atoms." class="row">
+                         <input type="radio" name="rmsd_sel" value="noh"> noh
+                      </div>
+                      <div title="Protein CA, CB, C, N, O." class="row">
+                         <input type="radio" name="rmsd_sel" value="min"> Minimal
+                      </div>
+                      <div class="row">
+                         <input type="radio" name="rmsd_sel" value="all_atoms"> All atoms
+                      </div>
+                      <div class="row" style="margin-bottom:10px">
+                         <div style="margin-left:0;padding-left:0;width:110px" class="col-md-3">
+                             <input id="rmds_my_sel_id" type="radio" name="rmsd_sel" value="rmds_my_sel"> My selection 
+                         </div>
+                         <div style="margin-left:0;padding-left:0;" class="col-md-9">
+                             <input class="form-control input-sm" id="rmsd_my_sel_sel" type="text" style="width:100%;padding-left:7px;">
+                         </div>
+                      </div>
+              <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:5px" >Obtain result</button>
+                </div>
+               </div>
+                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="rmsd_alert"> </div>
+              </div>
+             </div>
 
-              {% endif %}
+          {% endif %}
 <!-- ======================================== -->
             </div>
             </div>
@@ -268,7 +348,7 @@
             <div id="legend"> </div>
           </div>
 
-   </div>
+ <!--  </div>-->
         <div class="container-fluid" style="padding:0;margin-top:10px;">
           {% if traj_list %}
             <div class="panel panel-default" >
@@ -279,14 +359,14 @@
 			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
 			{% endfor %}
 		    </div>
-                    <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html">Open in MDsrv</a>
+                    <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
 
                 </div>
             </div>
          {% else %}
             <div class="panel">
                 <div class="panel-body" style="padding-top:0">
-                  <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html">Open in MDsrv</a>
+                  <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
                 </div>
            </div>
          {% endif %}

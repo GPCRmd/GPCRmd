@@ -1,0 +1,27 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+    </script>
+<style></style>
+</head>
+
+<body>
+
+{% load staticfiles %} 
+
+
+{% block content %} 
+
+    <div style="text-align: justify;text-justify: inter-word;">
+        <p style="margin:0;color:#DC143C"><b style="font-size:17px;">Error: </b> {{ error_msg }}</p>
+    </div>
+
+
+{% block addon_js %} 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+{% endblock %}
+
+{% endblock content %} 
+</body>

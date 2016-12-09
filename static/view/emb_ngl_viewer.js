@@ -1,10 +1,44 @@
 $(document).ready(function(){
     $(".sel_input, #inputdist, #dist_from, #dist_to").val("")
     $("#show_within, #show_dist").empty();
-    // $("#rad_sel").click(function(){alert("!!")});
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
-    
+  
+/// AJAX
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+
+////////
+
+  
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
 
     function obtainInputedGPCRnum(pre_sel) {
@@ -192,6 +226,11 @@ $(document).ready(function(){
         return [bw_dict,gpcrdb_dict]
     }
 
+ /*   var rad_option="high";
+    $( "input[type=radio]" ).on( "click", function(){
+        rad_option=$(this).attr("value");
+    });*/
+
     function obtainURLinfo(gpcr_pdb_dict){
         cp = obtainCompounds();
         sel_enc =inputText(gpcr_pdb_dict);
@@ -200,8 +239,9 @@ $(document).ready(function(){
         } else {
             high_pre = obtainPredefPositions();
         }
+        rad_option=$(".sel_high:checked").attr("value");
         // sel_ranges=obtainSelectedAtSeq();
-        return [cp, high_pre,sel_enc] 
+        return [cp, high_pre,sel_enc,rad_option] 
     }
 
     function disableMissingClasses(){
@@ -243,8 +283,12 @@ $(document).ready(function(){
         });
     }
 
-    maxInputLength('#inputdist',4);
+    maxInputLength('#inputdist',6);
     maxInputLength('input.sel_input',100);
+    maxInputLength('#rmsd_frame_1',8);
+    maxInputLength('#rmsd_frame_2',8);
+    maxInputLength('#rmsd_my_sel_sel',50);
+    maxInputLength('#rmsd_ref_frame',8);
     disableMissingClasses();
 
 
@@ -318,7 +362,8 @@ $(document).ready(function(){
 
 
     $(".sel_within").on("blur", ".dist_sel" ,function(){
-        var inp=$(this).find("input").val();
+        var inp=$(this).find("input").val().replace(/\s+/g, '');
+        $(this).find("input").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
             $(this).find("#tick").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
             $(this).find("#always").attr("style","");
@@ -363,9 +408,12 @@ $(document).ready(function(){
     });
 
 
+
     $(".dist_btw").on("blur", ".dist_pair" ,function(){
-        var d_from=$(this).find("#dist_from").val();
-        var d_to=$(this).find("#dist_to").val();
+        var d_from=$(this).find("#dist_from").val().replace(/\s+/g, '');
+        var d_to=$(this).find("#dist_to").val().replace(/\s+/g, '');
+        $(this).find("#dist_from").val(d_from);
+        $(this).find("#dist_to").val(d_to);
         if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
             $(this).find("#tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
             $(this).find("#always2").attr("style","");
@@ -395,7 +443,7 @@ $(document).ready(function(){
 
     function checkTrajUsedInDistComputatiion(res_ids){
         if (res_ids){
-            var traj_id = $(".trajForDist:checked").val();
+            var traj_id = $(".trajForDist:selected").val();
             if (traj_id){
                 $("#traj_id_"+traj_id)[0].checked=true;
                 return (traj_id)
@@ -404,14 +452,31 @@ $(document).ready(function(){
         return (false)
     }
 
+
+
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
+/*
+        $.ajax({
+            type: "POST",
+            url: "/view/1/",
+            dataType: "json",
+            data: { "item": "Hi there"},
+            success: function() {
+                alert("done!");
+            }
+        });
+
+*/
         var res_ids = obtainDistToComp();
         var traj_id=checkTrajUsedInDistComputatiion(res_ids);
         if (traj_id){
             var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
             newwindow=window.open(dist_url,'','width=870,height=400');
+            $("#dist_alert").html("");
+        } else {
+            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#dist_alert").html(add_error_d);
         }
-
     });
 
 ////
@@ -580,6 +645,104 @@ $(document).ready(function(){
         }
     });    
 
+    $("#rmds_my_sel_id").click(function(){
+        if ($("#rmsd_my_sel_sel").val() == ""){
+            rmsdMySel=$(".sel_input").val();
+            if (rmsdMySel){
+                $("#rmsd_my_sel_sel").val(rmsdMySel);
+            }
+        }
+    });
+
+    function removeSpacesInInput(my_selector){
+        $(my_selector).blur(function(){
+            my_input=$(this).val().replace(/\s+/g, '');
+            $(this).val(my_input);
+         });
+    }
+
+    removeSpacesInInput("#rmsd_frame_1");
+    removeSpacesInInput("#rmsd_frame_2");
+    removeSpacesInInput("#rmsd_ref_frame");
+
+    function showErrorInblock(selector, error_msg){
+         var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
+         $(selector).html(sel_fr_error);
+    }
+
+    $("#gotoRMSDPg").click(function(){
+        $("#rmsd_sel_frames_error").html("");
+        $("#rmsd_ref_frames_error").html("");
+        rmsdTraj=$("#rmsd_traj").val();
+        rmsdFrames=$("#rmsd_sel_frames_id input[name=rmsd_sel_frames]:checked").val();
+        if (rmsdFrames=="rmsd_frames_mine"){
+            frameFrom=$("#rmsd_frame_1").val();
+            frameTo=$("#rmsd_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                    if (Number(frameFrom) >= 1){
+                        if (Number(frameFrom) < Number(frameTo)){
+                            rmsdFrames=encode(frameFrom + "-" + frameTo);
+                        } else {
+                            showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
+                            rmsdFrames=false;
+                        }
+                    } else {
+                        showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                        rmsdFrames=false;
+                    }
+                } else {
+                    showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }
+        rmsdRefFr=$("#rmsd_ref_frame").val();
+        if (rmsdRefFr == ""){
+            rmsdRefFr="1";
+        } else if (! /^[\d]+$/.test(rmsdRefFr)){
+            showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
+            rmsdRefFr=false;
+        } else if (Number(rmsdRefFr)<1){
+            showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
+            rmsdRefFr=false;
+        }
+        rmsdRefTraj=$("#rmsd_ref_traj_id").val();
+        rmsdSel=$("#rmsd_sel_id input[name=rmsd_sel]:checked").val();
+        if (rmsdSel == "rmds_my_sel"){
+            rmsdSel=$("#rmsd_my_sel_sel").val(); //Curate this so that mdtraj understands it            
+        }
+        if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#rmsd_alert").html(add_error);
+        } else {
+            $("#rmsd_alert").html("");
+            $.ajax({
+                type: "POST",
+                url: "/view/1/",  //Change 1 for actual number
+                dataType: "json",
+                data: { 
+                  "rmsdStr": struc,
+                  "rmsdTraj": rmsdTraj,
+                  "rmsdFrames": rmsdFrames,
+                  "rmsdRefFr": rmsdRefFr,
+                  "rmsdRefTraj": rmsdRefTraj,
+                  "rmsdSel": rmsdSel
+                },
+                success: function() {
+                    var rmsd_url ='/view/rmsd/';
+                    newwindow=window.open(rmsd_url,'','width=870,height=520');
+                },
+                error: function() {
+                    add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                    $("#rmsd_alert").html(add_error);                
+                }
+            });
+
+        }
+    });
 
 
 ///
@@ -604,10 +767,7 @@ $(document).ready(function(){
         gpcrdb_dict=dicts_result[1];
     }
 
-    var rad_option="high";
-    $( "input[type=radio]" ).on( "click", function(){
-        rad_option=$(this).attr("value");
-    });
+
 
     click_unclick(".high_pdA");
     click_unclick(".high_pdB");
@@ -631,6 +791,7 @@ $(document).ready(function(){
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
+        var rad_option =results[3];
         var pd = "n";
         var legend_el=[];
         for (key in high_pre){
@@ -658,6 +819,7 @@ $(document).ready(function(){
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
+        var rad_option =results[3];
         var pd = "n";
         for (key in high_pre){
             if (high_pre[key].length > 0){
