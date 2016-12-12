@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'tools',
     'haystack',
     'drugs',
+    'graphos',
 )
 
 MIDDLEWARE_CLASSES = (
