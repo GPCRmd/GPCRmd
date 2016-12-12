@@ -118,11 +118,11 @@
 
 
 	        <div class="row">
-                	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="upload_pdb"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the model (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
-			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder=" Coordinates (PDB)" id="PDBcoor" /></div>
+                	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="file_source"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the model (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
+			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder=" Coordinates (PDB)" id="file_source" /></div>
 		</div>
 
-			<div style="text-align:right;margin-right:5%"><input type="submit" value="Upload" name="upload`_pdb"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" id="PDBcoor" /></div>
+			<div style="text-align:right;margin-right:5%"><button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button></div>
 			
   <br></div>
 		<div class=row id='PRUEBA1'>
@@ -159,7 +159,7 @@
                               <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_to" name="seq_resid_to" type="text"  style="width:50px" placeholder=" "/></td>
                               <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked placeholder=" "/></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" name="pdbidps" type="text"  style="width:50px" placeholder=" 4IAR.A  "/></td>
-				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps" readonly name="source_typeps" style="width:50px" >	
+				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps" name="source_typeps" style="width:50px" >	
                                       {% for i in fdbPS.Meta.model.SOURCE_TYPE %}
                                         <option value="{{i.0}}"> {{i.1}}</option>
                                       {% endfor %}
@@ -201,11 +201,11 @@
 				</thead>
                                 <tbody id="pElement2">
 				<tr id="Element2"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ" /></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 " /></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" name="id_molecule" type="text" placeholder="   " ></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="number" placeholder=" 1 " /></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" name="id_molecule" type="text" readonly placeholder="   " ></td>
 
-					<td style="padding:5px 5px 5px 5px"><input id="id_namemc" maxlength="60" name="namemc" type="text" style="width:70px" placeholder=" Clozapine" /></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_namemc" maxlength="60" name="namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" /></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" readonly placeholder="" /></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_typemc" name="typemc" style="width:60px">
                                               {% for i in fdbMC.Meta.model.MOLECULE_TYPE %}
                                                 <option value="{{i.0}}"> {{i.1}}</option>
@@ -227,7 +227,11 @@
 		        </div> 		
 
  			<div style="text-align:right;margin-right:5%">
-					<button id ="id_check_pdb_mol" type="button" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button> 
+                                      <a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a>
+					<button id ="id_check_pdb_mol" type="button" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button>
+					<br>
+					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a>
+                                      
 		        </div> 		
 		        </div> 		
 

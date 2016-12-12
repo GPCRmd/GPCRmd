@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db import connection
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -12,13 +12,15 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 import re, os, pickle
+import shutil
 import time
 import json
 import mimetypes
 import requests
 import math
+import tarfile
 from django.db.models.functions import Concat
-from django.db.models import CharField,TextField, Case, When, Value as V
+from django.db.models import CharField,TextField, Case, When, Value as V, F
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension,DownloadGenericError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
@@ -31,6 +33,7 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -40,6 +43,7 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
+
 
 # Create your views here.
 
@@ -2497,15 +2501,106 @@ def servecorrectedpdb(request,pdbname):
         response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
     return response
 
+
+def get_submission_molecule_info(request,submission_id):
+    if request.method == 'POST':
+        mol_int = request.POST['molecule'].strip()
+        if mol_int.isdigit():
+            mol_int=int(mol_int)
+        else:
+            return HttpResponse('Molecule form number '+str(mol_int)+' is invalid or empty.',status=422,reason='Unprocessable Entity')
+
+        q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=(mol_int-1))
+        q = q.annotate(namemc=F('molecule_id__id_compound__name'))
+        q = q.values('molecule_id','not_in_model','namemc')
+        qresults = list(q)
+        if len(qresults) > 0:
+            if qresults[0]['not_in_model']:
+                return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as no crystal-like.\n'+ \
+                'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
+            else:
+                return JsonResponse(qresults[0])
+        else:
+            return HttpResponseNotFound('Molecule form number "'+str(mol_int)+'" not found in submission ID:'+str(submission_id))
+    
 @csrf_exempt
-def pdbcheck_molecule(request,submission_id):
+def upload_model_pdb(request,submission_id):
   request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
-  return _pdbcheck_molecule(request,submission_id)
-
-
+  return _upload_model_pdb(request,submission_id)
+  
 @csrf_protect
-def _pdbcheck_molecule(request,submission_id):
-    postkeys_mc = {'resname','molecule','id_molecule','numberofmol'}
+def _upload_model_pdb(request,submission_id):
+    pdbfilekey = 'file_source'
+    if request.method == 'POST':
+        if  pdbfilekey in request.FILES.keys():
+            uploadedfile = request.FILES[pdbfilekey]
+            submission_path = get_file_paths("model",url=False,submission_id=submission_id)
+            submission_url = get_file_paths("model",url=True,submission_id=submission_id)
+            pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+            pdbfilepath =  os.path.join(submission_path,pdbname)
+            try:
+                save_uploadedfile(pdbfilepath,uploadedfile)
+                response = HttpResponse('File successfully uploaded.',content_type='text/plain')
+            except:
+                os.remove(pdbfilepath)
+                response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
+            finally:
+                uploadedfile.close()
+                return response
+            
+        else:
+            msg = 'No file was selected or cannot find molecule file reference.'
+            return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')  
+def get_sdf_from_db_by_submission(submission_id,int_ids):
+    
+    
+    sdf_mol_file_type = type_inverse_search(DyndbFilesMolecule.filemolec_types,searchkey='Molecule',case_sensitive=False)
+    
+    #q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id__in=molintdict.keys(),molecule_id__dyndbfilesmolecule__type=sdf_mol_file_type)
+    #q = q.annotate(filepath=F('molecule_id__dyndbfilesmolecule__id_files__filepath'))
+    #q = q.values('int_id','molecule_id','filepath')
+    
+    
+    
+    submol = DyndbSubmissionMolecule._meta.db_table
+    submol_pk_db_column = DyndbSubmissionMolecule._meta.pk.get_attname_column()[1]
+    int_id_db_column = DyndbSubmissionMolecule._meta.get_field("int_id").get_attname_column()[1]
+    molecule_id_db_column = DyndbSubmissionMolecule._meta.get_field("molecule_id").get_attname_column()[1]
+    submission_id_db_column = DyndbSubmissionMolecule._meta.get_field("submission_id").get_attname_column()[1]
+    
+    filesmol = DyndbFilesMolecule._meta.db_table
+    id_molecule_db_column = DyndbFilesMolecule._meta.get_field("id_molecule").get_attname_column()[1]
+    id_files_db_column = DyndbFilesMolecule._meta.get_field("id_files").get_attname_column()[1]
+    type_db_column = DyndbFilesMolecule._meta.get_field("type").get_attname_column()[1]
+    
+    files = DyndbFiles._meta.db_table
+    files_pk_db_column = DyndbFiles._meta.pk.get_attname_column()[1]
+    filepath_db_column = DyndbFiles._meta.get_field("filepath").get_attname_column()[1]
+    
+    int_id_string = ",".join([str(key) for key in int_ids])
+    with connection.cursor() as cursor:
+        q = cursor.execute(''.join(('''SELECT   submol."''',int_id_db_column,'''" AS int_id,
+                                                submol."''',molecule_id_db_column,'''"AS molecule_id,
+                                                files."''',filepath_db_column,'''" AS "filepath"
+                                                FROM "''',submol,'''" AS submol
+                                                INNER JOIN "dyndb_files_molecule" AS filesmol ON 
+                                                (molecule_id = filesmol."''',id_molecule_db_column,'''")
+                                                LEFT OUTER JOIN "''',files,'''" AS files ON (filesmol."''',id_files_db_column,'''" = files."''',files_pk_db_column,'''")
+                                                WHERE (
+                                                    submol."''',submission_id_db_column,'''" = %s
+                                                        AND int_id IN (''',int_id_string,''')
+                                                        AND filesmol."''',type_db_column,'''" = %s
+                                                )''')),[str(submission_id),str(sdf_mol_file_type)])
+        
+    
+
+        return dictfetchall(cursor)
+
+def pdbcheck_molecule(request,submission_id):
+    post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID'}
+    #post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID','numberofmol':'number of molecules'}
+    postkeys_mc = post_mc_dict.keys()
+    response = None
     prefix_mc='formmc'
     postkeys_ps = {'chain','segid','resid_from','resid_to'}
     prefix_ps='formps'
@@ -2513,64 +2608,240 @@ def _pdbcheck_molecule(request,submission_id):
     if request.method == 'POST':
             submission_path = get_file_paths("model",url=False,submission_id=submission_id)
             submission_url = get_file_paths("model",url=True,submission_id=submission_id)
+            pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+            pdbfilepath =  os.path.join(submission_path,pdbname)
+            if not os.path.isfile(pdbfilepath):
+                return JsonResponse({'msg':'Cannot find uploaded PDB file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
+
             data = dict()
             data['download_url_log'] = None
-            if  'file_source' in request.FILES.keys():
-                uploadfile = request.FILES['file_source']
-                fieldset_mc = dict()
-                fieldset_ps = dict()
-                for key in request.POST.keys():
-                    if key.find(prefix_mc) == 0:
-                        
-                        fieldsplit = key.split('-')
-                        fieldname = fieldsplit[2]
-                        if fieldname in postkeys_mc:
-                            num = int(fieldsplit[1])
-                            if num not in fieldset_mc.keys():
-                                fieldset_mc[num] = dict()    
-                            fieldset_mc[num][fieldname] = request.POST[key].strip()
-                            
-                    elif key.find(prefix_ps) == 0:
-                            
-                        fieldsplit = key.split('-')
-                        fieldname = fieldsplit[2]
-                        if fieldname in postkeys_ps:
-                            num = int(fieldsplit[1])
-                            if num not in fieldset_ps.keys():
-                                fieldset_ps[num] = dict()
-                            fieldset_ps[num][fieldname] = request.POST[key].strip()
-                                    
-                    elif key in postkeys_mc:
-                        if 0 not in fieldset_mc.keys():
-                            fieldset_mc[0] = dict()
-                        fieldset_mc[0][key] = request.POST[key].strip()
-                    elif key in postkeys_ps:
-                        if 0 not in fieldset_ps.keys():
-                            fieldset_ps[0] = dict()
-                        fieldset_ps[0][key] = request.POST[key].strip() 
-
-                if fieldset_mc == dict() or fieldset_ps == dict():
-                    return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                for num in fieldset_mc.keys():
-                    if fieldset_mc[num].keys() != postkeys_mc:
-                        return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                for num in fieldset_ps.keys():
-                    if fieldset_ps[num].keys() != postkeys_ps:
-                        return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                
-                
-                print(fieldset_ps)
-                
-                        
+ 
+            fieldset_mc = dict()
+            fieldset_ps = dict()
+            for key in request.POST.keys():
+                if key.find(prefix_mc) == 0:
                     
-                            
-                os.makedirs(submission_path,exist_ok=True)
-                logname = get_file_name_submission("model",submission_id,0,ext="log",forceext=False,subtype="log")
-                pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
-                logfile = open(os.path.join(submission_path,logname),'w')
-                data['download_url_log'] = join_path(submission_url,logname,url=True)
+                    fieldsplit = key.split('-')
+                    fieldname = fieldsplit[2]
+                    if fieldname in postkeys_mc:
+                        num = int(fieldsplit[1])
+                        if num not in fieldset_mc.keys():
+                            fieldset_mc[num] = dict()    
+                        fieldset_mc[num][fieldname] = request.POST[key].strip()
+                        if fieldname in {'molecule','id_molecule','numberofmol'}:
+                            if fieldset_mc[num][fieldname].isdigit():
+                                fieldset_mc[num][fieldname] = int(fieldset_mc[num][fieldname])
+                            else:
+                                msgtype = post_mc_dict[key].split(maxsplit=1)
+                                return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[num][fieldname])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
+
+                elif key.find(prefix_ps) == 0:
+                        
+                    fieldsplit = key.split('-')
+                    fieldname = fieldsplit[2]
+                    if fieldname in postkeys_ps:
+                        num = int(fieldsplit[1])
+                        if num not in fieldset_ps.keys():
+                            fieldset_ps[num] = dict()
+                        fieldset_ps[num][fieldname] = request.POST[key].strip()
+                        if fieldname in {'resid_from','resid_to'}:
+                            if fieldset_ps[num][fieldname].isdigit():
+                                fieldset_ps[num][fieldname] = int(fieldset_ps[num][fieldname])
+                            else:
+                                try:
+                                    fieldset_ps[num][fieldname] = int(fieldset_ps[num][fieldname],16)
+                                except ValueError:
+                                    return JsonResponse({'msg':'Residue definition "'+str(fieldset_ps[num][fieldname])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
         
-                return JsonResponse({'msg':'Success'})
+                elif key in postkeys_mc:
+                    if 0 not in fieldset_mc.keys():
+                        fieldset_mc[0] = dict()
+                    fieldset_mc[0][key] = request.POST[key].strip()
+                    if key in {'molecule','id_molecule','numberofmol'}:
+                        if fieldset_mc[0][key].isdigit():
+                            fieldset_mc[0][key] = int(fieldset_mc[0][key])
+                        else:
+                            msgtype = post_mc_dict[key].split(maxsplit=1)
+                            return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[0][key])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
+
+                elif key in postkeys_ps:
+                    if 0 not in fieldset_ps.keys():
+                        fieldset_ps[0] = dict()
+                    fieldset_ps[0][key] = request.POST[key].strip()
+                    if key in {'resid_from','resid_to'}:
+                        if fieldset_ps[0][key].isdigit():
+                            fieldset_ps[0][key] = int(fieldset_ps[num][key])
+                        else:
+                            try:
+                                fieldset_ps[0][key] = int(fieldset_ps[0][key],16)
+                            except ValueError:
+                                return JsonResponse({'msg':'Residue definition "'+str(fieldset_ps[0][key])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
+               
+            if fieldset_mc == dict() or fieldset_ps == dict():
+                return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
+            for num in fieldset_mc.keys():
+                if fieldset_mc[num].keys() != postkeys_mc:
+                    return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
+            for num in fieldset_ps.keys():
+                if fieldset_ps[num].keys() != postkeys_ps:
+                    return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
+                
+            print(fieldset_mc)
+            molintdict = dict()
+            form_resnames = set()
+            for key in fieldset_mc:
+                int_id = fieldset_mc[key]['molecule'] - 1
+                if int_id not in molintdict:
+                    molintdict[int_id] = dict()
+                    molintdict[int_id]['resname'] = set()
+                    #molintdict[int_id]['resname_list'] = []
+                   # molintdict[int_id]['numberofmol'] = []
+                resname = fieldset_mc[key]['resname']
+                if resname in molintdict[int_id]['resname']:
+                    return JsonResponse({'msg':'Resname "'+resname+'" definition is duplicated'},status=422,reason='Unprocessable Entity')
+                #molintdict[int_id]['resname_list'].append(resname)
+                molintdict[int_id]['resname'].add(resname)
+                form_resnames.add(resname)
+                molintdict[int_id]['id_molecule'] = fieldset_mc[key]['id_molecule']
+                #molintdict[int_id]['numberofmol'].append(fieldset_mc[key]['numberofmol'])
+                
+            int_ids = molintdict.keys()
+               
+            results = get_sdf_from_db_by_submission(submission_id,int_ids)
+            
+            print(results)
+            if len(results) == 0:
+                return JsonResponse({'msg':'Cannot find the selected  molecules or their respective files in the current submission.'},status=422,reason='Unprocessable Entity')
+
+            
+            for row in results:
+                int_id = row['int_id']
+                if molintdict[int_id]['id_molecule'] != row['molecule_id']:
+                    return JsonResponse({'msg':'Molecule form number "'+str(int_id+1)+'" does not match mol ID.'},status=422,reason='Unprocessable Entity')
+                molintdict[int_id]['molfile'] = row['filepath']
+                
+            
+            os.makedirs(submission_path,exist_ok=True)
+            logname = get_file_name_submission("model",submission_id,0,ext="log",forceext=False,subtype="log")
+            
+            logfile = open(os.path.join(submission_path,logname),'w')
+            data['download_url_log'] = join_path(submission_url,logname,url=True)
+            pdbcheckerpath = os.path.join(submission_path,'pdbchecker')
+            try:
+                shutil.rmtree(pdbcheckerpath)
+            except:
+                pass
+            try:
+                os.remove(os.path.join(pdbcheckerpath,'pdbchecker.tar.gz'))
+            except:
+                pass
+            os.makedirs(pdbcheckerpath,exist_ok=True)
+            
+            
+            print("Splitting into protein and non-protein residues...",file=logfile)
+            
+            try:
+                try:
+                    proteinpdbfilename,nonproteinpdbfilename = split_protein_pdb(pdbfilepath,fieldset_ps,outputfolder=pdbcheckerpath)
+                    print("Splitting non-protein residues by residue names...",file=logfile)
+                    datares = split_resnames_pdb(nonproteinpdbfilename,outputfolder=pdbcheckerpath)
+                    resnames = datares.keys()
+                    
+                    print(str(len(resnames))+" resname(s) found: "+", ".join(resnames),file=logfile)
+                    
+                    print("Checking non-protein residues naming consistency...",file=logfile)
+                    errorflaglist = []
+                    pdbdict = dict()
+                    for resname in resnames:
+                        pdbdict[resname],datares[resname]['num_of_mol'],errorflag = molecule_atoms_unique_pdb(datares[resname]['filename'], outputfolder=pdbcheckerpath,logfile=logfile)
+                        print("Found "+str(datares[resname]['num_of_mol'])+" "+resname+" molecule(s).",file=logfile)
+                        errorflaglist.append(errorflag)
+                    if sum(errorflaglist) > 0:
+                        data['msg'] = 'Errors found while parsing PDB file. Please check log file.'
+                        response = JsonResponse(data,status=422,reason='Unprocessable Entity')
+                        return response
+                        
+                except ParsingError as e:
+                    response = JsonResponse({'msg':e.args[0]},status=422,reason='Unprocessable Entity')
+                    return response
+                except:
+                    if settings.DEBUG:
+                        raise
+                    else:
+                        response = HttpResponseServerError('Unknown error while processing PDB file.',content_type='text/plain')
+                        return response
+                pdb_resnames = set(resnames)
+                diff_pdb_form = pdb_resnames.difference(form_resnames)
+                diff_form_pdb = form_resnames.difference(pdb_resnames)
+                if diff_pdb_form != set():
+                    data['msg'] = 'Found non-declared residue name(s): "'+",".join(sorted(diff_pdb_form))+'" . Please, add the missing resnames.'
+                    response = JsonResponse(data,status=422,reason='Unprocessable Entity')
+                    return response
+                if diff_form_pdb != set():
+                    data['msg'] = 'Residue name(s) "'+",".join(sorted(diff_form_pdb))+'" not found.'
+                    response = JsonResponse(data,status=422,reason='Unprocessable Entity')
+                    return response
+                print("\nChecking non-protein residues topology...\n",file=logfile)
+                fail = 0
+                for int_id in sorted(molintdict.keys(),key=int):
+                               
+                    print("Loading mol #"+str(int_id+1)+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
+                    try:
+                        with open(molintdict[int_id]['molfile'],'rb') as molfile:
+                            mol = open_molecule_file(molfile,logfile=logfile,filetype='sdf')
+                    except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                        print(e.args[0],file=logfile)
+                        data['msg'] = 'Cannot open molecule file of molecule form number #'+str(int_id+1)+'.'
+                        response = JsonResponse(data,status=500,reason='Internal Server Error')
+                        return response
+                    
+                    for resname in sorted(list(molintdict[int_id]['resname'])):
+                        print("\n------------------------------\n",file=logfile)
+                        try:
+                            print("Checking mol #"+str(int_id+1)+" resname "+resname+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
+                            failc, pdbmol = diff_mol_pdb(mol,pdbdict[resname],logfile=logfile)
+                            fail += failc
+                            try:
+                                generate_png(pdbmol,pdbdict[resname]+'.png',logfile=os.devnull,size=300)
+                            except:
+                                pass
+                            finally:
+                                del pdbmol
+                        except ParsingError as e:
+                            print(e.args[0],file=logfile)
+                            data['msg'] = "Cannot read from PDB mol #"+str(int_id+1)+" resname "+resname+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.'
+                            response = JsonResponse(data,status=500,reason='Internal Server Error')
+                            return response
+
+                    del mol
+
+                    print("\n##############################\n",file=logfile)
+                
+                
+                if fail == 0:
+                    data['msg'] = 'Validation complete. Everything seems fine.'
+                else:
+                    data['msg'] = 'Validation finished with errors. Please, see log file and double check your PDB file.'
+                data['resnames'] = datares
+                data['download_url_pdbchecker'] = join_path(submission_url,'pdbchecker.tar.gz',url=True)
+                response = JsonResponse(data)
+                return response
+            except:
+                raise
+            finally:
+                try:
+                    logfile.close()
+                except:
+                    pass
+                tgzfile = tarfile.open(name=os.path.join(submission_path,'pdbchecker.tar.gz'),mode='w:gz')
+                tgzfile.add(pdbcheckerpath,arcname='pdbchecker')
+                tgzfile.close()
+                
+                if response is None:
+                    raise
+                else:
+                    return response
+                
 
 def MODELreuseREQUESTview(request):
 
@@ -6410,3 +6681,40 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #       fdbMM = dyndb_Complex_Molecule_Molecule()
 
 #       return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
+
+def save_uploadedfile(filepath,uploadedfile):
+    with open(filepath,'wb') as f:
+        if uploadedfile.multiple_chunks:
+            for chunk in uploadedfile.chunks():
+                f.write(chunk)
+        else:
+            f.write(uploadedfile.read())
+def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False):
+    if  searchkey is None:
+        searchkey2 = None
+        inverse_type = dict()
+    else:
+        if case_sensitive:
+            searchkey2 = searchkey
+        else:
+            searchkey2 = searchkey.lower()
+    for row in type_matrix:
+        internal_val = row[0]
+        text = row[1]
+        if not case_sensitive:
+            text = text.lower()
+        if searchkey2 == text:
+            return internal_val
+        else:
+            inverse_type[text] = internal_val
+    if searchkey is None:
+        return inverse_type
+    else:
+        raise ValueError("Object in first argument doesn't have text '"+searchkey+"'.")
+def dictfetchall(cursor):
+    "Return all rows from a cursor as a dict"
+    columns = [col._asdict()['name'] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
