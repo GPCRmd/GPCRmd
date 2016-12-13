@@ -16,10 +16,13 @@ $(document).ready(function() {
     
     $.fn.update_mol_info = function () {
         var self = $(this);
-
+        var modelform = $(this).parents("form");
+        var buttonadd = modelform.find("#id_add_molecule");
+        var buttondel = modelform.find("#id_del_molecule");
         var element2 = $(this).parents("[id|=Element2]");
         var id_molecule = element2.find("[id='id_id_molecule'],[id|=id_formmc][id$='-id_molecule']");
         var namemc = element2.find("[id='id_namemc'],[id|=id_formmc][id$='-namemc']");
+
         if (self.val() !== '') {
             $.post("./get_submission_molecule_info/",
             {
@@ -47,12 +50,19 @@ $(document).ready(function() {
             
             .always(function(xhr,status,msg) {
                 self.prop('disabled',false);
+                buttonadd.prop('disabled',false);
+                buttondel.prop('disabled',false);
             });
         }
     }
     
     $(document).on('change',"[id='molecule'],[id|=id_formmc][id$='-molecule']",function(){
         var self = $(this);
+        var modelform = $(this).parents("form");
+        var buttonadd = modelform.find("#id_add_molecule");
+        var buttondel = modelform.find("#id_del_molecule");
+        buttonadd.prop('disabled',true);
+        buttondel.prop('disabled',true);
         self.prop('disabled',true);
         if (timeout_update_mol_info !== null) {
             window.clearTimeout(timeout_update_mol_info);
