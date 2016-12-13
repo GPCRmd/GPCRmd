@@ -29,7 +29,7 @@
     {%endif%}
 
     {%if answer.link_2_model%}
-    <b>Complex Structure</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
+    <b>Complex Structure</b>: <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br>
     {%endif%}
 
     {%if answer.solventtype%}
@@ -52,10 +52,10 @@
     {%if answer.link2protein%}
         <b>Protein(s)</b>:<br>
         {%for link in answer.link2protein%}
-            <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
         {%endfor%}
     {%endif%}
-
+    <br>
     {% if answer.ortoligands %}
         <b>Orthosteric ligand(s)</b>:<br>
         {% for url in answer.ortoligands %}
@@ -99,13 +99,13 @@
             <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
             <span class="sr-only">Next</span>
           </a>
-        </div></div></div>
+        </div></div>
         
         <div id='hideall'>
         {% for url in answer.link_2_molecules %}
             <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
-        <div>
+        </div>
     {% endif %}
     <br>
     <br>
@@ -121,7 +121,7 @@
     {% if answer.related %}
     <b>Related Dynamics</b>:
         {% for dyn in answer.related %}
-            <a href= /dynadb/dynamics/id/{{dyn}}>{{dyn}}</a>,
+            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
         {% endfor %}
     {% endif %}
     <br>
@@ -153,11 +153,11 @@ $("#showall").click(function(){
     if (counter%2==0){
         $('#hideall').hide();
         $('#carouselhide').show();
-        $('#showall').text('show all');
+        $('#showall').text('Show all');
     }else{
         $('#carouselhide').hide();
         $('#hideall').show();
-        $('#showall').text('show carousel');
+        $('#showall').text('Show carousel');
     }
 })
 </script>

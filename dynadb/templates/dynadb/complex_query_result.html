@@ -18,7 +18,7 @@
 {% if answer.proteins %}
     <b>Proteins used in this complex</b>:<br>
     {%for proid in answer.proteins%}
-       <a href= /dynadb/proteins/id/{{proid.0}}>{{proid.1}}</a>, 
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/proteins/id/{{proid.0}}>{{proid.1}}</a> 
     {%endfor%}
     <br>
 {% endif %} 
@@ -26,7 +26,7 @@
 {% if answer.molecules %} 
     <b>Molecules used in this complex</b>:<br>
     {%for molid in answer.molecules %}
-       <a href= /dynadb/molecule/id/{{molid}}>{{molid}}</a>,
+       <a href= /dynadb/molecule/id/{{molid}}>{{molid}}</a>
     {%endfor%}
     <br>
 {% endif %} 
@@ -50,7 +50,7 @@
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b>:<br>
     {% for modid in answer.models %}
-       <a href= /dynadb/model/id/{{modid}}>{{modid}}</a>,
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid}}>Complex Structure ID: {{modid}}</a>
     {% endfor %}
      <br>
 {% endif %} 
