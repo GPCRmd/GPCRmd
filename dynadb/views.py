@@ -2706,10 +2706,14 @@ def pdbcheck_molecule(request,submission_id):
                 #molintdict[int_id]['numberofmol'].append(fieldset_mc[key]['numberofmol'])
                 
             int_ids = molintdict.keys()
-               
+            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,not_in_model=False).values('int_id')
+            diff_int_id_form_db = set(list([row['int_id'] for row in int_ids_db])).difference(set(molintdict.keys()))
+            if diff_int_id_form_db != set():
+                return JsonResponse({'msg':'You have the following unused molecules in step 2: '+','.join(['#'+str(i+1) for i in diff_int_id_form_db])+'.\nPlease, delete them if they are not part of your submission.'},status=422,reason='Unprocessable Entity')
+
             results = get_sdf_from_db_by_submission(submission_id,int_ids)
             
-            print(results)
+
             if len(results) == 0:
                 return JsonResponse({'msg':'Cannot find the selected  molecules or their respective files in the current submission.'},status=422,reason='Unprocessable Entity')
 
@@ -3116,6 +3120,41 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
 #    return HttpResponse(qDS.values_list()[0])
     return render(request,'dynadb/DYNAMICSreuse.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
 
+def get_components_info_from_submission(submission_id,component_type=None):
+    if component_type not in {'model','dynamics'}:
+        raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
+    type_mapping = dict()
+    
+    compound_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE)
+    ligand_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='ligand',case_sensitive=False,first_match=False)
+   
+    if component_type == 'model':
+        ligand_type = type_inverse_search(DyndbModelComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
+        not_in_model = False
+        
+    elif component_type == 'dynamics':
+        ligand_type = None
+        #ligand_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
+        not_in_model = True
+        
+    for key in compound_types:
+        if key in ligand_types.keys():
+            type_mapping[compound_types[key]] = ligand_type
+        else:
+            type_mapping[compound_types[key]] = None
+        
+    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,not_in_model=not_in_model)
+    q = q.annotate(id_molecule=F('molecule_id'),namemc=F('molecule_id__id_compound__name'))
+    q = q.values('int_id','id_molecule','namemc','type')
+    q = q.order_by('int_id')
+    
+    result = list(q)
+    i = 0
+    for row in result:
+        result[i]['type'] = type_mapping[row['type']]
+        i +=1
+    return result
+    
 def MODELview(request, submission_id):
     # Function for saving files
     def handle_uploaded_file(f,p,name):
@@ -3582,7 +3621,16 @@ def MODELview(request, submission_id):
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id})
+        mcdata = get_components_info_from_submission(submission_id,'model')
+        
+        i = 0
+        for row in mcdata:
+            mcdata[i]['resname'] = ''
+            mcdata[i]['numberofmol'] = ''
+            mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
+            i += 1
+        print(mcdata)
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata})
 
 
 def SMALL_MOLECULEview2(request,submission_id):
@@ -6689,28 +6737,36 @@ def save_uploadedfile(filepath,uploadedfile):
                 f.write(chunk)
         else:
             f.write(uploadedfile.read())
-def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False):
+def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_match=True):
+    inverse_type = dict()
     if  searchkey is None:
-        searchkey2 = None
-        inverse_type = dict()
+        dore = False
     else:
+        dore = True
         if case_sensitive:
-            searchkey2 = searchkey
+            flags = 0
         else:
-            searchkey2 = searchkey.lower()
+            flags=re.IGNORECASE
+            
+        researchkey = re.compile(re.escape(searchkey),flags=flags)
     for row in type_matrix:
         internal_val = row[0]
         text = row[1]
-        if not case_sensitive:
-            text = text.lower()
-        if searchkey2 == text:
-            return internal_val
+        if dore:
+            m = researchkey.search(text)
+            if m:
+                if first_match:
+                    return internal_val
+                else:
+                    inverse_type[text] = internal_val
         else:
             inverse_type[text] = internal_val
-    if searchkey is None:
-        return inverse_type
+                
+    if first_match and dore:
+        raise ValueError("Object in first argument doesn't have text '"+searchkey+"'.")        
     else:
-        raise ValueError("Object in first argument doesn't have text '"+searchkey+"'.")
+        return inverse_type
+
 def dictfetchall(cursor):
     "Return all rows from a cursor as a dict"
     columns = [col._asdict()['name'] for col in cursor.description]
