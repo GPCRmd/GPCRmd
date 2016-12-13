@@ -11,12 +11,12 @@ function addModeledelement2() {
 	if (l==1) {
                 if (document.getElementById("Element2") != null){
 		var itemfirst = document.getElementById("Element2");
-		var idlabnod1= "Element2_0";
+		var idlabnod1= "Element2-0";
 		itemfirst.id = idlabnod1;
 		$(itemfirst).find(':input').each(function() {
 		var name1 = $(this).attr('name');
 		var namelab1="formmc-"+ll+"-"+name1;
-		var idlab1 ="id-formmc-"+0+"-"+name1;
+		var idlab1 ="id_formmc-"+0+"-"+name1;
 		var forlab ="id_formmc-"+ll+"-"+name1;
 		$(this).attr({'placeholder':namelab1, 'id':idlab1, 'for':idlab1, 'name':namelab1});
 		});
@@ -25,21 +25,21 @@ function addModeledelement2() {
 //		alert("l ="+ l + "   y ll=" +ll);
 	} 
 //	else {
-		var item = document.getElementById("Element2_0");
+		var item = document.getElementById("Element2-0");
                 var itemparent = document.getElementById("pElement2");
                 var itemlast = itemparent.lastElementChild;
 
                 console.log("itemlast antes de añadir" + itemlast.id);
 
 
-                var itemlastl = itemlast.id.split("_")[1];
+                var itemlastl = itemlast.id.split("-")[1];
                 var lll=Number(itemlastl);
                 ll=lll+1;
                 l=ll+1;
 //		var	protnumb = "PROTEIN  #" + l;
 		//alert("Mira   "+ item.id)
 		var	t = item.cloneNode(true);
-		var	idlabnod = "Element2_" + ll;
+		var	idlabnod = "Element2-" + ll;
 		t.id = idlabnod;
 //		t.childNodes[1].childNodes[1].childNodes[1].innerHTML = protnumb;
 		document.getElementById("pElement2").appendChild(t)[ll];
