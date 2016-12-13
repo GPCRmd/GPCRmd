@@ -2533,14 +2533,17 @@ def _upload_model_pdb(request,submission_id):
     pdbfilekey = 'file_source'
     if request.method == 'POST':
         if  pdbfilekey in request.FILES.keys():
+            data = dict()
             uploadedfile = request.FILES[pdbfilekey]
             submission_path = get_file_paths("model",url=False,submission_id=submission_id)
             submission_url = get_file_paths("model",url=True,submission_id=submission_id)
             pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
             pdbfilepath =  os.path.join(submission_path,pdbname)
+            data['download_url_pdb'] =  os.path.join(submission_url,pdbname)
             try:
                 save_uploadedfile(pdbfilepath,uploadedfile)
-                response = HttpResponse('File successfully uploaded.',content_type='text/plain')
+                data['msg'] = 'File successfully uploaded.'
+                response = JsonResponse(data)
             except:
                 os.remove(pdbfilepath)
                 response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')

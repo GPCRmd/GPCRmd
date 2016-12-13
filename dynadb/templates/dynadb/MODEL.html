@@ -121,8 +121,11 @@
                 	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="file_source"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the model (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
 			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder=" Coordinates (PDB)" id="file_source" /></div>
 		</div>
-
-			<div style="text-align:right;margin-right:5%"><button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button></div>
+                      
+			<div style="text-align:right;margin-right:5%">
+                            <a id="id_download_pdb"  name="download_pdb" href="" hidden target="_blank">Download uploaded PDB file.</a>
+                            <button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button>
+			</div>
 			
   <br></div>
 		<div class=row id='PRUEBA1'>
@@ -284,6 +287,7 @@
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
     <script src="{% static 'dynadb/addFields.js' %}"></script>
     <script src="{% static 'dynadb/pdbchecker.js' %}"></script>
     <script src="{% static 'dynadb/upfile.js' %}"></script>
