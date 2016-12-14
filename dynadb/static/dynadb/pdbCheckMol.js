@@ -17,8 +17,8 @@ $(document).ready(function() {
     $.fn.update_mol_info = function () {
         var self = $(this);
         var modelform = $(this).parents("form");
-        var buttonadd = modelform.find("#id_add_molecule");
-        var buttondel = modelform.find("#id_del_molecule");
+        var buttonadd = modelform.find("#id_add_element2");
+        var buttondel = modelform.find("#id_del_element2");
         var element2 = $(this).parents("[id|=Element2]");
         var id_molecule = element2.find("[id='id_id_molecule'],[id|=id_formmc][id$='-id_molecule']");
         var namemc = element2.find("[id='id_namemc'],[id|=id_formmc][id$='-namemc']");
@@ -59,8 +59,8 @@ $(document).ready(function() {
     $(document).on('change',"[id='molecule'],[id|=id_formmc][id$='-molecule']",function(){
         var self = $(this);
         var modelform = $(this).parents("form");
-        var buttonadd = modelform.find("#id_add_molecule");
-        var buttondel = modelform.find("#id_del_molecule");
+        var buttonadd = modelform.find("#id_add_element2");
+        var buttondel = modelform.find("#id_del_element2");
         buttonadd.prop('disabled',true);
         buttondel.prop('disabled',true);
         self.prop('disabled',true);
@@ -80,6 +80,8 @@ $(document).ready(function() {
     $("#id_check_pdb_mol").click(function() {
         var self = $(this);
         var modelform = $(this).parents("#myform");
+        var pElement1 = modelform.find("#pElement1");
+        var pElement2 = modelform.find("#pElement2");
         var fields = modelform.find("#pElement2 :input:not([readonly])");
         var Element2s = modelform.find("#pElement2 [id|=Element2]");
         var buttonadd = modelform.find("#id_add_button");
@@ -91,7 +93,10 @@ $(document).ready(function() {
         self.prop('disabled',true);
         buttonadd.prop('disabled',true);
         buttondel.prop('disabled',true);
-        $(modelform).ajaxSubmit({
+        var newform = $('<form method="post" id="hiddenform" action="" enctype="application/x-www-form-urlencoded"></form>');
+        newform.append(pElement1.clone());
+        newform.append(pElement2.clone());
+        $(newform).ajaxSubmit({
             url: "./check_pdb_molecules/",
             type: 'POST',
             dataType:'json',

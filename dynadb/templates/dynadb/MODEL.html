@@ -209,7 +209,6 @@
                                       <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" placeholder=" 1 " value="{{mc.int_id}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
-
 					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" style="width:60px">
@@ -236,8 +235,8 @@
 			
 			<br>
  			<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
-			     <button id="id_add_molecule" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();">+ Add Molecule</button><br>
-			     <button id="id_del_molecule" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">- Remove Molecule</button>
+			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();">+ Add Molecule</button><br>
+			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">- Remove Molecule</button>
 				<!--	<button onclick="addFields()"> + Add modeled residue </button>  -->
 		        </div>
 		        
