@@ -14,8 +14,8 @@ function delSimcomp() {
         	console.log("eeeooo",$(this).attr("id"));
         	var itemdel = $(this).children(":last");
         	console.log("el itemdel.id es "+itemdel.attr("id"));
-       		var match = itemdel.attr("id").search(/Element1_/);
-        	var match1 = itemdel.attr("id").search(/Element1_0/);
+       		var match = itemdel.attr("id").search(/Element1/);
+        	var match1 = itemdel.attr("id").search(/Element1-0/);
         	console.log("resultado de match "+ match +" resultado de match1 "+ match1);
         	if(match == 0) {
             		if(match1 == -1) {
