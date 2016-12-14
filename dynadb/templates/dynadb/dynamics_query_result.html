@@ -5,6 +5,14 @@
     .panel-body {
         word-break:break-all
     }    
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .bs-example{
+	    margin: 20px;
+    }
     </style>
 {% endblock %}
 {% block content %}
@@ -13,48 +21,48 @@
     <div class="panel-heading"><b>Dynamics Info:</b> {{answer.description}} </div>
     <div class="panel-body">
     {%if answer.soft%}
-    <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br>
+    <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br><br>
     {%endif%}
 
     {%if answer.forcefield%}
-    <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> 
+    <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> <br>
     {%endif%}
 
     {%if answer.link_2_model%}
-    <b>Complex Structure</b>: <a href= /dynadb/model/id/{{answer.link_2_model}}>{{answer.link_2_model}}</a> <br>
+    <b>Complex Structure</b>:<br> <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
     {%endif%}
 
     {%if answer.solventtype%}
-    <b>Solvent type</b>: {{answer.solventtype}} <br>
+    <b>Solvent type</b>: {{answer.solventtype}} <br><br>
     {%endif%}
 
     {%if answer.membranetype%}
-    <b>Membrane type</b>: {{answer.membranetype}} <br>
+    <b>Membrane type</b>: {{answer.membranetype}} <br><br>
     {%endif%}
 
     {%if answer.timestep%}
-    <b>Time step</b>: {{answer.timestep}} <br>
+    <b>Time step</b>: {{answer.timestep}} <br><br>
     {%endif%}
 
     {%if answer.delta%}
-    <b>Delta</b>: {{answer.delta}} <br>
+    <b>Delta</b>: {{answer.delta}} <br><br>
     {%endif%}
     <br>
 
     {%if answer.link2protein%}
         <b>Protein(s)</b>:<br>
         {%for link in answer.link2protein%}
-            <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
         {%endfor%}
     {%endif%}
-
+    <br><br>
     {% if answer.ortoligands %}
         <b>Orthosteric ligand(s)</b>:<br>
         {% for url in answer.ortoligands %}
             <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
     {% endif %}
-    <br>
+    <br><br>
     {% if answer.aloligands %}
         <b>Allosteric ligand(s)</b>:<br>
         {% for url in answer.aloligands %}
@@ -64,12 +72,42 @@
 
     {% if answer.link_2_molecules %}
         
-        <b>Dynamics Components</b>: <br>
+        <b>Dynamics Components</b>:  <button id='showall' type="button" class="btn btn-primary">Show all</button> <br>
+        <div id='carouselhide'>
+        <div class="col-lg-12 text-center"></div>
+        <div class="col-lg-12">
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+          <!-- Wrapper for slides -->
+          <div class="carousel-inner" role="listbox">
+        {% for url in answer.link_2_molecules %}
+            {% if forloop.counter == 1  %}
+            <div class="item active"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%else%}
+            <div class="item"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%endif%}
+
+        {% endfor %}
+          </div></div>
+
+          <!-- Left and right controls -->
+          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div></div>
+        
+        <div id='hideall'>
         {% for url in answer.link_2_molecules %}
             <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
+        </div>
     {% endif %}
-
+    <br>
     <br>
     {% if answer.references %} 
         <br><b>References in which this dynamic is mentioned</b>:<br>
@@ -81,9 +119,9 @@
     {% endif %} 
     <br>
     {% if answer.related %}
-    <b>Related Dynamics</b>:
+    <b>Related Dynamics</b>:<br>
         {% for dyn in answer.related %}
-            <a href= /dynadb/dynamics/id/{{dyn}}>{{dyn}}</a>,
+            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
         {% endfor %}
     {% endif %}
     <br>
@@ -95,12 +133,18 @@
     <div class="panel-heading"><b>Files in this simulation:</b></div>
     <div class="panel-body">
     {% for dyn in answer.files %}
-        <a href={{dyn.0}}><button type="button">Download {{dyn.1}}</button></a>
+        <a href={{dyn.0}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a>
     {% endfor %}
-    
+    <br>
     </div>
     </div>
     </div>
 
 {% endblock content %}
+
+{% block addon_js %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+{% endblock%}
 

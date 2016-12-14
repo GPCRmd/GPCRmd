@@ -25,11 +25,11 @@
     {%endif%}
     <br>
     {%if answer.pubchem_cid%}
-    <b>PUBCHEM link</b>:<br> <a href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br>
+    <b>PUBCHEM</b>:<br> <a target='_blank' class="btn btn-primary" role='button' href= https://pubchem.ncbi.nlm.nih.gov/compound/{{answer.pubchem_cid}}#section=Top> {{answer.pubchem_cid}}</a> <br>
     {%endif%}
     <br>
     {%if answer.chembleid%} 
-    <b>ChEMBLE link</b>:<br> <a href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
+    <b>ChEMBLE</b>: <a target='_blank' class="btn btn-primary" role='button' href= https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL{{answer.chembleid}}> {{answer.chembleid}}</a> <br>
     {%endif%}
     <br>
     {%if answer.sinchikey%}
@@ -41,9 +41,9 @@
     {%endif%}
     <br>
     {%if answer.link_2_molecule%}
-        <b>Corresponding Molecules</b>:<br>
+        <b>Related Molecule(s)</b>:<br>
         {% for url in answer.link_2_molecule %}
-            <a href= /dynadb/molecule/id/{{url}}>{{url}}</a>, 
+            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/molecule/id/{{url}}> Molecule ID: {{url}}</a>
         {% endfor %}
     {%endif%}
     <br>
@@ -66,7 +66,7 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Image of the compound</b></div>
     <div class="panel-body">
-    <img src="{{answer.imagelink}}" />
+    <center><img src="{{answer.imagelink}}" /></center>
 
 
 

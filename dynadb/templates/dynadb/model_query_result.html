@@ -3,11 +3,18 @@
 {% load static %}
 {% load staticfiles %} 
 {% block addon_css %}
-  <style>
-  .panel-body {
-    word-break:break-all
-}
-  
+    <style>
+    .panel-body {
+        word-break:break-all
+    }    
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .bs-example{
+	    margin: 20px;
+    }
   </style>
 {% endblock %}
 {% block content %}
@@ -26,10 +33,10 @@
     {%if answer.link2protein%}
         <b>Protein(s) involved</b>:<br>
             {%for link in answer.link2protein%}
-                <a href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+                <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
             {%endfor%}
     {%endif%}
-    <br>
+    <br><br>
 
 
     {% if answer.ortoligands %}
@@ -47,16 +54,47 @@
     {% endif %}
 
     {% if answer.components%} 
-        <b>Molecules used in this complex structure</b>:<br>
-        {%for compoundlink in answer.components %}
-           <a href= /dynadb/molecule/id/{{compoundlink.0}}><img src="{{compoundlink.1}}" height="200" width="200"/></a>
-        {%endfor%}
+        <b>Molecules used in this complex structure</b>:   <button id='showall' type="button" class="btn btn-primary">Show all</button> <br><br>
+        <div id='carouselhide'>
+        <div class="col-lg-12 text-center"></div>
+        <div class="col-lg-12">
+        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+
+          <!-- Wrapper for slides -->
+          <div class="carousel-inner" role="listbox">
+        {% for url in answer.components %}
+            {% if forloop.counter == 1  %}
+            <div class="item active"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%else%}
+            <div class="item"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+            {%endif%}
+
+        {% endfor %}
+          </div></div>
+
+          <!-- Left and right controls -->
+          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+          <br>    
+        </div></div>
+        
+        <div id='hideall'>
+        {% for url in answer.components %}
+            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+        {% endfor %}
+        </div>
     {% endif %} 
-    <br>
-    <b>Dynamic(s) in which this complex structure appears</b>:<br>
+    <br><br>
+        <b>Dynamic(s) in which this complex structure appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
-       <a href= /dynadb/dynamics/id/{{compoundlink}}>{{compoundlink}}</a>, 
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{compoundlink}}> Dynamics ID: {{compoundlink}}</a>
     {%endfor%}
     <br>
 
@@ -73,7 +111,10 @@
 
     </div>
     </div>
-    </div>
 
 {%endblock content %}
-
+{% block addon_js %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+{% endblock%}
