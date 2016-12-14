@@ -41,18 +41,20 @@
     {% endif %}
 
     {% if answer.other_names %}
-        <b>Alternative names:</b>
+        <b>Alternative names:</b><br><ul>
         {% for name in answer.other_names %}
-            {{name}},
+            <li>{{name}}</li>
         {% endfor %}
+        </ul>
     {% endif %}
     <br>
-    <b>Corresponding Cannonical Protein:</b> <a href='/dynadb/protein/id/{{answer.cannonical}}'>{{answer.cannonical}}</a> <br>
+    <b>Corresponding Cannonical Protein:</b> <br>
+     <a  class="btn btn-info" role='button' href='/dynadb/protein/id/{{answer.cannonical}}'>Protein ID: {{answer.cannonical}}</a> <br>
 
     {%if answer.model%}
         <b>You can find this protein in the following complex structures:</b>
         {% for link in answer.model %}
-            <a href='/dynadb/model/id/{{link}}'>{{link}}</a>,
+            <a  class="btn btn-info" role='button' href='/dynadb/model/id/{{link}}'>Complex Structure ID: {{link}}</a>,
         {% endfor %}
     {% endif %}
 

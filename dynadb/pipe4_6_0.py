@@ -1,7 +1,7 @@
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 import re
-
+import os
 #The pipeline: get sequence from pdb (checkpdb function) -> compare sequence from pdb to the fasta sequence (matchpdbfa) -> modify pdb to make it match the fasta numbering (repairpdb). 
 
 #The way to detect which format is used is to check if the residue after resid 9999 is 2710. if after 9999 there is a 2710 then all coming numbers are hexadecimal. If after 9999 comes 10000 they are using the insertion code. 
@@ -124,13 +124,14 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 
 #############################################################################################################################################
 
-def repairpdb(pdbfile, guide,segid,start,stop,chain):	
+def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):	
 
 	'''Takes a pdb file as input, the numbering of this pdb is modified according to the fasta sequence of the PDB whose relation
 	 is represented in a schema called guide like: [[A,'27',27],[A,28]] where the first element is the pdb item and the second is the 
 	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or insertion code)  in the new PDB file is the same that was used in the original PDB'''
+	tmppdbfile=os.path.splitext(pdbfile)[0]
 	oldpdb=open(pdbfile, 'r')
-	newpdb=open('/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb','w')
+	newpdb=open('/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb','w')
 	count=-1
 	pvresid=-1
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
@@ -193,6 +194,7 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	newpdb.close()
 	oldpdb.close()
 	#return pdbfile[:-4]+'_corrected.pdb'
+	return '/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb'
 	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
 #############################################################################################################################################
 
