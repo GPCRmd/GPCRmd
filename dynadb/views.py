@@ -2553,6 +2553,7 @@ def pdbcheck_molecule(request,submission_id):
                     pass
                 tgzfile = tarfile.open(name=os.path.join(submission_path,'pdbchecker.tar.gz'),mode='w:gz')
                 tgzfile.add(pdbcheckerpath,arcname='pdbchecker')
+                tgzfile.add(os.path.join(submission_path,logname),arcname=os.path.join('pdbchecker/',logname))
                 tgzfile.close()
                 
                 if response is None:
