@@ -1,9 +1,6 @@
 
 function searchtop() {
     //works when autocomplete is clicked. fills the 'seq from' and 'seq to' fields automatically.
-    var url=window.location.href;
-    var subid=url.indexOf("/model/");
-    subid=url.slice(subid+7,-1);
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -17,7 +14,7 @@ function searchtop() {
     $.ajax({
         type: "POST",
         data: { "bigarray[]": bigarray},
-        url: "/dynadb/search_top/"+subid+"/",
+        url: "./search_top/", // url: "/dynadb/search_top/"+subid+"/",
         dataType: "json",
         success: function(data) {
             $("#pdbchecker1").prop("disabled",false);
@@ -86,4 +83,8 @@ $.ajaxSetup({
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
         }
     }
-}); 
+});
+
+$("#pdbchecker1").click(function() {
+    searchtop();
+});

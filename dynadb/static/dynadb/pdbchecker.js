@@ -103,3 +103,7 @@ $.ajaxSetup({
         }
     }
 }); 
+
+$('#pdbchecker2').click(function(){
+    sendpar();
+});

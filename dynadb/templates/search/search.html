@@ -130,10 +130,7 @@
 
 
 #haystacksearch{
-    max-width: 100px;
-    height: 800px;
     overflow-x: scroll;
-    display: inline-block;
 }
 
 #floatdiv {
@@ -165,23 +162,23 @@ kbd{
 
  <div class="row">
   <div class="col-sm-6">
-    <div class="panel panel-info" div="haystacksearch">
+    <div class="panel panel-info" id="haystacksearch">
       <div class="panel-heading">
             <br>
             <center><h3>Search for proteins, molecules or compounds.</h3>
             <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
 
                 <input id="protein22" type="text" class="form-control" name="name" placeholder="5-HT1B receptor"></input>
-                <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option><option value="complex">Complex*</option><option value="model">Complex Structure *</option><option value="dynamics">Dynamics *</option></select>
+                <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option value="molecule">Molecule</option><option value="compound">Compound</option><option value="info" disabled>Available with ID search:</option><option value="complex">Complex</option><option value="model">Complex Structure</option><option value="dynamics">Dynamics</option></select>
 <button id="Searcher" type="button" value="Search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
-                <br><input id="idsearch" type="checkbox" value="">Search by ID <br>  * only works with ID search.
+                <br><input id="idsearch" type="checkbox" value="">Search by ID <br>
                 
 
             </form> 
             </center>
             <br>
     </div>
-      <div class="panel-body">
+      <div class="panel-body" id="haystacksearchbody">
             <table id='ajaxresults22'> <thead><tr><th> Results: </th><th>          </th></tr></thead><tbody><tr><td>No results</td><td>          </td></tr></tbody></table>
             <br><br><br><br><br><br><br><br><br><br><br>
       </div>

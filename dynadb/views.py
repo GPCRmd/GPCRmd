@@ -719,7 +719,7 @@ def ajaxsearcher(request):
                         comp=molecule.id_compound.id
                         compname=molecule.id_compound.name
                         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
-                        imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                        imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                         imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                         moleculelist.append([str(molecule.id),str(molecule.inchikey),imagepath,compname]) #define inchikey in searchindex
                     except IndexError:
@@ -734,7 +734,7 @@ def ajaxsearcher(request):
                 try:
                     compound=DyndbCompound.objects.select_related('std_id_molecule').get(pk=user_input)
                     pk2filesmolecule=compound.std_id_molecule.id
-                    imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                    imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                     imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                     compoundlist.append([ str(compound.id),str(compound.name),'',imagepath ])
                 except:
@@ -780,7 +780,7 @@ def ajaxsearcher(request):
                                 comp=res.id_compound #DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                                 compname=mol.id_compound.name # DyndbMolecule.objects.get(pk=mol_id).id_compound.name
                                 pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
-                                imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                                imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                                 imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                                 moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname]) #define inchikey in searchindex
                             except IndexError:
@@ -790,7 +790,7 @@ def ajaxsearcher(request):
 
                     try:
                         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=res.id_compound).std_id_molecule.id
-                        imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                        imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                         imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                         compoundlist.append([ str(res.id_compound),str(res.name),str(res.iupac_name),imagepath ])
                     except IndexError:
@@ -806,7 +806,7 @@ def ajaxsearcher(request):
                             comp=molobj.id_compound.id
                             compname=molobj.id_compound.name
                             pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
-                            imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+                            imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                             imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
                             moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname]) #define inchikey in searchindex
                         except IndexError:
@@ -1152,8 +1152,8 @@ def NiceSearcher(request):
         elif return_type=='model':
             if table_row[0]=='protein':
 
-                is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein.id
-                if (table_row[2]=='true' and type(is_receptor)==int) or (table_row[2]==False and type(is_receptor)!=int): #WARNING !=none
+                is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
+                if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
                     q = DyndbComplexProtein.objects.filter(id_protein=table_row[1])
                     q = q.annotate(model_id=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
                     q = q.values('id_protein','model_id')
@@ -1201,8 +1201,8 @@ def NiceSearcher(request):
 
         else: #return Dynamics
             if table_row[0]=='protein':
-                is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein.id #warning
-                if (table_row[2]=='true' and type(is_receptor)==int) or (table_row[2]==False and type(is_receptor)!=int):#warning
+                is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein 
+                if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
                     q=DyndbComplexProtein.objects.filter(id_protein=table_row[1])
                     q=q.annotate(id_dynamics=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__dyndbdynamics__id'))
                     q=q.values('id_dynamics')
@@ -1566,7 +1566,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['imagelink']=''
     try:
         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=molec_dic['link_2_compound']).std_id_molecule.id
-        molec_dic['imagelink']=DyndbFilesMolecule.objects.select_related('id_files__filepath').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+        molec_dic['imagelink']=DyndbFilesMolecule.objects.select_related('id_files__filepath').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
         molec_dic['imagelink']=molec_dic['imagelink'].replace("/protwis/sites/","/dynadb/") #this makes it work
     except:
         pass
@@ -1574,7 +1574,7 @@ def query_molecule(request, molecule_id,incall=False):
     for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
         molec_dic['inmodels'].append(match.id_model.id)
 
-    for molfile in DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=molecule_id).filter(type=0):
+    for molfile in DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=molecule_id,type=0):
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
         molec_dic['sdf']=string
@@ -1592,7 +1592,7 @@ def query_molecule(request, molecule_id,incall=False):
     return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
 
 def query_molecule_sdf(request, molecule_id):
-    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
+    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id,type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
     with open('/tmp/'+molecule_id+'_gpcrmd.sdf','w') as fh:
@@ -1622,7 +1622,7 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['sinchikey']=comp_obj.sinchikey
     try:
         pk2filesmolecule=comp_obj.std_id_molecule.id
-        comp_dic['imagelink']=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule).filter(type=2)[0].id_files.filepath
+        comp_dic['imagelink']=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
         comp_dic['imagelink']=comp_dic['imagelink'].replace("/protwis/sites/","/dynadb/") #this makes it work
     except:
         pass
@@ -1662,7 +1662,7 @@ def query_complex(request, complex_id,incall=False):
     
     for ccompound in DyndbComplexCompound.objects.filter(id_complex_exp=complex_id):
         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=ccompound.id_compound.id).std_id_molecule.id
-        imagelink=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=2).filter(type=2)[0].id_files.filepath #WARNING: id_molecule=pk2filesmolecule
+        imagelink=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
         imagelink=imagelink.replace("/protwis/sites/","/dynadb/") #this makes it work
         if ccompound.type==0:
             clistorto.append([ccompound.id_compound.id,imagelink])
@@ -1990,7 +1990,7 @@ def get_mutations_view(request):
       raise
 
 
-def upload_pdb(request):
+def upload_pdb(request): #warning , i think this view can be deleted
     if request.method == 'POST':
         form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
         myfile = request.FILES["file_source"]
@@ -2010,16 +2010,16 @@ def upload_pdb(request):
 
 def search_top(request,submission_id):
     if request.method=='POST':
-        #url=request.POST.get('url')
-        pdbname='/protwis/sites'+request.session['newfilename'] 
-        sub_id=submission_id #url[url.rfind('/model/')+7:-1] 
+        submission_path = get_file_paths("model",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("model",url=True,submission_id=submission_id)
+        pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+        pdbname =  os.path.join(submission_path,pdbname)
         arrays=request.POST.getlist('bigarray[]')
-        print('CP1')
         counter=0
         resultsdict=dict()
         for array in arrays:
             array=array.split(',') #array is a string with commas.
-            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID.
+            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING!
             start=array[3].strip()
             stop=array[4].strip()
             try:
@@ -2045,13 +2045,9 @@ def search_top(request,submission_id):
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
             
-            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=sub_id)[0].protein_id.id
-            print(str(protid))
+            protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
-            
-            print('CP3.9')
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
-            print(res)
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
                 resultsdict[counter]=[seq_res_from,seq_res_to]
@@ -2059,7 +2055,6 @@ def search_top(request,submission_id):
             elif isinstance(res,str):
                  resultsdict['message']=res
             counter+=1
-            
     data = json.dumps(resultsdict)
     
     return HttpResponse(data, content_type='application/json')
@@ -2072,7 +2067,10 @@ def pdbcheck(request,submission_id):
         combination_id='submission_id'+submission_id
         sub_id=submission_id
         results=dict()
-        pdbname='/protwis/sites'+request.session['newfilename'] 
+        submission_path = get_file_paths("model",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("model",url=True,submission_id=submission_id)
+        pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+        pdbname =  os.path.join(submission_path,pdbname)
         results['strlist']=list()
         results['pathlist']=list()
         finalguide=[]

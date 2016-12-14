@@ -36,7 +36,7 @@
                 <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
             {%endfor%}
     {%endif%}
-    <br>
+    <br><br>
 
 
     {% if answer.ortoligands %}
@@ -54,7 +54,7 @@
     {% endif %}
 
     {% if answer.components%} 
-        <b>Molecules used in this complex structure</b>:   <button id='showall' type="button" class="btn btn-info">Show all</button> <br>
+        <b>Molecules used in this complex structure</b>:   <button id='showall' type="button" class="btn btn-primary">Show all</button> <br><br>
         <div id='carouselhide'>
         <div class="col-lg-12 text-center"></div>
         <div class="col-lg-12">
@@ -81,6 +81,7 @@
             <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
             <span class="sr-only">Next</span>
           </a>
+          <br>    
         </div></div>
         
         <div id='hideall'>
@@ -89,7 +90,7 @@
         {% endfor %}
         </div>
     {% endif %} 
-    <br>
+    <br><br>
         <b>Dynamic(s) in which this complex structure appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
@@ -115,20 +116,5 @@
 {% block addon_js %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script>
-var counter=0;
-$('#hideall').hide();
-$("#showall").click(function(){
-    counter+=1;
-    if (counter%2==0){
-        $('#hideall').hide();
-        $('#carouselhide').show();
-        $('#showall').text('Show all');
-    }else{
-        $('#carouselhide').hide();
-        $('#hideall').show();
-        $('#showall').text('Show carousel');
-    }
-})
-</script>
+<script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
 {% endblock%}
