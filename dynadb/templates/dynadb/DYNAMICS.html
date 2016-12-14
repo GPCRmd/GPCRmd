@@ -197,46 +197,65 @@
  			<div style="text-align=center">
                         <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
                                 <thead>  
-				<tr><th style="width:80px;text-align:center"><label for="id_resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
-					<th style="width:80px;text-align:center"><label for="molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
-					<th style="width:80px;text-align:center"><label for="id_type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
+				<tr><th style="width:80px;text-align:center"><label for="id_formc-0-resname"><a title="Resname: Resname present on simulation topology file. Names from pdb are preferred but not mandatory. ">Resname</a></label></th>	
+					<th style="width:80px;text-align:center"><label for="id_formc-0-molecule"><a title="Ordinal number corresponding to the records containing sequence information that was provided in the small molecule form.  ">Molecule</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-id_molecule"><a title="Mol ID: ID of the chemical model (“molecule”) present in  “dynamics”. ">Mol ID</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-name"><a title="Mol name: Name of the molecule">Mol name</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-numberofmol"><a title="Number of molecules: Number of molecules belonging to a specific residue type present on simulation topology. ">Num of mol</a></label></th>
+					<th style="width:80px;text-align:center"><label for="id_formc-0-type"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
                                 </thead>
 
-                                <tbody id="pElement1-0"><tr id="Element1"><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_resname" maxlength="4" name="resname" type="text" placeholder=" CLOZ"/></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule" maxlength="4" name="molecule" type="text" placeholder=" 1 "  /></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_id_molecule" type="text" readonly placeholder="1" name="id_molecule">
-						</select></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
-					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px">
-                                      {% for i in ddC.Meta.model.MOLECULE_TYPE %}
-                                        <option value="{{i.0}}"> {{i.1}}</option>
-                                      {% endfor %}
-	<!--					<option value="0">Ions</option>
-						<option value="1">Ligand</option>
-						<option value="2">Membrane</option>
-						<option value="3">Water</option>
-						<option value="4">Other</option>-->
-						</select></td></tr>
+                                <tbody id="pElement1">
+                              {% for mc in cdata %}
+                                <tr id="Element1-{{forloop.counter0}}">
+                                      
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="number" placeholder=" 1 " value="{{mc.int_id}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.name}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><select id="id_formc-{{forloop.counter0}}-typemc" name="formc-{{forloop.counter0}}-typemc" style="width:60px">
+                                              {% for i in ddC.Meta.model.MOLECULE_TYPE %}
+                                                {% if mc.type == i.0 %}-->
+                                                    <option selected value="{{i.0}}"> {{i.1}}</option>
+                                                {% else %}
+                                                    <option value="{{i.0}}"> {{i.1}}</option>                                                
+                                                {% endif %}
+                                              {% endfor %}
+                                        <!--    <option value="0" >Ions</option>
+                                                <option value="1" selected="selected">Ligand</option>
+                                                <option value="2">Lipid</option>
+                                                <option value="3">Water</option>
+                                                <option value="4">Other</option>-->
+                                                </select></td></tr>
+                                                
+                                
+                              {% endfor %}
 				</tbody>
 			</table>
 
-
+                      {%if cdata %}
 			<br>
  			<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<input type="button" value="+ Add Component"  style="height:30px;;margin: 0px 0px 0px 0px;width:160px" onClick="addSimcomp();"></div>
+			     		<button type="button" id="id_add_element" type="button" style="height:30px;;margin: 0px 0px 0px 0px;width:160px" onClick="addSimcomp();">+ Add Component</button></div>
 	 			<div class="col-md-4" style="text-align:center">
-			     		<input type="button" value="- Remove Component"  style="height:30px;margin: 0px 0px 0px 0px;width:160px" onClick="delSimcomp();"></div>
+			     		<button type="button" id="id_del_element" type="button" style="height:30px;margin: 0px 0px 0px 0px;width:160px" onClick="delSimcomp();">- Remove Component</div>
 		        </div>
                         <br>
  		
  			<div style="text-align:right;margin-right:5%">
-					<button onclick="addFields()"> Validate </button> 
-		        </div> <!-- <br><br> 		
+					 <a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a>
+                                        <button id ="id_check_pdb_mol" type="button"> Validate </button>
+                                        <br>
+                                        <a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a>
+
+		        </div>
+		         {% else %}
+                        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
+                        {% endif %}
+		        
+		        <!-- <br><br> 		
 
                         <div style="text-align:center">
 	 			<div class="col-md-4" style="text-align:center">
@@ -273,8 +292,10 @@
 
 
 
-{% block addon_js %} 
-
+{% block addon_js %}
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/pdbCheckMolDyn.js' %}"></script>
     <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
     <script src="{% static 'dynadb/delSimcomp.js' %}"></script>
     <script src="{% static 'dynadb/addDynamics.js' %}"></script>

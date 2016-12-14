@@ -2502,7 +2502,7 @@ def servecorrectedpdb(request,pdbname):
     return response
 
 
-def get_submission_molecule_info(request,submission_id):
+def get_submission_molecule_info(request,form_type,submission_id):
     if request.method == 'POST':
         mol_int = request.POST['molecule'].strip()
         if mol_int.isdigit():
@@ -2511,12 +2511,22 @@ def get_submission_molecule_info(request,submission_id):
             return HttpResponse('Molecule form number '+str(mol_int)+' is invalid or empty.',status=422,reason='Unprocessable Entity')
 
         q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=(mol_int-1))
-        q = q.annotate(namemc=F('molecule_id__id_compound__name'))
-        q = q.values('molecule_id','not_in_model','namemc')
+        field_ref = 'molecule_id__id_compound__name'
+        if form_type == "model":
+            q = q.annotate(namemc=F(field_ref))
+            field_name = "namemc"
+        elif form_type == "dynamics":
+            q = q.annotate(name=F(field_ref))
+            field_name = "name"
+        
+        q = q.values('molecule_id','not_in_model',field_name)
         qresults = list(q)
         if len(qresults) > 0:
-            if qresults[0]['not_in_model']:
+            if qresults[0]['not_in_model'] and form_type == "model":
                 return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as no crystal-like.\n'+ \
+                'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
+            elif not(qresults[0]['not_in_model']) and form_type == "dynamics":
+                return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as crystal-like.\n'+ \
                 'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
             else:
                 return JsonResponse(qresults[0])
@@ -2781,7 +2791,7 @@ def pdbcheck_molecule(request,submission_id):
                 diff_pdb_form = pdb_resnames.difference(form_resnames)
                 diff_form_pdb = form_resnames.difference(pdb_resnames)
                 if diff_pdb_form != set():
-                    data['msg'] = 'Found non-declared residue name(s): "'+",".join(sorted(diff_pdb_form))+'" . Please, add the missing resnames.'
+                    data['msg'] = 'Found non-declared residue name(s): "'+", ".join(sorted(diff_pdb_form))+'" . Please, add the missing resnames.'
                     response = JsonResponse(data,status=422,reason='Unprocessable Entity')
                     return response
                 if diff_form_pdb != set():
@@ -3130,25 +3140,30 @@ def get_components_info_from_submission(submission_id,component_type=None):
     
     compound_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE)
     ligand_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='ligand',case_sensitive=False,first_match=False)
-   
+    
+    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    q = q.annotate(id_molecule=F('molecule_id'))
+    field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
         ligand_type = type_inverse_search(DyndbModelComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
-        not_in_model = False
-        
+        q = q.filter(not_in_model=False)
+        q = q.annotate(namemc=F(field_ref))
+        field_name = 'namemc'
     elif component_type == 'dynamics':
         ligand_type = None
         #ligand_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
-        not_in_model = True
-        
+        q = q.filter(not_in_model=True)
+        q = q.annotate(name=F(field_ref))
+        field_name = 'name'
     for key in compound_types:
         if key in ligand_types.keys():
             type_mapping[compound_types[key]] = ligand_type
         else:
             type_mapping[compound_types[key]] = None
         
-    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,not_in_model=not_in_model)
-    q = q.annotate(id_molecule=F('molecule_id'),namemc=F('molecule_id__id_compound__name'))
-    q = q.values('int_id','id_molecule','namemc','type')
+    
+    
+    q = q.values('int_id','id_molecule',field_name,'type')
     q = q.order_by('int_id')
     
     result = list(q)
@@ -3632,7 +3647,6 @@ def MODELview(request, submission_id):
             mcdata[i]['numberofmol'] = ''
             mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
             i += 1
-        print(mcdata)
         return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata})
 
 
@@ -4836,9 +4850,18 @@ def DYNAMICSview(request, submission_id):
         qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
         qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
         qAT =DyndbAssayTypes.objects.all().order_by('id')
-
-
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'submission_id' : submission_id})
+        
+        cdata = get_components_info_from_submission(submission_id,'dynamics')
+        
+        i = 0
+        for row in cdata:
+            cdata[i]['resname'] = ''
+            cdata[i]['numberofmol'] = ''
+            cdata[i]['int_id'] = 1 + cdata[i]['int_id']
+            i += 1
+        
+        print(cdata)
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'submission_id' : submission_id,'cdata':cdata})
 ##############################################################################################################
 
 

@@ -65,7 +65,7 @@ urlpatterns = [
     url(r'^MOLECULEfilled2/$', views.SMALL_MOLECULEview2, name='MOLECULEfilled2'),
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
     url(r'^model/(?P<submission_id>[0-9]+)/check_pdb_molecules/$', views.pdbcheck_molecule, name='pdbcheck_molecule'),
-    url(r'^model/(?P<submission_id>[0-9]+)/get_submission_molecule_info/$', views.get_submission_molecule_info, name='get_submission_molecule_info'),
+    url(r'^(?P<form_type>model|dynamics)/(?P<submission_id>[0-9]+)/get_submission_molecule_info/$', views.get_submission_molecule_info, name='get_submission_molecule_info'),
     url(r'^model/(?P<submission_id>[0-9]+)/upload_model_pdb/$', views.upload_model_pdb, name='upload_model_pdb'),
     
     url(r'^modelreuse/(?P<submission_id>-?[0-9]+)/(?P<model_id>[0-9]+)/$', views.MODELreuseview, name='modelreuse'),
