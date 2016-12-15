@@ -9,12 +9,12 @@ var similarity_chembl_default = '';
 
 
 $(document).ready(function(){
-    stdform_global_html = $("[id='id_stdform'],[id|=id_form][id$='-stdform']").clone();
-    retrieve_type_pubchem_default = $("[id='id_retrieve_type_pubchem'],[id|=id_form][id$='-retrieve_type_pubchem']").val();
-    retrieve_type_chembl_default = $("[id='id_retrieve_type_chembl'],[id|=id_form][id$='-retrieve_type_chembl']").val();
-    search_by_pubchem_default = $("[id='id_search_by_pubchem'],[id|=id_form][id$='-search_by_pubchem']").val();
-    search_by_chembl_default = $("[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']").val();
-    similarity_chembl_default =  $("[id='id_similarity_chembl'],[id|=id_form][id$='-similarity_chembl']").val();
+    stdform_global_html = $("[id='id_stdform'],[id|=id_form][id$='-stdform']").first().clone();
+    retrieve_type_pubchem_default = $("[id='id_retrieve_type_pubchem'],[id|=id_form][id$='-retrieve_type_pubchem']").first().val();
+    retrieve_type_chembl_default = $("[id='id_retrieve_type_chembl'],[id|=id_form][id$='-retrieve_type_chembl']").first().val();
+    search_by_pubchem_default = $("[id='id_search_by_pubchem'],[id|=id_form][id$='-search_by_pubchem']").first().val();
+    search_by_chembl_default = $("[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']").first().val();
+    similarity_chembl_default =  $("[id='id_similarity_chembl'],[id|=id_form][id$='-similarity_chembl']").first().val();
     
     $.fn.changeSimilarityStateOnSearchByChange = function () {
         var molform = $(this).parents("[id|=molform]");
@@ -281,7 +281,7 @@ $(document).ready(function(){
         stdform_html.attr('id',stdform.attr('id'));
         stdform_html.attr('name',stdform.attr('name'));
         var getmolinfo = $("[id='id_get_mol_info'],[id|=id_form][id$='-get_mol_info']");
-        var molformidx = molform.index();
+        var molformidx = parseInt(molform.attr('id').split("-")[1],10);
         var pmolform = $(molform).parent();
         var addbutton = $(pmolform).children(":last-child").find("[id='id_add_molecule'],[id|=id_form][id$='-add_molecule']");
         var resetbuttonall = $("[id='id_reset'],[id|=id_form][id$='-reset']");

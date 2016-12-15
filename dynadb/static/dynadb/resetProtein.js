@@ -1,6 +1,8 @@
 $(document).ready(function(){
      $.fn.resetProteinByButton = function () {
         var protform = $(this).parents("[id|=protform]");
+        var useisoform = protform.find("[id='id_use_isoform'],[id|=id_form][id$='use_isoform']");
+        var mutations = protform.find("[id='id_mutations_id'],[id|=id_form][id$='mutations_id']");
         var uniprotkbac = protform.find("[id='id_uniprotkbac'],[id|=id_form][id$='-uniprotkbac']");
         var isoform = protform.find("[id='id_isoform'],[id|=id_form][id$='-isoform']");
         var notuniprot = protform.find("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
@@ -39,6 +41,8 @@ $(document).ready(function(){
         $(protform).find(":input[type='checkbox'][id!='id_receptor'][id!='id_form-0-receptor'],:input[type='radio']").each(function(){
             $(this).prop("checked",false);
         });
+        useisoform.prop("checked",true);
+        mutations.attr("class",'col-md-12 panel collapse'); 
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
         notuniprot.isNotUniprotChange();

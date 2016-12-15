@@ -9,7 +9,7 @@ $(document).ready(function(){
       $(document).on('click',"[id^='id_pass'][id$='MoleculePOST'],[id|=id_form][id$='-passMoleculePOST']",function(){
         
         if ( $(this).is("[id='id_passAllMoleculePOST'],[id|=id_form][id$='-passAllMoleculePOST']"))  {
-            molform = $(this).parents("[id=MOLECULE_f]");
+            molform = $(this).parents("[id='MOLECULE_f']");
             console.log(molform.attr('class'));
         } 
         else if  ( $(this).is("[id='id_passMoleculePOST'],[id|=id_form][id$='-passMoleculePOST']") ) {

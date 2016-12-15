@@ -10,18 +10,40 @@ $(document).ready(function(){
         //Jquery function for changing labels for all the HTML input elements
         var new_form_num_1 = new_form_num + 1;
         var protnumb = "PROTEIN  #" + new_form_num_1;
+        var pnumb = "PROT  #" + new_form_num_1;
         var idlabnod = "protform-" + new_form_num;
         $(this).attr('id',idlabnod);
         $(this).find("#protlabnum").text(protnumb);
-        $(this).find(':input,:button').each(function() {
+        $(this).find("#plabnum").text(pnumb);
+        $(this).find(":input,:button,[id$='isoform'],[id$='not_uniprotcheck'],[id$='mutations_id']").each(function() {
             var name1 = $(this).attr('name');
             var id1 = $(this).attr('id');
             var name = name1.replace(/^form-[0-9]+-/,'');
             var id = id1.replace(/^id_/,'').replace(/^form-[0-9]+-/,'');
             var namelab="form-"+new_form_num+"-"+name;
             var idlab ="id_form-"+new_form_num+"-"+id;
-            $(this).attr({'placeholder':namelab, 'id':idlab, 'name':namelab});
+            $(this).attr({'id':idlab, 'name':namelab});
+            //$(this).attr({placeholder':namelab, 'id':idlab, 'name':namelab});
             var searchstr = "label[for='"+id1+"']"
+            if (name1.startsWith('form') && name1.endsWith('is_mutated')){
+                var tt=$(this);
+                tt.prop("checked",false);
+                $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-mutations_id"+","+"#mutations_id");
+//                $(this).attr('checked', false);
+                }; 
+            if (name1.startsWith('form') && name1.endsWith('mutations_id')){
+                $(this).attr('class',"col-md-12 panel collapse");
+                }; 
+            if (name1.startsWith('form') && name1.endsWith('use_isoform')){
+                $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-isoform");
+                var tt=$(this);
+                tt.prop("checked",true);
+                console.log(tt);
+ //               $(this).attr('checked',true);
+                }; 
+            if (name1.startsWith('form') && name1.endsWith('isoform')){
+                $(this).attr('class',"collapse in");
+                }; 
             if ($(searchstr).exists()) {
                 $(searchstr).attr('for',idlab);
             };
@@ -56,6 +78,7 @@ $(document).ready(function(){
         $("#id_form-"+next_form_num+"-del_protein").prop("disabled",false);
         var receptor = $("#id_form-"+next_form_num+"-receptor");
         receptor.prop("disabled",false);
+
         receptor.prop("checked",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);

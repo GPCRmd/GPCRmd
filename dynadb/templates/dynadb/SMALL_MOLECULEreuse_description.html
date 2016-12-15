@@ -1,0 +1,79 @@
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 > Reuse Complex <br> Small Molecule Information</h3>
+        <!--	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>-->
+         </div> 
+     </div>
+     
+<!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             
+<!--             <h4>FILL IN THE MOLECULE FORM</h4> -->
+            <div style="text-align:center"> 
+             <h4>CHECK THE SMALL MOLECULE INFO</h4>
+	    </div>
+
+             <p style="text-align: justify">Please, check that all non-protein molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulky waters or ions randomly generated), are included in the list of molecules shown in this Small Molecule form. In addition, the checkbox field “Important for the biological process” concerning every aforementioned molecule must appear in the form as a checked field. If both conditions are fulfilled the set of non-protein molecules in your system is in good agreement with the ones in the complex to be reused. Then, you have to add new molecules appearing in your simulations whose coordinates have been randomly generated and remove molecules from the form which are not used in your simulations. Importantly, molecules to be added or removed must have the checkbox field “Important for the biological process” unchecked.</p>
+             <p style="text-align: justify">Note that, if the set of molecules which are “Important for the biological process” in the form does not match the ones in your simulation, you have to submit it as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following all the steps in the Submission index.</p>
+
+
+<!--             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
+
+<p style="text-align: justify">Note, only molecule structures that have coordinates coming from experimental data or that are crucial for the setting of the simulation must be included in complex by checking the field “Important for the biological process” (e. g. crystalized-like waters or very stable ions, but not water molecules or ions with randomly generated coordinates). Otherwise chemical structures must be included into the dynamics form (step 4).</p>-->
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+
+<div class="col-md-7 "> 
+    <!-- filters -->
+  <div class="col-lg-12 panel panel-primary"> 
+
+    <div class="panel-body">
+ <!------------------------------------------------------------------------------ middle column -->
+<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
+<!--	<div style=display:table;>  -->
+
+		<div class=row id='PRUEBA'>
+<!-- 			<div style="text-align:center">
+            			<h4><br>Select Complex</h4><br>    
+             			<h4><br>Complex Information</h4><br>
+            		</div>   -->
+
+ 			<div style="text-align:center">
+<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
+             			<h4><br>Complex Information</h4><br>
+<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
+            		</div>
+                <div class="row">
+		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
+		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
+	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
+	        <div class="row">
+			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+			    <div class="row">
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
+				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
+                            </div>{% if message|length > 0 %}  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>{% endif %}
+			    <div class="row">
+			<!--	<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
+
+			        <div class="col-md-8"><input style="width:130px" id="Choose_submission_id" value="{{submission_id}}" name="Choose_submission_id" rows="1" readonly ></input></div> -->
+		      </div>   <br>    </div>
+	        <div class="row">
+           <div class="col-md-8 col-md-offset-2" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse" data-target="[id|='molform']" style="cursor:pointer;padding:0px 10px 5px 10px;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Hide information about the molecules in the model.</div><div="col-md-2"></div><br>
+                            </div>
+				
+		<br>
+		</div>
+		</div></div></div>

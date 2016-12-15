@@ -15,33 +15,28 @@ $(document).ready(function(){
         toto=$(this).find("[id|='id_form'][id$='-mlnumb']");
         console.log("toto"+$(toto).attr('id'));
         $(this).find("[id|='id_form'][id$='mlnumb']").text(mnumb);
-        $(this).find(":input,:button,[id|=id_form][id$='-collapse_id'],[id|=id_form][id$='-is_not_in_databases'],[id|=id_form][id$='-nodb'],[id|=id_form][id$='-retrieve_id'],[id|=id_form][id$='-collapse'],[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1'],[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2'],[id='id_stdform'],[id|=id_form][id$='-stdform']").each(function() {
+        $(this).find(":input,:button,[id|='id_form'][id$='-collapse_id'],[id|='id_form'][id$='-nodb'],[id|='id_form'][id$='-retrieve_id'],[id|='id_form'][id$='-collapse'],[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1'],[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2'],[id='id_stdform'],[id|=id_form][id$='-stdform']").each(function() {
             
-        //$(this).find(":input,:button,[id|='id_form'][id$='-collapse_id'],[id|='id_form'][id$='-collapse'],[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1'],[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2'],\
-//        [id='id_stdform'],[id|=id_form][id$='-stdform']").each(function() {
             var name1 = $(this).attr('name');
             var id1 = $(this).attr('id');
      //       console.log(id1+' '+name1);
-            if (name1 !== "csrfmiddlewaretoken" ) {
+            if (name1 !== "csrfmiddlewaretoken") {
                 var id1 = $(this).attr('id');
+                var name = name1.replace(/^form-[0-9]+-/,'');
                 var id = id1.replace(/^id_/,'').replace(/^form-[0-9]+-/,'');
+                var namelab="form-"+new_form_num+"-"+name;
                 var idlab ="id_form-"+new_form_num+"-"+id;
-                if ( !$(this).is("div")){
-                   var name = name1.replace(/^form-[0-9]+-/,'');
-                   var namelab="form-"+new_form_num+"-"+name;
-                   $(this).attr({'placeholder':namelab,  'name':namelab});
-                } 
-                $(this).attr('id',idlab );
+                $(this).attr({'placeholder':namelab, 'id':idlab, 'name':namelab});
                 var searchstr = "label[for='"+id1+"']"
                 if ($(searchstr).exists()) {
                     $(searchstr).attr('for',idlab);
                 }
             console.log(name1);
             //if (name1.is( "[id|='form'][id$='-collapse']")){
-            if (id1.startsWith('id_form') && id1.endsWith('-is_not_in_databases')){
+            if (name1.startsWith('form') && name1.endsWith('-collapse')){
                 $(this).attr('data-target',"#id_form-"+new_form_num+"-retrieve_id,[id|='id_form-"+new_form_num+"'][id$='nodb']");
                 } 
-            if (id1.startsWith('form') && id1.endsWith('-collapse')){
+            if (name1.startsWith('form') && name1.endsWith('-collapse')){
                 $(this).attr('data-target',"#"+idlab+"_id");
                 } 
             }

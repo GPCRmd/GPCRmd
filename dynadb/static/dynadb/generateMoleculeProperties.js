@@ -6,8 +6,8 @@ $(document).ready(function() {
         return this.length !== 0;
     };
     
-    uploadmol1_global_html = $("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']").clone();
-    uploadmol2_global_html = $("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']").clone();
+    uploadmol1_global_html = $("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']").first().clone();
+    uploadmol2_global_html = $("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']").first().clone();
     $(document).on('click',"[id='id_upload_button'],[id|=id_form][id$='-upload_button']",function(){
         var max_size = 52428800;
         var pngsize = 300;
