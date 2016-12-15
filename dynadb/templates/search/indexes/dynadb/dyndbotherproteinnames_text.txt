@@ -1,0 +1,4 @@
+{{ object.other_names }}
+{{ object.id_protein.uniprotkbac }}
+{{ object.id_protein.name }}
+{{ object.id_protein.id_uniprot_species.scientific_name }}

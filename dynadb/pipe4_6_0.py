@@ -1,7 +1,7 @@
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
 import re
-
+import os
 #The pipeline: get sequence from pdb (checkpdb function) -> compare sequence from pdb to the fasta sequence (matchpdbfa) -> modify pdb to make it match the fasta numbering (repairpdb). 
 
 #The way to detect which format is used is to check if the residue after resid 9999 is 2710. if after 9999 there is a 2710 then all coming numbers are hexadecimal. If after 9999 comes 10000 they are using the insertion code. 
@@ -25,11 +25,11 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 		if useline(line):
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
-			fields[3]=fields[3].replace(" ", "") #if it is a standard aa with 3 letters, eliminate whitespace.
-			fields[5]=fields[5].replace(" ", "") #if it is a standard RESID with 4 characters, eliminate whitespace.
+			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
+			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
 			i=3
 			while i<9:
-				if fields[i].replace(" ", "")=='':
+				if fields[i].strip()=='':
 					return 'Missing required field in the PDB file at line: '+line
 				i+=1
 
@@ -68,7 +68,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	onlyaa='' #ignore the resids, pick the aa and that is it.
 	for minilist in seqplain:
 		onlyaa=onlyaa+minilist[0]
-
+	#print(seqplain,onlyaa)
 	return (seqplain,onlyaa,hexflag)
 
 
@@ -124,13 +124,14 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 
 #############################################################################################################################################
 
-def repairpdb(pdbfile, guide,segid,start,stop,chain):	
+def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):	
 
 	'''Takes a pdb file as input, the numbering of this pdb is modified according to the fasta sequence of the PDB whose relation
 	 is represented in a schema called guide like: [[A,'27',27],[A,28]] where the first element is the pdb item and the second is the 
 	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or insertion code)  in the new PDB file is the same that was used in the original PDB'''
+	tmppdbfile=os.path.splitext(pdbfile)[0]
 	oldpdb=open(pdbfile, 'r')
-	newpdb=open('/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb','w')
+	newpdb=open('/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb','w')
 	count=-1
 	pvresid=-1
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
@@ -139,8 +140,8 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	for line in oldpdb:
 		if useline(line):
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
-			fields[3]=fields[3].replace(" ", "") #it is a standard aa with 3 letters, eliminate whitespace.
-			fields[5]=fields[5].replace(" ", "") #it is a standard RESID with 4 characters, eliminate whitespace.
+			fields[3]=fields[3].strip() #it is a standard aa with 3 letters, eliminate whitespace.
+			fields[5]=fields[5].strip() #it is a standard RESID with 4 characters, eliminate whitespace.
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
 			cpos=fields[5]
 			if fields[4]!=pfields[4] or fields[9]!=pfields[9] or fields[5]=='1': #resid count has been reseted by new chain or whatever. 
@@ -193,6 +194,7 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain):
 	newpdb.close()
 	oldpdb.close()
 	#return pdbfile[:-4]+'_corrected.pdb'
+	return '/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb'
 	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
 #############################################################################################################################################
 
@@ -259,7 +261,7 @@ def useline(line):
 	'''returns True if line starts with ATOM, or HETATM with a resname included in the d dictionary''' 
 	if line.startswith('ATOM') or line.startswith('HETATM'):
 		trykey=line[17:21]
-		trykey=trykey.replace(" ", "")
+		trykey=trykey.strip()
 		if trykey in d.keys():
 			return True
 		else:
@@ -283,8 +285,8 @@ def segment_id(pdbname, segid, start, stop, chain):
 		if useline(line):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:coordinates
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]]
-			fields[3]=fields[3].replace(" ", "")
-			fields[5]=fields[5].replace(" ", "")
+			fields[3]=fields[3].strip()
+			fields[5]=fields[5].strip()
 			try:
 				ccoor[0]=float(fields[6])
 				ccoor[1]=float(fields[7])
@@ -348,6 +350,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		return result
 	else:
 		tablepdb,simplified_sequence,hexflag=result
+
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
 	'''
 	The resulting alignment should be like:

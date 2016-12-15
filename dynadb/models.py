@@ -716,6 +716,7 @@ class DyndbFiles(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
     filepath = models.CharField(max_length=520, blank=True, null=True)
     url = models.CharField(max_length=520, blank=True, null=True)
+    
 
     class Meta:
         managed = True
@@ -766,7 +767,7 @@ class DyndbFilesMolecule(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_files_molecule'
-        unique_together = (('id_molecule', 'id_files','type'),)
+        unique_together = (('id_molecule', 'id_files'),('id_molecule','id_files','type'))
 
 
 class DyndbFunctional(models.Model):

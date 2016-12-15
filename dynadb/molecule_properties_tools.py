@@ -56,7 +56,9 @@ def stdout_redirected(to=os.devnull, stdout=None):
     with os.fdopen(os.dup(stdout_fd), 'wb') as copied: 
         stdout.flush()  # flush library buffers that dup2 knows nothing about
         try:
+            
             os.dup2(fileno(to), stdout_fd)  # $ exec >&to
+            to.flush()
         except ValueError:  # filename
             with open(to, 'ab') as to_file:
                 os.dup2(to_file.fileno(), stdout_fd)  # $ exec > to
@@ -231,7 +233,8 @@ def get_charge_from_inchi(inchi,removeHs=False):
 def generate_png(mol,pngpath,logfile=os.devnull,size=300):
     with stdout_redirected(to=sys.stdout,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
-            nhmol = RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
+            nhmol = RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=False)
+            SanitizeMol(nhmol,catchErrors=True)
             op = DrawingOptions()
             op.atomLabelFontSize = size/25
             MolToFile(PrepareMolForDrawing(nhmol,forceCoords=True,addChiralHs=True),\

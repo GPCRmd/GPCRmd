@@ -1,5 +1,6 @@
 
 function searchtop() {
+    //works when autocomplete is clicked. fills the 'seq from' and 'seq to' fields automatically.
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];
@@ -12,8 +13,8 @@ function searchtop() {
 
     $.ajax({
         type: "POST",
-        data: { "bigarray[]": bigarray,"url": window.location.href},
-        url: "/dynadb/search_top/",
+        data: { "bigarray[]": bigarray},
+        url: "./search_top/", // url: "/dynadb/search_top/"+subid+"/",
         dataType: "json",
         success: function(data) {
             $("#pdbchecker1").prop("disabled",false);
@@ -37,7 +38,17 @@ function searchtop() {
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#pdbchecker1").prop("disabled",false);
-                alert('Error ocurred: PDB file numbering is corrupted (50,51,32); or resid interval is too short.');
+                if (XMLHttpRequest.readyState == 4) {
+                    var responsetext = XMLHttpRequest.responseText;
+
+                    alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                }
+                else if (XMLHttpRequest.readyState == 0) {
+                    alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                }
+                else {
+                    alert("Unknown error");
+                }
         }
     });
 }
@@ -72,4 +83,8 @@ $.ajaxSetup({
             xhr.setRequestHeader("X-CSRFToken", csrftoken);
         }
     }
-}); 
+});
+
+$("#pdbchecker1").click(function() {
+    searchtop();
+});

@@ -1,4 +1,44 @@
 $(document).ready(function(){
+    $(".sel_input, #inputdist, #dist_from, #dist_to").val("")
+    $("#show_within, #show_dist").empty();
+    // $("#rad_high").attr("checked",false).checkboxradio("refresh");
+    // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
+  
+/// AJAX
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+
+////////
+
+  
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
 
     function obtainInputedGPCRnum(pre_sel) {
@@ -43,7 +83,7 @@ $(document).ready(function(){
                     chain_pair[chain_pair.length]=res_chain[1];
                 }
                 if (chain_pair){
-                    if ($("#chains").text() == "") {
+                    if (chains_str == "") {
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]
                     } else if (chain_pair[0]==chain_pair[1]){
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
@@ -64,6 +104,7 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
+        // alert(sel);
         sel_enc = encode(sel);
         return sel_enc
     };
@@ -164,32 +205,13 @@ $(document).ready(function(){
         high_pre["F"]=getSelectedPosLists(".high_pdF.active");
         return (high_pre)
     }
-//////////////
 
+    $("#clear_conspos").click(function(){;
+        $(".high_pd.active").each(function(){
+            $(this).removeClass("active");
+        });
+    });    
 
-    // function obtainPredefPositions(){
-    //     var high_pre=[];
-    //     $(".high_pd.active").each(function(){
-    //         range = $(this).attr("id");
-    //         if (range != "None"){
-    //             if (range.indexOf(",") > -1){
-    //                 range_li=range.split(",");
-    //                 for (num in range_li){
-    //                     high_pre[high_pre.length]=" " + range_li[num];
-    //                 }
-    //             } else{
-    //                 high_pre[high_pre.length]=" " + range;
-    //             }
-    //         }
-    //     })
-    //     high_pre.sort(function(x,y){
-    //         var patt = /\d+/;
-    //         var xp = Number(patt.exec(x));
-    //         var yp = Number(patt.exec(y));
-    //         return xp - yp });
-    //     high_pre=uniq(high_pre);
-    //     return (high_pre);
-    // }
 
     function obtainDicts(gpcr_pdb_dict){
         var bw_dict={};
@@ -204,6 +226,11 @@ $(document).ready(function(){
         return [bw_dict,gpcrdb_dict]
     }
 
+ /*   var rad_option="high";
+    $( "input[type=radio]" ).on( "click", function(){
+        rad_option=$(this).attr("value");
+    });*/
+
     function obtainURLinfo(gpcr_pdb_dict){
         cp = obtainCompounds();
         sel_enc =inputText(gpcr_pdb_dict);
@@ -212,8 +239,9 @@ $(document).ready(function(){
         } else {
             high_pre = obtainPredefPositions();
         }
+        rad_option=$(".sel_high:checked").attr("value");
         // sel_ranges=obtainSelectedAtSeq();
-        return [cp, high_pre,sel_enc] 
+        return [cp, high_pre,sel_enc,rad_option] 
     }
 
     function disableMissingClasses(){
@@ -255,12 +283,27 @@ $(document).ready(function(){
         });
     }
 
-    maxInputLength('#inputdist',4);
+    maxInputLength('#inputdist',6);
     maxInputLength('input.sel_input',100);
+    maxInputLength('#rmsd_frame_1',8);
+    maxInputLength('#rmsd_frame_2',8);
+    maxInputLength('#rmsd_my_sel_sel',50);
+    maxInputLength('#rmsd_ref_frame',8);
     disableMissingClasses();
 
 
-///    
+///    Res within xA of compounf  ///
+
+    $(".section_pan").click(function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        if(upOrDown.indexOf("in") > -1){
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-down");
+        } else {
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
+        }
+    });
+
     var comp_lg=[];
     var comp_sh=[];
     $(".comp").each(function(){
@@ -319,7 +362,8 @@ $(document).ready(function(){
 
 
     $(".sel_within").on("blur", ".dist_sel" ,function(){
-        var inp=$(this).find("input").val();
+        var inp=$(this).find("input").val().replace(/\s+/g, '');
+        $(this).find("input").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
             $(this).find("#tick").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
             $(this).find("#always").attr("style","");
@@ -330,13 +374,112 @@ $(document).ready(function(){
             }
         }
     });    
-////
+
+///   Dist between residues  ///
+
+    var first_dist=true;
+    var i_dist=1
+    $("#add_btn2").click(function(){ 
+        if (i_dist < 20){
+            var row_d='<span class="dist_pair" id=row2_'+i_dist+'><br>\
+                  <span id="tick2" ></span>\
+                  <span id="always2" style="margin-left:14px">\
+                     Compute distance between \
+                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+			and\
+                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+                  </span>';
+            $("#show_dist").append(row_d);
+            i_dist+=1;
+            if (first_dist){
+                $("#rm_btn2").css("visibility","visible");
+                first_dist=false;
+           }
+        }
+    });
+    
+    $("#rm_btn2").click(function(){ 
+        $("#row2_"+(i_dist-1)).remove();
+        i_dist -=1;
+        if (i_dist ==1){
+            $("#rm_btn2").css("visibility","hidden");
+            first_dist=true;
+        }
+    });
 
 
-    function clickSelRange(class_str){
-        return class_str.match(/(\d)+/g)
 
+    $(".dist_btw").on("blur", ".dist_pair" ,function(){
+        var d_from=$(this).find("#dist_from").val().replace(/\s+/g, '');
+        var d_to=$(this).find("#dist_to").val().replace(/\s+/g, '');
+        $(this).find("#dist_from").val(d_from);
+        $(this).find("#dist_to").val(d_to);
+        if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
+            $(this).find("#tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
+            $(this).find("#always2").attr("style","");
+            $(this).addClass("d_ok");
+        } else {
+            if ($(this).find("#tick2").attr("class")=="glyphicon glyphicon-ok"){
+                $(this).find("#tick2").attr({"class":"","style":""});
+                $(this).find("#always2").attr("style","margin-left:14px");
+                $(this).removeClass("d_ok");
+            }
+        }
+    }); 
+
+    function obtainDistToComp(){
+        var distToComp="";
+        $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
+            var d_from=$(this).find("#dist_from").val();
+            var d_to=$(this).find("#dist_to").val();
+            distToComp += d_from+"-"+d_to+"a";
+        });
+        if (distToComp){
+            return (encode(distToComp.slice(0, -1)))
+        } else {
+            return ""
+        }
     }
+
+    function checkTrajUsedInDistComputatiion(res_ids){
+        if (res_ids){
+            var traj_id = $(".trajForDist:selected").val();
+            if (traj_id){
+                $("#traj_id_"+traj_id)[0].checked=true;
+                return (traj_id)
+            }
+        }
+        return (false)
+    }
+
+
+
+    $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
+/*
+        $.ajax({
+            type: "POST",
+            url: "/view/1/",
+            dataType: "json",
+            data: { "item": "Hi there"},
+            success: function() {
+                alert("done!");
+            }
+        });
+
+*/
+        var res_ids = obtainDistToComp();
+        var traj_id=checkTrajUsedInDistComputatiion(res_ids);
+        if (traj_id){
+            var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
+            newwindow=window.open(dist_url,'','width=870,height=400');
+            $("#dist_alert").html("");
+        } else {
+            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#dist_alert").html(add_error_d);
+        }
+    });
+
+////
 
     function selectFromSeq(){
         var click_n=1;
@@ -348,18 +491,18 @@ $(document).ready(function(){
             if (click_n==1){
                 var range=$(this).attr("class"); 
                 if(range.indexOf("-") == -1){     //Start a new selection
-                    $(this).css("background-color","blue");
+                    $(this).css("background-color","#337ab7"); 
                     seq_pos_1 = $(this).attr("id");
                     click_n=2;
                 } else {      // Remove an old selection
-                    var selRange= clickSelRange(range);
+                    var selRange= range.match(/(\d)+/g);
                     i=Number(selRange[0]);
                     end=Number(selRange[1]);
                     // alert(typeof i);
                     while (i <= end) {
                         var mid_id="#" + String(i)
-                        $(mid_id).css("background-color","");
-                        $(mid_id).attr("class", "seq_sel")
+                        $(mid_id).css("background-color","#f2f2f2");
+                        $(mid_id).attr("class", "seq_sel");
                         i++
                     }
                 }
@@ -370,22 +513,22 @@ $(document).ready(function(){
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_fin){
                     var mid_id="#" + String(i)
-                    $(mid_id).css("background-color","grey");
+                    $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
-                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin);
+                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
                     i++
                 }
 
             }
         })
-    
+   
         $(".seq_sel").hover(function(){
             if (click_n==2) {
                 var seq_pos_2 = Number($(this).attr("id"));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
                     var mid_id="#" + String(i)
-                    $(mid_id).children().css("background-color","blue");
+                    $(mid_id).children().css("background-color","#337ab7");
                     i++
                 }
             }
@@ -403,68 +546,217 @@ $(document).ready(function(){
     }
     selectFromSeq();
 
+    function fromIdsToPositions(id_l, id_r){
+        var pos_l=$(id_l).children("#ss_pos").text();
+        var pos_r=$(id_r).children("#ss_pos").text();
+        return [pos_l, pos_r]
+    }
+
+    function fromIdsToPositionsInChain(id_l, id_r){
+        var pos_l=$(id_l).children("#ss_pos").text();
+        var pos_r=$(id_r).children("#ss_pos").text();
+        var chain_l = $(id_l).children("#ss_pos").attr("class");            
+        var chain_r = $(id_r).children("#ss_pos").attr("class");
+        if (chain_l==chain_r){
+            var pos_chain_str=pos_l + "-" +pos_r+":"+chain_l;
+        } else {
+            var pos_chain_str=pos_l + "-:"+chain_l + " or -"+pos_r+":" +chain_r;
+        }
+        return pos_chain_str;
+    }
+
 
     function joinContiguousRanges(sel_ranges){
         var sel_ranges_def=[]
         var o_max;
         var o_min;
         sel_ranges=uniq(sel_ranges);
-        for (p in sel_ranges) {
-            var my_range_str=sel_ranges[p];
-            var my_range = clickSelRange(my_range_str);
-            var my_min=my_range[0];
-            var my_max=my_range[1];
-            if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is 1
-                sel_ranges_def[sel_ranges_def.length -1]= o_min+"-"+my_max;
-                o_max = my_max;
-            } else {
-                sel_ranges_def[sel_ranges_def.length]=my_range_str;
-                o_max = my_max;
-                o_min = my_min;
+        if (chains_str == ""){
+            for (p in sel_ranges) {
+                var my_range_str=sel_ranges[p];
+                var my_range = my_range_str.match(/(\d)+/g);
+                var my_min=my_range[0];
+                var my_max=my_range[1];
+                if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is old last +1
+                    var pos_lr=fromIdsToPositions("#"+o_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length -1]= pos_lr[0]+"-"+pos_lr[1];
+                    o_max = my_max;
+                } else {
+                    var pos_lr=fromIdsToPositions("#"+my_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length]=pos_lr[0]+"-"+pos_lr[1];
+                    o_max = my_max;
+                    o_min = my_min;
+               }
+            }
+        } else { 
+            for (p in sel_ranges) {
+                var my_range_str=sel_ranges[p];
+                var my_range = my_range_str.match(/(\d)+/g);
+                var my_min=my_range[0];
+                var my_max=my_range[1];
+                if (o_min > 0 && Number(my_min) == Number(o_max)+1){ //CHeck what is 1st pos is old last +1
+                    var pos_chain_str=fromIdsToPositionsInChain("#"+o_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length -1]= pos_chain_str;
+                    o_max = my_max;
+                } else {
+                    var pos_chain_str=fromIdsToPositionsInChain("#"+my_min, "#"+my_max);
+                    sel_ranges_def[sel_ranges_def.length]=pos_chain_str;
+                    o_max = my_max;
+                    o_min = my_min;
+               }
             }
         }
         return sel_ranges_def
     }
 
+
+
+
     function obtainSelectedAtSeq(){
         var sel_ranges=[]
         $(".seq_sel.sel").each(function(){
-            var sel_range=clickSelRange($(this).attr("class"));
-            sel_ranges[sel_ranges.length]=sel_range[0]+"-"+sel_range[1];
+            var class_str=$(this).attr("class");
+            var id_range= class_str.match(/(\d)+/g);
+//            var sel_range=clickSelRange($(this).attr("class"));
+            sel_ranges[sel_ranges.length]=id_range[0]+"-"+id_range[1];
         });
         return(sel_ranges);
     }
+
+
     $("#addToSel").click(function(){ 
         sel_ranges=obtainSelectedAtSeq();
-        sel_ranges_ok=joinContiguousRanges(sel_ranges);
-        var pos_str=""
-        p=0;
-        while (p < (sel_ranges_ok.length -1)) {
-            pos_str += sel_ranges_ok[p] + " or "
-            p ++
+        if (sel_ranges.length > 0){
+            sel_ranges_ok=joinContiguousRanges(sel_ranges);
+            var pos_str=""
+            p=0;
+            while (p < (sel_ranges_ok.length -1)) {
+                pos_str += sel_ranges_ok[p] + " or "
+                p ++
+            }
+            pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
+            var act_val=$(".sel_input").val();
+            var or=""
+            if (act_val){
+                or = " or "
+            }
+            var fin_val = act_val + or + "protein and ("+ pos_str +")";
+            $(".sel_input").val(fin_val)
         }
-        pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
-        act_val=$(".sel_input").val();
-        var or=""
-        if (act_val){
-            or = " or "
-        }
-        var fin_val = act_val + or + "protein and ("+ pos_str +")";
-        $(".sel_input").val(fin_val)
-
     });    
 
+    $("#rmds_my_sel_id").click(function(){
+        if ($("#rmsd_my_sel_sel").val() == ""){
+            rmsdMySel=$(".sel_input").val();
+            if (rmsdMySel){
+                $("#rmsd_my_sel_sel").val(rmsdMySel);
+            }
+        }
+    });
 
+    function removeSpacesInInput(my_selector){
+        $(my_selector).blur(function(){
+            my_input=$(this).val().replace(/\s+/g, '');
+            $(this).val(my_input);
+         });
+    }
+
+    removeSpacesInInput("#rmsd_frame_1");
+    removeSpacesInInput("#rmsd_frame_2");
+    removeSpacesInInput("#rmsd_ref_frame");
+
+    function showErrorInblock(selector, error_msg){
+         var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
+         $(selector).html(sel_fr_error);
+    }
+
+    $("#gotoRMSDPg").click(function(){
+        $("#rmsd_sel_frames_error").html("");
+        $("#rmsd_ref_frames_error").html("");
+        rmsdTraj=$("#rmsd_traj").val();
+        rmsdFrames=$("#rmsd_sel_frames_id input[name=rmsd_sel_frames]:checked").val();
+        if (rmsdFrames=="rmsd_frames_mine"){
+            frameFrom=$("#rmsd_frame_1").val();
+            frameTo=$("#rmsd_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                    if (Number(frameFrom) >= 1){
+                        if (Number(frameFrom) < Number(frameTo)){
+                            rmsdFrames=encode(frameFrom + "-" + frameTo);
+                        } else {
+                            showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
+                            rmsdFrames=false;
+                        }
+                    } else {
+                        showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                        rmsdFrames=false;
+                    }
+                } else {
+                    showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }
+        rmsdRefFr=$("#rmsd_ref_frame").val();
+        if (rmsdRefFr == ""){
+            rmsdRefFr="1";
+        } else if (! /^[\d]+$/.test(rmsdRefFr)){
+            showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
+            rmsdRefFr=false;
+        } else if (Number(rmsdRefFr)<1){
+            showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
+            rmsdRefFr=false;
+        }
+        rmsdRefTraj=$("#rmsd_ref_traj_id").val();
+        rmsdSel=$("#rmsd_sel_id input[name=rmsd_sel]:checked").val();
+        if (rmsdSel == "rmds_my_sel"){
+            rmsdSel=$("#rmsd_my_sel_sel").val(); //Curate this so that mdtraj understands it            
+        }
+        if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#rmsd_alert").html(add_error);
+        } else {
+            $("#rmsd_alert").html("");
+            $.ajax({
+                type: "POST",
+                url: "/view/1/",  //Change 1 for actual number
+                dataType: "json",
+                data: { 
+                  "rmsdStr": struc,
+                  "rmsdTraj": rmsdTraj,
+                  "rmsdFrames": rmsdFrames,
+                  "rmsdRefFr": rmsdRefFr,
+                  "rmsdRefTraj": rmsdRefTraj,
+                  "rmsdSel": rmsdSel
+                },
+                success: function() {
+                    var rmsd_url ='/view/rmsd/';
+                    newwindow=window.open(rmsd_url,'','width=870,height=520');
+                },
+                error: function() {
+                    add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                    $("#rmsd_alert").html(add_error);                
+                }
+            });
+
+        }
+    });
 
 
 ///
-    var struc = $(".str_file").attr("id");
+    var struc_info = $(".str_file").attr("id");
+    var struc_info = struc_info.split(",");
+    var struc = struc_info[0];
+    var struc_id = struc_info[1];
     var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
     var sel_enc = encode(sel);
     $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel=" + sel_enc);
     $("#receptor").addClass("active");
+    var chains_str = $("#chains").text();
 
     var gpcr_pdb_dict = $(".gpcr_pdb").attr("id");
     var bw_dict,gpcrdb_dict
@@ -475,10 +767,7 @@ $(document).ready(function(){
         gpcrdb_dict=dicts_result[1];
     }
 
-    var rad_option="sel";
-    $( "input[type=radio]" ).on( "click", function(){
-        rad_option=$(this).attr("value");
-    });
+
 
     click_unclick(".high_pdA");
     click_unclick(".high_pdB");
@@ -496,11 +785,13 @@ $(document).ready(function(){
 
 
 
+
     $("#submit").click(function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
+        var rad_option =results[3];
         var pd = "n";
         var legend_el=[];
         for (key in high_pre){
@@ -510,13 +801,16 @@ $(document).ready(function(){
             }
         }
         var dist_of=obtainDistSel();  // For the dist selection
+        var distToComp = obtainDistToComp();
         obtainLegend(legend_el);
         url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
-        alert(url);
-       // $("iframe").attr("src", url);
+        // alert(url);
+       $("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){
+         var distToComp = obtainDistToComp();
+         var traj_id=checkTrajUsedInDistComputatiion(distToComp);
          var traj = [];
          $(".traj_element:checked").each(function(){
              traj[traj.length]=$(this).attr("value");
@@ -525,6 +819,7 @@ $(document).ready(function(){
         cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
+        var rad_option =results[3];
         var pd = "n";
         for (key in high_pre){
             if (high_pre[key].length > 0){
@@ -539,6 +834,3 @@ $(document).ready(function(){
 
 });
 
-// SOLVE:
-//          Presentation
-//          Solve error: Conserved positions are showing pos + 1 !!!

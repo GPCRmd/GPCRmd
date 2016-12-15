@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url,patterns
+from django.conf.urls import url,patterns,include #antes: from django.conf.urls import url,patterns
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf import settings
 from . import views
+from haystack.query import SearchQuerySet
+from haystack.views import SearchView
+from .forms import MainSearchForm
+
+sqs = SearchQuerySet().all()
 
 app_name= 'dynadb'
 urlpatterns = [
@@ -43,6 +48,7 @@ urlpatterns = [
     url(r'^compound/id/(?P<compound_id>[0-9]+)/$',views.query_compound, name='query_compound'),
     url(r'^model/id/(?P<model_id>[0-9]+)/$',views.query_model, name='query_model'),
     url(r'^dynamics/id/(?P<dynamics_id>[0-9]+)/$',views.query_dynamics, name='query_dynamics'),
+    url(r'^complex/id/(?P<complex_id>[0-9]+)/$',views.query_complex, name='query_complex'),
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/(?P<submission_id>[0-9]+)/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='PROTEINfilled'),
@@ -59,23 +65,33 @@ urlpatterns = [
     url(r'^MOLECULEfilled/(?P<submission_id>[0-9]+)/$', views.SMALL_MOLECULEview, name='MOLECULEfilled'),
     url(r'^MOLECULEfilled2/$', views.SMALL_MOLECULEview2, name='MOLECULEfilled2'),
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
+    url(r'^model/(?P<submission_id>[0-9]+)/check_pdb_molecules/$', views.pdbcheck_molecule, name='pdbcheck_molecule'),
+    url(r'^model/(?P<submission_id>[0-9]+)/ajax_pdbchecker/$', views.pdbcheck, name='pdbcheck'),
+    url(r'^model/(?P<submission_id>[0-9]+)/search_top/$',views.search_top,name='search_top'), #keep this one in a merge
+    url(r'^model/(?P<submission_id>[0-9]+)/get_submission_molecule_info/$', views.get_submission_molecule_info, name='get_submission_molecule_info'),
+    url(r'^model/(?P<submission_id>[0-9]+)/upload_model_pdb/$', views.upload_model_pdb, name='upload_model_pdb'),
     url(r'^modelreuse/(?P<submission_id>-?[0-9]+)/(?P<model_id>[0-9]+)/$', views.MODELreuseview, name='modelreuse'),
     url(r'^proteinreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.PROTEINreuseview, name='proteinreuse'),
 #    url(r'^moleculereuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.SMALL_MOLECULEreuseview, name='moleculereuse'),
     url(r'^modelrow/$', views.MODELrowview, name='modelrow'),
     url(r'^modelreuserequest/(?P<model_id>[0-9]+)/$', views.MODELreuseREQUESTview, name='modelreuserequest'),
     url(r'^MODELfilled/(?P<submission_id>[0-9]+)/$', views.MODELview, name='MODELfilled'),
-    #url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
-    url(r'^ajax_pdbchecker/(?P<combination_id>[a-zA-Z0-9_]+)$', views.pdbcheck, name='pdbcheck'),
+    #url(r'^ajax_pdbchecker/(?P<submission_id>[0-9]+)/$', views.pdbcheck, name='pdbcheck'), 
     url(r'^upload_pdb/$', views.upload_pdb, name='upload_pdb'),
-    url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
-    url(r'^search_top/$',views.search_top,name='search_top'),
+    url(r'^search/$', SearchView(template='/protwis/sites/protwis/dynadb/templates/search/search.html', searchqueryset=sqs, form_class=MainSearchForm),name='haystack_search'),
+    url(r'^ajaxsearch/',views.ajaxsearcher,name='ajaxsearcher'),
+    url(r'^empty_search/',views.emptysearcher,name='emptysearcher'),
+    url(r'^autocomplete/',views.autocomplete,name='autocomplete'),
+    url(r'^advanced_search/$', views.NiceSearcher,name='NiceSearcher'),
+    url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected[0-9]+.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'), 
+    #url(r'^search_top/(?P<submission_id>[0-9]+)/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSreuseview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
+
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
 
