@@ -12,7 +12,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Complex Structure Info:</b> </div>
+    <div class="panel-heading"><b>Complex Info:</b> </div>
     <div class="panel-body">
 
 {% if answer.proteins %}
@@ -50,7 +50,13 @@
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b>:<br>
     {% for modid in answer.models %}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid}}>Complex Structure ID: {{modid}}</a>
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
+        {%if modid.1%}
+            Using the molecule:
+            {%for mol in modid.1%}
+                <a target='_blank' class='btn btn-info' role='button' href= /dynadb/molecule/id/mol/}>Molecule ID: {{mol}}</a>
+            {%endfor%}
+        {%endif%}
     {% endfor %}
      <br>
 {% endif %} 
