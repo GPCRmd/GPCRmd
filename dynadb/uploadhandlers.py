@@ -30,7 +30,7 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
         
 class TemporaryMoleculeFileUploadHandlerMaxSize(TemporaryFileUploadHandlerMaxSize):
     def __init__(self,request,max_size,*args,**kwargs):
-        self.chunk_size=1*2**10
+        self.chunk_size=64*2**10
         self.filetype = None
         self.exception = None
         self.charset = None

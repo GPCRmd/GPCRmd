@@ -1,5 +1,4 @@
-
-{% extends "home/base.html" %} 
+{% extends "dynadb/base.html" %}
 {% load static %}
 {% load staticfiles %} 
 {% block addon_css %}
@@ -15,7 +14,7 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Alignment:</b></div>
     <div class="panel-body">
-    <div id="msa">Loading Multiple Alignment...</div>
+    <div id="msa">Loading Alignment...</div>
     <pre style="display: none" id="fasta-files">{{alig}}</pre>
     </div>
     </div>

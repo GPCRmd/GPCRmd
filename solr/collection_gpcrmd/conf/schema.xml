@@ -157,9 +157,13 @@
 
     <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-    <field name="iupac_name" type="text_en" indexed="true" stored="true" multiValued="false" />
-
     <field name="id_compound" type="long" indexed="true" stored="true" multiValued="false" />
+
+    <field name="other_names" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+
+    <field name="mainnames" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+
+    <field name="iupac_name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
     <field name="id_protein" type="long" indexed="true" stored="true" multiValued="false" />
 
