@@ -637,6 +637,7 @@ def autocomplete(request):
 
 
 def count_dynamics(result_id,result_type):
+    print('count dynamics for: ',result_id,result_type)
     counter=0
     if result_type=='compound': #we need to count complexcompound too!!!!
         for molecule in DyndbMolecule.objects.filter(id_compound=result_id):
@@ -644,6 +645,7 @@ def count_dynamics(result_id,result_type):
         return counter
 
     for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
+        print('searching in simulation:',simu.id)
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj !=None:
@@ -715,17 +717,18 @@ def ajaxsearcher(request):
 
                 try:
                     molecule=DyndbMolecule.objects.select_related('id_compound').get(pk=user_input)
+                    netcharge=molecule.net_charge
                     try:
                         comp=molecule.id_compound.id
                         compname=molecule.id_compound.name
                         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
                         imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                         imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
-                        moleculelist.append([str(molecule.id),str(molecule.inchikey),imagepath,compname]) #define inchikey in searchindex
+                        moleculelist.append([str(molecule.id),str(molecule.inchikey),imagepath,compname,netcharge]) #define inchikey in searchindex
                     except IndexError:
                         comp=molecule.id_compound.id
                         compname=molecule.id_compound.name
-                        moleculelist.append([str(molecule.id),str(molecule.inchikey),'',compname]) #define inchikey in searchindex              
+                        moleculelist.append([str(molecule.id),str(molecule.inchikey),'',compname,netcharge]) #define inchikey in searchindex              
                 except:
                     moleculelist=[]
 
@@ -802,17 +805,18 @@ def ajaxsearcher(request):
                     mol_id=res.id.split('.')[2]
                     if str(mol_id) not in [i[0] for i in moleculelist]: #molecule
                         molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=mol_id)
+                        netcharge=molobj.net_charge
                         try:
                             comp=molobj.id_compound.id
                             compname=molobj.id_compound.name
                             pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
                             imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                             imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
-                            moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname]) #define inchikey in searchindex
+                            moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname,netcharge]) #define inchikey in searchindex
                         except IndexError:
                             comp=molobj.id_compound.id
                             compname=molobj.id_compound.name
-                            moleculelist.append([str(mol_id),str(res.inchikey),'',compname]) #define inchikey in searchindex
+                            moleculelist.append([str(mol_id),str(res.inchikey),'',compname,netcharge]) #define inchikey in searchindex
 
         for mol in moleculelist:
             mol.append(count_dynamics(int(mol[0]),'molecule'))
@@ -1118,6 +1122,8 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
 
         else:
             user_compound = table_row[1]
+            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
+                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'complex')
             q = DyndbComplexCompound.objects.filter(id_compound=user_compound)
             q = q.annotate(cmol_id=F('id_complex_exp__dyndbcomplexmolecule__id'))
             q = q.values('type','cmol_id')
@@ -1163,6 +1169,8 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
 
         else: #it is a compound
             user_compound=table_row[1]
+            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
+                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'model')
             q=DyndbComplexCompound.objects.filter(id_compound=user_compound)
             q=q.annotate(id_model=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
             q=q.values('id_model','type')
@@ -1222,6 +1230,8 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
 
         else:
             user_compound=table_row[1]
+            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
+                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'dynamics')
             q=DyndbComplexCompound.objects.filter(id_compound=user_compound)
             q=q.annotate(id_dynamics=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__dyndbdynamics__id'))
             q=q.values('id_dynamics','type')
@@ -1557,7 +1567,7 @@ def query_protein_fasta(request,protein_id):
         response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
         response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
     return response
-            
+
 def query_molecule(request, molecule_id,incall=False):
     molec_dic=dict()
     molec_dic['inmodels']=list()
@@ -1600,16 +1610,18 @@ def query_molecule(request, molecule_id,incall=False):
     return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
 
 def query_molecule_sdf(request, molecule_id):
+
+    molecule_id=DyndbMolecule.objects.select_related('id_compound__std_id_molecule').get(pk=molecule_id).id_compound.std_id_molecule.id
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id,type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
-    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','w') as fh:
+    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','w') as fh:
         fh.write(string)
-    with open('/tmp/'+molecule_id+'_gpcrmd.sdf','r') as f:
+    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','r') as f:
         data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+molecule_id+'_gpcrmd.sdf')[0])
-        response['Content-Disposition']="attachment;filename=%s" % (molecule_id+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+molecule_id+'_gpcrmd.sdf')
+        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')[0])
+        response['Content-Disposition']="attachment;filename=%s" % (str(molecule_id)+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
+        response['Content-Length']=os.path.getsize('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')
     return response
             
 
@@ -1653,7 +1665,6 @@ def query_compound(request,compound_id,incall=False):
 
 def query_complex(request, complex_id,incall=False):
     plist=list()
-    mlist=list()
     clistorto=list()
     clistalo=list()
     model_list=list()
@@ -1661,28 +1672,22 @@ def query_complex(request, complex_id,incall=False):
 
     for cprotein in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=complex_id).values('id_protein__id','id_protein__name'): 
         plist.append([cprotein['id_protein__id'], cprotein['id_protein__name']])
-    '''
-    q = DyndbComplexExp.objects.filter(pk=1)
+
+    q = DyndbComplexExp.objects.filter(pk=complex_id)
     q = q.annotate(model_id=F('dyndbcomplexmolecule__dyndbmodel__id'))
     q = q.values('id','model_id')
     for row in q:
-        model_list.append(row['model_id'])
-    '''
-    q = DyndbComplexExp.objects.filter(pk=1)
-    q = q.annotate(model_id=F('dyndbcomplexmolecule__dyndbmodel__id'))
-    q = q.values('id','model_id')
-    for row in q:
-        tmpmolecule=[]
-        qq=DyndbModel.objects.filter(pk=row['model_id'])
-        qq.annotate(id_molecule=F('id_complex_molecule__dyndbcomplexmoleculemolecule__id_molecule__id'))
-        qq=qq.values('id_molecule')
-        for row in qq:
-            if qq['id_molecule']!=None:
-                tmpmolecule.append(qq['id_molecule'])
+        if row['model_id']!=None:
+            tmpmolecule=[]
+            qq=DyndbModel.objects.filter(pk=row['model_id'])
+            qq=qq.annotate(molecule_something= F('id_complex_molecule__dyndbcomplexmoleculemolecule__id_molecule__id') )
+            qq=qq.values('molecule_something')
+            for row2 in qq:
+                if row2['molecule_something']!=None:
+                    tmpmolecule.append(row2['molecule_something'])
+            print([row['model_id'],tmpmolecule])
+            model_list.append([row['model_id'],tmpmolecule])   
 
-        model_list.append(row['model_id'],tmpmolecule)
-
-    
     for ccompound in DyndbComplexCompound.objects.filter(id_complex_exp=complex_id):
         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=ccompound.id_compound.id).std_id_molecule.id
         imagelink=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
@@ -1694,7 +1699,7 @@ def query_complex(request, complex_id,incall=False):
     #for match in DyndbReferencesCompound.objects.filter(id_compound=compound_id):
         #comp_dic['references'].append([match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url])
 
-    comdic={'proteins':plist,'molecules': mlist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list}
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})

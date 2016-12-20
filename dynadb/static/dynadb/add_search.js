@@ -2,6 +2,17 @@ $('#hidden').hide();
 $('#hiddenmodel').hide();
 var counter=0;
 
+$(document).on({
+    mouseenter: function () {
+        $("#lightup").css("background-color", "#5cb85c"); //#609dd2
+
+    },
+    mouseleave: function () {
+        $("#lightup").css("background-color", "#d9edf7");
+    }
+}, ".protein, .molecule, .compound"); //pass the element as an argument to .on
+
+
 $(document).on('click', '.protein, .molecule, .compound', function(){
     $('[data-toggle="tooltip"]').tooltip();
     if (counter%2==0){
@@ -27,7 +38,7 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
 
         $('#myTable').find('.tableselect:first').empty().append('<option selected="selected" value=" "> </option>');
 
-    }else{
+    }else{ //ADVANCED SEARCH SELECTED
         var text = $(this).attr("name");
         var nameandid=text.split('%');
         var id=nameandid[0];
