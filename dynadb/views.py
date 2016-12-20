@@ -2401,7 +2401,7 @@ def pdbcheck_molecule(request,submission_id):
                 if fieldset_ps[num].keys() != postkeys_ps:
                     return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
                 
-            print(fieldset_mc)
+
             molintdict = dict()
             form_resnames = set()
             for key in fieldset_mc:
