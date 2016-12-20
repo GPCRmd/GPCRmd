@@ -9,13 +9,14 @@
     <title>{% site_title %}</title>
     <script src="{% static 'home/js/jquery.js' %}"></script>
 
-    {% block addon_js %}{% endblock %}
     <script>
+        window.opener = null;
         $(document).ready(function() {
     
             // create session ID, submit query and get url to retrieve the query results
             $("#open_chembl").submit();
             $("#iframe1").load(function() {
+                $("#iframe1").remove();
                 $("#chembl_results_url").submit();
             });
     
@@ -30,8 +31,9 @@
     
     <form id="chembl_homepage" method="get" action="{{ chembl_root_url }}" enctype="application/x-www-form-urlencoded"></form>
     <form id="chembl_results_url" method="get" action="{{ chembl_results_url }}" enctype="application/x-www-form-urlencoded"></form>    
-    <iframe id="iframe1" name="iframe1" src="about:blank" hidden></iframe>
+    <iframe id="iframe1" name="iframe1" src="{% url 'dynadb:blank' %}" style="display:none"></iframe>
   </body>
+</html>
 
 
 
