@@ -142,7 +142,7 @@
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+	        	 <div class="col-md-1" style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
 			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study. " ></textarea></div>
 		<br></div><br>
 
@@ -152,37 +152,22 @@
              			<h4>Upload the Simulation Files</h4>
             		</div>
 		</div><br>
+		{% for file_type,file_type_attr in file_types.items %}
+               <div class="row">
+                    <div class="col-md-1" style="height:30px"></div>
+                    <iframe id="id_{{file_type}}_iframe" src="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}" class="col-md-12" frameBorder=0  style="width:100%;height:60px;margin:0px;padding:0px;border:0px">
+                        <div class="col-md-3" style="height:45px">
+                            <label for="id_{{file_type}}"><a title="{{file_type_attr.long_name}}: {{file_type_attr.description}}">{{file_type_attr.long_name}}</a> </label>
+                        </div>
+                        <div class="col-md-6"><a href="./upload_files/{% if file_type == "traj" %}traj/{%endif%}?file_type={{file_type}}&new_window=1" noreferrer noopener target="_blank">Use this link to upload your {{file_type_attr.long_name|lower}}.</a></div>
+                    </iframe>
+               </div>
+<!--               <br>-->
+               {%endfor%}
+               
 
-
-		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_coor"><a title="Coordinate file: Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB">Coordinate file </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_coor" name="coor" type="file" accept="file_extension|.pdb"/></td></tr></div>
-      		</div>
-
-		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_top"><a title="Topology file: Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, other) max 50 MB"> Topology file</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_top" name="top" type="file" accept="file_extension|.rtf,.psf,.pmtop,.top" /></td></tr></div>
-      		</div>
-
-		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_traj"><a title="Trajectory files: Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB"> Trajectory files</a> </label></th></div>
-
-
-			<div class="col-md-6"><td><input id="id_traj" name="traj" type="file" accept="file_extension|.dcd,.xtc" multiple/></td></tr></div> 
-
-
-     		</div>
-
-		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_parm"><a title=" Simulation parameters: Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB"> Simulation parameters</a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_parm" name="parm" type="file" accept="file_extension|.tar.gz,.tgz" /></td></tr></div>
-      		</div>
-
-		<div class=row id='PRUEBA'>
-        		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_other"><a title="Others: Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB "> Others </a> </label></th></div>
-			<div class="col-md-6"><td><input id="id_other" name="other" type="file" /></td></tr></div>
-      		</div><br>
-
+      		<br>
+                
  			<div style="text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div> 		

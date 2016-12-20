@@ -85,6 +85,7 @@ urlpatterns = [
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     #url(r'^search_top/(?P<submission_id>[0-9]+)/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
+    url(r'^dynamics/(?P<submission_id>[0-9]+)/upload_files/((?P<trajectory>traj)/)?$', views.upload_dynamics_files, name='dynamics_upload_files'),
    
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSreuseview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),

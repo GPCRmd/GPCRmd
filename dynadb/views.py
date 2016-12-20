@@ -11,6 +11,7 @@ from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from collections import OrderedDict
 import re, os, pickle
 import shutil
 import time
@@ -4298,6 +4299,248 @@ def delete_molecule(request,submission_id):
     return response
 
 
+def test_accepted_file_extension(ext,file_type):
+    type_keys = {'coordinates', 'topology', 'trajectory', 'parameter', 'anytype', 'image', 'molecule', 'model'}
+    if file_type not in type_keys:
+        raise ValueError('Invalid type_file argument. Valid types are: '+', '.join(type_keys)+'.')
+
+    if ext[0] == '.':
+        ext2 = ext[1:].lower()
+    else:
+        ext2 = ext.lower()
+    fieldname = 'is_'+file_type
+    q = DyndbFileTypes.objects.filter(**{'extension':ext2,fieldname:True,'is_accepted':True})
+    if len(q) > 0:
+        return True
+    else:
+        return False
+
+        
+
+@csrf_exempt
+def upload_dynamics_files(request,submission_id,trajectory=None):
+  if trajectory is None:
+    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+  return _upload_dynamics_files(request,submission_id,trajectory=trajectory)
+
+def get_dynamics_file_types():
+    
+    file_types = OrderedDict()
+    file_types['coor']=dict()
+    file_types['top'] = dict()
+    file_types['traj'] = dict()
+    file_types['parm'] = dict()
+    file_types['other'] = dict()
+    file_types['coor']['db'] = ["is_model"]
+    file_types['top']['db'] = ["is_topology"]
+    file_types['traj']['db'] = ["is_trajectory"]
+    file_types['parm']['db'] = ["is_parameter","is_anytype"]
+    file_types['other']['db'] = ["is_anytype"]
+    
+    file_types['coor']['long_name'] = "Coordinate file"
+    file_types['top']['long_name'] = "Topology file"
+    file_types['traj']['long_name'] = "Trajectory files"
+    file_types['parm']['long_name'] = "Simulation parameters"
+    file_types['other']['long_name'] = "Other files"
+    file_types['coor']['description'] = "Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB."
+    file_types['top']['description'] = "Upload the file describing the topology of your system. Top (.psf, .prmtop, .top, other) max 50 MB."
+    file_types['traj']['description'] = "Upload the files containing the evolution of the system coordinates with time. Traj (.dcd, .xtc) max. 2 GB."
+    file_types['parm']['description'] = "Upload the file containing the force field parameters. Param (.tar.gz,.tgz) max 50 MB."
+    file_types['other']['description'] = "Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB."
+    fields = dict()
+    fields_extension = dict()
+    q = DyndbFileTypes.objects.filter(is_accepted=True)
+    for key in file_types:
+        file_types[key]['extension'] = []
+        for field in file_types[key]['db']:
+            fields_extension[field] = set()
+            
+    
+    fields_list = fields_extension.keys()
+    for field in fields_list:
+        q = q | q.filter(**{field:True,'is_accepted':True})
+    values_list = list(fields_list)
+    values_list.append('extension')
+
+  
+    q=q.values(*values_list)
+    result = list(q)
+    for row in result:
+        for field in fields_list:
+            if row[field]:
+                fields_extension[field].add(row['extension'])
+
+    for key in file_types:
+        for field in file_types[key]['db']:
+            file_types[key]['extension'] += sorted(fields_extension[field])
+    return file_types
+      
+file_types = get_dynamics_file_types()
+def _upload_dynamics_files(request,submission_id,trajectory=None):
+    file_types = get_dynamics_file_types()
+    file_type = None
+    new_window = '0'
+    no_js = '1'
+    download_url = ''
+    error = ''
+
+    if 'new_window' in request.GET:
+        new_window = request.GET['new_window']
+    elif 'new_window' in request.POST:
+        new_window = request.POST['new_window']
+    if new_window.isdigit() and not isinstance(new_window,int):
+        new_window = int(new_window)
+    else:
+        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        
+    if 'no_js' in request.GET:
+        no_js = request.GET['no_js']
+    elif 'no_js' in request.POST:
+        no_js = request.POST['no_js']
+    if no_js.isdigit() and not isinstance(no_js,int):
+        no_js = int(no_js)
+    else:
+        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        
+    if 'file_type' in request.GET:
+        file_type = request.GET['file_type']
+    elif 'file_type' in request.POST:
+        file_type = request.POST['file_type']
+        
+    if file_type == 'traj' and trajectory is None or file_type != 'traj' and trajectory is not None:
+        return HttpResponseForbidden('<h1>Forbidden<h1>')
+    
+    if file_type not in file_types:
+        return HttpResponse('Invalid file_type value',status=422,reason='Unprocessable Entity',content_type='text/plain')
+    
+    accept_string = ',.'.join(file_types[file_type]['extension'])
+    accept_string = '.' + accept_string
+    action ='./?file_type='+file_type+'&new_window='+str(new_window)+'&no_js='+str(no_js)+'&timestamp='+str(round(time.time()*1000))
+   
+    if request.method == "POST":
+        exceptions = False
+        data = dict()
+        data['download_url_file'] = []
+        try:
+            if 'filekey' in request.POST:
+                filekey = request.POST['filekey']
+            else:
+                response = HttpResponse('Missing POST keys.'+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response
+            if  filekey not in request.FILES:
+                msg = 'No file was selected or cannot find molecule file reference.'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response
+            if trajectory is None:
+                uploadedfiles = [request.FILES[filekey]]
+            else:
+                uploadedfiles = request.FILES.getlist(filekey)
+                     
+            if len(uploadedfiles) == 0:
+                msg = 'No file was selected.'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response
+            filenum = 0 
+            
+            
+            for uploadedfile in uploadedfiles:
+                rootname,fileext = os.path.splitext(uploadedfile.name)
+                if fileext == '.gz':
+                    rootname2,fileext2 = os.path.splitext(rootname)
+                    if fileext2 == '.tar':
+                        fileext = fileext2 + fileext
+                        rootname = rootname2
+                fileext = fileext.lower()
+                fileext = fileext[1:]
+                file_type = request.POST['file_type']
+                invalid_ext = False
+                if file_type == 'coor':
+                    subtype = "pdb"
+                    if fileext not in file_types[file_type]['extension']:
+                        invalid_ext = True
+                elif file_type == 'top':
+                    subtype = "topology"
+                    if fileext not in file_types[file_type]['extension']:
+                        invalid_ext = True
+                elif file_type == 'traj':
+    
+                    subtype = "trajectory"
+                    if fileext not in file_types[file_type]['extension']:
+                        invalid_ext = True
+                elif file_type == 'parm':
+                    subtype = "parameters"
+                    if fileext not in file_types[file_type]['extension']:
+                        invalid_ext = True
+
+                elif file_type == 'other':
+                    subtype = "other"
+                    if fileext not in file_types[file_type]['extension']:
+                        invalid_ext = True
+                else:
+                    response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                
+                if invalid_ext: 
+                    response = HttpResponse('Invalid extension ".'+fileext+'" for '+file_types[file_type]['long_name'].lower(),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                if fileext == 'tgz':
+                    ext = 'tar.gz'
+                else:
+                    ext = fileext
+                
+
+                
+
+                submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
+                submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)
+
+                filename = get_file_name_submission("dynamics",submission_id,filenum,ext=ext,forceext=False,subtype=subtype)
+                filepath = os.path.join(submission_path,filename)
+                download_url = os.path.join(submission_url,filename)
+                data['download_url_file'].append(download_url)
+                os.makedirs(submission_path,exist_ok=True)
+                try:
+                    save_uploadedfile(filepath,uploadedfile)
+                    
+                except:
+                    try:
+                        os.remove(filepath)
+                    except:
+                        pass
+                    response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
+                    return response
+                finally:
+                    uploadedfile.close()
+                filenum += 1
+
+            data['msg'] = 'File successfully uploaded.'
+            response = JsonResponse(data)
+            return response
+        except:
+            exceptions = True
+            raise
+        finally:
+            if not exceptions:
+                if new_window > 0 or no_js > 0:
+                    if response.status_code != 200:
+                        error = response.content.decode()
+                        success = False
+                    else:
+                        success = True
+                    return render(request,'dynadb/DYNAMICS_file_upload.html',{'action':action,'file_type':file_type,
+                    'long_name':file_types[file_type]['long_name'],'description':file_types[file_type]['description'],
+                    'new_window':new_window,'download_urls':data['download_url_file'],'success':success,'error':error,
+                    'accept_ext':accept_string,'no_js':no_js,'get':False},status=response.status_code)
+
+    elif request.method == "GET":
+
+        return render(request,'dynadb/DYNAMICS_file_upload.html',{'action':action,'file_type':file_type,
+        'long_name':file_types[file_type]['long_name'],'description':file_types[file_type]['description'],
+        'new_window':new_window,'download_url':download_url,'success':None,'error':'','accept_ext':accept_string,'no_js':no_js,'get':True})
+
+
+
+
 
 def DYNAMICSview(request, submission_id):
 
@@ -4546,6 +4789,7 @@ def DYNAMICSview(request, submission_id):
             pickle.dump(Pscompmod, handle)
 
     else:
+        file_types_items = file_types.items()
         dd=dyndb_Dynamics()
         ddC =dyndb_Dynamics_Components()
         qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
@@ -4562,8 +4806,10 @@ def DYNAMICSview(request, submission_id):
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
             i += 1
         
-        print(cdata)
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'submission_id' : submission_id,'cdata':cdata})
+
+         
+        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
+        'qAT':qAT, 'submission_id' : submission_id,'cdata':cdata, 'file_types':file_types})
 ##############################################################################################################
 
 
