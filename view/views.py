@@ -452,7 +452,7 @@ def distances(request, dist_str,struc_id,traj_id):
     for dist_pair in dist_li:
         pos_from,pos_to=re.findall("\d+",dist_pair) 
         from_to=np.array([[pos_from,pos_to]]) 
-        dist=md.compute_distances(traj, from_to) 
+        dist=md.compute_distances(traj, from_to)*10 
         if frames == []:
             frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
             data=np.append(frames,dist, axis=1).tolist()
@@ -526,7 +526,6 @@ def rmsd(request):
             traj=traj[fr_from -1:fr_to]
             #ref_traj=ref_traj[fr_from -1 :fr_to]
             num_frames=traj.n_frames
-        print("\n\n\n from: ",fr_from," to: ",fr_to,"\n\n\n")
         selection=traj.topology.select_atom_indices(set_sel)
         try:
             rmsds = md.rmsd(traj, ref_traj, (int(ref_frame)-1),atom_indices=selection).reshape((num_frames,1))

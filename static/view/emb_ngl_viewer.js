@@ -240,8 +240,9 @@ $(document).ready(function(){
             high_pre = obtainPredefPositions();
         }
         rad_option=$(".sel_high:checked").attr("value");
+        var traj=obtainCheckedTrajs()
         // sel_ranges=obtainSelectedAtSeq();
-        return [cp, high_pre,sel_enc,rad_option] 
+        return [cp, high_pre,sel_enc,rad_option,traj] 
     }
 
     function disableMissingClasses(){
@@ -353,7 +354,7 @@ $(document).ready(function(){
             var inp=$(this).find("input").val();
             if (inp && /^[\d.]+$/.test(inp)) {
                 var comp=$(this).find("select").val();
-                dist_of[dist_of.length]=[inp,comp];
+                dist_of[dist_of.length]=inp+"-"+comp;
             }
 
         });       
@@ -385,9 +386,9 @@ $(document).ready(function(){
                   <span id="tick2" ></span>\
                   <span id="always2" style="margin-left:14px">\
                      Compute distance between \
-                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+                     <input class="form-control input-sm" id="dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
 			and\
-                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">\
+                     <input class="form-control input-sm" id="dist_to" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
                   </span>';
             $("#show_dist").append(row_d);
             i_dist+=1;
@@ -480,7 +481,14 @@ $(document).ready(function(){
     });
 
 ////
-
+    function showDist(){
+        if ($(".view_dist").is(":checked")){
+            return ("y")
+        } else {
+            return ("n")
+        }
+    };
+////
     function selectFromSeq(){
         var click_n=1;
         var seq_pos_1;
@@ -744,17 +752,25 @@ $(document).ready(function(){
         }
     });
 
-
+    function obtainCheckedTrajs(){
+        var traj = [];
+        $(".traj_element:checked").each(function(){
+            traj[traj.length]=$(this).attr("value");
+        }); 
+        return traj;
+    }
 ///
     var struc_info = $(".str_file").attr("id");
     var struc_info = struc_info.split(",");
     var struc = struc_info[0];
     var struc_id = struc_info[1];
-    var url_orig = "http://localhost:8081/html/embed/embed.html?struc="+encode(struc);
+    var url_orig = "http://localhost:8081/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
     var sel_enc = encode(sel);
-    $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel=" + sel_enc);
+    
+    var traj=obtainCheckedTrajs()
+    $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
     $("#receptor").addClass("active");
     var chains_str = $("#chains").text();
 
@@ -792,6 +808,8 @@ $(document).ready(function(){
         high_pre=results[1];
         sel_enc=results[2];
         var rad_option =results[3];
+        var traj =results[4];
+        var view_dist=showDist();
         var pd = "n";
         var legend_el=[];
         for (key in high_pre){
@@ -802,33 +820,32 @@ $(document).ready(function(){
         }
         var dist_of=obtainDistSel();  // For the dist selection
         var distToComp = obtainDistToComp();
+        var traj_id=checkTrajUsedInDistComputatiion(distToComp);
         obtainLegend(legend_el);
-        url = url_orig + ("&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]));
-        // alert(url);
+        url = url_orig + ("&sel=" + sel_enc + "&traj=" + encode(traj) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp) );
+       // alert(url);
        $("iframe").attr("src", url);
     });
 
     $("#to_mdsrv").click(function(){
          var distToComp = obtainDistToComp();
          var traj_id=checkTrajUsedInDistComputatiion(distToComp);
-         var traj = [];
-         $(".traj_element:checked").each(function(){
-             traj[traj.length]=$(this).attr("value");
-         });
-        var results = obtainURLinfo(gpcr_pdb_dict);
-        cp = results[0];
-        high_pre=results[1];
-        sel_enc=results[2];
-        var rad_option =results[3];
-        var pd = "n";
-        for (key in high_pre){
-            if (high_pre[key].length > 0){
-                pd = "y"
-                break
-            }
-        }
-        // var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]);
+         var results = obtainURLinfo(gpcr_pdb_dict);
+         cp = results[0];
+         high_pre=results[1];
+         sel_enc=results[2];
+         var rad_option =results[3];
+         var traj =results[4];
+         var view_dist= showDist();
+         var pd = "n";
+         for (key in high_pre){
+             if (high_pre[key].length > 0){
+                 pd = "y"
+                 break
+             }
+         }
+        var dist_of=obtainDistSel(); // For the dist selection
+        var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp);
         $(this).attr("href", url_mdsrv);
     });    
 

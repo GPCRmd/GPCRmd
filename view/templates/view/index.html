@@ -79,7 +79,7 @@
             <div class="row">
                 <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
                 {% for long_n, short_n in compounds %}
-                  <button   style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8">Clear</button>
@@ -147,7 +147,22 @@
 
             </div>
             </div>
-
+<!-- ============= Trajectories =========== --> 
+          {% if traj_list %}
+           <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
+              <div class="row">
+                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+              </div>
+              <div id="emb_trajectories" class="collapse" >
+                  <div class="checkbox" >
+			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj_list.0.2}}" value="{{traj_list.0.0}}" checked>{{traj_list.0.1}}</label></span>
+			{% for traj in traj_list|slice:"1:" %}
+			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
+			{% endfor %}
+		  </div>
+              </div>
+          </div>
+          {% endif %}
 <!-- ============= Predefined views of cons pos =========== -->
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" style="margin-top:5px;margin-bottom:5px">
@@ -229,9 +244,9 @@
                     <span id="tick2" ></span>
                     <span id="always2" style="margin-left:14px">
                      Compute distance between 
-                     <input class="form-control input-sm" id="dist_from" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                     <input class="form-control input-sm" id="dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
 			and
-                     <input class="form-control input-sm" id="dist_to" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">       
+                     <input class="form-control input-sm" id="dist_to" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">       
 
                     </span>
                   </span>
@@ -254,6 +269,9 @@
                 <button id="gotoDistPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
                 </div>
                 <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="dist_alert"> </div>
+                <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
+		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
+               </div>
                </div>
 <!-- ============= RMSD Analysis =========== --> 
             <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>
@@ -335,21 +353,23 @@
 <!-- ======================================== -->
             </div>
             </div>
+            <div style="margin-bottom:5px">
+                <div class="row" style="margin-top:10px;margin-bottom:0" >
+                   <div style="padding-right:3px;padding-left:3px"> 
+                      <button  class="btn" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c;">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
+                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
+                   </div>
+     	        </div>
 
-            <div class="row" >
-               <div class="col-sm-2" style="padding-bottom:10px;padding-right:3px;padding-left:3px"> 
-                  <button  class="btn btn-block btn-default" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
-               </div>
-     	    </div>
-
-            <div>
-               <iframe src="http://localhost:8081/html/embed/embed.html" style="width:100%;height:370px;border:none;overflow:hidden" scrolling="no"></iframe>  
-            </div>
-            <div id="legend"> </div>
+                <div>
+                   <iframe src="http://localhost:8081/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
+                </div>
+                <div id="legend"> </div>
+                </div>
           </div>
 
  <!--  </div>-->
-        <div class="container-fluid" style="padding:0;margin-top:10px;">
+          <!--
           {% if traj_list %}
             <div class="panel panel-default" >
                 <div class="panel-body">
@@ -369,7 +389,7 @@
                   <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
                 </div>
            </div>
-         {% endif %}
+        {% endif %}-->
         </div>
     </div>
 
