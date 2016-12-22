@@ -1,33 +1,43 @@
-
-
-function addSimcomp() {
-                var item = document.getElementById("Element1-0");
-                var itemparent = document.getElementById("pElement1");
-                var itemlast = itemparent.lastElementChild;
-
-                console.log("itemlast antes de añadir" + itemlast.id);
-
-
-                var itemlastl = itemlast.id.split("-")[1];
-                var lll=Number(itemlastl);
-                var ll=lll+1;
-                var l=ll+1;
-//              var     protnumb = "PROTEIN  #" + l;
-                //alert("Mira   "+ item.id)
-                var     t = item.cloneNode(true);
-                var     idlabnod = "Element1-" + ll;
-                t.id = idlabnod;
-//              t.childNodes[1].childNodes[1].childNodes[1].innerHTML = protnumb;
-                document.getElementById("pElement1").appendChild(t)[ll];
-                var ttt = t;
+$(document).ready(function() {
+    $("#id_add_element").click(function () {
+        var dynform = $(this).parents("#dynform");
+        var itemparent = dynform.find("#pElement1");
+        var item = itemparent.find("#Element1-0");
         
-                $(ttt).find(':input').each(function() {
-                        var name1 = $(this).attr('name');
-                        var name= name1.replace('formc-0-','');
-                        var namelab="formc-"+ll+"-"+name;
-                                                //alert("before change " +  name1 + "  After change >> " + name );
-                        var idlab ="id_formc-"+ll+"-"+name;
-                        var forlab ="id_formc-"+ll+"-"+name;
-                        $(this).attr({'placeholder':namelab, 'id':idlab, 'for':idlab, 'name':namelab});
-                });
-}  
+        var itemlast = itemparent.children("[id|='Element1']:last-child");
+        var itemlastnum = Number(itemlast.attr("id").split("-")[1]);
+        var itemlastnum_1 = itemlastnum+1;
+
+        var newitem = item.clone();
+        var idlabnod = "Element1-" + itemlastnum_1;
+        newitem.attr("id",idlabnod);
+        var resname = newitem.find("[id$='-resname']:input")
+        var molecule = newitem.find("[id$='-molecule']:input")
+        resname.prop("readonly",false);
+        resname.set_restore_color();
+        molecule.prop("readonly",false);
+        molecule.set_restore_color();
+        molecule.attr("type","number");
+        molecule.attr("min",1);
+        $(newitem).find(':input').each(function() {
+                var name1 = $(this).attr('name');
+                var name= name1.replace('formc-0-','');
+                var namelab="formc-"+itemlastnum_1+"-"+name;
+                var idlab ="id_formc-"+itemlastnum_1+"-"+name;
+                $(this).attr({'id':idlab, 'name':namelab});
+        });
+        itemparent.append(newitem);
+    });
+    
+    
+   $("#id_del_element").click( function () {
+        var parentdin = $(this).parents("#dynform");
+        var itemdel = parentdin.find("[id|=Element1]:last:not(#Element1-0)");
+        if (!itemdel.find("[id$='molecule']:input").prop("readonly")) {
+            itemdel.remove();
+        }
+
+    });
+
+});
+

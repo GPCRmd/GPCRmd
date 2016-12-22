@@ -44,7 +44,9 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
-
+from .models import Model2DynamicsMoleculeType
+ 
+model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
 # Create your views here.
 
@@ -2849,6 +2851,31 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
 #    return HttpResponse(qDS.values_list()[0])
     return render(request,'dynadb/DYNAMICSreuse.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
 
+
+def get_components_info_from_components_by_submission(submission_id,component_type='model'):
+    if component_type not in {'model','dynamics'}:
+        raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
+    
+    if component_type == 'model':
+        q = DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+        fields_list = DyndbModelComponents._meta.get_fields()
+        path = 'model_id__dyndbmodelcomponents__'
+    elif component_type == 'dynamics':
+        q = DyndbDynamics.objects.filter(submission_id=submission_id)
+        fields_list = DyndbDynamicsComponents._meta.get_fields()
+        path = 'dyndbdynamicscomponents__' 
+        
+    fields = dict()
+    for field in fields_list:
+        fields[field.name] = F(path+field.name)
+    del fields['id']
+    fields['name'] = F(path+'id_molecule__id_compound__name')
+    fields['int_id'] = F(path+'id_molecule__dyndbsubmissionmolecule__int_id')
+    q = q.annotate(**fields)
+    q = q.values(*list(fields.keys()))
+    
+    return list(q)
+        
 def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
@@ -4810,19 +4837,29 @@ def DYNAMICSview(request, submission_id):
         qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
         qAT =DyndbAssayTypes.objects.all().order_by('id')
         
+        mdata = get_components_info_from_components_by_submission(submission_id,'model')
         cdata = get_components_info_from_submission(submission_id,'dynamics')
+        
+        i = 0
+        for row in mdata:
+            #mdata[i]['numberofmol'] = ''
+            mdata[i]['readonly'] = True
+            mdata[i]['int_id'] = 1 + mdata[i]['int_id']
+            mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
+            i += 1
         
         i = 0
         for row in cdata:
             cdata[i]['resname'] = ''
             cdata[i]['numberofmol'] = ''
+            cdata[i]['readonly'] = False
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
             i += 1
         
-
+        data = mdata + cdata
          
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
-        'qAT':qAT, 'submission_id' : submission_id,'cdata':cdata, 'file_types':file_types})
+        'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
 ##############################################################################################################
 
 
