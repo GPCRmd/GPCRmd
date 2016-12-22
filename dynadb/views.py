@@ -695,6 +695,7 @@ def ajaxsearcher(request):
     if request.method == 'POST':
         moleculelist=list()
         proteinlist=list()
+        gpcrlist=list()
         compoundlist=list()
         reslist=list()
         names=list()
@@ -707,10 +708,22 @@ def ajaxsearcher(request):
             return HttpResponse(data, content_type='application/json')
 
         if request.POST.get("id_search",False)=='true':
-            if return_type=='protein' or return_type=='All':
+            if return_type=='gpcr' or return_type=='All':
                 try:
                     protein=DyndbProtein.objects.get(pk=user_input)
-                    proteinlist.append([str(protein.id),str(protein.name)])
+                    isrec=protein.receptor_id_protein
+                    if isrec!=None:
+                        gpcrlist.append([str(protein.id),str(protein.name)])
+                except:
+                    gpcrlist=[]
+
+            if return_type=='protein' or return_type=='All':
+                
+                try:
+                    protein=DyndbProtein.objects.get(pk=user_input)
+                    isrec=protein.receptor_id_protein
+                    if isrec==None:
+                        proteinlist.append([str(protein.id),str(protein.name)])
                 except:
                     proteinlist=[]
             if return_type=='molecule' or return_type=='All':
@@ -728,6 +741,7 @@ def ajaxsearcher(request):
                     except IndexError:
                         comp=molecule.id_compound.id
                         compname=molecule.id_compound.name
+                        print([str(molecule.id),str(molecule.inchikey),'',compname,netcharge])
                         moleculelist.append([str(molecule.id),str(molecule.inchikey),'',compname,netcharge]) #define inchikey in searchindex              
                 except:
                     moleculelist=[]
@@ -779,17 +793,18 @@ def ajaxsearcher(request):
                     for mol in DyndbMolecule.objects.select_related('id_compound').filter(id_compound=res.id_compound):
                         if str(mol.id) not in [i[0] for i in moleculelist]: #molecule
                             mol_id=mol.id
+                            netcharge=mol.net_charge
                             try:
                                 comp=res.id_compound #DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                                 compname=mol.id_compound.name # DyndbMolecule.objects.get(pk=mol_id).id_compound.name
                                 pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=comp).std_id_molecule.id
                                 imagepath=DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=pk2filesmolecule,type=2)[0].id_files.filepath
                                 imagepath=imagepath.replace("/protwis/sites/","/dynadb/") #this makes it work
-                                moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname]) #define inchikey in searchindex
+                                moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname,netcharge]) #define inchikey in searchindex
                             except IndexError:
                                 comp=res.id_compound#DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                                 compname=mol.id_compound.name
-                                moleculelist.append([str(mol_id),str(res.inchikey),'',compname]) #define inchikey in searchindex                    
+                                moleculelist.append([str(mol_id),str(res.inchikey),'',compname,netcharge]) #define inchikey in searchindex                    
 
                     try:
                         pk2filesmolecule=DyndbCompound.objects.select_related('std_id_molecule').get(pk=res.id_compound).std_id_molecule.id
@@ -799,8 +814,15 @@ def ajaxsearcher(request):
                     except IndexError:
                         imagepath='not found'
                         compoundlist.append([str(res.id_compound),str(res.name),str(res.iupac_name),imagepath])
-                elif 'protein' in str(res.id) and [str(res.id_protein),str(res.name)] not in proteinlist:
-                    proteinlist.append([str(res.id_protein),str(res.name)])
+                elif 'protein' in str(res.id):
+                    if ([str(res.id_protein),str(res.name)] not in gpcrlist) and ([str(res.id_protein),str(res.name)] not in proteinlist):
+                        protein=DyndbProtein.objects.get(pk=res.id_protein)
+                        isrec=protein.receptor_id_protein
+                        if isrec==None:
+                            proteinlist.append([str(protein.id),str(protein.name)])
+                        else:
+                            gpcrlist.append([str(protein.id),str(protein.name)])
+
                 elif 'molecule' in str(res.id):
                     mol_id=res.id.split('.')[2]
                     if str(mol_id) not in [i[0] for i in moleculelist]: #molecule
@@ -820,35 +842,43 @@ def ajaxsearcher(request):
 
         for mol in moleculelist:
             mol.append(count_dynamics(int(mol[0]),'molecule'))
-
+        print('after dyn search',moleculelist)
         for pro in proteinlist:
             pro.append(count_dynamics(int(pro[0]),'protein'))
+
+        for gpcr in gpcrlist:
+            gpcr.append(count_dynamics(int(gpcr[0]),'protein'))
 
         for comp in compoundlist:
             comp.append(count_dynamics(int(comp[0]),'compound'))
 
         if return_type=='protein':
-            tojson={'compound':[], 'protein':proteinlist,'molecule':[],'names':[], 'message':''}
+            tojson={'compound':[], 'protein':proteinlist,'gpcr':[],'molecule':[],'names':[], 'message':''}
+            data = json.dumps(tojson)
+            return HttpResponse(data, content_type='application/json')
+
+        if return_type=='gpcr':
+            tojson={'compound':[], 'protein':[],'gpcr':gpcrlist,'molecule':[],'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='molecule':
-            tojson={'compound':[], 'protein':[],'molecule':moleculelist,'names':[], 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':moleculelist,'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='compound':
-            tojson={'compound':compoundlist, 'protein':[],'molecule':[],'names':[], 'message':''}
+            tojson={'compound':compoundlist, 'protein':[],'gpcr':[],'molecule':[],'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='complex' or return_type=='model' or return_type=='dynamics':
-            tojson={'compound':[], 'protein':[],'molecule':[], 'names':names, 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':[], 'names':names, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='All': #no filter
-            tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist,'names':names, 'message':''}
+            tojson={'compound':compoundlist, 'protein':proteinlist,'gpcr':gpcrlist,'molecule':moleculelist,'names':names, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
@@ -1113,11 +1143,11 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
         elif table_row[0]=='molecule':
             user_molecule = table_row[1]
             if table_row[2]=='orto' or table_row[2]=='all': #orthoesteric ligand
-                for comp in DyndbComplexMoleculeMolecule.objects.select_related('id_complex_molecule').filter(id_molecule=user_molecule,type=0): 
+                for comp in DyndbComplexMoleculeMolecule.objects.select_related('id_complex_molecule').filter(id_molecule=user_molecule).filter(type=0): 
                     rowlist.append(comp.id_complex_molecule.id)
 
             elif table_row[2]=='alo' or table_row[2]=='all': #alosteric ligand
-                for comp in DyndbComplexMoleculeMolecule.objects.select_related('id_complex_molecule').filter(id_molecule=user_molecule,type=1): 
+                for comp in DyndbComplexMoleculeMolecule.objects.select_related('id_complex_molecule').filter(id_molecule=user_molecule).filter(type=1): 
                     rowlist.append(comp.id_complex_molecule.id)
 
         else:
@@ -1130,7 +1160,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
             for row in q:
                 if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0: #ortoligand
                     rowlist.append(row['cmol_id'])
-                if table_row[2]=='alo' or table_row[2]=='all' and row['type']==1: #alosteric ligand
+                if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1: #alosteric ligand
                     rowlist.append(row['cmol_id'])
         ############################
     elif return_type=='model':
@@ -1213,7 +1243,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
             q=q.annotate(dynamics_id=F('id_complex_molecule__dyndbmodel__dyndbdynamics__id'))
             q=q.values('dynamics_id','type')
             for row in q:
-                if row['id_dynamics'] is not None:
+                if row['dynamics_id'] is not None:
                     if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0:
                         rowlist.append(row['dynamics_id'])
 

@@ -106,6 +106,10 @@ $("#Searcher").click(function(e) {
                     linkresult=linkresult+'<tr><td>   <a target="_blank" class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.protein[i][data.protein[i].length-1]+'</span> '+data.protein[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
                 }
 
+                for(i=0; i<data.gpcr.length; i++){
+                    linkresult=linkresult+'<tr><td>   <a target="_blank" class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.gpcr[i][0]+'%'+data.gpcr[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                }
+
                 for(i=0; i<data.names.length; i++){
                     if (data.names[i][0].length>2){
                         if (data.names[i][1]=='complex'){

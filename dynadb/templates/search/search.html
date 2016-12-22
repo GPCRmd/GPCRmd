@@ -147,8 +147,14 @@
     max-height:400px;
     overflow:auto;
     position: fixed;
+
 }
 
+#help{
+    overflow-y:auto;
+    max-height:300px;
+    overflow:auto;
+}
 
 .foo{
     border: solid black 2px;
@@ -180,7 +186,7 @@ kbd{
             <div style="padding:10px 40px">
             <li class="helpli">Search for compounds, molecules and proteins:</li><br>
 
-            <p>Use this panel in the left to search for compounds, molecules or proteins. You can filter the type of the results returned (All, Protein, Molecule, Compound, and other options that will be explained lately) using the menu between the search input box and the search icon. Next to every result, you will find an "Add to search" button, which will add the element to the right panel, allowing you to search a system using a combination of elements. For example: Molecule Clozapine AND Protein P28222.</p>
+            <p>Use the panel in the left to search for compounds, molecules or proteins. You can use SMILES, InChI, InChIKey, and the common name. You can filter the type of the results returned (All, Protein, Molecule, Compound, and other options that will be explained lately). Next to every result, you will find an "Add to search" button, which will add the element to the right panel, allowing you to search a system using a combination of elements. For example: Molecule Clozapine AND Protein P28222.</p>
 
             <li class="helpli" >Search by ID:</li><br>
 
@@ -191,7 +197,7 @@ kbd{
             <div style="padding:10px 40px">
             <li class="helpli"> Simple and Advanced Search</li><br>
 
-            <p>In the right panel, you can choose between <b>Simple and Advanced search</b>, the difference being that the second kind allows you to use "AND", "OR" and "NOT" boolean operators, as well as parenthesis. Simple search only allows "AND" operator (which is enough in most cases). When using the advanced search, if you want a system to have the protein P28222 and any of the following ligands: Serotonin, Clozapine, POPC, then build the query this way:</p><br>
+            <p>In the right panel, you can choose between <b>Simple and Advanced search</b>, the difference being that the second kind allows you to use "AND", "OR" and "NOT" boolean operators, as well as parenthesis. Simple search only allows "AND" operator (which is enough in most cases). The following is an example of how to perform a search with parenthesis:</p><br>
 
             <center><table class="jumbotable">
             <tr><td>P28222</td><td>P28222</td></tr>
@@ -201,17 +207,31 @@ kbd{
             </table></center>
 
             <p>The search in the left will return all the following:</p>
-            P28222+ Serotonin <br> P28222+ Clozapine <br> P28222+ POPC <br> P28222+Serotonin+Clozapine <br> P28222+Serotonin+POPC <br> P28222+Serotonin+Clozapine+POPC <br> P28222+POPC+Clozapine
+            <ul>
+            <li>P28222+ Serotonin</li>
+            <li>P28222+ Clozapine</li>
+            <li>P28222+ POPC </li>
+            <li>P28222+Serotonin+Clozapine</li>
+            <li>P28222+Serotonin+POPC </li>
+            <li>P28222+Serotonin+Clozapine+POPC </li>
+            <li>P28222+POPC+Clozapine </li>
+
+            </ul>
+
             <p>However, the search in the right will return: </p>
-            P28222 + Serotonin <br> All systems with Clozapine <br> All systems with POPC
+            <ul>
+            <li>P28222 + Serotonin</li>
+            <li>All systems with Clozapine</li>
+            <li>All systems with POPC </li>
+            </ul>
 
             <br><li class="helpli"> Defining functions inside the system: </li><br>
 
-            <p> You can select the function which the molecule performs in the system: "Orthosteric ligand", "Allosteric Ligand", "Other" or "All". "All" meaning any of the previous. For proteins, you can select if it is acting as a receptor or not, using the <b>"is receptor" checkbox</b>. If it is not checked, we assume you want that protein to NOT be a receptor.</p>
+            <p> You can select the function which the molecule performs in the system: "Orthosteric ligand", "Allosteric Ligand", "Other" or "All". "All" meaning any of the previous. For proteins, you can select if it is a GPCR or not, using the <b>"is GPCR" checkbox</b>. If it is not checked, if it is not selected, we assume that the protein is NOT a GPCR.</p>
 
             <li class="helpli">Exact Match</li><br>
 
-            <p> If you select "Exact Match"  the search will return only systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result.</p>
+            <p> If you select "Exact Match" the search will return only systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result.</p>
 
             <li class="helpli">Complex, Complex Structure and Dynamics</li><br>
             <p> You can also select between: <b>"Complex", "Complex Structure" or "Dynamics"</b>. "Complex" is a system composed by a GPCR and other proteins plus its orthosteric and allosteric ligands, "Complex Structure" is a complex with other selected co-crystallized molecules which is used to build the entire solvated and membrane-embeded system (think of it as a PDB file) and "Dynamics" is a "Complex Structure" with a trajectory. For the last two cases,"Complex Structure" and "Dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "Dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> 
@@ -234,7 +254,7 @@ kbd{
             <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
 
                 <input id="protein22" type="text" class="form-control" name="name" placeholder="5-HT1B receptor"></input>
-                <select id="simpletype"><option selected="selected" value="All">All</option><option value="protein">Protein</option><option title="Molecule in the classical sense, altough different protonation states or different tautomers constitute a molecule on their own. CH3-COOH and CH3COO- wold be two different molecules with its own ID." value="molecule">Molecule</option><option title="Comprises a set of moleculs and it is represented by the standard form of that set. 'Acetic Acid' would join molecules CH3-COOH and CH3COO- and it would be represented by the former" value="compound">Compound</option><option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option><option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> <option title="Simulations" value="dynamics">Dynamics (only with ID search)</option></select>
+                <select id="simpletype"><option selected="selected" value="All">All</option><option title="G protein coupled receptor" value="gpcr">GPCR</option><option title="G protein, arrestin, peptide ligand, nanobody, etc." value="protein">Other proteins</option><option title="Molecule in the classical sense, altough different protonation states or different tautomers constitute a molecule on their own. CH3-COOH and CH3COO- wold be two different molecules with its own ID." value="molecule">Molecule</option><option title="Comprises a set of moleculs and it is represented by the standard form of that set. 'Acetic Acid' would join molecules CH3-COOH and CH3COO- and it would be represented by the former" value="compound">Compound</option><option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option><option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> <option title="Simulations" value="dynamics">Dynamics (only with ID search)</option></select>
 <button id="Searcher" type="button" value="Search" class="btn btn-info"> <span class="glyphicon glyphicon-search"> </button>
                 <br><input id="idsearch" type="checkbox" value="val">Search by GPCRmd ID
                 
@@ -321,11 +341,6 @@ kbd{
 </div> <!--second col-->
 </div><!--container-->
 </div>
-<br><br><br><br>
-<!--<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
-<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br> -->
 {% endblock %}
 
 {% block addon_js %}

@@ -203,7 +203,7 @@ $("#tablesearch").click(function() {
     if (restype=='dynamics'){
         var is_apoform=$('input[name=radiosearch1]:checked', '#hidden').val();
     }
-
+    console.log(bigarray);
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
 
     if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
