@@ -578,6 +578,25 @@ class DyndbModelComponents(models.Model):
         unique_together = (('id_model', 'id_molecule'),)
 
 
+class Model2DynamicsMoleculeType:
+    def __init__(self):
+        model_type_2_num = dict()
+        for num,name in DyndbModelComponents.MOLECULE_TYPE:
+            model_type_2_num[name] = num
+        self.__dynamics_type_2_name = dict()
+        for num,name in DyndbDynamicsComponents.MOLECULE_TYPE:
+            self.__dynamics_type_2_name[num] = name
+        self.__translation_dict = dict()
+        for num,name in DyndbDynamicsComponents.MOLECULE_TYPE:
+            self.__translation_dict[model_type_2_num[name]] = num 
+    def translate(self,num,as_text=False):
+        val = None
+        if num in self.__translation_dict:
+            val = self.__translation_dict[num]
+            if as_text:
+                val = self.__dynamics_type_2_name[val]     
+        return val
+
 
 class DyndbDynamicsMembraneTypes(models.Model):
     type_name = models.CharField(max_length=20)
