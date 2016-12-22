@@ -55,6 +55,12 @@ function CreateTable(){
 }
 
 
+
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+
 $("#tablesearch").click(function() {
     $('#ajaxresults22').DataTable().clear().draw();
     var exactboo=$('#exactmatch').prop('checked');
@@ -182,6 +188,11 @@ $("#tablesearch").click(function() {
     var restype=$('#result_type').val();
     var ff=$('#fftype').val();
     var tstep=$('#tstep').val();
+    if (! isNumber(tstep) && tstep.length>0){
+        alert('Time step has to be a number');
+        $("#tablesearch").prop("disabled",false);
+        return false;
+    }
     var sof=$('#soft').val();
     var mem=$('#memtype').val();
     var method=$('#method').val();
@@ -192,10 +203,16 @@ $("#tablesearch").click(function() {
     if (restype=='dynamics'){
         var is_apoform=$('input[name=radiosearch1]:checked', '#hidden').val();
     }
-
+    console.log(bigarray);
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
 
     if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
+        if (exactboo==true){
+            alert('Exact match does not work if the query is empty.');
+            $("#tablesearch").prop("disabled",false);
+            return false;
+
+        }
         $.ajax({
             type: "POST",
             data: {'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform},

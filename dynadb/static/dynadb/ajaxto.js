@@ -99,11 +99,15 @@ $("#Searcher").click(function(e) {
                 }
 
                 for(i=0; i<data.molecule.length; i++){
-                    linkresult=linkresult+'<tr><td>  <a target="_blank" class="btn btn-info" role="button" href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule ID: '+data.molecule[i][0]+' '+data.molecule[i][3]+'</a> <span title="Number of dynamics in which this element is present" class="badge"> '+data.molecule[i][data.molecule[i].length-1]+'</span><br> <br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/> </td><td  align="left">  <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+'%'+data.molecule[i][3].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                    linkresult=linkresult+'<tr><td>  <a target="_blank" class="btn btn-info" role="button" href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule ID: '+data.molecule[i][0]+' '+data.molecule[i][3]+'</a> <span title="Number of dynamics in which this element is present" class="badge"> '+data.molecule[i][data.molecule[i].length-1]+'</span> <span title="Net Charge" class="badge"> '+data.molecule[i][data.molecule[i].length-2]+'</span><br> <br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/> </td><td  align="left">  <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+'%'+data.molecule[i][3].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
                 }
 
                 for(i=0; i<data.protein.length; i++){
-                    linkresult=linkresult+'<tr><td>   <a target="_blank" class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.protein[i][data.protein[i].length-1]+'</span> '+data.protein[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="receptor" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                    linkresult=linkresult+'<tr><td>   <a target="_blank" class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.protein[i][data.protein[i].length-1]+'</span> '+data.protein[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                }
+
+                for(i=0; i<data.gpcr.length; i++){
+                    linkresult=linkresult+'<tr><td>   <a target="_blank" class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.gpcr[i][0]+'%'+data.gpcr[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
                 }
 
                 for(i=0; i<data.names.length; i++){
