@@ -2381,19 +2381,22 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
-def pdbcheck_molecule(request,submission_id):
+def pdbcheck_molecule(request,submission_id,form_type):
     post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID'}
     #post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID','numberofmol':'number of molecules'}
     postkeys_mc = post_mc_dict.keys()
     response = None
-    prefix_mc='formmc'
+    if form_type == "model":
+        prefix_mc='formmc'
+    elif form_type == "dynamics":
+        prefix_mc='formc'
     postkeys_ps = {'chain','segid','resid_from','resid_to'}
     prefix_ps='formps'
     
     if request.method == 'POST':
-            submission_path = get_file_paths("model",url=False,submission_id=submission_id)
-            submission_url = get_file_paths("model",url=True,submission_id=submission_id)
-            pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+            submission_path = get_file_paths(form_type,url=False,submission_id=submission_id)
+            submission_url = get_file_paths(form_type,url=True,submission_id=submission_id)
+            pdbname = get_file_name_submission(form_type,submission_id,0,ext="pdb",forceext=False,subtype="pdb")
             pdbfilepath =  os.path.join(submission_path,pdbname)
             if not os.path.isfile(pdbfilepath):
                 return JsonResponse({'msg':'Cannot find uploaded PDB file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
@@ -2403,7 +2406,7 @@ def pdbcheck_molecule(request,submission_id):
  
             fieldset_mc = dict()
             fieldset_ps = dict()
-            for key in request.POST.keys():
+            for key in request.POST:
                 if key.find(prefix_mc) == 0:
                     
                     fieldsplit = key.split('-')
@@ -2420,7 +2423,7 @@ def pdbcheck_molecule(request,submission_id):
                                 msgtype = post_mc_dict[key].split(maxsplit=1)
                                 return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[num][fieldname])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
 
-                elif key.find(prefix_ps) == 0:
+                elif key.find(prefix_ps) == 0 and form_type == "model":
                         
                     fieldsplit = key.split('-')
                     fieldname = fieldsplit[2]
@@ -2449,7 +2452,7 @@ def pdbcheck_molecule(request,submission_id):
                             msgtype = post_mc_dict[key].split(maxsplit=1)
                             return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[0][key])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
 
-                elif key in postkeys_ps:
+                elif key in postkeys_ps and form_type == "model":
                     if 0 not in fieldset_ps.keys():
                         fieldset_ps[0] = dict()
                     fieldset_ps[0][key] = request.POST[key].strip()
@@ -2461,17 +2464,28 @@ def pdbcheck_molecule(request,submission_id):
                                 fieldset_ps[0][key] = int(fieldset_ps[0][key],16)
                             except ValueError:
                                 return JsonResponse({'msg':'Residue definition "'+str(fieldset_ps[0][key])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
-               
-            if fieldset_mc == dict() or fieldset_ps == dict():
+            if fieldset_mc == dict() or (fieldset_ps == dict() and form_type == "model"):
                 return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
             for num in fieldset_mc.keys():
                 if fieldset_mc[num].keys() != postkeys_mc:
                     return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
-            for num in fieldset_ps.keys():
-                if fieldset_ps[num].keys() != postkeys_ps:
-                    return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
-                
-
+            if form_type == "model":       
+                for num in fieldset_ps.keys():
+                    if fieldset_ps[num].keys() != postkeys_ps:
+                        return JsonResponse({'msg':'Missing POST keys.'},status=422,reason='Unprocessable Entity')
+            
+            if form_type == "model":
+                fieldset_ps = [fieldset_ps[key] for key in sorted(fieldset_ps,key=int)]
+            elif form_type == "dynamics":
+                q = DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+                fields_list = list(postkeys_ps)
+                path = 'model_id__dyndbmodeledresidues__'
+                fields = dict()
+                for field in fields_list:
+                    fields[field] = F(path+field)
+                q = q.annotate(**fields)
+                q = q.values(*fields_list)
+                fieldset_ps = list(q)
             molintdict = dict()
             form_resnames = set()
             for key in fieldset_mc:
@@ -2489,9 +2503,12 @@ def pdbcheck_molecule(request,submission_id):
                 form_resnames.add(resname)
                 molintdict[int_id]['id_molecule'] = fieldset_mc[key]['id_molecule']
                 #molintdict[int_id]['numberofmol'].append(fieldset_mc[key]['numberofmol'])
-                
+            del fieldset_mc    
             int_ids = molintdict.keys()
-            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,not_in_model=False).values('int_id')
+            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+            if form_type == "model":
+                int_ids_db = int_ids_db.filter(not_in_model=False)
+            int_ids_db = int_ids_db.values('int_id')
             diff_int_id_form_db = set(list([row['int_id'] for row in int_ids_db])).difference(set(molintdict.keys()))
             if diff_int_id_form_db != set():
                 return JsonResponse({'msg':'You have the following unused molecules in step 2: '+','.join(['#'+str(i+1) for i in diff_int_id_form_db])+'.\nPlease, delete them if they are not part of your submission.'},status=422,reason='Unprocessable Entity')
@@ -2511,7 +2528,7 @@ def pdbcheck_molecule(request,submission_id):
                 
             
             os.makedirs(submission_path,exist_ok=True)
-            logname = get_file_name_submission("model",submission_id,0,ext="log",forceext=False,subtype="log")
+            logname = get_file_name_submission(form_type,submission_id,0,ext="log",forceext=False,subtype="log")
             
             logfile = open(os.path.join(submission_path,logname),'w')
             data['download_url_log'] = join_path(submission_url,logname,url=True)

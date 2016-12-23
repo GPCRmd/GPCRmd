@@ -49,6 +49,7 @@ def write_entry(line,fileh,serial):
     
 def split_protein_pdb(filename,modeled_residues,outputfolder=None):
         '''Get sequence from a PDB file in a given interval defined by a combination of Segment Identifier (segid), starting residue number (start), end residue number (stop), chain identifier (chain). All can be left in blank. Returns 1) a list of minilist: each minilist has the resid and the aminoacid code. 2) a string with the sequence.'''
+        print(modeled_residues)
         fpdb=open(filename,'r')
         header = "CRYST1    0.000    0.000    0.000  90.00  90.00  90.00 P 1           1"
         rootname,ext = path.splitext(filename)
@@ -108,12 +109,12 @@ def split_protein_pdb(filename,modeled_residues,outputfolder=None):
                             pfields=fields
                             
                             protein = False
-                            for rownum,row in modeled_residues.items():
+                            for row in modeled_residues:
                                 chain = row['chain']
                                 start = row['resid_from']
                                 stop =  row['resid_to']
                                 segid = row['segid']
-                                if (fields['chain']==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in fields['segid'] or segid==''):
+                                if (fields['chain']==chain or chain == '') and cpos2 >= start and cpos2 <= stop and ((segid == fields['segid']) or segid==''):
                                     protein = True
                                     break
                                     
