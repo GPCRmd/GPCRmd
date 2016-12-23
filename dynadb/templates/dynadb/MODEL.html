@@ -123,7 +123,7 @@
 		</div>
                       
 			<div style="text-align:right;margin-right:5%">
-                            <a id="id_download_pdb"  name="download_pdb" href="" hidden target="_blank">Download uploaded PDB file.</a>
+                            <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="" hidden target="_blank">Download uploaded PDB file.</a>
                             <button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button>
 			</div>
 			
@@ -160,7 +160,7 @@
 				<td style="padding:5px 5px 5px 5px"><input id="id_resid_to" name="resid_to" type="text" style="width:50px" placeholder=" ?? "/></td>
                               <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_from" name="seq_resid_from" type="text"  style="width:50px" placeholder=" "/></td>
                               <td style="padding:5px 5px 5px 5px"><input id="id_seq_resid_to" name="seq_resid_to" type="text"  style="width:50px" placeholder=" "/></td>
-                              <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked placeholder=" "/></td>
+                              <td style="padding:5px 5px 5px 10px"><input id="id_bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" disabled placeholder=" "/></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" name="pdbidps" type="text"  style="width:50px" placeholder=" 4IAR.A  "/></td>
 				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps" name="source_typeps" style="width:50px" >	
                                       {% for i in fdbPS.Meta.model.SOURCE_TYPE %}
@@ -207,9 +207,8 @@
 				<tr id="Element2-{{forloop.counter0}}">
                                       
                                       <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" placeholder=" 1 " value="{{mc.int_id}}"/></td>
+					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" readonly maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="text" placeholder=" 1 " value="{{mc.int_id}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
-
 					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" style="width:60px">
@@ -236,18 +235,18 @@
 			
 			<br>
  			<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
-			     <button id="id_add_molecule" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement2();">+ Add Molecule</button><br>
-			     <button id="id_del_molecule" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement2();">- Remove Molecule</button>
+			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" >+ Add Molecule</button><br>
+			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" >- Remove Molecule</button>
 				<!--	<button onclick="addFields()"> + Add modeled residue </button>  -->
 		        </div>
 		        
 		        </div> 		
 
  			<div style="text-align:right;margin-right:5%">
-                                      <a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a>
+                                      <a id="id_logfile"  name="logfile" href="" noreferrer noopener hidden target="_blank">Download log file.</a>
 					<button id ="id_check_pdb_mol" type="button" style="height:30px;margin: 15px 0px 0px 0px;width:100px"> Validate </button>
 					<br>
-					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a>
+					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" noreferrer noopener target="_blank">Download pdbchecker results.</a>
                                       
 		        </div>
 		        {% else %}
@@ -294,7 +293,6 @@
     <script src="{% static 'dynadb/addModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/delModeledelement1.js' %}"></script>
     <script src="{% static 'dynadb/addModeledelement2.js' %}"></script>
-    <script src="{% static 'dynadb/delModeledelement2.js' %}"></script>
     <script src="{% static 'dynadb/pdbCheckMol.js' %}"></script>
 <!-- <script src="{% static 'dynadb/Modelsourcetypeps.js' %}"></script> -->
 

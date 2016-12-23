@@ -12,21 +12,13 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Complex Structure Info:</b> </div>
+    <div class="panel-heading"><b>Complex Info:</b> </div>
     <div class="panel-body">
 
 {% if answer.proteins %}
     <b>Proteins used in this complex</b>:<br>
     {%for proid in answer.proteins%}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/proteins/id/{{proid.0}}>{{proid.1}}</a> 
-    {%endfor%}
-    <br>
-{% endif %} 
-
-{% if answer.molecules %} 
-    <b>Molecules used in this complex</b>:<br>
-    {%for molid in answer.molecules %}
-       <a href= /dynadb/molecule/id/{{molid}}>{{molid}}</a>
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}}</a> 
     {%endfor%}
     <br>
 {% endif %} 
@@ -50,7 +42,13 @@
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b>:<br>
     {% for modid in answer.models %}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid}}>Complex Structure ID: {{modid}}</a>
+       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
+        {%if modid.1%}
+            using molecule(s):
+            {%for mol in modid.1%}
+                <a target='_blank' class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
+            {%endfor%}
+        {%endif%}
     {% endfor %}
      <br>
 {% endif %} 

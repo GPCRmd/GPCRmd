@@ -49,7 +49,6 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 					cpos2=int(cpos,16)
 					flag=1
 					hexflag=1
-
 				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
 					if cpos2>=ppos2+1:
 						try:
@@ -244,7 +243,7 @@ def unique(pdbname, usechain=False,usesegid=False):
 				if usesegid==True and csegid.isspace():
 					return 'Segid field is empty in:' + newele + '. Do not use this field or fill it.'
 				if newele in pdbset:
-					return 'The parameters you have provided do not ensure a unique aminoacid as: ' + newele + ' is repeated'
+					return 'The parameters you have provided do not define a unique aminoacid as: ' + newele + ' is repeated'
 					oldpdb.close()
 				else:
 					pdbset.add(newele)
@@ -365,8 +364,8 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 			seq_res_from=i+1
 			flag=1
 
-		if  bestalig[1][i]!='-' and flag==1: #find first gap after the pdb sequence ----------AKLISR-(this one at the left)----------
-			seq_res_to=i+1
+		if bestalig[1][i]!='-' and flag==1: #find first gap after the pdb sequence ----------AKLISR-(this one at the left)----------
+			seq_res_to=i+1 #keeps adding one until bestalig[1][i]=='-', gap has appeared after the sequence!
 
 		i+=1
   

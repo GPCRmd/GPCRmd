@@ -2,6 +2,17 @@ $('#hidden').hide();
 $('#hiddenmodel').hide();
 var counter=0;
 
+$(document).on({
+    mouseenter: function () {
+        $("#lightup").css("background-color", "#5cb85c"); //#609dd2
+
+    },
+    mouseleave: function () {
+        $("#lightup").css("background-color", "#d9edf7");
+    }
+}, ".protein, .molecule, .compound"); //pass the element as an argument to .on
+
+
 $(document).on('click', '.protein, .molecule, .compound', function(){
     $('[data-toggle="tooltip"]').tooltip();
     if (counter%2==0){
@@ -27,7 +38,7 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
 
         $('#myTable').find('.tableselect:first').empty().append('<option selected="selected" value=" "> </option>');
 
-    }else{
+    }else{ //ADVANCED SEARCH SELECTED
         var text = $(this).attr("name");
         var nameandid=text.split('%');
         var id=nameandid[0];
@@ -55,20 +66,24 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
 
 
 $('#gotoadvsearch').on('click', function(){
-    $('#myTable tbody tr').remove();
-
     counter+=1;
+    bigarray=tabledata(counter);
+    $('#myTable tbody tr').remove();
     if (counter%2==0){
-        $('#gotoadvsearch').html('Go to Advanced Search');
+        if (bigarray.length > 1){
+            recycletable(counter,bigarray);
+        }
+        $('#gotoadvsearch').html('Go to Advanced Search'); //from adv to simple
         $('#crazycolor').css("background-color", "transparent");
 
     }else{
-        $('#gotoadvsearch').html('Go to Simple Search');
+        if (bigarray.length > 1){
+            recycletable(counter,bigarray);
+        }
+        $('#gotoadvsearch').html('Go to Simple Search'); //from simple to adv
         $('#crazycolor').css("background-color", "#e6e6ff");
     }
 });
-
-
 
 
 $('#result_type').on('change', function() {
@@ -104,4 +119,118 @@ $('#result_type').on('change', function() {
     } 
 });
 
+function tabledata(countertt){
+    var bigarray=[];
+    var openpar=[];
+    var closingpar=[]
+    var flag=0; //means no errors
+    if (countertt%2==0){
+        var typeofsearch='advanced';
+        $("#myTable tr").each(function () {
+            var postarray=[];
+            var counter=0;
+            $('td', this).each(function () {
+                if (counter==0){
+                    var drop=$(this).find(":selected").text();
+                    postarray.push(drop);
+
+                }else if (counter==1) {
+                    var drop=$(this).find(":selected").text();
+                    postarray.push(drop);
+                    openpar.push(drop);
+
+                }else{
+                    if (counter==4){
+                        if (postarray[2]=='protein') {
+                            var isligrec=$(this).find('[type=checkbox]').prop('checked');
+                            postarray.push(isligrec);
+                        }else{
+                            var drop=$(this).find(":selected").val();
+                            postarray.push(drop);  
+                        }
+                    }else if (counter==5) {
+                        var drop=$(this).find(":selected").text();
+                        postarray.push(drop);
+                        closingpar.push(drop);
+                    } else {
+                        var value = $(this).text(); //var value = $(this).text();
+                        postarray.push(value);
+                    }
+                }
+                counter=counter+1;
+            })
+            bigarray.push(postarray);
+        })
+
+    }else{
+        //pick simple search information
+        var typeofsearch='simple';
+        $("#myTable tr").each(function () {
+            var postarray=[];
+            var counter=0;
+            $('td', this).each(function () {
+                if (counter==0){
+                    var drop=$(this).find(":selected").text();
+                    console.log('and or ',drop);
+                    postarray.push(drop);
+                } else {
+                    if (counter==3){
+                        if(postarray[1]=='protein'){
+                            var isligrec=$(this).find('[type=checkbox]').prop('checked');
+                            postarray.push(isligrec); 
+                            console.log('isrece?',isligrec);   
+                        }else{
+                            var drop=$(this).find(":selected").val();
+                            postarray.push(drop); 
+                            console.log('lig type',drop);
+                        }
+
+                    } else {
+                        var value = $(this).text(); //var value = $(this).text();
+                        console.log(counter,value);
+                        postarray.push(value);
+                    }
+                }
+                counter=counter+1;
+            })
+            bigarray.push(postarray);
+        })
+    } //else ends
+    return bigarray;
+}
+function recycletable(counterRT,bigarray){
+    $('#myTable').find('thead').html('<tr><th>Boolean</th><th>Type</th><th>ID</th> <th></th> <th>Name</th> <th></th> </tr>');
+    if (counterRT%2==0){
+        for (i=1;i<bigarray.length;i++){
+            if (bigarray[i][2]=='protein'){
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][6]+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+bigarray[i][2]+'</td><td>'+bigarray[i][3]+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="blah"> Is GPCR </td><td>'+bigarray[i][6]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+            }else{
+                if($('#result_type').find(":selected").text()=='Complex Structure' ||$('#result_type').find(":selected").text()=='Dynamics'){
+                    $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][6]+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+bigarray[i][2]+'</td><td>'+bigarray[i][3]+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option><option value="all">All</option></select> </td><td>'+bigarray[i][6]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+                }else{
+                    $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][6]+'><td><select class="tableselect"><option value="and">AND</option></select></td><td>'+bigarray[i][2]+'</td><td>'+bigarray[i][3]+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="all">All</option></select> </td><td>'+bigarray[i][6]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm"> <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+                }
+
+            }
+        } //endfor
+
+        $('#myTable').find('.tableselect:first').empty().append('<option selected="selected" value=" "> </option>');
+
+    }else{
+        $('#myTable').find('thead').html('<tr><th>Boolean</th><th>  </th><th>Type</th><th>ID</th> <th></th> <th></th> <th>Name</th> </tr>');
+        for (i=1;i<bigarray.length;i++){
+            if (bigarray[i][1]=='protein'){
+                $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][4]+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+bigarray[i][1]+'</td><td>'+bigarray[i][2]+'</td><td><input id="ligandreceptor" type="checkbox" name="ligrec" value="some"> Is GPCR </td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+bigarray[i][4]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+            }else{
+                if($('#result_type').find(":selected").text()=='Complex Structure' ||$('#result_type').find(":selected").text()=='Dynamics'){
+                    $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][4]+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>    <td>'+bigarray[i][1]+'</td><td>'+bigarray[i][2]+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="other">Other</option></option><option value="all">All</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+bigarray[i][4]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm" >  <span class="glyphicon glyphicon-trash" ></span> </button></td></tr>');
+                }else{
+                    $('#myTable').find('tbody').append('<tr data-toggle="tooltip" title='+bigarray[i][4]+'><td><select class="tableselect">   <option value="AND">AND</option>   <option value="OR">OR</option>   <option value="NOT">NOT</option>  </select>  </td><td>   <select class="paren"> <option  value="(">(</option> <option selected="selected" value=""> </option></select></td>      <td>'+bigarray[i][1]+'</td><td>'+bigarray[i][2]+'</td><td><select class="ligselect"><option value="orto">Orthosteric Ligand</option><option value="alo">Allosteric Ligand</option><option value="all">All</option></select></td><td><select class="paren"><option value=")">)</option><option selected="selected" value=""></option></select></td><td>'+bigarray[i][4]+'</td><td><button id="deleterow" class="btn btn-danger btn-sm">  <span class="glyphicon glyphicon-trash"></span> </button></td></tr>');
+
+                }
+            }
+        }
+        $('#myTable').find('.tableselect:first').empty().append('<option selected="selected" value=" "> </option>');    
+    }
+}
 
