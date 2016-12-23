@@ -73,11 +73,11 @@
             		</div><br>   -->
 
         <div class="container-fluid" style="padding-top:15px">
-            <div class=row><p class="str_file" id ={{structure_file}},{{structure_file_id}}> {{structure_name}} <span id="chains">{{chains}}</span></p></div>
+            <div class=row><p class="str_file" id ={{structure_file}},{{structure_file_id}}> {{structure_name}} <span id="chains" class="{{all_chains}}">{{chains}}</span></p></div>
               
 <!-- ============= Comp buttonss =========== -->
             <div class="row">
-                <button  style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
+                <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor"  id="receptor">Receptor</button>
                 {% for long_n, short_n in compounds %}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
@@ -103,25 +103,36 @@
               </div>
               <div id="alert"> </div>
 <!-- ============= Sequence selection =========== -->
+              {% if prot_seq_pos %}
+              <div style="margin-bottom:20px">
               <div class="row" style="">
               <button style="padding:5px;margin-left:3px" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
               </div>
               <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                 <button  class="btn btn-link" id="addToSel" ><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
                 <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
-                  {% for seq,pos,gnum,chain,index in seq_pos %}
-                  <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
-                    <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
-                    <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
-                  </div>            
+                  {% for prot_name, seq_pos in prot_seq_pos %}
+                    <div style="clear: left;padding-bottom:20px">
+                      {% if prot_seq_pos|length > 1 %}
+                         <div>{{prot_name}}</div>
+                      {% endif %}
+                      {% for seq,pos,gnum,chain,index in seq_pos %}
+                      <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                        <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
+                        <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                      </div>            
+                      {% endfor %}
+                    </div>
                   {% endfor %}
                 </div> 
               </div>
+              </div>
+              {% endif %}
              </div>
 
 <!-- ============= Residues within x A of y =========== --> 
                <div class="row">
-                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;margin-top:20px">
+                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
                   <span class="dist_sel" id="row0">
                     <span id="tick" ></span>
                     <span id="always" style="margin-left:14px">
@@ -228,7 +239,7 @@
             {% endif %}
 
 <!-- ============= Analysis =========== --> 
-          {% if traj_list %}
+          
            <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
@@ -256,6 +267,7 @@
                   <button id="rm_btn2" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
                   
                 </div>
+                {% if traj_list %}
                 <div style="margin-left:18px;margin-bottom:15px">
                  At trajectory: 
                    <span style="margin-left:5px">
@@ -266,9 +278,12 @@
                            {% endfor %}
                         </select>
                    </span>
-                <button id="gotoDistPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
                 </div>
-                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="dist_alert"> </div>
+                {% else %}
+                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:40px" >Obtain result</button>
+                {% endif %}
+                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
 		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
                </div>
@@ -349,7 +364,7 @@
               </div>
              </div>
 
-          {% endif %}
+
 <!-- ======================================== -->
             </div>
             </div>

@@ -88,7 +88,17 @@ $(document).ready(function(){
                     } else if (chain_pair[0]==chain_pair[1]){
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
                     } else {
-                        pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + " or -"+res_pair[1]+":" +chain_pair[1]+")";
+
+
+                        start=all_chains.indexOf(chain_pair[0]);
+                        end=all_chains.indexOf(chain_pair[1]);
+                        var middle_str="";
+                        considered_chains=all_chains.slice(start+1,end)
+                        for (chain in considered_chains){
+                            middle_str += " or :"+ considered_chains[chain];
+                        }
+
+                        pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
                     }
                     pre_sel = pre_sel.replace(gpcr_pair_str, pos_range);
                 } else {
@@ -469,14 +479,42 @@ $(document).ready(function(){
 
 */
         var res_ids = obtainDistToComp();
-        var traj_id=checkTrajUsedInDistComputatiion(res_ids);
-        if (traj_id){
-            var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
-            newwindow=window.open(dist_url,'','width=870,height=400');
-            $("#dist_alert").html("");
+        if ($(this).attr("class").indexOf("withTrajs") > -1){
+            var traj_id=checkTrajUsedInDistComputatiion(res_ids);
+            if (traj_id){
+                var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
+                newwindow=window.open(dist_url,'','width=870,height=400');
+                $("#dist_alert").html("");
+            } else {
+                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+                $("#dist_alert").html(add_error_d);
+            }
         } else {
-            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
-            $("#dist_alert").html(add_error_d);
+            if (res_ids){
+                $("#dist_alert").html("");
+
+                $.ajax({
+                    type: "POST",
+                    url: "/view/1/",  //Change 1 for actual number
+                    dataType: "json",
+                    data: { 
+                      "distStr": struc,
+                      "dist_resids": res_ids,
+                    },
+                    success: function(data_dist) {
+                        dist_result=data_dist.result
+                    //    var rmsd_url ='/view/rmsd/';
+                     //   newwindow=window.open(rmsd_url,'','width=870,height=520');
+                    },
+                    error: function() {
+                        add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                        $("#dist_alert").html(add_error_d);             
+                    }
+                });
+            } else {
+                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+                $("#dist_alert").html(add_error_d);
+            }
         }
     });
 
@@ -568,7 +606,14 @@ $(document).ready(function(){
         if (chain_l==chain_r){
             var pos_chain_str=pos_l + "-" +pos_r+":"+chain_l;
         } else {
-            var pos_chain_str=pos_l + "-:"+chain_l + " or -"+pos_r+":" +chain_r;
+            start=all_chains.indexOf(chain_l);
+            end=all_chains.indexOf(chain_r);
+            var middle_str="";
+            considered_chains=all_chains.slice(start+1,end)
+            for (chain in considered_chains){
+                middle_str += " or :"+ considered_chains[chain];
+            }
+            var pos_chain_str= pos_l + "-:"+chain_l +middle_str +" or 1-"+pos_r+":" +chain_r;
         }
         return pos_chain_str;
     }
@@ -773,6 +818,7 @@ $(document).ready(function(){
     $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
     $("#receptor").addClass("active");
     var chains_str = $("#chains").text();
+    var all_chains = $("#chains").attr("class").split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").attr("id");
     var bw_dict,gpcrdb_dict
