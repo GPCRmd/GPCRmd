@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles, DyndbModel, DyndbProtein,DyndbProteinSequence
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering
 from dynadb.pipe4_6_0 import *
 from view.data import *
@@ -193,20 +193,30 @@ def obtain_dyn_files(paths_dict):
             traj_list.append((myfile, myfile_name, f_id))
     return (structure_file,structure_file_id,structure_name, traj_list)
 
-def obtain_prot_chains(pdb_name):
-    """Given a structure file, returns a list of protein chains"""
-    pdb = PDBParser(PERMISSIVE=True, QUIET=True).get_structure("ref", pdb_name)
-    chain_name_li=[]
-    for chain in pdb.get_chains(): 
-        for residue in chain:
-            if PDB.is_aa(residue): 
-                chain_name_li.append(chain.id)
-                break
-    return chain_name_li
+def obtain_prot_chains_new(pdb_name):
+    chain_name_s=set()
+    fpdb=open(pdb_name,'r')
+    for line in fpdb:
+        if useline(line):
+            chain_name_s.add(line[21])
+            #print(line[23:27])
+    return list(chain_name_s)
+
+
+def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
+    """Creates a list of all the important info of prot sequence positions"""
+    chain_nm_seq_pos=""
+    if multiple_chains:
+        chain_nm_seq_pos=chain_name
+    for pos in result:
+        if pos[0] != "-": #Consider only num in the pdb
+            seq_pos.append([pos[0][0],pos[0][1],"",chain_nm_seq_pos,seq_pos_n]);
+            seq_pos_n+=1
+    return (seq_pos,seq_pos_n)
 
 def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
-    chain_nm_seq_pos=""
+    #chain_nm_seq_pos=""
     if multiple_chains:
         chain_nm_seq_pos=chain_name
     pos_gnum = numbers[current_class]
@@ -216,10 +226,10 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
             gnum_or_nth=""
             this_gnum = pos_gnum[db_pos][1]
             if this_gnum: #If exist GPCR num for this position
-                gpcr_pdb[this_gnum]=[pos[0][2],chain_name]
+                gpcr_pdb[this_gnum]=[pos[0][1],chain_name]
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
-            seq_pos.append([pos[0][0],pos[0][2],gnum_or_nth,chain_nm_seq_pos,seq_pos_n]);
+            seq_pos[seq_pos_n][2]=gnum_or_nth
             seq_pos_n+=1
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
@@ -337,21 +347,69 @@ def findGPCRclass(num_scheme):
     return current_class
 
 
+
+def distances_inpage(dist_struc,dist_ids):
+    struc_path = "/protwis/sites/files/"+dist_struc
+    strc=md.load(struc_path)
+    dist_li=re.findall("\d+-\d+",dist_ids)
+    dist_result={}
+    for dist_pair in dist_li:
+        pos_from,pos_to=dist_pair.split("-") 
+        from_to=np.array([[pos_from,pos_to]]) 
+        dist=float(md.compute_distances(strc, from_to)*10)
+        dist_result[dist_pair]=dist
+    return(dist_result)
+
+
+def obtain_DyndbProtein_id_list(dyn_id):
+    """Given a dynamic id, gets a list of the dyndb_proteins and proteins associated to it that are GPCRs + a list of all proteins (GPCRs or not)"""
+    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    prot_li_gpcr=[]
+    dprot_li_all=[]
+    dprot_li_all_info=[]
+    if model.id_protein:
+        is_gpcr = False
+        gprot= model.id_protein.receptor_id_protein
+        if gprot:
+            prot_li_gpcr=[(model.id_protein, gprot)]
+            is_gpcr=True
+        dprot_li_all=[model.id_protein]
+        dprot_seq=DyndbProteinSequence.objects.get(id_protein=model.id_protein.name.id).sequence
+        dprot_li_all_info=[model.id_protein.name, is_gpcr , dprot_seq ]     
+    else:
+        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+        for dprot in dprot_li_all:
+            is_gpcr = False
+            gprot= dprot.receptor_id_protein
+            if gprot:
+                is_gpcr = True
+                prot_li_gpcr.append((dprot,gprot))
+            dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
+            dprot_li_all_info.append((dprot.name, is_gpcr, dprot_seq))
+    return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
+
 def index(request, dyn_id):
     if request.is_ajax() and request.POST:
-        rmsd_data= { 
-                  "rmsdStr": request.POST.get("rmsdStr"),
-                  "rmsdTraj": request.POST.get("rmsdTraj"),
-                  "rmsdFrames": request.POST.get("rmsdFrames"),
-                  "rmsdRefFr": request.POST.get("rmsdRefFr"),
-                  "rmsdRefTraj": request.POST.get("rmsdRefTraj"),
-                  "rmsdSel": request.POST.get("rmsdSel")
-                }
-        request.session['rmsd_data']=rmsd_data
-        data_rt = json.dumps({})
-        return HttpResponse(data_rt, content_type='view/'+dyn_id)
+        if request.POST.get("rmsdStr"):
+            rmsd_data= { 
+                      "rmsdStr": request.POST.get("rmsdStr"),
+                      "rmsdTraj": request.POST.get("rmsdTraj"),
+                      "rmsdFrames": request.POST.get("rmsdFrames"),
+                      "rmsdRefFr": request.POST.get("rmsdRefFr"),
+                      "rmsdRefTraj": request.POST.get("rmsdRefTraj"),
+                      "rmsdSel": request.POST.get("rmsdSel")
+                    }
+            request.session['rmsd_data']=rmsd_data
+            data_rt = json.dumps({})
+            return HttpResponse(data_rt, content_type='view/'+dyn_id)
+        elif request.POST.get("distStr"):
+            dist_struc=request.POST.get("distStr")
+            dist_ids=request.POST.get("dist_resids")
+            dist_result=distances_inpage(dist_struc,dist_ids)
+            print(dist_result)
+            data = {"result":dist_result}
+            return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
 
-    #dyn_id =1 #EXAMPLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
         error="Structure file not found."
@@ -361,74 +419,156 @@ def index(request, dyn_id):
         paths_dict={}
         for e in dynfiles:
             paths_dict[e.id_files.id]=e.id_files.filepath
-       # paths_list=[e.id_files.filepath for e in dynfiles]
         (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
-        #structure_file="Dynamics/test.pdb"########################### REMOVE
-        #structure_name="test.pdb" ################################### REMOVE
+        #structure_file="Dynamics/with_prot_lig_multchains.pdb"########################### [!] REMOVE
+        #structure_name="with_prot_lig_multchains.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
-        chain_name_li=obtain_prot_chains(pdb_name)
+        chain_name_li=obtain_prot_chains_new(pdb_name)
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
             if len(chain_name_li) > 1:
                 multiple_chains=True
-                chain_str="(Chains: "+", ".join(chain_name_li)+")"
-            gen_num_res=obtain_gen_numbering(dyn_id)
-            if isinstance(gen_num_res, tuple):
-                (numbers, num_scheme, db_seq, current_class) = gen_num_res
-                current_class=findGPCRclass(num_scheme)
-                # current_class="B" ######## !!!!!!!!!!!!!!!!!!!!!!!!! REMOVE THIS!!!!!!!!!!!!!!!!!!!
-                gpcr_n_ex=""
-                for pos_gnum in numbers[current_class].values():
-                    if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
-                        gpcr_n_ex=pos_gnum[1]
-                        break
-                if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
-                    seq_pos=[]
-                    seq_pos_n=1
-                    gpcr_pdb={}
-                    gpcr_aa={}
-                    gnum_classes_rel={}
-                    for chain_name in chain_name_li:
-                        checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=99999, chain=chain_name)
-                        if isinstance(checkpdb_res, tuple):
-                            tablepdb,pdb_sequence,hexflag=checkpdb_res
-                            result=matchpdbfa(db_seq,pdb_sequence, tablepdb, hexflag)
-                            if isinstance(result, list):
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)=obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
-                                (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
-                                obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
-                    motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
-                    find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
-                    gpcr_pdb_js=json.dumps(gpcr_pdb)
-                    context={
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)
+            
+            dprot_chains={}
+            chains_taken=set()
+            gpcr_chains=[]# For the moment consider it as if there is only 1 gpcr per pdb
+            non_gpcr_chains=[]
+            prot_seq_pos=[]
+            seq_pos_n=1
+            all_chains=[]
+            for prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info:
+                seq_pos=[]
+                dprot_chains[prot_name]=[[],[]]  # dprot_chains: for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos
+                for chain_name in chain_name_li:
+                    checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
+                    if isinstance(checkpdb_res, tuple):
+                        tablepdb,pdb_sequence,hexflag=checkpdb_res 
+                        result=matchpdbfa(prot_seq,pdb_sequence, tablepdb, hexflag)
+                        if isinstance(result, list):
+                            #chain_results[chain_name]=result
+                            if chain_name not in chains_taken:
+                                chains_taken.add(chain_name)
+                                dprot_chains[prot_name][0].append((chain_name,result))
+                                seq_pos,seq_pos_n=(seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains)
+                                dprot_chains[prot_name][1]=seq_pos
+                                all_chains.append(chain_name)
+                                if prot_is_gpcr:
+                                    gpcr_chains.append(chain_name)
+                                else:
+                                    non_gpcr_chains.append(chain_name)
+                prot_seq_pos.append((prot_name,seq_pos))
+            print(all_chains)
+            keys_to_rm=set()
+            for key, val in dprot_chains.items():
+                if val==([],[]):
+                    keys_to_rm.add(key)
+            for key in keys_to_rm:
+                del dprot_chains[key]
+            receptor_sel="protein"
+            if non_gpcr_chains:
+                non_gpcrs_str="protein and (:"+non_gpcr_chains[0]
+                for chain_n in non_gpcr_chains[1:]:
+                    non_gpcrs_str+=" or :"+chain_n
+                non_gpcrs_str+=")"
+                comp_li.append(["Other proteins", non_gpcrs_str])
+                if gpcr_chains:
+                    receptor_sel+="and (:"+gpcr_chains[0]
+                    for chain_n in gpcr_chains[1:]:
+                        receptor_sel+=" or :"+chain_n
+                    non_gpcrs_str+=")"
+            if multiple_chains:
+                if len(gpcr_chains) ==1:
+                    chain_str="(Chain: "+gpcr_chains[0]+")"
+                elif len(gpcr_chains) > 1:
+                    chain_str="(Chains: "+", ".join(gpcr_chains)+")"
+                
+###################
+            if chains_taken: # To check if some result has been obtained
+                if prot_li_gpcr:
+                    gen_num_res=obtain_gen_numbering(dyn_id, prot_li_gpcr[0][0],prot_li_gpcr[0][1]) # !!!!!!!!!!!! FOR THE MOMENT, ONLY CONSIDER 1 GPCR FOR MODEL
+                    if len(gen_num_res) > 2:
+                        (numbers, num_scheme, db_seq, current_class) = gen_num_res
+                        current_class=findGPCRclass(num_scheme)
+                        # current_class="B" ######## [!]!!!!!!!!!!!!!!!!!!!!!!!!! REMOVE THIS!!!!!!!!!!!!!!!!!!!
+                        gpcr_n_ex=""
+                        for pos_gnum in numbers[current_class].values():
+                            if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
+                                gpcr_n_ex=pos_gnum[1]
+                                break
+                        if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
+                            gpcr_pdb={}
+                            gpcr_aa={}
+                            gnum_classes_rel={}
+                            prot_seq_pos=[]
+                            for dprot, dprot_info in dprot_chains.items():
+                                seq_pos_index=0
+                                dprot_chain_li, dprot_seq=dprot_info
+                                for chain_name, result in dprot_chain_li:
+                                    if chain_name in gpcr_chains:
+                                        (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                        (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok)
+                                        obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)
+                                    
+                                prot_seq_pos.append((dprot, dprot_seq)) 
+                            motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
+                            find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs)
+                            gpcr_pdb_js=json.dumps(gpcr_pdb)
+                            context={
+                                "structure_file":structure_file, 
+                                "structure_name":structure_name, 
+                                "structure_file_id":structure_file_id,
+                                "traj_list":traj_list,
+    #                            "traj_list":[],  
+                                "compounds" : comp_li,
+                                "show_class" : show_class,
+                                "mol_sw" : cons_pos_dict["A"][1],
+                                "cons_classA" : cons_pos_dict["A"][0],
+                                "motifs_def" : motifs_dict_def["A"],
+                                "cons_classB" : cons_pos_dict["B"][0],
+                                "cons_classC" : cons_pos_dict["C"][0],
+                                "cons_classF" : cons_pos_dict["F"][0],
+                                "gpcr_class" : current_class,
+                                "active_class" : active_class,
+                                "chains" : chain_str,
+                                "gpcr_pdb": gpcr_pdb_js,
+                                "prot_seq_pos": prot_seq_pos,
+                                "all_chains": ",".join(all_chains) }
+                            return render(request, 'view/index.html', context)
+                context={
+                    "structure_file":structure_file, 
+                    "structure_name":structure_name , 
+                    "structure_file_id":structure_file_id,
+                    "traj_list":traj_list, 
+                    "compounds" : comp_li,
+                    "chains" : chain_str,
+                    "prot_seq_pos": prot_seq_pos,
+                    "gpcr_pdb": "no",
+                    "all_chains": ",".join(all_chains)}
+                return render(request, 'view/index.html', context)
+            else: #No checkpdb and matchpdb
+                context={
                         "structure_file":structure_file, 
-                        "structure_name":structure_name, 
+                        "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
                         "compounds" : comp_li,
-                        "show_class" : show_class,
-                        "mol_sw" : cons_pos_dict["A"][1],
-                        "cons_classA" : cons_pos_dict["A"][0],
-                        "motifs_def" : motifs_dict_def["A"],
-                        "cons_classB" : cons_pos_dict["B"][0],
-                        "cons_classC" : cons_pos_dict["C"][0],
-                        "cons_classF" : cons_pos_dict["F"][0],
-                        "gpcr_class" : current_class,
-                        "active_class" : active_class,
-                        "chains" : chain_str,
-                        "gpcr_pdb": gpcr_pdb_js,
-                        "seq_pos": seq_pos}
-                    return render(request, 'view/index.html', context)
-       #Cannot use gpcr numbering:
-        context={
-            "structure_file":structure_file, 
-            "structure_name":structure_name , 
-            "traj_list":traj_list, 
-            "compounds" : comp_li,
-            "chains" : chain_str,            
-            "gpcr_pdb": "no"}
-        return render(request, 'view/index.html', context)
+                        "chains" : chain_str,            
+                        "gpcr_pdb": "no"}
+                return render(request, 'view/index.html', context)
+        else: #len(chain_name_li) <= 0
+            context={
+                    "structure_file":structure_file, 
+                    "structure_name":structure_name , 
+                    "structure_file_id":structure_file_id,
+                    "traj_list":traj_list, 
+                    "compounds" : comp_li,
+                    "chains" : chain_str,            
+                    "gpcr_pdb": "no"}
+            return render(request, 'view/index.html', context)
+
+
 
 #TEST:
 def pre_viewer(request):
