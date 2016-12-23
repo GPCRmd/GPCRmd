@@ -87,7 +87,7 @@ $('#gotoadvsearch').on('click', function(){
 
 
 $('#result_type').on('change', function() {
-    var opdef=$('<option></option>').val("orto").text("Orthoesteric ligand");
+    var opdef=$('<option></option>').val("orto").text("Orthosteric ligand");
     var opdef2=$('<option></option>').val("alo").text("Allosteric ligand");
 
     if(this.value=='dynamics') {
