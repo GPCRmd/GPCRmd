@@ -115,18 +115,20 @@
 			     		<button type="button" id="id_del_element" type="button" style="height:30px;margin: 0px 0px 0px 0px;width:160px">- Remove Component</div>
 		        </div>
                         <br>
- 		
+                        <br>
+                        <br>
  			<div style="text-align:right;margin-right:5%">
-					 <a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a>
-                                        <button id ="id_check_pdb_mol" type="button"> Validate </button>
+                                       <div class="col-md-2" style="text-align:right;float:right;"><button id ="id_check_pdb_mol" type="button"> Validate </button></div>
+					 <div class="col-md-4" style="text-align:right;float:right;margin-right:-15px"><a id="id_logfile"  name="logfile" href="" hidden target="_blank">Download log file.</a></div>
+                                        
                                         <br>
-                                        <a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a>
-
+                                        <div class="col-md-6" style="text-align:right;float:right;margin-right:-15px"><a id="id_pdbchecker_tar_gz" name="pdbchecker_tar_gz" hidden href="" target="_blank">Download pdbchecker results.</a></div>
+                                        <div class="col-md-2" style="text-align:right;float:right;"></div>
 		        </div>
 		         {% else %}
                         <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
                         {% endif %}
-		        
+                        <br>
 		        <!-- <br><br> 		
 
                         <div style="text-align:center">
