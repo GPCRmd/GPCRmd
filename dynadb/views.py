@@ -33,8 +33,8 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -2381,6 +2381,42 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
+def get_model_pdb_from_db_by_submission(submission_id):
+        
+    submodel = DyndbSubmissionModel._meta.db_table
+    submodel_pk_db_column = DyndbSubmissionModel._meta.pk.get_attname_column()[1]
+    model_id_db_column = DyndbSubmissionModel._meta.get_field("model_id").get_attname_column()[1]
+    submission_id_db_column = DyndbSubmissionModel._meta.get_field("submission_id").get_attname_column()[1]
+    
+    filesmodel = DyndbFilesModel._meta.db_table
+    id_model_db_column = DyndbFilesModel._meta.get_field("id_model").get_attname_column()[1]
+    id_files_db_column = DyndbFilesModel._meta.get_field("id_files").get_attname_column()[1]
+
+    
+    files = DyndbFiles._meta.db_table
+    files_pk_db_column = DyndbFiles._meta.pk.get_attname_column()[1]
+    filepath_db_column = DyndbFiles._meta.get_field("filepath").get_attname_column()[1]
+    
+    with connection.cursor() as cursor:
+        q = cursor.execute(''.join(('''SELECT   submodel."''',model_id_db_column,'''"AS model_id,
+                                                files."''',filepath_db_column,'''" AS "filepath"
+                                                FROM "''',submodel,'''" AS submodel
+                                                INNER JOIN "dyndb_files_model" AS filesmodel ON 
+                                                (model_id = filesmodel."''',id_model_db_column,'''")
+                                                LEFT OUTER JOIN "''',files,'''" AS files ON (filesmodel."''',id_files_db_column,'''" = files."''',files_pk_db_column,'''")
+                                                WHERE (
+                                                    submodel."''',submission_id_db_column,'''" = %s
+                                                )''')),[str(submission_id)])
+        rows = dictfetchall(cursor)
+        
+    if len(rows) == 1:
+        return rows[0]["filepath"]
+    else:
+        return None
+        
+
+    
+
 def pdbcheck_molecule(request,submission_id,form_type):
     post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID'}
     #post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID','numberofmol':'number of molecules'}
@@ -2620,11 +2656,34 @@ def pdbcheck_molecule(request,submission_id,form_type):
                             return response
 
                     del mol
-
                     print("\n##############################\n",file=logfile)
+                if form_type == "dynamics":
+                    
+                    
+                    model_pdbfilepath = get_model_pdb_from_db_by_submission(submission_id)
+                    if model_pdbfilepath is None:
+                        data['msg'] = "Cannot find model PDB file. Did you fill step 3 form?"
+                        response = JsonResponse(data,status=500,reason='Internal Server Error')
+                        return response
+                    print("\nSplitting model PDB file into protein and non-protein residues...\n",file=logfile)
+                    try:
+                        model_proteinpdbfilename,model_nonproteinpdbfilename = split_protein_pdb(model_pdbfilepath,fieldset_ps,outputfolder=pdbcheckerpath)
+                    except:
+                        data['msg'] = "Cannot process model PDB file. Did you fill and validate step 3 form?"
+                        response = JsonResponse(data,status=500,reason='Internal Server Error')
+                        return response
+                    print("\nChecking PDB protein model vs simulation assembly coherence...",file=logfile)
+                    model_protein_residue_dict,errorflag1 = residue_atoms_dict_pdb(model_proteinpdbfilename,logfile=logfile)
+                    dyn_protein_residue_dict,errorflag2 = residue_atoms_dict_pdb(proteinpdbfilename,logfile=logfile)
+                    diff_protein = residue_dict_diff(model_protein_residue_dict,dyn_protein_residue_dict,logfile=logfile,ignore_extra_residues=False)
+                    print("\nChecking PDB non-protein model vs simulation assembly coherence...",file=logfile)
+                    model_nonprotein_residue_dict,errorflag3 = residue_atoms_dict_pdb(model_nonproteinpdbfilename,logfile=logfile)
+                    dyn_nonprotein_residue_dict,errorflag4 = residue_atoms_dict_pdb(nonproteinpdbfilename,logfile=logfile)
+                    diff_nonprotein = residue_dict_diff(model_nonprotein_residue_dict,dyn_nonprotein_residue_dict,logfile=logfile,ignore_extra_residues=True)
+                    fail += sum((errorflag1,errorflag2,errorflag3,errorflag4))
                 
-                
-                if fail == 0:
+                print("\nEND\n",file=logfile)
+                if fail == 0 and not diff_protein and not diff_nonprotein:
                     data['msg'] = 'Validation complete. Everything seems fine.'
                 else:
                     data['msg'] = 'Validation finished with errors. Please, see log file and double check your PDB file.'
