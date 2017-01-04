@@ -2426,6 +2426,10 @@ def pdbcheck_molecule(request,submission_id,form_type):
         prefix_mc='formmc'
     elif form_type == "dynamics":
         prefix_mc='formc'
+        post_mc_dict['type_int'] = 'molecule type'
+        water_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='water',case_sensitive=False,first_match=False)
+        water_types = [i[1] for i in water_type.items()]
+        water_int_id_list = []
     postkeys_ps = {'chain','segid','resid_from','resid_to'}
     prefix_ps='formps'
     
@@ -2452,11 +2456,11 @@ def pdbcheck_molecule(request,submission_id,form_type):
                         if num not in fieldset_mc.keys():
                             fieldset_mc[num] = dict()    
                         fieldset_mc[num][fieldname] = request.POST[key].strip()
-                        if fieldname in {'molecule','id_molecule','numberofmol'}:
+                        if fieldname in {'molecule','id_molecule','numberofmol','type_int'}:
                             if fieldset_mc[num][fieldname].isdigit():
                                 fieldset_mc[num][fieldname] = int(fieldset_mc[num][fieldname])
                             else:
-                                msgtype = post_mc_dict[key].split(maxsplit=1)
+                                msgtype = post_mc_dict[fieldname].split(maxsplit=1)
                                 return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[num][fieldname])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
 
                 elif key.find(prefix_ps) == 0 and form_type == "model":
@@ -2524,11 +2528,14 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 fieldset_ps = list(q)
             molintdict = dict()
             form_resnames = set()
+            
             for key in fieldset_mc:
                 int_id = fieldset_mc[key]['molecule'] - 1
                 if int_id not in molintdict:
                     molintdict[int_id] = dict()
                     molintdict[int_id]['resname'] = set()
+                    if form_type == "dynamics" and fieldset_mc[key]['type_int'] in water_types:
+                        water_int_id_list.append(int_id)
                     #molintdict[int_id]['resname_list'] = []
                    # molintdict[int_id]['numberofmol'] = []
                 resname = fieldset_mc[key]['resname']
@@ -2681,7 +2688,13 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     dyn_nonprotein_residue_dict,errorflag4 = residue_atoms_dict_pdb(nonproteinpdbfilename,logfile=logfile)
                     diff_nonprotein = residue_dict_diff(model_nonprotein_residue_dict,dyn_nonprotein_residue_dict,logfile=logfile,ignore_extra_residues=True)
                     fail += sum((errorflag1,errorflag2,errorflag3,errorflag4))
-                
+                    
+                    data['num_of_solvent'] = 0
+                    for int_id in water_int_id_list:
+                        for resname in molintdict[int_id]['resname']:
+                            data['num_of_solvent'] += datares[resname]['num_of_mol']
+
+                    
                 print("\nEND\n",file=logfile)
                 if fail == 0 and not diff_protein and not diff_nonprotein:
                     data['msg'] = 'Validation complete. Everything seems fine.'
@@ -4979,6 +4992,9 @@ def DYNAMICSview(request, submission_id):
             #mdata[i]['numberofmol'] = ''
             mdata[i]['readonly'] = True
             mdata[i]['int_id'] = 1 + mdata[i]['int_id']
+            mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
+            if mdata[i]['type_int'] is None:
+                mdata[i]['type_int'] = 3
             mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
             i += 1
         
@@ -4988,6 +5004,7 @@ def DYNAMICSview(request, submission_id):
             cdata[i]['numberofmol'] = ''
             cdata[i]['readonly'] = False
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
+            cdata[i]['type_int'] = 3
             i += 1
         
         data = mdata + cdata
