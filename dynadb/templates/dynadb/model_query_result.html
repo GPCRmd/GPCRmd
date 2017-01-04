@@ -30,10 +30,16 @@
       <b>Complex Structure type</b>:<br> {{answer.type}} <br>
     {% endif %}
     <br>
+
+    {% if answer.complex%}
+        <b>Corresponding Complex</b>:<br>
+             <a target='_blank' class='btn btn-info' role='button' href=/dynadb/complex/id/{{answer.complex}}>Complex ID: {{answer.complex}}</a>       
+    {% endif %}
+    <br><br>  
     {%if answer.link2protein%}
         <b>Protein(s) involved</b>:<br>
             {%for link in answer.link2protein%}
-                <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+                <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}> Protein ID: {{link.1}}<br></a>
             {%endfor%}
     {%endif%}
     <br><br>
@@ -52,7 +58,7 @@
             <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
         {% endfor %}
     {% endif %}
-
+    <br>
     {% if answer.components%} 
         <b>Molecules used in this complex structure</b>:   <button id='showall' type="button" class="btn btn-primary">Show all</button> <br><br>
         <div id='carouselhide'>

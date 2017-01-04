@@ -49,8 +49,11 @@ function addModeledelement1() {
 			var idlab ="id_formps-"+ss+"-"+name;
 			var forlab ="id_formps-"+ss+"-"+name;
 			$(this).attr({'placeholder':namelab, 'id':idlab, 'for':idlab, 'name':namelab});
-		});	
-//	}
+		});
+		var bond = $(ttt).find("[id='id_bonded_to_id_modeled_residues'],[id|=id_formps][id$='-bonded_to_id_modeled_residues']")
+		bond.prop('disabled',false);
+		bond.prop('checked',true);
+//	}      
    				// alert("number of children " + ttt.childElementCount);
 }
 

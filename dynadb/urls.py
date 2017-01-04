@@ -72,10 +72,10 @@ urlpatterns = [
     url(r'^MOLECULEfilled/(?P<submission_id>[0-9]+)/$', views.SMALL_MOLECULEview, name='MOLECULEfilled'),
     url(r'^MOLECULEfilled2/$', views.SMALL_MOLECULEview2, name='MOLECULEfilled2'),
     url(r'^model/(?P<submission_id>[0-9]+)/$', views.MODELview, name='model'),
-    url(r'^model/(?P<submission_id>[0-9]+)/check_pdb_molecules/$', views.pdbcheck_molecule, name='pdbcheck_molecule'),
+    url(r'^(?P<form_type>model|dynamics)/(?P<submission_id>[0-9]+)/check_pdb_molecules/$', views.pdbcheck_molecule, name='pdbcheck_molecule'),
+    url(r'^(?P<form_type>model|dynamics)/(?P<submission_id>[0-9]+)/get_submission_molecule_info/$', views.get_submission_molecule_info, name='get_submission_molecule_info'),
     url(r'^model/(?P<submission_id>[0-9]+)/ajax_pdbchecker/$', views.pdbcheck, name='pdbcheck'),
     url(r'^model/(?P<submission_id>[0-9]+)/search_top/$',views.search_top,name='search_top'), #keep this one in a merge
-    url(r'^model/(?P<submission_id>[0-9]+)/get_submission_molecule_info/$', views.get_submission_molecule_info, name='get_submission_molecule_info'),
     url(r'^model/(?P<submission_id>[0-9]+)/upload_model_pdb/$', views.upload_model_pdb, name='upload_model_pdb'),
     url(r'^modelreuse/(?P<submission_id>-?[0-9]+)/(?P<model_id>[0-9]+)/$', views.MODELreuseview, name='modelreuse'),
     url(r'^proteinreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.PROTEINreuseview, name='proteinreuse'),
@@ -93,11 +93,14 @@ urlpatterns = [
     url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected[0-9]+.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'), 
     #url(r'^search_top/(?P<submission_id>[0-9]+)/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
+    url(r'^dynamics/(?P<submission_id>[0-9]+)/upload_files/((?P<trajectory>traj)/)?$', views.upload_dynamics_files, name='dynamics_upload_files'),
+   
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSreuseview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
-    url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted')]
+    url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted'),
+    url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank')]
 
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),

@@ -11,9 +11,11 @@ cons_classF=[["T1.50", "",""], ["F2.50", "",""], ["W3.50", "",""],["W4.50", "","
 cons_pos_dict={"A":[cons_classA,mol_swA],"B":[cons_classB],"C":[cons_classC],"F":[cons_classF]}
 
 motifs=[["PIF","P5.50",False,"",""],["PIF","I3.40",False,"",""],["PIF","F6.44",False,"",""],["DRY","D3.49",False,"",""],["DRY","R3.50",False,"",""],["DRY","Y3.51",False,"",""],["NPxxY","N7.49",False,"",""],["NPxxY","P7.50",False,"",""],["NPxxY","x7.51",False,"",""],["NPxxY","x7.52",False,"",""],["NPxxY","Y7.53",False,"",""]]
-motname_li=["PIF","DRY","NPxxY"]
+motname_li=["PIF","DRY","NPxxY",]
 
 motifs_dict={"A":[motifs,motname_li],"B":[],"C":[],"F":[]}
+
+motifs_all_info={"A":[["PIF","P5.50 , I3.40 , F6.44",""],["DRY","D3.49 , R3.50 , Y3.51",""],["NPxxY","N7.49 , P7.50 , x7.51 , x7.52 , Y7.53",""]],"B":[],"C":[],"F":[]}
 
 active_class={"A":["",""],"B":["",""],"C":["",""],"F":["",""]}
 

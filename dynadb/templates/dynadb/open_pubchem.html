@@ -9,11 +9,11 @@
     <title>{% site_title %}</title>
     <script src="{% static 'home/js/jquery.js' %}"></script>
     <script>
+    window.opener = null;
     $(document).ready(function() {
         $("#open_pubchem").submit();
     });
     </script>
-    {% block addon_js %}{% endblock %}
     
     </head>
   <body>
@@ -21,4 +21,6 @@
     <form id="open_pubchem" method="post" action="{{ action }}" enctype="application/x-www-form-urlencoded">
         <input type="hidden" id="term" name="term" value="{{ query }}">
     </form>
+  </body>
+</html>
 

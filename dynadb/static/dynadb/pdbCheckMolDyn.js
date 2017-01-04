@@ -16,12 +16,12 @@ $(document).ready(function() {
     
     $.fn.update_mol_info = function () {
         var self = $(this);
-        var modelform = $(this).parents("form");
-        var buttonadd = modelform.find("#id_add_element2");
-        var buttondel = modelform.find("#id_del_element2");
-        var element2 = $(this).parents("[id|=Element2]");
-        var id_molecule = element2.find("[id='id_id_molecule'],[id|=id_formmc][id$='-id_molecule']");
-        var namemc = element2.find("[id='id_namemc'],[id|=id_formmc][id$='-namemc']");
+        var dynform = $(this).parents("#dynform");
+        var buttonadd = dynform.find("#id_add_element");
+        var buttondel = dynform.find("#id_del_element");
+        var element1 = $(this).parents("[id|=Element1]");
+        var id_molecule = element1.find("[id='id_id_molecule'],[id|=id_formc][id$='-id_molecule']");
+        var namef = element1.find("[id='id_name'],[id|=id_formc][id$='-name']");
 
         if (self.val() !== '') {
             $.post("./get_submission_molecule_info/",
@@ -30,7 +30,7 @@ $(document).ready(function() {
             },
             function(data){
                 id_molecule.val(data.molecule_id);
-                namemc.val(data.namemc);
+                namef.val(data.name);
 
             }, 'json')
 
@@ -45,7 +45,7 @@ $(document).ready(function() {
                     alert("Unknown error");
             }
                 id_molecule.val('');
-                namemc.val('');
+                namef.val('');
             })
             
             .always(function(xhr,status,msg) {
@@ -56,11 +56,11 @@ $(document).ready(function() {
         }
     }
     
-    $(document).on('change',"[id='molecule'],[id|=id_formmc][id$='-molecule']",function(){
+    $(document).on('change',"[id='molecule'],[id|=id_formc][id$='-molecule']",function(){
         var self = $(this);
-        var modelform = $(this).parents("form");
-        var buttonadd = modelform.find("#id_add_element2");
-        var buttondel = modelform.find("#id_del_element2");
+        var dynform = $(this).parents("#dynform");
+        var buttonadd = dynform.find("#id_add_element");
+        var buttondel = dynform.find("#id_del_element");
         buttonadd.prop('disabled',true);
         buttondel.prop('disabled',true);
         self.prop('disabled',true);
@@ -70,6 +70,7 @@ $(document).ready(function() {
         }
         timeout_update_mol_info = window.setTimeout(function () {
             self.update_mol_info();
+            
         }
         ,3000);
         
@@ -79,32 +80,30 @@ $(document).ready(function() {
     
     $("#id_check_pdb_mol").click(function() {
         var self = $(this);
-        var modelform = $(this).parents("#myform");
-        var pElement1 = modelform.find("#pElement1");
-        var pElement2 = modelform.find("#pElement2");
-        var fields = modelform.find("#pElement2 :input:not([readonly])");
-        var Element2s = modelform.find("#pElement2 [id|=Element2]");
-        var buttonadd = modelform.find("#id_add_button");
-        var buttondel = modelform.find("#id_del_button");
-        var logfile = modelform.find("#id_logfile");
-        var pdbchecker_tar_gz = modelform.find("#id_pdbchecker_tar_gz");
+        var dynform = $(this).parents("#dynform");
+        var pElement1 = dynform.find("#pElement1");
+        var fields = dynform.find("#pElement1 :input:not([readonly])");
+        var Element1s = dynform.find("#pElement1 [id|=Element1]");
+        var buttonadd = dynform.find("#id_add_button");
+        var buttondel = dynform.find("#id_del_button");
+        var logfile = dynform.find("#id_logfile");
+        var pdbchecker_tar_gz = dynform.find("#id_pdbchecker_tar_gz");
         fields.prop('readonly',true);
-        //fields.set_readonly_color();
+        
         self.prop('disabled',true);
         buttonadd.prop('disabled',true);
         buttondel.prop('disabled',true);
         var newform = $('<form method="post" id="hiddenform" action="" enctype="application/x-www-form-urlencoded"></form>');
         newform.append(pElement1.clone());
-        newform.append(pElement2.clone());
         $(newform).ajaxSubmit({
             url: "./check_pdb_molecules/",
             type: 'POST',
             dataType:'json',
             success: function(data) {
                 alert(data.msg);
-                Element2s.each(function () {
-                    var resname = $(this).find("[id='resname'],[id|=id_formmc][id$='-resname']").val().trim();
-                    var numofmol = $(this).find("[id='numberofmol'],[id|=id_formmc][id$='-numberofmol']");
+                Element1s.each(function () {
+                    var resname = $(this).find("[id='resname'],[id|=id_formc][id$='-resname']").val().trim();
+                    var numofmol = $(this).find("[id='numberofmol'],[id|=id_formc][id$='-numberofmol']");
                     numofmol.val(data.resnames[resname].num_of_mol);
                     
                 });
