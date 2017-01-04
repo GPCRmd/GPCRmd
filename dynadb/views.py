@@ -4490,9 +4490,12 @@ def test_accepted_file_extension(ext,file_type):
 
 @csrf_exempt
 def upload_dynamics_files(request,submission_id,trajectory=None):
-  if trajectory is None:
-    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
-  return _upload_dynamics_files(request,submission_id,trajectory=trajectory)
+    if trajectory is None:
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+    else:
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=200)
+        #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
+    return _upload_dynamics_files(request,submission_id,trajectory=trajectory)
 
 def get_dynamics_file_types():
     
