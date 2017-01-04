@@ -6,7 +6,16 @@ $(document).ready(function(){
       return this.length !== 0;
     };
     
+    $(document).on('click',"[id|=id_form][is_mutated]",function(){
+       var pprotform = $(this).parents("[id='pprotform']")
+       var anycheckbox= $(pprotform).children("[id|=id_form][is_mutated]")
+
+    });
+
+
+
     $.fn.formrenum = function (new_form_num) {
+
         //Jquery function for changing labels for all the HTML input elements
         var new_form_num_1 = new_form_num + 1;
         var protnumb = "Protein  #" + new_form_num_1 + " General Infomation";
@@ -28,7 +37,7 @@ $(document).ready(function(){
             if (name1.startsWith('form') && name1.endsWith('is_mutated')){
                 var tt=$(this);
                 tt.prop("checked",false);
-                $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-mutations_id");
+                $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-mutations_id"+","+"#mutations_id");
 //                $(this).attr('checked', false);
                 }; 
             if (name1.startsWith('form') && name1.endsWith('mutations_id')){
@@ -88,15 +97,6 @@ $(document).ready(function(){
     });
     
     
-    $(document).on('click',"[id|=id_form][id$='is_mutated']",function(){
-        if ($(document).find("[id|=id_form][id$='is_mutated']input:checked").length > 0){
-               $("#mutations_id").show();
-        } else {
-               $("#mutations_id").hide();
-        }
-    });
-
-
     
     
     

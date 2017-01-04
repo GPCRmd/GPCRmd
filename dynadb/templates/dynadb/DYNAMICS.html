@@ -10,50 +10,37 @@
 
  <!-- description column -->
  <div class="col-md-4">
-     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
-         <div class="panel-body">
-        	<h3 > Simulation Submission<br>Step 4:<br>Dynamics Information</h3>
-        </div> 
-     </div>
-     <!-- main description -->
-     <div class="col-md-12 panel panel-primary">
-         <div class="panel-body">
-            <div style="text-align:center"> 
-             <h4>FILL IN THE DYNAMICS FORM</h4>
-            </div>
-             <p style="text-align: justify;" >Fill in the following form concerning specific details on the MD simulation protocol. </p>
-             <p style="text-align: justify;"  >User must provide molecular dynamics information as well as files required to rerun simulations in a specific simulation software (coordinates, topology, parameters, others). Note, it is mandatory to add files needed to regenerate topology files that are not published elsewhere.</p>
-         </div>
-     </div>
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
+{% if model_id %}
+{% include "dynadb/DYNAMICSreuse_description.html" %} 
+{% else %}
+{% include "dynadb/DYNAMICS_description.html" %} 
+                            </div>
+{% endif %}
 
-     <!-- link to docs -->
-     <div class="col-md-12 panel panel-primary">
-         <div class="panel-body">
-             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
-             </p>
 
- 
-         </div>
-     </div>
- </div>
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
 <div id="pdynform"class="col-md-7 "> 
-  <div id="dynform" class="col-md-12 panel panel-primary"> 
-    <div class="panel-body">
+  <div id="dynform" class="col-md-12 panel "> 
+    <div class="panel-body" style="margin-top:-2.5%">
             <div id="dynnumb" style="text-align:right;color:black" > 
     <!--            <h4>SIMULATION #1</h4> -->
 	    </div>
 		<div class=row id='PRUEBA'>
- 			<div style="text-align:center">
-             			<h4><br>Simulation Details</h4>
+ 			<div style="text-align:center;height:50px;background-color:AliceBlue;" class="col-md-12 panel panel-primary">
+             			<h4 style="margin-top: 10px;margin-left:-5px;margin-right:-5px;font-size:20px;color:DarkBlue"><b> Simulation Details and Files</b></h4>
             		</div>
-		</div><br>
+		</div>
 
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation specifications</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
 		<div class="row">
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
-			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px">
+			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
                                       {% for i in qDMeth.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
                                       {% endfor %}
@@ -70,29 +57,29 @@
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" NAMD" /></td></tr></div>
 		<br></div>	
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_sversion"> <a title="Software version: Version of the software used to compute the simulations."> Software version: </a></label></th></div>
-			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300p"  placeholder=" 2.11"  /></td></tr></div>
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3" ><tr><th><label for="id_sversion" style="margin-right:-30px"><a style="margin-right:-20px;width:130px" title="Software version: Version of the software used to compute the simulations.">Software version:</a></label></th></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300px"  placeholder=" 2.11"  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder=" CHARMM "  /></td></tr></div>
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
 			<div class="col-md-6"><td><input id="id_ffversion" maxlength="15" name="ffversion" type="text" style="width:300px"  placeholder=" 36  "/></td></tr></div>
 		<br></div>
 
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px"  placeholder="  " > 
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
                                       {% for i in qAT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
                                       {% endfor %}
@@ -109,8 +96,8 @@
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px"  placeholder="  " ><br>
+	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
                                       {% for i in qDMT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
                                       {% endfor %}
@@ -121,8 +108,8 @@
 		<br></div>
 
 	        <div class="row">
-        		 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. "> Solvent type:</a> </label></th></div>
-			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px"  placeholder="  " >
+        		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. ">Solvent type:</a> </label></th></div>
+			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
                                       {% for i in qDST.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
                                       {% endfor %}
@@ -142,17 +129,15 @@
 		<br></div>
 
 	        <div class="row">
-	        	 <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
 			<div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study. " ></textarea></div>
-		<br></div><br>
+		</div>
+</div>
 
-
-		<div class=row id='PRUEBA'>
- 			<div style="text-align:center">
-             			<h4>Upload the Simulation Files</h4>
-            		</div>
-		</div><br>
-
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Upload the simulation files</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
 
 		<div class=row id='PRUEBA'>
         		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_coor"><a title="Coordinate file: Upload the initial coordinates file of the system in PDB format (.pdb) max 50 MB">Coordinate file </a> </label></th></div>
@@ -181,18 +166,18 @@
 		<div class=row id='PRUEBA'>
         		 <div class="col-md-1"style="height:45px"> </div><div class="col-md-3"><tr><th><label for="id_other"><a title="Others: Additional files needed for rerunning the simulation. Include here individual topology files and parameters that are not published elsewhere (e.g. resulting from optimitzation). max 50 MB "> Others </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_other" name="other" type="file" /></td></tr></div>
-      		</div><br>
+      		</div>
 
- 			<div style="text-align:right;margin-right:5%">
+ 			<div style="height:50px;text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div> 		
+     </div> 		
 
 
-		<div class=row id='PRUEBA'>
- 			<div style="text-align:center">
-             			<h4> Simulation Components</h4>
-            		</div>
-		</div><br>
+     <div class="col-md-12 panel panel-primary">
+		<div class=row id='PRUEBA'><br>
+                <div style="height:60px" class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Simulation components</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+		</div>
 
  			<div style="text-align=center">
                         <table  style="text-align=center;width:80%;margin-left:10%;margin-right:10%;" > 
@@ -211,22 +196,17 @@
 						</select></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_name" maxlength="60" name="name" type="text" style="width:70px" placeholder="Clozapine"  /></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_numberofmol" min="0" name="numberofmol" type="number" style="width:70px" placeholder=" 2" /></td>
-					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px">
+					<td style="padding:5px 5px 5px 5px"><select id="id_type" name="type" style="width:60px;height:23.24px">
                                       {% for i in ddC.Meta.model.MOLECULE_TYPE %}
                                         <option value="{{i.0}}"> {{i.1}}</option>
                                       {% endfor %}
-	<!--					<option value="0">Ions</option>
-						<option value="1">Ligand</option>
-						<option value="2">Membrane</option>
-						<option value="3">Water</option>
-						<option value="4">Other</option>-->
 						</select></td></tr>
 				</tbody>
 			</table>
 
 
 			<br>
- 			<div style="text-align:center">
+ 			<div style="text-align:center;height:40px">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
 			     		<input type="button" value="+ Add Component"  style="height:30px;;margin: 0px 0px 0px 0px;width:160px" onClick="addSimcomp();"></div>
 	 			<div class="col-md-4" style="text-align:center">
@@ -234,7 +214,7 @@
 		        </div>
                         <br>
  		
- 			<div style="text-align:right;margin-right:5%">
+ 			<div style="height:50px;text-align:right;margin-right:5%">
 					<button onclick="addFields()"> Validate </button> 
 		        </div> <!-- <br><br> 		
 
@@ -250,6 +230,7 @@
 		       		</div> 
 			</div>	<br><br> 		-->
      </div>
+     </div> 		
         <br> <th><input type="submit" value="Submit" /> </th><br>   
 <br>
      </div>

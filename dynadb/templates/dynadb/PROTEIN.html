@@ -28,13 +28,13 @@
 <form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
  <!-- description column -->
- <div class="col-md-4">
+ <div class="col-md-4"style="height:800px" >
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
 {% if model_id %}
 {% include "dynadb/PROTEINreuse_description.html" %} 
 {% else %}
-{% for int0 in int_id0|slice:":1" %}
-{% include "dynadb/PROTEIN_description.html" with int0=int0 %} 
-{% endfor %}
+{% include "dynadb/PROTEIN_description.html"  %} 
+</div>
 {% endif %}
  <!--   _____________________________________________________________________________________________-->
 
@@ -42,14 +42,16 @@
 <div id="pprotform" class="col-md-7 "> 
 {% if model_id %}
 {% for o in qPROT %} 		{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %}
-  <div id="protform" class="col-md-12 panel " style="background-color:lightblue;"> 
-    <div class="panel-body">
-      <div style="text-align:right;color:black" > 
-             <h4 id="protlabnum" style="color:white;">PROTEIN #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
-	    </div>
+  <div id="protform" class="col-md-12 panel  " > 
+  <div class="col-md-12 panel panel-primary" style="background-color:AliceBlue" > 
+    <div class="panel-body" style="height:50px">
+    <!--  <div style="text-align:right;color:black" > 
+             <h4 id="protlabnum" style="color:white;text-shadow:2px 2px red" >PROTEIN #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
+	    </div> -->
                 <div style="text-align:center">
-             			<h4><br>Protein General Details</h4>
-                </div><br>
+             			<h4 id="protlabnum" style="font-size:20px;color:DarkBlue"><b>Protein #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} General Information</b></h4>
+                </div>
+                </div>
                 </div>
 
 
@@ -70,10 +72,10 @@
 -->
  
 <!--_________________________________________________________________________________________________________________________________________________________-->
-  <div class="col-md-12 panel"> 
+  <div class="col-md-12 panel panel-primary"> 
 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
                 </div><br>
 
            {% if o.uniprotkbac|length == 0 %} 
@@ -106,9 +108,10 @@
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel "> 
+  <div class="col-md-12 panel panel-primary"> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Retrieved data</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
+                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Protein details</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
+
                 </div><br>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
@@ -164,7 +167,7 @@
                 <div class="col-md-12 panel panel-primary" > 
 	        <div class="row" style="padding:0px 0px 10px 0px"><br>
 			<div class="col-md-3" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
-			<div class="col-md-1"><input data-toggle="collapse" data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id,#mutations_id" id="id_form-{{int0}}-is_mutated" name="form-{{int0}}-is_mutated" type="checkbox" checked value='1' disabled/></div>
+			<div class="col-md-1"><input data-toggle="collapse" data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id" id="id_form-{{int0}}-is_mutated" name="form-{{int0}}-is_mutated" type="checkbox" checked value='1' disabled/></div>
 		</div>
 		</div>
 		</div>    #POR AQUI!!!!!
@@ -172,7 +175,7 @@
 
   <div class="col-md-12 panel collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id"> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
 
                 </div><br>
 
@@ -237,19 +240,6 @@
               <!--_________________________________________________________________________________________________________________________________________________________-->
 
 
-                <div class=row style="text-align:center">
-                        <table align='center'>
-                        <tr><td>
-                                <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
-                        </td><td>
-                                <button type="button" id="id_del_protein" name="del_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;" disabled>- Remove Protein</button>
-                        </td><td>
-                                <button type="button" id="id_reset" name="reset"  style="height:30px;width:140px;margin-left:5px;margin-right:5px;">Clean Protein</button>
-                        </td></tr>
-                        </table>
-                        
-                </div> 	<br>	<br>	
-
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
@@ -259,43 +249,45 @@
 
 {%else%} <!-- FORM NO REUSE!!!!!!!!!!!! -->
 {% for o in qPROT %} 		{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %}
-  <div id="protform" class="col-md-12 panel " style="background-color:lightblue;"> 
-    <div class="panel-body">
-      <div style="text-align:right;color:black" > 
-             <h4 id="protlabnum" style="color:white;">PROTEIN #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
-	    </div>
+  <div id="protform" class="col-md-12 panel " > 
+  <div class="col-md-12 panel panel-primary" style="background-color:AliceBlue" > 
+    <div class="panel-body" style="height:50px">
+<!--      <div style="text-align:right;color:black" > 
+             <h4 id="protlabnum" style="color:AliceBlue;text-shadow:2px 2px red">PROTEIN #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
+	    </div> -->
                 <div style="text-align:center">
-             			<h4><br>Protein General Details</h4>
-                </div><br>
+             			<h4 id="protlabnum" style="font-size:20px;color:DarkBlue;"><b>Protein #1 General Information</b></h4>
+                </div>
+                </div>
                 </div>
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel"> 
+  <div class="col-md-12 panel panel-primary"> 
 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
                 </div><br>
 
 	        <div class="row">
 		<div class="col-md-3 col-md-offset-1" style="height:30px"><label for="id_uniprotkbac"><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field.">UniProtKB AC:</a></label></div>
-		<div class="col-md-2"style="height:30px"><input id="id_form-{{int0}}-uniprotkbac" maxlength="10"name="form-{{int0}}-uniprotkbac" style="width:70px" readonly type="text" value="{{o.uniprotkbac}}"  /></div>
-                        <div class="col-md-1" style="height:30px"><input id="id_form-{{int0}}-is_not_uniprot"  name="form-{{int0}}-is_not_uniprot"  type="checkbox" /></div>
+		<div class="col-md-2"style="height:30px"><input id="id_form-{{int0}}-uniprotkbac" maxlength="10"name="form-{{int0}}-uniprotkbac" style="width:70px" placeholder="P28222" type="text" value="{{o.uniprotkbac}}"  /></div>
+                        <div class="col-md-1" style="height:35px"><input id="id_form-{{int0}}-is_not_uniprot"  name="form-{{int0}}-is_not_uniprot"  type="checkbox" /></div>
                 <div class="col-md-5"><label for="id_is_not_uniprot"><a title="Not in UniprotKB: NOT RECOMENDED. This value must be checked if the protein sequence is not found in UniProtKB. This protein could be difficult to find in future queries!">Not available in UniprotKB?</a></label></div>
 		</div>
                 <br>
 			
-	        <div class="row" style="height:30px">
-			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" data-toggle="collapse" value="1" data-target="#id_form-{{int0}}-isoform" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div><div class="col-md-2"><input id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" style="width:140px" value="{{o.isoform}}"  class="collapse in" /></div>
+	        <div class="row" style="height:35px">
+			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" data-toggle="collapse" value="1" data-target="#id_form-{{int0}}-isoform" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div><div class="col-md-2"><input id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" min="1" style="width:140px" value="{{o.isoform}}"  class="collapse in" /></div>
 		<br></div>
 
-	        <div class="row" style="height:30px">
-			<div class="col-md-1 col-md-offset-3"><input id="id_form-{{int0}}-receptor" name="form-{{int0}}-receptor" type="checkbox"  disabled value='1' checked  /></div> 
-                        <div class="col-md-4" style="height:30px"><label for="id_receptor"><a title="Receptor: This value must be checked if the protein is a GPCR.">Is it a receptor? </a></label></div>
+	        <div class="row" style="height:40px">
+			<div class="col-md-1 col-md-offset-3"><input id="id_form-{{int0}}-receptor" name="form-{{int0}}-receptor" type="checkbox"  disabled value='1'   /></div> 
+                        <div class="col-md-4" style="height:30px"><label for="id_receptor"><a title="e.g. G protein, arrestin, nanobodies or peptide ligand.">It is not a GPCR. </a></label></div>
 	        </div>
 
 
-			<div class="col-md-3 col-md-offset-4" style="height:30px"><!-- jQuery static/retrieve_data.js --><button style="width:140px;"   type=button id="id_form-{{int0}}-get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
+			<div class="col-md-3 col-md-offset-4" style="height:60px"><!-- jQuery static/retrieve_data.js --><button style="width:140px;"   type=button id="id_form-{{int0}}-get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
 
                       
                 </div>
@@ -304,9 +296,9 @@
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel "> 
+  <div class="col-md-12 panel panel-primary  "> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Retrieved data</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
+                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Protein details</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
                 </div><br>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
@@ -355,9 +347,9 @@
 		<br></div>   
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id"> 
+  <div class="col-md-12 panel panel-primary collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id"> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:silver" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
 
                 </div><br>
 
@@ -417,8 +409,9 @@
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
+  <div class="col-md-12 panel panel-primary" > 
 
-                <div class=row style="text-align:center">
+                <div class=row style="text-align:center;height:80px; padding: 20px 0px 20px 0px;">
                         <table align='center'>
                         <tr><td>
                                 <button type="button" id="id_add_protein" name="add_protein" style="height:30px;width:140px;margin-left:5px;margin-right:5px;">+ Add Protein</button>
@@ -429,8 +422,9 @@
                         </td></tr>
                         </table>
                         
-                </div> 	<br>	<br>	
+                </div> 	
 
+</div>
 
 <!--_________________________________________________________________________________________________________________________________________________________-->
 

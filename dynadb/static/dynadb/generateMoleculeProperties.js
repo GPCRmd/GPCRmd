@@ -12,6 +12,24 @@ $(document).ready(function() {
         var max_size = 52428800;
         var pngsize = 300;
         var molform = $(this).parents("[id|=molform]");
+        var cotype= $(molform).find("[id|=id_form][id$='co_type']");
+        var nottype= $(molform).find("[id|=id_form][id$='bulk_type']");
+        if ($(cotype).length > 0){
+            var str = $(cotype).attr('name');
+            var form_num = str.split("-")[1];
+            if (!cotype.attr('name').endsWith('-type') && !nottype.attr('name').endsWith('-type')){ 
+                cotype.attr('name',"form-"+form_num+"-type");
+            }
+        } else {
+            var str = $(nottype).attr('name');
+            var form_num = str.split("-")[1];
+            if (!nottype.attr('name').endsWith('-type')){ 
+                nottype.attr('name',"form-"+form_num+"-type");
+            }
+        }
+           
+        // imagentable=== table in which the molecule to be uploaded will be shown. If changes in the DOM structure, the variable imagentable must be updated
+        var imagentable=$(this).parent().parent().siblings("[id|=id_form][id$='imagentable']");
         var uploadmol1 = $(molform).find("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']");
         var uploadmol1_html = $(uploadmol1_global_html).clone();
         uploadmol1_html.attr('id',uploadmol1.attr('id'));
@@ -22,7 +40,7 @@ $(document).ready(function() {
         uploadmol2_html.attr('name',uploadmol2.attr('name'));
         var self = $(this);
         $(self).prop('disabled',true);
-        var currentform = $(molform).find("#small_molecule");
+        var currentform = $(molform).find("[id|=small_molecule]");
         var molformid = $(molform).attr('id');
         var logfile = $(molform).find("[id='id_logfile'],[id|=id_form][id$='-logfile']");
         var inchi = $(molform).find("[id='id_inchi'],[id|=id_form][id$='-inchi']");
@@ -32,6 +50,7 @@ $(document).ready(function() {
         var smiles = $(molform).find("[id='id_smiles'],[id|=id_form][id$='-smiles']");
         
         var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
+        console.log("boton pulsado");
         
         
         if ($(molsdf).val() == "") {
@@ -67,10 +86,11 @@ $(document).ready(function() {
         sinchikey.val('');
         net_charge.val('');
         smiles.val('');
+        console.log("vamos a ver el self.resetCompoundInfo");
         self.resetCompoundInfo();
         
-        
         var molsdfname = $(molsdf).attr('name');
+        console.log("despues self.resetCompoundInfo "+molsdfname);
         $(currentform).ajaxSubmit({
             url: "./generate_properties/",
             type: 'POST',
@@ -105,6 +125,8 @@ $(document).ready(function() {
                 logfile.attr("href",data.download_url_log);
                 logfile.show();
                 uploadmol2 = $(newuploadmol);
+                imagentable.show(); //to show the table in which the image is contained 
+                console.log("success");
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {
@@ -131,6 +153,7 @@ $(document).ready(function() {
             complete: function(xhr,status,msg){
                 $(self).prop('disabled',false);
 
+                console.log("complete");
             }
         });
     });
