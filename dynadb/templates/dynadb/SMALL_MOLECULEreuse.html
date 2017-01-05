@@ -250,7 +250,7 @@
 			<br>
  		 	<div style="text-align:center">
 	 			<div class="col-md-4 col-md-offset-2" style="text-align:center">
-			     		<input type="button" value="+ Add molecule" id="id_add_molecule" name="form-{{int0}}-add_molecule" style="height:30px;width:160px" onClick="addSmalmolNew();">
+			     		<input type="button" value="+ Add molecule" id="id_add_molecule" name="form-{{int0}}-add_molecule" style="height:30px;width:160px" onClick="addSmallmol();">
 		        	</div> 		
 	 			<div class="col-md-4" style="text-align:center">
 			     		<input type="button" value="- Remove molecule" id="id_del_molecule" name="form-{{int0}}-del_molecule"  style="height:30px;width:160px" onClick="delSmalmol();">
@@ -299,7 +299,7 @@
 {% block addon_js %} 
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/generateInChi.js' %}"></script>
-    <script src="{% static 'dynadb/addSmalmol.js' %}"></script>
+    <script src="{% static 'dynadb/addSmallmol.js' %}"></script>
     <script src="{% static 'dynadb/delSmalmol.js' %}"></script>
 
 {% endblock %}

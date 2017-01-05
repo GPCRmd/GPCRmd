@@ -1,0 +1,28 @@
+This form has been conceived for being filled in a server-assisted fashion. Nevertheless, the user must provide a minimal amount of information.
+
+Please, if apply check the fields "Not in UniprotKB", "Is it a receptor" and "Is it a mutant" referred to the protein is being submitted. Note the first protein in the form must be a receptor but subsequent proteins may not necessarily be. 
+
+After checking, the remaining fields are recoloured according to the way of being filled. The set of white-coloured fields in the form must be manually filled. Red-coloured fields will be automatically filled by clicking buttons in the form. Grey-coloured fields do not apply for being filled for this type proteins.
+Note that protein information filled in the form can be deleted by clicking the "Clean Protein" button at the bottom of the square enclosing this information.
+
+Protein General Details
+
+1-If the protein to be submitted has an entry in the UniProtKB database, please provide the UniProtKB Accesion Code (UniProtKB AC) and the corresponding Isoform number (if the Isoform number is not provided, the canonical protein will be retrieved). Then, click the "Retrieve data" button and the remaining fields in the section as well as the  "Wild type sequence" field in the "Protein Sequence Details section" will be automatically filled after accessing the UniprotKB database. 
+
+If the protein is not found in the UniprotKB database only the "Name", the "Species" and the "Aliases" fields must be filled. Filling the "Aliases" field is not compulsory in the case of strange proteins or artificial peptides. 
+
+Protein Sequence Details
+
+If the Protein to be submitted is not a mutant, only the "Wild type sequence" field must be filled. This field is automatically filled after clicking the "Retrieve data" button if the protein has a UniprotKB Accession Code. Otherwise, this information must be manually provided.
+
+For mutants, the "Mutant sequence" field must be manually filled. Once the "Wild type" and the "Mutant" sequences have been provided, the user must click the "Align Wild and Mutant sequences" button. The sequence alignment will be shown in a pop-up browser window in order for the user to check if both sequences are correct. This alignment will appear in a fasta format in the "Sequence alignment" field. 
+
+By clicking "Get mutations" button, the "Protein Mutations" table will be automatically filled and the user can double check for mistakes. By clicking the "Clean mutations" button, the Protein Mutations table will be reset.
+
+Multiple proteins in the Model.
+
+If your system involves several proteins or one protein and several peptides you can add extra items to this form by clicking the "+ Add Protein" button. Extra items can be deleted from the form by clicking the "- Delete Protein" button. 
+
+Submission
+
+After properly filling the form fields corresponding to all the protein items in your system, the form information will be submitted by clicking the "Submit Protein Form" button in the bottom of the submission form.

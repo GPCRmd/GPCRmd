@@ -371,9 +371,7 @@ class DyndbCannonicalProteins(models.Model):
 class DyndbComplexCompound(models.Model):
     COMPOUND_TYPE=(
         (0,'Orthosteric ligand'),
-        (1,'Allosteric ligand'),
-        (2,'Crystallographic waters'),
-        (3,'Other')
+        (1,'Allosteric ligand')
     )
     id_complex_exp=models.ForeignKey('DyndbComplexExp', models.DO_NOTHING, db_column='id_complex_exp', null=True)#
     #id_complex_exp_id =models.IntegerField(blank=True, null=True)
@@ -424,9 +422,7 @@ class DyndbComplexMolecule(models.Model):
 class DyndbComplexMoleculeMolecule(models.Model):
     COMPOUND_TYPE=(
         (0,'Orthosteric ligand'),
-        (1,'Allosteric ligand'),
-        (2,'Crystallographic waters'),
-        (3,'Other')
+        (1,'Allosteric ligand')
     )
     type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
     id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',null=False)
@@ -491,10 +487,16 @@ class DyndbSubmissionMolecule(models.Model):
     COMPOUND_TYPE=(
         (0,'Orthosteric ligand'),
         (1,'Allosteric ligand'),
-        (2,'Crystallographic waters, lipids or ions'),
-        (3,'Other')
+        (2,'Crystallographic ions'),
+        (3,'Crystallographic lipids'),
+        (4,'Crystallographic waters'),
+        (5,'Other co-crystalized item'),
+        (6,'Bulk waters'),
+        (7,'Bulk lipids'),
+        (8,'Bulk ions'),
+        (9,'Other bulk component'),
     )
-    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
+    type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0, null=True, blank=True)#modified by juanma 
     submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
     molecule_id = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='molecule_id', blank=True, null=True)
     not_in_model=models.NullBooleanField()
@@ -543,9 +545,10 @@ class DyndbDynamics(models.Model):
 class DyndbDynamicsComponents(models.Model):
     MOLECULE_TYPE=(
         (0,'Ions'),
-        (1,'Membrane'),
-        (2,'Water'),
-        (3,'Other')
+        (1,'Ligand'),
+        (2,'Lipid'),
+        (3,'Water'),
+        (4,'Other')
     )    
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
     id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics', null=True)
@@ -559,13 +562,8 @@ class DyndbDynamicsComponents(models.Model):
         unique_together = (('id_dynamics', 'id_molecule'),)
 
 class DyndbModelComponents(models.Model):
-    MOLECULE_TYPE=(
-        (0,'Ions'),
-        (1,'Ligand'),
-        (2,'Membrane'),
-        (3,'Water'),
-        (4,'Other')
-    )
+    MOLECULE_TYPE=DyndbDynamicsComponents.MOLECULE_TYPE 
+
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=True)
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',null=True)
     resname = models.CharField(max_length=4)
@@ -734,10 +732,11 @@ class DyndbFiles(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     filepath = models.CharField(max_length=520, blank=True, null=True)
+    url = models.CharField(max_length=520, blank=True, null=True)
     
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_files'
 
 
@@ -824,7 +823,7 @@ class DyndbFunctional(models.Model):
    
 class DyndbModel(models.Model):
     MODEL_TYPE=(
-        (0,'Protein'),
+        (0,'Apoform'),
         (1,'Complex')
     )
     SOURCE_TYPE=(
