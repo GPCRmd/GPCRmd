@@ -2720,7 +2720,19 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     raise
                 else:
                     return response
-                
+
+def check_trajectories(request,submission_id):
+    if request.method == 'POST':
+        submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)
+        pdbname = get_file_name_submission("dynamics",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
+        pdbfilepath =  os.path.join(submission_path,pdbname)
+        if not os.path.isfile(pdbfilepath):
+            return JsonResponse({'msg':'Cannot find uploaded PDB file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
+
+        return HttpResponse("Success!",content_type='text/plain')
+        
+
 
 def MODELreuseREQUESTview(request):
 
