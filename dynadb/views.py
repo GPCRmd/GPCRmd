@@ -1033,7 +1033,7 @@ def complexmatch(result_id,querylist):
     return 'pass'
 
 def exactmatchtest(arrays,return_type,result_id):
-''' Extracts every element from each complex, model or dynamic in result_id and checks if there are elements in it which are not in the querylist '''
+    ''' Extracts every element from each complex, model or dynamic in result_id and checks if there are elements in it which are not in the querylist '''
     rowdict=dealwithquery(arrays)
     querylist=list()
     for keys,values in rowdict.items():
@@ -1797,7 +1797,7 @@ def query_model(request,model_id,incall=False):
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
 
 def query_dynamics(request,dynamics_id):
-'''Returns information about the given dynamics_id.Returns an Http Response '''
+    '''Returns information about the given dynamics_id.Returns an Http Response '''
     dyna_dic=dict()
     dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
     dyna_dic['link_2_molecules']=list()
