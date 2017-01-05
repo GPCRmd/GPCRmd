@@ -74,7 +74,7 @@
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." >Type:</a></label></div>
-				<div class="col-md-6" style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_type" name="type" placeholder="   "  style="width:300p;height:23px" >
+				<div class="col-md-6" style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_type" name="type" placeholder="   "  style="width:300px;height:26px" >
                                    {% if model_id %}
                                         <option value="{{p.values.0.type}}" >{{Type}}</option>
                                    {% else %}
@@ -97,9 +97,9 @@
 			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2" placeholder=" Agonist conformation (ergotamine). Clozapine binding by docking. Loop repair in Modeller 9v10."  {% if model_id %}  readonly {%endif%} style="width:300px">{% if model_id %}{{p.values.0.description}}{%endif%}</textarea></div>
 		<br></div>
 
-	        <div class="row" style="height:50px">
+	        <div class="row" >
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_source_type"><a title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment." >Source Type:</a></label></div>
-				<div class="col-md-6"  style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder="   "  style="width:300px;height:23px" >
+				<div class="col-md-6"  style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder="   "  style="width:300px;height:26px" >
                                 {% if model_id %}  
 					<option readonly value="{{p.values.0.source_type}}" >{{SType}}</option>
                                  {% else %}
@@ -163,7 +163,7 @@
                               <td style="width:60px;padding:5px 2px 5px 2px"><input readonly id="id_form-{{intps0}}-seq_resid_to" value="{{o.seq_resid_to}}" name="seq_resid_to" type="text"  style="width:58px" placeholder=" "/></td>
                               <td style="width:30px;padding:5px 0px 5px 0px;text-align:center"><input value="{{o.bonded_to_id_modeled_residues_id}}"  id="id_form-{{intps0}}-bonded_to_id_modeled_residues" name="bonded_to_id_modeled_residues" style="aligned:center" type="checkbox" checked placeholder=" "/></td>
 				<td style="width:60px;padding:5px 2px 5px 2px"><input readonly id="id_form-{{intps0}}-pdbidps" maxlength="6" name="pdbidps" type="text"  value="{{o.pdbid}}"  style="width:58px" placeholder=" 4IAR.A  "/></td>
-				<td style="width:65px;padding:5px 2px 5px 2px;height:30px"><select readonly id="id_form-{{intps0}}-source_typeps" name="source_typeps" style="width:63px;height:23px" >	
+				<td style="width:65px;padding:5px 2px 5px 2px;height:30px"><select readonly id="id_form-{{intps0}}-source_typeps" name="source_typeps" style="width:63px;height:26px" >	
                                        {% for ll in lmrstype %}
                                            {% if forloop.counter == forloop.parentloop.counter %}
 					   <option value="{{ll.0}}">{{ll.1}}</option>
@@ -256,7 +256,7 @@
 				<tr id="Element2-{{forloop.counter0}}">
                                       
                                       <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px"  placeholder="" value="{{mc.numberofmol}}"/></td>
+					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
 					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" readonly placeholder=" 1 " value="{{mc.int_id}}"/></td>
 					<td style="padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
 					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>

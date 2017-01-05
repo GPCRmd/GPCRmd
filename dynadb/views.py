@@ -2279,6 +2279,7 @@ def upload_pdb(request): #warning , i think this view can be deleted
         return HttpResponse(data, content_type='application/json')
 
 def search_top(request,submission_id):
+    print("HOLA")
     if request.method=='POST':
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
@@ -2288,11 +2289,12 @@ def search_top(request,submission_id):
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
         arrays=request.POST.getlist('bigarray[]')
+        print(arrays)
         counter=0
         resultsdict=dict()
         for array in arrays:
             array=array.split(',') #array is a string with commas.
-            prot_id= 1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING!
+            prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
             start=array[3].strip()
             stop=array[4].strip()
             try:
@@ -2318,8 +2320,11 @@ def search_top(request,submission_id):
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
             
+            print("LLLLlll")
             protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
+            print("lll")
             sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
+            print("HOLA1")
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
@@ -2378,7 +2383,7 @@ def pdbcheck(request,submission_id):
                         start = int(current_value)
                     if r == 4:
                         stop = int(current_value)
-            prot_id= 1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
+            prot_id= int(array[0])-1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
 
             start=int(array[3])
             stop=int(array[4])
@@ -2523,6 +2528,7 @@ def _upload_model_pdb(request,submission_id):
             data = dict()
             uploadedfile = request.FILES[pdbfilekey]
             submission_path = get_file_paths("model",url=False,submission_id=submission_id)
+            os.makedirs(submission_path,exist_ok=True)
             submission_url = get_file_paths("model",url=True,submission_id=submission_id)
             pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
             pdbfilepath =  os.path.join(submission_path,pdbname)
@@ -2755,6 +2761,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 return JsonResponse({'msg':'You have the following unused molecules in step 2: '+','.join(['#'+str(i+1) for i in diff_int_id_form_db])+'.\nPlease, delete them if they are not part of your submission.'},status=422,reason='Unprocessable Entity')
 
             results = get_sdf_from_db_by_submission(submission_id,int_ids)
+            print("RESULTS ",results)
             
 
             if len(results) == 0:
@@ -2767,7 +2774,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     return JsonResponse({'msg':'Molecule form number "'+str(int_id+1)+'" does not match mol ID.'},status=422,reason='Unprocessable Entity')
                 molintdict[int_id]['molfile'] = row['filepath']
                 
-            
             os.makedirs(submission_path,exist_ok=True)
             logname = get_file_name_submission(form_type,submission_id,0,ext="log",forceext=False,subtype="log")
             
@@ -2833,6 +2839,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 for int_id in sorted(molintdict.keys(),key=int):
                                
                     print("Loading mol #"+str(int_id+1)+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
+                    print("HOLA ",int_id)
                     try:
                         with open(molintdict[int_id]['molfile'],'rb') as molfile:
                             mol = open_molecule_file(molfile,logfile=logfile,filetype='sdf')
@@ -3419,11 +3426,11 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
     
     if component_type == 'model':
-        q = DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+        q = DyndbSubmissionModel.objects.filter(submission_id=submission_id,model_id__dyndbmodelcomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
         fields_list = DyndbModelComponents._meta.get_fields()
         path = 'model_id__dyndbmodelcomponents__'
     elif component_type == 'dynamics':
-        q = DyndbDynamics.objects.filter(submission_id=submission_id)
+        q = DyndbDynamics.objects.filter(submission_id=submission_id,dyndbdynamicscomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
         fields_list = DyndbDynamicsComponents._meta.get_fields()
         path = 'dyndbdynamicscomponents__' 
         
@@ -3435,6 +3442,7 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
     fields['int_id'] = F(path+'id_molecule__dyndbsubmissionmolecule__int_id')
     q = q.annotate(**fields)
     q = q.values(*list(fields.keys()))
+    print("valor q\n",q.query)
     
     return list(q)
         
@@ -3495,8 +3503,8 @@ def MODELview(request, submission_id):
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
         action="/".join(["/dynadb/MODELfilled",submission_id,""])
-        response = HttpResponse('PRUEBA MODEL',content_type='text/plain')
-        return response
+     #   response = HttpResponse('PRUEBA MODEL',content_type='text/plain')
+     #   return response
         now=timezone.now()
         author="jmr"
         author_id=1
@@ -5173,6 +5181,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
                 fileext = fileext.lower()
                 fileext = fileext[1:]
                 file_type = request.POST['file_type']
+                print(file_types[file_type])
                 invalid_ext = False
                 if file_type == 'coor':
                     subtype = "pdb"
@@ -5538,6 +5547,8 @@ def DYNAMICSview(request, submission_id):
             i += 1
         
         data = mdata + cdata
+        print("cdataL\n",cdata)
+        print("mdata\n",mdata)
          
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
         'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
