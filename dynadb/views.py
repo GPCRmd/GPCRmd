@@ -838,7 +838,7 @@ def ajaxsearcher(request):
             pro.append(len(count_dynamics(int(pro[0]),'protein')[1]))
 
         for gpcr in gpcrlist:
-            gpcr.appendlen((count_dynamics(int(gpcr[0]),'protein')[1]))
+            gpcr.append(len(count_dynamics(int(gpcr[0]),'protein')[1]))
 
         for comp in compoundlist:
             comp.append(len(count_dynamics(int(comp[0]),'compound')[1]))
@@ -1108,7 +1108,7 @@ def do_boolean(list_of_lists): #[ ['NONE',[1,2,3] ], ['OR',[3,4,5] ], ['AND',[1,
     orset=set()
     result_set=set()
 
-    for i in range(len(list_of_lists)-1,-1,-1): #go from the bottom to the up
+    for i in range(len(list_of_lists)-1,-1,-1): #go from the bottom to the top
 
         if list_of_lists[i][0]=='AND':
             list_of_lists[i-1][1]=list( set(list_of_lists[i][1]).intersection(set(list_of_lists[i-1][1])) ) #it cant give index error because first item is NONE,not AND.

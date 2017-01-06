@@ -1,4 +1,4 @@
-
+//function to autocomplete the user input
 $('#protein22').autocomplete({ 
     source: function (request, response) { 
         $.getJSON("/dynadb/autocomplete/?q=" + request.term, function (data) { 
