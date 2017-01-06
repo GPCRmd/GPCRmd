@@ -6,7 +6,8 @@ $(document).ready(function(){
     $.fn.clean_mutations = function() {
         var protform = $(this).parents("[id|=protform]");
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
-        protform.find("#mutationtable").resetTableRowFromFields()
+        var mutationtable = protform.find("[id|='id_form'][id$='mutationtable'],[id='mutationtable']");
+        mutationtable.resetTableRowFromFields();
         msequence.prop("readonly",false);
         msequence.set_restore_color();
     };
@@ -14,7 +15,7 @@ $(document).ready(function(){
     
     $.fn.resetTableRowFromFields = function() {
       var tr = $(this).find("tr:last-of-type");
-      var tr_parent = $(tr).parent()
+      var tr_parent = $(tr).parent();
       var tr2 = tr.clone();
       $(this).find("tr").each(function () {
         if (!$(this).find("th").exists()) {
@@ -41,8 +42,6 @@ $(document).ready(function(){
       });
       tr_parent.append(tr2);
 
-      
-  
     };
     $.fn.addTableRowFormFields = function(values,create_row=true) {
       var tr = $(this).find("tr:last-of-type");
@@ -112,7 +111,8 @@ $(document).ready(function(){
         var alignmentval = protform.find("[id='id_alignment'],[id|=id_form][id$='-alignment']").val();
         var sequenceval = protform.find("[id='id_sequence'],[id|=id_form][id$='-sequence']").val();
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
-        protform.find("#mutationtable").resetTableRowFromFields();
+        var mutationtable = protform.find("[id|='id_form'][id$='mutationtable'],[id='mutationtable']");
+        mutationtable.resetTableRowFromFields();
         
         $.post("../get_mutations/",
         {
@@ -128,9 +128,9 @@ $(document).ready(function(){
           msequence.set_readonly_color();
           $(data.mutations).each(function(){
             if (i == 0) {
-              protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to],false);
+              mutationtable.addTableRowFormFields([this.resid,this.from,this.to],false);
             } else {
-              protform.find("#mutationtable").addTableRowFormFields([this.resid,this.from,this.to]);
+              mutationtable.addTableRowFormFields([this.resid,this.from,this.to]);
             }
             i++;
           });

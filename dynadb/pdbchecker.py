@@ -49,6 +49,7 @@ def write_entry(line,fileh,serial):
     
 def split_protein_pdb(filename,modeled_residues,outputfolder=None):
         '''Get sequence from a PDB file in a given interval defined by a combination of Segment Identifier (segid), starting residue number (start), end residue number (stop), chain identifier (chain). All can be left in blank. Returns 1) a list of minilist: each minilist has the resid and the aminoacid code. 2) a string with the sequence.'''
+        print(modeled_residues)
         fpdb=open(filename,'r')
         header = "CRYST1    0.000    0.000    0.000  90.00  90.00  90.00 P 1           1"
         rootname,ext = path.splitext(filename)
@@ -108,12 +109,12 @@ def split_protein_pdb(filename,modeled_residues,outputfolder=None):
                             pfields=fields
                             
                             protein = False
-                            for rownum,row in modeled_residues.items():
+                            for row in modeled_residues:
                                 chain = row['chain']
                                 start = row['resid_from']
                                 stop =  row['resid_to']
                                 segid = row['segid']
-                                if (fields['chain']==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in fields['segid'] or segid==''):
+                                if (fields['chain']==chain or chain == '') and cpos2 >= start and cpos2 <= stop and ((segid == fields['segid']) or segid==''):
                                     protein = True
                                     break
                                     
@@ -211,23 +212,14 @@ def split_resnames_pdb(filename,outputfolder=None):
         fileh.close()
     return data
 
-def cmp(a,b):
-    return (a > b) - (a < b)
-def sort_residue(x,y):
-    xlist = x.split('_')
-    ylist = y.split('_')
-    for xe,ye in zip(xlist,ylist):
-        if xe.isdigit() and ye.isdigit():
-            cmpr = cmp(int(xe),int(ye))
-        else:
-            cmpr = cmp(xe,ye)
-        if cmpr != 0:
-            return cmpr
-    return cmp(len(xlist),len(ylist))
 
-
-def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=devnull):
+def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=None):
     '''Get sequence from a PDB file in a given interval defined by a combination of Segment Identifier (segid), starting residue number (start), end residue number (stop), chain identifier (chain). All can be left in blank. Returns 1) a list of minilist: each minilist has the resid and the aminoacid code. 2) a string with the sequence.'''
+    if logfile is None:
+        logfile = open(devnull,'w')
+        logfile_close = True
+    else:
+        logfile_close = False
     rootname,ext = path.splitext(filename)
     if outputfolder is not None:
         basename = path.basename(rootname)
@@ -301,6 +293,9 @@ def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=devnull):
                         data['residues'][residue] = dict()
                         data['residues'][residue]['serial'] = serial
                         data['residues'][residue]['names'] = set()
+                        data['residues'][residue]['chain'] = fields['chain']
+                        data['residues'][residue]['segid'] = fields['segid']
+                        data['residues'][residue]['cpos2'] = cpos2
                     if cname in data['residues'][residue]:
                         print('Duplicated atom "'+cname+'" in chain "'+fields['chain']+'", segid "'+\
                         fields['segid']+'", resid "'+fields['resid']+'".',file=logfile)
@@ -318,7 +313,7 @@ def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=devnull):
         residue_names_count[data['names'][name]['first_residue']] += 1
     
     # sort by residue chain_segid_resid
-    residue_list = sorted(residue_names_count.keys(),key=cmp_to_key(sort_residue))
+    residue_list = sorted(residue_names_count.keys(),key=sort_residue_keys(data['residues']))
     
     residue_names_count_items = [ (item,residue_names_count[item]) for item in residue_list]
     del residue_list
@@ -335,7 +330,9 @@ def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=devnull):
     for residue in residue_list:
         atoms = data['residues'][residue]['names']
         if atoms != atomsref:
-            chain,segid,cpos2 = residue.split('_')
+            chain = data['residues'][residue]['chain']
+            segid = data['residues'][residue]['segid']
+            cpos2 = data['residues'][residue]['cpos2'] 
             cpos2 = int(cpos2)
             if cpos2 > 9999:
                 cpos = hex(cpos2)
@@ -362,8 +359,164 @@ def molecule_atoms_unique_pdb(filename,outputfolder=None,logfile=devnull):
         write_entry(line,fileh,newserial)
     print("END",file=fileh)
     fileh.close()
+    if logfile_close:
+        logfile.close()
     return outfilename,len(data['residues']),errorflag
 
+def residue_atoms_dict_pdb(filename,logfile=None):
+    if logfile is None:
+        logfile = open(devnull,'w')
+        logfile_close = True
+    else:
+        logfile_close = False
+    fpdb=open(filename,'r')
+    cpos=0 #current residue position
+    ppos=0 #previous residue position
+    ppos2='0' #previous position after converting hexadecimals to decimals
+    residue_dict = dict()
+    hexflag=0
+    serial = 0
+    errorflag = False
+    pfields={ 'record':None,'serial': None,'name': None,'altloc':None,'resname':None,
+    'chain':None,'resid':None,'x':None,'y':None,'z':None,'occupancy':None,
+    'beta':None,'segid':None,'element':None,'charge':None}
+    #pfields=['','' ,'','AAA','Z','0','0','0','0','']
+    required_fields = {'serial','name','resname','resid','x','y','z','occupancy','beta'}
+    for line in fpdb:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                    serial += 1
+                    fields={ 'record':line[0:6],'serial': line[6:11],'name': line[11:16],'altloc':line[16],'resname':line[17:21],
+                    'chain':line[21],'resid':line[22:27],'x':line[30:38],'y':line[38:46],'z':line[46:54],'occupancy':line[54:60],
+                    'beta':line[60:66],'segid':line[72:76],'element':line[76:78],'charge':line[78:80]}
+
+                    for field in fields:
+                        fields[field] = fields[field].strip()
+
+                    for field in required_fields:
+                            if fields[field].strip()=='':
+                                raise ParsingError('Missing required field "'+field+'" in the PDB file at line:\n'+line)
+
+                    if fields['resid']!=pfields['resid']: #resid has changed->new aa
+                        if fields['chain']!=pfields['chain']  or fields['segid']!=pfields['segid'] or fields['segid'] == '1':
+                            #resid count has been reseted by new chain, new segid or whatever. 
+                            ppos='0'
+                            hexflag=0
+
+                        cpos=fields['resid'] #current position (resid) in the pdb during the present loop cycle
+                        try:
+                            if hexflag==1:
+                                    cpos2=int(str(cpos),16)
+                                    ppos2=int(str(ppos),16)
+                            elif hexflag==0:
+                                    cpos2=int(cpos)
+                                    ppos2=int(ppos)
+                            if cpos=='2710' and ppos=='9999':
+                                    cpos2=int(cpos,16)
+                                    hexflag=1
+                        except ValueError:
+                            raise ParsingError('Invalid resid format at line:\n'+line)
+                        ppos=cpos
+                        pfields=fields
+                    cname = fields['name']
+                    residue = '_'.join((fields['chain'],fields['segid'],str(cpos2)))
+                    
+                    # store atom names for each residue and the serial of the first atom
+                    if residue not in residue_dict:
+                        residue_dict[residue] = dict()
+                        residue_dict[residue]['serial'] = serial
+                        residue_dict[residue]['names'] = set()
+                        residue_dict[residue]['chain'] = fields['chain']
+                        residue_dict[residue]['segid'] = fields['segid']
+                        residue_dict[residue]['cpos2'] = cpos2
+                    if cname in residue_dict[residue]:
+                        print('Duplicated atom "'+cname+'" in chain "'+fields['chain']+'", segid "'+\
+                        fields['segid']+'", resid "'+fields['resid']+'".',file=logfile)
+                        errorflag = True
+                    residue_dict[residue]['names'].add(cname)
+    if logfile_close:
+        logfile.close()
+    return residue_dict,errorflag
+
+def sort_residue_keys(residue_dict):
+    def sort_residue(x):
+        return (residue_dict[x]['chain'],residue_dict[x]['segid'],residue_dict[x]['cpos2'])
+    return sort_residue
+def residue_dict_diff(residue_dict1,residue_dict2,logfile=None,ignore_extra_residues=False):
+    if logfile is None:
+        logfile = open(devnull,'w')
+        logfile_close = True
+    else:
+        logfile_close = False
+    diff = False
+    residue_keys1 = set(residue_dict1.keys())
+    residue_keys2 = set(residue_dict2.keys())
+    diff_missing = residue_keys1.difference(residue_keys2)
+    if not ignore_extra_residues:
+        diff_extra = residue_keys2.difference(residue_keys1)
+    del residue_keys2
+    residue_list = sorted(residue_keys1.difference(diff_missing),key=sort_residue_keys(residue_dict1))
+    del residue_keys1
+    if diff_missing != set():
+        for residue in sorted(diff_missing,key=sort_residue_keys(residue_dict1)):
+            chain = residue_dict1[residue]['chain']
+            segid = residue_dict1[residue]['segid']
+            cpos2 = residue_dict1[residue]['cpos2'] 
+            cpos2 = int(cpos2)
+            if cpos2 > 9999:
+                cpos = hex(cpos2)
+            else:
+                cpos = str(cpos2)
+            msg = 'Missing residue'
+            frase = ''.join((msg,' with chain "',chain,\
+            '", segid "',segid,'" and resid "',cpos,'".'))
+            print(frase,file=logfile)
+            diff = True
+    del diff_missing
+    if not ignore_extra_residues and diff_extra != set():
+        for residue in sorted(diff_extra,key=sort_residue_keys(residue_dict2)):
+            chain = residue_dict2[residue]['chain']
+            segid = residue_dict2[residue]['segid']
+            cpos2 = residue_dict2[residue]['cpos2'] 
+            cpos2 = int(cpos2)
+            if cpos2 > 9999:
+                cpos = hex(cpos2)
+            else:
+                cpos = str(cpos2)
+            msg = 'Inconsistent residue'
+            frase = ''.join((msg,' with chain "',chain,\
+            '", segid "',segid,'" and resid "',cpos,'".'))
+            print(frase,file=logfile)
+            diff = True
+    if not ignore_extra_residues:
+        del diff_extra
+    for residue in residue_list:
+        atoms = residue_dict2[residue]['names']
+        atomsref = residue_dict1[residue]['names']
+        if atoms != atomsref:
+            diff = True
+            chain = residue_dict1[residue]['chain']
+            segid = residue_dict1[residue]['segid']
+            cpos2 = residue_dict1[residue]['cpos2'] 
+            cpos2 = int(cpos2)
+            if cpos2 > 9999:
+                cpos = hex(cpos2)
+            else:
+                cpos = str(cpos2)
+            diff_atoms_atomsref = atoms.difference(atomsref)
+            diff_atomsref_atoms = atomsref.difference(atoms)
+            if diff_atoms_atomsref != set():
+                msg = 'Inconsistent atom name(s)'
+                frase = ''.join((msg,' "'," ".join(diff_atoms_atomsref),'" in residue with chain "',chain,\
+                '", segid "',segid,'" and resid "',cpos,'".'))
+                print(frase,file=logfile)
+            if diff_atomsref_atoms != set():
+                msg = 'Missing atom name(s)'
+                frase = ''.join((msg,' "'," ".join(diff_atomsref_atoms),'" in residue with chain "',chain,\
+                '", segid "',segid,'" and resid "',cpos,'".'))
+                print(frase,file=logfile)
+    if logfile_close:
+        logfile.close()
+    return diff
 
 def trimw(string):
     w = re.compile('\s+')
@@ -427,7 +580,7 @@ def truncate_inchi(inchi,options):
          else:
             return ''
     return tinchi
-def diff_mol_pdb(mol,pdbfile,logfile=os.devnull):
+def diff_mol_pdb(mol,pdbfile,logfile=devnull):
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             remove_isotopes(mol,sanitize=True)

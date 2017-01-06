@@ -7,11 +7,15 @@ from .molecule_properties_tools import MOLECULE_EXTENSION_TYPES
 
 
 class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
-    def __init__(self,request,max_size,*args,**kwargs):
+    def __init__(self,request,max_size,max_files=1,*args,**kwargs):
         self.max_size = max_size
+        self.max_files = max_files
         self.__acum_size = 0
+        self.__acum_file_num = 0
         super(TemporaryFileUploadHandlerMaxSize, self).__init__(request,*args, **kwargs)
-        
+    
+    
+    
     def handle_raw_input(self, input_data, META, content_length, boundary, encoding=None):
         """
         Use the content_length to signal whether or not this handler should be in use.
@@ -20,6 +24,13 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
         # If the post is too large, reset connection.
         if content_length > self.max_size:
             raise StopUpload(connection_reset=True)
+        
+    def new_file(self, *args, **kwargs):
+        if self.__acum_file_num >= self.max_files:
+            raise StopUpload(connection_reset=True)
+        return super(TemporaryFileUploadHandlerMaxSize, self).new_file(*args, **kwargs)    
+    
+    
     def receive_data_chunk(self,raw_data, start):
         self.__acum_size += len(raw_data)
         if self.__acum_size > self.max_size:
@@ -27,6 +38,10 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
             #self.file.close()
             raise StopUpload(connection_reset=True)
         return super(TemporaryFileUploadHandlerMaxSize, self).receive_data_chunk(raw_data, start)
+        
+    def file_complete(self, *args, **kwargs):
+        self.__acum_file_num += 1
+        return super(TemporaryFileUploadHandlerMaxSize, self).file_complete(*args, **kwargs)
         
 class TemporaryMoleculeFileUploadHandlerMaxSize(TemporaryFileUploadHandlerMaxSize):
     def __init__(self,request,max_size,*args,**kwargs):

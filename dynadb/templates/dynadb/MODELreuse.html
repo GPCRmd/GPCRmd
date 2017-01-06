@@ -154,8 +154,8 @@
 <!--					<th style="width:70px;text-align:center"><label style="writing-mode: vertical-rl;height:65px;text-align:right"for="id_template_id_model"><a title="Template id model: ID of the model used as template if “Source type” is set to 'Homology'. ">Template model ID</a></label></th></tr> -->
                                 </thead>
                                 <tbody id="pElement1">
-{% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}	
-                         	<tr id="Element1_{{intps0}}"><td style="padding:5px 5px 5px 5px"><input id="id_prot" value="1"  name="formps-{{intps0}}-prot" type="number" style="width:45px"  readonly /></td>
+{% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}{{intps0}}	
+                         	<tr id="Element1_{{intps0}}"><td style="padding:5px 5px 5px 5px"><input id="id_prot" value="{{intps0|add 1}}"  name="formps-{{intps0}}-prot" type="number" style="width:45px"  readonly /></td>
 				<!--<td style="padding:5px 5px 5px 5px"><input id="id_id_protein" value=  name="formps-{{intps0}}-id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
 				<td style="padding:5px 5px 5px 5px"><input id="id_chain" maxlength="1" value="{{o.chain}}"  name="formps-{{intps0}}-chain" type="text" style="width:45px"  readonly /></td>
 				<td style="padding:5px 5px 5px 5px"><input id="id_segid" maxlength="4" value="{{o.segid}}"  name="formps-{{intps0}}-segid" type="text" style="width:45px"  readonly/></td>
@@ -167,9 +167,9 @@
 				<td style="padding:5px 5px 5px 5px"><input id="id_pdbidps" maxlength="6" value="{{o.pdbid}}"  name="formps-{{intps0}}-pdbidps" type="text"  style="width:50px"  readonly/></td>
 		<!--		<td style="padding:5px 5px 5px 5px"><input id="id_source_typeps" value="{{o.source_type}}"  name="formps-{{intps0}}-source_typeps" type="text"  style="width:50px" /></td>-->
 				<td style="padding:5px 5px 5px 5px"><select id="id_source_typeps"   name="formps-{{intps0}}-source_typeps" style="width:50px" readonly >	
-                                       {% for ll in lmrstype %}
+                                       {% for ll in lmol_MOD_type_tup %}
                                            {% if forloop.counter == forloop.parentloop.counter %}
-					   <option value="{{o.source_type}}">{{ll}}</option>
+					   <option value="{{ll.0}}">{{ll.1}}</option>
                                            {%endif%}
                                        {%endfor%}	</select></td>
 
