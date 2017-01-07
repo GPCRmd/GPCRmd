@@ -3487,15 +3487,44 @@ def get_components_info_from_submission(submission_id,component_type=None):
     return result
     
 def MODELview(request, submission_id):
+    
+    def model_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
+        print("inside the function model_file_table")
+        print(dname)
+        fdbF={}
+        fdbFobj={}
+        
+       #####  
+        ft=DyndbFileTypes.objects.all()
+        dict_ext_id={}
+        for l in ft:
+            dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+       ##############
+        for key,val  in dname.items():
+             print("val\n", val)
+             fext="".join(val['path'].split(".")[1:])
+             initFiles['id_file_types']=dict_ext_id[fext]
+             initFiles['url']=val['url']
+             initFiles['filename']="".join(val['path'].split("/")[-1])
+             initFiles['filepath']=val['path']
+             initFiles['description']="pdb crystal-derived assembly coordinates"
+             print("HOLA initFiles", initFiles)
+    
+             fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+             dicfmod={}
+             fdbFM={}
+             if fdbF[key].is_valid():
+                 fdbFobj[key]=fdbF[key].save()
+                 dicfmod['id_model']=MFpk
+                 dicfmod['id_files']=fdbFobj[key].pk
+                 fdbFM[key]=dyndb_Files_Model(dicfmod)
+                 if fdbFM[key].is_valid():
+                     fdbFM[key].save()
+                 else:
+                     print("Errores en el form dyndb_Files_Model\n ", fdbFM[key].errors.as_text())
+             else:
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
     # Function for saving files
-    def handle_uploaded_file(f,p,name):
-        print("file name = ", f.name , "path =", p)
-        f.name=name
-        print("NEW name = ", f.name , "path =", p)
-        path=p+"/"+f.name
-        with open(path, 'wb+') as destination:
-            for chunk in f.chunks():
-                destination.write(chunk)
     print("REQUEST SESSIONS",request.session.items())
     request.session['info']="PASAR a SESSION"
     print("REQUEST SESSIONS",request.session.items())
@@ -3800,6 +3829,7 @@ def MODELview(request, submission_id):
                          #      rowl=[ce,cm]
  
 ##______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+                    print("SEVILLA!!!")
  
                     if len(rowl) >0: # The Complex_molecule is also in the GPCRmd database
                         print("COMPLEX_MOLECULE: ", rowl[-1],"\n The current Complex molecule already exists in the database")
@@ -3876,48 +3906,16 @@ def MODELview(request, submission_id):
 
         #Create storage directory: Every MODEL has its own directory in which the corresponding pdb file is saved. This directory is labeled as "PDBmodel"+ MFpk (primary key of the model)
         #Maybe we have to label the directory with submissionID?????
-        PDBmodel=request.FILES['upload_pdb']
-        direct='/protwis/sites/files/Model/model'+str(submission_id)
-        print("\nDirectorio a crear ", direct)
-        print("\nNombre del fichero ", PDBmodel)
-        if not os.path.exists(direct):
-            os.makedirs(direct)
+        pathpdb=get_file_paths("model",url=False,submission_id=submission_id)
+        namepdb=get_file_name_submission("model",submission_id,formid=0,ext="pdb",subtype="pdb")
+        urlpdb=get_file_paths("model",url=True,submission_id=submission_id)
+        path_namefpdb=("").join([pathpdb,namepdb]) 
+        url_namefpdb=("").join([urlpdb,namepdb]) 
+        dname={'dnamepdb':{'path':path_namefpdb,'url':url_namefpdb}}
+        ooo= model_file_table(dname,MFpk)
 
 
-        ft=DyndbFileTypes.objects.all()
-        dict_ext_id={}
-        for l in ft:
-            dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
-
-        fext="".join(PDBmodel.name.split(".")[1:]) 
-        dictfile={}
-        dictfiles['filename']=PDBmodel
-        dictfiles['description']="PDB file containing Model coordinates"
-        dictfiles['id_file_types']=dict_ext_id[fext]
-        dictfiles['filepath']=direct
-        for key,val in initFiles.items():   
-            dictfiles[key]=val
-        fdbFile=dyndb_Files(dictfiles)
-        if fdbFile.is_valid():
-            fdbFileobj=fdbFile.save()
-            newname=str(fdbFileobj.pk)+"_model_"+str(submission_id)+"."+fext
-            handle_uploaded_file(PDBmodel,direct,newname)
-            completepath=direct+"/"+newname
-            fdbFileobj.filename=newname   #rename filename in the database after saving the initial name
-            fdbFileobj.filepath=completepath   #rename filepath to the one including the new filename in the database after saving the initial name
-            fdbFileobj.save()
-            dictFModel={}
-            dictFModel['id_files']=fdbFileobj.pk
-            dictFModel['id_model']=MFpk
-            fdbFModel=dyndb_Files_Model(dictFModel)
-            if fdbFModel.is_valid():
-                fdbFModel.save() 
-            else:
-                print("Errores en el form dyndb_Files_Model\n ", fdbFile.errors.as_data())
-        else:
-            print("Errores en el form dyndb_Files\n ", fdbFile.errors.as_data())
-
-        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
+#        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
 
         fdbPS={} 
         fdbPSobj={} 
@@ -3967,7 +3965,8 @@ def MODELview(request, submission_id):
 #            form.user=request.user
 #            form.save()
             # redirect to a new URL:
-        return HttpResponseRedirect("/".join(["/dynadb/MODELfilled",submission_id,""]), {'submission_id':submission_id} )
+        response = HttpResponse("The model has been successfully registered" ,content_type='text/plain')
+        return response
 
     # if a GET (or any other method) we'll create a blank form
     else:
