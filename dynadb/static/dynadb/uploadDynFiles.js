@@ -44,7 +44,7 @@ $(document).ready(function() {
                         link_div_new.attr('id',link_div_new.attr('id')+"-"+i.toString());
                         var download_file_new = link_div_new.find("[id|='id_"+file_type+"_download_url']");
                         download_file_new.attr('id',download_file.attr('id')+"-"+i.toString());
-                        download_file_new.attr('href',$(this));
+                        download_file_new.attr('href',this);
                         download_file_new.text(download_file_new.text().replace("file","file "+(i+1).toString()));
                         download_file_new.show();
                         link_div_new.show();
