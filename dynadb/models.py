@@ -507,14 +507,15 @@ class DyndbSubmissionMolecule(models.Model):
         db_table = 'dyndb_submission_molecule'
         unique_together = (('submission_id', 'molecule_id'),('submission_id', 'int_id'),)
 
+smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4} #dictionary from submission_molecule_type to Dynamics components type and Modeled components type (from 0 to 5)
+
 class DyndbSubmissionModel(models.Model):
-    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True)
+    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True, unique=True)
     model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='model_id', blank=True, null=True) 
 
     class Meta:
         managed =True 
         db_table = 'dyndb_submission_model'
-        unique_together = (('submission_id', 'model_id'),)
 
 class DyndbDynamics(models.Model):
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model', blank=True, null=True)

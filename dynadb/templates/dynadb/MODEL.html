@@ -116,7 +116,7 @@
                        {% if model_id %}
                        {% else %}
                         <div class="row">
-                          	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="file_source"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the model (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
+                          	<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="file_source"><a title="Upload PDB file: Provide the PDB file which contains the 3D structure of the crystalized components in the simulation (Max. size of the file is 50 MB)" >Upload PDB file:</a></label></div>
          			<div class="col-md-3"><input type="file"  name="file_source"  class="validate[required,custom[onlyLetter],length[0,100]] feedback-input" placeholder=" Coordinates (PDB)" id="file_source" /></div>
 	        	</div>
                       
@@ -135,7 +135,7 @@
                 <div class=row style="height:20px"></div>
 
 	        <div class="row">
-                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Protein information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Curated protein information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
                 </div><br>
                         <table style="text-align=center;width:96%;margin-left:0%;margin-right:2%;"> 
                                 <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:right;height:30px"for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot</a></label></th>
@@ -197,8 +197,8 @@
 </div>
                        {% else %}
  			<div style="text-align:center">
-			     <input type="button" value="+ Add protein coordinates source"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
-			     <input type="button" value="- Remove protein coordinates source"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
+			     <input type="button" value="+ Add protein segment"  style="height:30px;margin: 0px 0px 5px 0px;width:300px" onClick="addModeledelement1();"><br>
+			     <input type="button" value="- Remove protein segment"  style="height:30px;margin: 5px 0px 0px 0px;width:300px" onClick="delModeledelement1();">
 		        </div>	
  			<div style="text-align:right;margin-right:5%;height:70px">
                                         <input type="button" value="Autocomplete resid" style="height:30px;margin: 15px 0px 0px 0px;width:150px" id="pdbchecker1" >                                        
@@ -212,7 +212,7 @@
                 <div class=row style="height:20px"></div>
 
 	        <div class="row">
-                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Small molecule information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Information of crystalized small molecules</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
                 </div><br>
 
 
@@ -275,13 +275,13 @@
 
 
       		{%if mcdata %}
-			<br>
+	<!--		<br>
  			<div style="text-align:center" style="margin: 5px 0px 5px 0px" >
 			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" >+ Add Molecule</button><br>
 			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" >- Remove Molecule</button>
-		        </div>
+		        </div> 	-->
 		        
-		        </div> 		
+		        </div> 	
 
  			<div style="text-align:right;margin-right:5%;height:70px">
                                       <a id="id_logfile"  name="logfile" href="" noreferrer noopener hidden target="_blank">Download log file.</a>
