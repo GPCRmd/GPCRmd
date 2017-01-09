@@ -392,9 +392,13 @@ class DyndbComplexExp(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
+    ki=models.FloatField(blank=True, null=True)
+    ic_fifty=models.FloatField(blank=True, null=True)
+    kd=models.FloatField(blank=True, null=True)
+    ec_fifty=models.FloatField(blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True #this used to be False
         db_table = 'dyndb_complex_exp'
 
 
