@@ -111,7 +111,7 @@ def show_alig(request, alignment_key):
         result=align_wt_mut(wtseq,mutseq)
         result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
         request.session[alignment_key]=result
-        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        tojson={'alignment':result, 'message':'' , 'userkey':alignment_key}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
     else:
@@ -1111,7 +1111,7 @@ def emptysearcher(request):
             dynresult=[]
             dynresult=getligrec(dynlist,'dynamics')
 
-    tojson={'dynlist':dynresult,'model':modelresult,'message':''}
+    tojson={'dynlist':dynresult,'model':modelresult,'result':[],'message':''}
     data = json.dumps(tojson)
     return HttpResponse(data, content_type='application/json')
 
@@ -1897,7 +1897,7 @@ def query_complex(request, complex_id,incall=False):
 def query_model(request,model_id,incall=False):
     '''Returns information about the given model_id. If incall is True, it will return a dictionary, otherwise, it returns an Http Response '''
     model_dic=dict()
-    numbertostring={0:'Apomorfic (only proteins)',1:'Complex Structure'}
+    numbertostring={0:'Apomorfic (no ligands)',1:'Complex Structure (proteins and ligands)'}
     #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
     modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
     model_dic['pdbid']=modelobj.pdbid
@@ -2284,7 +2284,7 @@ def upload_pdb(request): #warning , i think this view can be deleted
         return HttpResponse(data, content_type='application/json')
 
 def search_top(request,submission_id):
-    '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of two ends of the aligned PDB interval sequence are returned. '''
+    '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)

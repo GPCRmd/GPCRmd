@@ -186,7 +186,7 @@ kbd{
             <div style="padding:10px 40px">
             <li class="helpli">Search for compounds, molecules and proteins:</li><br>
 
-            <p>Use the panel in the left to search for compounds, molecules or proteins. You can use SMILES, InChI, InChIKey, Uniprot accession codes and common names. You can filter the type of the results returned (All, Protein, Molecule, Compound, and other options that will be explained lately). Next to every result, you will find an "Add to search" button, which will add the element to the right panel, allowing you to search a system using a combination of elements. For example: Molecule Clozapine AND Protein P28222.</p>
+            <p>Use the panel in the left to search for compounds, molecules or proteins. You can use SMILES, InChI, InChIKey and common names to search for molecules or compounds and Uniprot accession codes and common names to find proteins. You can filter the type of the results returned (All, Protein, Molecule, Compound, and other options that will be explained lately). Next to every result, you will find an "Add to search" button, which will add the element to the right panel, allowing you to search a system using a combination of elements. For example: Molecule Clozapine AND Protein P28222.</p>
 
             <li class="helpli" >Search by ID:</li><br>
 
@@ -197,7 +197,7 @@ kbd{
             <div style="padding:10px 40px">
             <li class="helpli"> Simple and Advanced Search</li><br>
 
-            <p>In the right panel, you can choose between <b>Simple and Advanced search</b>, the difference being that the second kind allows you to use "AND", "OR" and "NOT" boolean operators, as well as parenthesis. Simple search only allows "AND" operator (which is enough in most cases). The following is an example of how to perform a search with parenthesis:</p><br>
+            <p>In the right panel, you can choose between <b>Simple and Advanced search</b>, the difference being that the second kind allows you to use "AND", "OR" and "NOT" boolean operators, as well as brackets. Simple search only allows "AND" operator (which is enough in most cases). The following is an example of how to perform a search with brackets:</p><br>
 
             <center><table class="jumbotable">
             <tr><td>P28222</td><td>P28222</td></tr>
@@ -206,35 +206,35 @@ kbd{
             <tr><td>OR POPC )</td><td>OR POPC</td></tr>
             </table></center>
 
-            <p>The search in the left will return every system containing any of the following:</p>
+            <p>The search in the left will return the systems matching any of the following:</p>
             <ul>
             <li>P28222 + Serotonin</li>
             <li>P28222 + Clozapine</li>
             <li>P28222 + POPC </li>
             <li>P28222 + Serotonin + Clozapine</li>
             <li>P28222 + Serotonin + POPC </li>
-            <li>P28222 + Serotonin + Clozapine+POPC </li>
+            <li>P28222 + Serotonin + Clozapine + POPC </li>
             <li>P28222 + POPC + Clozapine </li>
 
             </ul>
 
-            <p>However, the search in the right will return every system containing any of the following: </p>
+            <p>However, the search in the right will return the systems matching any of the following: </p>
             <ul>
             <li>P28222 + Serotonin</li>
-            <li>All systems with Clozapine</li>
-            <li>All systems with POPC </li>
+            <li>Every system with Clozapine</li>
+            <li>Every system with POPC </li>
             </ul>
-
+            <p>Please, keep in mind that the results may not be composed only by the elements you have included in the search. So, when we say that the system will match "P28222 + Serotonin", it means that at least, it has those two components, but it also may have something else, like ions, water, etc. Read the "Exact match" section to know how to avoid this greedy behaviour.</p>
             <br><li class="helpli"> Defining functions inside the system: </li><br>
 
             <p> You can select the function which the molecule performs in the system: "Orthosteric ligand", "Allosteric Ligand", "Other" or "All". "All" meaning any of the previous. For proteins, you can select if it is a GPCR or not, using the <b>"is GPCR" checkbox</b>. If it is not selected, we assume that the protein is NOT a GPCR.</p>
 
             <li class="helpli">Exact Match</li><br>
 
-            <p> If you select "Exact Match" the search will return only those systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result.</p>
+            <p> If you select "Exact Match" the search will return only those systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result. So, if you look for P28222 AND Serotonin, and select exact match, only those systems composed by P28222 and serotonin and nothing else will be retrieved; a system with P28222, water and serotonin will not be a result.</p>
 
             <li class="helpli">Complex, Complex Structure and Dynamics</li><br>
-            <p> You can also select between: <b>"Complex", "Complex Structure" or "Dynamics"</b>. "Complex" is a system composed by a GPCR and other proteins plus its orthoesteric and alloesteric ligands, "Complex Structure" is a complex with other selected co-crystallized molecules which is used to build the entire solvated and membrane-embeded system (think of it as a PDB file) and "Dynamics" is a "Complex Structure" with a trajectory. For the last two cases,"Complex Structure" and "Dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "Dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> 
+            <p> You can also select between: <b>"Complex", "Complex Structure" or "Dynamics"</b>. "Complex" is a system composed by a GPCR, other proteins, orthoesteric and alloesteric ligands, "Complex Structure" is a complex with other selected co-crystallized molecules (think of it as a PDB file) and "Dynamics" is a "Complex Structure" which has been solvated and membrane-embeded and has got a trajectory. For the last two cases,"Complex Structure" and "Dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "Dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> 
 
             <p> <b>Note</b>: The difference between molecule and compound is that a compound represents a set of related molecules which only differ in the protonation state or some other subtle feature. As the concept of molecule is more precise, when searching with a molecule, you will only find those systems containing exactly that molecule. However, if you search by its corresponding compound, you will find all the systems which have that exact molecule or any of the other molecules belonging to that compound. So, if you search systems using Clozapine (compound) you will get more results (or the same) than if you search by Clozapine (molecule).</p>
           </div> <!--end of right panel div  -->
