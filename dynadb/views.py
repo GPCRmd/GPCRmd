@@ -794,36 +794,29 @@ def autocomplete(request):
 
 def count_dynamics(result_id,result_type):
     '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas.'''
-    counter=0
     dynset=set()
     if result_type=='compound': #we need to count complexcompound too!!!!
         for molecule in DyndbMolecule.objects.filter(id_compound=result_id):
-            countmol,dynsets=count_dynamics(molecule.id,'molecule')
-            dynset.union(dynsets)
-            counter+=countmol
-        return counter,dynset
+            somenumber,dynsets=count_dynamics(molecule.id,'molecule')
+            dynset=dynset.union(dynsets)
 
     for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
-        print('searching in simulation:',simu.id)
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj !=None:
                 if modelobj.id==result_id:
                     dynset.add(simu.id)
-                    counter+=1
                     continue
             else:
                 for prot in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=simu.id_model.id_complex_molecule.id_complex_exp.id):
                     if prot.id_protein.id==result_id:
                         dynset.add(simu.id)
-                        counter+=1
 
         elif result_type=='molecule':
             molflag=0
             for comp in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=simu.id):
                 if comp.id_molecule.id==result_id:
                     molflag=1
-                    counter+=1
                     dynset.add(simu.id)
                     break
 
@@ -831,21 +824,28 @@ def count_dynamics(result_id,result_type):
                 for comp in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=simu.id_model.id):
                     if comp.id_molecule.id==result_id:
                         molflag=1
-                        counter+=1
-                        print('molecule and simulation ids:',result_id,simu.id)
                         dynset.add(simu.id)
                         break
             if molflag==0: #molecule not found in dynamics nor model components, maybe it is in the complex molecule
                 try:
                     for mol in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=simu.id_model.id_complex_molecule.id):
                         if mol.id_molecule.id==result_id:
-                            counter+=1
                             dynset.add(simu.id)
                             break
                 except AttributeError:
                     pass #the dynamics has an apoform model
 
-    return counter,dynset
+        elif result_type=='compound':
+            try:
+                cexp_id=simu.id_model.id_complex_molecule.id_complex_exp
+                for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=cexp_id):
+                    if ccomp.id_compound.id==result_id:
+                        dynset.add(simu.id)
+            except:
+                continue           
+
+    return len(dynset),dynset
+
 
 def get_imagepath(id, type):
     '''Returns the path to the image of the molecule or compound with the given id. If type is molecule, it returns the image of the molecule, if it is a compound, it returns the image of the standar molecule for that compound.'''
@@ -906,6 +906,8 @@ def ajaxsearcher(request):
                 try:
                     molecule=DyndbMolecule.objects.select_related('id_compound').get(pk=user_input)
                     netcharge=molecule.net_charge
+                    if netcharge>0:
+                        netcharge='+'+str(netcharge)
                     comp=molecule.id_compound.id
                     compname=molecule.id_compound.name
                     imagepath=get_imagepath(user_input, 'molecule')
@@ -959,6 +961,8 @@ def ajaxsearcher(request):
                         if str(mol.id) not in [i[0] for i in moleculelist]: #molecule
                             mol_id=mol.id
                             netcharge=mol.net_charge
+                            if netcharge>0:
+                                netcharge='+'+str(netcharge)
                             comp=res.id_compound #DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                             compname=mol.id_compound.name # DyndbMolecule.objects.get(pk=mol_id).id_compound.name
                             imagepath=get_imagepath(mol.id, 'molecule')
@@ -981,6 +985,8 @@ def ajaxsearcher(request):
                     if str(mol_id) not in [i[0] for i in moleculelist]: #molecule
                         molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=mol_id)
                         netcharge=molobj.net_charge
+                        if netcharge>0:
+                            netcharge='+'+str(netcharge)
                         comp=molobj.id_compound.id
                         compname=molobj.id_compound.name
                         imagepath=get_imagepath(mol_id,'molecule')

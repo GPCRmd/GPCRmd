@@ -1,5 +1,6 @@
 $('#hidden').hide();
 $('#hiddenmodel').hide();
+$('#hiddenbar').hide();
 var counter=0;
 
 $(document).on({
