@@ -1,0 +1,33 @@
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">
+         <div class="panel-body">
+                <h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3>
+         </div>
+     </div>
+       {{int0}}
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary" style="height:300px">
+         <div class="panel-body" style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
+
+            <div style="text-align:center">
+             <h4 style="margin-top:-5%">FILL IN THE PROTEIN FORM</h4>
+            </div>
+             <p style="text-align: justify;">Please provide relevant data for GPCRs as well as other proteins (e.g. G protein, arrestin, nanobodies, peptide ligands etc.) that are included in the simulation.  </p>
+             <p style="text-align: justify;"><b>(A)</b> Protein information is automatically retrieved by its  UniProtKB accession number (AC). In case no AC exist, fill in manually the requested information in <b>(B)</b>.</p>
+             <p style="text-align: justify;"><b>(B)</b> Automatically retrieved protein details. In case the protein is not available in UniProtKB the user has to manually provide this information. </p>
+
+
+             <p style="text-align: justify;" hidden id="mutations_id"> <b>(C)</b> In case of mutated proteins, provide the corresponding sequence in the field 'Mutant sequence'. The mutant sequence will be automatically aligned to the previously specified wild type sequence by clicking the 'Align to wild type' button. Check the alignment in the provided pop-up window. Corrections can be done in the 'Sequence alignment' field. Once you confirm a correct alignment, you can retrieve a list of mutations, additions or deletions by clicking the 'Get mutations' button.<p>
+
+             <p style="text-align: justify;margin-bottom:-5%;">By clicking the '+ Add protein' button information about another proteins in the system can be provided. Several proteins can be added in a single submission but at least one must be a GPCR whose sequence must have been deposited to the GPCRdb.  </p>
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+ </div>
+

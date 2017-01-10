@@ -68,6 +68,8 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	for minilist in seqplain:
 		onlyaa=onlyaa+minilist[0]
 	#print(seqplain,onlyaa)
+	if len(onlyaa)==0:
+		return 'Unable to extract sequence from PDB file. Double check if the elements that define your interval exist: chain, segid, resid.'
 	return (seqplain,onlyaa,hexflag)
 
 
@@ -198,6 +200,7 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):
 #############################################################################################################################################
 
 def unique(pdbname, usechain=False,usesegid=False):
+	'''Checks if a given combination of resid, chain (optional) and segid (optional) ensures that a given resid is unique in the whole PDB file. '''
 	flag=0
 	pdbset=set()
 	oldpdb=open(pdbname,'r')

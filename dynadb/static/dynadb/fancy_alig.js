@@ -1,4 +1,4 @@
-
+//main function to call the MSA plugin to show the aligment in colors.
 $(document).ready(function(event){
     var yourDiv=document.getElementById("msa");
     var fasta = document.getElementById("fasta-files").innerText;

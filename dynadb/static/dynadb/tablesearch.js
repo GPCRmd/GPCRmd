@@ -1,4 +1,18 @@
+function sortFunction(a, b) {
+    if (a[0] === b[0]) {
+        return 0;
+    }
+    else {
+        return (a[0] < b[0]) ? -1 : 1;
+    }
+}
+
 function ShowResults(data, restype,is_apoform){
+    data.model=data.model.sort(sortFunction);
+    data.dynlist=data.dynlist.sort(sortFunction);
+    data.result=data.result.sort(sortFunction);
+
+
     var tablestr='';
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
@@ -141,6 +155,7 @@ $("#tablesearch").click(function() {
         })
     } //else ends
 
+    //check that parenthesis are correct
     for (i=0;i<openpar.length;i++){
         if (openpar[i]=='(' && openpar[i+1]=='('){
             flag=2;
@@ -205,7 +220,7 @@ $("#tablesearch").click(function() {
     }
     console.log(bigarray);
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
-
+    //search to perform when no elements were added to the right panel
     if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
         if (exactboo==true){
             alert('Exact match does not work if the query is empty.');

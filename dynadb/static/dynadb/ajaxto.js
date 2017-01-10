@@ -1,6 +1,7 @@
 //MAIN SEARCHER, sends ajax call to auto_query function. Returns: link to result + Add to table button
 
 function ShowResults(data, restype,is_apoform){
+    //creates an string with the results of the search
     var tablestr='';
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
@@ -13,9 +14,9 @@ function ShowResults(data, restype,is_apoform){
     if ( restype=='model'  && data.model.length>0){
         var rl=data.model
         for(i=0; i<rl.length; i++){ //rl[i].length>2
-            if (rl[i].length>2 && (is_apoform=='com'||is_apoform=='both') ){
+            if (rl[i].length>2 && (is_apoform=='com'||is_apoform=='both') ){ //complex result
                 tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +" </a></td><td> Receptor: <kbd>"+rl[i][1]+"<br></kbd> Ligand: <kbd>"+rl[i][2]+"</kbd></td></tr>";
-            }if (rl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
+            }if (rl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) { //apoform result
                 tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+" </a></td><td> Protein: <kbd>"+rl[i][1]+"</kbd></td></tr>";
             }
         }
@@ -27,7 +28,7 @@ function ShowResults(data, restype,is_apoform){
         for(i=0; i<dl.length; i++){
             if (dl[i].length>2 && (is_apoform=='com'||is_apoform=='both')){ //dl[i].length>2
                 tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "<br></kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
-            }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
+            }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) { //apoform result
                 tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
             }
         }
@@ -62,6 +63,7 @@ function CreateTable(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 $("#Searcher").click(function(e) {
+    //gets the options the user has chosen and performs an ajax call with the user input
     $('#ajaxresults22').DataTable().clear().draw();
     e.preventDefault(); //not helping, still GET error sometimes...
     var p=$("#protein22").val();
@@ -93,7 +95,30 @@ $("#Searcher").click(function(e) {
                 var linkresult1='';
                 var linkresult2='';
                 var linkresult3='';
+                function sortFunction(a, b) {
+                    if (a[0] === b[0]) {
+                        return 0;
+                    }
+                    else {
+                        return (a[0] < b[0]) ? -1 : 1;
+                    }
+                }
+                function sortNamesFunction(a, b) {
+                    if (a[0][0] === b[0][0]) {
+                        return 0;
+                    }
+                    else {
+                        return (a[0][0] < b[0][0]) ? -1 : 1;
+                    }
+                }
+                //sort the results among each category
+                data.compound=data.compound.sort(sortFunction);
+                data.molecule=data.molecule.sort(sortFunction);
+                data.protein=data.protein.sort(sortFunction);
+                data.gpcr=data.gpcr.sort(sortFunction);
+                data.names=data.names.sort(sortNamesFunction);
 
+                //create the table rows with the results
                 for(i=0; i<data.compound.length; i++){
                     linkresult=linkresult+'<tr><td> <a target="_blank" class="btn btn-info" role="button" href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound ID: '+data.compound[i][0] +' '+data.compound[i][1]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.compound[i][data.compound[i].length-1]+'</span><br> <br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></td><td align="left"> <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+'%'+data.compound[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
                 }
@@ -198,6 +223,7 @@ $.ajaxSetup({
 
 
 $(document).on('keypress', function (event) {
+    //avoids refreshing the page when enter key is clicked
     if (event.keyCode == 13) {
        event.preventDefault();
        if ( $('#protein22').is(":focus") ){

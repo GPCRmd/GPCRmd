@@ -88,6 +88,7 @@ $(document).ready(function() {
         var buttondel = dynform.find("#id_del_button");
         var logfile = dynform.find("#id_logfile");
         var pdbchecker_tar_gz = dynform.find("#id_pdbchecker_tar_gz");
+        var solvent_num = dynform.find("#id_solvent_num");
         fields.prop('readonly',true);
         
         self.prop('disabled',true);
@@ -105,7 +106,7 @@ $(document).ready(function() {
                     var resname = $(this).find("[id='resname'],[id|=id_formc][id$='-resname']").val().trim();
                     var numofmol = $(this).find("[id='numberofmol'],[id|=id_formc][id$='-numberofmol']");
                     numofmol.val(data.resnames[resname].num_of_mol);
-                    
+                    solvent_num.val(data.num_of_solvent);
                 });
                 if (data.download_url_log != null) {
                     logfile.attr("href",data.download_url_log);

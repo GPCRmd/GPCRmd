@@ -51,13 +51,13 @@
     <b>Corresponding Cannonical Protein:</b> <br>
      <a  class="btn btn-info" role='button' href='/dynadb/protein/id/{{answer.cannonical}}'>Protein ID: {{answer.cannonical}}</a> <br>
 
-    {%if answer.model%}
-        <b>You can find this protein in the following complex structures:</b>
-        {% for link in answer.model %}
-            <a  class="btn btn-info" role='button' href='/dynadb/model/id/{{link}}'>Complex Structure ID: {{link}}</a>,
+    {%if answer.models%}
+        <b>You can find this protein in the following complex structures:</b><br>
+        {% for link in answer.models %}
+            <a  class="btn btn-info" role='button' href='/dynadb/model/id/{{link}}'>Complex Structure ID: {{link}}</a>
         {% endfor %}
     {% endif %}
-
+    <br>
     {% if answer.references %} 
         <br><b>References in which this protein is mentioned</b>:<br>
         <ul>

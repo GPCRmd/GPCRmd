@@ -1,3 +1,4 @@
+//code to hide or show the bootstrap carousel code 
 var counter=0;
 $('#hideall').hide();
 $("#showall").click(function(){
