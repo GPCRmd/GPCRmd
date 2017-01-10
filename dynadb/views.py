@@ -3532,15 +3532,44 @@ def get_components_info_from_submission(submission_id,component_type=None):
     return result
     
 def MODELview(request, submission_id):
+    
+    def model_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
+        print("inside the function model_file_table")
+        print(dname)
+        fdbF={}
+        fdbFobj={}
+        
+       #####  
+        ft=DyndbFileTypes.objects.all()
+        dict_ext_id={}
+        for l in ft:
+            dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+       ##############
+        for key,val  in dname.items():
+             print("val\n", val)
+             fext="".join(val['path'].split(".")[1:])
+             initFiles['id_file_types']=dict_ext_id[fext]
+             initFiles['url']=val['url']
+             initFiles['filename']="".join(val['path'].split("/")[-1])
+             initFiles['filepath']=val['path']
+             initFiles['description']="pdb crystal-derived assembly coordinates"
+             print("HOLA initFiles", initFiles)
+    
+             fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+             dicfmod={}
+             fdbFM={}
+             if fdbF[key].is_valid():
+                 fdbFobj[key]=fdbF[key].save()
+                 dicfmod['id_model']=MFpk
+                 dicfmod['id_files']=fdbFobj[key].pk
+                 fdbFM[key]=dyndb_Files_Model(dicfmod)
+                 if fdbFM[key].is_valid():
+                     fdbFM[key].save()
+                 else:
+                     print("Errores en el form dyndb_Files_Model\n ", fdbFM[key].errors.as_text())
+             else:
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
     # Function for saving files
-    def handle_uploaded_file(f,p,name):
-        print("file name = ", f.name , "path =", p)
-        f.name=name
-        print("NEW name = ", f.name , "path =", p)
-        path=p+"/"+f.name
-        with open(path, 'wb+') as destination:
-            for chunk in f.chunks():
-                destination.write(chunk)
     print("REQUEST SESSIONS",request.session.items())
     request.session['info']="PASAR a SESSION"
     print("REQUEST SESSIONS",request.session.items())
@@ -3680,9 +3709,9 @@ def MODELview(request, submission_id):
                     #scolmol.append(("").join([", ",tp,".id_protein "]))
                     From.append(("").join([" INNER JOIN dyndb_complex_protein AS ",tp," ON ",tinit,".id_complex_exp = ", tp,".id_complex_exp "]))
                     where.append(("").join([" AND ",tp,".id_protein = ", str(pid)]))
- 
+            print( "JJJJJOOOOOLLLL"  )
             
-            if len(lmol_in_model)==0: #If there is not any molecule in the model the query is based in the proteins (QUERYp)
+            if len(lmol_in_model)==0: #If there is not any molecule in the model the query is focused on the proteins (QUERYp)
                # where.append(("AND tcm.id_complex_exp IS NULL;"))
  
                 SELp=(" ").join(scol)
@@ -3702,13 +3731,12 @@ def MODELview(request, submission_id):
                         # Let's get the id_complex_exp of complexes involving just the same proteins in our submission and NO ONE ELSE!!!!! There should be only one result. To do so we have to exclude complex_exp containing compounds!!!!
                         p=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLp).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model)).exclude(id_complex_exp__in=DyndbComplexCompound.objects.filter(id_complex_exp__gt=0).values_list('id_complex_exp',flat=True))
                         if(len(p)>1):# Complexes involving exactly the same proteins in our submission is higher than one
-                            response = HttpResponse('Several complex_exp entries for the same set of proteins and no molecules exist in the DB... Please Report that error to the GPCRdb administrator',status=422,reason='Unprocessable Entity',content_type='text/plain')
-                            print(response)
-                            #return response
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
                         elif(len(p)==1):
                             ce=p[0]['id_complex_exp']
                             rowl=[ce] #Complex exp
- 
+
  
             else: # otherwise molecules should be included in the query. Two queries are needed... Complex_Compound (QUERYComp) and Complex_Molecule (QUERY)
  
@@ -3732,6 +3760,7 @@ def MODELview(request, submission_id):
                 QUERYComp=(" ").join([SELComp,FROMComp,WHEREComp])
  
     #  ##### MAKING THE COMPOUND-WISE QUERY 
+                print( "JJJJJOOOOOLLLL    2"  )
                 ROWLCompe=[]
                 #the QUERYComp is needed in order to check if the Complex_Exp exists regardless the specific Complex_molecule does
                 with connection.cursor() as cursor:
@@ -3749,7 +3778,10 @@ def MODELview(request, submission_id):
                         cep=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLCompe).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
                         b=set(cep.values_list('id_complex_exp',flat=True))
                         rowCompl=list(a&b) # if the id_complex is in both lists cep and cec this is the complex we are looking for
- 
+                        if rowCompl > 1:
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
+                            
 ##                      if(len(cec)<len(cep)):# Complexes with the same number of molecules than our submission is lower than complexes with the same number of proteins than our submission. There should be only one. Then complex_exp value is taken from the DyndbComplexCompound query "c"
 ##                          rowCompl=[cec[0]['id_complex_exp']]
 ##                      else:# Number of Complexes involving the same number of proteins than our submission is lower or equal than the number of complexes involving the same number of compounds considered in our submission. Only one Complex involving the same number of proteins must exist. if 'equal' just a single complex_exp and complex_molecule exist
@@ -3769,19 +3801,29 @@ def MODELview(request, submission_id):
  
             if len(lmol_in_model)>0: #There are molecules in the model!!!!
  
-                if len(rowCompl) > 0: #Actually should be one or 0. If > 0 the corresponding complex_exp is in the GPCRmd database
+                if len(rowCompl) > 0: #Actually should be one or 0. If > 0 the corresponding complex_exp is in the GPCRmd database and the complex_compound entry
+                    Upd_Comp_Type_l=[] #list of tupples containing info about wether the compound type has been updated
                     print("COMPLEX_EXP: ", rowCompl[0],"\n")
                     CE_exists=True # If Complex_Exp exists Complex_Compound exist for sure
                     CEpk=rowCompl[0]
                     #### CHECK if the COMPOUND_TYPE PRIORITY OF THE COMPLEX_COMPOUND TYPE HAS TO BE UPDATED 
                     qCompType=DyndbComplexCompound.objects.filter(id_complex_exp=CEpk)
-                    for l in qCompType.values_list('id_compound','type').order_by('id_compound'):
+                    for l in qCompType.values_list('id_compound','id_complex_exp','type').order_by('id_compound'):
                         sub_molec_type=qSMol.filter(molecule_id__in=DyndbMolecule.objects.filter(id_compound=l[0]).values_list('id',flat=True)).values_list('type',flat=True)
                         min_molec_type =min(sub_molec_type)
                         print("MIN MOLEC ",min_molec_type,"complex_compound", l[0])
-                        if min_molec_type < l[0]:
+                        lid_type=l[0]
+                        print( "JJJJJOOOOOLLLL    2"  )
+                        if min_molec_type < l[2]:
                             DyndbComplexCompound.objects.filter(id_compound=l[0]).filter(id_complex_exp=CEpk).update(type=min_molec_type)
+                            comp_type_t=(True,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating; min_molec_type= updated value if True
+                                                                             # min_molec_type= type value in the current model. Field updated because if True. If error in submission
+                                                                             #should be updated back to the l[2] value
                             print("updated value" )
+                        else:
+                            comp_type_t=(False,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating;
+                                                                             # min_molec_type= type value in the current model. Field not  updated because if False
+                        Upd_Comp_Type_t.append(comp_type_t)
  
                     ##### MAKING THE MOLECULE-WISE QUERY 
  
@@ -3845,6 +3887,7 @@ def MODELview(request, submission_id):
                          #      rowl=[ce,cm]
  
 ##______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+                    print("SEVILLA!!!")
  
                     if len(rowl) >0: # The Complex_molecule is also in the GPCRmd database
                         print("COMPLEX_MOLECULE: ", rowl[-1],"\n The current Complex molecule already exists in the database")
@@ -3858,13 +3901,20 @@ def MODELview(request, submission_id):
                     fdbCEobj=fdbCE.save()
                     CEpk=fdbCEobj.pk
                 else:
-                    print("Errores en el form dyndb_Complex_Exp\n ", fdbCE.errors.as_data())                
+                    iii1=fdbCE.errors.as_text()
+                    print("Errores en el form dyndb_Complex_Exp\n ", iii1)                
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
                 for prot in lprot_in_model:
                     fdbComP=dyndb_Complex_Protein({'id_protein':prot,'id_complex_exp':CEpk})
                     if fdbComP.is_valid():
                         fdbComPobj=fdbComP.save()
                     else:
+                        iii1=fdbComP.errors.as_text()
                         print("Errores en el form dyndb_Complex_Protein\n ", fdbComP.errors.as_data())    
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        DyndbComplexExp.objects.filter(id=CEpk).delete()
+                        return response
  
                 if len(lmol_in_model)>0: 
                     for comp in  lcomp_in_model: #no Complex containing these set of compounds and proteins exists in the database. Record a new entry
@@ -3872,7 +3922,13 @@ def MODELview(request, submission_id):
                         if fdbComComp.is_valid():
                             fdbComComp.save()
                         else:
-                            print("Errores en el form dyndb_Complex_Compound\n ", fdbComComp.errors.as_data())
+                            iii1=fdbComP.errors.as_text() 
+                            print("Errores en el form dyndb_Complex_Compound\n ", fdbComP.errors.as_text())
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                            DyndbComplexExp.objects.filter(id=CEpk).delete()
+                            return response
+
             if CM_exists==False:  #No Complex containing the set of compounds has been recorded.
             
                 fdbComMol=dyndb_Complex_Molecule({'id_complex_exp':CEpk,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now(),'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':author_id,'last_update_by':author_id})
@@ -3882,14 +3938,39 @@ def MODELview(request, submission_id):
                     id_complex_molecule=ComMolpk
                     print("CM_exist= False ",id_complex_molecule)
                 else:
-                    print("Errores en el form dyndb_Complex_Molecule\n ", fdbComMol.errors.as_data())
+                    iii1=fdbComMol.errors.as_text() 
+                    print("Errores en el form dyndb_Complex_Molecule\n ", iii1)
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    if CE_exist==False:# There was not any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                        DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                        DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                        DyndbComplexExp.objects.filter(id=CEpk).delete()
+                    else:
+                        for comp_type_t in Upd_Comp_Type_l:
+                            #comp_type_t=(True,l[0],l[1],l[2],min_molec_type)---> l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating; min_molec_type= updated value if True
+                            if comp_type_t[0]:
+                                DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+                    return response
+
                 for obj in qSMol.values():
-                   
                     fdbComMolMol=dyndb_Complex_Molecule_Molecule({'id_complex_molecule':id_complex_molecule,'id_molecule':obj['molecule_id_id'],'type':obj['type']})
                     if fdbComMolMol.is_valid():
                         fdbComMolMol.save()
                     else:
-                        print("Errores en el form dyndb_Complex_Molecule_Molecule\n ", fdbComMolMol.errors.as_data())
+                        iii1=fdbComMolMol.errors.as_text() 
+                        print("Errores en el form dyndb_Complex_Molecule_Molecule\n ", fdbComMolMol.errors.as_text())
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        if CE_exist==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                            DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                            DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                            DyndbComplexExp.objects.filter(id=CEpk).delete()
+                        else:
+                            for comp_type_t in Upd_Comp_Type_l:
+                               #comp_type_t=(True,l[0],l[1],l[2],min_molec_type)---> l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating; min_molec_type= updated value if True
+                                if comp_type_t[0]:
+                                    DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+                        DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+                        return response
  
             if dictmodel['type']=='1':
                 dictmodel['id_protein']=None
@@ -3907,7 +3988,21 @@ def MODELview(request, submission_id):
             fdbMFobj=fdbMF.save()
             MFpk=fdbMFobj.pk
         else:
-            print("Errores en el form dyndbModels\n ", fdbMF.errors.as_data())
+            iii1=fdbMF.errors.as_text() 
+            print("Errores en el form dyndb_Models\n", iii1)
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            if CE_exist==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                DyndbComplexExp.objects.filter(id=CEpk).delete()
+            else:
+                for comp_type_t in Upd_Comp_Type_l:
+                    if comp_type_t[0]:
+                        DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+            if CM_exist==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
+                DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+                DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+            return response
         
         #Fill the dyndb_Submission_Model form. Remember there is just a single Model for each submission !!!!
         dictSMd={'model_id':MFpk,'submission_id':submission_id}
@@ -3915,54 +4010,36 @@ def MODELview(request, submission_id):
         if fdbSMd.is_valid():
             fdbSMd.save()
         else:
-            iii1=fdbSMd[ii].errors.as_data()
+            iii1=fdbSMd.errors.as_text()
             print("fdbSMd",ii," no es valido")
-            print("!!!!!!Errores despues del fdbSMd[",ii,"]\n",iii1,"\n")
+            print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            if CE_exist==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                DyndbComplexExp.objects.filter(id=CEpk).delete()
+            else:
+                for comp_type_t in Upd_Comp_Type_l:
+                    if comp_type_t[0]:
+                        DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+            if CM_exist==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
+                DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+                DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+            DyndbModel.objects.filter(id=MFpk).delete()
+            return response
 
         #Create storage directory: Every MODEL has its own directory in which the corresponding pdb file is saved. This directory is labeled as "PDBmodel"+ MFpk (primary key of the model)
         #Maybe we have to label the directory with submissionID?????
-        PDBmodel=request.FILES['upload_pdb']
-        direct='/protwis/sites/files/Model/model'+str(submission_id)
-        print("\nDirectorio a crear ", direct)
-        print("\nNombre del fichero ", PDBmodel)
-        if not os.path.exists(direct):
-            os.makedirs(direct)
+        pathpdb=get_file_paths("model",url=False,submission_id=submission_id)
+        namepdb=get_file_name_submission("model",submission_id,formid=0,ext="pdb",subtype="pdb")
+        urlpdb=get_file_paths("model",url=True,submission_id=submission_id)
+        path_namefpdb=("").join([pathpdb,namepdb]) 
+        url_namefpdb=("").join([urlpdb,namepdb]) 
+        dname={'dnamepdb':{'path':path_namefpdb,'url':url_namefpdb}}
+        ooo= model_file_table(dname,MFpk)
 
 
-        ft=DyndbFileTypes.objects.all()
-        dict_ext_id={}
-        for l in ft:
-            dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
-
-        fext="".join(PDBmodel.name.split(".")[1:]) 
-        dictfile={}
-        dictfiles['filename']=PDBmodel
-        dictfiles['description']="PDB file containing Model coordinates"
-        dictfiles['id_file_types']=dict_ext_id[fext]
-        dictfiles['filepath']=direct
-        for key,val in initFiles.items():   
-            dictfiles[key]=val
-        fdbFile=dyndb_Files(dictfiles)
-        if fdbFile.is_valid():
-            fdbFileobj=fdbFile.save()
-            newname=str(fdbFileobj.pk)+"_model_"+str(submission_id)+"."+fext
-            handle_uploaded_file(PDBmodel,direct,newname)
-            completepath=direct+"/"+newname
-            fdbFileobj.filename=newname   #rename filename in the database after saving the initial name
-            fdbFileobj.filepath=completepath   #rename filepath to the one including the new filename in the database after saving the initial name
-            fdbFileobj.save()
-            dictFModel={}
-            dictFModel['id_files']=fdbFileobj.pk
-            dictFModel['id_model']=MFpk
-            fdbFModel=dyndb_Files_Model(dictFModel)
-            if fdbFModel.is_valid():
-                fdbFModel.save() 
-            else:
-                print("Errores en el form dyndb_Files_Model\n ", fdbFile.errors.as_data())
-        else:
-            print("Errores en el form dyndb_Files\n ", fdbFile.errors.as_data())
-
-        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
+#        request.session['newfilename']=direct+'/'+newname #added on 27/9 to access the path of the uploaded PDB file from pdbcheck view. Alex.
 
         fdbPS={} 
         fdbPSobj={} 
@@ -3987,7 +4064,25 @@ def MODELview(request, submission_id):
                 fdbPSobj[ii]=fdbPS[ii].save()
                 fdbPSobj[ii].pk
             else:
-                print("Errores en el form dyndb_Modeled_Residues\n ", fdbPS[ii].errors.as_data())
+                iii1=fdbPS[ii].errors.as_text()
+                print("Errores en el form dyndb_Modeled_Residues\n ", fdbPS[ii].errors.as_text())
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                if CE_exist==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                    DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexExp.objects.filter(id=CEpk).delete()
+                else:
+                    for comp_type_t in Upd_Comp_Type_l:
+                        if comp_type_t[0]:
+                            DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+                if CM_exist==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error
+                    DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+                DyndbFiles.objects.filter(id__in=DyndbFilesModel.objects.filter(id_model=MFpk).values_list('id_files',flat=True)).delete()
+                DyndbFilesMolecule.objects.filter(id_model=MFpk).delete()
+                DyndbSubmissionModel.objects.filter(model_id=MFpk).delete()
+                DyndbModel.objects.filter(id=MFpk).delete()
+                return response
 
         fdbMC={} 
         fdbMCobj={} 
@@ -4003,22 +4098,39 @@ def MODELview(request, submission_id):
                 fdbMCobj[ii]=fdbMC[ii].save(commit=False)
                 fdbMCobj[ii]=fdbMC[ii].save()
             else:
-                print("Errores en el form dyndb_Model_Components\n ", fdbMC[ii].errors.as_data())
-                         
-            
-
-
+                iii1=fdbMC[ii].errors.as_text()
+                print("Errores en el form dyndb_Model_Components\n ", iii1 )
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                if CE_exist==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+                    DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexExp.objects.filter(id=CEpk).delete()
+                else:
+                    for comp_type_t in Upd_Comp_Type_l:
+                        if comp_type_t[0]:
+                            DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+                if CM_exist==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an erro 
+                    DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+                    DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+                DyndbFiles.objects.filter(id__in=DyndbFilesModel.objects.filter(id_model=MFpk).values_list('id_files',flat=True)).delete()
+                DyndbFilesMolecule.objects.filter(id_model=MFpk).delete()
+                DyndbSubmissionModel.objects.filter(model_id=MFpk).delete()
+                DyndbModeledResidues.objects.filter(id_model=MFpk).delete()
+                DyndbModel.objects.filter(id=MFpk).delete()
+                return response
 
 #            form.user=request.user
 #            form.save()
             # redirect to a new URL:
-        return HttpResponseRedirect("/".join(["/dynadb/MODELfilled",submission_id,""]), {'submission_id':submission_id} )
+        response = HttpResponse("The model has been successfully registered" ,content_type='text/plain')
+        return response
 
     # if a GET (or any other method) we'll create a blank form
     else:
          
         lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)###!!!!POR AQUI
-        Smol_to_Modcomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4}
+        smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4}
+        Smol_to_Modcomp_type=smol_to_dyncomp_type
         lmol_MOD_type_tup=[]
         for l in lmol_MOD_type_num:
             lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
