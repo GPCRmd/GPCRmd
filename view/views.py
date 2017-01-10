@@ -399,7 +399,7 @@ def generate_cons_pos_all_info(cons_pos_all,all_gpcrs_info):
     active_class_all[classes[0]]=['active', 'in active']
     return (cons_pos_all,show_class,active_class_all)
 
-def distances_inpage(dist_struc,dist_ids):
+def distances_notraj(dist_struc,dist_ids):
     struc_path = "/protwis/sites/files/"+dist_struc
     strc=md.load(struc_path)
     dist_li=re.findall("\d+-\d+",dist_ids)
@@ -410,6 +410,8 @@ def distances_inpage(dist_struc,dist_ids):
         dist=float(md.compute_distances(strc, from_to)*10)
         dist_result[dist_pair]=dist
     return(dist_result)
+
+
 
 
 def obtain_DyndbProtein_id_list(dyn_id):
@@ -439,6 +441,30 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
+def distances_Wtraj(dist_str,struc_path,traj_path):
+    struc_path = "/protwis/sites/files/"+struc_path
+    traj_path = "/protwis/sites/files/"+traj_path
+    traj=md.load(traj_path, top=struc_path) 
+    dist_li=re.findall("\d+-\d+",dist_str)
+    frames=[]
+    axis_lab=[["Frame"]]
+    for dist_pair in dist_li:
+        pos_from,pos_to=re.findall("\d+",dist_pair) 
+        from_to=np.array([[pos_from,pos_to]]) 
+        dist=md.compute_distances(traj, from_to)*10 
+        if frames == []:
+            frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
+            data=np.append(frames,dist, axis=1).tolist()
+        else:
+            data=np.append(data,dist, axis=1).tolist()
+        var_lab="dist "+pos_from+"-"+pos_to
+        axis_lab[0].append(var_lab)
+
+    data_fin=axis_lab + data
+    #data_source = SimpleDataSource(data=data_fin)
+    #chart = LineChart(data_source,options={'title': "Residue Distance"})
+    return (data_fin)
+
 def index(request, dyn_id):
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
@@ -456,8 +482,26 @@ def index(request, dyn_id):
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
             dist_ids=request.POST.get("dist_resids")
-            dist_result=distances_inpage(dist_struc,dist_ids)
+            dist_result=distances_notraj(dist_struc,dist_ids)
             data = {"result":dist_result}
+            return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
+        elif request.POST.get("distStrWT"):
+            dist_struc_p=request.POST.get("distStrWT")
+            dist_ids=request.POST.get("dist_residsWT")
+            dist_traj_p=request.POST.get("distTraj")
+            data_fin=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p)
+################
+            if request.session.get('dist_data', False):
+                dist_data=request.session['dist_data']
+                dist_dict=dist_data["dist_dict"]
+                new_id=dist_data["new_id"]
+            else:
+                new_id=1
+                dist_dict={}
+            dist_dict["dist_"+str(new_id)]=data_fin
+            request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1}
+################
+            data = {"result":data_fin,"dist_id":"dist_"+str(new_id)}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
 
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
@@ -580,9 +624,9 @@ def index(request, dyn_id):
                 if all_gpcrs_info:
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    print("\n\n!!!!!!!!\n\n",chain_str)
-              
+        
                     context={
+                        #'chart': chart,
                         "structure_file":structure_file, 
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
@@ -659,35 +703,35 @@ def pre_viewer(request):
 
 
 
-def distances(request, dist_str,struc_id,traj_id):
-    struc_path = DyndbFiles.objects.get(id=struc_id).filepath
-    traj_path = DyndbFiles.objects.get(id=traj_id).filepath
-    traj=md.load(traj_path, top=struc_path) 
-    dist_li=re.findall("\d+-\d+",dist_str)
-    frames=[]
-    axis_lab=[["Frame"]]
-    for dist_pair in dist_li:
-        pos_from,pos_to=re.findall("\d+",dist_pair) 
-        from_to=np.array([[pos_from,pos_to]]) 
-        dist=md.compute_distances(traj, from_to)*10 
-        if frames == []:
-            frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
-            data=np.append(frames,dist, axis=1).tolist()
-        else:
-            data=np.append(data,dist, axis=1).tolist()
-        var_lab="dist "+pos_from+"-"+pos_to
-        axis_lab[0].append(var_lab)
+#def distances(request, dist_str,struc_id,traj_id):
+#    struc_path = DyndbFiles.objects.get(id=struc_id).filepath
+#    traj_path = DyndbFiles.objects.get(id=traj_id).filepath
+#    traj=md.load(traj_path, top=struc_path) 
+#    dist_li=re.findall("\d+-\d+",dist_str)
+#    frames=[]
+#    axis_lab=[["Frame"]]
+#    for dist_pair in dist_li:
+#        pos_from,pos_to=re.findall("\d+",dist_pair) 
+#        from_to=np.array([[pos_from,pos_to]]) 
+#        dist=md.compute_distances(traj, from_to)*10 
+#        if frames == []:
+#            frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
+#            data=np.append(frames,dist, axis=1).tolist()
+#        else:
+#            data=np.append(data,dist, axis=1).tolist()
+#        var_lab="dist "+pos_from+"-"+pos_to
+#        axis_lab[0].append(var_lab)
 
-    data_fin=axis_lab + data
-    # DataSource object
-    data_source = SimpleDataSource(data=data_fin)
-    # Chart object
-    chart = LineChart(data_source,options={'title': "Residue Distance"})
-    context={
-
-        'chart': chart
-    }
-    return render(request, 'view/distances.html', context)
+#    data_fin=axis_lab + data
+#    # DataSource object
+#    data_source = SimpleDataSource(data=data_fin)
+#    # Chart object
+#    chart = LineChart(data_source,options={'title': "Residue Distance"})
+#    context={
+#
+#        'chart': chart
+#    }
+#    return render(request, 'view/distances.html', context)
 
 
 
@@ -765,4 +809,6 @@ def rmsd(request):
     else:
         error_msg="Data not found."
         return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
+
+
 

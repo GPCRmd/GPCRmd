@@ -1,4 +1,5 @@
 $(document).ready(function(){
+    
     $(".sel_input, #inputdist, #dist_from, #dist_to").val("")
     $("#show_within, #show_dist").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
@@ -537,27 +538,91 @@ $(document).ready(function(){
         return (false)
     }
 
-
-
+    //var distResultDict={};
+    var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
-/*
-        $.ajax({
-            type: "POST",
-            url: "/view/1/",
-            dataType: "json",
-            data: { "item": "Hi there"},
-            success: function() {
-                alert("done!");
-            }
-        });
 
-*/
         var res_ids = obtainDistToComp();
         if ($(this).attr("class").indexOf("withTrajs") > -1){
             var traj_id=checkTrajUsedInDistComputatiion(res_ids);
             if (traj_id){
-                var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
-                newwindow=window.open(dist_url,'','width=870,height=400');
+/////////////////////////////////////// UNDER CONSTRUCTION 
+
+                traj_p="Dynamics/14_trj_1_1.dcd"; //Example (change values of select list to paths, not traj ids
+                
+                $("#dist_chart").after("<p style='margin-left:13px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>")
+                if (d_id==1){
+                    $("#gotoDistPg").addClass("disabled");
+                }
+                $.ajax({
+                    type: "POST",
+                    url: "/view/1/",  //Change 1 for actual number
+                    dataType: "json",
+                    data: { 
+                      "distStrWT": struc,
+                      "distTraj": traj_p,
+                      "dist_residsWT": res_ids,
+                    },
+                    success: function(data_dist_wt) {
+                        $("#wait_dist").remove();
+                        if (d_id==1){
+                            $("#gotoDistPg").removeClass("disabled");
+                        }
+                        var dist_array=data_dist_wt.result;
+                        var dist_id=data_dist_wt.dist_id;
+                        //distResultDict["dist_"+d_id.toString()]=dist_array;
+                        google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
+                                                
+                        function drawChart(){
+                            var data = google.visualization.arrayToDataTable(dist_array,false);
+                            var options = {'title':'Residue Distance',
+                                "height":350, "width":500, "legend":"bottom", 
+                                "chartArea":{"right":"10","left":"40","right":"0","top":"50","bottom":"50"}};
+                            newgraph_sel="dist_chart_"+d_id.toString();
+                            d_id+=1;
+                            var plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                <div id="+newgraph_sel+"></div>\
+                                                <div style='margin:5px'>\
+                                                    <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                        <span id='save_img_dist_plot' title='Save plot' class='glyphicon glyphicon-stats'></span>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;'>\
+                                                        <a href='x/"+dist_id+"' style='text-decoration:none;color:#000000'>\
+                                                            <span id='save_data_dist_plot' title='Save data' class='glyphicon glyphicon-file'>\
+                                                        </a>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                        <span id='delete_dist_plot' title='Delete' class='glyphicon glyphicon-trash'></span>\
+                                                    </div>\
+                                                </div>\
+                                            </div>"//color:#239023
+                            $("#dist_chart").append(plot_html);
+                            var chart_div = document.getElementById(newgraph_sel);
+                            var chart = new google.visualization.LineChart(chart_div);
+                            
+                            /*//Wait for the chart to finish drawing before calling the getImageURI() method.
+                            google.visualization.events.addListener(chart, 'ready', function () {
+                                chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+                                console.log(chart_div.innerHTML);
+                          });*/
+                            
+                            chart.draw(data, options);
+                            
+                        };
+
+                    },
+                    error: function() {
+                        if (d_id==1){
+                            $("#gotoDistPg").removeClass("disabled");
+                        }
+                        $("#wait_dist").remove();
+                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                        $("#dist_alert").html(add_error);                
+                    }
+                });
+///////////////////////////////////////
+                //var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
+                //newwindow=window.open(dist_url,'','width=870,height=400');
                 $("#dist_alert").html("");
             } else {
                 add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
@@ -592,6 +657,11 @@ $(document).ready(function(){
         }
     });
 
+    $('body').on('click','#delete_dist_plot', function(){
+        var plotToRv=$(this).parents(".dist_plot").attr("id");
+        $('#'+plotToRv).remove();
+    });
+
 
     function showDist(){
         if ($(".view_dist").is(":checked")){
@@ -600,7 +670,7 @@ $(document).ready(function(){
             return ("n")
         }
     };
-
+///////////////////////////
     function selectFromSeq(){
         var click_n=1;
         var seq_pos_1;
