@@ -1,5 +1,7 @@
 
 function sendpar() {
+    //Gets the segments the user has defined in the model section of the submission and calls the PDBcheck function.
+
     var bigarray=[];
     $("#pElement1 tr").each(function () {
         var postarray=[];

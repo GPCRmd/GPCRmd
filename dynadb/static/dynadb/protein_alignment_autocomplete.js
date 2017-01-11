@@ -1,7 +1,9 @@
-//$(document).ready(function(event){
+//When "Align" button is clicked in the Protein step of the submission process, the sequence from the cannonical Uniprot protein and the mutant sequence of a given protein are extracted and an aligning function is called, which performs a sequence alignment between the two sequences. The alignment fills the alignment box of the protein and a pop up with a visually esthetic alignment appears.
+
+
 $('body').on('click', "[id$=get_align]", function(){ //react to clicked elements with id ending in get_mutations (a button)
 	var id_present_button=$(this).attr('id');  //get its full ID
-    if (id_present_button.indexOf("-") >= 0) { //check if it is the only one or there are more than 1. The hyphen tells.
+    if (id_present_button.indexOf("-") >= 0) { //check if it is the only one or there are more. The hyphen tells.
 	    var regex=/(id_form-)([0-9]+)-get_align/;
 	    var show=id_present_button.replace(regex,"$1$2-alignment");
         show='#'+show;
@@ -17,13 +19,13 @@ $('body').on('click', "[id$=get_align]", function(){ //react to clicked elements
 	$.ajax({
 	    type: "POST",
 	    data: { "wtseq":uniprot_sequence,"mutant":mutant_sequence},
-	    url: "/dynadb/protein/alignment/",
+	    url: "./alignment/",
 	    dataType: "json",
 	    success: function(data) {
 	         if (data.message==''){
 	             $(show).val(data.alignment);
-                 newwindow=window.open('/dynadb/protein/showalignment/'+data.userkey,'','height=500,width=700');
-                    if (window.focus) {newwindow.focus()}
+                 newwindow=window.open('./alignment/','','height=500,width=700');
+                 if (window.focus) {newwindow.focus()}
 	         }else{
 	             alert(data.message);
 	         }

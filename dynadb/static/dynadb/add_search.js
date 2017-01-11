@@ -1,5 +1,6 @@
 $('#hidden').hide();
 $('#hiddenmodel').hide();
+$('#hiddenbar').hide();
 var counter=0;
 
 $(document).on({
@@ -14,6 +15,7 @@ $(document).on({
 
 
 $(document).on('click', '.protein, .molecule, .compound', function(){
+    //when a "add to search" button is clicked that element is added to the right panel. Depending on the selection of advanced or simple search options, the element information is displayed differently (with or without parenthesis) 
     $('[data-toggle="tooltip"]').tooltip();
     if (counter%2==0){
         var text = $(this).attr("name");
@@ -66,6 +68,7 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
 
 
 $('#gotoadvsearch').on('click', function(){
+    //steps to perform when changing between adv and simpmle search.
     counter+=1;
     bigarray=tabledata(counter);
     $('#myTable tbody tr').remove();
@@ -87,7 +90,8 @@ $('#gotoadvsearch').on('click', function(){
 
 
 $('#result_type').on('change', function() {
-    var opdef=$('<option></option>').val("orto").text("Orthoesteric ligand");
+    //When changing between adv and simple search, this function changes the available options to the user
+    var opdef=$('<option></option>').val("orto").text("Orthosteric ligand");
     var opdef2=$('<option></option>').val("alo").text("Allosteric ligand");
 
     if(this.value=='dynamics') {
@@ -120,6 +124,7 @@ $('#result_type').on('change', function() {
 });
 
 function tabledata(countertt){
+    //gets the data from the right panel and returns it as an array of arrays.
     var bigarray=[];
     var openpar=[];
     var closingpar=[]
@@ -199,6 +204,7 @@ function tabledata(countertt){
     return bigarray;
 }
 function recycletable(counterRT,bigarray){
+    //allows the user to change between advanced and simple search and save the elements previously added to the right panel.
     $('#myTable').find('thead').html('<tr><th>Boolean</th><th>Type</th><th>ID</th> <th></th> <th>Name</th> <th></th> </tr>');
     if (counterRT%2==0){
         for (i=1;i<bigarray.length;i++){

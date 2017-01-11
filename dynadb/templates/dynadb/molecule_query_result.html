@@ -37,13 +37,13 @@
 <br>
     {% if answer.link_2_compound %}
         <b>Corresponding compound</b>:<br> 
-           <a target='_blank' class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}> Compound ID: {{answer.link_2_compound}}</a>
+           <a class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}> Compound ID: {{answer.link_2_compound}}</a>
     {%endif%}
 <br>
     {% if answer.inmodels %}
         <br><b> Complex structures in which this molecule appears </b>:<br>
         {%for model in answer.inmodels%}
-            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{model}}> Complex Structure ID: {{model}}</a>
+            <a class='btn btn-info' role='button' href= /dynadb/model/id/{{model}}> Complex Structure ID: {{model}}</a>
         {%endfor%}
     {%endif%}
 <br>
@@ -63,7 +63,7 @@
 
 <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Image of the Molecule (Standard form):</b></div>
+    <div class="panel-heading"><b>Image of the Molecule:</b></div>
     <div class="panel-body">  
     <center><img src="{{answer.imagelink}}" /></center>
     </div>

@@ -1,4 +1,18 @@
+function sortFunction(a, b) {
+    if (a[0] === b[0]) {
+        return 0;
+    }
+    else {
+        return (a[0] < b[0]) ? -1 : 1;
+    }
+}
+
 function ShowResults(data, restype,is_apoform){
+    data.model=data.model.sort(sortFunction);
+    data.dynlist=data.dynlist.sort(sortFunction);
+    data.result=data.result.sort(sortFunction);
+
+
     var tablestr='';
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
@@ -69,7 +83,8 @@ $("#tablesearch").click(function() {
     var closingpar=[]
     var flag=0; //means no errors
     $("#tablesearch").prop("disabled",true);
-
+    $('#hiddenbar').show();
+    $('#hiddenbarin').width("10%");
 
     //pick information of advanced search, parenthesis
     if ($('#gotoadvsearch').html().length==19){
@@ -140,7 +155,8 @@ $("#tablesearch").click(function() {
             bigarray.push(postarray);
         })
     } //else ends
-
+    $('#hiddenbarin').width("60%");
+    //check that parenthesis are correct
     for (i=0;i<openpar.length;i++){
         if (openpar[i]=='(' && openpar[i+1]=='('){
             flag=2;
@@ -184,13 +200,15 @@ $("#tablesearch").click(function() {
         flag=4;
         flagsms='Mismatching parenthesis!';
     }
-
+    $('#hiddenbarin').width("80%");
     var restype=$('#result_type').val();
     var ff=$('#fftype').val();
     var tstep=$('#tstep').val();
     if (! isNumber(tstep) && tstep.length>0){
         alert('Time step has to be a number');
         $("#tablesearch").prop("disabled",false);
+        $('#hiddenbar').hide();
+        $('#hiddenbarin').width("10%");
         return false;
     }
     var sof=$('#soft').val();
@@ -203,13 +221,15 @@ $("#tablesearch").click(function() {
     if (restype=='dynamics'){
         var is_apoform=$('input[name=radiosearch1]:checked', '#hidden').val();
     }
-    console.log(bigarray);
+    $('#hiddenbarin').width("90%");
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
-
+    //search to perform when no elements were added to the right panel
     if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
         if (exactboo==true){
             alert('Exact match does not work if the query is empty.');
             $("#tablesearch").prop("disabled",false);
+            $('#hiddenbar').hide();
+            $('#hiddenbarin').width("10%");
             return false;
 
         }
@@ -222,10 +242,12 @@ $("#tablesearch").click(function() {
             url: "/dynadb/empty_search/",
             dataType: "json",
             success: function(data) {
+                $('#hiddenbarin').width("100%");
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 if (data.message==''){
                     $('#ajaxresults22 tbody').empty();
-                    //$('#ajaxresults22').DataTable().clear().draw(); this new, uncommented before
                     tablestr=ShowResults(data, restype,is_apoform);
                     $('#ajaxresults22').DataTable().destroy()
                     $('#ajaxresults22 tbody').append(tablestr);
@@ -238,6 +260,8 @@ $("#tablesearch").click(function() {
 
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 alert("Something unexpected happen.");
             }
         }); //end of ajax call
@@ -247,6 +271,8 @@ $("#tablesearch").click(function() {
     if (bigarray.length==1 && restype=='complex'){
         alert('Complex search does not work if there is not any protein or molecule.');
         $("#tablesearch").prop("disabled",false);
+        $('#hiddenbar').hide();
+        $('#hiddenbarin').width("10%");
         return false;
     }
 
@@ -276,9 +302,10 @@ $("#tablesearch").click(function() {
                     dataType: "json",
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();
+                        $('#hiddenbarin').width("10%");
                         if (data.message==''){
                             $('#ajaxresults22 tbody').empty(); //this new
-                            //$('#ajaxresults22').DataTable().clear().draw();
                             tablestr=ShowResults(data,restype,is_apoform);
                             $('#ajaxresults22').DataTable().destroy() //this new
                             $('#ajaxresults22 tbody').append(tablestr);
@@ -291,12 +318,16 @@ $("#tablesearch").click(function() {
 
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();
+                        $('#hiddenbarin').width("10%");
                         alert("Something unexpected happen.");
                     }
                 });
 
             }else {
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 if (flag==1){
                     alert('Apoforms are composed by a single protein. Try again.'); 
                 }else{
@@ -315,6 +346,7 @@ $("#tablesearch").click(function() {
                     }
                 }
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
             }
             console.log('adv',bigarray);
             if (flag==0){
@@ -328,31 +360,30 @@ $("#tablesearch").click(function() {
                     dataType: "json",
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         if (data.message==''){
                             $('#ajaxresults22 tbody').empty(); //this new
                             tablestr=ShowResults(data,restype,is_apoform);
                             $('#ajaxresults22').DataTable().destroy() //this new
                             $('#ajaxresults22 tbody').append(tablestr);
                             CreateTable();
-                            //$('#ajaxresults22 tbody').empty();
-                            //$('#ajaxresults22').DataTable().clear().draw();
-                            //tablestr=ShowResults(data,restype,is_apoform);
-                            //$('#ajaxresults22 tbody').append(tablestr);
-                            //CreateTable();
                         }else{
                             alert(data.message);
                             $("#tablesearch").prop("disabled",false);
+                            $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         }
                     },
 
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         alert("Something unexpected happen.");
                     }
                 });
             }else{//if flag 0
                 alert(flagsms);
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
             }
         }//end of the "advanced search" else.
 
