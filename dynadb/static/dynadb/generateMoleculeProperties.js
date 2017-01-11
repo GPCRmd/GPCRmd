@@ -30,6 +30,7 @@ $(document).ready(function() {
            
         // imagentable=== table in which the molecule to be uploaded will be shown. If changes in the DOM structure, the variable imagentable must be updated
         var imagentable=$(this).parent().parent().siblings("[id|=id_form][id$='imagentable']");
+        var imagentable2=$(this).parents("[id|=id_form][id$='A_section']").siblings("[id|=id_form][id$='D_section']").find("[id|=id_form][id$='z-nodb']");
         var uploadmol1 = $(molform).find("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']");
         var uploadmol1_html = $(uploadmol1_global_html).clone();
         uploadmol1_html.attr('id',uploadmol1.attr('id'));
@@ -126,6 +127,7 @@ $(document).ready(function() {
                 logfile.show();
                 uploadmol2 = $(newuploadmol);
                 imagentable.show(); //to show the table in which the image is contained 
+                imagentable2.show(); //to show the table in which the image is contained 
                 console.log("success");
             },
             error: function(xhr,status,msg){

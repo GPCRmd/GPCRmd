@@ -35,7 +35,7 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel, smol_to_dyncomp_type
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
@@ -2516,8 +2516,9 @@ def get_submission_molecule_info(request,form_type,submission_id):
             q = q.annotate(name=F(field_ref))
             field_name = "name"
         
-        q = q.values('molecule_id','not_in_model',field_name)
+        q = q.values('molecule_id','not_in_model',field_name,'type') #modification Juanma added type field
         qresults = list(q)
+        qresults[0]['type']= smol_to_dyncomp_type[q.values_list('type',flat=True)[0]]#modification Juanma added type field
         if len(qresults) > 0:
             if qresults[0]['not_in_model'] and form_type == "model":
                 return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as no crystal-like.\n'+ \
@@ -3520,9 +3521,10 @@ def get_components_info_from_submission(submission_id,component_type=None):
     
     result = list(q)
     i = 0
+    print("LLLLLLL\n",result)
     for row in result:
-        result[i]['type'] = type_mapping[row['type']]
-        i +=1
+       result[i]['type'] = type_mapping[row['type']]
+       i +=1
     return result
     
 def MODELview(request, submission_id):
@@ -3754,7 +3756,6 @@ def MODELview(request, submission_id):
                 QUERYComp=(" ").join([SELComp,FROMComp,WHEREComp])
  
     #  ##### MAKING THE COMPOUND-WISE QUERY 
-                print( "JJJJJOOOOOLLLL    2"  )
                 ROWLCompe=[]
                 #the QUERYComp is needed in order to check if the Complex_Exp exists regardless the specific Complex_molecule does
                 with connection.cursor() as cursor:
@@ -3772,7 +3773,8 @@ def MODELview(request, submission_id):
                         cep=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLCompe).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
                         b=set(cep.values_list('id_complex_exp',flat=True))
                         rowCompl=list(a&b) # if the id_complex is in both lists cep and cec this is the complex we are looking for
-                        if rowCompl > 1:
+                        print( "JJJJJOOOOOLLLL    2"  )
+                        if len(rowCompl) > 1:
                             response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
                             return response
                             
@@ -3797,6 +3799,7 @@ def MODELview(request, submission_id):
  
                 if len(rowCompl) > 0: #Actually should be one or 0. If > 0 the corresponding complex_exp is in the GPCRmd database and the complex_compound entry
                     Upd_Comp_Type_l=[] #list of tupples containing info about wether the compound type has been updated
+                    print( "JJJJJOOOOOLLLL    3"  )
                     print("COMPLEX_EXP: ", rowCompl[0],"\n")
                     CE_exists=True # If Complex_Exp exists Complex_Compound exist for sure
                     CEpk=rowCompl[0]
@@ -3807,7 +3810,7 @@ def MODELview(request, submission_id):
                         min_molec_type =min(sub_molec_type)
                         print("MIN MOLEC ",min_molec_type,"complex_compound", l[0])
                         lid_type=l[0]
-                        print( "JJJJJOOOOOLLLL    2"  )
+                        print("NO updated value" )
                         if min_molec_type < l[2]:
                             DyndbComplexCompound.objects.filter(id_compound=l[0]).filter(id_complex_exp=CEpk).update(type=min_molec_type)
                             comp_type_t=(True,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating; min_molec_type= updated value if True
@@ -3817,7 +3820,7 @@ def MODELview(request, submission_id):
                         else:
                             comp_type_t=(False,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating;
                                                                              # min_molec_type= type value in the current model. Field not  updated because if False
-                        Upd_Comp_Type_t.append(comp_type_t)
+                        Upd_Comp_Type_l.append(comp_type_t)
  
                     ##### MAKING THE MOLECULE-WISE QUERY 
  
@@ -4121,7 +4124,8 @@ def MODELview(request, submission_id):
 
     # if a GET (or any other method) we'll create a blank form
     else:
-         
+        protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
+        
         lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)###!!!!POR AQUI
         smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4}
         Smol_to_Modcomp_type=smol_to_dyncomp_type
@@ -4140,7 +4144,7 @@ def MODELview(request, submission_id):
             mcdata[i]['numberofmol'] = ''
             mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
             i += 1
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup})
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup, 'protlist':protlist})
 
 
 
