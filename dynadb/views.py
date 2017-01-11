@@ -50,8 +50,7 @@ from .models import Model2DynamicsMoleculeType
  
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
-# Create your views here.
-
+# Create your views here.CID
 
 def REFERENCEview(request, submission_id=None):
  
