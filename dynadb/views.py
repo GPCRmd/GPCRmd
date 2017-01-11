@@ -46,7 +46,7 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
-from .models import Model2DynamicsMoleculeType
+from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
  
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
@@ -3492,32 +3492,18 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
 def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
-    type_mapping = dict()
-    
-    compound_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE)
-    ligand_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='ligand',case_sensitive=False,first_match=False)
     
     q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
     q = q.annotate(id_molecule=F('molecule_id'))
     field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
-        ligand_type = type_inverse_search(DyndbModelComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=False)
         q = q.annotate(namemc=F(field_ref))
         field_name = 'namemc'
     elif component_type == 'dynamics':
-        ligand_type = None
-        #ligand_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=True)
         q = q.annotate(name=F(field_ref))
         field_name = 'name'
-    for key in compound_types:
-        if key in ligand_types.keys():
-            type_mapping[compound_types[key]] = ligand_type
-        else:
-            type_mapping[compound_types[key]] = None
-        
-    
     
     q = q.values('int_id','id_molecule',field_name,'type')
     q = q.order_by('int_id')
@@ -3525,7 +3511,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     result = list(q)
     i = 0
     for row in result:
-        result[i]['type'] = type_mapping[row['type']]
+        result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
         i +=1
     return result
     
@@ -5780,6 +5766,8 @@ def DYNAMICSview(request, submission_id):
         
         mdata = get_components_info_from_components_by_submission(submission_id,'model')
         cdata = get_components_info_from_submission(submission_id,'dynamics')
+        other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
+        molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
         
         i = 0
         for row in mdata:
@@ -5788,7 +5776,7 @@ def DYNAMICSview(request, submission_id):
             mdata[i]['int_id'] = 1 + mdata[i]['int_id']
             mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
             if mdata[i]['type_int'] is None:
-                mdata[i]['type_int'] = 3
+                mdata[i]['type_int'] = other_int
             mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
             i += 1
         
@@ -5798,12 +5786,14 @@ def DYNAMICSview(request, submission_id):
             cdata[i]['numberofmol'] = ''
             cdata[i]['readonly'] = False
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
-            cdata[i]['type_int'] = 3
+            smol_to_dyncomp_type
+            cdata[i]['type_int'] = cdata[i]['type']
+            if cdata[i]['type_int'] is None:
+                cdata[i]['type_int'] = other_int
+            cdata[i]['type'] = molecule_type_dict[cdata[i]['type_int']]
             i += 1
         
         data = mdata + cdata
-        print("cdataL\n",cdata)
-        print("mdata\n",mdata)
          
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
         'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
