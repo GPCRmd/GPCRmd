@@ -67,6 +67,9 @@ $(document).ready(function() {
                     alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
                     $("[id^=id_"+file_type+"_download_url_div-]").remove();
                     download_file.hide();
+                    if (xhr.status == 432) {
+                        $("[id^=id_"+file_type+"_download_url_div-]").remove();
+                    }
                 }
                 else if (xhr.readyState == 0) {
                     alert("Connection error. Please, try later and check that your file is not larger than "+maxsize+".");

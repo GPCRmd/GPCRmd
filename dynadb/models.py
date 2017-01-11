@@ -473,6 +473,8 @@ class DyndbSubmission(models.Model):
         managed = True
         db_table = 'dyndb_submission'
 
+
+
 class DyndbSubmissionProtein(models.Model):
     submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='submission_id',  blank=True, null=True) 
     protein_id = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='protein_id', blank=True, null=True)  
@@ -740,7 +742,6 @@ class DyndbFiles(models.Model):
         managed = True
         db_table = 'dyndb_files'
 
-
 class DyndbFilesDynamics(models.Model):
     file_types=(
         (0, 'Input coordinates'),
@@ -759,6 +760,18 @@ class DyndbFilesDynamics(models.Model):
         db_table = 'dyndb_files_dynamics'
         unique_together = (('id_dynamics', 'id_files','type'),)
 
+class DyndbSubmissionDynamicsFiles(models.Model):
+    file_types = DyndbFilesDynamics.file_types
+    submission_id = models.ForeignKey('DyndbSubmission',models.DO_NOTHING, db_column='submission_id',  blank=False, null=False)
+    type = models.SmallIntegerField(choices=file_types,default=0,null=False)
+    filename = models.CharField(unique=True, max_length=80)
+    filepath = models.CharField(max_length=520, blank=False, null=False)
+    url = models.CharField(max_length=520, blank=False, null=True)
+    framenum = models.IntegerField(null=True,default=None)
+    class Meta:
+        managed = True
+        db_table = 'dyndb_submission_dynamics_files'
+        unique_together = (('submission_id', 'filepath'))
 
 class DyndbFilesModel(models.Model):
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')
