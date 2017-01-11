@@ -22,7 +22,8 @@ $(document).ready(function() {
         var element1 = $(this).parents("[id|=Element1]");
         var id_molecule = element1.find("[id='id_id_molecule'],[id|=id_formc][id$='-id_molecule']");
         var namef = element1.find("[id='id_name'],[id|=id_formc][id$='-name']");
-
+        var typemc = element1.find("[id='id_typemc'],[id|=id_formc][id$='-typemc']");
+        var type_int = element1.find("[id='id_typemc'],[id|=id_formc][id$='-type_int']");
         if (self.val() !== '') {
             $.post("./get_submission_molecule_info/",
             {
@@ -31,7 +32,8 @@ $(document).ready(function() {
             function(data){
                 id_molecule.val(data.molecule_id);
                 namef.val(data.name);
-
+                typemc.val(data.type_text);
+                type_int.val(data.type);
             }, 'json')
 
             .fail(function(xhr,status,msg) {
@@ -46,6 +48,8 @@ $(document).ready(function() {
             }
                 id_molecule.val('');
                 namef.val('');
+                typemc.val('');
+                type_int.val('');
             })
             
             .always(function(xhr,status,msg) {
