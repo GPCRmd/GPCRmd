@@ -4,8 +4,10 @@ from os import devnull
 from functools import cmp_to_key
 from operator import itemgetter
 from .customized_errors import ParsingError
-
-
+from numpy import empty as nd_empty, float32 as nd_float32
+from mdtraj import open as mdtraj_open, load as mdtraj_load, load_pdb as mdtraj_load_pdb
+from mdtraj.formats import DCDTrajectoryFile
+from mdtraj.formats import XTCTrajectoryFile
 import os
 import sys
 #sys.tracebacklimit = 0
@@ -697,3 +699,72 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
             del nhpdbmol
 
             return failnum, pdbmol
+
+def mdtraj_get_frames_num(trajfile,init=0,step=1000):
+    tell = trajfile.tell()
+    trajfile.seek(init)
+    res = trajfile.read(1)
+    xyz = res[0]
+    pos = init
+    while xyz.shape[0] > 0:
+        trajfile.seek(pos)
+        res = trajfile.read(1)
+        xyz = res[0]
+        pos += step
+    trajfile.seek(tell)    
+    if step == 1:
+        return pos - 1
+    elif pos == init:
+        return 0
+    else:
+        if step > 10:
+            next_step = int(step/10)
+        else:
+            next_step = 1
+        return mdtraj_get_frames_num(trajfile, init = pos - 2 * step, step=next_step)
+
+def get_frames_num(filepath,file_type,ext=None):
+    if file_type == 'coor':
+        if ext is None:
+            traj = mdtraj_load(filepath)
+        else:
+            ext2 = ext.lower()
+            if ext2 == 'pdb':
+                traj = mdtraj_load_pdb(filepath)
+            else:
+                raise ValueError('Extension "'+ext2+'" not implemented.')
+        numframes = traj.n_frames
+    elif file_type == 'traj':
+        trajfile = mdtraj_open(filepath)
+        numframes = mdtraj_get_frames_num(trajfile)
+        trajfile.close()
+    return numframes
+
+        
+def get_atoms_num(filepath,file_type,ext=None):
+    if file_type == 'coor':
+        if ext is None:
+            traj = mdtraj_load(filepath)
+        else:
+            ext2 = ext.lower()
+            if ext2 == 'pdb':
+                traj = mdtraj_load_pdb(filepath)
+            else:
+                raise ValueError('Extension "'+ext2+'" not implemented.')
+        numatoms = traj.n_atoms
+    elif file_type == 'traj':
+        if ext is None:
+            trajfile = mdtraj_open(filepath)
+        else:
+            ext2 = ext.lower()
+            if ext2 == 'dcd':
+                trajfile = DCDTrajectoryFile(filepath)
+            elif ext2 == 'xtc':
+                trajfile = XTCTrajectoryFile(filepath)
+            else:
+                raise ValueError('Extension "'+ext+'" not implemented.')
+        res = trajfile.read(1)
+        xyz = res[0]
+        numatoms = xyz.shape[1]
+        trajfile.close()
+    return numatoms
