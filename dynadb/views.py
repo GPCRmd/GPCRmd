@@ -35,8 +35,8 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -5051,6 +5051,58 @@ def delete_molecule(request,submission_id,model_id=1):
     return response
 
 
+def get_dynamics_files_reference_atomnum(submission_id,file_type):
+    """
+    Gets a reference num of atoms with a priorized reference dynamics file 
+    """
+    file_types = ['coor','traj']
+    filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
+    if file_type not in file_types:
+        raise ValueError('Invalid file_type argument: "'+str(file_type)+'"')
+    
+    #remove file_type from reference file type files
+    dbtype_preference_list = []
+    dbtype_2_file_type = dict()
+    for type1 in file_types:
+        if type1 != file_type:
+            dbtype_preference_list.append(type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[type1],case_sensitive=False,first_match=True))
+            dbtype_2_file_type[dbtype_preference_list[-1]] = type1
+    q = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id).values('filename','filepath','type')
+    results = list(q)
+    del q
+    reffilepath = None
+    reffilename = None
+    ref_numatoms = None
+    if len(results) > 0:
+        type_filepaths = dict()
+        filepaths = []
+        for row in results:
+            ctype = row['type']
+            if ctype not in type_filepaths:
+                type_filepaths[ctype] = dict()
+                type_filepaths[ctype]['filenames'] = []
+                type_filepaths[ctype]['filepaths'] = []
+            type_filepaths[ctype]['filepaths'].append(row['filepath'])
+            type_filepaths[ctype]['filenames'].append(row['filename'])
+        del results
+
+        for pref in dbtype_preference_list:
+            if pref in type_filepaths:
+                reffilepath = type_filepaths[pref]['filepaths'][0]
+                reffilename = type_filepaths[pref]['filenames'][0]
+                dbtype_pref = pref
+                break
+
+        if reffilepath is not None:       
+            ref_numatoms = get_atoms_num(reffilepath,dbtype_2_file_type[dbtype_pref])
+            
+    return (reffilepath, reffilename, ref_numatoms)
+
+    
+    
+        
+        
+
 def test_accepted_file_extension(ext,file_type):
     type_keys = {'coordinates', 'topology', 'trajectory', 'parameter', 'anytype', 'image', 'molecule', 'model'}
     if file_type not in type_keys:
@@ -5071,12 +5123,13 @@ def test_accepted_file_extension(ext,file_type):
 
 @csrf_exempt
 def upload_dynamics_files(request,submission_id,trajectory=None):
+    trajectory_max_files = 200
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=200)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
-    return _upload_dynamics_files(request,submission_id,trajectory=trajectory)
+    return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
 
 def get_dynamics_file_types():
     
@@ -5131,14 +5184,18 @@ def get_dynamics_file_types():
     return file_types
       
 file_types = get_dynamics_file_types()
-def _upload_dynamics_files(request,submission_id,trajectory=None):
+
+@csrf_protect
+def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_files=200):
     file_types = get_dynamics_file_types()
     file_type = None
     new_window = '0'
     no_js = '1'
     download_url = ''
     error = ''
-
+    filetype_subtypes_dict = {'coor':'pdb','top':'topology','traj':'trajectory','parm':'parameters','other':'other'}
+    filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
+    atomnum_check_file_types = {'coor','traj'}
     if 'new_window' in request.GET:
         new_window = request.GET['new_window']
     elif 'new_window' in request.POST:
@@ -5176,6 +5233,20 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
         exceptions = False
         data = dict()
         data['download_url_file'] = []
+        if file_type in filetype_subtypes_dict:
+            subtype = filetype_subtypes_dict[file_type]
+        else:
+            response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return response
+            
+        if file_type in atomnum_check_file_types:    
+            reffilepath, reffilename, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
+            prev_numatoms = ref_numatoms
+        
+        
+        dbtype = type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[file_type],case_sensitive=False,first_match=True)
+        submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)    
         try:
             if 'filekey' in request.POST:
                 filekey = request.POST['filekey']
@@ -5194,10 +5265,18 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
             if len(uploadedfiles) == 0:
                 msg = 'No file was selected.'
                 response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                return response
-            filenum = 0 
+                return response               
+            elif len(uploadedfiles) > 1 and file_type != 'traj':
+                msg = 'Too many files selected (Max. 1).'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response   
+            elif file_type == 'traj' and len(uploadedfiles) > trajectory_max_files:
+                msg = 'Too many files selected (Max. 200).'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response   
             
             
+            filenum = 0
             for uploadedfile in uploadedfiles:
                 rootname,fileext = os.path.splitext(uploadedfile.name)
                 if fileext == '.gz':
@@ -5207,35 +5286,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
                         rootname = rootname2
                 fileext = fileext.lower()
                 fileext = fileext[1:]
-                file_type = request.POST['file_type']
-                print(file_types[file_type])
                 invalid_ext = False
-                if file_type == 'coor':
-                    subtype = "pdb"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'top':
-                    subtype = "topology"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'traj':
-    
-                    subtype = "trajectory"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'parm':
-                    subtype = "parameters"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-
-                elif file_type == 'other':
-                    subtype = "other"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                else:
-                    response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    return response
                 
+                if fileext not in file_types[file_type]['extension']:
+                    invalid_ext = True
                 if invalid_ext: 
                     response = HttpResponse('Invalid extension ".'+fileext+'" for '+file_types[file_type]['long_name'].lower(),status=422,reason='Unprocessable Entity',content_type='text/plain')
                     return response
@@ -5243,24 +5297,63 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
                     ext = 'tar.gz'
                 else:
                     ext = fileext
-                
-
-                
-
-                submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
-                submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)
 
                 filename = get_file_name_submission("dynamics",submission_id,filenum,ext=ext,forceext=False,subtype=subtype)
                 filepath = os.path.join(submission_path,filename)
                 download_url = os.path.join(submission_url,filename)
+                
+                if file_type in atomnum_check_file_types:
+                    if request.upload_handlers[0].activated:
+                        deleteme_filepath = os.path.join(submission_path,'deleteme_'+filename)
+                        save_uploadedfile(deleteme_filepath,uploadedfile)
+                    else:
+                        deleteme_filepath = uploadedfile.temporary_file_path()
+                    try:
+                        numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
+                    except:
+                        response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
+                
+                if file_type == 'traj':
+
+                    if filenum == 0:
+                        if ref_numatoms is not None and ref_numatoms != numatoms:
+                            response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
+                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                        dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
+                        for row in dyndb_submission_dynamics_files:
+                            filepath2 = row['filepath']
+                            if os.path.exists(filepath2):
+                                os.remove(filepath2)
+                                
+                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                        dyndb_submission_dynamics_files.delete()
+                    elif prev_numatoms != numatoms:
+                        response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from "'+prev_name+'".',status=432,reason='Partial Unprocessable Entity',content_type='text/plain')
+                        return response
+                    prev_name = uploadedfile.name
+                    prev_numatoms = numatoms
+
+                
+                dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
+                
                 data['download_url_file'].append(download_url)
                 os.makedirs(submission_path,exist_ok=True)
                 try:
-                    save_uploadedfile(filepath,uploadedfile)
+                    if file_type in atomnum_check_file_types and request.upload_handlers[0].activated:
+                        os.rename(deleteme_filepath,filepath)
+                    else:
+                        save_uploadedfile(filepath,uploadedfile)
                     
                 except:
                     try:
                         os.remove(filepath)
+                    except:
+                        pass
+                    try:
+                        os.remove(deleteme_filepath)
                     except:
                         pass
                     response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
@@ -8740,6 +8833,7 @@ def save_uploadedfile(filepath,uploadedfile):
                 f.write(chunk)
         else:
             f.write(uploadedfile.read())
+        f.close()
 def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_match=True):
     inverse_type = dict()
     if  searchkey is None:
