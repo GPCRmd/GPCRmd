@@ -2769,7 +2769,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     if form_type == "dynamics" and fieldset_mc[key]['type_int'] in water_types:
                         water_int_id_list.append(int_id)
                     #molintdict[int_id]['resname_list'] = []
-                   # molintdict[int_id]['numberofmol'] = []
+                    #molintdict[int_id]['numberofmol'] = []
                 resname = fieldset_mc[key]['resname']
                 if resname in molintdict[int_id]['resname']:
                     return JsonResponse({'msg':'Resname "'+resname+'" definition is duplicated'},status=422,reason='Unprocessable Entity')
@@ -2789,7 +2789,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 return JsonResponse({'msg':'You have the following unused molecules in step 2: '+','.join(['#'+str(i+1) for i in diff_int_id_form_db])+'.\nPlease, delete them if they are not part of your submission.'},status=422,reason='Unprocessable Entity')
 
             results = get_sdf_from_db_by_submission(submission_id,int_ids)
-            print("RESULTS ",results)
             
 
             if len(results) == 0:
@@ -2827,7 +2826,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     print("Splitting non-protein residues by residue names...",file=logfile)
                     datares = split_resnames_pdb(nonproteinpdbfilename,outputfolder=pdbcheckerpath)
                     resnames = datares.keys()
-                    
+                    data['atom_num'] = get_atoms_num(pdbfilepath,'coor')
                     print(str(len(resnames))+" resname(s) found: "+", ".join(resnames),file=logfile)
                     
                     print("Checking non-protein residues naming consistency...",file=logfile)
@@ -2867,7 +2866,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 for int_id in sorted(molintdict.keys(),key=int):
                                
                     print("Loading mol #"+str(int_id+1)+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
-                    print("HOLA ",int_id)
                     try:
                         with open(molintdict[int_id]['molfile'],'rb') as molfile:
                             mol = open_molecule_file(molfile,logfile=logfile,filetype='sdf')
