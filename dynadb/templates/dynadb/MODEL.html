@@ -19,12 +19,12 @@
 {% else %}
 {% include "dynadb/MODEL_description.html" %} 
 {% endif %}
-
 </div>
+
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div class="col-md-7 "> 
+<div class="col-md-7 col-md-offset-4"> 
     <!-- filters -->
 
     <div class="col-md-12 panel">
@@ -137,8 +137,29 @@
 	        <div class="row">
                 <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Curated protein information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
                 </div><br>
-
- <p style="font-size:14px;margin-left:7%;margin-right:7%;text-align: justify;padding-bottom:15px">Use the proper Prot # identifier for every protein fragment in this table. A correspondence between the Prot # and the protein name and UniprotKB AC can be found in the table "Submitted proteins summary".</p>
+              {% if model_id %}
+                {%else%}
+          
+                <div class="panel panel-primary col-md-10 col-md-offset-1" style="background-color:GhostWhite; border:0px">
+                <div class="col-md-1"></div> <div class="col-md-8 col-md-offset-1" style="text-align:center"><h4 style=";height:30px;padding-top:15px;margin-bottom:25px"><a title="Summary of the list of proteins entered by the user in the &quot;Step 1: Protein Information&quot; form. The list is ordered by Prot #. This value is important for linking information of that form with the one provided herein.  Please, use the Prot# value in this table for filling every row in the &quot;Curated protein Information&quot; table describing the segments of the corresponding protein.">Submitted proteins summary</h4></a></div>
+                        <table style="text-align:center;width:90%;margin-left:5%;margin-right:5%;"> 
+                                <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:center;height:30px"for="id_prot" size='10'><a title="Identifier number of the protein in the &quot;Step 1: Protein Information&quot; form. This identifier corresponds to the N value in the &quot;Protein #N General Information&quot; title at the top of every protein entry in the aforemetioned form.">Prot #</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="prtnam" size='10'><a title="Protein name corresponding to the protein provided in the &quot;Protein #N&quot; item in &quot;Step 1: Protein Information&quot;.">Protein name</a></label></th>
+					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="uniprot" size='10'><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field.">UniProtKB AC</a></label></th>
+                                </thead>
+                                <tbody style="height:60px"><tr  {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}>
+                                 {%for prot in protlist%}      
+                                <td style="width:10%;margin-right:5%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="  1" /></td>
+				<td style="width:50%;margin-left:5%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
+				<td style="width:20%;margin-left:5%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
+                               </tbody></table> 
+                                 {%endfor%}
+                <div class="row" style="height:30px"></div>
+                </div>
+ <p style="font-size:14px;margin-left:9%;margin-right:9%;text-align: justify;padding-bottom:15px">Use the proper "<b>Prot #</b>" identifier for every protein segment in the "<b>Curated protein data</b>" table. A correspondence between the "<b>Prot #</b>", the protein name and the UniprotKB AC is shown in the <b>"Submitted proteins summary"</b> table.</p>
+                <div class="col-md-6 col-md-offset-3" style="text-align:center;"><h4 style="margin-bottom:25px"><a title="This table should be filled with information about the sources from which the protein coordinates have been obtained. It is possible that coordinates of different segments of the protein come from different sources (e.g. transmembrane fragment coordinates usually come from X-ray crystals whereas loop coordinates may come from homology modeling or any alternative sources). Therefore, information about a specific continuous protein segment whose coordinates come from the same source must be entered in a table row. The user can add to the form as many rows as needed.">Curated protein data</a></h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
+                <br>
+             {%endif%}
 
                         <table style="text-align=center;width:96%;margin-left:0%;margin-right:2%;"> 
                                 <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:right;height:30px"for="id_prot" size='10'><a title="Ordinal number corresponding to the records containing sequence information that was provided in the protein form ">Prot #</a></label></th>
@@ -156,7 +177,7 @@
                                 <tbody id="pElement1">
                                 {% if model_id %} 
 {% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}	
-				<tr id="Element1" {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input readonly id="id_form-{{intps0}}-prot" name="prot" value="{{intps0|add:"1"}}" type="number" style="width:58px" placeholder="  1" /></td>
+				<tr id="Element1" {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input readonly id="id_form-{{intps0}}-prot" name="prot" value="{{o.int_id|add:"1"}}" type="number" style="width:58px" placeholder="  1" /></td>
 				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input readonly id="id_form-{{intps0}}-id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
 				<td style="width:60px;padding:5px 2px 5px 2px"><input readonly id="id_form-{{intps0}}-chain" value="{{o.chain}}"  maxlength="1" name="chain" type="text" style="width:58px" placeholder=" E"/></td>
 				<td style="width:60px;padding:5px 2px 5px 2px"><input readonly id="id_form-{{intps0}}-segid" value="{{o.segid}}"  maxlength="4" name="segid" type="text" style="width:58px" /></td>
@@ -208,22 +229,6 @@
                                         <input type="button" value="Validate"  style="height:30px;margin: 15px 5px 0px 0px;width:100px" id="pdbchecker2" > <!--This one sends data to pdbcheck view through AJAX. Newer.-->
 		        </div> 		
 <!--  --------------------------------SUBMITTED PROTEINS INFO TABLE  -->
-                <div class="panel panel-primary col-md-10 col-md-offset-1" style="background-color:yellow; border:0px">
-                <div class="col-md-1"></div> <div class="col-md-8 col-md-offset-1" style="text-align:center"><h4 style=";height:30px;padding-top:15px;margin-bottom:25px"><a title="Summary of the list of proteins entered by the user in the &quot;Step 1: Protein Information&quot; form. The list is ordered by Prot #. This value is important for linking information of that form with the one provided herein.  Please, use the Prot# value in this table for filling every row in the &quot;Curated protein Information&quot; table describing the fragments of the corresponding protein.">Submitted protein summary</h4></a></div>
-                        <table style="text-align:center;width:90%;margin-left:5%;margin-right:5%;"> 
-                                <thead><tr><th style="width:60px;text-align:center"><label style="writing-mode: horizontal-rl;font-size:14px;text-align:center;height:30px"for="id_prot" size='10'><a title="Identifier number of the protein in the &quot;Step 1: Protein Information&quot; form. This identifier corresponds to the N value in the &quot;Protein #N General Information&quot; title at the top of every protein entry in the aforemetioned form.">Prot #</a></label></th>
-					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="prtnam" size='10'><a title="Protein name corresponding to the protein provided in the &quot;Protein #N&quot; item in &quot;Step 1: Protein Information&quot;.">Protein name</a></label></th>
-					<th style="width:60px;text-align:center"><label style="writing-mode:horizontal-rl;font-size:14px;height:30px;text-align:center" for="uniprot" size='10'><a title="UniProtKB AC: UniProtKB Accession Number. This value identifies protein to their cannonical sequences. Use only Accession Numbers pointing to cannonical sequences. Mutations are handled in a different field.">UniProtKB AC</a></label></th>
-                                </thead>
-                                <tbody style="height:60px"><tr  {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}>
-                                 {%for prot in protlist%}      
-                                <td style="width:10%;margin-right:5%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="  1" /></td>
-				<td style="width:50%;margin-left:5%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
-				<td style="width:20%;margin-left:5%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
-                               </tbody></table> 
-                                 {%endfor%}
-                <div class="row" style="height:30px"></div>
-                </div>
 <!-- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx      -->
 		        </div><br>
                        {% endif %}
@@ -298,14 +303,15 @@
 
       		{%if mcdata %}
  	        	<div class="row"style="text-align:left;height:30px;padding-top:10px">
-                              <div class="col-md-1 col-md-offset-2" style="width:30px;padding:0px 0px 0px 0px"><input id="add_mol_new" data-target="#addmoleculebutton" data-toggle="collapse" name="add_mol_new" style="aligned:center;margin-right:-0px" type="checkbox"  /></div>   
+                              <div class="col-md-1 col-md-offset-2" style="width:30px;padding:0px 0px 0px 0px"><input id="add_mol_new" name="add_mol_new" style="aligned:center;margin-right:-0px" type="checkbox"  /></div>   
                               <div class="col-md-9"  ><a style="font-size:13px;color:black" title="Sometimes more than one &quot;residue name&quot; may be used for one molecule type just to highlight individual molecules of this type playing a specific role in the simulation. If so, an extra row can be added by using the &quot;+ Add molecule&quot; button. The corresponding fields in the row must be manually filled" > Check the box if a crystalized molecule has several resnames </a></div>
 		        </div> 	
                     
- 			<div id="addmoleculebutton" class="collapse" style="text-align:center;height:70px;margin: 0px 0px 5px 0px" >
+ 			<div id="addmoleculebutton"  style="text-align:center;height:90px;margin: 0px 0px 25px 0px" hidden>
                              <br>
-			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 5px 0px;width:300px" >+ Add Molecule</button><br>
-			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 5px 0px 0px 0px;width:300px" >- Remove Molecule</button>
+			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >+ Add Molecule</button>
+			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >- Remove Molecule</button>
+                             <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
 		        </div> 	
 		        
 		        </div> 	

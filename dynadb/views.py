@@ -2936,7 +2936,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 if fail == 0 and not diff_protein and not diff_nonprotein:
                     data['msg'] = 'Validation complete. Everything seems fine.'
                 else:
-                    data['msg'] = 'Validation finished with errors. Please, see log file and double check your PDB file.'
+                    data['msg'] = 'Validation finished with warnings. Please, see log file and double check your PDB file.'
                 data['resnames'] = datares
                 data['download_url_pdbchecker'] = join_path(submission_url,'pdbchecker.tar.gz',url=True)
                 response = JsonResponse(data)
@@ -3050,7 +3050,8 @@ def MODELreuseview(request, submission_id, model_id  ):
     STypeval=p.values()[0]['source_type']
     SType=p.model.SOURCE_TYPE[STypeval][1]
     print("QMODEL ",p)
-    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
+    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=submission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
+#    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
     q0MODRES=qMODRES[0]
     rowsMR=qMODRES
@@ -3153,7 +3154,8 @@ def PROTEINreuseview(request, submission_id, model_id ):
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id})
 
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
-    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
+#    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
+    qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').exclude(not_in_model=True).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
     print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
     labtypel=[]
     int_id=[]
@@ -3163,7 +3165,9 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
     qMOL=[]
     imp=[]
     Type=[]
+    url=[]
     for l in qSub:
+        url.append(qSub.values_list('url')[0])
         labtype=l.COMPOUND_TYPE[l.type]
         labtypel.append(labtype) 
         if  not l.not_in_model:
@@ -3202,7 +3206,7 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #       print("AQUI", tt,alias)
 
 #    return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
-    return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
+    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
 
 def DYNAMICSreuseview(request, submission_id, model_id ):
     if request.method == 'POST':
@@ -4123,8 +4127,11 @@ def MODELview(request, submission_id):
         lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
         Smol_to_Modcomp_type=smol_to_dyncomp_type
         lmol_MOD_type_tup=[]
+        molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
         for l in lmol_MOD_type_num:
-            lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
+            #lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
+            lmol_MOD_type_tup.append((Smol_to_Modcomp_type[l],molecule_type_dict[Smol_to_Modcomp_type[l]]))
+            
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
