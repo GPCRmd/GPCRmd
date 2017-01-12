@@ -1781,6 +1781,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['references']=list()
     molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
     molec_dic['link_2_compound']=molobj.id_compound.id
+    molec_dic['name']=molobj.id_compound.name
     molec_dic['sdf']=''
     molec_dic['smiles']=molobj.smiles
     molec_dic['description']=molobj.description
