@@ -1521,6 +1521,7 @@ def NiceSearcher(request):
             if array[4]=='false':
                 array[4]=False
             arrays_def.append(array)
+        print('\n\nHOLAAAAAAAAAAAA\n\n',arrays_def)
 
     #{(1, 'AND'): ['protein', '1', 'true'], (0, ' '): ['molecule', '1', 'orto']}
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
