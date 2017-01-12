@@ -35,10 +35,9 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel, smol_to_dyncomp_type
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
+
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -48,7 +47,7 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
-from .models import Model2DynamicsMoleculeType
+from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
  
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
@@ -2514,7 +2513,12 @@ def get_submission_molecule_info(request,form_type,submission_id):
             mol_int=int(mol_int)
         else:
             return HttpResponse('Molecule form number '+str(mol_int)+' is invalid or empty.',status=422,reason='Unprocessable Entity')
-
+        if form_type == "model":
+            molecule_type_dict = dict(DyndbModelComponents.MOLECULE_TYPE)
+            smol_to_comp_type = smol_to_dyncomp_type
+        elif form_type == "dynamics":
+            molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+            smol_to_comp_type = smol_to_dyncomp_type
         q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=(mol_int-1))
         field_ref = 'molecule_id__id_compound__name'
         if form_type == "model":
@@ -2524,15 +2528,14 @@ def get_submission_molecule_info(request,form_type,submission_id):
             q = q.annotate(name=F(field_ref))
             field_name = "name"
         
-        q = q.values('molecule_id','not_in_model',field_name,'type') #modification Juanma added type field
+        q = q.values('molecule_id','not_in_model',field_name,'type')
         qresults = list(q)
-        qresults[0]['type']= smol_to_dyncomp_type[q.values_list('type',flat=True)[0]]#modification Juanma added type field
         if len(qresults) > 0:
+            qresults[0]['type'] = smol_to_comp_type[qresults[0]['type']]
+            qresults[0]['type_text'] = molecule_type_dict[qresults[0]['type']]
+            
             if qresults[0]['not_in_model'] and form_type == "model":
                 return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as no crystal-like.\n'+ \
-                'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
-            elif not(qresults[0]['not_in_model']) and form_type == "dynamics":
-                return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as crystal-like.\n'+ \
                 'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
             else:
                 return JsonResponse(qresults[0])
@@ -3499,42 +3502,27 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
 def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
-    type_mapping = dict()
-    
-    compound_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE)
-    ligand_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='ligand',case_sensitive=False,first_match=False)
     
     q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
     q = q.annotate(id_molecule=F('molecule_id'))
     field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
-        ligand_type = type_inverse_search(DyndbModelComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=False)
         q = q.annotate(namemc=F(field_ref))
         field_name = 'namemc'
     elif component_type == 'dynamics':
-        ligand_type = None
-        #ligand_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=True)
         q = q.annotate(name=F(field_ref))
         field_name = 'name'
-    for key in compound_types:
-        if key in ligand_types.keys():
-            type_mapping[compound_types[key]] = ligand_type
-        else:
-            type_mapping[compound_types[key]] = None
-        
-    
     
     q = q.values('int_id','id_molecule',field_name,'type')
     q = q.order_by('int_id')
     
     result = list(q)
     i = 0
-    print("LLLLLLL\n",result)
     for row in result:
-       result[i]['type'] = type_mapping[row['type']]
-       i +=1
+        result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
+        i +=1
     return result
     
 def MODELview(request, submission_id):
@@ -4136,8 +4124,7 @@ def MODELview(request, submission_id):
     else:
         protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
         
-        lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)###!!!!POR AQUI
-        smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4}
+        lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
         Smol_to_Modcomp_type=smol_to_dyncomp_type
         lmol_MOD_type_tup=[]
         molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
@@ -5793,6 +5780,8 @@ def DYNAMICSview(request, submission_id):
         
         mdata = get_components_info_from_components_by_submission(submission_id,'model')
         cdata = get_components_info_from_submission(submission_id,'dynamics')
+        other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
+        molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
         
         i = 0
         for row in mdata:
@@ -5801,7 +5790,7 @@ def DYNAMICSview(request, submission_id):
             mdata[i]['int_id'] = 1 + mdata[i]['int_id']
             mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
             if mdata[i]['type_int'] is None:
-                mdata[i]['type_int'] = 3
+                mdata[i]['type_int'] = other_int
             mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
             i += 1
         
@@ -5811,12 +5800,13 @@ def DYNAMICSview(request, submission_id):
             cdata[i]['numberofmol'] = ''
             cdata[i]['readonly'] = False
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
-            cdata[i]['type_int'] = 3
+            cdata[i]['type_int'] = cdata[i]['type']
+            if cdata[i]['type_int'] is None:
+                cdata[i]['type_int'] = other_int
+            cdata[i]['type'] = molecule_type_dict[cdata[i]['type_int']]
             i += 1
         
         data = mdata + cdata
-        print("cdataL\n",cdata)
-        print("mdata\n",mdata)
          
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
         'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
