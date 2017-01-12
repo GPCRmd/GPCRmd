@@ -81,7 +81,18 @@ $(document).ready(function() {
     });
    
     
-    
+    $("#add_mol_new").click(function() {
+        var self=$(this)
+        var collapse=$(this).parents("#PRUEBA2").find("#addmoleculebutton")
+        if (self.prop('checked') ===true){
+            $(collapse).prop('hidden',false)
+        } else {
+            $(collapse).prop('hidden',true)
+        }
+      });
+
+
+            
     $("#id_check_pdb_mol").click(function() {
         var self = $(this);
         var modelform = $(this).parents("#myform");
