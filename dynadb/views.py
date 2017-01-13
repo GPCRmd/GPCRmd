@@ -1843,10 +1843,12 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['sinchi']=comp_obj.sinchi
     comp_dic['sinchikey']=comp_obj.sinchikey
     comp_dic['imagelink']=get_imagepath(compound_id,'compound')
+    comp_dic['related_mol_images']=[]
 
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
-
+        comp_dic['related_mol_images'].append([molecule.id,get_imagepath(molecule.id,'molecule')])
+        
     for match in DyndbReferencesCompound.objects.select_related('id_references').filter(id_compound=compound_id):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0

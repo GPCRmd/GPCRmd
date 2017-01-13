@@ -13,7 +13,7 @@
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Molecule Info:{{answer.name}} </b></div>
+    <div class="panel-heading"><b>Molecule Info: {{answer.name}} </b></div>
     <div class="panel-body">  
     {% if answer.smiles %}
     <b>Smiles</b>:<br> {{answer.smiles}} <br>  
@@ -37,7 +37,7 @@
 <br>
     {% if answer.link_2_compound %}
         <b>Corresponding compound</b>:<br> 
-           <a class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}> Compound {{answer.name}}</a>
+           <a class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}>{{answer.name}}</a>
     {%endif%}
 <br>
     {% if answer.inmodels %}
