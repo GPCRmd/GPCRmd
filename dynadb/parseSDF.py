@@ -4,6 +4,7 @@ from contextlib import closing
 from django.db import connection
 from django.utils import timezone
 from django.conf import settings
+#from GPCRuniprot import GPCRlist
 fh=open('fewmolecules.sdf','r')
 complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
 uniflag=0 
@@ -18,7 +19,9 @@ for line in fh:
 protlist=[]
 while i<len(lines_list):
     if '$$$$' in lines_list[i]:
-        complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50]) 
+        for uni in protlist:
+            if uni in GPCRlist:
+                complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50]) 
         protlist=[]
     if '<Ligand InChI Key>' in lines_list[i]:
         ligkey=lines_list[i+1].strip()

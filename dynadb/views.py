@@ -50,7 +50,17 @@ from .models import Model2DynamicsMoleculeType
  
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
-# Create your views here.CID
+# Create your views here.
+from contextlib import closing
+from django.db import connection
+aa=[]
+with closing(connection.cursor()) as cursor:
+    cursor.execute("SELECT accession FROM protein")
+    rows=cursor.fetchall()
+    for row in rows:
+        if row[0] != None:
+            aa.append(row[0])
+    print(aa)
 
 def REFERENCEview(request, submission_id=None):
  
