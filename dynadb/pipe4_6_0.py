@@ -27,6 +27,8 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
 			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
 			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
+			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
 			i=3
 			while i<9:
 				if fields[i].strip()=='':

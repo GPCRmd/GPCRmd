@@ -35,8 +35,9 @@ from .molecule_download import retreive_compound_data_pubchem_post_json, retreiv
 #from .models import Question,Formup
 #from .forms import PostForm
 from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
+
 #from django.views.generic.edit import FormView
 from .forms import FileUploadForm, NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import NameForm, dyndb_ProteinForm, dyndb_Model, dyndb_Files, AlertForm, NotifierForm,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, Formup, dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound 
@@ -46,7 +47,7 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
-from .models import Model2DynamicsMoleculeType
+from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
  
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
@@ -111,7 +112,7 @@ def show_alig(request, alignment_key):
         result=align_wt_mut(wtseq,mutseq)
         result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
         request.session[alignment_key]=result
-        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        tojson={'alignment':result, 'message':'' , 'userkey':alignment_key}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
     else:
@@ -794,36 +795,29 @@ def autocomplete(request):
 
 def count_dynamics(result_id,result_type):
     '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas.'''
-    counter=0
     dynset=set()
     if result_type=='compound': #we need to count complexcompound too!!!!
         for molecule in DyndbMolecule.objects.filter(id_compound=result_id):
-            countmol,dynsets=count_dynamics(molecule.id,'molecule')
-            dynset.union(dynsets)
-            counter+=countmol
-        return counter,dynset
+            somenumber,dynsets=count_dynamics(molecule.id,'molecule')
+            dynset=dynset.union(dynsets)
 
     for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
-        print('searching in simulation:',simu.id)
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj !=None:
                 if modelobj.id==result_id:
                     dynset.add(simu.id)
-                    counter+=1
                     continue
             else:
                 for prot in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=simu.id_model.id_complex_molecule.id_complex_exp.id):
                     if prot.id_protein.id==result_id:
                         dynset.add(simu.id)
-                        counter+=1
 
         elif result_type=='molecule':
             molflag=0
             for comp in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=simu.id):
                 if comp.id_molecule.id==result_id:
                     molflag=1
-                    counter+=1
                     dynset.add(simu.id)
                     break
 
@@ -831,21 +825,28 @@ def count_dynamics(result_id,result_type):
                 for comp in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=simu.id_model.id):
                     if comp.id_molecule.id==result_id:
                         molflag=1
-                        counter+=1
-                        print('molecule and simulation ids:',result_id,simu.id)
                         dynset.add(simu.id)
                         break
             if molflag==0: #molecule not found in dynamics nor model components, maybe it is in the complex molecule
                 try:
                     for mol in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=simu.id_model.id_complex_molecule.id):
                         if mol.id_molecule.id==result_id:
-                            counter+=1
                             dynset.add(simu.id)
                             break
                 except AttributeError:
                     pass #the dynamics has an apoform model
 
-    return counter,dynset
+        elif result_type=='compound':
+            try:
+                cexp_id=simu.id_model.id_complex_molecule.id_complex_exp
+                for ccomp in DyndbComplexCompound.objects.filter(id_complex_exp=cexp_id):
+                    if ccomp.id_compound.id==result_id:
+                        dynset.add(simu.id)
+            except:
+                continue           
+
+    return len(dynset),dynset
+
 
 def get_imagepath(id, type):
     '''Returns the path to the image of the molecule or compound with the given id. If type is molecule, it returns the image of the molecule, if it is a compound, it returns the image of the standar molecule for that compound.'''
@@ -906,6 +907,8 @@ def ajaxsearcher(request):
                 try:
                     molecule=DyndbMolecule.objects.select_related('id_compound').get(pk=user_input)
                     netcharge=molecule.net_charge
+                    if netcharge>0:
+                        netcharge='+'+str(netcharge)
                     comp=molecule.id_compound.id
                     compname=molecule.id_compound.name
                     imagepath=get_imagepath(user_input, 'molecule')
@@ -959,6 +962,8 @@ def ajaxsearcher(request):
                         if str(mol.id) not in [i[0] for i in moleculelist]: #molecule
                             mol_id=mol.id
                             netcharge=mol.net_charge
+                            if netcharge>0:
+                                netcharge='+'+str(netcharge)
                             comp=res.id_compound #DyndbMolecule.objects.get(pk=mol_id).id_compound.id
                             compname=mol.id_compound.name # DyndbMolecule.objects.get(pk=mol_id).id_compound.name
                             imagepath=get_imagepath(mol.id, 'molecule')
@@ -981,6 +986,8 @@ def ajaxsearcher(request):
                     if str(mol_id) not in [i[0] for i in moleculelist]: #molecule
                         molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=mol_id)
                         netcharge=molobj.net_charge
+                        if netcharge>0:
+                            netcharge='+'+str(netcharge)
                         comp=molobj.id_compound.id
                         compname=molobj.id_compound.name
                         imagepath=get_imagepath(mol_id,'molecule')
@@ -1111,7 +1118,7 @@ def emptysearcher(request):
             dynresult=[]
             dynresult=getligrec(dynlist,'dynamics')
 
-    tojson={'dynlist':dynresult,'model':modelresult,'message':''}
+    tojson={'dynlist':dynresult,'model':modelresult,'result':[],'message':''}
     data = json.dumps(tojson)
     return HttpResponse(data, content_type='application/json')
 
@@ -1897,7 +1904,7 @@ def query_complex(request, complex_id,incall=False):
 def query_model(request,model_id,incall=False):
     '''Returns information about the given model_id. If incall is True, it will return a dictionary, otherwise, it returns an Http Response '''
     model_dic=dict()
-    numbertostring={0:'Apomorfic (only proteins)',1:'Complex Structure'}
+    numbertostring={0:'Apomorfic (no ligands)',1:'Complex Structure (proteins and ligands)'}
     #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
     modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
     model_dic['pdbid']=modelobj.pdbid
@@ -2284,7 +2291,7 @@ def upload_pdb(request): #warning , i think this view can be deleted
         return HttpResponse(data, content_type='application/json')
 
 def search_top(request,submission_id):
-    '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of two ends of the aligned PDB interval sequence are returned. '''
+    '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
@@ -2506,7 +2513,12 @@ def get_submission_molecule_info(request,form_type,submission_id):
             mol_int=int(mol_int)
         else:
             return HttpResponse('Molecule form number '+str(mol_int)+' is invalid or empty.',status=422,reason='Unprocessable Entity')
-
+        if form_type == "model":
+            molecule_type_dict = dict(DyndbModelComponents.MOLECULE_TYPE)
+            smol_to_comp_type = smol_to_dyncomp_type
+        elif form_type == "dynamics":
+            molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+            smol_to_comp_type = smol_to_dyncomp_type
         q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=(mol_int-1))
         field_ref = 'molecule_id__id_compound__name'
         if form_type == "model":
@@ -2516,14 +2528,14 @@ def get_submission_molecule_info(request,form_type,submission_id):
             q = q.annotate(name=F(field_ref))
             field_name = "name"
         
-        q = q.values('molecule_id','not_in_model',field_name)
+        q = q.values('molecule_id','not_in_model',field_name,'type')
         qresults = list(q)
         if len(qresults) > 0:
+            qresults[0]['type'] = smol_to_comp_type[qresults[0]['type']]
+            qresults[0]['type_text'] = molecule_type_dict[qresults[0]['type']]
+            
             if qresults[0]['not_in_model'] and form_type == "model":
                 return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as no crystal-like.\n'+ \
-                'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
-            elif not(qresults[0]['not_in_model']) and form_type == "dynamics":
-                return HttpResponse('Molecule form number "'+str(mol_int)+'" is defined as crystal-like.\n'+ \
                 'You can change this definition by going back to the Small Molecule form.',status=422,reason='Unprocessable Entity')
             else:
                 return JsonResponse(qresults[0])
@@ -2763,7 +2775,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     if form_type == "dynamics" and fieldset_mc[key]['type_int'] in water_types:
                         water_int_id_list.append(int_id)
                     #molintdict[int_id]['resname_list'] = []
-                   # molintdict[int_id]['numberofmol'] = []
+                    #molintdict[int_id]['numberofmol'] = []
                 resname = fieldset_mc[key]['resname']
                 if resname in molintdict[int_id]['resname']:
                     return JsonResponse({'msg':'Resname "'+resname+'" definition is duplicated'},status=422,reason='Unprocessable Entity')
@@ -2783,7 +2795,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 return JsonResponse({'msg':'You have the following unused molecules in step 2: '+','.join(['#'+str(i+1) for i in diff_int_id_form_db])+'.\nPlease, delete them if they are not part of your submission.'},status=422,reason='Unprocessable Entity')
 
             results = get_sdf_from_db_by_submission(submission_id,int_ids)
-            print("RESULTS ",results)
             
 
             if len(results) == 0:
@@ -2821,7 +2832,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     print("Splitting non-protein residues by residue names...",file=logfile)
                     datares = split_resnames_pdb(nonproteinpdbfilename,outputfolder=pdbcheckerpath)
                     resnames = datares.keys()
-                    
+                    data['atom_num'] = get_atoms_num(pdbfilepath,'coor')
                     print(str(len(resnames))+" resname(s) found: "+", ".join(resnames),file=logfile)
                     
                     print("Checking non-protein residues naming consistency...",file=logfile)
@@ -2861,7 +2872,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 for int_id in sorted(molintdict.keys(),key=int):
                                
                     print("Loading mol #"+str(int_id+1)+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
-                    print("HOLA ",int_id)
                     try:
                         with open(molintdict[int_id]['molfile'],'rb') as molfile:
                             mol = open_molecule_file(molfile,logfile=logfile,filetype='sdf')
@@ -2926,7 +2936,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 if fail == 0 and not diff_protein and not diff_nonprotein:
                     data['msg'] = 'Validation complete. Everything seems fine.'
                 else:
-                    data['msg'] = 'Validation finished with errors. Please, see log file and double check your PDB file.'
+                    data['msg'] = 'Validation finished with warnings. Please, see log file and double check your PDB file.'
                 data['resnames'] = datares
                 data['download_url_pdbchecker'] = join_path(submission_url,'pdbchecker.tar.gz',url=True)
                 response = JsonResponse(data)
@@ -3040,7 +3050,8 @@ def MODELreuseview(request, submission_id, model_id  ):
     STypeval=p.values()[0]['source_type']
     SType=p.model.SOURCE_TYPE[STypeval][1]
     print("QMODEL ",p)
-    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
+    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=submission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
+#    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
     q0MODRES=qMODRES[0]
     rowsMR=qMODRES
@@ -3143,7 +3154,8 @@ def PROTEINreuseview(request, submission_id, model_id ):
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id})
 
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
-    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
+#    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
+    qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').exclude(not_in_model=True).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
     print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
     labtypel=[]
     int_id=[]
@@ -3153,7 +3165,9 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
     qMOL=[]
     imp=[]
     Type=[]
+    url=[]
     for l in qSub:
+        url.append(qSub.values_list('url')[0])
         labtype=l.COMPOUND_TYPE[l.type]
         labtypel.append(labtype) 
         if  not l.not_in_model:
@@ -3192,7 +3206,7 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #       print("AQUI", tt,alias)
 
 #    return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
-    return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
+    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
 
 def DYNAMICSreuseview(request, submission_id, model_id ):
     if request.method == 'POST':
@@ -3488,32 +3502,18 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
 def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
-    type_mapping = dict()
-    
-    compound_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE)
-    ligand_types = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='ligand',case_sensitive=False,first_match=False)
     
     q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
     q = q.annotate(id_molecule=F('molecule_id'))
     field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
-        ligand_type = type_inverse_search(DyndbModelComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=False)
         q = q.annotate(namemc=F(field_ref))
         field_name = 'namemc'
     elif component_type == 'dynamics':
-        ligand_type = None
-        #ligand_type = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey='ligand',case_sensitive=False,first_match=True)
         q = q.filter(not_in_model=True)
         q = q.annotate(name=F(field_ref))
         field_name = 'name'
-    for key in compound_types:
-        if key in ligand_types.keys():
-            type_mapping[compound_types[key]] = ligand_type
-        else:
-            type_mapping[compound_types[key]] = None
-        
-    
     
     q = q.values('int_id','id_molecule',field_name,'type')
     q = q.order_by('int_id')
@@ -3521,7 +3521,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     result = list(q)
     i = 0
     for row in result:
-        result[i]['type'] = type_mapping[row['type']]
+        result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
         i +=1
     return result
     
@@ -3754,7 +3754,6 @@ def MODELview(request, submission_id):
                 QUERYComp=(" ").join([SELComp,FROMComp,WHEREComp])
  
     #  ##### MAKING THE COMPOUND-WISE QUERY 
-                print( "JJJJJOOOOOLLLL    2"  )
                 ROWLCompe=[]
                 #the QUERYComp is needed in order to check if the Complex_Exp exists regardless the specific Complex_molecule does
                 with connection.cursor() as cursor:
@@ -3772,7 +3771,8 @@ def MODELview(request, submission_id):
                         cep=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLCompe).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model))  
                         b=set(cep.values_list('id_complex_exp',flat=True))
                         rowCompl=list(a&b) # if the id_complex is in both lists cep and cec this is the complex we are looking for
-                        if rowCompl > 1:
+                        print( "JJJJJOOOOOLLLL    2"  )
+                        if len(rowCompl) > 1:
                             response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
                             return response
                             
@@ -3797,6 +3797,7 @@ def MODELview(request, submission_id):
  
                 if len(rowCompl) > 0: #Actually should be one or 0. If > 0 the corresponding complex_exp is in the GPCRmd database and the complex_compound entry
                     Upd_Comp_Type_l=[] #list of tupples containing info about wether the compound type has been updated
+                    print( "JJJJJOOOOOLLLL    3"  )
                     print("COMPLEX_EXP: ", rowCompl[0],"\n")
                     CE_exists=True # If Complex_Exp exists Complex_Compound exist for sure
                     CEpk=rowCompl[0]
@@ -3807,7 +3808,7 @@ def MODELview(request, submission_id):
                         min_molec_type =min(sub_molec_type)
                         print("MIN MOLEC ",min_molec_type,"complex_compound", l[0])
                         lid_type=l[0]
-                        print( "JJJJJOOOOOLLLL    2"  )
+                        print("NO updated value" )
                         if min_molec_type < l[2]:
                             DyndbComplexCompound.objects.filter(id_compound=l[0]).filter(id_complex_exp=CEpk).update(type=min_molec_type)
                             comp_type_t=(True,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating; min_molec_type= updated value if True
@@ -3817,7 +3818,7 @@ def MODELview(request, submission_id):
                         else:
                             comp_type_t=(False,l[0],l[1],l[2],min_molec_type)#l[0] = id_compound;l[1]=id_complex_exp l[2]= type before updating;
                                                                              # min_molec_type= type value in the current model. Field not  updated because if False
-                        Upd_Comp_Type_t.append(comp_type_t)
+                        Upd_Comp_Type_l.append(comp_type_t)
  
                     ##### MAKING THE MOLECULE-WISE QUERY 
  
@@ -4121,13 +4122,16 @@ def MODELview(request, submission_id):
 
     # if a GET (or any other method) we'll create a blank form
     else:
-         
-        lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)###!!!!POR AQUI
-        smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4}
+        protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
+        
+        lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
         Smol_to_Modcomp_type=smol_to_dyncomp_type
         lmol_MOD_type_tup=[]
+        molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
         for l in lmol_MOD_type_num:
-            lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
+            #lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
+            lmol_MOD_type_tup.append((Smol_to_Modcomp_type[l],molecule_type_dict[Smol_to_Modcomp_type[l]]))
+            
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
@@ -4140,7 +4144,7 @@ def MODELview(request, submission_id):
             mcdata[i]['numberofmol'] = ''
             mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
             i += 1
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup})
+        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup, 'protlist':protlist})
 
 
 
@@ -5178,6 +5182,58 @@ def delete_molecule(request,submission_id,model_id=1):
     return response
 
 
+def get_dynamics_files_reference_atomnum(submission_id,file_type):
+    """
+    Gets a reference num of atoms with a priorized reference dynamics file 
+    """
+    file_types = ['coor','traj']
+    filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
+    if file_type not in file_types:
+        raise ValueError('Invalid file_type argument: "'+str(file_type)+'"')
+    
+    #remove file_type from reference file type files
+    dbtype_preference_list = []
+    dbtype_2_file_type = dict()
+    for type1 in file_types:
+        if type1 != file_type:
+            dbtype_preference_list.append(type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[type1],case_sensitive=False,first_match=True))
+            dbtype_2_file_type[dbtype_preference_list[-1]] = type1
+    q = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id).values('filename','filepath','type')
+    results = list(q)
+    del q
+    reffilepath = None
+    reffilename = None
+    ref_numatoms = None
+    if len(results) > 0:
+        type_filepaths = dict()
+        filepaths = []
+        for row in results:
+            ctype = row['type']
+            if ctype not in type_filepaths:
+                type_filepaths[ctype] = dict()
+                type_filepaths[ctype]['filenames'] = []
+                type_filepaths[ctype]['filepaths'] = []
+            type_filepaths[ctype]['filepaths'].append(row['filepath'])
+            type_filepaths[ctype]['filenames'].append(row['filename'])
+        del results
+
+        for pref in dbtype_preference_list:
+            if pref in type_filepaths:
+                reffilepath = type_filepaths[pref]['filepaths'][0]
+                reffilename = type_filepaths[pref]['filenames'][0]
+                dbtype_pref = pref
+                break
+
+        if reffilepath is not None:       
+            ref_numatoms = get_atoms_num(reffilepath,dbtype_2_file_type[dbtype_pref])
+            
+    return (reffilepath, reffilename, ref_numatoms)
+
+    
+    
+        
+        
+
 def test_accepted_file_extension(ext,file_type):
     type_keys = {'coordinates', 'topology', 'trajectory', 'parameter', 'anytype', 'image', 'molecule', 'model'}
     if file_type not in type_keys:
@@ -5198,12 +5254,13 @@ def test_accepted_file_extension(ext,file_type):
 
 @csrf_exempt
 def upload_dynamics_files(request,submission_id,trajectory=None):
+    trajectory_max_files = 200
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=200)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
-    return _upload_dynamics_files(request,submission_id,trajectory=trajectory)
+    return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
 
 def get_dynamics_file_types():
     
@@ -5258,14 +5315,18 @@ def get_dynamics_file_types():
     return file_types
       
 file_types = get_dynamics_file_types()
-def _upload_dynamics_files(request,submission_id,trajectory=None):
+
+@csrf_protect
+def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_files=200):
     file_types = get_dynamics_file_types()
     file_type = None
     new_window = '0'
     no_js = '1'
     download_url = ''
     error = ''
-
+    filetype_subtypes_dict = {'coor':'pdb','top':'topology','traj':'trajectory','parm':'parameters','other':'other'}
+    filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
+    atomnum_check_file_types = {'coor','traj'}
     if 'new_window' in request.GET:
         new_window = request.GET['new_window']
     elif 'new_window' in request.POST:
@@ -5303,6 +5364,20 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
         exceptions = False
         data = dict()
         data['download_url_file'] = []
+        if file_type in filetype_subtypes_dict:
+            subtype = filetype_subtypes_dict[file_type]
+        else:
+            response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return response
+            
+        if file_type in atomnum_check_file_types:    
+            reffilepath, reffilename, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
+            prev_numatoms = ref_numatoms
+        
+        
+        dbtype = type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[file_type],case_sensitive=False,first_match=True)
+        submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)    
         try:
             if 'filekey' in request.POST:
                 filekey = request.POST['filekey']
@@ -5321,10 +5396,18 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
             if len(uploadedfiles) == 0:
                 msg = 'No file was selected.'
                 response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                return response
-            filenum = 0 
+                return response               
+            elif len(uploadedfiles) > 1 and file_type != 'traj':
+                msg = 'Too many files selected (Max. 1).'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response   
+            elif file_type == 'traj' and len(uploadedfiles) > trajectory_max_files:
+                msg = 'Too many files selected (Max. 200).'
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response   
             
             
+            filenum = 0
             for uploadedfile in uploadedfiles:
                 rootname,fileext = os.path.splitext(uploadedfile.name)
                 if fileext == '.gz':
@@ -5334,35 +5417,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
                         rootname = rootname2
                 fileext = fileext.lower()
                 fileext = fileext[1:]
-                file_type = request.POST['file_type']
-                print(file_types[file_type])
                 invalid_ext = False
-                if file_type == 'coor':
-                    subtype = "pdb"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'top':
-                    subtype = "topology"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'traj':
-    
-                    subtype = "trajectory"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                elif file_type == 'parm':
-                    subtype = "parameters"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-
-                elif file_type == 'other':
-                    subtype = "other"
-                    if fileext not in file_types[file_type]['extension']:
-                        invalid_ext = True
-                else:
-                    response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    return response
                 
+                if fileext not in file_types[file_type]['extension']:
+                    invalid_ext = True
                 if invalid_ext: 
                     response = HttpResponse('Invalid extension ".'+fileext+'" for '+file_types[file_type]['long_name'].lower(),status=422,reason='Unprocessable Entity',content_type='text/plain')
                     return response
@@ -5370,24 +5428,63 @@ def _upload_dynamics_files(request,submission_id,trajectory=None):
                     ext = 'tar.gz'
                 else:
                     ext = fileext
-                
-
-                
-
-                submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
-                submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)
 
                 filename = get_file_name_submission("dynamics",submission_id,filenum,ext=ext,forceext=False,subtype=subtype)
                 filepath = os.path.join(submission_path,filename)
                 download_url = os.path.join(submission_url,filename)
+                
+                if file_type in atomnum_check_file_types:
+                    if request.upload_handlers[0].activated:
+                        deleteme_filepath = os.path.join(submission_path,'deleteme_'+filename)
+                        save_uploadedfile(deleteme_filepath,uploadedfile)
+                    else:
+                        deleteme_filepath = uploadedfile.temporary_file_path()
+                    try:
+                        numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
+                    except:
+                        response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
+                
+                if file_type == 'traj':
+
+                    if filenum == 0:
+                        if ref_numatoms is not None and ref_numatoms != numatoms:
+                            response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
+                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                        dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
+                        for row in dyndb_submission_dynamics_files:
+                            filepath2 = row['filepath']
+                            if os.path.exists(filepath2):
+                                os.remove(filepath2)
+                                
+                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                        dyndb_submission_dynamics_files.delete()
+                    elif prev_numatoms != numatoms:
+                        response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from "'+prev_name+'".',status=432,reason='Partial Unprocessable Entity',content_type='text/plain')
+                        return response
+                    prev_name = uploadedfile.name
+                    prev_numatoms = numatoms
+
+                
+                dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+                dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
+                
                 data['download_url_file'].append(download_url)
                 os.makedirs(submission_path,exist_ok=True)
                 try:
-                    save_uploadedfile(filepath,uploadedfile)
+                    if file_type in atomnum_check_file_types and request.upload_handlers[0].activated:
+                        os.rename(deleteme_filepath,filepath)
+                    else:
+                        save_uploadedfile(filepath,uploadedfile)
                     
                 except:
                     try:
                         os.remove(filepath)
+                    except:
+                        pass
+                    try:
+                        os.remove(deleteme_filepath)
                     except:
                         pass
                     response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
@@ -5683,6 +5780,8 @@ def DYNAMICSview(request, submission_id):
         
         mdata = get_components_info_from_components_by_submission(submission_id,'model')
         cdata = get_components_info_from_submission(submission_id,'dynamics')
+        other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
+        molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
         
         i = 0
         for row in mdata:
@@ -5691,7 +5790,7 @@ def DYNAMICSview(request, submission_id):
             mdata[i]['int_id'] = 1 + mdata[i]['int_id']
             mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
             if mdata[i]['type_int'] is None:
-                mdata[i]['type_int'] = 3
+                mdata[i]['type_int'] = other_int
             mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
             i += 1
         
@@ -5701,12 +5800,13 @@ def DYNAMICSview(request, submission_id):
             cdata[i]['numberofmol'] = ''
             cdata[i]['readonly'] = False
             cdata[i]['int_id'] = 1 + cdata[i]['int_id']
-            cdata[i]['type_int'] = 3
+            cdata[i]['type_int'] = cdata[i]['type']
+            if cdata[i]['type_int'] is None:
+                cdata[i]['type_int'] = other_int
+            cdata[i]['type'] = molecule_type_dict[cdata[i]['type_int']]
             i += 1
         
         data = mdata + cdata
-        print("cdataL\n",cdata)
-        print("mdata\n",mdata)
          
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
         'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
@@ -8867,6 +8967,7 @@ def save_uploadedfile(filepath,uploadedfile):
                 f.write(chunk)
         else:
             f.write(uploadedfile.read())
+        f.close()
 def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_match=True):
     inverse_type = dict()
     if  searchkey is None:

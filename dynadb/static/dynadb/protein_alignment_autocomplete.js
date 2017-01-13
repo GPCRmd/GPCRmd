@@ -1,4 +1,4 @@
-//When "Align" button is clicked in the Protein step of the submission process, the sequence from the cannonical Uniprot protein and the mutant sequence of a given protein are extracted and "searchtop" function is called, which performs a sequence alignment between the two sequences. The alignment fills the alignment box of the protein and a pop up with a visually esthetic alignment appears.
+//When "Align" button is clicked in the Protein step of the submission process, the sequence from the cannonical Uniprot protein and the mutant sequence of a given protein are extracted and an aligning function is called, which performs a sequence alignment between the two sequences. The alignment fills the alignment box of the protein and a pop up with a visually esthetic alignment appears.
 
 
 $('body').on('click', "[id$=get_align]", function(){ //react to clicked elements with id ending in get_mutations (a button)

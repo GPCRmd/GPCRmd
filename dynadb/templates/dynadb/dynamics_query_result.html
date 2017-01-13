@@ -29,7 +29,7 @@
     {%endif%}
 
     {%if answer.link_2_model%}
-    <b>Complex Structure</b>:<br> <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
+    <b>Complex Structure</b>:<br> <a class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
     {%endif%}
 
     {%if answer.solventtype%}
@@ -52,7 +52,7 @@
     {%if answer.link2protein%}
         <b>Protein(s)</b>:<br>
         {%for link in answer.link2protein%}
-            <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            <a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
         {%endfor%}
     {%endif%}
     <br><br>
@@ -121,7 +121,7 @@
     {% if answer.related %}
     <b>Related Dynamics</b>:<br>
         {% for dyn in answer.related %}
-            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
+            <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
         {% endfor %}
     {% endif %}
     <br>

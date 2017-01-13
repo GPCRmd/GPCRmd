@@ -68,16 +68,19 @@ $("#Searcher").click(function(e) {
     e.preventDefault(); //not helping, still GET error sometimes...
     var p=$("#protein22").val();
     var return_type=$("#simpletype").find(":selected").val();
-
+    $('#hiddenbar').show();
+    $('#hiddenbarin').width("10%");
     var idsearch=$("#idsearch").prop('checked');
 
     if (idsearch==true){
         p=parseInt(p);
         if (isNaN(p)) {
             alert('ID search demands a number');
+            $('#hiddenbar').hide();
             return false;
         }
     }
+    $('#hiddenbarin').width("80%");
     $("#Searcher").prop('disabled', true);
     $.ajax({
         type: "POST",
@@ -90,6 +93,7 @@ $("#Searcher").click(function(e) {
         success: function(data) {
             $("#Searcher").prop("disabled",false);
             if (data.message==''){
+                $('#hiddenbarin').width("90%");
                 $('#ajaxresults22 tbody').empty();
                 var linkresult='';
                 var linkresult1='';
@@ -158,8 +162,10 @@ $("#Searcher").click(function(e) {
                     }
                 }
                 linkresult=linkresult+linkresult1+linkresult2+linkresult3;
+                $('#hiddenbarin').width("100%");
                 $('#ajaxresults22').DataTable().destroy()
                 $('#ajaxresults22 tbody').append(linkresult);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
 
                 if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
                     table = $('#ajaxresults22').DataTable();
@@ -180,11 +186,13 @@ $("#Searcher").click(function(e) {
                 }           
             }else{
                 alert(data.message);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             $("#Searcher").prop("disabled",false);
             alert("Something unexpected happen.");
+            $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
         },
     });
 });
