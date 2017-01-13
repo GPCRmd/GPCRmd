@@ -4,14 +4,14 @@ from contextlib import closing
 from django.db import connection
 from django.utils import timezone
 from django.conf import settings
-#from GPCRuniprot import GPCRlist
-fh=open('fewmolecules.sdf','r')
+from GPCRuniprot import GPCRlist
+fh=open('EC50example.sdf','r')
 complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
 uniflag=0 
 ligflag=0
 lines_list=[]
 i=0
-
+reference={}
 for line in fh:
     lines_list.append(line)
 
@@ -21,15 +21,14 @@ while i<len(lines_list):
     if '$$$$' in lines_list[i]:
         for uni in protlist:
             if uni in GPCRlist:
-                complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50]) 
+                complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference]) 
         protlist=[]
+        reference={}
     if '<Ligand InChI Key>' in lines_list[i]:
         ligkey=lines_list[i+1].strip()
     if '<Ligand InChI>' in lines_list[i]:
         liginchi=lines_list[i+1].strip()
-    elif '<UniProt (SwissProt) Primary ID of Target Chain>' in lines_list[i]:
-        protlist.append(lines_list[i+1].strip())
-    elif '<UniProt (TrEMBL) Primary ID of Target Chain>' in lines_list[i]:
+    elif '<UniProt (SwissProt) Primary ID of Target Chain>' in lines_list[i]: #we are only using SwissProt, because trEMBLE is predicted.
         protlist.append(lines_list[i+1].strip())
     elif '<PubChem CID>' in lines_list[i]: 
         pubchem_id=lines_list[i+1].strip()
@@ -51,13 +50,22 @@ while i<len(lines_list):
         ec50=lines_list[i+1].strip()
         ec50=ec50.replace(">", "")
         ec50=ec50.replace("<", "")
+    elif '> <Authors>' in lines_list[i]:
+        reference['authors']=lines_list[i+1].strip()
+    elif '> <Article DOI>' in lines_list[i]:
+        reference['DOI']=lines_list[i+1].strip()
+    elif '> <Link to Ligand-Target Pair in BindingDB>' in lines_list[i]:
+        reference['bindingdblink']=lines_list[i+1].strip()
 
     i+=1
 
 fh.close()
 
-for comple in complexes:  #need to change to inside other for loop, for every chunk.
-
+for comple in complexes:
+    [ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference]
+    kd=comple[5]
+    ec_fifty=comple[6]
+    '''
     ##################################################################################################
     # Check if that combination of ligand and target already exists. Transform it into tablesearch and use NiceSearcher to retrieve the complex
     # [[' ', ' ', 'protein', '1', 'true', '', '5-hydroxytryptamine-receptor', '  '], ['AND', ' ', 'compound', '1', 'orto', '', 'Clozapine', '  ']]
@@ -73,9 +81,9 @@ for comple in complexes:  #need to change to inside other for loop, for every ch
     for i in resultlist:
         if exactmatchtest(arrays_def,'complex',i)=='pass':
             #do not create again that cexp!
-            cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp,ligand1,ligand2,protein1,protein2) VALUES ('+complextype+','+i+','+comple[4]+','+comple[5]+') RETURNING id') #WORKS            
+            cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES ('+complextype+','+i+' RETURNING id') #WORKS            
     ##################################################################################################
-
+    '''
 
     #Create the complex_exp record
     with closing(connection.cursor()) as cursor:
@@ -83,13 +91,13 @@ for comple in complexes:  #need to change to inside other for loop, for every ch
         complex_id=cursor.fetchone()[0] #returns the id of the last insert command
         if len(kd)>0:
             complextype=1
-        elif len(ec_fifty)>0;
+        elif len(ec_fifty)>0:
             complextype=2
         else:
             complextype=0 #functional
         #Create the complex_exp_interaction_data record
-        cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp,ligand1,ligand2,protein1,protein2) VALUES ('+complextype+','+complex_id+','+comple[4]+','+comple[5]+') RETURNING id') #WORKS
-        complex_id=cursor.fetchone()[0] #returns the id of the last insert command
+        cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES ('+complextype+','+complex_id+','+comple[4]+','+comple[5]+') RETURNING id') #WORKS
+        complex_interaction_id=cursor.fetchone()[0] #returns the id of the last insert command
         
     #Create the protein and the complexprotein, if it does not exist
     for uniprot in comple[4]:
@@ -136,3 +144,18 @@ for comple in complexes:  #need to change to inside other for loop, for every ch
         cursor.executemany(
             'INSERT INTO dyndb_complex_compound (id_compound,id_complex_exp) VALUES ('+compound_id+', '+complex_id+');'
         )
+
+
+
+'''
+from contextlib import closing
+from django.db import connection
+aa=[]
+with closing(connection.cursor()) as cursor:
+    cursor.execute("SELECT accession FROM protein")
+    rows=cursor.fetchall()
+    for row in rows:
+        if row[0] != None:
+            aa.append(row[0])
+    print(aa)
+'''
