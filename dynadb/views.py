@@ -2396,11 +2396,11 @@ def search_top(request,submission_id):
                  resultsdict['message']=res
             if pstop!='undef':
                 bonded=False
-                #if pchain!=chain:
-                if len(chain)>0:
+                if pchain!=chain:
+                #if len(chain)>0:
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
-                #elif psegid!=segid:
-                if len(segid)>0:
+                elif psegid!=segid:
+                #if len(segid)>0:
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
 
                 bond_list[counter]=bonded

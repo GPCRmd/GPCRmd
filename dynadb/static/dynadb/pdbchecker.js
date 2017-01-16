@@ -19,7 +19,7 @@ function sendpar() {
     counter=1;
     for (i=0,lenout=bigarray.length;i<lenout;i++){
         for (j=counter,len=bigarray.length;j<len;j++){
-            if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10)) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10)) ) {
+            if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] ) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1]) ) {
                 alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
                 goon=false;
             }
