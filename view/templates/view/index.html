@@ -1,4 +1,8 @@
 <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+        google.load("visualization", "1", {packages:["corechart"]});
+    </script>
 <style>
 .falselist{
     margin-bottom:4px;
@@ -78,6 +82,9 @@
             {% else %}
             <div class=row><p class="str_file" id ={{structure_file}},{{structure_file_id}}> {{structure_name}} <span id="chains" class="{{all_chains}}">{{chains}}</span></p></div>
             {% endif %}
+            
+           <!-- <div id="chart_div"></div>-->
+
 <!-- ============= Comp buttonss =========== -->
             <div class="row">
                 <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor active"  id="receptor">Receptor</button>
@@ -392,9 +399,9 @@
                     <span id="tick2" ></span>
                     <span id="always2" style="margin-left:14px">
                      Compute distance between 
-                     <input class="form-control input-sm" id="dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <input class="form-control input-sm" id="dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
 			and
-                     <input class="form-control input-sm" id="dist_to" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">       
+                     <input class="form-control input-sm" id="dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">       
 
                     </span>
                   </span>
@@ -421,9 +428,11 @@
                 <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:40px" >Obtain result</button>
                 {% endif %}
                 <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;z-index: 10;" id="dist_alert"> </div>
+                <div id="dist_chart" ></div>
                 <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
 		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
                </div>
+              <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
 <!-- ============= RMSD Analysis =========== --> 
             <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>

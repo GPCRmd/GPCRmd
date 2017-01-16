@@ -77,7 +77,8 @@ ROOT_URLCONF = 'protwis.urls'
 
 WSGI_APPLICATION = 'protwis.wsgi.application'
 
-
+# Analytics
+GOOGLE_ANALYTICS_KEY = False
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'

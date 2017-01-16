@@ -15,6 +15,7 @@ import numpy as np
 from graphos.sources.simple import SimpleDataSource
 from graphos.renderers.gchart import LineChart
 import copy
+import csv
 
 
 
@@ -399,17 +400,39 @@ def generate_cons_pos_all_info(cons_pos_all,all_gpcrs_info):
     active_class_all[classes[0]]=['active', 'in active']
     return (cons_pos_all,show_class,active_class_all)
 
-def distances_inpage(dist_struc,dist_ids):
+def relate_atomSerial_mdtrajIndex(pdb_path):
+    serial_mdInd={}
+    line_num=0
+    readpdb=open(pdb_path,'r')
+    for line in readpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            serial=line[6:11].strip()
+            serial_mdInd[serial]=line_num
+            line_num+=1
+    return(serial_mdInd)
+
+
+def distances_notraj(dist_struc,dist_ids):
     struc_path = "/protwis/sites/files/"+dist_struc
-    strc=md.load(struc_path)
+    try:
+        strc=md.load(struc_path)
+    except Exception:
+        return (False,None, "Error loading the file.")    
     dist_li=re.findall("\d+-\d+",dist_ids)
+    #serial_mdInd=relate_atomSerial_mdtrajIndex(struc_path)
     dist_result={}
     for dist_pair in dist_li:
         pos_from,pos_to=dist_pair.split("-") 
+        #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]]) 
         from_to=np.array([[pos_from,pos_to]]) 
-        dist=float(md.compute_distances(strc, from_to)*10)
+        try:
+            dist=float(md.compute_distances(strc, from_to)*10)
+        except Exception:
+            num_atoms=strc.n_atoms
+            error_msg="Atom indices must be between 0 and "+str(num_atoms)
+            return (False, None, error_msg)
         dist_result[dist_pair]=dist
-    return(dist_result)
+    return(True, dist_result, None)
 
 
 def obtain_DyndbProtein_id_list(dyn_id):
@@ -439,6 +462,42 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
+def distances_Wtraj(dist_str,struc_path,traj_path):
+    struc_path = "/protwis/sites/files/"+struc_path
+    traj_path = "/protwis/sites/files/"+traj_path
+    dist_li=re.findall("\d+-\d+",dist_str)
+    #serial_mdInd=relate_atomSerial_mdtrajIndex(struc_path) 
+    frames=[]
+    axis_lab=[["Frame"]]
+    atom_pairs=np.array([]).reshape(0,2)
+    for dist_pair in dist_li:
+        pos_from,pos_to=re.findall("\d+",dist_pair)
+        var_lab="dist "+pos_from+"-"+pos_to
+        axis_lab[0].append(var_lab) 
+        #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]])
+        from_to=np.array([[pos_from,pos_to]])        
+        atom_pairs=np.append(atom_pairs,from_to, axis=0)
+    try:
+        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+    except Exception:
+        return (False,None, "Error loading the file.")
+    dist=np.array([]).reshape((0,len(atom_pairs))) 
+    for itraj in itertraj:
+        try:
+            d=md.compute_distances(itraj, atom_pairs)*10
+        except Exception:
+            num_atoms=itraj.n_atoms
+            error_msg="Atom indices must be between 0 and "+str(num_atoms)
+            return (False, None, error_msg)
+        dist=np.append(dist,d,axis=0)
+    frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((len(dist),1))
+    data=np.append(frames,dist, axis=1).tolist()
+    data_fin=axis_lab + data
+    return (True,data_fin, None)
+
+
+
+
 def index(request, dyn_id):
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
@@ -456,10 +515,32 @@ def index(request, dyn_id):
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
             dist_ids=request.POST.get("dist_resids")
-            dist_result=distances_inpage(dist_struc,dist_ids)
-            data = {"result":dist_result}
+            (success,dist_result, msg)=distances_notraj(dist_struc,dist_ids)
+            data = {"result":dist_result,"success": success, "msg":msg}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
-
+        elif request.POST.get("distStrWT"):
+            dist_struc_p=request.POST.get("distStrWT")
+            dist_ids=request.POST.get("dist_residsWT")
+            dist_traj_p=request.POST.get("distTraj")
+            (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p)
+            if success:
+                p=re.compile("\w*\.\w*$")
+                struc_filename=p.search(dist_struc_p).group(0)
+                traj_filename=p.search(dist_traj_p).group(0)
+                if request.session.get('dist_data', False):
+                    dist_data=request.session['dist_data']
+                    dist_dict=dist_data["dist_dict"]
+                    new_id=dist_data["new_id"]
+                else:
+                    new_id=1
+                    dist_dict={}
+                dist_dict["dist_"+str(new_id)]=data_fin
+                request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
+                     "traj_filename":traj_filename, "struc_filename":struc_filename}
+                data = {"result":data_fin,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
+            else: 
+                 data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg}
+            return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
         error="Structure file not found."
@@ -580,9 +661,9 @@ def index(request, dyn_id):
                 if all_gpcrs_info:
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    print("\n\n!!!!!!!!\n\n",chain_str)
-              
+        
                     context={
+                        #'chart': chart,
                         "structure_file":structure_file, 
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
@@ -659,39 +740,7 @@ def pre_viewer(request):
 
 
 
-def distances(request, dist_str,struc_id,traj_id):
-    struc_path = DyndbFiles.objects.get(id=struc_id).filepath
-    traj_path = DyndbFiles.objects.get(id=traj_id).filepath
-    traj=md.load(traj_path, top=struc_path) 
-    dist_li=re.findall("\d+-\d+",dist_str)
-    frames=[]
-    axis_lab=[["Frame"]]
-    for dist_pair in dist_li:
-        pos_from,pos_to=re.findall("\d+",dist_pair) 
-        from_to=np.array([[pos_from,pos_to]]) 
-        dist=md.compute_distances(traj, from_to)*10 
-        if frames == []:
-            frames=np.arange(1,len(dist)+1,dtype=np.int32).reshape((np.shape(dist)))
-            data=np.append(frames,dist, axis=1).tolist()
-        else:
-            data=np.append(data,dist, axis=1).tolist()
-        var_lab="dist "+pos_from+"-"+pos_to
-        axis_lab[0].append(var_lab)
-
-    data_fin=axis_lab + data
-    # DataSource object
-    data_source = SimpleDataSource(data=data_fin)
-    # Chart object
-    chart = LineChart(data_source,options={'title': "Residue Distance"})
-    context={
-
-        'chart': chart
-    }
-    return render(request, 'view/distances.html', context)
-
-
-
-def rmsd(request):
+def rmsd(request):  # Change md.load to md.iterload!!!
     if request.session.get('rmsd_data', False):
         error_li=[]
         rmsd_data=request.session['rmsd_data']
@@ -711,8 +760,7 @@ def rmsd(request):
             set_sel="all"
         try:
             traj=md.load(traj_path, top=struc_path)
-        except Exception as e:
-            print(e)
+        except Exception:
             error_msg="File can't be loaded."
             return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
         num_frames=traj.n_frames
@@ -766,3 +814,32 @@ def rmsd(request):
         error_msg="Data not found."
         return render(request, 'view/analysis_error.html', {"error_msg" : error_msg})
 
+
+
+
+def download_dist(request, dist_id):
+    if request.session.get('dist_data', False):
+        dist_data=request.session['dist_data']
+        dist_dict=dist_data["dist_dict"]
+        struc_filename=dist_data["struc_filename"]
+        traj_filename=dist_data["traj_filename"]
+        dist_data=dist_dict[dist_id]
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="'+struc_filename+"_"+dist_id+'.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["#Structure: "+struc_filename])
+        writer.writerow(["#Trajectory: "+traj_filename])
+        header=[]
+        for name in dist_data[0]:
+            header.append("'"+name+"'")
+        writer.writerow(header)
+        for row in dist_data[1:]:
+            rowcol=[]
+            for col in row:
+                rowcol.append(col)
+            writer.writerow(rowcol) 
+    else:
+        # ERROR
+        print("ERROR")
+        #return response
+    return response
