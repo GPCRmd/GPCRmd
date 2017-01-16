@@ -2296,26 +2296,38 @@ def upload_pdb(request): #warning , i think this view can be deleted
         return HttpResponse(data, content_type='application/json')
 
 
-def obtain_res_coords(pdb_path,res1,res2,pair,line_start,line_end):
+def obtain_res_coords(pdb_path,res1,res2,pair, pair2): 
+    '''res1 is last residue of previous segment, res2 is start of current segment. PAIR is [A,B], pair2 is [PROA,PROB]'''
     res1_coords=[]
     res2_coords=[]
     readpdb=open(pdb_path,'r')
+    print(res1,res2,pair,pair2)
     for line in readpdb:
         if line.startswith('ATOM') or line.startswith('HETATM'):
-            if line[line_start:line_end].strip()==pair[0]:
+            if ( (pair==None) or (line[21:22].strip()==pair[0]) ) and ((pair2==None) or (line[72:76].strip()==pair2[0]) ):
                 if line[22:27].strip() == str(res1):
+                    #print('FIRST \n',line)
                     res1_coords.append([line[30:38],line[38:46],line[46:54]])
-            elif line[line_start:line_end].strip()==pair[1]:
+            if (pair==None or line[21:22].strip()==pair[1] ) and (pair2==None or line[72:76].strip()==pair2[1] ):
                 if line[22:27].strip() == str(res2):
+                    #print('LAST\n',line)
                     res2_coords.append([line[30:38],line[38:46],line[46:54]])
+
     return(res1_coords,res2_coords)
 
-    
 def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
-    if seg_pair and seg_pair[0] != seg_pair[1]:
-        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,seg_pair,72,76)
-    elif chain_pair and chain_pair[0] != chain_pair[1]:
-        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,21,22)
+    if seg_pair and chain_pair:
+        print('both again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,seg_pair)
+
+    elif seg_pair:
+        print('only seg again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,None,seg_pair)
+
+    elif chain_pair:
+        print('only chain again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,None)
+
     coord_pairs=list(itertools.product(np.array(res1_coords),np.array(res2_coords)))
     bond=False
     dist_coo=[]
@@ -2378,7 +2390,8 @@ def search_top(request,submission_id):
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
-
+            print('chain'+chain+'segid'+segid+'stop')
+            print(len(chain),len(segid))
             try:
                 protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
                 sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
@@ -2396,11 +2409,14 @@ def search_top(request,submission_id):
                  resultsdict['message']=res
             if pstop!='undef':
                 bonded=False
-                if pchain!=chain:
-                #if len(chain)>0:
+                if len(chain)>0 and len(segid)>0:
+                    print('BOTH')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=[psegid,segid])
+                elif len(chain)>0:
+                    print('only chain')
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
-                elif psegid!=segid:
-                #if len(segid)>0:
+                elif len(segid)>0:
+                    print('only segid')
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
 
                 bond_list[counter]=bonded
