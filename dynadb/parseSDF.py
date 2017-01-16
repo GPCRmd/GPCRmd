@@ -126,9 +126,6 @@ for comple in complexes: #423 last record
 
     print('kinetics recorded. Now, record the protein')
 
-
-
-
     #Create the protein and the complexprotein, if it does not exist
     for uniprot in comple[4]:
         if len(DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False))>0:
