@@ -7,6 +7,9 @@ function sendpar() {
         var postarray=[];
         $('td', this).each(function () {
             var value = $(this).find(":input").val();
+            if (postarray.length==7){
+                value = $(this).find('[type=checkbox]').prop('checked');
+            }            
             postarray.push(value);
         })
         bigarray.push(postarray);
@@ -17,7 +20,7 @@ function sendpar() {
     for (i=0,lenout=bigarray.length;i<lenout;i++){
         for (j=counter,len=bigarray.length;j<len;j++){
             if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10)) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10)) ) {
-                alert('There is overlapping between the range'+bigarray[i]+' and ' +bigarray[j]);
+                alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
                 goon=false;
             }
         }

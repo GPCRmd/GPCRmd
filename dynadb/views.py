@@ -21,6 +21,8 @@ import json
 import mimetypes
 import requests
 import math
+import itertools
+import numpy as np
 import tarfile
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F
@@ -2292,13 +2294,54 @@ def upload_pdb(request): #warning , i think this view can be deleted
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
+
+def obtain_res_coords(pdb_path,res1,res2,pair,line_start,line_end):
+    res1_coords=[]
+    res2_coords=[]
+    readpdb=open(pdb_path,'r')
+    for line in readpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            if line[line_start:line_end].strip()==pair[0]:
+                if line[22:27].strip() == str(res1):
+                    res1_coords.append([line[30:38],line[38:46],line[46:54]])
+            elif line[line_start:line_end].strip()==pair[1]:
+                if line[22:27].strip() == str(res2):
+                    res2_coords.append([line[30:38],line[38:46],line[46:54]])
+    return(res1_coords,res2_coords)
+
+    
+def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
+    if seg_pair and seg_pair[0] != seg_pair[1]:
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,seg_pair,72,76)
+    elif chain_pair and chain_pair[0] != chain_pair[1]:
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,21,22)
+    coord_pairs=list(itertools.product(np.array(res1_coords),np.array(res2_coords)))
+    bond=False
+    dist_coo=[]
+    for cpair in coord_pairs:
+        x1=float(cpair[0][0])
+        y1=float(cpair[0][1])
+        z1=float(cpair[0][2])
+        x2=float(cpair[1][0])
+        y2=float(cpair[1][1])
+        z2=float(cpair[1][2])
+        dist=math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+        dist_coo.append(dist)
+        if dist < 2:
+            dist_coo.append(dist)
+            bond=True
+            break
+    return(bond)
+
 def search_top(request,submission_id):
     '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
+        pstop='undef'
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
+        bond_list=dict()
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
@@ -2311,6 +2354,7 @@ def search_top(request,submission_id):
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
             start=array[3].strip()
             stop=array[4].strip()
+            
             try:
                 if start == '' or not (start.isdigit()):
                     start = int(array[3],16)
@@ -2349,7 +2393,21 @@ def search_top(request,submission_id):
                 resultsdict['message']=''
             elif isinstance(res,str):
                  resultsdict['message']=res
+            if pstop!='undef':
+                bonded=False
+                #if pchain!=chain:
+                if len(chain)>0:
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
+                #elif psegid!=segid:
+                if len(segid)>0:
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
+
+                bond_list[counter]=bonded
+            pstop=stop
+            pchain=chain
+            psegid=segid
             counter+=1
+    resultsdict['bonds']=bond_list
     data = json.dumps(resultsdict)
     
     return HttpResponse(data, content_type='application/json')
