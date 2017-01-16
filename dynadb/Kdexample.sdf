@@ -1,0 +1,264 @@
+Promegestone
+
+Vconf v2.0 Academic SN VC001-00000579
+ 54 57  0  0  0  0  0  0  0  0999 V2000
+   -3.9110    2.6950    0.1330 C   0  0  0  0  0  0  0  0  0  0  0
+   -5.3810    2.3260   -0.1480 C   0  0  0  0  0  0  0  0  0  0  0
+   -5.4700    1.5630   -1.3590 C   0  0  0  0  0  0  0  0  0  0  0
+   -4.6170    0.5450   -1.5120 C   0  0  0  0  0  0  0  0  0  0  0
+   -6.3340    1.7930   -2.1900 O   0  0  0  0  0  0  0  0  0  0  0
+   -2.9450    1.6780   -0.2740 C   0  0  0  0  0  0  0  0  0  0  0
+   -3.4000    0.5750   -0.9460 C   0  0  0  0  0  0  0  0  0  0  0
+   -2.5560   -0.5910   -1.0590 C   0  0  0  0  0  0  0  0  0  0  0
+   -1.1770   -0.1280   -1.5200 C   0  0  0  0  0  0  0  0  0  0  0
+   -1.6250    1.8510   -0.0310 C   0  0  0  0  0  0  0  0  0  0  0
+    0.0910    3.6940    0.0900 C   0  0  0  0  0  0  0  0  0  0  0
+   -1.1240    2.9930    0.7370 C   0  0  0  0  0  0  0  0  0  0  0
+    1.1960    2.6720   -0.2390 C   0  0  2  0  0  0  0  0  0  0  0
+    0.5370    1.6410   -1.1660 C   0  0  1  0  0  0  0  0  0  0  0
+    1.7200    0.8220   -1.6830 C   0  0  0  0  0  0  0  0  0  0  0
+    2.8840    1.8320   -1.7410 C   0  0  0  0  0  0  0  0  0  0  0
+    1.7300    2.0290    1.0740 C   0  0  0  0  0  0  0  0  0  0  0
+    1.9570    4.1290   -2.2530 C   0  0  0  0  0  0  0  0  0  0  0
+   -0.6260    0.8830   -0.4970 C   0  0  2  0  0  0  0  0  0  0  0
+    2.3860    3.1670   -1.1160 C   0  0  1  0  0  0  0  0  0  0  0
+    3.4110    3.8740   -0.3630 C   0  0  0  0  0  0  0  0  0  0  0
+    3.0780    4.6430    0.5260 O   0  0  0  0  0  0  0  0  0  0  0
+    4.7990    3.8750   -0.7520 C   0  0  0  0  0  0  0  0  0  0  0
+    5.6590    3.1570    0.2970 C   0  0  0  0  0  0  0  0  0  0  0
+    0.1090    2.1610   -2.0240 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.2610    0.3180    0.3590 H   0  0  0  0  0  0  0  0  0  0  0
+   -3.8210    2.8790    1.2050 H   0  0  0  0  0  0  0  0  0  0  0
+   -3.6870    3.6180   -0.4060 H   0  0  0  0  0  0  0  0  0  0  0
+   -5.7520    1.7130    0.6760 H   0  0  0  0  0  0  0  0  0  0  0
+   -5.9880    3.2300   -0.2160 H   0  0  0  0  0  0  0  0  0  0  0
+   -4.9060   -0.2480   -2.0320 H   0  0  0  0  0  0  0  0  0  0  0
+   -2.9510   -1.3160   -1.7730 H   0  0  0  0  0  0  0  0  0  0  0
+   -2.4660   -1.0690   -0.0820 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.5060   -0.9850   -1.5900 H   0  0  0  0  0  0  0  0  0  0  0
+   -1.2640    0.3360   -2.5050 H   0  0  0  0  0  0  0  0  0  0  0
+    0.4820    4.4490    0.7740 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.2470    4.1880   -0.8210 H   0  0  0  0  0  0  0  0  0  0  0
+   -1.8780    3.7630    0.8800 H   0  0  0  0  0  0  0  0  0  0  0
+   -0.8380    2.6370    1.7260 H   0  0  0  0  0  0  0  0  0  0  0
+    1.5050    0.4120   -2.6700 H   0  0  0  0  0  0  0  0  0  0  0
+    1.9550    0.0160   -0.9870 H   0  0  0  0  0  0  0  0  0  0  0
+    3.2020    1.9800   -2.7740 H   0  0  0  0  0  0  0  0  0  0  0
+    3.7180    1.4240   -1.1700 H   0  0  0  0  0  0  0  0  0  0  0
+    2.5530    1.3470    0.8610 H   0  0  0  0  0  0  0  0  0  0  0
+    2.0900    2.8060    1.7470 H   0  0  0  0  0  0  0  0  0  0  0
+    0.9550    1.4750    1.5950 H   0  0  0  0  0  0  0  0  0  0  0
+    2.8250    4.3870   -2.8620 H   0  0  0  0  0  0  0  0  0  0  0
+    1.2140    3.6710   -2.9020 H   0  0  0  0  0  0  0  0  0  0  0
+    1.5440    5.0460   -1.8320 H   0  0  0  0  0  0  0  0  0  0  0
+    4.9300    3.3850   -1.7170 H   0  0  0  0  0  0  0  0  0  0  0
+    5.1400    4.9070   -0.8440 H   0  0  0  0  0  0  0  0  0  0  0
+    6.7020    3.1730   -0.0200 H   0  0  0  0  0  0  0  0  0  0  0
+    5.5700    3.6640    1.2590 H   0  0  0  0  0  0  0  0  0  0  0
+    5.3330    2.1220    0.4030 H   0  0  0  0  0  0  0  0  0  0  0
+  1  2  1  0  0  0  0
+  1  6  1  0  0  0  0
+  1 27  1  0  0  0  0
+  1 28  1  0  0  0  0
+  2  3  1  0  0  0  0
+  2 29  1  0  0  0  0
+  2 30  1  0  0  0  0
+  3  4  1  0  0  0  0
+  3  5  2  0  0  0  0
+  4  7  2  0  0  0  0
+  4 31  1  0  0  0  0
+  6  7  1  0  0  0  0
+  6 10  2  0  0  0  0
+  7  8  1  0  0  0  0
+  8  9  1  0  0  0  0
+  8 32  1  0  0  0  0
+  8 33  1  0  0  0  0
+  9 19  1  0  0  0  0
+  9 34  1  0  0  0  0
+  9 35  1  0  0  0  0
+ 10 12  1  0  0  0  0
+ 10 19  1  0  0  0  0
+ 11 12  1  0  0  0  0
+ 11 13  1  0  0  0  0
+ 11 36  1  0  0  0  0
+ 11 37  1  0  0  0  0
+ 12 38  1  0  0  0  0
+ 12 39  1  0  0  0  0
+ 13 14  1  0  0  0  0
+ 13 17  1  1  0  0  0
+ 13 20  1  0  0  0  0
+ 14 15  1  0  0  0  0
+ 14 19  1  0  0  0  0
+ 14 25  1  6  0  0  0
+ 15 16  1  0  0  0  0
+ 15 40  1  0  0  0  0
+ 15 41  1  0  0  0  0
+ 16 20  1  0  0  0  0
+ 16 42  1  0  0  0  0
+ 16 43  1  0  0  0  0
+ 17 44  1  0  0  0  0
+ 17 45  1  0  0  0  0
+ 17 46  1  0  0  0  0
+ 20 18  1  6  0  0  0
+ 18 47  1  0  0  0  0
+ 18 48  1  0  0  0  0
+ 18 49  1  0  0  0  0
+ 19 26  1  1  0  0  0
+ 20 21  1  1  0  0  0
+ 21 22  2  0  0  0  0
+ 21 23  1  0  0  0  0
+ 23 24  1  0  0  0  0
+ 23 50  1  0  0  0  0
+ 23 51  1  0  0  0  0
+ 24 52  1  0  0  0  0
+ 24 53  1  0  0  0  0
+ 24 54  1  0  0  0  0
+M  END
+> <From>
+www.bindingDB.org
+
+> <BindingDB Reactant_set_id>
+50911604
+
+> <Ligand InChI>
+InChI=1S/C22H30O2/c1-4-20(24)22(3)12-10-19-18-7-5-14-13-15(23)6-8-16(14)17(18)9-11-21(19,22)2/h13,18-19H,4-12H2,1-3H3/t18-,19+,21+,22-/m1/s1
+
+> <Ligand InChI Key>
+QFFCYTLOTYIJMR-XMGTWHOFSA-N
+
+> <BindingDB MonomerID>
+18660
+
+> <BindingDB Ligand Name>
+(10S,11S,14S,15S)-14,15-dimethyl-14-propanoyltetracyclo[8.7.0.0^{2,7}.0^{11,15}]heptadeca-1,6-dien-5-one::Promegestone::[3H]R5020
+
+> <Target Name Assigned by Curator or DataSource>
+Progesterone receptor
+
+> <Target Source Organism According to Curator or DataSource>
+
+
+> <Ki (nM)>
+
+
+> <IC50 (nM)>
+
+
+> <Kd (nM)>
+ 0.4
+
+> <EC50 (nM)>
+
+
+> <kon (M-1-s-1)>
+
+
+> <koff (s-1)>
+
+
+> <pH>
+
+
+> <Temp C>
+
+
+> <Curation/DataSource>
+ChEMBL
+
+> <Article DOI>
+10.1021/jm100052k
+
+> <PMID>
+20355713
+
+> <PubChem AID>
+
+
+> <Patent Number>
+
+
+> <Authors>
+Zhou, HB; Lee, JH; Mayne, CG; Carlson, KE; Katzenellenbogen, JA
+
+> <Institution>
+University of Illinois
+
+> <Link to Ligand in BindingDB>
+http://www.bindingdb.org/bind/chemsearch/marvin/MolStructure.jsp?monomerid=18660
+
+> <Link to Ligand-Target Pair in BindingDB>
+http://www.bindingdb.org/jsp/dbsearch/PrimarySearch_ki.jsp?energyterm=kJ/mole&tag=pol&polymerid=6757&target=Progesterone+receptor&column=ki&startPg=0&Increment=50&submit=Search
+
+> <Link to Ligand-Target Pair in BindingDB>
+http://www.bindingdb.org/jsp/dbsearch/PrimarySearch_ki.jsp?energyterm=kJ/mole&tag=r21&monomerid=18660&enzyme=Progesterone+receptor&column=ki&startPg=0&Increment=50&submit=Search
+
+> <Ligand HET ID in PDB>
+
+
+> <PDB ID(s) for Ligand-Target Complex>
+
+
+> <PubChem CID>
+36709
+
+> <PubChem SID>
+172097280
+
+> <ChEBI ID of Ligand>
+73390
+
+> <ChEMBL ID of Ligand>
+
+
+> <DrugBank ID of Ligand>
+
+
+> <IUPHAR_GRAC ID of Ligand>
+
+
+> <KEGG ID of Ligand>
+C14208
+
+> <ZINC ID of Ligand>
+ZINC03814408
+
+> <Number of Protein Chains in Target (>1 implies a multichain complex)>
+1
+
+> <BindingDB Target Chain Sequence>
+MTELKAKGPRAPHVAGGPPSPEVGSPLLCRPAAGPFPGSQTSDTLPEVSAIPISLDGLLFPRPCQGQDPSDEKTQDQQSLSDVEGAYSRAEATRGAGGSSSSPPEKDSGLLDSVLDTLLAPSGPGQSQPSPPACEVTSSWCLFGPELPEDPPAAPATQRVLSPLMSRSGCKVGDSSGTAAAHKVLPRGLSPARQLLLPASESPHWSGAPVKPSPQAAAVEVEEEDGSESEESAGPLLKGKPRALGGAAAGGGAAAVPPGAAAGGVALVPKEDSRFSAPRVALVEQDAPMAPGRSPLATTVMDFIHVPILPLNHALLAARTRQLLEDESYDGGAGAASAFAPPRSSPCASSTPVAVGDFPDCAYPPDAEPKDDAYPLYSDFQPPALKIKEEEEGAEASARSPRSYLVAGANPAAFPDFPLGPPPPLPPRATPSRPGEAAVTAAPASASVSSASSSGSTLECILYKAEGAPPQQGPFAPPPCKAPGASGCLLPRDGLPSTSASAAAAGAAPALYPALGLNGLPQLGYQAAVLKEGLPQVYPPYLNYLRPDSEASQSPQYSFESLPQKICLICGDEASGCHYGVLTCGSCKVFFKRAMEGQHNYLCAGRNDCIVDKIRRKNCPACRLRKCCQAGMVLGGRKFKKFNKVRVVRALDAVALPQPVGVPNESQALSQRFTFSPGQDIQLIPPLINLLMSIEPDVIYAGHDNTKPDTSSSLLTSLNQLGERQLLSVVKWSKSLPGFRNLHIDDQITLIQYSWMSLMVFGLGWRSYKHVSGQMLYFAPDLILNEQRMKESSFYSLCLTMWQIPQEFVKLQVSQEEFLCMKVLLLLNTIPLEGLRSQTQFEEMRSSYIRELIKAIGLRQKGVVSSSQRFYQLTKLLDNLHDLVKQLHLYCLNTFIQSRALSVEFPEMMSEVIAAQLPKILAGMVKPLLFHKK
+
+> <PDB ID(s) of Target Chain>
+1A28,1E3K,1SQN,1SR7,1ZUC,2C7A,2OVH,2OVM,2W8Y,3D90,3G8O,3HQ5,3KBA,3ZR7,3ZRA,3ZRB,4A2J,4APU,4OAR
+
+> <UniProt (SwissProt) Recommended Name of Target Chain>
+Progesterone receptor
+
+> <UniProt (SwissProt) Entry Name of Target Chain>
+PRGR_HUMAN
+
+> <UniProt (SwissProt) Primary ID of Target Chain>
+P06401
+
+> <UniProt (SwissProt) Secondary ID(s) of Target Chain>
+A7LQ08,A7X8B0,B4E3T0,Q8TDS3,Q9UPF7
+
+> <UniProt (SwissProt) Alternative ID(s) of Target Chain>
+
+
+> <UniProt (TrEMBL) Submitted Name of Target Chain>
+
+
+> <UniProt (TrEMBL) Entry Name of Target Chain>
+
+
+> <UniProt (TrEMBL) Primary ID of Target Chain>
+
+
+> <UniProt (TrEMBL) Secondary ID(s) of Target Chain>
+
+
+> <UniProt (TrEMBL) Alternative ID(s) of Target Chain>
+
+
+$$$$
