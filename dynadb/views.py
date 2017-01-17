@@ -34,7 +34,7 @@ from rdkit.Chem import MolFromInchi,MolFromSmiles
 from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
+from .models import DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff
 #from django.views.generic.edit import FormView
@@ -51,208 +51,7 @@ from .models import Model2DynamicsMoleculeType
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
 # Create your views here.
-###################################################################################
-###################################################################################
-###################################################################################
-###################################################################################
-#let's python
-from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot, retreive_isoform_data_uniprot
-from contextlib import closing
-from django.db import connection
-from django.utils import timezone
-from django.conf import settings
-from .GPCRuniprot import GPCRlist
-#fh=open('./dynadb/EC50example.sdf','r') worked! (more or less, null constraint problem with id_reference_comopund)
-#fh=open('./dynadb/Kdexample.sdf','r')  worked! 
-fh=open('./dynadb/chunk1_from5487587_to_8107333.sdf','r')
-complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
-uniflag=0 
-ligflag=0
-lines_list=[]
-i=0
-reference={}
-for line in fh:
-    lines_list.append(line)
 
-
-protlist=[]
-while i<len(lines_list):
-    if '$$$$' in lines_list[i]:
-        if (len(kd)>0 or len(ec50)>0):
-            #for uni in protlist:
-                #if uni in GPCRlist:
-            complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference]) 
-            protlist=[]
-            reference={}
-        else:
-            protlist=[]
-            reference={} 
-    
-    if '<Ligand InChI Key>' in lines_list[i]:
-        ligkey=lines_list[i+1].strip()
-    if '<Ligand InChI>' in lines_list[i]:
-        liginchi=lines_list[i+1].strip()
-    elif '<UniProt (SwissProt) Primary ID of Target Chain>' in lines_list[i]: #we are only using SwissProt, because trEMBLE is predicted.
-        protlist.append(lines_list[i+1].strip())
-    elif '<PubChem CID>' in lines_list[i]: 
-        pubchem_id=lines_list[i+1].strip()
-    elif '<ChEMBL ID of Ligand>' in lines_list[i]:
-        chembl_id=lines_list[i+1].strip()
-    elif '<Ki (nM)>' in lines_list[i]:
-        ki=lines_list[i+1].strip()
-        ki=ki.replace(">", "")
-        ki=ki.replace("<", "")
-    elif '<IC50 (nM)>' in lines_list[i]:
-        ic50=lines_list[i+1].strip()
-        ic50=ic50.replace(">", "")
-        ic50=ic50.replace("<", "")
-    elif '<Kd (nM)>' in lines_list[i]:
-        kd=lines_list[i+1].strip()
-        kd=kd.replace(">", "")
-        kd=kd.replace("<", "")
-    elif '<EC50 (nM)>' in lines_list[i]:
-        ec50=lines_list[i+1].strip()
-        ec50=ec50.replace(">", "")
-        ec50=ec50.replace("<", "")
-    elif '> <Authors>' in lines_list[i]:
-        reference['authors']=lines_list[i+1].strip()
-    elif '> <Article DOI>' in lines_list[i]:
-        reference['DOI']=lines_list[i+1].strip()
-    elif '> <Link to Ligand-Target Pair in BindingDB>' in lines_list[i]:
-        reference['bindingdblink']=lines_list[i+1].strip()
-
-    i+=1
-
-fh.close()
-
-#print('Complexes FOUND:', complexes)
-complexcounter=0
-for comple in complexes: #423 last record
-    kd=comple[5]
-    ec_fifty=comple[6]
-    '''
-    ##################################################################################################
-    # Check if that combination of ligand and target already exists. Transform it into tablesearch and use NiceSearcher to retrieve the complex
-    # [[' ', ' ', 'protein', '1', 'true', '', '5-hydroxytryptamine-receptor', '  '], ['AND', ' ', 'compound', '1', 'orto', '', 'Clozapine', '  ']]
-    query_array=[]
-    for uniprot in comple[4]:
-        pkprot=DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False)[0].id
-        query_array.append(['AND', ' ', 'protein', str(pkprot), 'true', '', '5-hydroxytryptamine-receptor', '  '])#'5-hydroxytryptamine-receptor' is not really used, so we leave it
-    pubchem_id=comple[2]
-    compound_id=DyndbCompound.objects.filter(pubchem_cid=pubchem_id)[0].id
-    query_array.append(['AND', ' ', 'compound', str(compound_id), 'orto', '', 'Clozapine', '  ']) #'Clozapine' is not really used, so we leave it
-    query_array[0][0]=' ' #first element has no boolean!
-    resultlist=main(query_array,'complex')
-    for i in resultlist:
-        if exactmatchtest(arrays_def,'complex',i)=='pass':
-            #do not create again that cexp!
-            cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES ('+complextype+','+i+' RETURNING id') #WORKS            
-    ##################################################################################################
-    '''
-
-
-    print('Record the complex exp')
-    with closing(connection.cursor()) as cursor:
-        #Create the complex_exp record
-        cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id') #WORKS!
-        complex_id=cursor.fetchone()[0] #returns the id of the last insert command
-        if len(kd)>0:
-            complextype=1
-        elif len(ec_fifty)>0:
-            complextype=2
-        else:
-            complextype=0 #functional
-
-
-
-        #Create the complex_exp_interaction_data record
-        cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(complex_id))) #WORKS
-
-        complex_interaction_id=cursor.fetchone()[0] #returns the id of the last insert command
-
-
-
-
-    print('Complex recorded. Now, record the kinetic values')
-    if complextype==1: #kd, binding
-        with closing(connection.cursor()) as cursor:
-            cursor.execute('INSERT INTO dyndb_binding (id, rvalue,units,description) VALUES (%s, %s, %s, %s)', (str(complex_interaction_id),str(kd),'nM','some description'))
-
-    if complextype==2: #ec_50, efficacy
-        with closing(connection.cursor()) as cursor:
-            cursor.execute('INSERT INTO dyndb_efficacy (id, rvalue,units,description,reference_id_compound) VALUES (%s, %s, %s, %s, %s)', (str(complex_interaction_id),str(ec_fifty),'nM','some description','2')) 
-
-    print('kinetics recorded. Now, record the protein')
-
-
-
-
-    #Create the protein and the complexprotein, if it does not exist
-    for uniprot in comple[4]:
-        if len(DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False))>0:
-            prot_id=DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False)[0].id
-            print('Protein already existed, no need to record')
-        else:
-            seqdata,errdata = retreive_fasta_seq_uniprot(uniprot) #THIS FAILES SOMETIMES! do they block my ip? 
-            namedata,errdata = retreive_protein_names_uniprot(uniprot)
-            print('seqdata and namedata',seqdata,namedata)
-            seqdata=seqdata['sequence'] #to insert in dyndb_protein_sequence sometimes this does not work because of the retrieval process
-            namedata=namedata['RecName'][0]['Full'][0]
-            with closing(connection.cursor()) as cursor:
-                cursor.execute(
-                    'INSERT INTO dyndb_protein (uniprotkbac,name,is_mutated,isoform,id_uniprot_species) VALUES (%s, %s, %s, %s, %s) RETURNING id', (uniprot,namedata,'False','1','11463')
-                )
-
-                prot_id=cursor.fetchone()[0]
-                cursor.execute(
-                    'INSERT INTO dyndb_protein_sequence (id_protein,sequence,length) VALUES (%s, %s, %s)', (prot_id,seqdata,len(seqdata))
-                )
-
-        with closing(connection.cursor()) as cursor:
-            cursor.execute(
-                'INSERT INTO dyndb_complex_protein (id_complex_exp,id_protein) VALUES (%s, %s)', (complex_id,prot_id)
-            )
-        
-
-
-    #Create the ccompound and complxcompound, if it does not exist
-    print('Protein recorded, now the compound')
-    if len(DyndbCompound.objects.filter(pubchem_cid=comple[2]))>0:
-        compound_id=DyndbCompound.objects.filter(pubchem_cid=comple[2])[0].id
-        print('compound already existed, mo need to record it')
-    else:
-        pubchem_id=comple[2]
-        iupac,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='IUPACName')
-        iupac=iupac['PropertyTable']['Properties'][0]['IUPACName']
-        names,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='synonyms') #different names
-        for name in names['InformationList']['Information'][0]['Synonym']:
-            if len(name)<60:
-                defname=name
-                break
-        names=defname
-        sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
-        sinchi=sinchi['PropertyTable']['Properties'][0]['InChI']
-        sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
-        sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
-        print('trying to record the comopund...')
-        with closing(connection.cursor()) as cursor:
-            print('THIS IS THE NAME',names)
-            cursor.execute('INSERT INTO dyndb_compound (name, iupac_name,pubchem_cid,sinchi,sinchikey) VALUES (%s, %s, %s, %s, %s) RETURNING id', (names,iupac,pubchem_id,sinchi,sinchikey) )
-            compound_id=cursor.fetchone()[0]
-        print('success! now the complex compound...')
-
-    with closing(connection.cursor()) as cursor:
-        cursor.execute(
-            'INSERT INTO dyndb_complex_compound (id_compound,id_complex_exp) VALUES (%s, %s)', (compound_id,complex_id)
-        )
-    print('Compound recorded. EVERYTHING WENT WELL. $$$$$$$$$$$$$.',complexcounter)
-    complexcounter+=1
-        
-    
-###################################################################################
-###################################################################################
-###################################################################################
-###################################################################################
 def REFERENCEview(request, submission_id=None):
  
     if request.method == 'POST':
@@ -1360,27 +1159,29 @@ def getligrec(idlist,return_type):
 def complexmatch(result_id,querylist):
     ''' Extracts every element from each complex in result_id and checks if there are elements in the complex which are not in the querylist '''
     moltypetrans={0:'orto',1:'alo'}
-    cmolecule=DyndbComplexMolecule.objects.select_related('id_complex_exp').get(pk=result_id)
-    for mol in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=result_id):
-        print('this molecule',mol.id_molecule.id,' is in the cmol', result_id)
-        strid=str(mol.id_molecule.id)
-        if (['molecule',strid, moltypetrans[mol.type]] not in querylist) and (['molecule',strid, 'all'] not in querylist):
-            return 'fail'
+    #cmolecule=DyndbComplexMolecule.objects.select_related('id_complex_exp').get(pk=result_id)
+    #for mol in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=result_id):
+    #    print('this molecule',mol.id_molecule.id,' is in the cmol', result_id)
+    #    strid=str(mol.id_molecule.id)
+    #    if (['molecule',strid, moltypetrans[mol.type]] not in querylist) and (['molecule',strid, 'all'] not in querylist):
+    #        return 'fail'
 
-    for cprotein in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein').filter(id_complex_exp=cmolecule.id_complex_exp.id):
+    for cprotein in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein').filter(id_complex_exp=result_id):
 
         is_receptor=cprotein.id_protein.receptor_id_protein!=None
         if is_receptor is True:
             is_receptor='true'
+        else:
+            is_receptor=False
         cprotstr=str(cprotein.id_protein.id)
-        print(['protein',cprotstr,is_receptor], 'this protein is in this cmol')
+        #print(['protein',cprotstr,is_receptor], 'this protein is in this cmol')
         if ['protein',cprotstr,is_receptor] not in querylist:
             print('missing protein:',['protein',str(cprotein.id_protein.id),is_receptor])
             return 'fail'
 
-    for ccompound in DyndbComplexCompound.objects.select_related('id_compound').filter(id_complex_exp=cmolecule.id_complex_exp.id):
+    for ccompound in DyndbComplexCompound.objects.select_related('id_compound').filter(id_complex_exp=result_id):
         comstr=str(ccompound.id_compound.id)
-        print('this compound is in this cmol',['compound',comstr,moltypetrans[ccompound.type]])
+        #print('this compound is in this cmol',['compound',comstr,moltypetrans[ccompound.type]])
         if (['compound',comstr,moltypetrans[ccompound.type]] not in querylist) and (['compound',comstr,'all'] not in querylist):
             print('mising compound:',['compound',str(ccompound.id_compound.id),moltypetrans[ccompound.type]])
             return 'fail' 
@@ -1486,13 +1287,13 @@ def do_boolean(list_of_lists): #[ ['NONE',[1,2,3] ], ['OR',[3,4,5] ], ['AND',[1,
 def do_query(table_row,return_type): #table row will be a list as [id,type]
     '''Returns a list of id's of the selected type (complex, model or dynamics) where the element in table_row appears. If the elemnt in table_row is a compound the ids brom both the compound and all the correspondent molecules are retrieved'''
     rowlist=[]
-
+    print('\n\nSearching...',table_row)
     if return_type=='complex':
         if table_row[0]=='protein':
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and type(is_receptor)!=None) or (table_row[2]==False and type(is_receptor)==None):
+            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
                 q=DyndbProtein.objects.filter(pk=table_row[1])
-                q=q.annotate(cmol_id=F('dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule__id'))
+                q=q.annotate(cmol_id=F('dyndbcomplexprotein__id_complex_exp')) #warning, I HAVE CHANGED IT ONLY TO SEARCH COMPLEXES INSTEAD OF CMolecules! To the parseSDF thing! be careful on MERGE!
                 q=q.values('cmol_id')
                 for row in q:
                     rowlist.append(row['cmol_id'])
@@ -1509,10 +1310,8 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
 
         else:
             user_compound = table_row[1]
-            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
-                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'complex')
             q = DyndbComplexCompound.objects.filter(id_compound=user_compound)
-            q = q.annotate(cmol_id=F('id_complex_exp__dyndbcomplexmolecule__id'))
+            q = q.annotate(cmol_id=F('id_complex_exp')) #warning, I HAVE CHANGED IT ONLY TO SEARCH COMPLEXES INSTEAD OF CMolecules! To the parseSDF thing! be careful on MERGE!i have also eliminated a few lines that compoute the same for the corresponding molecules.
             q = q.values('type','cmol_id')
             for row in q:
                 if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0: #ortoligand
@@ -1857,6 +1656,211 @@ def NiceSearcher(request):
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
 
+###################################################################################
+###################################################################################
+###################################################################################
+###################################################################################
+#let's python
+from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot, retreive_isoform_data_uniprot
+from contextlib import closing
+from django.db import connection
+from django.utils import timezone
+from django.conf import settings
+from .GPCRuniprot import GPCRlist
+fh=open('./dynadb/chunk1_from5487587_to_8107333.sdf','r') #chunk1_from5487587_to_8107333.sdf chunk0_from2870096_to_5487587.sdf
+complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
+uniflag=0 
+ligflag=0
+lines_list=[]
+i=0
+reference={}
+for line in fh:
+    lines_list.append(line)
+
+protlist=[]
+while i<len(lines_list):#make sure the last line is parsed.
+    if '$$$$' in lines_list[i]:
+        if (len(kd)>0 or len(ec50)>0):
+            #for uni in protlist:
+                #if uni in GPCRlist:
+            complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference]) 
+            protlist=[]
+            reference={}
+        else:
+            protlist=[]
+            reference={} 
+    
+    if '<Ligand InChI Key>' in lines_list[i]:
+        ligkey=lines_list[i+1].strip()
+    if '<Ligand InChI>' in lines_list[i]:
+        liginchi=lines_list[i+1].strip()
+    elif '<UniProt (SwissProt) Primary ID of Target Chain>' in lines_list[i]: #we are only using SwissProt, because trEMBLE is predicted.
+        protlist.append(lines_list[i+1].strip())
+    elif '<PubChem CID>' in lines_list[i]: 
+        pubchem_id=lines_list[i+1].strip()
+    elif '<ChEMBL ID of Ligand>' in lines_list[i]:
+        chembl_id=lines_list[i+1].strip()
+    elif '<Ki (nM)>' in lines_list[i]:
+        ki=lines_list[i+1].strip()
+        ki=ki.replace(">", "")
+        ki=ki.replace("<", "")
+    elif '<IC50 (nM)>' in lines_list[i]:
+        ic50=lines_list[i+1].strip()
+        ic50=ic50.replace(">", "")
+        ic50=ic50.replace("<", "")
+    elif '<Kd (nM)>' in lines_list[i]:
+        kd=lines_list[i+1].strip()
+        kd=kd.replace(">", "")
+        kd=kd.replace("<", "")
+    elif '<EC50 (nM)>' in lines_list[i]:
+        ec50=lines_list[i+1].strip()
+        ec50=ec50.replace(">", "")
+        ec50=ec50.replace("<", "")
+    elif '> <Authors>' in lines_list[i]:
+        reference['authors']=lines_list[i+1].strip()
+    elif '> <Article DOI>' in lines_list[i]:
+        reference['DOI']=lines_list[i+1].strip()
+    elif '> <Link to Ligand-Target Pair in BindingDB>' in lines_list[i]:
+        reference['bindingdblink']=lines_list[i+1].strip()
+
+    i+=1
+
+fh.close()
+complexcounter=0
+for comple in complexes:
+    with closing(connection.cursor()) as cursor:
+        kd=comple[5]
+        ec_fifty=comple[6]
+        if len(kd)>0:
+            complextype=1
+        elif len(ec_fifty)>0:
+            complextype=2
+        else:
+            complextype=0 #functional
+
+        #Check if combination of ligand and target exists. Transform it into tablesearch and use NiceSearcher to retrieve the complex
+        # [[' ', ' ', 'protein', '1', 'true', '', '5-receptor', '  '], ['AND', ' ', 'compound', '1', 'orto', '', 'Clozapine', '  ']]
+
+        query_array=[]
+        flag=0 #check if either the protein or the compound is new to the database, if it is, do not perform NiceSearch as it is useless. 
+        for uniprot in comple[4]:
+            proteindb=DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False)
+            if len(proteindb)>0:
+                pkprot=proteindb[0].id
+                query_array.append(['AND', ' ', 'protein', str(pkprot), False, '', '5-hydroxytryptamine-receptor', '  ']) #the name doesnt matter, but false yes! change it depending on the protein! WARNING! 'true' and False.
+            else:
+                flag=1
+        pubchem_id=comple[2]
+        compdb=DyndbCompound.objects.filter(pubchem_cid=pubchem_id)
+        if len(compdb)>0:
+            compound_id=compdb[0].id
+            query_array.append(['AND', ' ', 'compound', str(compound_id), 'orto', '', 'Clozapine', '  ']) #'Clozapine' is not really used, so we leave it
+        else:
+            flag=1
+        complex_interaction_id='undef'
+        exactest=0
+        if flag==0: #if either the protein or the compound is not present, then, we are sure that a complex containing them does not exist.
+            query_array[0][0]=' ' #first element has no boolean!
+            resultlist=main(query_array,'complex')
+            for i in resultlist:
+                if exactmatchtest(query_array,'complex',i)=='pass':
+                    print('complex already exists, no need to record again. Its ID is:',i,' its components are: ',comple)
+                    exactest=1
+                    #do not create again that cexp!
+                    complex_id=i
+                    cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(i))) # warning should i check if the interactiondata already exists?
+                    complex_interaction_id=cursor.fetchone()[0]
+
+
+        if complex_interaction_id=='undef':
+            print('This complex does not exist yet. Record the complex exp')
+            #Create the complex_exp record
+            cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
+            complex_id=cursor.fetchone()[0] #returns the id of the last insert command
+            #Create the complex_exp_interaction_data record
+            cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(complex_id)))
+            complex_interaction_id=cursor.fetchone()[0]
+
+        #Create the references
+        doires=DyndbReferences.objects.filter(doi=comple[9]['DOI'])
+        if len(doires)>0:
+            print('DOI already exists, no need to record')
+            reference_id=doires[0].id
+        else:
+            cursor.execute('INSERT INTO dyndb_references (doi, authors) VALUES (%s, %s) RETURNING id', (comple[9]['DOI'],comple[9]['authors']))
+            reference_id=cursor.fetchone()[0]
+
+        cursor.execute('INSERT INTO dyndb_references_exp_interaction_data (id_exp_interaction_data, id_references) VALUES (%s, %s)', (str(complex_interaction_id),str(reference_id)))
+
+        print('Complex recorded. Now, record the kinetic values')
+        if complextype==1: #kd, binding
+            cursor.execute('INSERT INTO dyndb_binding (id, rvalue,units,description) VALUES (%s, %s, %s, %s)', (str(complex_interaction_id),str(kd),'nM','some description')) #warning should i check if they already exist?
+
+        if complextype==2: #ec_50, efficacy
+            cursor.execute('INSERT INTO dyndb_efficacy (id, rvalue,units,description,reference_id_compound) VALUES (%s, %s, %s, %s, %s)', (str(complex_interaction_id),str(ec_fifty),'nM','some description','2')) 
+
+        print('kinetics recorded. Now, record the protein')
+
+
+
+
+        #Create the protein and the complexprotein, if it does not exist
+        for uniprot in comple[4]:
+            data,errdata = retreive_data_uniprot(uniprot,isoform=None,columns='id,entry name,organism,length,')
+            #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
+            id_uniprot_species=DyndbUniprotSpecies.objects.filter(scientific_name=data['Organism'])[0].id
+            dataiso,errdata = retreive_isoform_data_uniprot(data['Entry'])
+            print('data',data,'\n\n\ndataiso',dataiso)
+            if len(DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False))>0:
+                prot_id=DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False)[0].id
+                print('Protein already existed, no need to record')
+            else: #warning check if they are a mutant?
+                seqdata,errdata = retreive_fasta_seq_uniprot(uniprot) #THIS FAILES SOMETIMES! do they block my ip? 
+                namedata,errdata = retreive_protein_names_uniprot(uniprot)
+                seqdata=seqdata['sequence'] #to insert in dyndb_protein_sequence sometimes this does not work because of the retrieval process
+                namedata=namedata['RecName'][0]['Full'][0]
+                cursor.execute(
+                    'INSERT INTO dyndb_protein (uniprotkbac,name,is_mutated,isoform,id_uniprot_species) VALUES (%s, %s, %s, %s, %s) RETURNING id', (uniprot,namedata,'False','1',str(id_uniprot_species))
+                )
+
+                prot_id=cursor.fetchone()[0]
+                cursor.execute(
+                    'INSERT INTO dyndb_protein_sequence (id_protein,sequence,length) VALUES (%s, %s, %s)', (prot_id,seqdata,len(seqdata))
+                )
+            if exactest==0:
+                cursor.execute(
+                    'INSERT INTO dyndb_complex_protein (id_complex_exp,id_protein) VALUES (%s, %s)', (complex_id,prot_id)
+                )
+        #Create the ccompound and complxcompound, if it does not exist
+        print('Protein recorded, now the compound')
+        if len(DyndbCompound.objects.filter(pubchem_cid=comple[2]))>0:
+            compound_id=DyndbCompound.objects.filter(pubchem_cid=comple[2])[0].id
+            print('compound already existed, mo need to record it')
+        else:
+            pubchem_id=comple[2]
+            iupac,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='IUPACName')
+            print(comple,iupac,errdata)
+            iupac=iupac['PropertyTable']['Properties'][0]['IUPACName']
+            names,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='synonyms') #different names
+            for name in names['InformationList']['Information'][0]['Synonym']:
+                if len(name)<60:
+                    defname=name
+                    break
+            names=defname
+            sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
+            sinchi=sinchi['PropertyTable']['Properties'][0]['InChI']
+            sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
+            sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
+            print('trying to record the comopund...')
+            cursor.execute('INSERT INTO dyndb_compound (name, iupac_name,pubchem_cid,sinchi,sinchikey) VALUES (%s, %s, %s, %s, %s) RETURNING id', (names,iupac,pubchem_id,sinchi,sinchikey) )
+            compound_id=cursor.fetchone()[0]
+        if exactest==0:
+            cursor.execute(
+                'INSERT INTO dyndb_complex_compound (id_compound,id_complex_exp,type) VALUES (%s, %s, %s)', (compound_id,complex_id,'0')
+            )
+        print('EVERYTHING WENT WELL. $$$$$$$$$$$$$.',complexcounter)
+        print('\n\n\n\n\n\n\n\n\n\n\n')
+        complexcounter+=1
 
 ##############################################################################################################################################
 ##############################################################################################################################################
@@ -1941,7 +1945,7 @@ def query_protein(request, protein_id,incall=False):
         return fiva
     print('MODELS',fiva['models'])
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
-
+dataiso,errdata = retreive_isoform_data_uniprot(data['Entry'])
 
 def query_protein_fasta(request,protein_id):
     '''Gets the sequence of the given protein and returns its sequence in fasta format.'''

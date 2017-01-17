@@ -379,7 +379,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 
 
 #############################################################################################################################################
-def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=False,chain='A'): #we need to know if start and stop are hexadecimal or not!
+def main_pdbcheck(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=False,chain='A'): #we need to know if start and stop are hexadecimal or not!
 	if starthex is True:
 		start=int(str(start),16)
 	if stophex is True:
