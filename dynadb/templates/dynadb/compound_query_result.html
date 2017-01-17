@@ -42,9 +42,17 @@
     <br>
     {%if answer.link_2_molecule%}
         <b>Related Molecule(s)</b>:<br>
-        {% for url in answer.link_2_molecule %}
-            <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{url}}> Molecule ID: {{url}}</a>
+        <table class="table table-bordered"><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Molecule ID: {{url.0}}</a></td>
         {% endfor %}
+
+        </tr><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
+        {% endfor %}
+
+        </tr></table>
     {%endif%}
     <br>
     {% if answer.references %} 

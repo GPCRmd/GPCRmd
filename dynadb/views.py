@@ -21,6 +21,8 @@ import json
 import mimetypes
 import requests
 import math
+import itertools
+import numpy as np
 import tarfile
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F
@@ -1807,6 +1809,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['references']=list()
     molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
     molec_dic['link_2_compound']=molobj.id_compound.id
+    molec_dic['name']=molobj.id_compound.name
     molec_dic['sdf']=''
     molec_dic['smiles']=molobj.smiles
     molec_dic['description']=molobj.description
@@ -1868,10 +1871,12 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['sinchi']=comp_obj.sinchi
     comp_dic['sinchikey']=comp_obj.sinchikey
     comp_dic['imagelink']=get_imagepath(compound_id,'compound')
+    comp_dic['related_mol_images']=[]
 
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
-
+        comp_dic['related_mol_images'].append([molecule.id,get_imagepath(molecule.id,'molecule')])
+        
     for match in DyndbReferencesCompound.objects.select_related('id_references').filter(id_compound=compound_id):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
@@ -2320,14 +2325,66 @@ def upload_pdb(request): #warning , i think this view can be deleted
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
         
+
+def obtain_res_coords(pdb_path,res1,res2,pair, pair2): 
+    '''res1 is last residue of previous segment, res2 is start of current segment. PAIR is [A,B], pair2 is [PROA,PROB]'''
+    res1_coords=[]
+    res2_coords=[]
+    readpdb=open(pdb_path,'r')
+    print(res1,res2,pair,pair2)
+    for line in readpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            if ( (pair==None) or (line[21:22].strip()==pair[0]) ) and ((pair2==None) or (line[72:76].strip()==pair2[0]) ):
+                if line[22:27].strip() == str(res1):
+                    #print('FIRST \n',line)
+                    res1_coords.append([line[30:38],line[38:46],line[46:54]])
+            if (pair==None or line[21:22].strip()==pair[1] ) and (pair2==None or line[72:76].strip()==pair2[1] ):
+                if line[22:27].strip() == str(res2):
+                    #print('LAST\n',line)
+                    res2_coords.append([line[30:38],line[38:46],line[46:54]])
+
+    return(res1_coords,res2_coords)
+
+def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
+    if seg_pair and chain_pair:
+        print('both again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,seg_pair)
+
+    elif seg_pair:
+        print('only seg again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,None,seg_pair)
+
+    elif chain_pair:
+        print('only chain again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,None)
+
+    coord_pairs=list(itertools.product(np.array(res1_coords),np.array(res2_coords)))
+    bond=False
+    dist_coo=[]
+    for cpair in coord_pairs:
+        x1=float(cpair[0][0])
+        y1=float(cpair[0][1])
+        z1=float(cpair[0][2])
+        x2=float(cpair[1][0])
+        y2=float(cpair[1][1])
+        z2=float(cpair[1][2])
+        dist=math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+        dist_coo.append(dist)
+        if dist < 2:
+            dist_coo.append(dist)
+            bond=True
+            break
+    return(bond)
 @textonly_500_handler
 def search_top(request,submission_id):
     '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
+        pstop='undef'
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
+        bond_list=dict()
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
@@ -2340,6 +2397,7 @@ def search_top(request,submission_id):
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
             start=array[3].strip()
             stop=array[4].strip()
+            
             try:
                 if start == '' or not (start.isdigit()):
                     start = int(array[3],16)
@@ -2362,7 +2420,8 @@ def search_top(request,submission_id):
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
-
+            print('chain'+chain+'segid'+segid+'stop')
+            print(len(chain),len(segid))
             try:
                 protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
                 sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
@@ -2378,7 +2437,24 @@ def search_top(request,submission_id):
                 resultsdict['message']=''
             elif isinstance(res,str):
                  resultsdict['message']=res
+            if pstop!='undef':
+                bonded=False
+                if len(chain)>0 and len(segid)>0:
+                    print('BOTH')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=[psegid,segid])
+                elif len(chain)>0:
+                    print('only chain')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
+                elif len(segid)>0:
+                    print('only segid')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
+
+                bond_list[counter]=bonded
+            pstop=stop
+            pchain=chain
+            psegid=segid
             counter+=1
+    resultsdict['bonds']=bond_list
     data = json.dumps(resultsdict)
     
     return HttpResponse(data, content_type='application/json')
