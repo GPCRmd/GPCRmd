@@ -25,7 +25,6 @@ $(document).ready(function(){
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
                 var cookie = jQuery.trim(cookies[i]);
-                // Does this cookie string begin with the name we want?
                 if (cookie.substring(0, name.length + 1) === (name + '=')) {
                     cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                     break;
@@ -212,15 +211,6 @@ $(document).ready(function(){
         return ("");
     }
 
-/*    function obtainGPCRchains(){
-        GPCRchains_dr=$("#receptor").attr("title");
-        if (GPCRchains_dr){
-            return GPCRchains_dr.slice(12);
-        } else {
-            return "";
-        }
-    }
-*/
 
     function uniq(a) {
         var seen = {};
@@ -290,23 +280,7 @@ $(document).ready(function(){
         return [all_gpcr_dicts , num_gpcrs];
     }
 
-/*    function obtainDicts_old(gpcr_pdb_dict){
-        var bw_dict={};
-        var gpcrdb_dict={};
-        for (gen_num in gpcr_pdb_dict) {
-            split=gen_num.split(new RegExp('[\.x]','g'));
-            bw = split[0]+"."+ split[1];
-            db = split[0]+"x"+ split[2];
-            bw_dict[bw]=gpcr_pdb_dict[gen_num];
-            gpcrdb_dict[db]=gpcr_pdb_dict[gen_num];
-        }  
-        return [bw_dict,gpcrdb_dict]
-    }*/
 
- /*   var rad_option="high";
-    $( "input[type=radio]" ).on( "click", function(){
-        rad_option=$(this).attr("value");
-    });*/
 
     function obtainURLinfo(gpcr_pdb_dict){
         cp = obtainCompounds();
@@ -319,7 +293,6 @@ $(document).ready(function(){
         }
         rad_option=$(".sel_high:checked").attr("value");
         var traj=obtainCheckedTrajs()
-        // sel_ranges=obtainSelectedAtSeq();
         return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR] 
     }
 
@@ -354,7 +327,6 @@ $(document).ready(function(){
 
     function maxInputLength(select, maxlength){
         $(select).on('keyup blur', function() {
-            // var maxlength =4;
             var val = $(this).val();
             if (val.length > maxlength) {
                 $(this).val(val.slice(0, maxlength));
@@ -538,6 +510,18 @@ $(document).ready(function(){
         return (false)
     }
 
+    function obtainTrajUsedInDistComputatiion(res_ids){
+        if (res_ids){
+            var traj_id = $(".trajForDist:selected").val();
+            var traj_path = $(".trajForDist:selected").attr("name");
+            if (traj_id){
+                $("#traj_id_"+traj_id)[0].checked=true;
+                return (traj_path)
+            }
+        }
+        return (false)
+    }
+
     //var distResultDict={};
     var chart_img={};
     var d_id=1;
@@ -545,20 +529,16 @@ $(document).ready(function(){
 
         var res_ids = obtainDistToComp();
         if ($(this).attr("class").indexOf("withTrajs") > -1){
-            var traj_id=checkTrajUsedInDistComputatiion(res_ids);
-            if (traj_id){
-/////////////////////////////////////// UNDER CONSTRUCTION 
-
-                traj_p="Dynamics/14_trj_1_1.dcd"; //Example (change values of select list to paths, not traj ids
-                
+            var traj_p=obtainTrajUsedInDistComputatiion(res_ids);
+            if (traj_p){                
                 $("#dist_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>")
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
                 }
-                $(".href_save_data_dist_plot").addClass("disabled");
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
                 $.ajax({
                     type: "POST",
-                    url: "/view/1/",  //Change 1 for actual number
+                    url: "/view/"+dyn_id+"/",  //Change 1 for actual number
                     dataType: "json",
                     data: { 
                       "distStrWT": struc,
@@ -649,7 +629,7 @@ $(document).ready(function(){
                             $("#dist_alert").html(add_error);                
                         }
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
                     },
                     error: function() {
@@ -658,7 +638,7 @@ $(document).ready(function(){
                         }
                         $("#wait_dist").remove();
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
                         $("#dist_alert").html(add_error);                
@@ -675,10 +655,9 @@ $(document).ready(function(){
         } else {
             if (res_ids){
                 $("#dist_alert").html("");
-
                 $.ajax({
                     type: "POST",
-                    url: "/view/1/",  //Change 1 for actual number
+                    url: "/view/"+dyn_id+"/",  //Change 1 for actual number
                     dataType: "json",
                     data: { 
                       "distStr": struc,
@@ -920,6 +899,20 @@ $(document).ready(function(){
          $(selector).html(sel_fr_error);
     }
 
+    function SelectionName(traj_sel){
+        var set_sel
+        if (traj_sel == "bck"){
+            set_sel="backbone"
+        } else if (traj_sel == "noh"){
+            set_sel="noh"
+        } else if (traj_sel == "min"){
+            set_sel="minimal"
+        } else if (traj_sel == "all_atoms"){
+            set_sel="all atoms"
+        }
+        return (set_sel)
+    }
+    var r_id=1;
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");
         $("#rmsd_ref_frames_error").html("");
@@ -930,17 +923,17 @@ $(document).ready(function(){
             frameTo=$("#rmsd_frame_2").val();
             if (frameFrom && frameTo) {
                 if (/^[\d]+$/.test(frameFrom + frameTo)){
-                    if (Number(frameFrom) >= 1){
-                        if (Number(frameFrom) < Number(frameTo)){
-                            rmsdFrames=encode(frameFrom + "-" + frameTo);
-                        } else {
-                            showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
-                            rmsdFrames=false;
-                        }
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=encode(frameFrom + "-" + frameTo);
                     } else {
-                        showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                        showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
                         rmsdFrames=false;
                     }
+                    //} else {
+                    //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                    //    rmsdFrames=false;
+                    //}
                 } else {
                     showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
                     rmsdFrames=false;
@@ -951,14 +944,14 @@ $(document).ready(function(){
         }
         rmsdRefFr=$("#rmsd_ref_frame").val();
         if (rmsdRefFr == ""){
-            rmsdRefFr="1";
+            rmsdRefFr="0";
         } else if (! /^[\d]+$/.test(rmsdRefFr)){
             showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
             rmsdRefFr=false;
-        } else if (Number(rmsdRefFr)<1){
+        }/* else if (Number(rmsdRefFr)<1){
             showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
             rmsdRefFr=false;
-        }
+        }*/
         rmsdRefTraj=$("#rmsd_ref_traj_id").val();
         rmsdSel=$("#rmsd_sel_id input[name=rmsd_sel]:checked").val();
         if (rmsdSel == "rmds_my_sel"){
@@ -967,12 +960,16 @@ $(document).ready(function(){
         if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
             $("#rmsd_alert").html(add_error);
-        } else {
+        } else {//class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;"
+            $("#rmsd_chart").after("<div class='col-md-12'><p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p></div>")        
             $("#rmsd_alert").html("");
-            $(".href_save_data_dist_plot").addClass("disabled");
+            if (r_id==1){
+                $("#gotoRMSDPg").addClass("disabled");
+            }
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
             $.ajax({
                 type: "POST",
-                url: "/view/1/",  //Change 1 for actual number
+                url: "/view/"+dyn_id+"/",  //Change 1 for actual number
                 dataType: "json",
                 data: { 
                   "rmsdStr": struc,
@@ -982,25 +979,123 @@ $(document).ready(function(){
                   "rmsdRefTraj": rmsdRefTraj,
                   "rmsdSel": rmsdSel
                 },
-                success: function() {
-                    var rmsd_url ='/view/rmsd/';
-                    newwindow=window.open(rmsd_url,'','width=870,height=520');
-                    $(".href_save_data_dist_plot").addClass("disabled");
+                success: function(data_rmsd) {
+                    $("#wait_rmsd").remove();
+                    if (r_id==1){
+                        $("#gotoRMSDPg").removeClass("disabled");
+                    }
+                    var success=data_rmsd.success;
+                    if (success){
+/////////////////////                    
+                        var rmsd_array=data_rmsd.result;
+                        var rmsd_id=data_rmsd.rmsd_id;                               
+                        function drawChart2(){
+                            var patt = /[^/]*$/g;
+                            var trajFile = patt.exec(rmsdTraj);
+                            var refTrajFile = patt.exec(rmsdRefTraj);
+                            var rmsdSelOk=SelectionName(rmsdSel)
+                            var data = google.visualization.arrayToDataTable(rmsd_array,false);
+                            var options = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
+                                "chartArea":{"right":"10","left":"40","top":"50","bottom":"60"}};
+                            newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
+                            var RMSDplot_html;
+                            if ($.active<=1){
+                                RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                <div id="+newRMSDgraph_sel+"></div>\
+                                                <div id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
+                                                    <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                        <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                        </a>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;'>\
+                                                        <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                        </a>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                        <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
+                                                    </div>\
+                                                </div>\
+                                            </div>"//color:#239023
+                            }else{
+                                RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                <div id="+newRMSDgraph_sel+"></div>\
+                                                <div style='margin:5px'>\
+                                                    <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                        <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                        </a>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;'>\
+                                                        <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                        </a>\
+                                                    </div>\
+                                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                        <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
+                                                    </div>\
+                                                </div>\
+                                            </div>"                            
+                            } 
+                            $("#rmsd_chart").append(RMSDplot_html);
+                            var rmsd_chart_div = document.getElementById(newRMSDgraph_sel);
+                            var chart = new google.visualization.LineChart(rmsd_chart_div);
+                            
+                            google.visualization.events.addListener(chart, 'ready', function () {
+                                var rmsd_img_source =  chart.getImageURI() 
+                                $(".save_img_rmsd_plot").attr("href",rmsd_img_source)
+                            });
+                            
+                            chart.draw(data, options);
+                            r_id+=1;
+                            
+                            
+                            if (small_errors.length >= 1){
+                                errors_html="";
+                                for (error_msg in small_errors){
+                                    errors_html+="<p>"+small_errors[error_msg]+"</p>";
+                                }
+                                errors_html_div='<div style="margin-bottom:5px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
+                                //$("#all_"+newRMSDgraph_sel).after(errors_html_div);
+                                errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
+                                $("#opt_"+newRMSDgraph_sel).after(errors_html_div);
+                                                            
+                            }
+                            
+                        };
+                        google.load("visualization", "1", {packages:["corechart"],'callback': drawChart2});
+                        small_errors=data_rmsd.msg;
+////////////////////
+                    } else {
+                        var e_msg=data_rmsd.msg;
+                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ e_msg;
+                        $("#rmsd_alert").html(add_error);                              
+                    }
                     if ($.active<=1){
-                        $(".href_save_data_dist_plot").removeClass("disabled");
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                     }
                 },
                 error: function() {
+                    if (r_id==1){
+                        $("#gotoRMSDPg").removeClass("disabled");
+                    }
+                    $("#wait_rmsd").remove();
                     add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
                     $("#rmsd_alert").html(add_error);  
-                    $(".href_save_data_dist_plot").addClass("disabled");
                     if ($.active<=1){
-                        $(".href_save_data_dist_plot").removeClass("disabled");
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                     }
                 }
             });
 
         }
+    });
+
+    $('body').on('click','.delete_rmsd_plot', function(){
+        var plotToRv=$(this).parents(".rmsd_plot").attr("id");
+        $('#'+plotToRv).remove();
     });
 
     function obtainCheckedTrajs(){
@@ -1015,6 +1110,7 @@ $(document).ready(function(){
     var struc_info = struc_info.split(",");
     var struc = struc_info[0];
     var struc_id = struc_info[1];
+    var dyn_id=struc_info[2];
     var url_orig = "http://localhost:8081/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
