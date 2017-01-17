@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+
 from django.conf.urls import url,patterns,include #antes: from django.conf.urls import url,patterns
-from django.conf.urls.static import static
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf import settings
+
 from . import views
+
 from haystack.query import SearchQuerySet
 from haystack.views import SearchView
 from .forms import MainSearchForm

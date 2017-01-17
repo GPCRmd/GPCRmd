@@ -4,15 +4,14 @@ from os import devnull
 from functools import cmp_to_key
 from operator import itemgetter
 from .customized_errors import ParsingError
+
 from numpy import empty as nd_empty, float32 as nd_float32
+
 from mdtraj import open as mdtraj_open, load as mdtraj_load, load_pdb as mdtraj_load_pdb
 from mdtraj.formats import DCDTrajectoryFile
 from mdtraj.formats import XTCTrajectoryFile
-import os
-import sys
-#sys.tracebacklimit = 0
-#import argparse
-#from molvs.metal import MetalDisconnector
+from sys import stderr as sys_stderr, stdout as sys_stdout
+
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 from rdkit.Chem import rdinchi
@@ -583,8 +582,8 @@ def truncate_inchi(inchi,options):
             return ''
     return tinchi
 def diff_mol_pdb(mol,pdbfile,logfile=devnull):
-    with stdout_redirected(to=logfile,stdout=sys.stderr):
-        with stdout_redirected(to=logfile,stdout=sys.stdout):
+    with stdout_redirected(to=logfile,stdout=sys_stderr):
+        with stdout_redirected(to=logfile,stdout=sys_stdout):
             remove_isotopes(mol,sanitize=True)
             nhmol = Chem.RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
             try:
@@ -742,6 +741,7 @@ def get_frames_num(filepath,file_type,ext=None):
 
         
 def get_atoms_num(filepath,file_type,ext=None):
+
     if file_type == 'coor':
         if ext is None:
             traj = mdtraj_load(filepath)
@@ -753,6 +753,7 @@ def get_atoms_num(filepath,file_type,ext=None):
                 raise ValueError('Extension "'+ext2+'" not implemented.')
         numatoms = traj.n_atoms
     elif file_type == 'traj':
+        
         if ext is None:
             trajfile = mdtraj_open(filepath)
         else:
