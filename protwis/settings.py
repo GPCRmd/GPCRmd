@@ -7,6 +7,7 @@ Django settings for protwis project.
 # by default, local settings are in protwis/settings_local_default.py
 # you can override these settings by creating a protwis/settings_local.py file (or copying settings_local_default)
 # protwis/settings_local.py is ignored by git
+
 try:
     from protwis.settings_local import *
 except ImportError:
@@ -17,9 +18,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
-#DEBUG CAMBIAR a True
-#DEBUG=False
-#ALLOWED_HOSTS = ['*']
 
 # Application definition
 
