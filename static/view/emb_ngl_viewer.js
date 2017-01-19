@@ -340,10 +340,8 @@ $(document).ready(function(){
     maxInputLength('#rmsd_frame_2',8);
     maxInputLength('#rmsd_my_sel_sel',50);
     maxInputLength('#rmsd_ref_frame',8);
+    maxInputLength("#int_thr", 3)
     disableMissingClasses();
-
-
-///    Res within xA of compounf  ///
 
     $(".section_pan").click(function(){
         var target=$(this).attr("data-target");
@@ -354,6 +352,8 @@ $(document).ready(function(){
             $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
         }
     });
+
+///    Res within xA of compounf  ///
 
     var comp_lg=[];
     var comp_sh=[];
@@ -433,8 +433,83 @@ $(document).ready(function(){
         }
     });    
 
-///   Dist between residues  ///
 
+///   Freq on Interaction  ///
+
+    /*$("#int_thr").blur(function(){  
+        test=$(this).val();
+        if /^[\d]+$/.test(thr){
+            $(this).addClass(".ok"); 
+        } else {
+        }
+    })*/
+    var i_id=1;
+    var lig_sel_str;
+    $("#gotoInt").click(function(){
+        var inp_is_num=true;
+        var thr=$("#int_thr").val()
+        if (thr){
+            if (/^[\d]+$/.test(thr)){ //CONTINUE: if there is a non-digit, remove class ok. If when submit there is no class ok -> Error
+                var thr_ok=thr
+            } else {
+                inp_is_num=false;            
+            }
+        } else {
+            var thr_ok=3;
+        }
+        if (inp_is_num){
+            var intof=$(".ligInt:selected").val()
+            if (intof=="allLig"){
+                var all_lig_sel=[]
+                $(".unitInt").each(function(){
+                    var lig_s=$(this).val();
+                    all_lig_sel[all_lig_sel.length]=lig_s;        
+                });
+            } else {
+                all_lig_sel=[intof]
+            }
+            ///AJAX!!!
+            $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>")
+            if (i_id==1){
+                $("#gotoInt").addClass("disabled");
+            }
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+            $.ajax({
+                type: "POST",
+                url: "/view/"+dyn_id+"/", 
+                dataType: "json",
+                data: { 
+                  "all_ligs": all_lig_sel.join(),
+                  "thresh":thr_ok,
+                },
+                success: function() {
+                    alert("YAAAY :D");
+                    if ($.active<=1){
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                    }
+                    $("#wait_int").remove();
+                    if (i_id==1){
+                        $("#gotoInt").removeClass("disabled");
+                    }
+                    i_id+=1
+                },
+                error: function(){
+                    alert("NOOO :(");
+                    if ($.active<=1){
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                    }
+                    $("#wait_int").remove();
+                    if (i_id==1){
+                        $("#gotoInt").removeClass("disabled");
+                    }            
+                }
+            });
+        } else {
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Threshold must be an integer.'
+            $("#int_alert").html(add_error);   
+        }
+    });
+///   Dist between residues  ///
     var first_dist=true;
     var i_dist=1
     $("#add_btn2").click(function(){ 
@@ -645,8 +720,6 @@ $(document).ready(function(){
                     }
                 });
 ///////////////////////////////////////
-                //var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
-                //newwindow=window.open(dist_url,'','width=870,height=400');
                 $("#dist_alert").html("");
             } else {
                 add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
@@ -657,7 +730,7 @@ $(document).ready(function(){
                 $("#dist_alert").html("");
                 $.ajax({
                     type: "POST",
-                    url: "/view/"+dyn_id+"/",  //Change 1 for actual number
+                    url: "/view/"+dyn_id+"/",  
                     dataType: "json",
                     data: { 
                       "distStr": struc,
@@ -667,8 +740,6 @@ $(document).ready(function(){
                         var success=data_dist.success;
                         if (success){
                             dist_result=data_dist.result
-                        //    var rmsd_url ='/view/rmsd/';
-                         //   newwindow=window.open(rmsd_url,'','width=870,height=520');
                         }else{ 
                             var msg=data_dist.msg;
                             add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
@@ -692,10 +763,7 @@ $(document).ready(function(){
         $('#'+plotToRv).remove();
     });
 
-    /*$('body').on('click','.save_img_dist_plot', function(){
-        var ImgId=$(this).attr("id");
-        console.log(chart_img[ImgId]);
-    });*/
+
     
     function showDist(){
         if ($(".view_dist").is(":checked")){
@@ -969,7 +1037,7 @@ $(document).ready(function(){
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
             $.ajax({
                 type: "POST",
-                url: "/view/"+dyn_id+"/",  //Change 1 for actual number
+                url: "/view/"+dyn_id+"/",  
                 dataType: "json",
                 data: { 
                   "rmsdStr": struc,

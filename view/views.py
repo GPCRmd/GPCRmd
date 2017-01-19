@@ -314,9 +314,12 @@ def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic"""
     comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
     comp_dict={}
+    lig_li=[]
     for c in comp:
         dc=DyndbCompound.objects.get(dyndbmolecule__dyndbmodelcomponents=c.id).name #Ligands, water (and ions)
         comp_dict[dc] = c.resname
+        if c.type ==1:
+            lig_li.append([dc,c.resname])
     ddc=DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id) # Lipids and ions
     for c in ddc:
         dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
@@ -329,7 +332,7 @@ def obtain_compounds(dyn_id):
                 comp_dict[dc]= new_resn 
     comp_li=list(map(list, comp_dict.items()))
     comp_li=sorted(comp_li, key=lambda x: x[0])
-    return(comp_li)
+    return(comp_li,lig_li)
 
 def findGPCRclass(num_scheme):
     """Uses the numbering scheme name to determine the GPCR family (A, B, C or F). Also sets the values of a dict that will determine the class shown at the template."""
@@ -555,13 +558,16 @@ def index(request, dyn_id):
             else: 
                  data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
-                
+        elif request.POST.get("all_ligs"):
+            all_ligs=request.POST.get("all_ligs")
+            data={"hi":"HI!"}
+            return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
         error="Structure file not found."
         return render(request, 'view/index_error.html', {"error":error} )
     else:
-        comp_li=obtain_compounds(dyn_id)
+        (comp_li,lig_li)=obtain_compounds(dyn_id)
         paths_dict={}
         for e in dynfiles:
             paths_dict[e.id_files.id]=e.id_files.filepath
@@ -685,6 +691,7 @@ def index(request, dyn_id):
                         "traj_list":traj_list,
                         #"traj_list":[],  
                         "compounds" : comp_li,
+                        "ligands": lig_li,
                         "other_prots":other_prots,
                         "all_gpcrs_info" : all_gpcrs_info,
                         "cons_pos_all_info" : cons_pos_all_info,
@@ -704,6 +711,7 @@ def index(request, dyn_id):
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
                         "compounds" : comp_li,
+                        "ligands": lig_li,
                         "other_prots":other_prots,
                         "chains" : chain_str,
                         "prot_seq_pos": list(prot_seq_pos.values()),
@@ -718,6 +726,7 @@ def index(request, dyn_id):
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
                         "compounds" : comp_li,
+                        "ligands": lig_li,
                         "other_prots":other_prots,
                         "chains" : chain_str,            
                         "gpcr_pdb": "no"}
@@ -730,6 +739,7 @@ def index(request, dyn_id):
                     "structure_file_id":structure_file_id,
                     "traj_list":traj_list, 
                     "compounds" : comp_li,
+                    "ligands": lig_li,
                     "other_prots":[],
                     "chains" : "",            
                     "gpcr_pdb": "no"}
