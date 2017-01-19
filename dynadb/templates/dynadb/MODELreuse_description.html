@@ -6,13 +6,13 @@
      </div>
 
      <!-- main description -->
-     <div class="col-md-12 panel panel-primary">
-         <div class="panel-body">
+     <div class="col-md-12 panel panel-primary" style="height:300px">
+         <div class="panel-body" style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
             <div style="text-align:center"> 
-             <h4>CHECK THE CRYSTALIZED COMPONENTS INFO</h4>
+             <h4 style="margin-top:-5%">CHECK THE CRYSTALIZED COMPONENTS INFO</h4>
             </div>
              <p style="text-align: justify;" >Please, find here the information on the complex you have requested to be reused in your simulation submission. Make sure the data contained here matches the one corresponding to your simulation.</p>
-             <p style="text-align: justify;" >Information appearing in the ‘Residues assignment and protein coordinate sources’ section must be identical to the one concerning your simulation. Resname, Mol name, Num of mol and Type fields in the ‘Other Molecules in the Complex” section must match data in your simulation as well. </p>
+             <p style="text-align: justify;margin-bottom:-5%;" >Information appearing in the ‘Residues assignment and protein coordinate sources’ section must be identical to the one concerning your simulation. Resname, Mol name, Num of mol and Type fields in the ‘Other Molecules in the Complex” section must match data in your simulation as well. </p>
 
              <p style="text-align: justify;"> If a perfect match exists, please click the 'Check Protein Information' and 'Check Small Molecule Information' links at the bottom of the form to confirm matching of further system details. Otherwise, you have to submit your simulation as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following the whole Submission index. </p>
 <!--              <p style="text-align: justify;" >Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
@@ -33,44 +33,4 @@
      </div>
  <!--   _____________________________________________________________________________________________-->
 
-<!-- middle column -->
-<div class="col-md-7 "> 
-    <!-- filters -->
-  <div class="col-md-12 panel panel-primary"> 
-
-    <div class="panel-body">
- <!------------------------------------------------------------------------------ middle column -->
-<!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
-<!--	<div style=display:table;>  -->
-
-	<div class=row id='PRUEBA'>
-<!-- 			<div style="text-align:center">
-            			<h4><br>Select Complex</h4><br>    
-             			<h4><br>Complex Information</h4><br>
-            		</div>   -->
-
- 			<div style="text-align:center">
-<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
-             			<h4><br>Complex Information</h4><br>
-<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
-            		</div>
-                <div class="row">
-		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
-		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
-	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
-	        <div class="row">
-			<div class="col-md-8 col-md-offset-4" style="text-align:left">
-			    <div class="row">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
-				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
-                            </div>{% if message|length > 0 %}  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>{% endif %}
-			    <div class="row">
-			<!--	<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><label for="Choose_submission_id"><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </label></div>
-
-			        <div class="col-md-8"><input style="width:130px" id="Choose_submission_id" value="{{submission_id}}" name="Choose_submission_id" rows="1" readonly ></input></div> -->
-		            </div>
-                            </div>
-				
-		</div></div> 
-		</div></div>
-                </div>
+{% include "dynadb/REUSE_CAPTION.html" with prot=True %} 

@@ -1,0 +1,186 @@
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+  <style>
+a {
+color: #555;
+}
+label{
+cursor:pointer;
+font-weight:normal
+}
+  .ui-autocomplete {
+    max-height: 100px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 100px;
+  }
+  th {
+    width:80px;
+    text-align:center;
+  }
+  td {
+    padding: 5px 5px 5px 5px;
+  }
+  </style>
+{% endblock %}
+{% block content %}
+
+<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+
+ <!-- description column -->
+ <div class="col-md-4"style="height:800px" >
+ <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
+{% include "dynadb/SMALL_MOLECULE_description.html" %} 
+</div>
+ <!--   _____________________________________________________________________________________________-->
+
+<!-- middle column -->
+<div id="ssform" class="col-md-7 " style="margin-bottom:0px"> 
+<!-- SMALL MOLECULES -->
+<div class="col-md-12 panel " style="margin-bottom:0px" >
+  <div class="col-md-12 panel panel-primary" id="SMALL_BUTTON"style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;" > 
+
+                   <h4 style="padding:5px 0px 5px 0px;color:#555;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:0px">{% if minisummary %} <b>Small Molecule </b> summary {%else%}Toggle the (<b>2</b>) <b>Small Molecule </b>block {%endif%}</h4>
+                </div>
+
+       {% for o in qMOL %} 	{%for int0 in int_ids0%}{% if forloop.counter == forloop.parentloop.counter %} 	
+  <div class="col-md-12 panel panel-primary" id="SMALL_BLOCK-{{int0}}"  style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);"> 
+
+	        <div class="row"><br>
+                <div class="col-md-1"><h4></h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4 style="font-size:20px;color:DarkBlue">Small Molecule #{%for int in int_ids%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} </h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum"></div>
+                </div><br>
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-name"><a title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem.">Name:</a></label></div>
+                       {% for com in qCOMP %}
+                         {% if forloop.counter == forloop.parentloop.counter %}
+  	                    <div class="col-md-6"><input readonly  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" name="form-{{int0}}-name" type="text" value={{com.name}} /></div> <!-- placeholder=" Clozapine"--> 	
+                       {%endif%} {%endfor%}
+
+		</div>
+	        <div class="row">
+                       <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-net_charge"><a title="Net charge: Net charge of the molecule structure.">Net charge:</a></label></div>
+                       <div class="col-md-2"><input style="width:75px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div>		
+			<div class="col-md-2" style="padding-right:0px;padding-left:5px;margin-left:15px"><label for="id_form-{{int0}}-pubchem_cid"><a style="padding-right:-40px" title="PubChem cid: PubChem chemical identifier">PubChem cid:</a></label></div>
+                    {% if submission_id %}
+                       {% for com in qCOMP %}
+                         {% if forloop.counter == forloop.parentloop.counter %}
+		            <div class="col-md-2"><input id="id_form-{{int0}}-pubchem_cid" readonly name="form-{{int0}}-pubchem_cid"  style="width:75px;margin-left:10px" type="number" value={{com.pubchem_cid}} /></div> 
+                       {%endif%} {%endfor%}
+                    {% endif %}
+		</div>
+
+	        <div class="row">
+	               <div class="col-md-1" style="height:30px"></div><div class="col-md-3" ><label style="height:30px" for="id_form-{{int0}}-is_present">{% if submission_id %} {% for t in labtypels %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %}  <a style="height:30px;margin-right:-20px"title="Check this field if the molecule has been co-crystalized with the GPCR.">Crystalized molecule</a>{%else%}<a title="Bulk molecule, component of the simulation environment."> Bulk (no co-crystalized)</a> {% endif %}{% endif %}{%endfor%} {%else%} {% endif %}</label></div>
+                       <div class="col-md-6" ><input style="width:300px" id="id_form-{{int0}}-co_type" name="form-{{int0}}-type" type="text"  {% for t in labtypels %} {% if forloop.counter == forloop.parentloop.counter %} value="{{t.1}}"  {%endif%} {%endfor%} readonly /></div>{{t.1}}
+                             
+                                                                          
+	      </div><br> 
+
+</div>
+
+{%endif%} {%endfor%}
+{%endfor%}
+
+</div>
+<!--______________-->
+
+</div>
+{% if submission_id %}
+
+        <div class="col-md-7 col-md-offset-4"> 
+              <div class="col-md-12 panel panel-primary">
+                  <!--Submit prueba -->
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
+              	  </div>
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
+              	  </div>
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+              	  </div>
+              </div>
+        </div>
+
+
+{%endif%}
+</form>
+
+{% endblock content %}
+
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/protein_alignment_autocomplete.js' %}"></script>
+    <script src="{% static 'dynadb/notUniprotProtein.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+   {% if not submission_id %}
+    <script src="{% static 'dynadb/autocomplete_species.js' %}"></script>
+   {% endif%}
+    <script src="{% static 'dynadb/resetProtein.js' %}"></script>
+    <script src="{% static 'dynadb/addProtein.js' %}"></script>
+    <script src="{% static 'dynadb/delProtein.js' %}"></script>
+    <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
+    <script src="{% static 'dynadb/getMutations.js' %}"></script>
+    <script src="{% static 'dynadb/changeMutant.js' %}"></script>
+    
+<script>
+    $(document).on('click',"[id|=show_protmut]",function(){
+    self=$(this);
+    tablemut=$(this).parents("[id|=sform]").find("[id$=mutationtable]");
+    tablemut.toggle();
+        });
+    
+    $(document).on('click',"#collapse-PRUEBA2",function(){
+    self=$(this);
+    tablecomp=$(this).parent().siblings("#PRUEBA2");
+    tablecomp.toggle();
+        });
+
+    $(document).on('click',"#collapse-PRUEBA3",function(){
+    self=$(this);
+    tablecomp=$(this).parent().siblings("#PRUEBA3");
+    tablecomp.toggle();
+        });
+
+    $(document).on('click',"#PROTEIN_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("[id|=PROTEIN_BLOCK]");
+    tablecomp.toggle();
+        });
+
+    $(document).on('click',"#SMALL_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("[id|=SMALL_BLOCK]");
+    tablecomp.toggle();
+        });
+
+    $(document).on('click',"#MODEL_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("#MODEL_BLOCK");
+    tablecomp.toggle();
+        });
+
+    $(document).on('click',"#DYNAMICS_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("#DYNAMICS_BLOCK");
+    tablecomp.toggle();
+        });
+</script>
+
+<!--    $(document).on('click',"#PROTEIN_BUTTON","#SMALL_BUTTON","#MODEL_BUTTON","#DYNAMICS_BUTTON" ,function(){
+    self=$(this);
+    tablecomp=$(this).siblings("#PROTEIN_BLOCK-{{int0}}", "SMALL_BLOCK-{{int0}}", "#MODEL_BLOCK", "DYNAMICS_BLOCK");
+    tablecomp.toggle();
+        });-->
+{% endblock %}

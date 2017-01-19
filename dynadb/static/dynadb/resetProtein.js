@@ -42,7 +42,7 @@ $(document).ready(function(){
             $(this).prop("checked",false);
         });
         useisoform.prop("checked",true);
-        mutations.attr("class",'col-md-12 panel panel-primary collapse'); 
+        mutations.attr("class",'col-md-12 panel panel-primary '); 
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
         notuniprot.isNotUniprotChange();

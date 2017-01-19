@@ -154,4 +154,43 @@ $(document).ready(function(){
             $(ismutated).prop("disabled",false);
         });
     });
+
+
+// Added by Juanma!!!
+
+       $(document).on('click',"[id='id_is_mutated'],[id|=id_form][id$='-is_mutated']",function(){
+
+           if ($(document).find("[id|=id_form][id$='is_mutated']input:checked").length > 0){
+               $("#mutations_id").show();
+           } else {
+               $("#mutations_id").hide();
+           }
+           var self=$(this);
+           self.prop('disabled',true);
+           var mut_block=$(this).parents("[id|=protform]").find("[id|=id_form][id$='mutations_id']");
+           if ($(this).is(':checked')){
+               $(mut_block).show();  
+           }else{
+               $(mut_block).hide();  
+               $(mut_block).css("display","none");  
+           }
+           self.prop('disabled',false);
+       });
+
+       $(document).on('click',"[id='id_use_isoform'],[id|=id_form][id$='-use_isoform']",function(){
+
+           var self=$(this);
+           self.prop('disabled',true);
+           var mut_iso=$(this).parents("[id|=protform]").find("[id|=id_form][id$='-isoform']");
+           if ($(this).is(':checked')){
+               $(mut_iso).show();  
+           }else{
+               $(mut_iso).hide();  
+              // $(mut_iso).css("display","none");  
+           }
+           self.prop('disabled',false);
+       });
+
+
+
 });

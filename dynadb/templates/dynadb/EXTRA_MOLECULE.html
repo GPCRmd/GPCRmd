@@ -1,4 +1,8 @@
   
+	      <div class="col-md-12 panel panel-primary" style="height:50px;margin-top:20px;background-color:rgb(200, 150, 200)">
+                   <div class="row" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse"  data-target="{%for l in qMOL %}[id|='molform'][id$='{{forloop.counter0}}']{% if not forloop.last %},{%endif%}{%endfor%}"  style="cursor:pointer;padding:5px 0px 5px 0px;color:DarkBlue;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:5px">Hide/show <b>crystalized components</b> in the simulation.</div>
+              </div>
+
  <div id="molform-{{qMOL|length}}" class="col-md-12 panel panel-primary collapse in" style="background-color:AliceBlue">
   <form id="small_molecule-{{qMOL|length}}" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
             <div id="molnumb" style="text-align:right;color:black" > 

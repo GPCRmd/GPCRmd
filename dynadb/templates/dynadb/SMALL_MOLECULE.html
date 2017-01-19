@@ -5,6 +5,15 @@
 
 {% block addon_css %}
 <style>
+{% if model_id %}
+a {
+color: #555;
+}
+label{
+cursor:pointer;
+font-weight:normal
+}
+{%endif%}
 #left {
 }
 #right {
@@ -30,18 +39,24 @@
 
 <!-- middle column -->
 <div id="pmolform" class="col-md-7 col-sm-7 " style="width:665px{%if model_id %} margin-left:-2.5%{% endif %}" > 
+
        {% for o in qMOL %} 	{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %} 	
       {% if model_id %}
+	    {% if forloop.counter == 1%}    <div class="col-md-12 panel panel-primary" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse"  data-target="{%for l in qMOL %}[id|='molform'][id$='{{forloop.counter0}}']{% if not forloop.last %},{%endif%}{%endfor%}"  style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;">
+                   <div class="row" style="padding:5px 0px 5px 0px;color:#555;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:0px">Toggle the (<b>1</b>) <b>summary of crystalized components</b> </div>
+                                           </div>
+            {%endif%}
+
   <div id="molform-{{int0}}" class="col-md-12 panel  collapse in" style="margin-bottom:0px">
   <form id="small_molecule" name="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
       {% else %}
-  <div id="molform-{{0}}" class="col-md-12 panel "  >
+  <div id="molform-{{0}}" class="col-md-12 panel " style="margin-bottom:0px"  >
   <form id="small_molecule" name="small_molecule"method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
       {% endif %}
-            <div id="molnumb" class="col-md-12 panel panel-primary"  data-toggle="collapse" data-target="[id|='id_form-{{int0}}'][id$='_section']"  style="background-color:AliceBlue;text-align:center;color:black;height:50px" > 
-    <div class="panel-body" style="height:50px">
+            <div id="molnumb" class="col-md-12 panel panel-primary"  data-toggle="collapse" data-target="[id|='id_form-{{int0}}'][id$='_section']"  style="text-align:center;color:black;height:50px;{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} background-color:AliceBlue;background-color:AliceBlue;{%endif%}" > 
+    <div class="panel-body" style="height:50px;text-align:center">
              {% if model_id %}
-             			<h4  style="font-size:20px;color:DarkBlue"><b>Small Molecule #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} General Information</b></h4>
+             			<h4  style="font-size:20px;color:#555;cursor:pointer"><b>Small Molecule #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} General Information</b></h4>
              {%else%}
              <h4 style="font-size:20px;color:DarkBlue"><b>Small Molecule #1 General Information</b></h4>
              {% endif %}
@@ -49,7 +64,7 @@
 	    </div>
          
 <!--_________________________________________________________________________________________________________________-->
-  <div  class="col-md-12 panel panel-primary collapse in" id="id_form-{{int0}}-A_section">
+  <div  class="col-md-12 panel panel-primary collapse in" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-A_section">
 
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>{%if model_id %} {%for com in qCOMP %} {% if forloop.counter == forloop.parentloop.counter %} {{com.name}} {%endif%} {%endfor%} {%else%} Upload molecule {%endif%}</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -72,13 +87,16 @@
                   
                 <div class="row " {% if not model_id  %} hidden {% endif %} id="id_form-{{int0}}-imagentable" >
                         <table align='center'>
-				<tr><th style="width:80px;text-align:center"><label for="id_form-{{int0}}-upload_mol-1"><a title="Graphical representation of the uploaded molecule if provided">{% if model_id  %} Graphical representation {%else%} Uploaded Molecule {% endif %}</a></label></th>
+                                <thead>
+				<tr><th style="width:80px;text-align:center"><label for="id_form-{{int0}}-upload_mol-1"><a title="Graphical representation of the uploaded molecule if provided">{% if model_id  %} Graphical representation {%else%} Uploaded Molecule {% endif %}</a></label></th></tr></thead>
+                                <tbody>
 				{%if model_id%}	
-				<tr><img src="{%for mol in url%} {{mol}} {%endfor%}" height="300px" width="300px"> </td>
-                                {%else%}
+				<tr style="align-items:center"><td><img  src="{%for mol in url%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" ></td></tr>
 				</tr>
-				<tr><td style="padding:5px 5px 5px 5px"><div style="border:0px inset #000000;border-radius:5px;width:250px;height:250px" id="id_form-{{int0}}-upload_mol-1"  name="form-{{int0}}-upload_mol-1"/></div></td>
+                                {%else%}
+				<tr><td style="padding:5px 5px 5px 5px"><div style="border:0px inset #000000;border-radius:5px;width:250px;height:250px" id="id_form-{{int0}}-upload_mol-1"  name="form-{{int0}}-upload_mol-1"/></div></td></tr>
                                  {%endif%}
+                                </tbody>
 			</table><br>
                 </div><br>
 
@@ -87,7 +105,7 @@
 
 <!--_________________________________________________________________________________________________________________-->
 
-  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-B_section" >
+  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-B_section" >
 
 	        <div class="row"><br>
 	                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> {%if model_id %} Co-crystalized molecule or bulk component {%else%}Indicate if the uploaded structure is a co-crystalized molecule or if it belongs to bulk {%endif%}</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black " id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -133,7 +151,7 @@
                                                                           
                                                                           
  <!--_________________________________________________________________________________________________________________-->
-   <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-C_section">                        
+   <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-C_section">                        
                                                                           
  	        <div class="row"><br>                                    
                  <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> Retrieved chemoinformatics data from the uploaded structure</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -210,7 +228,7 @@
 <!--_________________________________________________________________________________________________________________-->
 
 
-  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-D_section" >
+  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-D_section" >
 	        <div class="row" style="height:70px">
                 <br>
                 <div class="col-md-1"><h4>(<b>D</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> {%if model_id %} Retrieved {%else%} Obtain {%endif%}PubChem & ChEMBL information</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black;margin-left:0px" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -377,9 +395,10 @@
 
        {% endif %}        {% endfor %}
               {% endfor %} 
-                </div>  
+</div>
 {% if model_id %} 
 {% include "dynadb/EXTRA_MOLECULE2.html"   %}
+{%else%}
 {%endif%}
 
 <div class="col-md-7 col-md-offset-4"> 
@@ -430,9 +449,19 @@
     <script src="{% static 'dynadb/delSmallMol.js' %}"></script>
     <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script>
     <script src="{% static 'dynadb/cocrystalised.js' %}"></script>
-<!--    <script src="{% static 'dynadb/fixedleft.js' %}"></script> -->
+<!--   <script src="{% static 'dynadb/fixedleft.js' %}"></script> -->
 
+<script>
+    $(document).find("[id|=molform]").each(function(){
+    var numform=Number($(this).attr('id').split("-")[1]);
+    if (numform >= {{qMOL|length}}){
+        $(this).find('a').each(function(){ 
+          $(this).css("color","#337ab7");
+        });
+    }
+    })
+   
+</script>
 {% endblock %}
-
 
 

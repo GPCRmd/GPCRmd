@@ -22,6 +22,8 @@ import mimetypes
 import requests
 import math
 import tarfile
+from os import listdir
+from os.path import isfile, join
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension,DownloadGenericError
@@ -120,6 +122,7 @@ def show_alig(request, alignment_key):
         return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
 def PROTEINview(request, submission_id):
+    
     p= submission_id
     print ("submission_id ==",submission_id)
     if request.method == 'POST':
@@ -732,6 +735,7 @@ def PROTEINview(request, submission_id):
                     fdbPCaP[ii].save()
                 else:
                     iii1=fdbPCaP[ii].errors.as_text()
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
                     print("fdbPCaP[",ii,"] no es valido")
                     print("!!!!!!Errores despues del fdbCaP[",ii,"]\n",iii1,"\n") 
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
@@ -742,7 +746,9 @@ def PROTEINview(request, submission_id):
                     return response
 
             # redirect to a new URL:
-        return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
+        response = HttpResponse("Step 1 \"Protein Information\" form has been successfully submitted.",content_type='text/plain')
+        return response
+        #return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
  #       return HttpResponseRedirect(request, '/dynadb/PROTEINfilled.html', {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
 
         
@@ -750,22 +756,69 @@ def PROTEINview(request, submission_id):
     else:
 #        qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).order_by('int_id')
  #       print(qSub)
-        int_id=[1]
-        int_id0=[0]
-        alias=[]
-        mseq=[]
-        wseq=[]
-        MUTations=[]
-        sci_na_codel=[]
-        qPROT=[1]
-        sci_namel=[]
-        sci_namel.append('')
-        fdbPF = dyndb_ProteinForm()
-        fdbPS = dyndb_Protein_SequenceForm()
-        fdbPM = dyndb_Protein_MutationsForm()
-        fdbOPN= dyndb_Other_Protein_NamesForm()
+        qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id')
+        if len(qSub)==0:
+            int_id=[1]
+            int_id0=[0]
+            alias=[]
+            mseq=[]
+            wseq=[]
+            MUTations=[]
+            sci_na_codel=[]
+            qPROT=[1]
+            sci_namel=[]
+            sci_namel.append('')
+            fdbPF = dyndb_ProteinForm()
+            fdbPS = dyndb_Protein_SequenceForm()
+            fdbPM = dyndb_Protein_MutationsForm()
+            fdbOPN= dyndb_Other_Protein_NamesForm()
+         
+            return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
 
-        return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
+        else:
+            print(qSub)
+            int_id=[]
+            int_id0=[]
+            alias=[]
+            mseq=[]
+            wseq=[]
+            MUTations=[]
+            sci_na_codel=[]
+            qPROT=[]
+            for l in qSub:
+                sci_name=list(DyndbUniprotSpecies.objects.filter(id= l.protein_id.id_uniprot_species_id).values_list('scientific_name','code')[0])
+                sci_na_code=("").join([sci_name[0]," (",sci_name[1],")"])
+                sci_na_codel.append(sci_na_code)
+                qprot=DyndbProtein.objects.filter(id=l.protein_id_id)[0]
+                qPROT.append(qprot)
+                int_id.append(l.int_id +1) 
+                int_id0.append(l.int_id) 
+###              MUT=qPROT.values('id','is_mutated')
+                qSEQ=DyndbProteinSequence.objects.filter(id_protein=l.protein_id).values_list('sequence',flat=True)[0]
+                if l.protein_id.is_mutated: 
+                    print("SEGURO ES MUTADA")
+###                  MUT.values('is_mutated').filter(id=tt)[0]['is_mutated']:
+                    llsm=qSEQ
+                    mseq.append(llsm)
+                    qpCp=DyndbProteinCannonicalProtein.objects.filter(id_protein=l.protein_id).values_list('id_cannonical_proteins',flat=True)[0]
+                    llsw=DyndbProteinSequence.objects.filter(id_protein=qpCp).values_list('sequence',flat=True)[0]
+                    qPMut=DyndbProteinMutations.objects.filter(id_protein=l.protein_id)
+                    MUTations.append(qPMut)
+                else:
+                    llsw=qSEQ
+                    mseq.append('')
+                    MUTations.append('')
+                wseq.append(llsw) 
+                qALIAS=DyndbOtherProteinNames.objects.filter(id_protein=l.protein_id)
+                llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+                alias.append(llo) 
+                print(alias)
+                print("mutant",mseq)
+                print(wseq)
+                print("mutation",MUTations)
+  
+
+    return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
@@ -3043,14 +3096,16 @@ def MODELrowview(request):
 
 
 def MODELreuseview(request, submission_id, model_id  ):
+    print("reuseview")
     qModel=DyndbModel.objects.filter(id=model_id)
+    INITsubmission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]
     p=qModel
     Typeval=p.values()[0]['type']
     Type=p.model.MODEL_TYPE[Typeval][1]
     STypeval=p.values()[0]['source_type']
     SType=p.model.SOURCE_TYPE[STypeval][1]
     print("QMODEL ",p)
-    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=submission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
+    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 #    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
     q0MODRES=qMODRES[0]
@@ -3156,8 +3211,8 @@ def PROTEINreuseview(request, submission_id, model_id ):
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
     qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').exclude(not_in_model=True).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
-    print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
     labtypel=[]
+    print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
     int_id=[]
     int_id0=[]
     alias=[]
@@ -3167,7 +3222,9 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
     Type=[]
     url=[]
     for l in qSub:
-        url.append(qSub.values_list('url')[0])
+        url.append(str(l.url).strip())
+        print(l.url)
+        print(url)
         labtype=l.COMPOUND_TYPE[l.type]
         labtypel.append(labtype) 
         if  not l.not_in_model:
@@ -3493,7 +3550,8 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
     del fields['id']
     fields['name'] = F(path+'id_molecule__id_compound__name')
     fields['int_id'] = F(path+'id_molecule__dyndbsubmissionmolecule__int_id')
-    q = q.annotate(**fields)
+    fields['not_in_model'] = F(path+'id_molecule__dyndbsubmissionmolecule__not_in_model')
+    q = q.annotate(**fields).order_by('int_id')
     q = q.values(*list(fields.keys()))
     print("valor q\n",q.query)
     
@@ -3563,6 +3621,8 @@ def MODELview(request, submission_id):
                      print("Errores en el form dyndb_Files_Model\n ", fdbFM[key].errors.as_text())
              else:
                  print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
+
+
     # Function for saving files
     print("REQUEST SESSIONS",request.session.items())
     request.session['info']="PASAR a SESSION"
@@ -4122,29 +4182,79 @@ def MODELview(request, submission_id):
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
-        
-        lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
-        Smol_to_Modcomp_type=smol_to_dyncomp_type
-        lmol_MOD_type_tup=[]
-        molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
-        for l in lmol_MOD_type_num:
-            #lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
-            lmol_MOD_type_tup.append((Smol_to_Modcomp_type[l],molecule_type_dict[Smol_to_Modcomp_type[l]]))
+        qSM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+        protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
+        if len(qSM)>0: #The form should be completely filled
+            model_id=qSM.values_list('model_id',flat=True)[0]
+            qModel=DyndbModel.objects.filter(id=model_id)
+            INITsubmission_id=submission_id
+            p=qModel
+            Typeval=p.values()[0]['type']
+            Type=p.model.MODEL_TYPE[Typeval][1]
+            STypeval=p.values()[0]['source_type']
+            SType=p.model.SOURCE_TYPE[STypeval][1]
+            print("QMODEL ",p)
+            qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
+##           qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
+            lformps=list(range(0,len(qMODRES)))
+            q0MODRES=qMODRES[0]
+            rowsMR=qMODRES
+            lmrstype=[]
+            for l in qMODRES:
+                mrstype=l.SOURCE_TYPE[l.source_type]
+                lmrstype.append(mrstype)
+            print ("residues!!",lmrstype)
+            qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id)
+            qMODCOMP=qMODCOMP.order_by('id')
+            lmtype=[]
+            lformmc=list(range(0,len(qMODCOMP)))
+            lcompname=[]
+            l_ord_mol=[]
+            d=0
+            for l in qMODCOMP:
+                d=d+1
+                print("query list element",l.id," ",d)
+                mtype=l.MOLECULE_TYPE[l.type]
+                lmtype.append(mtype)
+                qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.id_molecule_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+                lcompname.append(qName)
+                l_ord_mol.append(d)
+            print(lmtype)
+            print(l_ord_mol)
+            rowsMC=qMODCOMP.values('resname','id_molecule_id','numberofmol','type')
+            print("OOO\n",rowsMC)
+         
+            reuse_model=model_id
+            print(rowsMR.values)
+            print("aqui",lformps)
+         
+            fdbMF = dyndb_Model()
+            fdbPS = dyndb_Modeled_Residues()
+            fdbMC = dyndb_Model_Components()
+            return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id, 'saved':True,'protlist':protlist})
+
+        else:
+            lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
+            Smol_to_Modcomp_type=smol_to_dyncomp_type
+            lmol_MOD_type_tup=[]
+            molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
+            for l in lmol_MOD_type_num:
+                #lmol_MOD_type_tup.append(DyndbModelComponents.MOLECULE_TYPE[Smol_to_Modcomp_type[l]])
+                lmol_MOD_type_tup.append((Smol_to_Modcomp_type[l],molecule_type_dict[Smol_to_Modcomp_type[l]]))
+                
+            fdbMF = dyndb_Model()
+            fdbPS = dyndb_Modeled_Residues()
+            fdbMC = dyndb_Model_Components()
+            mcdata = get_components_info_from_submission(submission_id,'model')
             
-        fdbMF = dyndb_Model()
-        fdbPS = dyndb_Modeled_Residues()
-        fdbMC = dyndb_Model_Components()
-        mcdata = get_components_info_from_submission(submission_id,'model')
-        
-        print("list",lmol_MOD_type_tup)
-        i = 0
-        for row in mcdata:
-            mcdata[i]['resname'] = ''
-            mcdata[i]['numberofmol'] = ''
-            mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
-            i += 1
-        return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup, 'protlist':protlist})
+            print("list",lmol_MOD_type_tup)
+            i = 0
+            for row in mcdata:
+                mcdata[i]['resname'] = ''
+                mcdata[i]['numberofmol'] = ''
+                mcdata[i]['int_id'] = 1 + mcdata[i]['int_id']
+                i += 1
+            return render(request,'dynadb/MODEL.html', {'fdbMF':fdbMF,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'mcdata':mcdata,'lmol_MOD_type_tup':lmol_MOD_type_tup, 'protlist':protlist})
 
 
 
@@ -5524,6 +5634,58 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
 
 def DYNAMICSview(request, submission_id):
+                   
+    def dynamics_file_table (dname, DFpk): #d_fmolec_t, dictext_id 
+        print("inside the function model_file_table")
+        print(dname)
+        fdbF={}
+        fdbFobj={}
+        qft=DyndbFileTypes.objects.all().values()
+        ext_to_descr={'pdb': "pdb simulation coordinates file", 'psf':'psf simulation topology file', 'prm':"prm simulation parameters file", 'dcd':"dcd simulation trajectory file", 'xtc':"xtc simulation trajectory file", 'tar.gz':'parameters or other simulation files' }  
+       #####  
+        ft=DyndbFileTypes.objects.all()
+        dict_ext_id={}
+        for l in ft:
+            if l.__dict__['extension'].rstrip() == "psf":
+                dict_ext_id[l.__dict__['extension'].rstrip()]=5
+
+            elif l.__dict__['extension'].rstrip() == "prm":
+                dict_ext_id[l.__dict__['extension'].rstrip()]=5
+            else:
+                dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
+            
+       ##############
+        for key,val  in dname.items():
+             print("val\n", val)
+             fext=".".join(val['path'].split(".")[1:])
+             initFiles['id_file_types']=dict_ext_id[fext]
+             initFiles['url']=val['url']
+             initFiles['filename']="".join(val['path'].split("/")[-1])
+             initFiles['filepath']=val['path']
+             initFiles['description']=ext_to_descr[fext]
+             print("HOLA initFiles", initFiles)
+    
+             fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
+             dicfdyn={}
+             fdbFM={}
+             if fdbF[key].is_valid():
+                 fdbFobj[key]=fdbF[key].save()
+                 dicfdyn['id_dynamics']=DFpk
+                 dicfdyn['id_files']=fdbFobj[key].pk
+                 dicfdyn['type']=val['type']
+                 fdbFM[key]=dyndb_Files_Dynamics(dicfdyn)
+                 if fdbFM[key].is_valid():
+                     fdbFM[key].save()
+                 else:
+                     error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
+                     print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                     response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+                     return response
+             else:
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
+                 error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+                 return response
 
     def handle_uploaded_file(f,p,name):
         print("file name = ", f.name , "path =", p)
@@ -5541,7 +5703,7 @@ def DYNAMICSview(request, submission_id):
         now=timezone.now()
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
-        model_id=qM.values('model_id')[0]
+        model_id=qM.values_list('model_id',flat=True)[0]
         initDyn={'id_model':model_id,'id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
         initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
@@ -5553,21 +5715,22 @@ def DYNAMICSview(request, submission_id):
         with open('/protwis/sites/protwis/dynadb/dict_ext_id.txt', 'wb') as handle:
             pickle.dump(dict_ext_id, handle)
           
+        print("JJJJJJJJ")
         # Defining a dictionary "d_fdyn_t" containing choices in the table dyndb_files_dynamics (field 'type')
 
         d_fdyn_t={'coor':'0','top':'1','traj':'2','parm':'3','other':'3'}
 
         dicpost=request.POST
-        dicfiles=request.FILES
-        print(dicfiles)
-        print("CLASS traj",type(request.FILES['traj'])," ",request.FILES['traj'] )
-        print("CLASS traj",type(request.FILES['traj'])," ",request.FILES.getlist('traj') )
-        print(len(request.FILES.getlist('traj')))
+        #dicfiles=request.FILES
+        #print(dicfiles)
+        #print("CLASS traj",type(request.FILES['traj'])," ",request.FILES['traj'] )
+        #print("CLASS traj",type(request.FILES['traj'])," ",request.FILES.getlist('traj') )
+        #print(len(request.FILES.getlist('traj')))
         lkeydyncomp=["id_molecule","molecule","name","numberofmol","resname","type"]
         indexl=[]
         indexfl=[]
         POSTimod={} #Dictionary of dyctionarys containing POST for each SIMULATION REPLICATE keys have been modified to match table fields
-        FILEmod={} #Dictionary of dyctionarys containing FILES for each SIMULATION REPLICATE keys have been modified to match table fields
+        #FILEmod={} #Dictionary of dyctionarys containing FILES for each SIMULATION REPLICATE keys have been modified to match table fields
         ## Crear diccionario para instanciar dyndb_dynamicsform
         # compilation of regex patterns for searching and modifying keys and make them match the table fields  
         form=re.compile('form-')
@@ -5596,28 +5759,28 @@ def DYNAMICSview(request, submission_id):
         indexl.sort()
         print("lista indexl", indexl," ordenada")
         
-        for key,val in dicfiles.items():
-            if form.search(key):
-                indexf=int(key.split("-")[1])
-                if indexf not in indexfl:
-                    indexfl.append(indexf)
-                    FILEmod[indexf]={}
-                    print("indexf ", indexf, " Key, Val ", key, val)
-                nkey="-".join(key.split("-")[2:])
-                if nkey == 'traj':
-                    FILEmod[indexf][nkey]={} 
-                    continue
-                FILEmod[indexf][nkey]=val
-            else:
-                if len(indexfl)==0:
-                    indexfl.append(0)
-                    print("indexf=0")
-                    FILEmod[0]={}
-                print("key en dicfiles ", key, val)
-                if key == 'traj':
-                    FILEmod[0][key]={} #needed !!!! 
-                    continue
-                FILEmod[0][key]=val  ###################### ME QUEDE AQUI
+      # for key,val in dicfiles.items():
+      #     if form.search(key):
+      #         indexf=int(key.split("-")[1])
+      #         if indexf not in indexfl:
+      #             indexfl.append(indexf)
+      #             FILEmod[indexf]={}
+      #             print("indexf ", indexf, " Key, Val ", key, val)
+      #         nkey="-".join(key.split("-")[2:])
+      #         if nkey == 'traj':
+      #             FILEmod[indexf][nkey]={} 
+      #             continue
+      #         FILEmod[indexf][nkey]=val
+      #     else:
+      #         if len(indexfl)==0:
+      #             indexfl.append(0)
+      #             print("indexf=0")
+      #             FILEmod[0]={}
+      #         print("key en dicfiles ", key, val)
+      #         if key == 'traj':
+      #             FILEmod[0][key]={} #needed !!!! 
+      #             continue
+      #         FILEmod[0][key]=val  ###################### ME QUEDE AQUI
 
         file_ins={}
         filedyn_ins={}
@@ -5639,10 +5802,13 @@ def DYNAMICSview(request, submission_id):
                 dyn_ins[ii].data[key]=value
 
             if dyn_ins[ii].is_valid():
-                dyn_objf[ii]=dyn_ins[ii].save(commit=False)   
                 dyn_obj[ii]=dyn_ins[ii].save()
+                DFpk=dyn_obj[ii].pk
             else:
-                print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors)
+                iii1=dyn_ins[ii].errors.as_text()
+                print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return response
 
             print("\nPOSTimod",ii,POSTimod[ii])
             for key,val in POSTimod[ii].items(): # hay que modificar esto!!!!
@@ -5671,10 +5837,12 @@ def DYNAMICSview(request, submission_id):
             print("\nlongitud de indexcl \n",len(indexcl),"dinamica",ii) 
             with open('/protwis/sites/protwis/dynadb/Pscompmod.txt', 'wb') as handle:
                 pickle.dump(Pscompmod, handle)
+            print("Pscompmod", Pscompmod[ii])
+            invMOL_TYPE=dict((v,k) for k, v in dict(DyndbModelComponents.MOLECULE_TYPE).items()) 
             for iii in indexcl:
                 print("ii y iii", ii," ", iii)
                 Pscompmod[ii][iii]['id_dynamics']=dyn_obj[ii].pk
-                Pscompmod[ii][iii]['id_molecule']=iii+1#modificar
+                Pscompmod[ii][iii]['type']=invMOL_TYPE[Pscompmod[ii][iii]['typemc']]
                 print("ii y iii", ii," ", iii, " Dictionary compound ", Pscompmod[ii][iii] )
                 Scom_inst[ii][iii]=dyndb_Dynamics_Components(Pscompmod[ii][iii])
                 if Scom_inst[ii][iii].is_valid():
@@ -5688,80 +5856,23 @@ def DYNAMICSview(request, submission_id):
             print("\nDirectorio a crear ", direct)
             if not os.path.exists(direct):
                 os.makedirs(direct)
-      
-            print("Dynamica ",ii," print FILEmod[ii] ",FILEmod[ii].items())
-            for key,val in FILEmod[ii].items():
-                if key == 'traj':
-                    i=0
-                    file_ins[ii]['traj']={}
-                    file_obj[ii]['traj']={}
-                    filedyn_ins[ii][key]={}
-                    filedyn_obj[ii][key]={}
-                    for files in request.FILES.getlist('traj'):
-                        print("TRAJ ",  files)
-                        fext="".join(files.name.split(".")[1:])
-                        initFiles['id_file_types']=dict_ext_id[fext]
-                        initFiles['filename']=files.name
-                        initFiles['filepath']=direct
-                        file_ins[ii][key][i]=dyndb_Files(initFiles)
-                        if file_ins[ii][key][i].is_valid(): 
-                            file_obj[ii][key][i]=file_ins[ii][key][i].save()
-                            newname=str(file_obj[ii][key][i].pk)+"_dyn_"+str(submission_id)+"_rep_"+str(i)+"."+fext
-                            handle_uploaded_file(files,direct,newname)
-                            completepath=direct+"/"+newname
-                            file_obj[ii][key][i].filename=newname   #rename filename in the database after saving the initial name
-                            file_obj[ii][key][i].filepath=completepath   #rename filename in the database after saving the initial name
-                            file_obj[ii][key][i].save() 
-                            dicfyndyn={}
-                            dicfyndyn['type']=d_fdyn_t[key]
-                            dicfyndyn['id_dynamics']=dyn_obj[ii].pk
-                            dicfyndyn['id_files']=file_obj[ii][key][i].pk
-                            print("numero de fichero ",i, "id_files", file_obj[ii][key][i].pk)
-                            filedyn_ins[ii][key][i]=dyndb_Files_Dynamics(dicfyndyn)
-                            if filedyn_ins[ii][key][i].is_valid():
-                                filedyn_obj[ii][key][i]=filedyn_ins[ii][key][i].save()
-                            else:
-                                print("Errores en el form dyndb_Files_Dynamics ", ii, " ",key, " ", i," ",  filedyn_ins[ii][key].errors.as_data())
-                        else:
-                            iii1=file_ins[ii][key][i].errors.as_data()
-                            print("file_ins[",ii,"]['traj'][",i,"] no es valido")
-                            print("!!!!!!Errores despues del file_ins[",ii,"]['traj'][",i,"]\n",iii1,"\n")
-                        i=i+1
+            
+            qSDF=DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id)
+            lfiles=list(qSDF.values('filepath','url','type'))
+            for f in lfiles:
+                if not isfile(f['filepath']):
+                    response = HttpResponse((" ").join(["There is a simulation file which has not been succesfully saved (",f[filename],") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
                 else:
-                    fext="".join(val.name.split(".")[1:])
-                    print("val ",val, " ;val split",fext," Tambien id",dict_ext_id[fext])
-                    #print("val ",val, " ;val split",fext," Tambien id")
-                    if fext in dict_ext_id.keys():
-                        initFiles['id_file_types']=dict_ext_id[fext]
-                        initFiles['filename']=val.name
-                        initFiles['filepath']=direct
-                        #initFiles['filepath']='/protwis/sites/files/Dynamics/dyn'+dyn_obj[ii].pk#modificar
-                    else:
-                        print("This extension is not valid for submission")
-             
-                    file_ins[ii][key]=dyndb_Files(initFiles)
-                    if file_ins[ii][key].is_valid(): 
-                        dicfyndyn={}
-                        file_obj[ii][key]=file_ins[ii][key].save()
-                        newname=str(file_obj[ii][key].pk)+"_dyn_"+str(submission_id)+"."+fext
-                        handle_uploaded_file(FILEmod[ii][key],direct,newname)
-                        completepath=direct+"/"+newname
-                        file_obj[ii][key].filename=newname   #rename filename in the database after saving the initial name
-                        file_obj[ii][key].filepath=completepath #rename filepath to the one including the new filename in the database after saving the initial name
-                        file_obj[ii][key].save() 
-                        dicfyndyn['type']=d_fdyn_t[key]
-                        dicfyndyn['id_dynamics']=dyn_obj[ii].pk
-                        dicfyndyn['id_files']=file_obj[ii][key].pk
-                        filedyn_ins[ii][key]=dyndb_Files_Dynamics(dicfyndyn)
-                        if filedyn_ins[ii][key].is_valid():
-                            filedyn_obj[ii][key]=filedyn_ins[ii][key].save(commit=False)
-                            filedyn_obj[ii][key]=filedyn_ins[ii][key].save()
-                        else:
-                            print("Errores en el form dyndb_Files_Dynamics ", ii, " ",key, " ",  filedyn_ins[ii][key].errors.as_data())
-                    else:
-                        print("Errores en el form dyndb_Files ", ii, " ",key, " ",  file_ins[ii][key].errors.as_data())  
+                    dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type']}}
+                    ooofile= dynamics_file_table(dname,DFpk) 
+                    if type(ooofile)==HttpResponse:
+                        return ooofile 
+
+        response = HttpResponse('Step 4 "Dynamics Information" form has been successfully submitted.',content_type='text/plain')
+        return response
  
-        return HttpResponseRedirect("/".join(["/dynadb/DYNAMICSfilled",submission_id,""]))
+       # return HttpResponseRedirect("/".join(["/dynadb/DYNAMICSfilled",submission_id,""]))
                     
         with open('/protwis/sites/protwis/dynadb/POSTimod.txt', 'wb') as handle:
             pickle.dump(POSTimod, handle)
@@ -5770,46 +5881,89 @@ def DYNAMICSview(request, submission_id):
             pickle.dump(Pscompmod, handle)
 
     else:
-        file_types_items = file_types.items()
-        dd=dyndb_Dynamics()
-        ddC =dyndb_Dynamics_Components()
-        qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
-        qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
-        qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
-        qAT =DyndbAssayTypes.objects.all().order_by('id')
+        qDYNs=DyndbDynamics.objects.filter(submission_id=submission_id)
+        protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
+        if len(qDYNs)==1:
+            qDYNsids=qDYNs.values_list('id',flat=True)[0]
+            ddown={}
+            ddown['id_dynamics_methods']= DyndbDynamicsMethods.objects.filter(dyndbdynamics=qDYNsids).values_list('type_name',flat=True)[0]
+            ddown['id_assay_types']= DyndbAssayTypes.objects.filter(dyndbdynamics=qDYNsids).values_list('type_name',flat=True)[0]
+            ddown['id_dynamics_membrane_types']=DyndbDynamicsMembraneTypes.objects.filter(dyndbdynamics=qDYNsids).values_list('type_name',flat=True)[0]
+            ddown['id_dynamics_solvent_types']=DyndbDynamicsSolventTypes.objects.filter(dyndbdynamics=qDYNsids).values_list('type_name',flat=True)[0]
+            print(qDYNs.values()[0])
+            compl=[]
+            ddctypel=[]
+            n=0
+            for tt in qDYNs.values_list('id',flat=True):
+                print("ESTO ES TT",tt)
+                queryDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt,id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
+                qDC=queryDC.values('id','resname','numberofmol','id_molecule__dyndbsubmissionmolecule__type','id_molecule__dyndbsubmissionmolecule__int_id','id_molecule__dyndbcompound__name','type').order_by('id_molecule__dyndbsubmissionmolecule__int_id')
+                compl=list(qDC)
+                print("LLL",compl)
+                d=0
+                for l in qDC:
+                    ddctypel.append(DyndbModelComponents.MOLECULE_TYPE[l['type']][1])
+
+                print(ddctypel,"PPPPP")
+                 
+            dd=dyndb_Dynamics()
+            ddC =dyndb_Dynamics_Components()
+            qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
+            qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
+            qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
+            qAT =DyndbAssayTypes.objects.all().order_by('id')
         
-        mdata = get_components_info_from_components_by_submission(submission_id,'model')
-        cdata = get_components_info_from_submission(submission_id,'dynamics')
-        other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
-        molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
-        
-        i = 0
-        for row in mdata:
-            #mdata[i]['numberofmol'] = ''
-            mdata[i]['readonly'] = True
-            mdata[i]['int_id'] = 1 + mdata[i]['int_id']
-            mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
-            if mdata[i]['type_int'] is None:
-                mdata[i]['type_int'] = other_int
-            mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
-            i += 1
-        
-        i = 0
-        for row in cdata:
-            cdata[i]['resname'] = ''
-            cdata[i]['numberofmol'] = ''
-            cdata[i]['readonly'] = False
-            cdata[i]['int_id'] = 1 + cdata[i]['int_id']
-            cdata[i]['type_int'] = cdata[i]['type']
-            if cdata[i]['type_int'] is None:
-                cdata[i]['type_int'] = other_int
-            cdata[i]['type'] = molecule_type_dict[cdata[i]['type_int']]
-            i += 1
-        
-        data = mdata + cdata
-         
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,
-        'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
+ 
+##       return HttpResponse(qDS.values_list()[0])
+            return render(request,'dynadb/DYNAMICS.html', {'dd':dd, 'ddctypel':ddctypel,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDYNs,'compl':compl,'ddown':ddown,'submission_id':submission_id,'protlist':protlist, 'saved':True,'file_types':file_types })
+
+        elif len(qDYNs)>1:
+            response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
+            return response
+        else:
+            file_types_items = file_types.items()
+            dd=dyndb_Dynamics()
+            ddC =dyndb_Dynamics_Components()
+            qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
+            qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
+            qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
+            qAT =DyndbAssayTypes.objects.all().order_by('id')
+            
+            mdata = get_components_info_from_components_by_submission(submission_id,'model')
+            cdata = get_components_info_from_submission(submission_id,'dynamics')
+            other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
+            molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+            
+            i = 0
+            for row in mdata:
+                #mdata[i]['numberofmol'] = ''
+                mdata[i]['readonly'] = True
+                mdata[i]['int_id'] = 1 + mdata[i]['int_id']
+                mdata[i]['type_int'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=False)
+                if mdata[i]['type_int'] is None:
+                    mdata[i]['type_int'] = other_int
+                mdata[i]['type'] = model_2_dynamics_molecule_type.translate(mdata[i]['type'],as_text=True)
+                mdata[i]['cryst'] = True
+                i += 1
+            
+            i = 0
+            for row in cdata:
+                cdata[i]['resname'] = ''
+                cdata[i]['numberofmol'] = ''
+                cdata[i]['readonly'] = False
+                cdata[i]['int_id'] = 1 + cdata[i]['int_id']
+                cdata[i]['type_int'] = cdata[i]['type']
+                if cdata[i]['type_int'] is None:
+                    cdata[i]['type_int'] = other_int
+                cdata[i]['type'] = molecule_type_dict[cdata[i]['type_int']]
+                cdata[i]['cryst'] = False
+                i += 1
+            
+            data = mdata + cdata
+          
+          
+             
+            return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,'protlist':protlist, 'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
 ##############################################################################################################
 
 
@@ -7687,6 +7841,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             print("COMPROBAR ",INFOstdMOL)
             
             
+            print("LLLLLLLLLLLl")
             if INFOstdMOL['inchi']['inchi']==dictmol[ii]['inchi'].split('=')[1]: #Both molecules are the standard molecule so one entry is saved
                 print("The molecule ",ii, "is actually the standard molecule")
                 dictmol[ii]['description']="Standard form"
@@ -7838,7 +7993,8 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                 DyndbCompound.objects.filter(id=CFpk).delete()
             return response
     moleculelist=str(indexl)
-    response = HttpResponse(("").join(["molecules ", moleculelist]),content_type='text/plain')
+
+    response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
     return response
 #_____________________________________________________________________________
 
@@ -9005,3 +9161,249 @@ def dictfetchall(cursor):
         dict(zip(columns, row))
         for row in cursor.fetchall()
     ]
+
+def submission_summaryiew(request,submission_id):
+#protein section
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
+    print(qSub)
+    int_id=[]
+    int_id0=[]
+    alias=[]
+    mseq=[]
+    wseq=[]
+    MUTations=[]
+    sci_na_codel=[]
+    qPROT=[]
+    for l in qSub:
+        sci_name=list(DyndbUniprotSpecies.objects.filter(id= l.protein_id.id_uniprot_species_id).values_list('scientific_name','code')[0])
+        sci_na_code=("").join([sci_name[0]," (",sci_name[1],")"])
+        sci_na_codel.append(sci_na_code)
+        qprot=DyndbProtein.objects.filter(id=l.protein_id_id)[0]
+        qPROT.append(qprot)
+        int_id.append(l.int_id +1) 
+        int_id0.append(l.int_id) 
+#        MUT=qPROT.values('id','is_mutated')
+        qSEQ=DyndbProteinSequence.objects.filter(id_protein=l.protein_id).values_list('sequence',flat=True)[0]
+        if l.protein_id.is_mutated: 
+#            MUT.values('is_mutated').filter(id=tt)[0]['is_mutated']:
+            llsm=qSEQ
+            mseq.append(llsm)
+            qpCp=DyndbProteinCannonicalProtein.objects.filter(id_protein=l.protein_id).values_list('id_cannonical_proteins',flat=True)[0]
+            llsw=DyndbProteinSequence.objects.filter(id_protein=qpCp).values_list('sequence',flat=True)[0]
+            qPMut=DyndbProteinMutations.objects.filter(id_protein=l.protein_id)
+            MUTations.append(qPMut)
+        else:
+            llsw=qSEQ
+            mseq.append('')
+            MUTations.append('')
+        wseq.append(llsw) 
+        qALIAS=DyndbOtherProteinNames.objects.filter(id_protein=l.protein_id)
+        llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+        alias.append(llo) 
+
+#small molecule section
+    qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').filter(submission_id=submission_id,molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
+    labtypels=[]
+    print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
+    int_ids=[]
+    int_ids0=[]
+    aliass=[]
+    qCOMP=[]
+    qMOL=[]
+    imps=[]
+    Types=[]
+    urls=[]
+    for l in qSub:
+        urls.append(str(l.url).strip())
+        print(l.url)
+        print(urls)
+        labtypes=l.COMPOUND_TYPE[l.type]
+        labtypels.append(labtypes) 
+        if  not l.not_in_model:
+            imps.append(True)
+        else:
+            imps.append(False)
+
+        int_ids.append(l.int_id+1)
+        int_ids0.append(l.int_id)
+        typt=l.type
+        Types.append(typt)
+        qmol=DyndbMolecule.objects.filter(id=l.molecule_id.id)[0]
+        qMOL.append(qmol)
+        qCOMPtt=DyndbCompound.objects.filter(id=qmol.id_compound.id)[0] # VERIFICAR!!!!!!!!!!!!!!!!!!!
+        qCOMP.append(qCOMPtt) 
+    print("LABTYPES",labtypels)
+    print("int_ids0",int_ids0)
+    print(alias)
+    print(qCOMP)
+    print(qMOL)
+    fdbSubs = dyndb_Submission_Molecule()
+
+#model section
+    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel=submission_id)
+    print("qModel",qModel)
+    p=qModel
+    print("p ", p)
+    Typeval=p.values()[0]['type']
+    TypeM=p.model.MODEL_TYPE[Typeval][1]
+    STypeval=p.values()[0]['source_type']
+    SType=p.model.SOURCE_TYPE[STypeval][1]
+
+#dynamics section
+
+    qDS=DyndbDynamics.objects.filter(submission_id=submission_id)
+    ddown={}
+
+    ddown['id_dynamics_methods']= DyndbDynamicsMethods.objects.filter(dyndbdynamics__submission_id=submission_id).values_list('type_name',flat=True)[0]
+    ddown['id_assay_types']= DyndbAssayTypes.objects.filter(dyndbdynamics__submission_id=submission_id).values_list('type_name',flat=True)[0]
+    ddown['id_dynamics_membrane_types']=DyndbDynamicsMembraneTypes.objects.filter(dyndbdynamics__submission_id=submission_id).values_list('type_name',flat=True)[0]
+    ddown['id_dynamics_solvent_types']=DyndbDynamicsSolventTypes.objects.filter(dyndbdynamics__submission_id=submission_id).values_list('type_name',flat=True)[0]
+
+    data = get_components_info_from_components_by_submission(submission_id,'dynamics')
+    other_int = type_inverse_search(DyndbDynamicsComponents.MOLECULE_TYPE,searchkey="other",case_sensitive=False,first_match=True)
+    molecule_type_dict = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+    
+    i = 0
+    for row in  data:
+        #mdata[i]['numberofmol'] = ''
+        data[i]['readonly'] = True
+        data[i]['int_id'] = 1 + data[i]['int_id']
+        data[i]['type_int'] = model_2_dynamics_molecule_type.translate(data[i]['type'],as_text=False)
+        if data[i]['type_int'] is None:
+            data[i]['type_int'] = other_int
+        data[i]['type'] = model_2_dynamics_molecule_type.translate(data[i]['type'],as_text=True)
+        i += 1
+    
+
+    print(qDS.values()[0])
+    compl=[]
+    dctypel=[]
+    for tt in qDS.values_list('id',flat=True):
+        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).order_by('id')
+        compl.append(qDC)
+        d=0
+        l_ord_mol=[]
+        lcompname=[]
+        for l in qDC:
+            dctype=qDC.model.MOLECULE_TYPE[l.type][1]
+            dctypel.append(dctype)
+            d=d+1
+            qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.id_molecule_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+            lcompname.append(qName)
+            l_ord_mol.append(d)
+
+    dd=dyndb_Dynamics()
+    ddC =dyndb_Dynamics_Components()
+    qDMT =DyndbDynamicsMembraneTypes.objects.all().order_by('id')
+    qDST =DyndbDynamicsSolventTypes.objects.all().order_by('id')
+    qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
+    qAT =DyndbAssayTypes.objects.all().order_by('id')
+
+    
+    
+
+
+    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data })
+
+def protein_summaryiew(request,submission_id):
+#protein section
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
+    print(qSub)
+    int_id=[]
+    int_id0=[]
+    alias=[]
+    mseq=[]
+    wseq=[]
+    MUTations=[]
+    sci_na_codel=[]
+    qPROT=[]
+    for l in qSub:
+        sci_name=list(DyndbUniprotSpecies.objects.filter(id= l.protein_id.id_uniprot_species_id).values_list('scientific_name','code')[0])
+        sci_na_code=("").join([sci_name[0]," (",sci_name[1],")"])
+        sci_na_codel.append(sci_na_code)
+        qprot=DyndbProtein.objects.filter(id=l.protein_id_id)[0]
+        qPROT.append(qprot)
+        int_id.append(l.int_id +1) 
+        int_id0.append(l.int_id) 
+#        MUT=qPROT.values('id','is_mutated')
+        qSEQ=DyndbProteinSequence.objects.filter(id_protein=l.protein_id).values_list('sequence',flat=True)[0]
+        if l.protein_id.is_mutated: 
+#            MUT.values('is_mutated').filter(id=tt)[0]['is_mutated']:
+            llsm=qSEQ
+            mseq.append(llsm)
+            qpCp=DyndbProteinCannonicalProtein.objects.filter(id_protein=l.protein_id).values_list('id_cannonical_proteins',flat=True)[0]
+            llsw=DyndbProteinSequence.objects.filter(id_protein=qpCp).values_list('sequence',flat=True)[0]
+            qPMut=DyndbProteinMutations.objects.filter(id_protein=l.protein_id)
+            MUTations.append(qPMut)
+        else:
+            llsw=qSEQ
+            mseq.append('')
+            MUTations.append('')
+        wseq.append(llsw) 
+        qALIAS=DyndbOtherProteinNames.objects.filter(id_protein=l.protein_id)
+        llo=("; ").join(qALIAS.values_list('other_names',flat=True))
+        alias.append(llo) 
+
+    return render(request,'dynadb/PROTEIN_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id, 'minisummary':True})
+
+def molecule_summaryiew(request,submission_id):
+#small molecule section
+    qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').filter(submission_id=submission_id,molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
+    labtypels=[]
+    print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
+    int_ids=[]
+    int_ids0=[]
+    qCOMP=[]
+    qMOL=[]
+    imps=[]
+    Types=[]
+    urls=[]
+    for l in qSub:
+        urls.append(str(l.url).strip())
+        print(l.url)
+        print(urls)
+        labtypes=l.COMPOUND_TYPE[l.type]
+        labtypels.append(labtypes) 
+        if  not l.not_in_model:
+            imps.append(True)
+        else:
+            imps.append(False)
+
+        int_ids.append(l.int_id+1)
+        int_ids0.append(l.int_id)
+        typt=l.type
+        Types.append(typt)
+        qmol=DyndbMolecule.objects.filter(id=l.molecule_id.id)[0]
+        qMOL.append(qmol)
+        qCOMPtt=DyndbCompound.objects.filter(id=qmol.id_compound.id)[0] # VERIFICAR!!!!!!!!!!!!!!!!!!!
+        qCOMP.append(qCOMPtt) 
+    print("LABTYPES",labtypels)
+    print("int_ids0",int_ids0)
+    print(qCOMP)
+    print(qMOL)
+    fdbSubs = dyndb_Submission_Molecule()
+
+    return render(request,'dynadb/SMALL_MOLECULE_SUMMARY.html', { 'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0, 'minisummary':True})
+
+
+
+
+def model_summaryiew(request,submission_id):
+
+#model section
+    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel=submission_id)
+    print("qModel",qModel)
+    p=qModel
+    print("p ", p)
+    Typeval=p.values()[0]['type']
+    TypeM=p.model.MODEL_TYPE[Typeval][1]
+    STypeval=p.values()[0]['source_type']
+    SType=p.model.SOURCE_TYPE[STypeval][1]
+
+    return render(request,'dynadb/MODEL_SUMMARY.html', { 'p':p,'SType':SType,'TypeM':TypeM, 'minisummary':True}   )
+
+   # return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0})
+
+
+
+    return render(request,'dynadb/SUBMISSION_SUMMARY.html', )
