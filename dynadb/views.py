@@ -1300,7 +1300,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
     if return_type=='complex':
         if table_row[0]=='protein':
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and type(is_receptor)!=None) or (table_row[2]==False and type(is_receptor)==None):
+            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
                 q=DyndbProtein.objects.filter(pk=table_row[1])
                 q=q.annotate(cmol_id=F('dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule__id'))
                 q=q.values('cmol_id')
@@ -1489,7 +1489,7 @@ def dealwithquery(arrays):
 
 ##########################################################################################################################################
 
-def main(arrays,return_type):
+def mainsearcher(arrays,return_type):
     rowdict=dealwithquery(arrays)
     results=dict()
     for keys,values in rowdict.items():
@@ -1536,7 +1536,7 @@ def NiceSearcher(request):
     #{(1, 'AND'): ['protein', '1', 'true'], (0, ' '): ['molecule', '1', 'orto']}
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
 
-        resultlist=main(arrays_def,return_type)
+        resultlist=mainsearcher(arrays_def,return_type)
         print(resultlist,'these are the resullts')
         if len(resultlist)==0:
             tojson={'result':[],'model':[],'dynlist':[],'message':''}
@@ -1968,6 +1968,7 @@ def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
     dyna_dic=dict()
     dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']=list()
     dyna_dic['references']=list()
