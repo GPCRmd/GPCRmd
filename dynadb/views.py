@@ -3768,7 +3768,8 @@ def MODELview(request, submission_id):
 
 ######## 150
         ########   Query for obtaining molecules submitted in the current submission!!!!
-        qSMol=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).filter(not_in_model=False).filter(type__lt=2).exclude(int_id=None)
+        qSMolecules=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).filter(not_in_model=False).exclude(int_id=None)
+        qSMol=qSMolecules.filter(type__lt=2)
         molid_typel=dict(qSMol.values_list('molecule_id','type'))
         #molid_typel=dict(set(qSMol.values_list('molecule_id','type')))
         lmol_in_modelbs =qSMol.values_list('molecule_id',flat=True)
@@ -4194,7 +4195,7 @@ def MODELview(request, submission_id):
         for ii in indexmcl:  
             dictmodcompmod[ii]['id_model']=MFpk
             dictmodcompmod[ii]['name']=dictmodcompmod[ii].pop('namemc')
-            dictmodcompmod[ii]['id_molecule']= qSMol.values().filter(int_id=int(dictmodcompmod[ii]['molecule'])-1)[0]['molecule_id_id']
+            dictmodcompmod[ii]['id_molecule']= qSMolecules.values().filter(int_id=int(dictmodcompmod[ii]['molecule'])-1)[0]['molecule_id_id']
             dictmodcompmod[ii]['type']=dictmodcompmod[ii].pop('typemc')
             print ("\ndictmodcompmod type  name y id_model",i,":\n", dictmodcompmod[ii]['type'], dictmodcompmod[ii]['name'],  dictmodcompmod[ii]['id_model'])
             fdbMC[ii] = dyndb_Model_Components(dictmodcompmod[ii])
