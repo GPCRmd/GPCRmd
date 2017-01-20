@@ -1686,8 +1686,8 @@ from django.utils import timezone
 from django.conf import settings
 from .GPCRuniprot import GPCRlist
 chunks=[]
-#chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
-for chunk in chunks[13:]:
+chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
+for chunk in chunks:
     print('\n\n\n\n\n\nProccessing chunk: ',chunk)
     time.sleep(3)
     fh=open('./dynadb/'+chunk,'r')
@@ -1873,6 +1873,10 @@ for chunk in chunks[13:]:
                 #Create the complex_exp record
                 cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
                 complex_id=cursor.fetchone()[0] #returns the id of the last insert command
+                cursor.execute(
+                    'INSERT INTO dyndb_complex_molecule (id_complex_exp) VALUES (%s) RETURNING id' % (str(complex_id))
+                )
+                cmol_id=cursor.fetchone()[0]
                 #Create the complex_exp_interaction_data record
                 cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(complex_id)))
                 complex_interaction_id=cursor.fetchone()[0]
@@ -1901,7 +1905,7 @@ for chunk in chunks[13:]:
 
             if complextype==2: #ec_50, efficacy
                 if len(DyndbEfficacy.objects.filter(id=complex_interaction_id))==0:
-                    cursor.execute('INSERT INTO dyndb_efficacy (id, rvalue,units,description,reference_id_compound) VALUES (%s, %s, %s, %s, %s)', (str(complex_interaction_id),str(ec_fifty),'nM','some description','2'))
+                    cursor.execute('INSERT INTO dyndb_efficacy (id, rvalue,units,description,reference_id_compound) VALUES (%s, %s, %s, %s, %s)', (str(complex_interaction_id),str(ec_fifty),'nM','some description','1'))
                 else:
                     print('that record of efficacy was already registered')
 
@@ -2027,6 +2031,11 @@ for chunk in chunks[13:]:
                 if len(DBcompound)>0:
                     compound_id=DBcompound[0].id
                     print('compound already existed, mo need to record it')
+                    molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form')[0].id
+                    
+                    cursor.execute(
+                        'INSERT INTO dyndb_complex_molecule_molecule (id_molecule,id_complex_molecule,type) VALUES (%s, %s, %s)', (str(molecule_id),str(cmol_id),'0')
+                    )
                 else:
                     pubchem_id=comple[2]
                     iupac,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='IUPACName')
@@ -2047,6 +2056,8 @@ for chunk in chunks[13:]:
                     sinchi=sinchi['PropertyTable']['Properties'][0]['InChI']
                     sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
                     sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
+                    smiles,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='CanonicalSMILES')
+                    smiles=smiles['PropertyTable']['Properties'][0]['CanonicalSMILES']
                     print('trying to record the comopund...')
                     try:
                         cursor.execute('INSERT INTO dyndb_compound (name, iupac_name,pubchem_cid,sinchi,sinchikey) VALUES (%s, %s, %s, %s, %s) RETURNING id', (names,iupac,pubchem_id,sinchi,sinchikey) )
@@ -2054,9 +2065,19 @@ for chunk in chunks[13:]:
                         cursor.execute('INSERT INTO dyndb_compound (name, iupac_name,pubchem_cid,sinchi,sinchikey) VALUES (%s, %s, %s, %s, %s) RETURNING id', ('repeated_name_for_pubchemid'+str(pubchem_id),iupac,pubchem_id,sinchi,sinchikey) )
                     compound_id=cursor.fetchone()[0]
 
+                    cursor.execute(
+                        'INSERT INTO dyndb_molecule (id_compound,description,net_charge,inchi,inchikey,inchicol,smiles) VALUES (%s, %s, %s,%s, %s, %s, %s) RETURNING id', (str(compound_id),'Standard form','0',str(sinchi),str(sinchikey),'1',str(smiles))
+                    )
+                    molecule_id=cursor.fetchone()[0]
+                    cursor.execute(
+                        'INSERT INTO dyndb_complex_molecule_molecule (id_molecule,id_complex_molecule,type) VALUES (%s, %s, %s)', (str(molecule_id),str(cmol_id),'0')
+                    )
+
+                    
                 cursor.execute(
                     'INSERT INTO dyndb_complex_compound (id_compound,id_complex_exp,type) VALUES (%s, %s, %s)', (compound_id,complex_id,'0')
                 )
+
             print('\n\nComplex data recorded without errors.\n\n',complexcounter)
             complexcounter+=1
 

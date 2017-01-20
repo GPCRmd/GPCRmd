@@ -3,3 +3,4 @@
 #protwis/settings_local.py
 solr-4.10.2/example/logs/*
 *~
+*.sdf
