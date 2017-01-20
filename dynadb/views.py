@@ -1687,7 +1687,7 @@ from django.conf import settings
 from .GPCRuniprot import GPCRlist
 chunks=[]
 chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
-for chunk in chunks:
+for chunk in chunks[3:]:
     print('\n\n\n\n\n\nProccessing chunk: ',chunk)
     time.sleep(3)
     fh=open('./dynadb/'+chunk,'r')
