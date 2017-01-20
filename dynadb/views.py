@@ -5322,6 +5322,7 @@ def get_dynamics_files_reference_atomnum(submission_id,file_type):
     reffilepath = None
     reffilename = None
     ref_numatoms = None
+    ref_file_type = None
     if len(results) > 0:
         type_filepaths = dict()
         filepaths = []
@@ -5342,10 +5343,11 @@ def get_dynamics_files_reference_atomnum(submission_id,file_type):
                 dbtype_pref = pref
                 break
 
-        if reffilepath is not None:       
-            ref_numatoms = get_atoms_num(reffilepath,dbtype_2_file_type[dbtype_pref])
+        if reffilepath is not None:
+            ref_file_type = dbtype_2_file_type[dbtype_pref]
+            ref_numatoms = get_atoms_num(reffilepath,ref_file_type)
             
-    return (reffilepath, reffilename, ref_numatoms)
+    return (reffilepath, reffilename, ref_file_type, ref_numatoms)
 
     
     
@@ -5444,6 +5446,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     no_js = '1'
     download_url = ''
     error = ''
+    filetype_complete_names = {'coor':'coordinate','top':'topology','traj':'trajectory','parm':'parameter','other':'other'}
     filetype_subtypes_dict = {'coor':'pdb','top':'topology','traj':'trajectory','parm':'parameters','other':'other'}
     filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
     atomnum_check_file_types = {'coor','traj'}
@@ -5491,7 +5494,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             return response
             
         if file_type in atomnum_check_file_types:    
-            reffilepath, reffilename, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
+            reffilepath, reffilename, ref_file_type, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
             prev_numatoms = ref_numatoms
         
         
@@ -5566,6 +5569,13 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     except:
                         response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
                         return response
+                    if file_type != 'traj' and ref_numatoms is not None and ref_numatoms != numatoms:
+                        if ref_file_type == 'traj':
+                            files_text = 'file(s)'
+                        else:
+                            files_text = 'file'
+                        response = HttpResponse('Uploaded '+filetype_complete_names[file_type]+' file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded '+filetype_complete_names[ref_file_type]+' '+files_text+'.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
                     
                 if file_type == 'traj':
 
@@ -5589,6 +5599,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     prev_name = uploadedfile.name
                     prev_numatoms = numatoms
 
+                    
                 
                 dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
                 dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
