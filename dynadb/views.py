@@ -2317,11 +2317,6 @@ def upload_pdb(request): #warning , i think this view can be deleted
         uploaded_file_url = fs.url(filename)
         request.session['newfilename']=uploaded_file_url
         pdbname='/protwis/sites'+request.session['newfilename']
-        if form.is_valid():
-            #print('valid form')                     
-        else:
-            #print ('invalid form')
-            #print (form.errors)
         tojson={'chain': 'A','message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
