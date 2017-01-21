@@ -109,6 +109,11 @@
     {% endif %}
     <br>
     <br>
+    <center><a class='btn btn-lg btn-info' role='button' href= /dynadb/view/{{answer.nglviewer_id}}>Watch the simulation</a><br><br>
+     <iframe height="400" width="1100" src=" /dynadb/view/{{answer.nglviewer_id}}"></iframe> </center>
+
+    <br>
+    <br>
     {% if answer.references %} 
         <br><b>References in which this dynamic is mentioned</b>:<br>
         <ul>
@@ -126,6 +131,8 @@
     {% endif %}
     <br>
     </div></div></div>
+
+
 
 
     <div class="container">
