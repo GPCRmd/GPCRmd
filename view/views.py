@@ -1,5 +1,7 @@
 from django.shortcuts import render
+from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
+from django.conf import settings
 from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
@@ -9,7 +11,7 @@ import json
 import urllib
 from Bio.PDB import *
 from Bio import PDB
-
+import itertools
 import mdtraj as md 
 import numpy as np
 from graphos.sources.simple import SimpleDataSource
@@ -24,19 +26,6 @@ def find_range_from_cons_pos(my_pos, gpcr_pdb):
     (ext_range,chain)=gpcr_pdb[my_pos]
     ext_range=str(ext_range)
     pos_range=ext_range+"-"+ext_range
-    # pos_range_r=int()
-    # pos_range=""
-    # n=1
-    # pdb_positions_all = gpcr_pdb.values()
-    # pdb_positions_inchain = [p[0] for p in pdb_positions_all if p[1]==chain]
-    # while pos_range=="":
-    #     if pos_range_l + n in pdb_positions_inchain:
-    #         pos_range = (str(pos_range_l)+"-"+str(pos_range_l +n))
-    #         break
-    #     else:
-    #         n+=1
-    #     if n > len(pdb_positions_inchain):  
-    #         return False
     return pos_range
                               
 def create_conserved_pos_list(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li, multiple_chains,chain_name):
@@ -498,10 +487,24 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
     data_fin=axis_lab + data
     return (True,data_fin, None)
 
-
+def obtain_url(request):
+    current_host = request.get_host()
+    domain=current_host.rsplit(':',1)[0]
+    if request.is_secure():
+        protocol = 'https'
+    else:
+        protocol = 'http'
+    if hasattr(settings, 'MDSRV_URL'):
+        mdsrv_url = settings.MDSRV_URL.strip()
+        if mdsrv_url.find('/') == len(mdsrv_url) - 1:
+           mdsrv_url = mdsrv_url[:-1]
+    else:
+        mdsrv_url = protocol+'://'+domain+':'+str(settings.MDSRV_PORT)
+    return(mdsrv_url)
 
 
 def index(request, dyn_id):
+    mdsrv_url=obtain_url(request)
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
             struc_p= request.POST.get("rmsdStr")
@@ -560,7 +563,20 @@ def index(request, dyn_id):
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")
-            data={"hi":"HI!"}
+            thresh=request.POST.get("thresh")
+            int_traj_p=request.POST.get("traj_p")
+            int_struc_p=request.POST.get("struc_p")
+            res_li=all_ligs.split(',')
+            if request.session.get('main_strc_data', False):
+                session_data=request.session["main_strc_data"]
+                chain_names=session_data["chain_name_li"]
+                num_prots=session_data["prot_num"]
+                serial_mdInd=session_data["serial_mdInd"]
+                gpcr_chains=session_data["gpcr_chains"]
+                (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains)
+                data = {"result":int_dict,"success": success, "e_msg":errors}
+            else:
+                data = {"result":None,"success": False, "e_msg":"Session error."}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -582,6 +598,7 @@ def index(request, dyn_id):
             if len(chain_name_li) > 1:
                 multiple_chains=True
             (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)            
+            request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False}
             dprot_chains={}
             chains_taken=set()
             gpcr_chains=[]
@@ -641,6 +658,7 @@ def index(request, dyn_id):
                     chain_str="GPCR chains: "+", ".join(gpcr_chains)
                 
             if chains_taken: # To check if some result have been obtained
+                request.session['main_strc_data']["gpcr_chains"]=gpcr_chains
                 all_gpcrs_info=[]
                 gpcr_pdb_all={}
                 gpcr_id_name={}
@@ -685,6 +703,7 @@ def index(request, dyn_id):
         
                     context={
                         "dyn_id":dyn_id,
+                        "mdsrv_url":mdsrv_url,
                         "structure_file":structure_file, 
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
@@ -706,6 +725,7 @@ def index(request, dyn_id):
                 else:
                     context={
                         "dyn_id":dyn_id,
+                        "mdsrv_url":mdsrv_url,
                         "structure_file":structure_file, 
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
@@ -721,6 +741,7 @@ def index(request, dyn_id):
             else: #No checkpdb and matchpdb
                 context={
                         "dyn_id":dyn_id,
+                        "mdsrv_url":mdsrv_url,
                         "structure_file":structure_file, 
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
@@ -734,6 +755,7 @@ def index(request, dyn_id):
         else: #len(chain_name_li) <= 0
             context={
                     "dyn_id":dyn_id,
+                    "mdsrv_url":mdsrv_url,
                     "structure_file":structure_file, 
                     "structure_name":structure_name , 
                     "structure_file_id":structure_file_id,
@@ -860,7 +882,98 @@ def proper_name(traj_sel):
         set_sel="all atoms"      
     return set_sel  
     
-    #rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_fin,struc_filename,traj_filename,traj_frame_rg,ref_frame,ref_traj_p,traj_sel)
+
+def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
+    readpdb=open(struc_path,'r')
+    gpcr_atomInd=[]
+    for line in readpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            trykey=line[17:21].strip()
+            if trykey in d.keys():
+                if line[21:22].strip() in gpcr_chains:
+                    serial=line[6:11].strip()
+                    gpcr_atomInd.append(serial_mdInd[serial])
+    return(np.array(gpcr_atomInd))
+
+
+
+def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains):
+    struc_path = "/protwis/sites/files/"+struc_p
+    traj_path = "/protwis/sites/files/"+traj_p
+    try:
+        struc=md.load(struc_path)
+    except Exception:
+        return (False,None, "Error loading the file.")
+    all_lig_res=[]
+    for res in res_li:
+        lig_sel=struc.topology.select("resname "+res)
+        if len(lig_sel)>0:
+            lig_res=[residue.index for residue in struc.atom_slice(lig_sel).topology.residues]
+            all_lig_res.append(lig_res[0])
+    if len(all_lig_res)>0:
+        if gpcr_chains:
+            gpcr_chains_sel=""
+            for chain in gpcr_chains:
+                gpcr_chains_sel+="chainid "+ str(chain_name_li.index(chain)) +" or "
+            gpcr_chains_sel="protein and ("+gpcr_chains_sel[:-4]+")"
+            gpcr_sel=struc.topology.select(gpcr_chains_sel)
+        else:
+            gpcr_sel=struc.topology.select("protein") 
+        #if num_prots > 1:
+        #    gpcr_sel=obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd)
+        #else:
+        #    gpcr_sel=struc.topology.select("protein") 
+        gpcr_res=[residue.index for residue in struc.atom_slice(gpcr_sel).topology.residues]
+        pairs = list(itertools.product(gpcr_res, all_lig_res))
+        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+        first=True
+        try:
+            for itraj in itertraj:
+                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme='closest-heavy')
+                if first:
+                    alldists=dists
+                    allres_p=res_p
+                    first=False
+                else:
+                    alldists=np.append(alldists,dists,axis=0)
+        except Exception:
+            return (False,None, "Error loading the file.")
+        contact_freq={}
+        for pair in allres_p:
+            contact_freq[tuple(pair)]=0
+        for frame_dist in alldists:
+             i=0
+             while i < len(frame_dist):
+                 if frame_dist[i]<(thresh/10):
+                     contact_freq[tuple(allres_p[i])]+=1
+                 i+=1
+        num_frames=len(alldists)
+        to_delete=[]
+        for allres_p , freq in contact_freq.items():
+             if freq ==0:               
+                 to_delete.append(allres_p)
+             else:                    
+                 contact_freq[allres_p]=(freq/num_frames)*100
+        for key in to_delete:
+            del contact_freq[key]
+        fin_dict={}
+        for r in res_li:
+             fin_dict[r]=[]
+        for pair in sorted(contact_freq, key=lambda x: x[0]):
+            freq=contact_freq[pair]
+            res_ind=pair[0]
+            lig_ind=pair[1]
+            lig_nm=struc.topology.residue(lig_ind).name
+            res_topo=struc.topology.residue(res_ind)
+            res_pdb=res_topo.resSeq
+            res_chain_ind=res_topo.chain.index
+            res_name=res_topo.name
+            res_chain=chain_name_li[res_chain_ind]
+            fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
+        return(True,fin_dict,None)
+    else:
+        return (False,None, "Error with ligand selection.")
+
 def download_rmsd(request, rmsd_id):
     if request.session.get('rmsd_data', False):
         rmsd_data_s=request.session['rmsd_data']
