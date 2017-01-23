@@ -1,4 +1,5 @@
-from django.conf.urls import url
+from django.conf.urls import url,patterns,include
+from django.conf import settings
 from . import views
 
 app_name = "view"
@@ -11,3 +12,13 @@ urlpatterns = [
     url(r'^dwl/(?P<dist_id>dist_[0-9]+)/$', views.download_dist, name="download_dist"),
     url(r'^dwl/(?P<rmsd_id>rmsd_[0-9]+)/$', views.download_rmsd, name="download_rmsd"),
 ]
+
+if settings.DEBUG:
+    urlpatterns += patterns('',
+        url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {
+            'document_root': settings.MEDIA_ROOT,
+        }),
+        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
+            'document_root': settings.STATIC_ROOT,
+        }),
+)

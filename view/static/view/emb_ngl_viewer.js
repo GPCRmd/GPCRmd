@@ -1284,7 +1284,7 @@ function isEmptyDict(mydict){
     var struc = struc_info[0];
     var struc_id = struc_info[1];
     var dyn_id=struc_info[2];
-    var mdsrv_url=$("iframe").attr("class");
+    var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
