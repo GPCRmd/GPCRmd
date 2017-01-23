@@ -7,10 +7,12 @@
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
     <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
     <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
     <link rel="subresource" href="mdsrv/webapp/css/light.css" />
     <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
 </head>
 <body >
     <!-- NGL -->
@@ -18,6 +20,8 @@
 
     <!-- UI -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script><!-- test -->
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
     <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
     <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
     <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
@@ -91,6 +95,7 @@
                    var  comp_dist= NGL.getQuery("di");
                    var  nonGPCR= NGL.getQuery("ng");
                    var  onlyChains= NGL.getQuery("och");
+                   var trajComp;
 
 
                     var rc_sel = "";
@@ -252,10 +257,17 @@
                                         //$("#buttons").append("<button id='playerButton"+t+"'>"+traj_li[t].match(/(\w*)(\.\w*)$/)[1]);
                                         $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+traj_li[t].match(/(\w*)(\.\w*)$/)[1]);
                                     }
+                                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0];
+////////////////
+                                    $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+                                    $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+                                    $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px"});
+///////////////////
                                     $(".traj_btn").click( function(){
-                                        var btn_traj_id=$(this).attr("id").slice(-1);                                        
-                                        var trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                                        console.log(trajComp);
+                                        var btn_traj_Bid=$(this).attr("id");
+                                        var tPatt = /\d*$/g;
+                                        var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                                         var player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                                         pos_class=$(this).attr("class");
                                         if(pos_class.indexOf("active") > -1){
@@ -265,10 +277,18 @@
                                             player.pause();
                                             some_clicked=false;
                                         } else if (! some_clicked){
+                                            $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
                                             player.play();
                                             $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
                                             $(this).children().attr("class","glyphicon glyphicon-pause");
                                             some_clicked=true;
+                                            $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                                            trajComp.signals.frameChanged.add(function(){
+                                                //console.log(trajComp.trajectory.currentFrame);
+                                                var fnum=trajComp.trajectory.currentFrame;
+                                                $("#trajRange").val(fnum);
+                                                $("#trajRange").slider("refresh");
+                                            })
                                             if (dist_within){
                                                 trajComp.signals.frameChanged.add(function(){
                                                     for (wth_n in dist_within_li){
@@ -318,6 +338,8 @@
                                        // hovrep.repr.clear()
                                         if (clicktrue){
                                             if (d.atom){
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind:"+d.atom.serial+") - ";
+                                                $("#atomClicked").text(info)
                                                 myrepr = o.addRepresentation( "label", {
                                                     sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
                                                     color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal"  } );
@@ -328,6 +350,8 @@
                                             }
                                         }else{
                                             if (d.atom){
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind:"+d.atom.serial+") - ";
+                                                $("#atomClicked").text(info)                                            
                                                 atom2 = d.atom.serial.toString();
                                                 //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
                                                 clicktrue = true;
@@ -339,9 +363,9 @@
                                                     o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal"} );
                                                 }
                                             } else {
+                                                $("#atomClicked").text("")
                                                 clicktrue = true;
                                                 myrepr.repr.clear()
-                                                //o.removeRepresentation("1stlab");
                                             }
                                         };
                                     } );
@@ -352,21 +376,27 @@
 				} );
                     }
 		
-
-/*            stage.loadFile( "/mdsrv/file/ExampleData/default/md.gro", { asTrajectory: true } )
-            .then(function( o){
-                o.addRepresentation( "cartoon", { sele: "protein" } );
-                o.addTrajectory("ExampleData/default/md.xtc");
-                o.centerView();
-            } );*/
+            $("#trajRange").change(function(){
+                if (trajComp){
+                    var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                    trajComp.setFrame(toframe);
+                    console.log(trajComp.trajectory.currentFrame);
+                }
+            });
         } );
     </script>
-    <div style="width:540px">
+    <div id="toiframe" style="width:540px">
         <div id="viewport" style="width:540px; height:370px;"></div>
         <div id="buttons" style="width:536px;height:30px;overflow: auto;margin-top:36px;margin-left:2px">
             <!--<button id="playerButton">play/pause</button>-->
         </div>
-        <div id="atomInfo" style="width:536px;height:30px;margin-top:335px;margin-left:2px;color:green"></div>
+        <div id="trajRangeDiv" style="position:absolute;width:536px;height:30px;margin-top:295px;margin-left:2px;visibility:hidden">
+          <input id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
+        </div>
+        <div style="width:536px;height:30px;margin-top:335px;margin-left:2px;">
+            <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
+            <div id="atomInfo" style="color:green;"></div>
+        </div>
     </div>
 </body>
 </html>
