@@ -54,14 +54,15 @@
 		        <a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
 			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 2:<br> Small Molecule Information </a>
 		</div>
-
+               
+                
     		<div class="panel-body" id="selection-">
-		        <a id='selection-button' href="/dynadb/model/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+		        <a {% if disable_3 %} disabled {%endif%} id='selection-button' href="/dynadb/model/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
 			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 3:<br> Complex Information </a>
 		</div>
 
     		<div class="panel-body" id="selection-">
-		        <a id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+		        <a {% if disable_4 %} disabled {%endif%} id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
 			<span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Step 4:<br> Dynamics Information </a>
 		</div>
 

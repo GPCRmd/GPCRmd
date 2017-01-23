@@ -182,7 +182,7 @@ font-weight:normal
 		</div>  
                 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id" style="color:black; border-color:#555;background-color:rgba(200, 150, 200, 0.1);"> > 
+  <div class="col-md-12 panel collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id" style="color:black; border-color:#555;background-color:rgba(200, 150, 200, 0.1);"> 
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
 
@@ -258,14 +258,14 @@ font-weight:normal
 
 {%else%} <!-- FORM NO REUSE!!!!!!!!!!!! -->
 {% for o in qPROT %} 		{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %}
-  <div id="protform" class="col-md-12 panel " > 
+  <div id="protform-{{int0}}" class="col-md-12 panel " > 
   <div class="col-md-12 panel panel-primary" style="background-color:AliceBlue" > 
     <div class="panel-body" style="height:50px">
 <!--      <div style="text-align:right;color:black" > 
              <h4 id="protlabnum" style="color:AliceBlue;text-shadow:2px 2px red">PROTEIN #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4>
 	    </div> -->
                 <div style="text-align:center">
-             			<h4 id="protlabnum" style="font-size:20px;color:DarkBlue;"><b>Protein #1 General Information</b></h4>
+             			<h4 id="protlabnum" style="font-size:20px;color:DarkBlue;"><b>Protein #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} General Information</b></h4>
                 </div>
                 </div>
                 </div>
@@ -409,11 +409,17 @@ font-weight:normal
 				<tr>	<th><label for="id_form-{{int0}}-resid"><a title="Resid: Residue number that its mutated on wild type protein.">Resid</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
-{%if MUTations%}{%for mut in MUTations%}{% if forloop.counter == forloop.parentloop.counter   %}{%for m in mut%}
+{%if MUTations%}{%for mut in MUTations%}{% if forloop.counter == forloop.parentloop.counter   %}{%if mut|length > 0%} {%for m in mut%}
 				<tr> 	<td><input style="width:140px;" disabled id="id_form-{{int0}}-resid" name="form-{{int0}}-resid-{{forloop.counter}}" type="number" {%if  mut%} readonly {%else%} disabled {%endif%} value="{{m.resid}}"/></td> <!--placeholder=" 95"-->
 					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%}    name="form-{{int0}}-resletter_from-{{forloop.counter}}" value="{{m.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->{{mut.resletter_from}}
 					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%} name="form-{{int0}}-resletter_to-{{forloop.counter}}" type="text" value="{{m.resletter_to}}" /></td>	<!--placeholder=" A"-->	
-				</tr>{%endfor%}{%endif%}{%endfor%}{%endif%}
+				</tr>
+                               {%endfor%}{%else%}
+				<tr> 	<td><input style="width:140px;" disabled id="id_form-{{int0}}-resid" name="form-{{int0}}-resid-{{forloop.counter}}" type="number"  disabled value=""/></td> <!--placeholder=" 95"-->
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" disabled    name="form-{{int0}}-resletter_from-{{forloop.counter}}" value="{{m.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->{{mut.resletter_from}}
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" disabled  name="form-{{int0}}-resletter_to-{{forloop.counter}}" type="text" value="{{m.resletter_to}}" /></td>	<!--placeholder=" A"-->	
+				</tr>
+                    {%endif%}{%endif%}{%endfor%}     {%endif%}
 
 			</table>
                 </div>
@@ -509,6 +515,9 @@ font-weight:normal
     <script src="{% static 'dynadb/changeMutant.js' %}"></script>
     <script src="{% static 'dynadb/PROTEINpost.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/Proteinf_init_config.js' %}"></script>
+    <script>
+    </script>
     
 
 {% endblock %}

@@ -89,10 +89,26 @@ $(document).ready(function(){
         $("#id_form-"+next_form_num+"-del_molecule").prop("disabled",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
+        $(newitem).smol_init_config()
     });
     
+       
+
+
+
+
+    $(document).on('click',"[id='id_is_not_in_databases'],[id|=id_form][id$='-is_not_in_databases']",function(){
+        var self=$(this);
+        self.prop("disabled",true);
+        var molform = $(this).parents("[id|=molform]");
+        var notdb_remove= $(molform).find("[id|=id_form][id$=-get_mol_info],[id|=id_form][id$='nodb']");
+        if ($(self).is(":checked")){
+            $(notdb_remove).fadeOut("200").prop('disabled',true);
+        }else{
+            $(notdb_remove).fadeIn("200").prop("disabled",false);
+        }
+        self.prop("disabled",false);
     
     
-    
-    
+    });   
 });

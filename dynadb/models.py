@@ -563,7 +563,7 @@ class DyndbDynamicsComponents(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_dynamics_components'
-        unique_together = (('id_dynamics', 'id_molecule'),)
+        unique_together = (('id_dynamics', 'id_molecule', 'resname'),)
 
 class DyndbModelComponents(models.Model):
     MOLECULE_TYPE=DyndbDynamicsComponents.MOLECULE_TYPE 
@@ -577,7 +577,7 @@ class DyndbModelComponents(models.Model):
     class Meta:
         managed = True
         db_table = 'dyndb_model_components'
-        unique_together = (('id_model', 'id_molecule'),)
+        unique_together = (('id_model', 'id_molecule', 'resname'),)
 
 
 class Model2DynamicsMoleculeType:

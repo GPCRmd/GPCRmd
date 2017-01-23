@@ -85,6 +85,8 @@ $(document).ready(function(){
         receptor.prop("checked",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
+ 
+        $(document).protein_init_config();
     });
     
     

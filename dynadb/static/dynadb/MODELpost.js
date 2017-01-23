@@ -26,7 +26,7 @@ $(document).ready(function(){
                 var urllist=window.location.href.split("/");
                 var submission_id=urllist[urllist.length-2];
                 alert("Congratulations!! "+data);
-                window.location.replace("../../model_summary/"+submission_id+"/");
+                window.location.replace("../../dynamics/"+submission_id+"/");
                 
             },
             error: function(xhr,status,msg){

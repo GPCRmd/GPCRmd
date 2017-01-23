@@ -39,7 +39,7 @@ $(document).ready(function(){
                     var submission_id=urllist[urllist.length-2];
                     alert("Congratulations!! "+data);
                     if (multi===true){
-                        window.location.replace("../../molecule_summary/"+submission_id+"/");
+                        window.location.replace("../../model/"+submission_id+"/");
                     }else{
                         alert("Please, submit other molecules in your system or continue to step 3.");
                     }

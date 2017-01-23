@@ -131,7 +131,7 @@ font-weight:normal
                               {% for i in compl%} 
                                 <tr id="Element1-{{forloop.counter0}}">
                                       
-                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ"  value="{{i.resname}}"/></td>
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" {%if i.id_molecule__dyndbsubmissionmolecule__type < 6%} readonly  {%endif%} value="{{i.resname}}"/></td>
                                         <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder=" 1 " readonly value="{{i.id_molecule__dyndbsubmissionmolecule__int_id}}"/></td>
                                        <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{{i.id_molecule}}"></td>
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder=" Clozapine" value="{{i.id_molecule__dyndbcompound__name}}"/></td>
@@ -153,8 +153,8 @@ font-weight:normal
                     
  			<div id="addmoleculebutton"  style="text-align:center;height:90px;margin: 0px 0px 25px 0px" hidden>
                              <br>
-			     <button id="id_add_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >+ Add Molecule</button>
-			     <button id="id_del_element2" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >- Remove Molecule</button>
+			     <button id="id_add_element" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >+ Add Molecule</button>
+			     <button id="id_del_element" type="button" value=""  style="height:30px;margin: 0px 0px 0px 0px;width:220px" >- Remove Molecule</button>
                              <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
 		        </div> 	
 		        
@@ -193,7 +193,7 @@ font-weight:normal
                         <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_id_dynamics_methods"> <a title="Method: Classification of the simulation according to the computational method."> Method: </a> </label></div>
 			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
                                       {%if saved%}
-		        	      <option value="{{qDS.values.0.id_dynamics_methods}}">{{ddown.id_dynamics_methods}}</option>{{qDS.values.0.id_dynamics_methods}}
+		        	      <option value="{{ddown.id_dynamics_methods.0}}">{{ddown.id_dynamics_methods.1}}</option>{{qDS.values.0.id_dynamics_methods}}
                                       {% endif %}
                                       {% for i in qDMeth.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -226,7 +226,7 @@ font-weight:normal
         		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_assay_types"><a title="Assay type: Classification of simulations according to an equivalent experimental assay."> Assay type:</a> </label></th></div>
 			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
                                       {%if saved%}
-		        	       <option value="{{qDS.values.0.id_assay_types}}">{{ddown.id_assay_types}}</option>
+		        	       <option value="{{ddown.id_assay_types.0}}">{{ddown.id_assay_types.1}}</option>
                                       {% endif %}
                                       {% for i in qAT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -247,7 +247,7 @@ font-weight:normal
 	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_membrane_types"><a title="Membrane type: Type of membrane used in the simulation."> Membrane type:</a> </label></th></div>
 			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
                                       {%if saved%}
-		        	      <option value="{{qDS.values.0.id_dynamics_membrane_types}}">{{ddown.id_dynamics_membrane_types}}</option>
+		        	      <option value="{{ddown.id_dynamics_membrane_types.0}}">{{ddown.id_dynamics_membrane_types.1}}</option>
                                       {% endif %}
                                       {% for i in qDMT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -262,7 +262,7 @@ font-weight:normal
         		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_id_dynamics_solvent_types"><a title="Solvent type: Type of solvent used in the simulation. ">Solvent type:</a> </label></th></div>
 			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
                                       {%if saved%}
-                                       <option value="{{qDS.values.0.id_dynamics_solvent_types}}">{{ddown.id_dynamics_solvent_types}}</option>
+                                       <option value="{{ddown.id_dynamics_solvent_types.0}}">{{ddown.id_dynamics_solvent_types.1}}</option>
                                       {% endif %}
                                      {% for i in qDST.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -308,7 +308,7 @@ font-weight:normal
       	  </div>
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/model/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
-            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Complex Information </a>
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Crystalized Components Information </a>
       	  </div>
       </div>
   </div>
@@ -323,6 +323,6 @@ font-weight:normal
     <script src="{% static 'dynadb/pdbCheckMolDyn.js' %}"></script>
     <script src="{% static 'dynadb/addSimcomp.js' %}"></script>
     <script src="{% static 'dynadb/checkTrajectories.js' %}"></script>
-    <script src="{% static 'dynadb/DYNAMICSpost.js' %}"></script>
+<!--    <script src="{% static 'dynadb/DYNAMICSpost.js' %}"></script> -->
                    
 {% endblock %}

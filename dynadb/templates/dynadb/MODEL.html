@@ -138,6 +138,7 @@ font-weight:normal
                       
 			<div style="text-align:right;margin-right:5%;height:50px">
                             <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="" hidden target="_blank">Download uploaded PDB file.</a>
+                            <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="{{urlpdb}}" hidden target="_blank">Download uploaded PDB file.</a>
                             <button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button>
 			</div>
                         {%endif%}
@@ -272,7 +273,7 @@ font-weight:normal
                                 <tbody id="pElement2">
 {%if model_id or saved %}
 {% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
-                                	<tr id="Element2_{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:70px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
  
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
                                         {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
@@ -283,7 +284,7 @@ font-weight:normal
  
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
 
-                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_form-{{intmc0}}-typemc" readonly name="typemc"   type="text" style="width:70px;height:23px" />
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_form-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
                                 {% for ll in lmtype %}
                                    {% if forloop.counter == forloop.parentloop.counter %}
                                                     <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
@@ -330,7 +331,6 @@ font-weight:normal
                              <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
 		        </div> 	
 		        
-		        </div> 	
 
  			<div style="text-align:right;margin-right:5%;height:70px">
                                       <a id="id_logfile"  name="logfile" href="" noreferrer noopener hidden target="_blank">Download log file.</a>
@@ -338,6 +338,7 @@ font-weight:normal
 					<br>
 					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" noreferrer noopener target="_blank">Download pdbchecker results.</a>
 		        </div>
+		        </div> 	
 		        {% else %}{%if not model_id %}
 		        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
 		        {% endif %}{% endif %}
@@ -372,7 +373,8 @@ font-weight:normal
       <div class="col-md-12 panel panel-primary" >
           <div class="panel-body" id="selection-">
                   <!--Submit prueba -->
-		      <button type="button" value="submit" id="id_submit"  class="btn btn-success btn-lg btn-block has-spinner" name="submit"   > Submit Crystalized Components </button>
+<!--		      <button type="button" value="submit" id="id_submit"  class="btn btn-success btn-lg btn-block has-spinner" name="submit"   > Submit Crystalized Components </button>-->
+                <input id="id_submit" name="submit" type="submit" value="Submit " class="btn btn-success btn-lg btn-block has-spinner"  />
            </div>
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
@@ -395,7 +397,7 @@ font-weight:normal
 
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
-    <script src="{% static 'dynadb/MODELpost.js' %}"></script>
+<!--    <script src="{% static 'dynadb/MODELpost.js' %}"></script> -->
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
     <script src="{% static 'dynadb/addFields.js' %}"></script>
