@@ -17,7 +17,7 @@ function ShowResults(data, restype,is_apoform){
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
         for(i=0; i<cl.length; i++){
-            tablestr=tablestr+"<tr><td> <a target='_blank' class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
+            tablestr=tablestr+"<tr><td> <a class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
         }
     }//endif
 
@@ -26,9 +26,9 @@ function ShowResults(data, restype,is_apoform){
         var rl=data.model
         for(i=0; i<rl.length; i++){ //rl[i].length>2
             if (rl[i].length>2 && (is_apoform=='com'||is_apoform=='both') ){
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd> Ligand: <kbd>"+rl[i][2]+"</kbd> </td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd> Ligand: <kbd>"+rl[i][2]+"</kbd> </td></tr>";
             }if (rl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> Protein: <kbd>"+rl[i][1]+"</kbd> </td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> Protein: <kbd>"+rl[i][1]+"</kbd> </td></tr>";
             }
         }
     }//endif
@@ -38,9 +38,9 @@ function ShowResults(data, restype,is_apoform){
         var dl=data.dynlist;
         for(i=0; i<dl.length; i++){
             if (dl[i].length>2 && (is_apoform=='com'||is_apoform=='both')){ //dl[i].length>2
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
             }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
             }
         }
     } //endif

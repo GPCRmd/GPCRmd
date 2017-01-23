@@ -21,6 +21,8 @@ import json
 import mimetypes
 import requests
 import math
+import itertools
+import numpy as np
 import tarfile
 from os import listdir
 from os.path import isfile, join
@@ -50,11 +52,36 @@ from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
 from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
- 
+from django.conf import settings
+from django.views.defaults import server_error
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
 # Create your views here.
 
+
+def default_500_handler(func):
+    def inner(request,*args, **kwargs):
+
+        try:
+            return func(request,*args, **kwargs)
+        except:
+            if settings.DEBUG:
+                raise
+            else:
+                return server_error(request)
+    return inner
+    
+def textonly_500_handler(func):
+    def inner(request,*args, **kwargs):
+
+        try:
+            return func(request,*args, **kwargs)
+        except:
+            if settings.DEBUG:
+                raise
+            else:
+                return HttpResponseServerError("Server Error (500).",content_type='text/plain')
+    return inner
 
 def REFERENCEview(request, submission_id=None):
  
@@ -829,7 +856,7 @@ def PROTEINview(request, submission_id):
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
-
+@textonly_500_handler
 def delete_protein(request,submission_id):
     if request.method == "POST":
         protein_num = request.POST["protein_num"]
@@ -840,7 +867,7 @@ def delete_protein(request,submission_id):
         response = HttpResponseForbidden()
     return response
     
-
+@textonly_500_handler
 def autocomplete(request):
     '''Uses haystack functionality to return on the fly suggestions to the user input according to the names it has indexed.'''
     other_names= SearchQuerySet().autocomplete(other_names=request.GET.get('q', ''))[:5]
@@ -927,7 +954,7 @@ def get_imagepath(id, type):
 
     return imagepath
 
-
+@textonly_500_handler
 def ajaxsearcher(request):
     '''Searches user input among indexed data. If "search by id" option is allowed, a simple database query is used using that ID.'''
     if request.method == 'POST':
@@ -1100,7 +1127,7 @@ def ajaxsearcher(request):
 ###################################################################################################################################
 ###################################################################################################################################
 
-
+@textonly_500_handler
 def emptysearcher(request):
     '''Returns every result matching the filters the user has activated, but ignores the composition of the simulation. Only its properties are searched, like apoform or not, software used, etc.'''
     if request.method == 'POST':
@@ -1359,7 +1386,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
     if return_type=='complex':
         if table_row[0]=='protein':
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and type(is_receptor)!=None) or (table_row[2]==False and type(is_receptor)==None):
+            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
                 q=DyndbProtein.objects.filter(pk=table_row[1])
                 q=q.annotate(cmol_id=F('dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule__id'))
                 q=q.values('cmol_id')
@@ -1548,7 +1575,7 @@ def dealwithquery(arrays):
 
 ##########################################################################################################################################
 
-def main(arrays,return_type):
+def mainsearcher(arrays,return_type):
     rowdict=dealwithquery(arrays)
     results=dict()
     for keys,values in rowdict.items():
@@ -1573,7 +1600,7 @@ def main(arrays,return_type):
 
 ##########################################################################################################################################
 ##########################################################################################################################################
-
+@textonly_500_handler
 def NiceSearcher(request):
     '''Searchs for complexes, models or dynamics with the combination of elements and features (apoform or not, software, etc) designed by the user'''
     arrays_def=[]
@@ -1595,7 +1622,7 @@ def NiceSearcher(request):
     #{(1, 'AND'): ['protein', '1', 'true'], (0, ' '): ['molecule', '1', 'orto']}
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
 
-        resultlist=main(arrays_def,return_type)
+        resultlist=mainsearcher(arrays_def,return_type)
         print(resultlist,'these are the resullts')
         if len(resultlist)==0:
             tojson={'result':[],'model':[],'dynlist':[],'message':''}
@@ -1807,10 +1834,10 @@ def query_protein(request, protein_id,incall=False):
             fiva['activity'].append((match2.rvalue,match2.units,match2.description))
     if incall==True:
         return fiva
-    print('MODELS',fiva['models'])
+    #print('MODELS',fiva['models'])
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
-
+@textonly_500_handler
 def query_protein_fasta(request,protein_id):
     '''Gets the sequence of the given protein and returns its sequence in fasta format.'''
     yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
@@ -1843,6 +1870,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['references']=list()
     molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
     molec_dic['link_2_compound']=molobj.id_compound.id
+    molec_dic['name']=molobj.id_compound.name
     molec_dic['sdf']=''
     molec_dic['smiles']=molobj.smiles
     molec_dic['description']=molobj.description
@@ -1851,7 +1879,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['inchikey']=molobj.inchikey
     molec_dic['inchicol']=molobj.inchicol
     molec_dic['imagelink']=get_imagepath(molecule_id, 'molecule')
-    print('path to image',molec_dic['imagelink'])
+    #print('path to image',molec_dic['imagelink'])
     for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
         molec_dic['inmodels'].append(match.id_model.id)
 
@@ -1904,10 +1932,12 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['sinchi']=comp_obj.sinchi
     comp_dic['sinchikey']=comp_obj.sinchikey
     comp_dic['imagelink']=get_imagepath(compound_id,'compound')
+    comp_dic['related_mol_images']=[]
 
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
-
+        comp_dic['related_mol_images'].append([molecule.id,get_imagepath(molecule.id,'molecule')])
+        
     for match in DyndbReferencesCompound.objects.select_related('id_references').filter(id_compound=compound_id):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
@@ -1944,7 +1974,7 @@ def query_complex(request, complex_id,incall=False):
             for row2 in qq:
                 if row2['molecule_something']!=None:
                     tmpmolecule.append(row2['molecule_something'])
-            print([row['model_id'],tmpmolecule])
+            #print([row['model_id'],tmpmolecule])
             model_list.append([row['model_id'],tmpmolecule])   
 
     for ccompound in DyndbComplexCompound.objects.filter(id_complex_exp=complex_id):
@@ -2024,6 +2054,7 @@ def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
     dyna_dic=dict()
     dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']=list()
     dyna_dic['references']=list()
@@ -2087,7 +2118,8 @@ def query_dynamics(request,dynamics_id):
         dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
     
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
-
+    
+@textonly_500_handler
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
@@ -2175,6 +2207,7 @@ def get_uniprot_species_id_and_screen_name(mnemonic):
     raise
   return (record.pk,record.screen_name)
 
+@textonly_500_handler
 def download_specieslist(request):
     """A view that streams a TSV file."""
     COMMENT_BLOCK = '# id = species GPCRmd internal identifier\r\n\
@@ -2194,7 +2227,8 @@ def download_specieslist(request):
                                      content_type="text/tab-separated-values")
     response['Content-Disposition'] = 'attachment; filename="alt_speclist.tsv"'
     return response
-
+    
+@textonly_500_handler
 def get_specieslist(request):
   """A view that shows an 'screen_name' = scientific_name +' (' + (uniprot_)code + ')' 
   that matches a searched 'term'."""
@@ -2262,6 +2296,7 @@ def get_specieslist(request):
   response = HttpResponse(datajson, content_type="application/json")
   return response
 
+@textonly_500_handler
 def submitpost_view(request,submission_id,model_id=1):
     if request.method == 'POST':
         print(request.POST.items())
@@ -2314,7 +2349,8 @@ def submitpost_view(request,submission_id,model_id=1):
             return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'submission_id' : submission_id, 'model_id':model_id})
         ###return render(request,'dynadb/SMALL_MOLECULE.html', {'submission_id' : submission_id})
         #return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
-  
+
+@textonly_500_handler  
 def get_mutations_view(request):
   if request.method == 'POST':
     try:
@@ -2332,7 +2368,7 @@ def get_mutations_view(request):
     except:
       raise
 
-
+@textonly_500_handler
 def upload_pdb(request): #warning , i think this view can be deleted
     if request.method == 'POST':
         form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
@@ -2342,27 +2378,75 @@ def upload_pdb(request): #warning , i think this view can be deleted
         uploaded_file_url = fs.url(filename)
         request.session['newfilename']=uploaded_file_url
         pdbname='/protwis/sites'+request.session['newfilename']
-        if form.is_valid():
-            print('valid form')                     
-        else:
-            print ('invalid form')
-            print (form.errors)
         tojson={'chain': 'A','message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
+        
 
+def obtain_res_coords(pdb_path,res1,res2,pair, pair2): 
+    '''res1 is last residue of previous segment, res2 is start of current segment. PAIR is [A,B], pair2 is [PROA,PROB]'''
+    res1_coords=[]
+    res2_coords=[]
+    readpdb=open(pdb_path,'r')
+    #print(res1,res2,pair,pair2)
+    for line in readpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            if ( (pair==None) or (line[21:22].strip()==pair[0]) ) and ((pair2==None) or (line[72:76].strip()==pair2[0]) ):
+                if line[22:27].strip() == str(res1):
+                    #print('FIRST \n',line)
+                    res1_coords.append([line[30:38],line[38:46],line[46:54]])
+            if (pair==None or line[21:22].strip()==pair[1] ) and (pair2==None or line[72:76].strip()==pair2[1] ):
+                if line[22:27].strip() == str(res2):
+                    #print('LAST\n',line)
+                    res2_coords.append([line[30:38],line[38:46],line[46:54]])
+
+    return(res1_coords,res2_coords)
+
+def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
+    if seg_pair and chain_pair:
+        #print('both again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,seg_pair)
+
+    elif seg_pair:
+        #print('only seg again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,None,seg_pair)
+
+    elif chain_pair:
+        #print('only chain again')
+        (res1_coords,res2_coords)=obtain_res_coords(pdb_path,res1,res2,chain_pair,None)
+
+    coord_pairs=list(itertools.product(np.array(res1_coords),np.array(res2_coords)))
+    bond=False
+    dist_coo=[]
+    for cpair in coord_pairs:
+        x1=float(cpair[0][0])
+        y1=float(cpair[0][1])
+        z1=float(cpair[0][2])
+        x2=float(cpair[1][0])
+        y2=float(cpair[1][1])
+        z2=float(cpair[1][2])
+        dist=math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+        dist_coo.append(dist)
+        if dist < 2:
+            dist_coo.append(dist)
+            bond=True
+            break
+    return(bond)
+@textonly_500_handler
 def search_top(request,submission_id):
     '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
+        pstop='undef'
         submission_path = get_file_paths("model",url=False,submission_id=submission_id)
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
+        bond_list=dict()
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
         arrays=request.POST.getlist('bigarray[]')
-        print(arrays)
+        #print(arrays)
         counter=0
         resultsdict=dict()
         for array in arrays:
@@ -2370,6 +2454,7 @@ def search_top(request,submission_id):
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
             start=array[3].strip()
             stop=array[4].strip()
+            
             try:
                 if start == '' or not (start.isdigit()):
                     start = int(array[3],16)
@@ -2392,7 +2477,8 @@ def search_top(request,submission_id):
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
-
+            #print('chain'+chain+'segid'+segid+'stop')
+            #print(len(chain),len(segid))
             try:
                 protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
                 sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
@@ -2408,14 +2494,31 @@ def search_top(request,submission_id):
                 resultsdict['message']=''
             elif isinstance(res,str):
                  resultsdict['message']=res
+            if pstop!='undef':
+                bonded=False
+                if len(chain)>0 and len(segid)>0:
+                    #print('BOTH')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=[psegid,segid])
+                elif len(chain)>0:
+                    #print('only chain')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
+                elif len(segid)>0:
+                    #print('only segid')
+                    bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
+
+                bond_list[counter]=bonded
+            pstop=stop
+            pchain=chain
+            psegid=segid
             counter+=1
+    resultsdict['bonds']=bond_list
     data = json.dumps(resultsdict)
     
     return HttpResponse(data, content_type='application/json')
 
 
 
-
+@textonly_500_handler
 def pdbcheck(request,submission_id):
     '''Performs an alignment between the sequence in a PDB interval and an interval in the full protein sequence. Returns a table where the original resids of the PDB are displayed with the resids it should use according to the position of that aminoacid in the alignment. Also creates a new PDB file with the correct resids.'''
     if request.method=='POST': #See pdbcheck.js
@@ -2557,6 +2660,7 @@ def pdbcheck(request,submission_id):
             fav_color={'errmess':'Most common causes are: \n -Missing one file\n -Too short interval\n -Very poor alignment\n ','title':'Unknown error'}
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
+@textonly_500_handler
 def servecorrectedpdb(request,pdbname):
     ''' Allows the download of a PDB file with the correct resids, according to the aligment performed by pdbcheck function. '''
     with open('/tmp/'+pdbname,'r') as f:
@@ -2566,7 +2670,7 @@ def servecorrectedpdb(request,pdbname):
         response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
     return response
 
-
+@textonly_500_handler
 def get_submission_molecule_info(request,form_type,submission_id):
     if request.method == 'POST':
         mol_int = request.POST['molecule'].strip()
@@ -2604,6 +2708,7 @@ def get_submission_molecule_info(request,form_type,submission_id):
             return HttpResponseNotFound('Molecule form number "'+str(mol_int)+'" not found in submission ID:'+str(submission_id))
     
 @csrf_exempt
+@textonly_500_handler
 def upload_model_pdb(request,submission_id):
   request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
   return _upload_model_pdb(request,submission_id)
@@ -3018,7 +3123,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     raise
                 else:
                     return response
-
+@textonly_500_handler
 def check_trajectories(request,submission_id):
     if request.method == 'POST':
         submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
@@ -4613,10 +4718,9 @@ def SMALL_MOLECULEview2(request,submission_id):
 #       return render(request,'dynadb/SMALL_MOLECULE2.html', {'fdbMF':fdbMF,'fdbMfl':fdbMfl,'fdbMM':fdbMM, 'fdbCF':fdbCF, 'fdbCN':fdbCN })
         
 @csrf_exempt
+@textonly_500_handler
 def generate_molecule_properties(request,submission_id,model_id=1):
-  print("generate_molecule_properties\n")
   request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
-  print("view generate_molecule_properties")
   return _generate_molecule_properties(request,submission_id)
 
 @csrf_protect
@@ -4628,12 +4732,9 @@ def _generate_molecule_properties(request,submission_id):
              
   if request.method == 'POST':
     submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
-    print("POST",request.POST)
-    print("FILES",request.FILES)
     submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
     data = dict()
     data['download_url_log'] = None
-    print ("pipol")
     if 'molpostkey' in request.POST.keys():
         if 'recmet' in request.POST.keys():
             RecMet = True
@@ -4654,6 +4755,7 @@ def _generate_molecule_properties(request,submission_id):
             pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
             sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
             pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+            
             try:
                 os.remove(os.path.join(submission_path,sdfname))
             except:
@@ -4670,10 +4772,12 @@ def _generate_molecule_properties(request,submission_id):
                 os.remove(os.path.join(submission_path,sdfnameref))
             except:
                 pass
+            
             logfile = open(os.path.join(submission_path,logname),'w')
             data['download_url_log'] = join_path(submission_url,logname,url=True)
             try:
-                mol = open_molecule_file(uploadfile,logfile)
+                mol = open_molecule_file(uploadfile,logfile=logfile)
+                
             except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
                 print(e.args[0],file=logfile)
                 logfile.close()
@@ -4686,6 +4790,7 @@ def _generate_molecule_properties(request,submission_id):
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
             finally:
                 uploadfile.close()
+              
             if check_implicit_hydrogens(mol):
                 data['msg'] = 'Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
                 print(data['msg'],file=logfile)
@@ -4788,7 +4893,8 @@ def _generate_molecule_properties(request,submission_id):
         print("no POST")
         data['msg'] = 'No file was selected or cannot find molecule file reference.'
         return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-
+        
+@textonly_500_handler
 def get_compound_info_pubchem(request,submission_id,model_id=1):
     pngsize=300
     search_by='inchi'
@@ -4876,7 +4982,7 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
 
             else:
                 return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
-            
+           
         data['pubchem_cid'] = None
         data['chembl_id'] = None
         data['name'] = None
@@ -4904,7 +5010,7 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
                 
                 cids = datapubchem["IdentifierList"]["CID"]   
             data['pubchem_cid'] = cids
-            
+             
             if len(cids) == 1:
                 time.sleep(5)
                 datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='property',outputproperty='IUPACName')
@@ -4924,24 +5030,30 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
                 del datapubchem
 
                 time.sleep(5)
-                
+
                 datapubchem,errdata = retreive_compound_sdf_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,sdfname),in3D=True)
+                print(errdata)
                 if 'Error' in errdata.keys():
                     if errdata['ErrorType'] == 'HTTPError' and (errdata['status_code'] == 404 or errdata['status_code'] == 410):
+                        
                         time.sleep(5)
+                        
                         datapubchem,errdata = retreive_compound_sdf_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,sdfname),in3D=False)
                         if 'Error' in errdata.keys():
                             raise DownloadGenericError(errdata['reason'])
                     else:
                         raise DownloadGenericError(errdata['reason'])
+                
                 data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
-
+                
                 time.sleep(5)
                 
                 datapubchem,errdata = retreive_compound_png_pubchem('cid',cids[0],outputfile=os.path.join(submission_path,pngname),width=pngsize,height=pngsize)
+                
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
                 data['download_url_png'] = join_path(submission_url,pngname,url=True)
+                
                 return JsonResponse(data,safe=False)
             elif len(cids) > 1:
                     return JsonResponse(data,safe=False)
@@ -5105,15 +5217,21 @@ def get_compound_info_chembl(request,submission_id,model_id=1):
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
                 time.sleep(5)
+                
                 datachembl,errdata = retreive_compound_sdf_chembl(molregno,getmol_url='/chembl/download_helper/getmol/',outputfile=os.path.join(submission_path,sdfname))
+                print(errdata)
                 if 'Error' in errdata.keys():
+                    
                     raise DownloadGenericError(errdata['reason'])
                 data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+                
                 time.sleep(5)
+                
                 datachembl,errdata = retreive_compound_png_chembl('CHEMBL'+str(cids[0]),outputfile=os.path.join(submission_path,pngname),dimensions=pngsize)
-
+                
                 data['download_url_png'] = join_path(submission_url,pngname,url=True)
                 return JsonResponse(data,safe=False)
+                
             else:
                 return JsonResponse(data,safe=False)
         except DownloadGenericError:
@@ -5559,7 +5677,7 @@ def open_chembl(request,submission_id=1):
 #           fdbMM = dyndb_Complex_Molecule_Molecule()
 #   
 #           return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
-    
+@textonly_500_handler    
 def delete_molecule(request,submission_id,model_id=1):
     if request.method == "POST":
         molecule_num = request.POST["molecule_num"]
@@ -5593,6 +5711,7 @@ def get_dynamics_files_reference_atomnum(submission_id,file_type):
     reffilepath = None
     reffilename = None
     ref_numatoms = None
+    ref_file_type = None
     if len(results) > 0:
         type_filepaths = dict()
         filepaths = []
@@ -5613,10 +5732,11 @@ def get_dynamics_files_reference_atomnum(submission_id,file_type):
                 dbtype_pref = pref
                 break
 
-        if reffilepath is not None:       
-            ref_numatoms = get_atoms_num(reffilepath,dbtype_2_file_type[dbtype_pref])
+        if reffilepath is not None:
+            ref_file_type = dbtype_2_file_type[dbtype_pref]
+            ref_numatoms = get_atoms_num(reffilepath,ref_file_type)
             
-    return (reffilepath, reffilename, ref_numatoms)
+    return (reffilepath, reffilename, ref_file_type, ref_numatoms)
 
     
     
@@ -5642,6 +5762,7 @@ def test_accepted_file_extension(ext,file_type):
         
 
 @csrf_exempt
+@textonly_500_handler
 def upload_dynamics_files(request,submission_id,trajectory=None):
     trajectory_max_files = 200
     if trajectory is None:
@@ -5707,12 +5828,14 @@ file_types = get_dynamics_file_types()
 
 @csrf_protect
 def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_files=200):
+    
     file_types = get_dynamics_file_types()
     file_type = None
     new_window = '0'
     no_js = '1'
     download_url = ''
     error = ''
+    filetype_complete_names = {'coor':'coordinate','top':'topology','traj':'trajectory','parm':'parameter','other':'other'}
     filetype_subtypes_dict = {'coor':'pdb','top':'topology','traj':'trajectory','parm':'parameters','other':'other'}
     filetype_dbtypestext_dict = {'coor':'coor','top':'top','traj':'traj','parm':'param','other':'other'}
     atomnum_check_file_types = {'coor','traj'}
@@ -5748,7 +5871,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     accept_string = ',.'.join(file_types[file_type]['extension'])
     accept_string = '.' + accept_string
     action ='./?file_type='+file_type+'&new_window='+str(new_window)+'&no_js='+str(no_js)+'&timestamp='+str(round(time.time()*1000))
-   
+    
     if request.method == "POST":
         exceptions = False
         data = dict()
@@ -5760,7 +5883,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             return response
             
         if file_type in atomnum_check_file_types:    
-            reffilepath, reffilename, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
+            reffilepath, reffilename, ref_file_type, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
             prev_numatoms = ref_numatoms
         
         
@@ -5817,8 +5940,9 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     ext = 'tar.gz'
                 else:
                     ext = fileext
-
+                
                 filename = get_file_name_submission("dynamics",submission_id,filenum,ext=ext,forceext=False,subtype=subtype)
+                
                 filepath = os.path.join(submission_path,filename)
                 download_url = os.path.join(submission_url,filename)
                 
@@ -5828,12 +5952,20 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         save_uploadedfile(deleteme_filepath,uploadedfile)
                     else:
                         deleteme_filepath = uploadedfile.temporary_file_path()
+                    
                     try:
                         numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
                     except:
                         response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
                         return response
-                
+                    if file_type != 'traj' and ref_numatoms is not None and ref_numatoms != numatoms:
+                        if ref_file_type == 'traj':
+                            files_text = 'file(s)'
+                        else:
+                            files_text = 'file'
+                        response = HttpResponse('Uploaded '+filetype_complete_names[file_type]+' file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded '+filetype_complete_names[ref_file_type]+' '+files_text+'.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
+                    
                 if file_type == 'traj':
 
                     if filenum == 0:
@@ -5842,6 +5974,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                             return response
                         dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
                         dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
+                        
                         for row in dyndb_submission_dynamics_files:
                             filepath2 = row['filepath']
                             if os.path.exists(filepath2):
@@ -5855,6 +5988,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     prev_name = uploadedfile.name
                     prev_numatoms = numatoms
 
+                    
                 
                 dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
                 dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
@@ -7396,7 +7530,7 @@ def check_protein_entry_exist(uniprotkbac, isoform, is_mutated, sequence):
 
 #  lpkm=[]
 #  lpkw=[]
-
+@textonly_500_handler
 def PROTEINv_get_data_upkb (request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
@@ -9086,8 +9220,11 @@ def generate_molecule_properties2(submission_id,molid):
     submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
     sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
     print(sdfnameref)
+    
     uploadfile=open(os.path.join(submission_path,sdfnameref),'rb')
+    
     mol = open_molecule_file(uploadfile) # EL objeto mol es necesario para trabajar en RD KIT
+    
     try:
         sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
         print("\nSINCHI",code)
@@ -9097,6 +9234,7 @@ def generate_molecule_properties2(submission_id,molid):
         data['sinchi']['sinchi'] = sinchi
         data['sinchi']['code'] = code
         data['inchi'] = dict()
+        
         inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
         print("\nINCHI",code)
         if code > 1:
@@ -9107,10 +9245,11 @@ def generate_molecule_properties2(submission_id,molid):
         print(" data['inchi']['code'] = code")
     except:
         data['msg'] ='Error while computing InChI.'
+    
      #   return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
     print("AAAAAAAAAAAAAAAAAA\n")
 
-    data['smiles'] = generate_smiles(mol,logfile=sys.stdout)
+    data['smiles'] = generate_smiles(mol,logfile=sys.stderr)
     print(data['smiles'], "= generate_smiles(mol,logfile=sys.stdout)")
     print("AAAAAAAAAAAAAAAAAA\n")
     data['charge'] = get_net_charge(mol)

@@ -177,7 +177,7 @@ kbd{
   <div class="col-sm-12">
     <div id="headerbrowser" style="word-break: normal" class="jumbotron">
     <h1>Simulation browser</h1>
-    <p>Use the panel in the left to search for the elements which form the simulation (GPCR's, other proteins, molecules and compounds). Click "Add to Search" button next to the results to join those elements in the right panel and find a system containing them.</p>
+    <p>Use the panel in the left to search for the elements which form the simulation (GPCR's, other proteins, molecules and compounds). Click "Add to Search" button next to every result you have obtained to join those elements in the right panel and find a system containing them.</p>
     <center><button  id="helpbutton" type="button" value="Help" class="btn btn-primary">Show Help</button></center>
 
       <div id="help" style="word-break: normal">
@@ -206,7 +206,7 @@ kbd{
             <tr><td>OR POPC )</td><td>OR POPC</td></tr>
             </table></center>
 
-            <p>The search in the left will return the systems matching any of the following:</p>
+            <p>The example search in the left will return the systems matching any of the following:</p>
             <ul>
             <li>P28222 + Serotonin</li>
             <li>P28222 + Clozapine</li>
@@ -218,7 +218,7 @@ kbd{
 
             </ul>
 
-            <p>However, the search in the right will return the systems matching any of the following: </p>
+            <p>However, the example search in the right will return the systems matching any of the following: </p>
             <ul>
             <li>P28222 + Serotonin</li>
             <li>Every system with Clozapine</li>
@@ -231,10 +231,10 @@ kbd{
 
             <li class="helpli">Exact Match</li><br>
 
-            <p> If you select "Exact Match" the search will return only those systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result. So, if you look for P28222 AND Serotonin, and select exact match, only those systems composed by P28222 and serotonin and nothing else will be retrieved; a system with P28222, water and serotonin will not be a result.</p>
+            <p> If you select "Exact Match", the search will return only those systems whose composition matches exactly the one you have build in this panel. If there is any other element in the system that you have not included in the search, it will not appear as a result. So, if you look for P28222 AND Serotonin, and select exact match, only those systems composed by P28222 and serotonin and nothing else will be retrieved; a system with P28222, water and serotonin will not be a result.</p>
 
             <li class="helpli">Complex, Complex Structure and Dynamics</li><br>
-            <p> You can also select between: <b>"Complex", "Complex Structure" or "Dynamics"</b>. "Complex" is a system composed by a GPCR, other proteins, orthoesteric and alloesteric ligands, "Complex Structure" is a complex with other selected co-crystallized molecules (think of it as a PDB file) and "Dynamics" is a "Complex Structure" which has been solvated and membrane-embeded and has got a trajectory. For the last two cases,"Complex Structure" and "Dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "Dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> 
+            <p> You can also select between: <b>"Complex", "Complex Structure" or "Dynamics"</b>. "Complex" is a system composed by a GPCR, other proteins, orthoesteric and alloesteric ligands, "Complex Structure" is a complex with other selected co-crystallized molecules (think of it as a PDB file) and "Dynamics" is a "Complex Structure" which may have been solvated and/or membrane-embeded and has a trajectory. For the last two cases,"Complex Structure" and "Dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "Dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> 
 
             <p> <b>Note</b>: The difference between molecule and compound is that a compound represents a set of related molecules which only differ in the protonation state or some other subtle feature. As the concept of molecule is more precise, when searching with a molecule, you will only find those systems containing exactly that molecule. However, if you search by its corresponding compound, you will find all the systems which have that exact molecule or any of the other molecules belonging to that compound. So, if you search systems using Clozapine (compound) you will get more results (or the same) than if you search by Clozapine (molecule).</p>
           </div> <!--end of right panel div  -->
