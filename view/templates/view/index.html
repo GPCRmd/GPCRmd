@@ -383,7 +383,7 @@
             {% endif %}
 
 <!-- ============= Analysis =========== --> 
-          
+           {% if traj_list %}          
            <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
@@ -557,6 +557,7 @@
 <!-- ======================================== -->
             </div>
             </div>
+            {% endif %}
             <div style="margin-bottom:5px">
                 <div class="row" style="margin-top:10px;margin-bottom:0" >
                    <div style="padding-right:3px;padding-left:3px"> 
@@ -566,7 +567,7 @@
      	        </div>
 
                 <div>
-                   <iframe class={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
+                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
                 </div>
                 <div id="legend"> </div>
                 </div>

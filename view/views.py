@@ -487,7 +487,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
     data_fin=axis_lab + data
     return (True,data_fin, None)
 
-def obtain_url(request):
+def obtain_domain_url(request):
     current_host = request.get_host()
     domain=current_host.rsplit(':',1)[0]
     if request.is_secure():
@@ -504,7 +504,7 @@ def obtain_url(request):
 
 
 def index(request, dyn_id):
-    mdsrv_url=obtain_url(request)
+    mdsrv_url=obtain_domain_url(request)
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
             struc_p= request.POST.get("rmsdStr")
@@ -700,7 +700,6 @@ def index(request, dyn_id):
                 if all_gpcrs_info:
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-        
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
