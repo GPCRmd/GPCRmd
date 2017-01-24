@@ -223,7 +223,7 @@ $(document).ready(function(){
     function getSelectedPosLists(selector){
         var selPosList=[];
         $(selector).each(function(){
-            range = $(this).attr("id");
+            range = $(this).data("pdbpos");
             if (range != "None"){
                 if (range.indexOf(",") > -1){
                     range_li=range.split(",");
@@ -298,12 +298,12 @@ $(document).ready(function(){
 
     function disableMissingClasses(){
         $("li.cons_nav").each(function(){ 
-            if ($(this).attr("id") == "False"){
+            if ($(this).data("TF") == "False"){
                 $(this).addClass("disabled")
             }
         })
         $("a.cons_nav").each(function(){ 
-            if ($(this).attr("id") == "False"){
+            if ($(this).data("TF") == "False"){
                 $(this).removeAttr("data-toggle").removeAttr("href").attr("title","Class not avaliable");
             }
         })         
@@ -1279,11 +1279,14 @@ function isEmptyDict(mydict){
         return traj;
     }
 ///
-    var struc_info = $(".str_file").attr("id");
+    var struc = $(".str_file").data("struc_file");
+    var dyn_id=$(".str_file").data("dyn_id");
+    //var struc_id =$(".str_file").data("structure_file_id");
+    /*var struc_info = $(".str_file").attr("id");
     var struc_info = struc_info.split(",");
     var struc = struc_info[0];
     var struc_id = struc_info[1];
-    var dyn_id=struc_info[2];
+    var dyn_id=struc_info[2];*/
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
@@ -1296,13 +1299,13 @@ function isEmptyDict(mydict){
     $("#receptor").addClass("active");
     $(".nonGPCR").addClass("active");
     var chains_str = $("#chains").text();
-    var all_chains = $("#chains").attr("class").split(",");
+    var all_chains = $("#chains").data("all_chains").split(",");
 
-    var gpcr_pdb_dict = $(".gpcr_pdb").attr("id");
+    var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
     if (gpcr_pdb_dict !="no"){
-        gpcr_id_name=JSON.parse($("#cons_pos_box_all").attr("class"));
-        gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
+        gpcr_id_name=$("#cons_pos_box_all").data("gpcr_id_name");
+        //gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
         dicts_results=obtainDicts(gpcr_pdb_dict);
         all_gpcr_dicts=dicts_results[0];
         num_gpcrs =dicts_results[1];

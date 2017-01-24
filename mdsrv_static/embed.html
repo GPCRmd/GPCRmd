@@ -261,7 +261,7 @@
 ////////////////
                                     $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
                                     $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-                                    $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px"});
+                                    $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"2px"});
 ///////////////////
                                     $(".traj_btn").click( function(){
                                         var btn_traj_Bid=$(this).attr("id");
@@ -325,7 +325,7 @@
                                     stage.signals.hovered.add( function( d ){
                                     if (d.atom){
                                         var hatom = d.atom;
-                                        var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind:"+hatom.serial+")";
+                                        var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.serial+")";
                                         $("#atomInfo").text(info);
                                     } /*else {
                                         $("#atomInfo").text("");
@@ -338,7 +338,7 @@
                                        // hovrep.repr.clear()
                                         if (clicktrue){
                                             if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind:"+d.atom.serial+") - ";
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
                                                 $("#atomClicked").text(info)
                                                 myrepr = o.addRepresentation( "label", {
                                                     sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
@@ -350,7 +350,7 @@
                                             }
                                         }else{
                                             if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind:"+d.atom.serial+") - ";
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
                                                 $("#atomClicked").text(info)                                            
                                                 atom2 = d.atom.serial.toString();
                                                 //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
@@ -380,7 +380,6 @@
                 if (trajComp){
                     var toframe=$(".ui-slider-handle").attr("aria-valuenow");
                     trajComp.setFrame(toframe);
-                    console.log(trajComp.trajectory.currentFrame);
                 }
             });
         } );
@@ -391,7 +390,7 @@
             <!--<button id="playerButton">play/pause</button>-->
         </div>
         <div id="trajRangeDiv" style="position:absolute;width:536px;height:30px;margin-top:295px;margin-left:2px;visibility:hidden">
-          <input id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
+          <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
         <div style="width:536px;height:30px;margin-top:335px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>

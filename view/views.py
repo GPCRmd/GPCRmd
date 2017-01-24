@@ -2,20 +2,17 @@ from django.shortcuts import render
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
 from view.data import *
 import re
 import json
-import urllib
 from Bio.PDB import *
 from Bio import PDB
 import itertools
 import mdtraj as md 
 import numpy as np
-from graphos.sources.simple import SimpleDataSource
-from graphos.renderers.gchart import LineChart
 import copy
 import csv
 
@@ -768,15 +765,7 @@ def index(request, dyn_id):
 
 
 
-#TEST:
-def pre_viewer(request):
-    all_dyn=DyndbDynamics.objects.all()
-    dyn_ids=[dyn.id for dyn in all_dyn]
-    dyn_ids.sort()
-    context={
-        "dyn_ids" : dyn_ids
-    }
-    return render(request, 'view/pre_viewer.html', context)
+
 
 #########################
 
