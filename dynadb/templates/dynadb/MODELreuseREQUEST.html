@@ -3,9 +3,9 @@
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 
-{% block content %}
+{% block addon_css %}
 
-<head><style>
+<style>
 .long input {
  width:100%;
 }
@@ -50,8 +50,10 @@ input[type=submit]:hover{
     background-color: #337ac1;
     color:white;
 }
-</style></head>
+</style>
 
+{% endblock %}
+{% block content %}
 
 <form method="post" id="myform" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
@@ -61,20 +63,19 @@ input[type=submit]:hover{
      
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Simulation Submission<br>Reuse Complex<br></h3>
+        	<h3 > Reuse Crystal-Derived Assembly </h3><h3 style="margin-left:-5%;margin-right:-5%">Browse for a previous submission</h3>
          </div> 
      </div>
 
      <!-- main description -->
-     <div class="col-md-12 panel panel-primary">
-         <div class="panel-body">
+     <div class="col-md-12 panel panel-primary" style="height:300px">
+         <div class="panel-body" style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
             <div style="text-align:center"> 
-             <h4>FILL IN THE COMPLEX FORM</h4>
+             <h4 style="margin-top:-5%">SIMULATION REQUEST</h4>
             </div>
-             <p style="text-align: justify;" >Fill in the form with information on the curated pdb protein (loops, mutations, etc)</p>
-             <p style="text-align: justify;" >Contains structural information about proteins or “molecular complexes” in PDB format similar to the PDB database: structure and coordinates of protein, ligand and/or  molecules crystallized with proteins, crystallized or user-predicted stable waters and ions.</p>
-
-             <p style="text-align: justify;">Note, do not include coordinates of solvent, ions, membrane lipids or other molecules which are part of the general solvation environment specially if their coordinates are randomly generated. </p>
+             <p style="text-align: justify;" >The "reuse crystal-derived assembly" protocol allows the user to take advantage of the data stored in a simulation item in the GPCRmd database in order to simplify a new simulation submission. This submission method is recomended provided that the set of crystalized components in the new simulation matches exactly the one in the reused simulation. Therefore, only small molecules belonging to the bulk environment (not crystalized components of the simulation) can be modified when using this simulation mode.</p>
+             <p style="text-align: justify;" >To obtain data on the set of crystalized components in a specific simulation item, the user must provide either a "Model ID" or a "Submission ID" identifier after checking the checkbox corresponding to the chosen option. </p>
+             <p style="text-align: justify;" >The "new submission" protocol which allows data submission from scratch is available by clicking the "Back to index" button.</p>
          </div>
      </div>
 
@@ -91,7 +92,7 @@ input[type=submit]:hover{
 <!-- middle column -->
 <div class="col-md-7 "> 
     <!-- filters -->
-  <div class="col-lg-12 panel panel-primary"> 
+  <div class="col-lg-12 panel panel-primary" style="background-color:GhostWhite"> 
 
     <div class="panel-body">
  <!------------------------------------------------------------------------------ middle column -->
@@ -106,24 +107,22 @@ input[type=submit]:hover{
 
  			<div style="text-align:center">
 <!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
-             			<h4><br>Complex Information</h4><br>
+             			<h4><br>Crystal-Derived Assembly Request</h4><br>
 <!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
             		</div>
-                <div class="row">
-		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
-		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
-	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div></div><br>
-	        <div class="row">
-			<div class="col-md-8 col-md-offset-4" style="text-align:left">
+	        <div class="row" id="PR">
+			<div class="col-md-10 col-md-offset-2" style="text-align:left">
 			    <div class="row">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><a title="Choose a previous complex from the GPCRmd database. If the Submission ID and Complex ID values  do not designate the same System, the Submission ID will be taken as the correct value and the corresponding Complex ID value will be displayed here after posting.">Complex ID:</a> </div>
-			        <div class="col-md-4"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" placeholder="previous complex"> </input></div> 
-                            {% if value == 0 %} <div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
+                            <div class="col-md-1 col-md-offset-1"> <input checked type="radio" style="float:left"id="id_form-1-is_present" name="form-is_present" value="is_present" /> </div>
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><a title="Choose a previous set of crystalized compounds from the GPCRmd database by providing a specific model identifier Model ID.">Model ID:</a> </div>
+			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" placeholder="1"> </input></div> 
+                            {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 			    </div>
-                            <div class="row">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p><a title="Choose a previous submission from the GPCRmd database">Submission ID:</a> </p></div>
-			        <div class="col-md-4"><input style="width:130px" id="Choose_submission_id" name="Choose_submission_id" rows="1" placeholder="Previous Complex"> </input></div> 
-                            {% if value == 0 %} <div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
+                           <div class="row">
+                            <div class="col-md-1 col-md-offset-1"> <input type="radio" style="float:left"id="id_form-2-is_present" name="form-is_present" value="is_present" /> </div>
+				<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p><a title="Choose a previous set of crystalized compounds from the GPCRmd database by providing a specific model identifier Model ID." >Submission ID:</a> </p></div>
+			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input style="width:130px" id="Choose_submission_id" name="Choose_submission_id" hidden rows="1" placeholder="1"> </input></div> 
+                            {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 		            </div><br>
                             </div>
                             {% if value == 0 %}
@@ -142,3 +141,16 @@ input[type=submit]:hover{
       </div>
   </div>
 {% endblock %}
+
+
+{% block addon_js %}
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
+    <script src="{% static 'dynadb/reusemodel_id.js' %}"></script>
+
+{% endblock %}
+
+
+
+
+

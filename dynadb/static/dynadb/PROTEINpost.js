@@ -9,16 +9,16 @@ $(document).ready(function(){
     $("#id_submit").click(function(event) {
         event.preventDefault();
 	var self = $(this);
-        var modelform = $(this).parents("#myform");
-        var file_source=modelform.find("#file_source");
+        var protform = $(this).parents("#myformProt");
+        //var file_source=modelform.find("#file_source");
         //fields.set_readonly_color();
         var buttons = $("button,input[type='submit'],input[type='button']");
 
         self.prop('disabled',true);
         buttons.prop('disabled',true);
-        file_source.prop('disabled',true);
+        //file_source.prop('disabled',true);
         
-        $(modelform).ajaxSubmit({
+        $(protform).ajaxSubmit({
             url: "./",
             type: 'POST',
             dataType:'text',
@@ -26,8 +26,7 @@ $(document).ready(function(){
                 var urllist=window.location.href.split("/");
                 var submission_id=urllist[urllist.length-2];
                 alert("Congratulations!! "+data);
-                window.location.replace("../../dynamics/"+submission_id+"/");
-                
+                window.location.replace("../../molecule/"+submission_id+"/");
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {
@@ -42,7 +41,7 @@ $(document).ready(function(){
             },
             complete: function(xhr,status,msg){
                 buttons.prop('disabled',false);
-                file_source.prop('disabled',false);
+                //file_source.prop('disabled',false);
                 self.prop('disabled',false);
             }
         });

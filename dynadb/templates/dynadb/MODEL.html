@@ -4,6 +4,22 @@
 {% load staticfiles %} 
 
 
+{% block addon_css %}
+<style>
+{% if model_id %}
+a {
+color: #555;
+}
+label{
+cursor:pointer;
+font-weight:normal
+}
+{%endif%}
+
+</style>
+{% endblock %}
+
+
 {% block content %}
 
 <form method="post" id="myform" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
@@ -21,13 +37,13 @@
 {% endif %}
 </div>
 
- <!--   _____________________________________________________________________________________________-->
+ <!--   .............................................................................................-->
 
 <!-- middle column -->
 <div class="col-md-7 col-md-offset-4"> 
     <!-- filters -->
 
-    <div class="col-md-12 panel">
+    <div class="col-md-12 panel" style="margin-bottom:0px">
  <!------------------------------------------------------------------------------ middle column -->
 <!--        <h4> <a title="Table containing molecular dynamic metadata"> dyndb_Dynamics Table:</a></h4> <br> -->
 <!--	<div style=display:table;>  -->
@@ -38,12 +54,12 @@
              			<h4><br>Complex Information</h4><br>
             		</div>   -->
 
- 			<div style="text-align:center;height:50px;background-color:AliceBlue;" class="col-md-12 panel panel-primary">
+ 			<div class="col-md-12 panel panel-primary" style="text-align:center;color:black;height:50px;{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} background-color:AliceBlue;background-color:AliceBlue;text-align:center;height:50px;{%endif%}">
 <!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
              			<h4 style="margin-top: 10px;margin-left:-5px;margin-right:-5px;font-size:20px;color:DarkBlue"><b>Description of crystalized components in the simulated system</b></h4>
 <!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
             		</div>
-     <div class="col-md-12 panel panel-primary">
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}">
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>General information</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"></div>
                 </div><br>
@@ -69,13 +85,13 @@
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex" >Name:</a></label></div>
-			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder="5-HT1B receptor in complex with Clozapine"  {% if model_id %} value="{{p.values.0.name}}" readonly {%endif%}  style="width:300px"></input></div>
+			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder="5-HT1B receptor in complex with Clozapine"  {% if model_id or saved  %} value="{{p.values.0.name}}" readonly {%endif%}  style="width:300px"></input></div>
 		<br></div>
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_type"><a title="Complex Type: Type of structure that is modeled." >Type:</a></label></div>
 				<div class="col-md-6" style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_type" name="type" placeholder="   "  style="width:300px;height:26px" >
-                                   {% if model_id %}
+                                   {% if model_id or saved %}
                                         <option value="{{p.values.0.type}}" >{{Type}}</option>
                                    {% else %}
                                       {% for i in fdbMF.Meta.model.MODEL_TYPE %}
@@ -89,18 +105,18 @@
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pdbid"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). " >PDB ID:</a></label></div>
-			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  {% if model_id %} value="{{p.values.0.pdbid}}" readonly {% endif %} placeholder=" 4IAR.A"  style="width:300px"/></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  {% if model_id or saved %} value="{{p.values.0.pdbid}}" readonly {% endif %} placeholder=" 4IAR.A"  style="width:300px"/></div>
 		<br></div>
 
 	        <div class="row">
 		<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_description"><a title="Description: Description of the complex containing information that is not provided in other field such as procedure followed for the construction of the model. " >Description:</a></label></div>
-			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2" placeholder=" Agonist conformation (ergotamine). Clozapine binding by docking. Loop repair in Modeller 9v10."  {% if model_id %}  readonly {%endif%} style="width:300px">{% if model_id %}{{p.values.0.description}}{%endif%}</textarea></div>
+			<div class="col-md-6"><textarea cols="40" id="id_description" name="description" rows="2" placeholder=" Agonist conformation (ergotamine). Clozapine binding by docking. Loop repair in Modeller 9v10."  {% if model_id %}  readonly {%endif%} style="width:300px">{% if model_id or saved  %}{{p.values.0.description}}{%endif%}</textarea></div>
 		<br></div>
 
-	        <div class="row" >
+	        <div class="row" {%if model_id %} style="margin-bottom:30px" {%endif%}>
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_source_type"><a title="Source Type: Source of the coordinates of the “complex”. Loop repairs and other replaced missing protein residues on X-ray or NMR structures are not taken into account for setting the value of this field. In order to set the value to X-ray or NMR all the coordinates (including relative positions between different components) of protein complexes and their components should come from an X-ray or an NMR experiment." >Source Type:</a></label></div>
 				<div class="col-md-6"  style="height:30px"><select {% if model_id %} readonly {%endif%} id="id_source_type" name="source_type" placeholder="   "  style="width:300px;height:26px" >
-                                {% if model_id %}  
+                                {% if model_id or saved  %}  
 					<option readonly value="{{p.values.0.source_type}}" >{{SType}}</option>
                                  {% else %}
                                       {% for i in fdbMF.Meta.model.SOURCE_TYPE %}
@@ -122,6 +138,7 @@
                       
 			<div style="text-align:right;margin-right:5%;height:50px">
                             <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="" hidden target="_blank">Download uploaded PDB file.</a>
+                            <a id="id_download_pdb"  name="download_pdb" noreferrer noopener href="{{urlpdb}}" hidden target="_blank">Download uploaded PDB file.</a>
                             <button type="button" name="upload_pdb" id="id_upload_pdb" >Upload</button>
 			</div>
                         {%endif%}
@@ -131,7 +148,7 @@
   <br></div>
 		<div class=row id='PRUEBA1'>
 
-     <div class="col-md-12 panel panel-primary" >
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} margin-bottom:0px{%endif%}" >
                 <div class=row style="height:20px"></div>
 
 	        <div class="row">
@@ -152,8 +169,8 @@
                                 <td style="width:10%;margin-right:5%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="  1" /></td>
 				<td style="width:50%;margin-left:5%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
 				<td style="width:20%;margin-left:5%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
-                               </tbody></table> 
-                                 {%endfor%}
+                               </tbody>
+                                 {%endfor%}</table> 
                 <div class="row" style="height:30px"></div>
                 </div>
  <p style="font-size:14px;margin-left:9%;margin-right:9%;text-align: justify;padding-bottom:15px">Use the proper "<b>Prot #</b>" identifier for every protein segment in the "<b>Curated protein data</b>" table. A correspondence between the "<b>Prot #</b>", the protein name and the UniprotKB AC is shown in the <b>"Submitted proteins summary"</b> table.</p>
@@ -175,7 +192,7 @@
 
                                 </thead>
                                 <tbody id="pElement1">
-                                {% if model_id %} 
+                                {% if model_id or saved %} 
 {% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}	
 				<tr id="Element1" {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input readonly id="id_form-{{intps0}}-prot" name="prot" value="{{o.int_id|add:"1"}}" type="number" style="width:58px" placeholder="  1" /></td>
 				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input readonly id="id_form-{{intps0}}-id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
@@ -235,7 +252,7 @@
 
 </div>
 		<div class=row id='PRUEBA2'>
-     <div class="col-md-12 panel panel-primary" style="margin-bottom:0px">
+     <div class="col-md-12 panel panel-primary" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} margin-top:20px{%endif%}">
                 <div class=row style="height:20px"></div>
 
 	        <div class="row">
@@ -254,20 +271,20 @@
 					<th style="width:90px;text-align:center"><label for="id_formmc-0-typemc"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
 				</thead>
                                 <tbody id="pElement2">
-{%if model_id %}
+{%if model_id or saved %}
 {% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
-                                	<tr id="Element2_{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:70px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
  
-					<td style="padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
                                         {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{d}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{d}}"/></td>
                                         {%endif%}{%endfor%}
 
                                         {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
  
-					<td style="padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
 
-                                        <td style="padding:5px 5px 5px 5px"><select id="id_form-{{intmc0}}-typemc" readonly name="typemc"   type="text" style="width:70px;height:23px" />
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_form-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
                                 {% for ll in lmtype %}
                                    {% if forloop.counter == forloop.parentloop.counter %}
                                                     <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
@@ -282,12 +299,12 @@
                               {% for mc in mcdata %}
 				<tr id="Element2-{{forloop.counter0}}">
                                       
-                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
-					<td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" readonly placeholder=" 1 " value="{{mc.int_id}}"/></td>
-					<td style="padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
-					<td style="padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
-					<td style="padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" readonly style="width:60px;height:23px">
+                                      <td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" readonly placeholder=" 1 " value="{{mc.int_id}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" readonly style="width:60px;height:23px">
                                 {% for ll in lmol_MOD_type_tup %}
                                    {% if forloop.counter == forloop.parentloop.counter %}
                                                     <option selected value="{{ll.0}}"> {{ll.1}}</option>
@@ -298,10 +315,10 @@
                               {% endfor %}
                         </tbody>
 			</table>
-	
 
+{%endif%}
 
-      		{%if mcdata %}
+      		{%if mcdata or saved %}
  	        	<div class="row"style="text-align:left;height:30px;padding-top:10px">
                               <div class="col-md-1 col-md-offset-2" style="width:30px;padding:0px 0px 0px 0px"><input id="add_mol_new" name="add_mol_new" style="aligned:center;margin-right:-0px" type="checkbox"  /></div>   
                               <div class="col-md-9"  ><a style="font-size:13px;color:black" title="Sometimes more than one &quot;residue name&quot; may be used for one molecule type just to highlight individual molecules of this type playing a specific role in the simulation. If so, an extra row can be added by using the &quot;+ Add molecule&quot; button. The corresponding fields in the row must be manually filled" > Check the box if a crystalized molecule has several resnames </a></div>
@@ -314,7 +331,6 @@
                              <p style="margin: 10px 14% 35px 14%;text-align:justify"> Update the "<b>Molecule</b>" field in the added row to the value corresponding to the molecule with more than one "<b>Resname</b>".</p>
 		        </div> 	
 		        
-		        </div> 	
 
  			<div style="text-align:right;margin-right:5%;height:70px">
                                       <a id="id_logfile"  name="logfile" href="" noreferrer noopener hidden target="_blank">Download log file.</a>
@@ -322,14 +338,13 @@
 					<br>
 					<a id="id_pdbchecker_tar_gz" style="margin: 0px 104px 0px 0px;" name="pdbchecker_tar_gz" hidden href="" noreferrer noopener target="_blank">Download pdbchecker results.</a>
 		        </div>
-		        {% else %}
+		        </div> 	
+		        {% else %}{%if not model_id %}
 		        <p style="text-align:center;">No molecules found. Please, go back to step 2.</p>
-		        {% endif %}
+		        {% endif %}{% endif %}
 		        </div> 		
 
-{%endif%}
 
-</div>
 </form>
 
 </div>
@@ -358,7 +373,8 @@
       <div class="col-md-12 panel panel-primary" >
           <div class="panel-body" id="selection-">
                   <!--Submit prueba -->
-		      <button type="button" value="submit" id="id_submit"  class="btn btn-success btn-lg btn-block has-spinner" name="submit"   > Submit Crystalized Components </button>
+<!--		      <button type="button" value="submit" id="id_submit"  class="btn btn-success btn-lg btn-block has-spinner" name="submit"   > Submit Crystalized Components </button>-->
+                <input id="id_submit" name="submit" type="submit" value="Submit " class="btn btn-success btn-lg btn-block has-spinner"  />
            </div>
   	  <div class="panel-body" id="selection-">
         	<a id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
@@ -381,7 +397,7 @@
 
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
-    <script src="{% static 'dynadb/MODELpost.js' %}"></script>
+<!--    <script src="{% static 'dynadb/MODELpost.js' %}"></script> -->
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
     <script src="{% static 'dynadb/addFields.js' %}"></script>
