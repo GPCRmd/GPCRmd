@@ -1156,7 +1156,7 @@ def getligrec(idlist,return_type):
         return dynresult
 ###################################################################################################################################
 
-def complexmatch(result_id,querylist):
+def complexmatch_complex_exp(result_id,querylist):
     ''' Extracts every element from each complex in result_id and checks if there are elements in the complex which are not in the querylist '''
     moltypetrans={0:'orto',1:'alo'}
     #cmolecule=DyndbComplexMolecule.objects.select_related('id_complex_exp').get(pk=result_id)
@@ -1188,7 +1188,7 @@ def complexmatch(result_id,querylist):
 
     return 'pass'
 
-def exactmatchtest(arrays,return_type,result_id):
+def exactmatchtest_complex_exp(arrays,return_type,result_id):
     ''' Extracts every element from each complex, model or dynamic in result_id and checks if there are elements in it which are not in the querylist '''
     rowdict=dealwithquery(arrays)
     querylist=list()
@@ -1213,37 +1213,7 @@ def exactmatchtest(arrays,return_type,result_id):
 
     querylist+=tmpquerylist
     if return_type=='complex':
-        return complexmatch(result_id,querylist)
-            
-    elif return_type=='model':
-        for comp in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=result_id):
-            if comp.type!=1:
-                compstr=str(comp.id_molecule.id)
-                if (['molecule',compstr,'other'] not in querylist) and (['molecule',compstr,'all'] not in querylist):
-                    print(['molecule',str(comp.id_molecule.id),'other'],'MISSING!')
-                    return 'fail'
-        apotest=DyndbModel.objects.select_related('id_complex_molecule').get(pk=result_id).id_complex_molecule
-        if apotest!=None:
-            return complexmatch(apotest.id,querylist)
-
-        else:
-            return 'pass'
-        
-    else:
-        modelobj=DyndbDynamics.objects.select_related('id_model').get(pk=result_id).id_model
-        for comp in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=result_id):
-            compstr=str(comp.id_molecule.id)
-            if (['molecule',compstr,'other'] not in querylist) and (['molecule',compstr,'all'] not in querylist):
-                print(['molecule',str(comp.id_molecule.id),'other'],'MISSING!')
-                return 'fail'
-        for comp in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=modelobj.id):
-            compstr=str(comp.id_molecule.id)
-            if comp.type!=1:
-                if (['molecule',compstr,'other'] not in querylist) and (['molecule',compstr,'all'] not in querylist):
-                    print(['molecule',str(comp.id_molecule.id),'other'],'MISSSING!')
-                    return 'fail'
-        if DyndbDynamics.objects.get(pk=result_id).id_model.id_complex_molecule!=None:
-            return complexmatch(modelobj.id_complex_molecule.id,querylist)
+        return complexmatch_complex_exp(result_id,querylist)
 
     return 'pass'
 ##########################################################################################################################################
@@ -1284,7 +1254,7 @@ def do_boolean(list_of_lists): #[ ['NONE',[1,2,3] ], ['OR',[3,4,5] ], ['AND',[1,
 
 ##########################################################################################################################################
 
-def do_query(table_row,return_type): #table row will be a list as [id,type]
+def do_query_complex_exp(table_row,return_type): #table row will be a list as [id,type]
     '''Returns a list of id's of the selected type (complex, model or dynamics) where the element in table_row appears. If the elemnt in table_row is a compound the ids brom both the compound and all the correspondent molecules are retrieved'''
     rowlist=[]
     print('\n\nSearching...',table_row)
@@ -1318,127 +1288,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
                     rowlist.append(row['cmol_id'])
                 if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1: #alosteric ligand
                     rowlist.append(row['cmol_id'])
-        ############################
-    elif return_type=='model':
-        if table_row[0]=='protein':
 
-            is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
-                q = DyndbComplexProtein.objects.filter(id_protein=table_row[1])
-                q = q.annotate(model_id=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
-                q = q.values('id_protein','model_id')
-                for row in q:
-                    if row['model_id'] is not None:
-                        rowlist.append(row['model_id'])
-
-            for model in DyndbModel.objects.filter(id_protein=table_row[1]): #apoforms
-                rowlist.append(model.id)
-
-        elif table_row[0]=='molecule':
-            user_molecule = table_row[1]
-            q=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule)
-            q=q.annotate(model_id=F('id_complex_molecule__dyndbmodel__id'))
-            q=q.values('model_id','type')
-            for row in q:
-                if row['model_id'] is not None:
-                    if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0: #orthosteric ligand
-                        rowlist.append(row['model_id'])
-
-                    if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1: #alosteric ligand
-                        rowlist.append(row['model_id'])
-
-
-            if table_row[2]=='other' or table_row[2]=='all':
-                for modcomp in DyndbModelComponents.objects.filter(id_molecule=user_molecule):
-                    if int(modcomp.type) in [0,2,3,4]:
-                        rowlist.append(modcomp.id_model.id)
-
-        else: #it is a compound
-            user_compound=table_row[1]
-            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
-                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'model')
-            q=DyndbComplexCompound.objects.filter(id_compound=user_compound)
-            q=q.annotate(id_model=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
-            q=q.values('id_model','type')
-            for row in q:
-                if row['id_model'] is not None:
-                    if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0:
-                        rowlist.append(row['id_model'])
-                    if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1:
-                        rowlist.append(row['id_model'])
-            
-            if table_row[2]=='other' or table_row[2]=='all':
-                for molecule in DyndbMolecule.objects.filter(id_compound=user_compound):
-                    for modcomp in DyndbModelComponents.objects.select_related('id_model').filter(id_molecule=molecule.id):
-                        if int(modcomp.type) in [0,2,3,4]:
-                            rowlist.append(modcomp.id_model.id)
-        #######################
-
-    else: #return Dynamics
-        if table_row[0]=='protein':
-            is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein 
-            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
-                q=DyndbComplexProtein.objects.filter(id_protein=table_row[1])
-                q=q.annotate(id_dynamics=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__dyndbdynamics__id'))
-                q=q.values('id_dynamics')
-                for row in q:
-                    if row['id_dynamics'] is not None:
-                        rowlist.append(row['id_dynamics'])
-
-            q=DyndbModel.objects.filter(id_protein=table_row[1]) #apoforms
-            q=q.annotate(id_dynamics=F('dyndbdynamics__id'))
-            q=q.values('id_dynamics')
-            for row in q:
-                if row['id_dynamics'] is not None:
-                    rowlist.append(row['id_dynamics'])
-
-
-        elif table_row[0]=='molecule':
-            user_molecule = table_row[1]
-            q=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=user_molecule)
-            q=q.annotate(dynamics_id=F('id_complex_molecule__dyndbmodel__dyndbdynamics__id'))
-            q=q.values('dynamics_id','type')
-            for row in q:
-                if row['dynamics_id'] is not None:
-                    if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0:
-                        rowlist.append(row['dynamics_id'])
-
-                    if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1:
-                        rowlist.append(row['dynamics_id'])
-
-            if table_row[2]=='other' or table_row[2]=='all':
-                for dyncomp in DyndbDynamicsComponents.objects.select_related('id_dynamics').filter(id_molecule=user_molecule):
-                    rowlist.append(dyncomp.id_dynamics.id)
-                for modcomp in DyndbModelComponents.objects.select_related('id_model').filter(id_molecule=user_molecule):
-                    if int(modcomp.type) in [0,2,3,4]:
-                        for dyid in DyndbDynamics.objects.filter(id_model=modcomp.id_model.id): #dynamics whose model has the mol of user's interest.
-                            rowlist.append(dyid.id)
-
-        else:
-            user_compound=table_row[1]
-            for mol in DyndbMolecule.objects.filter(id_compound=user_compound):
-                rowlist+=do_query([ 'molecule' , mol.id , table_row[2] ], 'dynamics')
-            q=DyndbComplexCompound.objects.filter(id_compound=user_compound)
-            q=q.annotate(id_dynamics=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__dyndbdynamics__id'))
-            q=q.values('id_dynamics','type')
-            for row in q:
-                if row['id_dynamics'] is not None:
-                    if (table_row[2]=='orto' or table_row[2]=='all') and row['type']==0:
-                        rowlist.append(row['id_dynamics'])
-                    if (table_row[2]=='alo' or table_row[2]=='all') and row['type']==1:
-                        rowlist.append(row['id_dynamics'])
-
-            if table_row[2]=='other' or table_row[2]=='all':
-                q=DyndbMolecule.objects.filter(id_compound=user_compound)
-                q=q.annotate(id_dynamics=F('dyndbdynamicscomponents__id_dynamics__id'), id_model=F('dyndbmodelcomponents__id_model__id'), typemodel=F('dyndbmodelcomponents__type'))
-                q=q.values('id_dynamics','id_model','typemodel')
-                for row in q:
-                    if (row['id_dynamics'] is not None) and row['id_dynamics'] not in rowlist:
-                        rowlist.append(row['id_dynamics'])
-                    if (row['typemodel'] is not None) and row['typemodel'] in [0,2,3,4]:
-                        for dyn in DyndbDynamics.objects.filter(id_model=row['typemodel']):
-                            if dyn.id not in rowlist:
-                                rowlist.append(dyn.id)
     rowlist=[res_id for res_id in rowlist if res_id!=None]
     return rowlist
    
@@ -1478,7 +1328,7 @@ def dealwithquery(arrays):
 
 ##########################################################################################################################################
 
-def main(arrays,return_type):
+def main_complex_exp(arrays,return_type):
     rowdict=dealwithquery(arrays)
     results=dict()
     for keys,values in rowdict.items():
@@ -1489,15 +1339,15 @@ def main(arrays,return_type):
         if type(values[0])==list: #inside of parenthesis
             for item in values: #values is a list, so it keeps the order of the rows, so does inner_results.
                 if item[0]=='AND' or item[0]=='OR' or item[0]=='NOT':
-                    inner_results.append([ item[0] , do_query(item[1:4],return_type) ]) #inner_results=[ ['AND', [1,2,3] ]  ],  ['OR', [2,3,5] ]  ]
+                    inner_results.append([ item[0] , do_query_complex_exp(item[1:4],return_type) ]) #inner_results=[ ['AND', [1,2,3] ]  ],  ['OR', [2,3,5] ]  ]
 
                 else: #first line inside parenthesis, the boolean of this row aplies to the whole parenthesis and it is stored in the rowdict.                
-                    inner_results.append([ 'NONE' , do_query(item[0:3], return_type)])
+                    inner_results.append([ 'NONE' , do_query_complex_exp(item[0:3], return_type)])
             results[keys]=list(do_boolean(inner_results)) #results[counter,boolean]=[1,2,3,4] #counter is the row number where the '(' appears
 
 
         else: #simple row
-            results[keys]=do_query(values,return_type) #do query for each value, save it under same key
+            results[keys]=do_query_complex_exp(values,return_type) #do query for each value, save it under same key
     aaa=do_boolean( prepare_to_boolean(results) )
     return aaa
 
@@ -8862,7 +8712,7 @@ def dictfetchall(cursor):
 ###################################################################################
 ###################################################################################
 #let's python
-
+#fill the database
 from protein.models import Protein
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot, retreive_isoform_data_uniprot
 from contextlib import closing
@@ -8871,7 +8721,7 @@ from django.utils import timezone
 from django.conf import settings
 from .GPCRuniprot import GPCRlist
 chunks=[]
-#chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
+chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
 for chunk in chunks:
     print('\n\n\n\n\n\nProccessing chunk: ',chunk)
     time.sleep(3)
@@ -8937,13 +8787,17 @@ for chunk in chunks:
 
 
         elif '<ChEMBL ID of Ligand>' in lines_list[i]:
-            chembl_id=lines_list[i+1].strip()
+            chembl_id=lines_list[i+1].strip()[6:]
 
+        elif '<PMID>' in lines_list[i]:
+            reference['pmid']=''
+            reference['pmid']=lines_list[i+1].strip() 
 
         elif '<Ki (nM)>' in lines_list[i]:
             ki=lines_list[i+1].strip()
             ki=ki.replace(">", "")
             ki=ki.replace("<", "")
+
 
 
         elif '<IC50 (nM)>' in lines_list[i]:
@@ -9050,9 +8904,9 @@ for chunk in chunks:
 
             if flag==0: #if either the protein or the compound is not present, then, we are sure that a complex containing them does not exist.
                 query_array[0][0]=' ' #first element has no boolean!
-                resultlist=main(query_array,'complex')
+                resultlist=main_complex_exp(query_array,'complex')
                 for i in resultlist:
-                    if exactmatchtest(query_array,'complex',i)=='pass':
+                    if exactmatchtest_complex_exp(query_array,'complex',i)=='pass':
                         print('complex already exists, no need to record again. Its ID is:',i,' its components are: ',comple)
                         exactest=1
                         #do not create again that cexp!
@@ -9085,7 +8939,7 @@ for chunk in chunks:
                 print('link already exists, no need to record')
                 reference_id=doires[0].id
             else:
-                cursor.execute('INSERT INTO dyndb_references (doi, authors, url,dbname) VALUES (%s, %s, %s, %s) RETURNING id', (comple[9]['DOI'],comple[9]['authors'], comple[9]['bindingdblink'], 'BindingDB' )) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
+                cursor.execute('INSERT INTO dyndb_references (doi, authors, url,dbname,pmid) VALUES (%s, %s, %s, %s, %s) RETURNING id', (comple[9]['DOI'],comple[9]['authors'], comple[9]['bindingdblink'], 'BindingDB',str(comple[9]['pmid'])) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
                 reference_id=cursor.fetchone()[0]
 
             intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
@@ -9258,7 +9112,7 @@ for chunk in chunks:
                             )
                     unicount+=1
     ##############################################################################################################################################################################################
-                #Create the ccompound and complxcompound, if it does not exist
+                #Create the compound and complxcompound, if it does not exist
                 print('Protein recorded, now the compound')
                 DBcompound=DyndbCompound.objects.filter(pubchem_cid=comple[2])
                 if len(DBcompound)>0:
@@ -9281,7 +9135,12 @@ for chunk in chunks:
                     SDFname=get_file_name('molecule',nextid,nextmol,ext='sdf',subtype='molecule')
                     SDFpath=get_file_paths('molecule')
                     SDFpath=SDFpath+SDFname
-                    print('\n\n\n\n\nTHIS IS THE SDFPATH:::::::::',SDFpath)
+
+                    PNGname=get_file_name('molecule',nextid+1,nextmol,ext='png',subtype='image')
+                    PNGpath=get_file_paths('molecule')
+                    PNGpath=PNGpath+PNGname
+                    print('PNG path',PNGpath)
+                    datapubchem,errdata = retreive_compound_png_pubchem('cid',pubchem_id,outputfile=PNGpath,width=300,height=300) #works
                     with open(SDFpath,'w+') as sdfhand:
                         for line in comple[11]:
                             sdfhand.write(line)
@@ -9289,6 +9148,12 @@ for chunk in chunks:
                         'INSERT INTO dyndb_files (filename,filepath,id_file_types,id) VALUES (%s, %s, %s, %s) RETURNING id', (SDFname,SDFpath,'20',str(nextid)) #20=SDF file
                         )
                     dyndbfilesid=cursor.fetchone()[0] 
+
+                    cursor.execute(
+                        'INSERT INTO dyndb_files (filename,filepath,id_file_types,id) VALUES (%s, %s, %s, %s) RETURNING id', (PNGname,PNGpath,'19',str(nextid+1)) #19=PNG file
+                        )
+                    dyndbpngid=cursor.fetchone()[0] 
+
                     #GET MOLECULE INFO FROM SDF FILE
                     molprop=generate_molecule_properties_BindingDB(SDFpath)
                     iupac,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='IUPACName')
@@ -9360,7 +9225,11 @@ for chunk in chunks:
 
                     cursor.execute(
                         'INSERT INTO dyndb_files_molecule (id_molecule,id_files,type) VALUES (%s, %s, %s)', (str(molecule_id),str(dyndbfilesid),'0') #SDF file=type 0!
-                        )     
+                        )
+                    cursor.execute(
+                        'INSERT INTO dyndb_files_molecule (id_molecule,id_files,type) VALUES (%s, %s, %s)', (str(molecule_id),str(dyndbpngid),'2') #SDF file=type 0!
+                        )
+
                     print('HERE2')
 
                     cursor.execute(
