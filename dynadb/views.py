@@ -1700,7 +1700,7 @@ def generate_molecule_properties_BindingDB(SDFpath):
         data['msg'] ='Error while computing InChI.'
      #   return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
 
-    data['smiles'] = generate_smiles(mol,logfile=sys.stdout)
+    data['smiles'] = generate_smiles(mol)
 
     data['charge'] = get_net_charge(mol)
         
@@ -8872,7 +8872,7 @@ from django.conf import settings
 from .GPCRuniprot import GPCRlist
 chunks=[]
 chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
-for chunk in chunks[3:5]:
+for chunk in chunks:
     print('\n\n\n\n\n\nProccessing chunk: ',chunk)
     time.sleep(3)
     fh=open('./dynadb/'+chunk,'r')
@@ -9080,13 +9080,12 @@ for chunk in chunks[3:5]:
     ##############################################################################################################################################################################################
             #Create the references
             print('Recording references...')
-            #doires=DyndbReferences.objects.filter(url=comple[9]['bindingdblink']).filter(doi=comple[9]['DOI']).filter(authors=comple[9]['authors'])
             doires=DyndbReferences.objects.filter(doi=comple[9]['DOI'])
             if len(doires)>0:
                 print('link already exists, no need to record')
                 reference_id=doires[0].id
             else:
-                cursor.execute('INSERT INTO dyndb_references (doi, authors, url) VALUES (%s, %s, %s) RETURNING id', (comple[9]['DOI'],comple[9]['authors'], comple[9]['bindingdblink'] )) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
+                cursor.execute('INSERT INTO dyndb_references (doi, authors, url,dbname) VALUES (%s, %s, %s, %s) RETURNING id', (comple[9]['DOI'],comple[9]['authors'], comple[9]['bindingdblink'], 'BindingDB' )) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
                 reference_id=cursor.fetchone()[0]
 
             intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
@@ -9157,6 +9156,18 @@ for chunk in chunks[3:5]:
                                 )                       
 
                             prot_id=cursor.fetchone()[0]
+                            try:
+                                preference_id=DyndbReferences.objects.filter(doi='https://doi.org/10.1093/nar/gku989')[0].id
+                            except:
+
+                                cursor.execute(
+                                    'INSERT INTO dyndb_references (doi,url,authors,title,dbname,journal_press,pub_year,volume,pages) VALUES (%s,%s, %s,%s,%s, %s,%s) RETURNING id', ( 'https://doi.org/10.1093/nar/gku989', 'https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gku989' ,'The UniProt Consortium','UniProt: a hub for protein information','Uniprot','Nucleic Acids Research','2014','43','D204') 
+                                )
+                                preference_id=cursor.fetchone()[0] 
+  
+                            cursor.execute(
+                                'INSERT INTO dyndb_references_protein (id_protein,id_references) VALUES (%s, %s)', (str(prot_id),str(preference_id))
+                            )
 
                             for name in namedataori['RecName'][0]['Full']:
                                 cursor.execute(
@@ -9212,7 +9223,17 @@ for chunk in chunks[3:5]:
                                 )   
 
                             prot_id=cursor.fetchone()[0]
-                            
+                            try:
+                                preference_id=DyndbReferences.objects.filter(doi='https://doi.org/10.1093/nar/gku989')[0].id
+                            except:
+                                cursor.execute(
+                                    'INSERT INTO dyndb_references (doi,url,authors,title,dbname,journal_press,pub_year) VALUES (%s,%s, %s,%s,%s, %s,%s) RETURNING id', ( 'https://doi.org/10.1093/nar/gku989', 'https://academic.oup.com/nar/article-lookup/doi/10.1093/nar/gku989' ,'The UniProt Consortium','UniProt: a hub for protein information','Uniprot','Nucl Acids Res','2014') #Nucl Acids Res 2014; 43 (D1): D204-D212.
+                                )
+                                preference_id=cursor.fetchone()[0] 
+  
+                            cursor.execute(
+                                'INSERT INTO dyndb_references_protein (id_protein,id_references) VALUES (%s, %s)', (str(prot_id),str(preference_id))
+                            )
                             for name in namedataori['RecName'][0]['Full']:
                                 cursor.execute(
                                     'INSERT INTO dyndb_other_protein_names (id_protein,other_names) VALUES (%s, %s)', (str(prot_id),name)
@@ -9309,12 +9330,13 @@ for chunk in chunks[3:5]:
                     #recording alternative names
                
                     for name in cnames[:50]:
-                        cursor.execute(
-                            'INSERT INTO dyndb_other_compound_names (id_compound,other_names) VALUES (%s, %s)', (str(compound_id),str(name))
-                        )
+                        if len(name)<200:
+                            cursor.execute(
+                                'INSERT INTO dyndb_other_compound_names (id_compound,other_names) VALUES (%s, %s)', (str(compound_id),str(name))
+                            )
                     urlcompo='https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?cid='+str(pubchem_id)
                     cursor.execute(
-                        'INSERT INTO dyndb_references (url,authors) VALUES (%s, %s) RETURNING id', (urlcompo,'National Center for Biotechnology Information. PubChem Compound Database')
+                        'INSERT INTO dyndb_references (url,authors,dbname) VALUES (%s, %s,%s) RETURNING id', (urlcompo,'National Center for Biotechnology Information. PubChem Compound Database','PubChem Compound Database')
                     )
                     creference_id=cursor.fetchone()[0]   
                     cursor.execute(
@@ -9327,11 +9349,30 @@ for chunk in chunks[3:5]:
                         'INSERT INTO dyndb_molecule (id_compound,description,net_charge,inchi,inchikey,inchicol,smiles,id) VALUES (%s, %s, %s,%s, %s, %s, %s, %s) RETURNING id', (str(compound_id),'Standard form',str(molprop['charge']),str(molprop['inchi']['inchi'][6:]),str(molprop['inchikey']),str(molprop['inchicol']),str(molprop['smiles']),str(nextmol)) #perfect.
                     )
                     molecule_id=cursor.fetchone()[0]
-                    print('HERE')
+
+                    cursor.execute ("""
+                       UPDATE dyndb_compound
+                       SET std_id_molecule=%s
+                       WHERE id=%s
+                    """, ( str(molecule_id),str(compound_id) )  )
+
+                    #update compound WHERE id=compound_id std_id_molecule=molecule_id
+
                     cursor.execute(
                         'INSERT INTO dyndb_files_molecule (id_molecule,id_files,type) VALUES (%s, %s, %s)', (str(molecule_id),str(dyndbfilesid),'0') #SDF file=type 0!
                         )     
                     print('HERE2')
+
+                    cursor.execute(
+                        'INSERT INTO dyndb_references (url,authors,title,dbname) VALUES (%s, %s, %s, %s) RETURNING id', (urlcompo,'National Center for Biotechnology Information. PubChem Compound Database','Information of this molecule was obtained via PubChem API and RDKit tools','PubChem Compound Database')
+                    )
+                    mreference_id=cursor.fetchone()[0] 
+
+                    cursor.execute(
+                        'INSERT INTO dyndb_references_molecule (id_molecule,id_references) VALUES (%s, %s)', (str(molecule_id),str(mreference_id))
+                        )   
+
+
                     cursor.execute(
                         'INSERT INTO dyndb_complex_molecule_molecule (id_molecule,id_complex_molecule,type) VALUES (%s, %s, %s)', (str(molecule_id),str(cmol_id),'0')
                     )
