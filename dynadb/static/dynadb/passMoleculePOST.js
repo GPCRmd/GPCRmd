@@ -12,9 +12,11 @@ $(document).ready(function(){
             molforml = $(this).parents("[id='content']");
             molform=$(molforml).find("[id='MOLECULE_f']");
             console.log(molform.attr('class'));
+            var multi=true
         } 
         else if  ( $(this).is("[id='id_passMoleculePOST'],[id|=id_form][id$='-passMoleculePOST']") ) {
             var molform = $(this).parents("[id|=molform]");
+            var multi=false
         }
         var self = $(this);
         console.log(self.attr('name'));
@@ -33,7 +35,15 @@ $(document).ready(function(){
         $.post("./submitpost/",
                 data, 
                 function(data){
-                    alert("HOLA"+data);
+                    var urllist=window.location.href.split("/");
+                    var submission_id=urllist[urllist.length-2];
+                    alert("Congratulations!! "+data);
+                    if (multi===true){
+                        window.location.replace("../../model/"+submission_id+"/");
+                    }else{
+                        alert("Please, submit other molecules in your system or continue to step 3.");
+                    }
+                  
                 },  
                 "text" )
         .fail(function(xhr,status,msg) {

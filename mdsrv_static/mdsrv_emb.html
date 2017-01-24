@@ -42,7 +42,23 @@
         document.addEventListener( "DOMContentLoaded", function(){
             stage = new NGL.Stage();
             NGL.StageWidget( stage );
+//////////////
 
+        function selWithinComponent(o,dist_comp){
+            var radius=Number(dist_comp[0]);
+            var ligSele =dist_comp[1];
+            var restriction="";
+            if (ligSele.indexOf("protein and") > -1){
+                restriction="not "+ligSele.slice(12)+" and ";
+            }
+            var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
+            //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
+            var sele2 = o.structure.getAtomSetWithinGroup( sele );
+            return([restriction,sele, sele2])
+        }
+
+
+///////////////
             //var load = NGL.getQuery( "load" );
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";// MAYBE I WILL NEED TO CHANE THIS
@@ -113,6 +129,7 @@
                     if (struc) {
 			    stage.loadFile( s_path + struc, {sele: sele_final, visible: visibility}  ).then( function( o ){
 				stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
+                                o.setName("my_comp");
                                 if (rc=="y"){
                                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
                                     /*if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
@@ -196,27 +213,39 @@
                                         }
 				     }
                                  }
-                                if (dist_within){
-                                    var dist_within_li = decodeURIComponent(dist_within.replace(/\+/g, " ")).split(",");
-                                    for (wth_n in dist_within_li){
-                                        var dist_comp=  dist_within_li[wth_n].split("-");
-                                        var radius=Number(dist_comp[0]);
-                                        var ligSele =dist_comp[1];
-                                        var restriction="";
-                                        if (ligSele.indexOf("protein and") > -1){
-                                            restriction= "not "+ligSele.slice(12) + " and ";
-                                        }
-                                        var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius ).toSeleString();
-                                        var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
-                                        var spacefillRepr = o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: "protein and "+restriction + sele } );
-                                    }
-                                }
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
                                     var traj_li=traj_str.split(",")
                                     for (t in traj_li) {
-                                    o.addTrajectory( t_path + traj_li[t] );
+                                        o.addTrajectory( t_path + traj_li[t] );
                                     }
+                                }
+                                if (dist_within){
+                                    var dist_within_li = decodeURIComponent(dist_within.replace(/\+/g, " ")).split(",");
+                                    for (wth_n in dist_within_li){
+                                        var dist_comp=  dist_within_li[wth_n].split("-");
+                                        var result=selWithinComponent(o,dist_comp);
+                                        var restriction=result[0];
+                                        var sele = result[1];
+                                        var sele2 = result[2];
+                                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: "protein and "+restriction + sele.toSeleString(), name:"sel_within" } );
+                                        o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: "protein and "+restriction + sele2.toSeleString() , name:"sel_within2"} );
+                                    }
+                                    var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
+                                    for (trajN in trajCompT){
+                                        trajCompT[trajN].signals.frameChanged.add(function(){
+                                            for (wth_n in dist_within_li){
+                                                var dist_comp=  dist_within_li[wth_n].split("-");
+                                                var result=selWithinComponent(o,dist_comp);
+                                                var restriction=result[0];
+                                                var sele = result[1];
+                                                var sele2 = result[2];
+                                                stage.getRepresentationsByName("sel_within").setSelection("protein and "+restriction + sele.toSeleString())
+                                                stage.getRepresentationsByName("sel_within2").setSelection("protein and "+restriction + sele2.toSeleString())
+                                            }
+                                        });
+                                    }
+
                                 }
                                 if (show_dist =="y"){
 ////////////////////////////////////

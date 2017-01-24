@@ -1,4 +1,7 @@
 
+	      <div class="col-md-12 panel panel-primary" id="id_show_mol_inbulk" name="show_mol_inbulk" data-toggle="collapse"   data-target="{%for l in list %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}" style="cursor:pointer;height:50px;margin-bottom:15px;margin-top:0px;background-color:rgba(0, 250, 220, 0.7);">
+                   <div class="row"  style="padding:5px 0px 5px 0px;color:DarkBlue;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:5px">Toggle the (<b>2</b>) <b>list of bulk components in the simulation</b></div>
+              </div>
  <div id="molform-{{qMOL|length}}" class="col-md-12 panel collapse in" style="margin-bottom:0px">
   <form id="small_molecule" name="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
     <div id="molnumb" class="col-md-12 panel panel-primary" style="background-color:AliceBlue;text-align:center;color:black;height:50px" > 
@@ -63,7 +66,7 @@
                  <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> Retrieved chemoinformatics data from the uploaded structure</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{qMOL|length}}-mlnumb">SMOL #{{qMOL|length|add:1}}</h4></div>
                  </div>                                                   
                  <br>                                                     
-                                                                          
+ 
  	        <div class="row">                                        
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{qMOL|length}}-inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
                                                                           
@@ -201,7 +204,6 @@
 </form>
 
 </div>
-   </div>  
 
 
 

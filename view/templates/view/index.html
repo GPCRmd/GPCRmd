@@ -43,9 +43,7 @@
 
 	     <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
         {% if gpcr_pdb != "no" %}
-            <p style="text-align: justify;">Protein residues must be indicated as a range of residue positions or  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
-        {% else %}
-            <p style="text-align: justify;">Protein residues must be indicated as a range of residue positions.</p>
+            <p style="text-align: justify;">Protein residues must be indicated as residue positions or  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
         <p style="text-align: justify;">If you wish a more complete visualization or to add a trajectory, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
              <p style="text-align: justify;margin-bottom:4px">Mouse controls:</p>
@@ -383,7 +381,7 @@
             {% endif %}
 
 <!-- ============= Analysis =========== --> 
-          
+           {% if traj_list %}          
            <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
@@ -509,49 +507,71 @@
                 <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="rmsd_alert"> </div>
               <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
               </div>
-             </div>
 
 
+
+<!-- ============= Interaction Analysis =========== --> 
+            {% if ligands|length >= 1 %}
+            <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Interaction</div>
+              <div class="collapse" id="analysis_Int">
+              
+                    <div class="int_btw" style="margin-right:5px;margin-left:14px;margin-bottom:10px">
+                         Compute interaction between GPCR and 
+                            <select id="comp_int" name="comp_int">
+                               <option class="ligInt"  value="allLig">All ligands</option>
+                               {% for long_n, short_n in ligands %}
+                               <option class="ligInt unitInt"  value="{{short_n}}">{{long_n}}</option>
+                               {% endfor %}
+                             <!--  {% if other_prots%}
+                               <option   value="{{other_prots.0}}">Other proteins</option>
+                               {% endif %}-->
+                            </select>  
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;;margin-bottom:10px">
+                         At trajectory: 
+                           <span style="margin-left:5px">
+                                <select id="" name="int_traj">
+                                   <option disabled selected value> </option>
+                                   {% for traj in traj_list %}
+                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                                   {% endfor %}
+                                </select>
+                           </span>
+                           <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;">
+                        Threshold:
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are consideres to interact when the distance beween any of their atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
+                    </div>
+                    <div class="row">
+                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px;margin-top:5px" >Obtain result</button>
+                    </div>
+                    <div class="row" style="margin-top:5px;padding-right:40px;" id="int_alert"> </div>
+                    <div style="margin-top:5px;padding-right:40px;"  id="int_info" ></div>
+              </div>
+            {% endif %}
+            </div>
 <!-- ======================================== -->
             </div>
             </div>
+            {% endif %}
             <div style="margin-bottom:5px">
                 <div class="row" style="margin-top:10px;margin-bottom:0" >
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c;">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
-                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
+                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
                    </div>
      	        </div>
 
                 <div>
-                   <iframe src="http://localhost:8081/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
+                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
                 </div>
                 <div id="legend"> </div>
                 </div>
           </div>
 
- <!--  </div>-->
-          <!--
-          {% if traj_list %}
-            <div class="panel panel-default" >
-                <div class="panel-body">
-                  <div><p style="color:#337ac1;">Select trajectories</p></div>
-		    <div class="checkbox" >
-			{% for traj in traj_list %}
-			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
-			{% endfor %}
-		    </div>
-                    <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
 
-                </div>
-            </div>
-         {% else %}
-            <div class="panel">
-                <div class="panel-body" style="padding-top:0">
-                  <a class="btn btn-default"  id="to_mdsrv" role="button"  href="http://localhost:8081/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
-                </div>
-           </div>
-        {% endif %}-->
         </div>
     </div>
 

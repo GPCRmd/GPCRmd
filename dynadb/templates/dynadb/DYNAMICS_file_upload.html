@@ -46,13 +46,12 @@
     <input type="hidden" name="filekey" value="{{file_type}}"/>
     <input type="hidden" name="new_window" value="{{new_window}}"/>
     <input type="hidden" name="no_js" value="{{no_js}}"/>
-    <div id="{{file_type}}_div">
-        <div class="row" style="width:100%;margin:0px" id='PRUEBA'>
-                <div class="col-md-1" style="height:45px;float:left;width:8.33333333%"></div>
-                <div class="col-md-3" style="height:45px;float:left;width:25%">
-                    <label for="id_{{file_type}}"><a title="{{long_name}}: {{description}}">{{long_name}}</a> </label>
+    <div id="{{file_type}}_div" >
+        <div class="row" style="width:80%;margin-left:20%" id='PRUEBA'>
+                <div class="col-md-4" style="height:45px;float:left;width:35%;padding:0px">
+                    <label style="cursor:pointer;font-weight:normal;margin-left:10px"for="id_{{file_type}}"><a title="{{long_name}}: {{description}}">{{long_name}}</a> </label>
                 </div>
-                <div class="col-md-8" style="float:left;width:66.66666667%;padding:0px">
+                <div class="col-md-8" style="float:left;width:65%;padding:0px">
                     <div class="row" style="height:30px;width:100%;margin:0px">
                         <div class="col-md-6" style="float:left;width:50%">
                             <input style="" id="id_{{file_type}}" name="{{file_type}}" type="file" accept="{{accept_ext}}" {% if file_type == "traj" %} multiple{%endif%}/>
@@ -65,7 +64,7 @@
                         <div class="col-md-9" style="float:left;width:75%">
                             {%for download_url in download_urls%}
                             <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px">
-                            <a style="vertical-align:middle;line-height:26px;" href="{{download_url}}" id="id_{{file_type}}_download_url-{{forloop.counter0}}" noreferrer target="_blank">Download uploaded file{%if file_type == "traj"%} {{forloop.counter}}{%endif%}.</a>
+                            <a style="vertical-align:middle;line-height:26px;cursor:pointer;font-weight:normal" href="{{download_url}}" id="id_{{file_type}}_download_url-{{forloop.counter0}}" noreferrer target="_blank">Download uploaded file{%if file_type == "traj"%} {{forloop.counter}}{%endif%}.</a>
                             </div>
                             {%empty%}
                             <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px;">

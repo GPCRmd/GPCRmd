@@ -8,6 +8,7 @@ Django settings for protwis project.
 # you can override these settings by creating a protwis/settings_local.py file (or copying settings_local_default)
 # protwis/settings_local.py is ignored by git
 
+
 try:
     from protwis.settings_local import *
 except ImportError:
@@ -61,6 +62,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'protwis.custom_middlewares.MultipleProxyMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -210,6 +212,9 @@ CACHES = {
         'LOCATION': '/tmp/django_cache',
     }
 }
+
+MDSRV_PORT=8081
+
 
 
 AUTH_USER_MODEL = 'accounts.User'

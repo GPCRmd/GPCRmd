@@ -340,10 +340,8 @@ $(document).ready(function(){
     maxInputLength('#rmsd_frame_2',8);
     maxInputLength('#rmsd_my_sel_sel',50);
     maxInputLength('#rmsd_ref_frame',8);
+    maxInputLength("#int_thr", 3)
     disableMissingClasses();
-
-
-///    Res within xA of compounf  ///
 
     $(".section_pan").click(function(){
         var target=$(this).attr("data-target");
@@ -354,6 +352,8 @@ $(document).ready(function(){
             $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
         }
     });
+
+///    Res within xA of compounf  ///
 
     var comp_lg=[];
     var comp_sh=[];
@@ -433,8 +433,187 @@ $(document).ready(function(){
         }
     });    
 
-///   Dist between residues  ///
 
+
+
+function isEmptyDict(mydict){
+    empty=true
+    for (key in mydict){
+        if (mydict[key].length >= 1){
+            empty=false
+            break
+        }
+    }
+  return empty;
+}
+
+///   Freq on Interaction  ///
+    function gnumFromPosChain(pos, chain){
+        result="-"
+        for (gpcr in all_gpcr_dicts){ //[1]["combined_num"]
+            var search_dict=all_gpcr_dicts[gpcr]["combined_num"]
+            for (gnum in search_dict){
+                if (search_dict[gnum][0] == pos && search_dict[gnum][1] ==chain){
+                    result = gnum
+                }
+            }
+        }
+        return result
+    }
+
+    var i_id=1;
+    var lig_sel_str;
+    $("#gotoInt").click(function(){
+        var inp_is_num=true;
+        var thr=$("#int_thr").val();
+        var correctinput=true;
+        if (thr==""){
+            var thr_ok="3";
+        } else if (/^(\d+(\.\d+)?)$/.test(thr)){
+            var thr_ok=thr;
+        } else {
+            correctinput=false;
+        }
+        if (correctinput){
+            if (thr==""){
+                var thr_ok="3";
+            }else{
+                var thr_ok=thr;
+            }
+            var traj_path = $(".trajForInt:selected").attr("name");
+            if (traj_path){
+                var intof=$(".ligInt:selected").val()
+                if (intof=="allLig"){
+                    var all_lig_sel=[]
+                    $(".unitInt").each(function(){
+                        var lig_s=$(this).val();
+                        all_lig_sel[all_lig_sel.length]=lig_s;        
+                    });
+                } else {
+                    all_lig_sel=[intof]
+                }
+                $("#int_alert , #int_thr_error , #int_traj_error").html("");
+                ///AJAX!!!
+                $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>")
+                if (i_id==1){
+                    $("#gotoInt").addClass("disabled");
+                }
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                $.ajax({
+                    type: "POST",
+                    url: "/view/"+dyn_id+"/", 
+                    dataType: "json",
+                    data: { 
+                      "all_ligs": all_lig_sel.join(),
+                      "thresh":thr_ok,
+                      "traj_p": traj_path,
+                      "struc_p": struc,
+                    },
+                    success: function(int_data) {
+                        if ($.active<=1){
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                        }
+                        $("#wait_int").remove();
+                        if (i_id==1){
+                            $("#gotoInt").removeClass("disabled");
+                        }
+                        var success=int_data.success;
+                        if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                            var int_data=int_data.result;
+                            if (! isEmptyDict(int_data)){
+                                var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
+                                  <table class="table table-condensed" style="font-size:12px">\
+                                    <thead>\
+                                      <tr>\
+                                      	<th>Ligand</th>\
+                                        <th>AA</th>\
+                                        <th>Chain</th>\
+                                        <th>Generic num</th>\
+                                        <th>Frequency</th>\
+                                      </tr>\
+                                    </thead>\
+                                  <tbody>';
+                                for (lig in int_data){
+                                    res_int=int_data[lig];
+                                    var num_res_int=res_int.length;
+                                    table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
+                                    var res_int_1st=res_int[0];
+                                    var res_int_1st_ok=[res_int_1st[2]+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"]
+                                    for (info in res_int_1st_ok){
+                                        table_html+='<td>'+res_int_1st_ok[info]+'</td>';
+                                    }
+                                    table_html+='</tr>';
+                                    var res_int_rest=res_int.slice(1,res_int.length);
+                                    for (res_infoN in res_int_rest){
+                                        var res_info=res_int_rest[res_infoN];
+                                        var res_info_ok=[res_info[2]+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"]
+                                        table_html+='<tr>';
+                                        for (infoN in res_info_ok){
+                                            var info=res_info_ok[infoN];
+                                            table_html+='<td>'+info+'</td>';
+                                        }
+                                        table_html+='</tr>';
+                                    }                              
+                                }
+                                var patt = /[^/]*$/g;
+                                var trajFile = patt.exec(traj_path);
+                                table_html+="</tbody></table>\
+                                 <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; , <b>Trajectory:</b> "+trajFile+"</div>\
+                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                        <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
+                                    </div>\
+                                </div>";
+                                $("#int_info").append(table_html);
+                            } else {
+                                var patt = /[^/]*$/g;
+                                var trajFile = patt.exec(traj_path);
+                                var noInt_msg="<div class='int_tbl' id=int_tbl"+i_id+" style='border:1px solid #F3F3F3;padding:10px;'>\
+                                 <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491; , <b>Trajectory:</b> "+trajFile+"</div>\
+                                        <div style='margin-bottom:5px'>No interactions found.</div>\
+                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                        <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
+                                    </div>\
+                                </div>"
+                                $("#int_info").append(noInt_msg);
+                            }
+                            i_id+=1;
+                        }else{
+                            var int_error=int_data.e_msg;
+                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ int_error;
+                            $("#int_alert").html(add_error);    
+                        }
+                    },
+                    error: function(){
+                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
+                        $("#int_alert").html(add_error); 
+                        if ($.active<=1){
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                        }
+                        $("#wait_int").remove();
+                        if (i_id==1){
+                            $("#gotoInt").removeClass("disabled");
+                        }            
+                    }
+                });
+            } else {
+                $("#int_traj_error").text("Please select a trajectory.");
+                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                $("#int_alert").html(add_error_d);
+            }
+        } else {
+            $("#int_thr_error").text("Threshold must be an integer.")
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#int_alert").html(add_error);   
+        }
+    });
+    
+    $('body').on('click','.delete_int_tbl', function(){
+        var IntToRv=$(this).parents(".int_tbl").attr("id");
+        $('#'+IntToRv).remove();
+    });
+    
+    
+///   Dist between residues  ///
     var first_dist=true;
     var i_dist=1
     $("#add_btn2").click(function(){ 
@@ -645,8 +824,6 @@ $(document).ready(function(){
                     }
                 });
 ///////////////////////////////////////
-                //var dist_url ='/view/distances/' +res_ids +"/"+struc_id+"/"+traj_id;
-                //newwindow=window.open(dist_url,'','width=870,height=400');
                 $("#dist_alert").html("");
             } else {
                 add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
@@ -657,7 +834,7 @@ $(document).ready(function(){
                 $("#dist_alert").html("");
                 $.ajax({
                     type: "POST",
-                    url: "/view/"+dyn_id+"/",  //Change 1 for actual number
+                    url: "/view/"+dyn_id+"/",  
                     dataType: "json",
                     data: { 
                       "distStr": struc,
@@ -667,8 +844,6 @@ $(document).ready(function(){
                         var success=data_dist.success;
                         if (success){
                             dist_result=data_dist.result
-                        //    var rmsd_url ='/view/rmsd/';
-                         //   newwindow=window.open(rmsd_url,'','width=870,height=520');
                         }else{ 
                             var msg=data_dist.msg;
                             add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
@@ -692,10 +867,7 @@ $(document).ready(function(){
         $('#'+plotToRv).remove();
     });
 
-    /*$('body').on('click','.save_img_dist_plot', function(){
-        var ImgId=$(this).attr("id");
-        console.log(chart_img[ImgId]);
-    });*/
+
     
     function showDist(){
         if ($(".view_dist").is(":checked")){
@@ -893,6 +1065,7 @@ $(document).ready(function(){
     removeSpacesInInput("#rmsd_frame_1");
     removeSpacesInInput("#rmsd_frame_2");
     removeSpacesInInput("#rmsd_ref_frame");
+    removeSpacesInInput("#int_thr");
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
@@ -969,7 +1142,7 @@ $(document).ready(function(){
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
             $.ajax({
                 type: "POST",
-                url: "/view/"+dyn_id+"/",  //Change 1 for actual number
+                url: "/view/"+dyn_id+"/",  
                 dataType: "json",
                 data: { 
                   "rmsdStr": struc,
@@ -1111,10 +1284,12 @@ $(document).ready(function(){
     var struc = struc_info[0];
     var struc_id = struc_info[1];
     var dyn_id=struc_info[2];
-    var url_orig = "http://localhost:8081/html/embed.html?struc="+encode(struc);
+    var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
+    var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y" 
     var sel = "";
     var sel_enc = encode(sel);
+
     
     var traj=obtainCheckedTrajs()
     $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
@@ -1131,10 +1306,7 @@ $(document).ready(function(){
         dicts_results=obtainDicts(gpcr_pdb_dict);
         all_gpcr_dicts=dicts_results[0];
         num_gpcrs =dicts_results[1];
-       // bw_dict = dicts_result[0];
-       // gpcrdb_dict=dicts_result[1];
     }
-
 
 
     click_unclick(".high_pdA");
@@ -1207,7 +1379,7 @@ $(document).ready(function(){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
         var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = "http://localhost:8081/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
+        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
         $(this).attr("href", url_mdsrv);
     });    
 
