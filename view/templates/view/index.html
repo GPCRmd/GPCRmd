@@ -526,7 +526,7 @@
                                {% endif %}-->
                             </select>  
                     </div>
-                    <div style="margin-right:5px;margin-left:14px;;margin-bottom:10px">
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                          At trajectory: 
                            <span style="margin-left:5px">
                                 <select id="" name="int_traj">
@@ -538,10 +538,17 @@
                            </span>
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
-                    <div style="margin-right:5px;margin-left:14px;">
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are consideres to interact when the distance beween any of their atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
                           <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;">
+                         Consider 
+                            <select id="dist_scheme" >
+                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
+                               <option class="dist_scheme_opt"  value="closest">all atoms</option>
+                            </select>  
                     </div>
                     <div class="row">
                             <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px;margin-top:5px" >Obtain result</button>

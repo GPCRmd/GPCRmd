@@ -261,38 +261,83 @@
                                             o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" } );
                                         }
                                     }
+/////////////
                                     var clicktrue = true;
                                     var atom1 , atom2 , res2 , res2, myrepr;
+                                    var lbl_id=0;
+                                    var dist_id=0;
+                                    var clickedRep={};
+                                    var lbl_name1, lbl_name2, dist_name;
                                     stage.signals.clicked.add( function( d ){
                                        // hovrep.repr.clear()
                                         if (clicktrue){
                                             if (d.atom){
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                                                lbl_name1="label_"+lbl_id.toString();
+                                                lbl_id+=1;
                                                 myrepr = o.addRepresentation( "label", {
                                                     sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                    color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal"  } );
+                                                    color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
                                                 atom1 = d.atom.serial.toString();
-                                                //res1 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
- 
+                                                /*if (! clickedRep[atom1]){
+                                                    clickedRep[atom1]=[];
+                                                }
+                                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;*/
                                                 clicktrue = false;
                                             }
                                         }else{
                                             if (d.atom){
+                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
                                                 atom2 = d.atom.serial.toString();
                                                 //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
                                                 clicktrue = true;
                                                 if (atom1 != atom2){
+                                                    lbl_name2="label_"+lbl_id.toString();
+                                                    lbl_id+=1;
+                                                    dist_name="dist_"+dist_id.toString();
+                                                    dist_id+=1;
+                                                    var add1=[lbl_name1, lbl_name2 , dist_name];
+                                                    var add2 = [lbl_name1, lbl_name2 , dist_name];
+                                                    if (! clickedRep[atom1]){
+                                                        clickedRep[atom1]=[];
+                                                    }
+                                                    if (! clickedRep[atom2]){
+                                                        clickedRep[atom2]=[];
+                                                    }
+                                                    for (an in add1){
+                                                        clickedRep[atom1][clickedRep[atom1].length]=add1[an]
+                                                    }
+                                                    for (an in add2){
+                                                        clickedRep[atom2][clickedRep[atom2].length]=add2[an]
+                                                    }
                                                     o.addRepresentation( "label", {
                                                         sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                        color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" } );
+                                                        color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
                                                     var atomPair = [[ Number(atom1), Number(atom2) ]];
-                                                    o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal"} );
+                                                    o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
+
+                                                } else {
+                                                    if (atom1 in clickedRep){
+                                                        var toRv=clickedRep[atom1];
+                                                        for (rvN in toRv){
+                                                            var repName=toRv[rvN];
+                                                            stage.getRepresentationsByName(repName).list[0].repr.clear();
+                                                        }
+                                                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                                                        delete clickedRep[atom1];
+                                                    } else {
+                                                        if (! clickedRep[atom1]){
+                                                            clickedRep[atom1]=[];
+                                                        }
+                                                        clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
+                                                    }
                                                 }
                                             } else {
                                                 clicktrue = true;
-                                                myrepr.repr.clear()
-                                                //o.removeRepresentation("1stlab");
+                                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                                                //lbl_id -=1;
                                             }
-                                        };
+                                        }
                                     } );
 /////////////////////////////////////
                                 } 

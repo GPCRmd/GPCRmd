@@ -223,7 +223,7 @@ $(document).ready(function(){
     function getSelectedPosLists(selector){
         var selPosList=[];
         $(selector).each(function(){
-            range = $(this).data("pdbpos");
+            range = $(this).data("pdbpos").toString();
             if (range != "None"){
                 if (range.indexOf(",") > -1){
                     range_li=range.split(",");
@@ -492,6 +492,13 @@ function isEmptyDict(mydict){
                 } else {
                     all_lig_sel=[intof]
                 }
+                var dist_scheme= $(".dist_scheme_opt:selected").val();
+                var dist_scheme_name;
+                if (dist_scheme=="closest"){
+                    dist_scheme_name="All atoms";
+                } else {
+                    dist_scheme_name="Heavy atoms only";
+                }
                 $("#int_alert , #int_thr_error , #int_traj_error").html("");
                 ///AJAX!!!
                 $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>")
@@ -508,6 +515,7 @@ function isEmptyDict(mydict){
                       "thresh":thr_ok,
                       "traj_p": traj_path,
                       "struc_p": struc,
+                      "dist_scheme": dist_scheme,
                     },
                     success: function(int_data) {
                         if ($.active<=1){
@@ -558,7 +566,7 @@ function isEmptyDict(mydict){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 table_html+="</tbody></table>\
-                                 <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; , <b>Trajectory:</b> "+trajFile+"</div>\
+                                 <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
@@ -568,7 +576,7 @@ function isEmptyDict(mydict){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 var noInt_msg="<div class='int_tbl' id=int_tbl"+i_id+" style='border:1px solid #F3F3F3;padding:10px;'>\
-                                 <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491; , <b>Trajectory:</b> "+trajFile+"</div>\
+                                 <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491;  ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
                                         <div style='margin-bottom:5px'>No interactions found.</div>\
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
