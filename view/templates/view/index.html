@@ -76,9 +76,9 @@
 
         <div class="container-fluid" style="padding-top:15px">
             {% if chains %}
-            <div class=row><p class="str_file" id ={{structure_file}},{{structure_file_id}},{{dyn_id}}> {{structure_name}} <span id="chains" class="{{all_chains}}">({{chains}})</span></p></div>
+            <div class=row><p class="str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}}> {{structure_name}} <span id="chains" data-all_chains="{{all_chains}}">({{chains}})</span></p></div>
             {% else %}
-            <div class=row><p class="str_file" id ={{structure_file}},{{structure_file_id}},{{dyn_id}}> {{structure_name}} <span id="chains" class="{{all_chains}}">{{chains}}</span></p></div>
+            <div class=row><p class="str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}}> {{structure_name}} <span id="chains" data-all_chains="{{all_chains}}">{{chains}}</span></p></div>
             {% endif %}
             
            <!-- <div id="chart_div"></div>-->
@@ -105,7 +105,7 @@
              <div style="padding-left:15px">
                <div class="row" style="margin-top:10px;">
                   <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-	                <input value="" class="form-control sel_input gpcr_pdb" type="text" id ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
+	                <input value="" class="form-control sel_input gpcr_pdb" type="text" data-gpcr_pdb ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
                   </div>
                   <div class="col-sm-2 radio" style="margin-top:0; " >
 	                <label><input class="sel_high" type="radio" name="sel_high" id="rad_high" class="high" value="high" checked>Highlight</label>
@@ -190,14 +190,13 @@
           {% endif %}
 <!-- ============= Predefined views of cons pos =========== -->
            {% if gpcr_pdb != "no" %}
-            <div id="cons_pos_box_all" class="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
+            <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
             <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>               
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
             </div>
             <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
               {% if gpcr_id_name|length > 1 %}
-              hello :)
                 <div class="row" style="margin-bottom:10px">
                       <select class="form-control" style="width:100%;height:32px;" id="gpcr_sel">
                         <option value="all">All GPCRs</option>
@@ -209,10 +208,10 @@
                 <!-- Conserved pos for all GPCRs -->
                     <div id="gpcr_id_all" class="gpcr_prot_show_cons" style="display:inline">
                         <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" id="{{cons_pos_all_info.1.A}}"><a id="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#classA_all">Class A</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" id="{{cons_pos_all_info.1.B}}"><a id="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#classB_all">Class B</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav" id="{{cons_pos_all_info.1.C}}"><a id="{{cons_pos_all_info.1.C}}" class="cons_nav" data-toggle="tab" href="#classC_all">Class C</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav" id="{{cons_pos_all_info.1..F}}"><a id="{{cons_pos_all_info.1..F}}" class="cons_nav" data-toggle="tab" href="#classF_all">Class F</a></li>
+                          <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#classA_all">Class A</a></li>
+                          <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#classB_all">Class B</a></li>
+                          <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav" data-TF="{{cons_pos_all_info.1.C}}"><a data-TF="{{cons_pos_all_info.1.C}}" class="cons_nav" data-toggle="tab" href="#classC_all">Class C</a></li>
+                          <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav" data-TF="{{cons_pos_all_info.1..F}}"><a data-TF="{{cons_pos_all_info.1..F}}" class="cons_nav" data-toggle="tab" href="#classF_all">Class F</a></li>
                         </ul>
                         <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                             <div style="margin:0;" id="classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
@@ -220,16 +219,16 @@
                                     {% if cons_pos_all_info.0.A.1 %}
                                         <p>Molecular switches</p>
 	                                        {% for pos in cons_pos_all_info.0.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_all_info.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_pos_all_info.0.A.0 %}
                                         <p>Most conserved</p>
 	                                        {% for pos in cons_pos_all_info.0.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -238,7 +237,7 @@
                                   {% if cons_pos_all_info.0.B.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_pos_all_info.0.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -246,7 +245,7 @@
                                   {% if cons_pos_all_info.0.C.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_pos_all_info.0.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -254,7 +253,7 @@
                                   {% if cons_pos_all_info.0.F.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_pos_all_info.0.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -265,10 +264,10 @@
                 {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
                     <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons" style="display:none">
                         <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{active_class.A.0}} cons_nav" id="{{show_class.A}}"><a id="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA_{{gpcr_id}}">Class A</a></li>
-                          <li class="GPCRclass {{active_class.B.0}} cons_nav" id="{{show_class.B}}"><a id="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB_{{gpcr_id}}">Class B</a></li>
-                          <li class="GPCRclass {{active_class.C.0}} cons_nav" id="{{show_class.C}}"><a id="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC_{{gpcr_id}}">Class C</a></li>
-                          <li class="GPCRclass {{active_class.F.0}} cons_nav" id="{{show_class.F}}"><a id="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF_{{gpcr_id}}">Class F</a></li>
+                          <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA_{{gpcr_id}}">Class A</a></li>
+                          <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB_{{gpcr_id}}">Class B</a></li>
+                          <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC_{{gpcr_id}}">Class C</a></li>
+                          <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF_{{gpcr_id}}">Class F</a></li>
                         </ul>
                         <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                             <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
@@ -276,16 +275,16 @@
                                     {% if cons_class.A.1 %}
                                         <p>Molecular switches</p>
 	                                        {% for pos in cons_class.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
                                         <p>Most conserved</p>
 	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -294,7 +293,7 @@
                                   {% if cons_class.B.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -302,7 +301,7 @@
                                   {% if cons_class.C.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -310,7 +309,7 @@
                                   {% if cons_class.F.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -322,10 +321,10 @@
                    {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
                     <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons">
                         <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{active_class.A.0}} cons_nav" id="{{show_class.A}}"><a id="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
-                          <li class="GPCRclass {{active_class.B.0}} cons_nav" id="{{show_class.B}}"><a id="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
-                          <li class="GPCRclass {{active_class.C.0}} cons_nav" id="{{show_class.C}}"><a id="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC">Class C</a></li>
-                          <li class="GPCRclass {{active_class.F.0}} cons_nav" id="{{show_class.F}}"><a id="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF">Class F</a></li>
+                          <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
+                          <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
+                          <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC">Class C</a></li>
+                          <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF">Class F</a></li>
                         </ul>
                         <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                             <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
@@ -333,16 +332,16 @@
                                     {% if cons_class.A.1 %}
                                         <p>Molecular switches</p>
 	                                        {% for pos in cons_class.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" id="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
                                         <p>Most conserved</p>
 	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -351,7 +350,7 @@
                                   {% if cons_class.B.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -359,7 +358,7 @@
                                   {% if cons_class.C.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -367,7 +366,7 @@
                                   {% if cons_class.F.0 %}
                                     <p>Most conserved</p>
                                     {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" id="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -527,7 +526,7 @@
                                {% endif %}-->
                             </select>  
                     </div>
-                    <div style="margin-right:5px;margin-left:14px;;margin-bottom:10px">
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                          At trajectory: 
                            <span style="margin-left:5px">
                                 <select id="" name="int_traj">
@@ -539,10 +538,17 @@
                            </span>
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
-                    <div style="margin-right:5px;margin-left:14px;">
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are consideres to interact when the distance beween any of their atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
                           <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;">
+                         Consider 
+                            <select id="dist_scheme" >
+                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
+                               <option class="dist_scheme_opt"  value="closest">all atoms</option>
+                            </select>  
                     </div>
                     <div class="row">
                             <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px;margin-top:5px" >Obtain result</button>
