@@ -107,10 +107,15 @@ def show_alig(request, alignment_key):
     if request.method=='POST':
         wtseq=request.POST.get('wtseq')
         mutseq=request.POST.get('mutant')
+        if '\n' in mutseq or '>' in mutseq:
+            mutlines=mutseq.split('\n')
+            if '>' in mutlines[0]:
+                mutlines=mutlines[1:]
+            mutseq=''.join(mutlines)
         result=align_wt_mut(wtseq,mutseq)
         result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
         request.session[alignment_key]=result
-        tojson={'alignment':result, 'message':'' , 'userkey':key}
+        tojson={'alignment':result, 'message':'' , 'userkey':alignment_key} #do not keeep this line on merge. you shouldnt be doing a merge anyway
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
     else:
@@ -8721,63 +8726,67 @@ from django.utils import timezone
 from django.conf import settings
 from .GPCRuniprot import GPCRlist
 from django.db.models import Q
+from Bio import Entrez
 from Bio.Entrez import efetch
 Entrez.email = 'alejandrovarelarial@yahoo.es'
-import xml.etree.ElementTree as ET
 
 def fetch_abstract(pmid):
     handle = efetch(db='pubmed', id=pmid, retmode='xml')
     xml_data = handle.read()
-    print (xml_data)
+    #print (xml_data)
     linelist=[]
-    for line in xml_data:
-        linelist.append(line.strip())
+    for line in xml_data.split('\n'):
+        linelist.append(line)
 
-    i=0:
+    i=0
+    title=''
+    journal=''
+    issn=''
+    volume=''
+    issue=''
+    doi=None
+    year=None #null?
+    #print(linelist)
     while i<len(linelist):
         line=linelist[i]
-        title=''
-        if '<ArticleTitle>' in line:
-            title_search = re.search('<title>(.*)</title>', line, re.IGNORECASE)
+        print (line)
+        if re.search('<ArticleTitle>(.*)</ArticleTitle>', line, re.IGNORECASE):
+            title_search = re.search('<ArticleTitle>(.*)</ArticleTitle>', line, re.IGNORECASE)
             if title_search:
                 title = title_search.group(1)
-        journal=''
-        elif '<Title>' in line:
-            title_search=re.search('<Title>(.*)</Title>', line, re.IGNORECASE)
-            if title_search:
-                journal= title_search.group(1)    
-        issn=''        
-        elif '<ISSN' in line:
-            title_search = re.search('>(.*)</ISSN>', line, re.IGNORECASE)
-            if title_search:
-                issn = title_search.group(1)
 
-        volume=''
-        elif '<Volume>' in line:
-            title_search = re.search('<Volume>(.*)</Volume>', line, re.IGNORECASE)
-            if title_search:
-                volume = title_search.group(1)
-        issue=''
-        elif '<Issue>' in line:
-            title_search = re.search('<Issue>(.*)</Issue>', line, re.IGNORECASE)
-            if title_search:
-                issue = title_search.group(1)
-        doi=''
-        elif '<ELocationID' in line and 'EIdType="doi"' in line:
-            title_search = re.search('<<ELocationID.*>(.*)</ELocationID>', line, re.IGNORECASE)
+        elif re.search('<Title>(.*)</Title>', line, re.IGNORECASE):
+            title_search=re.search('<Title>(.*)</Title>', line, re.IGNORECASE)
+            journal= title_search.group(1)    
+       
+        elif re.search('>(.*)</ISSN>', line, re.IGNORECASE):
+            title_search=re.search('>(.*)</ISSN>', line, re.IGNORECASE)
+            issn = title_search.group(1)
+
+        elif re.search('<Volume>(.*)</Volume>', line, re.IGNORECASE):
+            title_search=re.search('<Volume>(.*)</Volume>', line, re.IGNORECASE)
+            volume = title_search.group(1)
+
+        elif re.search('<Issue>(.*)</Issue>', line, re.IGNORECASE):
+            title_search=re.search('<Issue>(.*)</Issue>', line, re.IGNORECASE)
+            issue = title_search.group(1)
+
+        elif re.search('<ELocationID',line,re.IGNORECASE) and re.search('EIdType="doi"',line,re.IGNORECASE):
+            title_search = re.search('<ELocationID.*>(.*)</ELocationID>', line, re.IGNORECASE)
             if title_search:
                 doi = title_search.group(1)
-        year=''
-        elif '<Pubdate>':
-            j=i+1
-            while '</PubDate>' not in linelist[j]:
-                line=linelist[j]
-                year=''
-                month=''
-                day=''
-                year_search = re.search('<Year>(.*)</Year>', line, re.IGNORECASE)
 
+            if len(doi)==0:
+                doi=None
+
+        elif re.search('<pubdate>',line,re.IGNORECASE):
+            j=i+1
+            while not re.search('</PubDate>',linelist[j],re.IGNORECASE):
+                line=linelist[j]
+                year_search = re.search('<Year>(.*)</Year>', line, re.IGNORECASE)
+                print(line)
                 if year_search:
+                    print(year_search.group(1),'FOUND')
                     year = year_search.group(1)
      
                 j+=1
@@ -8790,7 +8799,7 @@ def fetch_abstract(pmid):
 
 
 chunks=['chunk0_from2870096_to_5487587.sdf','chunk10_from28600899_to_31150286.sdf','chunk11_from31150286_to_33730861.sdf','chunk12_from33730861_to_36373039.sdf','chunk13_from36373039_to_38807745.sdf','chunk14_from38807745_to_41292353.sdf','chunk15_from41292353_to_43720827.sdf','chunk16_from43720827_to_46164765.sdf','chunk17_from46164765_to_48529918.sdf','chunk18_from48529918_to_50960816.sdf','chunk19_from50960816_to_53419225.sdf','chunk1_from5487587_to_8107333.sdf','chunk20_from53419225_to_55867575.sdf','chunk21_from55867575_to_58318805.sdf','chunk2_from8107333_to_10673062.sdf','chunk3_from10673062_to_12925257.sdf','chunk4_from12925257_to_15613041.sdf','chunk5_from15613041_to_18280168.sdf','chunk6_from18280168_to_20874179.sdf','chunk7_from20874179_to_23536254.sdf','chunk8_from23536254_to_26041971.sdf','chunk9_from26041971_to_28600899.sdf']
-chunks=chunks[7:]
+chunks=chunks[1:3]
 
 
 
@@ -8798,7 +8807,6 @@ def fill_db(chunks):
     '''Fills the GPCRmd database with data from the BindingDB. It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created.'''
     for chunk in chunks:
         print('\n\n\n\n\n\nProccessing chunk: ',chunk)
-        time.sleep(3)
         fh=open('./dynadb/'+chunk,'r')
         complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
         uniflag=0 
@@ -9037,13 +9045,13 @@ def fill_db(chunks):
                         #{'title':title, 'volume':volume, 'issue':issue, 'pubyear':year, 'issn':issn, 'journal':journal,'doi':doi}
                         print(fullref) #{'title':title, 'volume':volume, 'issue':issue, 'pubyear':, 'issn':issn}
 
-                        if len(comple[9]['DOI'])<4:
+                        if comple[9]['DOI']==None:
                             doi=fullref['doi']
                         else:
                             doi=comple[9]['DOI']
 
                         cursor.execute(
-                            'INSERT INTO dyndb_references (doi, authors, url,dbname,pmid,title,issue,volume,pubyear,journal_press) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (doi,comple[9]['authors'], str(comple[9]['bindingdblink']), 'BindingDB',comple[9]['pmid'],fullref['title'],fullref['issue'],fullref['volume'],fullref['pubyear'],fullref['journal'])
+                            'INSERT INTO dyndb_references (doi, authors, url,dbname,pmid,title,issue,volume,pub_year,journal_press) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (doi,str(comple[9]['authors']), str(comple[9]['bindingdblink']), 'BindingDB',str(comple[9]['pmid']),str(fullref['title']),str(fullref['issue']),str(fullref['volume']),str(fullref['pubyear']),str(fullref['journal']))
                         ) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
 
                     else:
