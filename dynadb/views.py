@@ -38,7 +38,7 @@ from rdkit.Chem import MolFromInchi,MolFromSmiles
 from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
+from .models import DyndbReferences,DyndbEfficacy,DyndbBinding, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
 
@@ -1983,10 +1983,43 @@ def query_complex(request, complex_id,incall=False):
             clistorto.append([ccompound.id_compound.id,imagelink])
         else:
             clistalo.append([ccompound.id_compound.id,imagelink])
-    #for match in DyndbReferencesCompound.objects.filter(id_compound=compound_id):
-        #comp_dic['references'].append([match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url])
 
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list}
+    q = DyndbComplexExp.objects.filter(pk=complex_id)
+    q = q.annotate(ec_fifty_val=F('dyndbexpinteractiondata__dyndbefficacy__id'))
+    q = q.annotate(binding_val=F('dyndbexpinteractiondata__dyndbbinding__id'))
+    q = q.annotate(references=F('dyndbexpinteractiondata__dyndbreferencesexpinteractiondata__id_references__id'))  
+    q = q.values('ec_fifty_val','binding_val','references')
+    efficacy=dict()
+    binding=dict()
+    references=dict()
+    for row in q:
+        print (row['ec_fifty_val'],row['binding_val'],row['references'])
+        if row['ec_fifty_val']!=None:
+            efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
+            efficacy['value']=efficacyrow.rvalue
+            efficacy['units']=efficacyrow.units
+            efficacy['description']=efficacyrow.description
+   
+        if row['binding_val']!=None:
+            bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
+            binding['value']=bindrow.rvalue
+            binding['units']=bindrow.units
+            binding['description']=bindrow.description
+
+        if row['references']!=None:
+            refrow=DyndbReferences.objects.get(pk=row['references'])
+            references['url']=refrow.url
+            references['journal']=refrow.journal_press          
+            references['volume']=refrow.volume
+            references['issue']=refrow.issue
+            references['doi']=refrow.doi           
+            references['pmid']=refrow.pmid
+            references['authors']=refrow.authors
+            references['title']=refrow.title
+            references['pub_year']=refrow.pub_year
+
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':references,'binding':binding,'efficacy':efficacy}
+    print(comdic)
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
