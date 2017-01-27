@@ -8948,11 +8948,16 @@ def fill_db(chunks):
 
                 kd=comple[5]
                 ec_fifty=comple[6]
+                #warning! what if we have both!?
+                if len(kd)>0 and len(ec_fifty)>0:
+                    complextype=3
 
-                if len(kd)>0:
+                elif len(kd)>0:
                     complextype=1
+
                 elif len(ec_fifty)>0:
                     complextype=2
+
                 else:
                     complextype=0 #functional
 
@@ -9001,12 +9006,29 @@ def fill_db(chunks):
                             exactest=1
                             #do not create again that cexp!
                             complex_id=i
-                            intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype)
-                            if len(intdata)==0:
-                                cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(i))) # warning should i check if the interactiondata already exists?
-                                complex_interaction_id=cursor.fetchone()[0]
+                            if complextype==3:
+                                intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=1)
+                                intdata2=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=2)
+                                if len(indata)>0 and len(indata2)>0:
+                                    pass
+                                if len(intdata)>0:
+                                    cursor.execute(
+                                        'INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(1),str(i))
+                                    )
+                                    complex_interaction_id0=cursor.fetchone()[0]     
+                                if len(intdata2)>0:
+                                    cursor.execute(
+                                        'INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(2),str(i))
+                                    )
+                                    complex_interaction_id1=cursor.fetchone()[0]
+
                             else:
-                                complex_interaction_id=intdata[0].id
+                                intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype)
+                                if len(intdata)==0:
+                                    cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(i))) # warning should i check if the interactiondata already exists?
+                                    complex_interaction_id=cursor.fetchone()[0]
+                                else:
+                                    complex_interaction_id=intdata[0].id #warning! maybe i should break here already
 
 
                 if complex_interaction_id=='undef':
@@ -9019,8 +9041,19 @@ def fill_db(chunks):
                     )
                     cmol_id=cursor.fetchone()[0]
                     #Create the complex_exp_interaction_data record
-                    cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(complex_id)))
-                    complex_interaction_id=cursor.fetchone()[0]
+                    if complextype==3:
+                        cursor.execute(
+                            'INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(1),str(i))
+                        )
+                        complex_interaction_id1=cursor.fetchone()[0]
+
+                        cursor.execute(
+                            'INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(0),str(i))
+                        )
+                        complex_interaction_id0=cursor.fetchone()[0]                    
+                    else:
+                        cursor.execute('INSERT INTO dyndb_exp_interaction_data (type, id_complex_exp) VALUES (%s, %s) RETURNING id', (str(complextype),str(complex_id)))
+                        complex_interaction_id=cursor.fetchone()[0]
         ##############################################################################################################################################################################################
                 #Create the references
                 print('Recording references...')
@@ -9060,7 +9093,22 @@ def fill_db(chunks):
                         ) #the link is to the BindingDB entry, not the paper, but it is the closest thing the sdf file provides
                     reference_id=cursor.fetchone()[0]
 
-                intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
+
+                #now that reference exists, create the referenceexpintdata, if it does not exist already
+                if complextype==3:
+                    intref0=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id0).filter(id_references=reference_id)
+
+                    intref1=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id1).filter(id_references=reference_id)
+
+                    if len(intref0)==0:
+                        cursor.execute('INSERT INTO dyndb_references_exp_interaction_data (id_exp_interaction_data, id_references) VALUES (%s, %s)', (str(complex_interaction_id0),str(reference_id)))
+
+                    if len(intref1)==0:
+                        cursor.execute('INSERT INTO dyndb_references_exp_interaction_data (id_exp_interaction_data, id_references) VALUES (%s, %s)', (str(complex_interaction_id1),str(reference_id)))
+
+                else:
+                    intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
+
                 if len(intref)==0:
                     cursor.execute('INSERT INTO dyndb_references_exp_interaction_data (id_exp_interaction_data, id_references) VALUES (%s, %s)', (str(complex_interaction_id),str(reference_id)))
 
@@ -9077,7 +9125,18 @@ def fill_db(chunks):
                     else:
                         print('that record of efficacy was already registered')
 
+
+                if complextype==3:
+                    if len(DyndbEfficacy.objects.filter(id=complex_interaction_id1))==0:
+                        cursor.execute('INSERT INTO dyndb_efficacy (id, rvalue,units,description) VALUES (%s, %s, %s, %s)', (str(complex_interaction_id0),str(ec_fifty),'nM',comple[9]['bindingdblink'])) #now, none referencecompound
+                    else:
+                        print('that record of efficacy was already registered')
                 print('kinetics recorded. Now, record the protein')
+
+                    if len(DyndbBinding.objects.filter(id=complex_interaction_id0))==0:
+                        cursor.execute('INSERT INTO dyndb_binding (id, rvalue,units,description) VALUES (%s, %s, %s, %s)', (str(complex_interaction_id1),str(kd),'nM',comple[9]['bindingdblink'])) #warning should i check if they already exist?
+                    else:
+                        print('that record of binding affinity already existed')
 
         ############################################################This complex is NOT already in the DB######################################
                 if exactest!=1: #if the complex has not been found by the NiceSearcher, we may need to create the proteins and the compounds.
