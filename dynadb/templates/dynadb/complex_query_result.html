@@ -41,31 +41,25 @@
 <br><br><br>
 {% if answer.reference %}
     <b>References for this complex:</b><br>
-    Authors:{{answer.reference.authors}}<br>
-    DOI:{{answer.reference.doi}}<br>
-    Title:{{answer.reference.title}}<br>
-    PubMedID:{{answer.reference.pmid}}<br>
-    Journal:{{answer.reference.journal}}<br>
-    Publication Year:{{answer.reference.pub_year}}<br>
-    Issue:{{answer.reference.issue}}<br>
-    Volume:{{answer.reference.volume}}<br>
-    DataBase name:{{answer.reference.dbname}}<br>
+    {% for reference in answer.reference%}
+    {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}<br>
 
+    <a class='btn btn-info' role='button' href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+    <hr><hr>
+    {%endfor%}
 {% endif %} 
 <br><br><br>
 {% if answer.efficacy %}
-    <b>EC50 for this complex:</b><br>
-    Value:{{answer.efficacy.value}}<br>
-    Units:{{answer.efficacy.units}}<br>
-    Link to BindingDB:{{answer.efficacy.description}}<br>
+    <b>EC50 according to BindingDB:</b><br>
+    {{answer.efficacy.value}} {{answer.efficacy.units}}
+    <a class='btn btn-info' role='button' href={{answer.efficacy.description}}>Binding DB</a><br>
 
 {% endif %} 
 <br><br><br>
 {% if answer.binding %}
-    <b>Kd for this complex:</b><br>
-    Value:{{answer.binding.value}}<br>
-    Units: {{answer.binding.units}}<br>
-    Link to BindingDB: {{answer.binding.description}}<br>
+    <b>Kd according to BindingDB:</b><br>
+    {{answer.binding.value}} {{answer.binding.units}}<br>
+    <a class='btn btn-info' role='button' href={{answer.binding.description}}>Binding DB</a>
 {% endif %} 
 <br><br><br>
 

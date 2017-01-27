@@ -138,6 +138,11 @@ def show_alig(request, alignment_key):
     if request.method=='POST':
         wtseq=request.POST.get('wtseq')
         mutseq=request.POST.get('mutant')
+        if '\n' in mutseq or '>' in mutseq:
+            mutlines=mutseq.split('\n')
+            if '>' in mutlines[0]:
+                mutlines=mutlines[1:]
+            mutseq=''.join(mutlines)
         result=align_wt_mut(wtseq,mutseq)
         result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
         request.session[alignment_key]=result
@@ -1853,14 +1858,11 @@ def query_protein_fasta(request,protein_id):
             fseq=fseq+char
         count=count+1
 
-    with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
-        fh.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
-        fh.write(fseq)
-    with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
-        data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+protein_id+'_gpcrmd.fasta')[0])
-        response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
+    response = HttpResponse('', content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="protein_'+'protein_id'+'.fa"'
+    response.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
+    response.write(fseq)
+
     return response
 
 def query_molecule(request, molecule_id,incall=False):
@@ -1991,6 +1993,7 @@ def query_complex(request, complex_id,incall=False):
     q = q.values('ec_fifty_val','binding_val','references')
     efficacy=dict()
     binding=dict()
+    reference_list=[]
     references=dict()
     for row in q:
         print (row['ec_fifty_val'],row['binding_val'],row['references'])
@@ -2007,6 +2010,7 @@ def query_complex(request, complex_id,incall=False):
             binding['description']=bindrow.description
 
         if row['references']!=None:
+            references=dict()
             refrow=DyndbReferences.objects.get(pk=row['references'])
             references['url']=refrow.url
             references['journal']=refrow.journal_press          
@@ -2017,8 +2021,11 @@ def query_complex(request, complex_id,incall=False):
             references['authors']=refrow.authors
             references['title']=refrow.title
             references['pub_year']=refrow.pub_year
-
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':references,'binding':binding,'efficacy':efficacy}
+            for keys in references:
+                if references[keys]==None:
+                    references[keys]=''
+            reference_list.append(references)
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy}
     print(comdic)
     if incall==True:
         return comdic
@@ -2562,7 +2569,6 @@ def pdbcheck(request,submission_id):
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
-
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
@@ -2663,7 +2669,7 @@ def pdbcheck(request,submission_id):
                 data = json.dumps(tojson)
                 return HttpResponse(data, content_type='application/json')
 
-            counter=+1
+            counter+=1
 
         if isinstance(finalguide, list) and len(finalguide)>0:
             results['type']='fullrun'
@@ -2696,11 +2702,11 @@ def pdbcheck(request,submission_id):
 @textonly_500_handler
 def servecorrectedpdb(request,pdbname):
     ''' Allows the download of a PDB file with the correct resids, according to the aligment performed by pdbcheck function. '''
-    with open('/tmp/'+pdbname,'r') as f:
+    with open('/'+pdbname,'r') as f:
         data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+pdbname)[0])
-        response['Content-Disposition']="attachment;filename=%s" % (pdbname) #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
+        response=HttpResponse(data, content_type=mimetypes.guess_type(pdbname)[0])
+        response['Content-Disposition']="attachment;filename=%s" % (pdbname[pdbname.rfind('/')+1:])
+        response['Content-Length']=os.path.getsize('/'+pdbname)
     return response
 
 @textonly_500_handler
