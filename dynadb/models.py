@@ -467,12 +467,15 @@ class DyndbCompound(models.Model):
         db_table = 'dyndb_compound'
 
 class DyndbSubmission(models.Model):
-    user_id=models.IntegerField(blank=True, null=True)
-
+    user_id = models.ForeignKey('accounts.User',models.DO_NOTHING, db_column='user_id', blank=True, null=True)
+    is_reuse_model = models.BooleanField(default=False)
+    is_closed = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False)
+    is_ready_for_publication = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_submission'
-
+        unique_together = (('id','user_id'),)
 
 
 class DyndbSubmissionProtein(models.Model):

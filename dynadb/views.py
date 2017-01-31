@@ -6,13 +6,16 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError
 from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, PermissionDenied
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.contrib.auth.decorators import login_required
+from accounts.user_functions import user_passes_test_submission_id
 from collections import OrderedDict
+from sendfile import sendfile
 import re, os, pickle
 import shutil
 import time
@@ -25,7 +28,7 @@ import itertools
 import numpy as np
 import tarfile
 from os import listdir
-from os.path import isfile, join
+from os.path import isfile, normpath
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension,DownloadGenericError
@@ -83,6 +86,13 @@ def textonly_500_handler(func):
                 return HttpResponseServerError("Server Error (500).",content_type='text/plain')
     return inner
 
+def is_submission_owner(user,submission_id):
+    
+    entry = DyndbSubmission.objects.filter(pk=submission_id,user_id=user)
+    return entry.exists()
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def REFERENCEview(request, submission_id=None):
  
     if request.method == 'POST':
@@ -148,6 +158,8 @@ def show_alig(request, alignment_key):
         alignment=request.session[alignment_key]
         return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def PROTEINview(request, submission_id):
     
     p= submission_id
@@ -856,6 +868,8 @@ def PROTEINview(request, submission_id):
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 @textonly_500_handler
 def delete_protein(request,submission_id):
     if request.method == "POST":
@@ -2120,6 +2134,8 @@ def query_dynamics(request,dynamics_id):
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def protein_get_data_upkb(request, uniprotkbac=None):
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
@@ -2297,6 +2313,8 @@ def get_specieslist(request):
   return response
 
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def submitpost_view(request,submission_id,model_id=1):
     if request.method == 'POST':
         print(request.POST.items())
@@ -2369,6 +2387,7 @@ def get_mutations_view(request):
       raise
 
 @textonly_500_handler
+@login_required
 def upload_pdb(request): #warning , i think this view can be deleted
     if request.method == 'POST':
         form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
@@ -2433,6 +2452,8 @@ def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
             break
     return(bond)
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def search_top(request,submission_id):
     '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
@@ -2519,6 +2540,8 @@ def search_top(request,submission_id):
 
 
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def pdbcheck(request,submission_id):
     '''Performs an alignment between the sequence in a PDB interval and an interval in the full protein sequence. Returns a table where the original resids of the PDB are displayed with the resids it should use according to the position of that aminoacid in the alignment. Also creates a new PDB file with the correct resids.'''
     if request.method=='POST': #See pdbcheck.js
@@ -2661,6 +2684,7 @@ def pdbcheck(request,submission_id):
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
 @textonly_500_handler
+@login_required
 def servecorrectedpdb(request,pdbname):
     ''' Allows the download of a PDB file with the correct resids, according to the aligment performed by pdbcheck function. '''
     with open('/tmp/'+pdbname,'r') as f:
@@ -2671,6 +2695,8 @@ def servecorrectedpdb(request,pdbname):
     return response
 
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def get_submission_molecule_info(request,form_type,submission_id):
     if request.method == 'POST':
         mol_int = request.POST['molecule'].strip()
@@ -2709,6 +2735,8 @@ def get_submission_molecule_info(request,form_type,submission_id):
     
 @csrf_exempt
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def upload_model_pdb(request,submission_id):
   request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
   return _upload_model_pdb(request,submission_id)
@@ -2739,7 +2767,10 @@ def _upload_model_pdb(request,submission_id):
             
         else:
             msg = 'No file was selected or cannot find molecule file reference.'
-            return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')  
+            return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def get_sdf_from_db_by_submission(submission_id,int_ids):
     
     
@@ -2785,6 +2816,8 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def get_model_pdb_from_db_by_submission(submission_id):
         
     submodel = DyndbSubmissionModel._meta.db_table
@@ -2820,7 +2853,8 @@ def get_model_pdb_from_db_by_submission(submission_id):
         
 
     
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def pdbcheck_molecule(request,submission_id,form_type):
     post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID'}
     #post_mc_dict = {'resname':'residue name','molecule':'molecule form number','id_molecule':'molecule ID','numberofmol':'number of molecules'}
@@ -3124,6 +3158,8 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 else:
                     return response
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def check_trajectories(request,submission_id):
     if request.method == 'POST':
         submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
@@ -3136,14 +3172,15 @@ def check_trajectories(request,submission_id):
         return HttpResponse("Success!",content_type='text/plain')
         
 
-
+@login_required
 def MODELreuseREQUESTview(request,model_id):
     if model_id == 0: #model_id is 0 when the view is accesed from the memberpage view!!! then the model_id selected by the user is passed to other reuse views
         return render(request,'dynadb/MODELreuseREQUEST.html', {})
     # Dealing with POST data
     if request.method == 'POST':
         dictsubid={}#dictionary for instatiating dyndbSubmission and obtaining a new submission_id for our new submission
-        dictsubid['user_id']='1'
+        dictsubid['user_id']=str(request.user.pk)
+        dictsubid['is_reuse_model']=str(1)
         fdbsub=dyndb_Submission(dictsubid)
         fdbsubobj=fdbsub.save()
         print(request.POST.dict())
@@ -3194,7 +3231,7 @@ def MODELreuseREQUESTview(request,model_id):
     else:
 
         return render(request,'dynadb/MODELreuseREQUEST.html', {})
-
+@login_required
 def MODELrowview(request):
     form=[1,2,3]
     qMODEL=DyndbModeledResidues.objects.filter(id_model=1)
@@ -3207,7 +3244,8 @@ def MODELrowview(request):
             rows[i]['segid']="-"
     return render(request,'dynadb/MODELreuseCOMMON.html', {'rows':rows})
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def MODELreuseview(request, submission_id, model_id  ):
     print("reuseview")
     qModel=DyndbModel.objects.filter(id=model_id)
@@ -3261,7 +3299,8 @@ def MODELreuseview(request, submission_id, model_id  ):
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
         return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id})
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def PROTEINreuseview(request, submission_id, model_id ):
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).order_by('int_id')
     print(qSub)
@@ -3320,7 +3359,8 @@ def PROTEINreuseview(request, submission_id, model_id ):
 #       wseq.append(llsw) 
 
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id})
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
     qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').exclude(not_in_model=True).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
@@ -3377,7 +3417,8 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 
 #    return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
     return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def DYNAMICSreuseview(request, submission_id, model_id ):
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
@@ -3643,7 +3684,6 @@ def DYNAMICSreuseview(request, submission_id, model_id ):
 ##       return HttpResponse(qDS.values_list()[0])
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDS,'dctypel':dctypel,'lcompname':lcompname,'compl':compl,'l_ord_mol':l_ord_mol,'ddown':ddown,'submission_id':submission_id,'model_id':model_id})
 
-
 def get_components_info_from_components_by_submission(submission_id,component_type='model'):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
@@ -3695,7 +3735,9 @@ def get_components_info_from_submission(submission_id,component_type=None):
         result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
         i +=1
     return result
-    
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)    
 def MODELview(request, submission_id):
     
     def model_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
@@ -4663,7 +4705,8 @@ def MODELview(request, submission_id):
 
 
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def SMALL_MOLECULEview2(request,submission_id):
     print("REQUEST SESSIONS",request.session.items())
     print("REQUEST SESSIONS",request.path)
@@ -4719,7 +4762,9 @@ def SMALL_MOLECULEview2(request,submission_id):
         
 @csrf_exempt
 @textonly_500_handler
-def generate_molecule_properties(request,submission_id,model_id=1):
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
+def generate_molecule_properties(request,submission_id):
   request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
   return _generate_molecule_properties(request,submission_id)
 
@@ -4895,7 +4940,9 @@ def _generate_molecule_properties(request,submission_id):
         return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
         
 @textonly_500_handler
-def get_compound_info_pubchem(request,submission_id,model_id=1):
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
+def get_compound_info_pubchem(request,submission_id):
     pngsize=300
     search_by='inchi'
     retrieve_type='parent'
@@ -5069,8 +5116,10 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
             return pubchem_errdata_2_response(errdata,data=datapubchem)
         except:
             raise
-        
-def get_compound_info_chembl(request,submission_id,model_id=1):
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)        
+def get_compound_info_chembl(request,submission_id):
     pngsize=300
     search_by='inchi'
     retrieve_type='parent'
@@ -5246,8 +5295,10 @@ def get_compound_info_chembl(request,submission_id,model_id=1):
             return chembl_errdata_2_response(errdata,data=datachembl)
         except:
             raise  
-            
-def open_pubchem(request,submission_id=1):
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)           
+def open_pubchem(request,submission_id):
     if request.method == 'POST':
         if 'cids' in request.POST.keys():
             cids = request.POST['cids'].split(',')
@@ -5256,8 +5307,10 @@ def open_pubchem(request,submission_id=1):
                 query += str(cid)+'[CompoundID] OR '
             query = query[:query.rfind(' OR ')]
             return render(request,'dynadb/open_pubchem.html',{'query':query,'action':'https://www.ncbi.nlm.nih.gov/pccompound/'})
-            
-def open_chembl(request,submission_id=1):
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)            
+def open_chembl(request,submission_id):
     chembl_root_url = 'https://www.ebi.ac.uk/chembl'
     chembl_index_php = chembl_root_url+'/index.php'
     chembl_submission_url = chembl_root_url + '/compound/ids'
@@ -5677,7 +5730,9 @@ def open_chembl(request,submission_id=1):
 #           fdbMM = dyndb_Complex_Molecule_Molecule()
 #   
 #           return render(request,'dynadb/SMALL_MOLECULE.html', {'fdbMF':fdbMF,'fdbSub':fdbSub,'fdbCF':fdbCF,'fdbON':fdbON, 'fdbF':fdbF, 'fdbFM':fdbFM, 'fdbMM':fdbMM, 'submission_id' : submission_id})
-@textonly_500_handler    
+@textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def delete_molecule(request,submission_id,model_id=1):
     if request.method == "POST":
         molecule_num = request.POST["molecule_num"]
@@ -5688,7 +5743,8 @@ def delete_molecule(request,submission_id,model_id=1):
         response = HttpResponseForbidden()
     return response
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def get_dynamics_files_reference_atomnum(submission_id,file_type):
     """
     Gets a reference num of atoms with a priorized reference dynamics file 
@@ -5763,6 +5819,8 @@ def test_accepted_file_extension(ext,file_type):
 
 @csrf_exempt
 @textonly_500_handler
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def upload_dynamics_files(request,submission_id,trajectory=None):
     trajectory_max_files = 200
     if trajectory is None:
@@ -6045,7 +6103,8 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
 
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def DYNAMICSview(request, submission_id):
                    
     def dynamics_file_table (dname, DFpk): #d_fmolec_t, dictext_id 
@@ -6826,7 +6885,7 @@ def DYNAMICSview(request, submission_id):
 #      # ddTL=dyndb_Dynamics_Tags_List()
 
 #       return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
-
+@login_required
 def DYNAMICSviewOLD(request):
     if request.method == 'POST':
         author="jmr"   #to be modified with author information. To initPF dict
@@ -6918,24 +6977,26 @@ def DYNAMICSviewOLD(request):
 
         return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def SUBMITTEDview(request,submission_id): 
         return render(request,'dynadb/SUBMITTED.html',{'submission_id':submission_id})
-
+        
+@login_required
 def get_Author_Information(request): 
         return render(request,'dynadb/dynadb_Author_Information.html'  )
 
-
+@login_required
 def db_inputformMAIN(request,submission_id): 
     if submission_id is None:
         dictsubid={}
         disable_3=True
         disable_4=True
-        dictsubid['user_id']='1'
+        dictsubid['user_id']=str(request.user.pk)
         fdbsub=dyndb_Submission(dictsubid)
         fdbsubobj=fdbsub.save()
         submission_id = fdbsubobj.pk
-    else:
+    elif is_submission_owner(request.user,submission_id):
         qSMod=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         qSDyn=DyndbDynamics.objects.filter(submission_id=submission_id)
         if len(qSMod) == 1:
@@ -6946,10 +7007,11 @@ def db_inputformMAIN(request,submission_id):
             disable_4=False
         else:
             disable_4=True   
-
+    else:
+        return HttpResponseRedirect(reverse('dynadb:db_inputform'))
     return render(request,'dynadb/dynadb_inputformMAIN.html', {'submission_id':submission_id, 'disable_3':disable_3 , 'disable_4':disable_4 } )
 
-
+@login_required
 def get_FilesCOMPLETE(request): 
     # MEZCLA DE TABLAS PARA HACER 
     if request.method == 'POST':
@@ -6978,7 +7040,7 @@ def get_FilesCOMPLETE(request):
         return render(request,'dynadb/dynadb_FilesCOMPLETE.html', {'fdb_Files1':fdb_Files1, 'fdb_Files2':fdb_Files2, 'fdb_Files3':fdb_Files3, 'fdb_Files4':fdb_Files4, 'fdb_Files5':fdb_Files5 })
 
 
-
+@login_required
 def get_ProteinForm(request): 
 
     if request.method == 'POST':
@@ -6997,7 +7059,7 @@ def get_ProteinForm(request):
         return render(request,'dynadb/dynadb_ProteinForm.html', {'fdb_ProteinForm':fdb_ProteinForm} )
 
 
-
+@login_required
 def get_CompoundForm(request): 
 
     if request.method == 'POST':
@@ -7016,7 +7078,7 @@ def get_CompoundForm(request):
         return render(request,'dynadb/dynadb_CompoundForm.html', {'fdb_CompoundForm':fdb_CompoundForm} )
 
 
-   
+@login_required   
 def  get_Component(request): 
 
     if request.method == 'POST':
@@ -7036,7 +7098,7 @@ def  get_Component(request):
         fdb_CompoundForm = dyndb_CompoundForm()
         return render(request,'dynadb/dynadb_Component.html', {'fdb_Molecule':fdb_Molecule , 'fdb_CompoundForm':fdb_CompoundForm} )
 
-
+@login_required
 def get_Molecule(request): 
 
     if request.method == 'POST':
@@ -7054,6 +7116,7 @@ def get_Molecule(request):
         fdb_Molecule=dyndb_Molecule()
         return render(request,'dynadb/dynadb_Molecule.html', {'fdb_Molecule':fdb_Molecule} )
 
+@login_required
 def get_Model(request): 
 
     if request.method == 'POST':
@@ -7070,7 +7133,7 @@ def get_Model(request):
     else:
         fdb_Model=dyndb_Model()
         return render(request,'dynadb/dynadb_Model.html', {'fdb_Model':fdb_Model} )
-
+@login_required
 def get_Dynamics(request): 
 
     if request.method == 'POST':
@@ -7114,7 +7177,7 @@ def get_Dynamics(request):
 #              return render(request,'dynadb/pruebaDYNAname.html', {'fdb_Dynamics':fdb_Dynamics, 'fdb_Dynamics_tags':fdb_Dynamics_tags, 'fdb_Dynamics_Tags_List':fdb_Dynamics_Tags_List} )
 #      
 #      
-
+@login_required
 def get_DyndbFilesExcFields(request):
     if request.method == 'POST':
         fdb_ProteinForm  =  dyndb_ProteinForm(request.POST)
@@ -7177,7 +7240,8 @@ def get_DyndbFilesExcFields(request):
         fdb_Model = dyndb_Model() 
 
         return render(request,'dynadb/DYNAnameab.html', {'fdb_ProteinForm':fdb_ProteinForm, 'fdb_Other_Protein_NamesForm':fdb_Other_Protein_NamesForm, 'fdb_Protein_SequenceForm':fdb_Protein_SequenceForm, 'fdb_Other_Protein_NamesForm':fdb_Other_Protein_NamesForm, 'fdb_Cannonical_ProteinsForm':fdb_Cannonical_ProteinsForm, 'fdb_Protein_MutationsForm': fdb_Protein_MutationsForm, 'fdb_CompoundForm': fdb_CompoundForm, 'fdb_Other_Compound_Names':fdb_Other_Compound_Names, 'fdb_Molecule':fdb_Molecule, 'fdb_Files':fdb_Files, 'fdb_Files_Molecule':fdb_Files_Molecule, 'fdb_Complex_Exp':fdb_Complex_Exp, 'fdb_Complex_Protein':fdb_Complex_Protein, 'fdb_Complex_Molecule':fdb_Complex_Molecule, 'fdb_Complex_Molecule_Molecule':fdb_Complex_Molecule_Molecule, 'fdb_Modeled_Residues':fdb_Modeled_Residues, 'fdb_Files_Model':fdb_Files_Model, 'fdb_Dynamics':fdb_Dynamics, 'fdb_Dynamics_tags':fdb_Dynamics_tags, 'fdb_Dynamics_Tags_List':fdb_Dynamics_Tags_List, 'fdb_Files_Dynamics':fdb_Files_Dynamics, 'fdb_Related_Dynamics':fdb_Related_Dynamics, 'fdb_Related_Dynamics_Dynamics':fdb_Related_Dynamics_Dynamics, 'fdb_Model':fdb_Model})
-                        
+
+
 def get_DyndbFiles(request):
     # if this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -7273,6 +7337,7 @@ def get_DyndbFiles(request):
 AlertCountFormset = modelformset_factory(StructureModelLoopTemplates,form = AlertForm)
 NotifierFormset = modelformset_factory(StructureType, form = NotifierForm)
 
+@login_required
 def profile_setting(request ):
     if request.method == 'POST':
         alert_form = AlertForm(request.POST)
@@ -7295,12 +7360,12 @@ def profile_setting(request ):
 
     return TemplateView(request,'dynadb/pruebamult_template.html', extra_context)
 
-
+@login_required
 def sub_sim(request):
     return render(request, 'dynadb/sub_sim_form.html')
 
 
-
+@login_required
 def get_formup(request):
     FormupSet=formset_factory(Formup, extra=2)
     # if this is a POST request we need to process the form data
@@ -7324,6 +7389,7 @@ def get_formup(request):
 
     return render(request, 'dynadb/form.html', {'formset': formset})
 
+@login_required
 def get_name(request):
     NameFormSet=formset_factory(NameForm, extra=1)
     # if this is a POST request we need to process the form data
@@ -8144,8 +8210,17 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 
-def get_file_paths(objecttype,url=False,submission_id=None):
+def get_file_url_root():
+    ''' Function that defines root URL for served files.
+    Edit to change file URLs.'''
+    
     url_prefix = "/dynadb/"
+    return join_path(url_prefix,settings.MEDIA_URL,relative=False,url=True)
+
+def get_file_paths(objecttype,url=False,submission_id=None,return_main_submission_dict=False,):
+    ''' Function that defines file paths and URLs for served files.
+    Edit to change file path and URLs.'''
+    
     filepathdict = dict()
     #define objects
     filepathdict['molecule'] = dict()
@@ -8159,9 +8234,16 @@ def get_file_paths(objecttype,url=False,submission_id=None):
     filepathdict['molecule']['submission'] = "mol"
     filepathdict['model']['submission'] = "model"
     filepathdict['dynamics']['submission'] = "dyn"
-    
+    if return_main_submission_dict:
+        main_submission_dict= dict()
+        for key in filepathdict:
+            main_submission_dict[filepathdict[key]['main']] = {'object_type':key,'submission':filepathdict[key]['submission']}
+
+            
+        return main_submission_dict
+        
     if url:
-        root = join_path(url_prefix,settings.MEDIA_URL,relative=False,url=url)
+        root = get_file_url_root()
     else:
         root = settings.MEDIA_ROOT
         
@@ -8174,6 +8256,17 @@ def get_file_paths(objecttype,url=False,submission_id=None):
     else:
         path += os.path.sep
     return path
+    
+def file_url_to_file_path(url):
+    url_root = normpath(get_file_url_root())
+    file_root = normpath(settings.MEDIA_ROOT)
+    nurl = normpath(url)
+    if nurl.find(url_root) == 0:
+        relative_url = nurl[len(url_root)+1:]
+        return os.path.join(file_root,relative_url)
+    else:
+        raise ValueError("Invalid URL '"+nurl+"' .Path must be contained in '"+url_root+"' URL.")
+    
 
 def get_file_name_dict():
     filenamedict = dict()
@@ -9413,6 +9506,9 @@ def generate_molecule_properties2(submission_id,molid):
 #   else:
 #       data['msg'] = 'No file was selected or cannot find molecule file reference.'
 #       return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def SMALL_MOLECULEview(request, submission_id):
 
   # def handle_uploaded_file(f,p,name):
@@ -9989,6 +10085,8 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def submission_summaryiew(request,submission_id):
 #protein section
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
@@ -10132,6 +10230,8 @@ def submission_summaryiew(request,submission_id):
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data })
 
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def protein_summaryiew(request,submission_id):
 #protein section
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
@@ -10173,6 +10273,8 @@ def protein_summaryiew(request,submission_id):
 
     return render(request,'dynadb/PROTEIN_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id, 'minisummary':True})
 
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def molecule_summaryiew(request,submission_id):
 #small molecule section
     qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').filter(submission_id=submission_id,molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
@@ -10214,7 +10316,8 @@ def molecule_summaryiew(request,submission_id):
 
 
 
-
+@login_required
+@user_passes_test_submission_id(is_submission_owner)
 def model_summaryiew(request,submission_id):
 
 #model section
@@ -10234,3 +10337,35 @@ def model_summaryiew(request,submission_id):
 
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', )
+
+@login_required
+def serve_submission_files(request,obj_folder,submission_folder,path):
+    ''' Function to serve private files using django-sendfile module.'''
+
+    #get and check submission folder path elements
+    main_submission_dict = get_file_paths('',return_main_submission_dict = True)
+    if obj_folder in main_submission_dict:
+        prefix = main_submission_dict[obj_folder]['submission']
+        object_type = main_submission_dict[obj_folder]['object_type']
+        #check submission folder path for the second element and extract submission ID
+        if submission_folder.find(prefix) == 0:
+            submission_id = submission_folder.replace(prefix,"")
+            if submission_id.isdigit():
+                submission_id = int(submission_id)
+                #check user permissions
+                if is_submission_owner(request.user,submission_id=submission_id):
+                    allowed_directory = get_file_paths(object_type,submission_id=submission_id,url=False)
+                    filepath = file_url_to_file_path(request.path)
+                    if in_directory(filepath, allowed_directory):
+                        return sendfile(request,filepath)
+
+    raise PermissionDenied
+    
+def in_directory(file, directory):
+    #make both absolute    
+    directory = os.path.join(os.path.realpath(directory), '')
+    file = os.path.realpath(file)
+
+    #return true, if the common prefix of both is equal to directory
+    #e.g. /a/b/c/d.rst and directory is /a/b, the common prefix is /a/b
+    return os.path.commonprefix([file, directory]) == directory    

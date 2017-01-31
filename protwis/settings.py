@@ -12,7 +12,7 @@ Django settings for protwis project.
 try:
     from protwis.settings_local import *
 except ImportError:
-    from protwis.settings_local_development import *
+    from protwis.settings_local_production import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
@@ -33,6 +33,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'sendfile',
     'debug_toolbar',
     'rest_framework',
     'rest_framework_swagger',
@@ -101,7 +102,7 @@ MEDIA_URL = '/files/'
 #past: MEDIA_URL = '/media/'
 MEDIA_ROOT = '/protwis/sites/files/'
 #past: MEDIA_ROOT = '/protwis/media/protwis'
-
+SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 #Search Engine
 
