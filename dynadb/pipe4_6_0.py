@@ -132,9 +132,10 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):
 	'''Takes a pdb file as input, the numbering of this pdb is modified according to the fasta sequence of the PDB whose relation
 	 is represented in a schema called guide like: [[A,'27',27],[A,28]] where the first element is the pdb item and the second is the 
 	 fasta one. The number between '' can ben in hexadecimal format. The format used to write numbers bigger than 9999 (hexadecimal or insertion code)  in the new PDB file is the same that was used in the original PDB'''
+
 	tmppdbfile=os.path.splitext(pdbfile)[0]
 	oldpdb=open(pdbfile, 'r')
-	newpdb=open('/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb','w')
+	newpdb=open(pdbfile[:-4]+'_corrected'+str(counter)+'.pdb','w')
 	count=-1
 	pvresid=-1
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
@@ -197,8 +198,7 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):
 	newpdb.close()
 	oldpdb.close()
 	#return pdbfile[:-4]+'_corrected.pdb'
-	return '/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb'
-	return '/tmp/'+pdbfile[pdbfile.rfind('/')+1:-4]+'_corrected.pdb'
+	return pdbfile[:-4]+'_corrected'+str(counter)+'.pdb' #'/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb'
 #############################################################################################################################################
 
 def unique(pdbname, usechain=False,usesegid=False):

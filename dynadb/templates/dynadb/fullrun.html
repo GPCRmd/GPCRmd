@@ -22,7 +22,7 @@
         {% with count=forloop.counter0 mylist=answer.strlist pathlist=answer.pathlist%}
         <div class="panel-heading"> Results for {{ mylist|retkey:count}}</div>
         <div class="panel-body">
-        <center> <a href=/dynadb{{ pathlist|retkey:count}}><button type="button"> Download the corrected PDB </button></a></center>
+        <center> <a href=.{{ pathlist|retkey:count}}><button type="button"> Download the corrected PDB </button></a></center>
         <table id="table_id" class="tablejs">
           <thead>
           <tr>
