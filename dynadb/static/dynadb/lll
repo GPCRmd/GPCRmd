@@ -1,0 +1,18 @@
+12c12
+<         var dynform = $(this).parents("#myformDyn");
+---
+>         var protform = $(this).parents("#myformProt");
+21c21
+<         $(dynform).ajaxSubmit({
+---
+>         $(protform).ajaxSubmit({
+26,29c26,29
+<                 var urllist=window.location.href.split("/")
+<                 var submission_id=urllist[urllist.length-2]
+<                 alert("PIPOL"+data);
+<                 window.location.replace("../../submission_summary/"+submission_id+"/")
+---
+>                 var urllist=window.location.href.split("/");
+>                 var submission_id=urllist[urllist.length-2];
+>                 alert("Congratulations!! "+data);
+>                 window.location.replace("../../molecule/"+submission_id+"/");
