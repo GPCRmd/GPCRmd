@@ -24,10 +24,10 @@
     
             if ($(use_isoform).is(":checked")){
                 console.log("f1");
-                $(protform).find("[id|=id_form][id$='-isoform']").show().prop('disabled',false);
+                $(protform).find("[id|=id_form][id$='-isoform']").show().prop('readonly',false);
                 console.log("f2");
             }else{
-                $(protform).find("[id|=id_form][id$='-isoform']").hide().prop('disabled',true);
+                $(protform).find("[id|=id_form][id$='-isoform']").val("").hide().prop('readonly',true);
             };
           
         });
@@ -60,7 +60,7 @@
            if ($(this).is(':checked')){
                $(mut_iso).show();  
            }else{
-               $(mut_iso).hide();  
+               $(mut_iso).val("").hide();  
               // $(mut_iso).css("display","none");  
            }
            self.prop('disabled',false);

@@ -32,7 +32,7 @@ $(document).ready(function(){
           console.log("PIPOL  "+element.value);
 }); 
         console.log(data);
-        $.post("./submitpost/",
+        $.post("./",
                 data, 
                 function(data){
                     var urllist=window.location.href.split("/");
