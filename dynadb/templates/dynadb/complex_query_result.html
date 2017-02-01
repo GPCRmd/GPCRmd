@@ -22,7 +22,7 @@
     {%endfor%}
     <br>
 {% endif %} 
-
+<br><br><br>
 {% if answer.compoundsorto %} 
     <b>Orthosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsorto %}
@@ -30,7 +30,7 @@
     {%endfor%}
      <br>
 {% endif %} 
-
+<br><br><br>
 {% if answer.compoundsalo %} 
     <b>Allosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsalo %}
@@ -38,6 +38,30 @@
     {%endfor%}
      <br>
 {% endif %} 
+<br><br><br>
+{% if answer.reference %}
+    <b>References for this complex:</b><br>
+    {% for reference in answer.reference%}
+    {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}<br>
+
+    <a class='btn btn-info' role='button' href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+    <hr><hr>
+    {%endfor%}
+{% endif %} 
+<br><br><br>
+{% if answer.efficacy %}
+    <b>EC50 according to BindingDB:</b><br>
+    {{answer.efficacy.value}} {{answer.efficacy.units}}
+    <a class='btn btn-info' role='button' href={{answer.efficacy.description}}>Binding DB</a><br>
+
+{% endif %} 
+<br><br><br>
+{% if answer.binding %}
+    <b>Kd according to BindingDB:</b><br>
+    {{answer.binding.value}} {{answer.binding.units}}<br>
+    <a class='btn btn-info' role='button' href={{answer.binding.description}}>Binding DB</a>
+{% endif %} 
+<br><br><br>
 
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b>:<br>

@@ -2,30 +2,27 @@ from django.shortcuts import render
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbFiles, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
 from view.data import *
 import re
 import json
-import urllib
 from Bio.PDB import *
 from Bio import PDB
 import itertools
 import mdtraj as md 
 import numpy as np
-from graphos.sources.simple import SimpleDataSource
-from graphos.renderers.gchart import LineChart
 import copy
 import csv
 
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
-    """Given a position in GPCR generic numbering, returns the range that consist in the residue number twice. This is necessary because NGL selections require a range, not a single number."""
+    """Given a position in GPCR generic numbering, returns the residue number."""
     (ext_range,chain)=gpcr_pdb[my_pos]
-    ext_range=str(ext_range)
-    pos_range=ext_range+"-"+ext_range
+    pos_range=str(ext_range)
+    #pos_range=ext_range+"-"+ext_range
     return pos_range
                               
 def create_conserved_pos_list(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li, multiple_chains,chain_name):
@@ -566,6 +563,7 @@ def index(request, dyn_id):
             thresh=request.POST.get("thresh")
             int_traj_p=request.POST.get("traj_p")
             int_struc_p=request.POST.get("struc_p")
+            dist_scheme = request.POST.get("dist_scheme")
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
@@ -573,7 +571,7 @@ def index(request, dyn_id):
                 num_prots=session_data["prot_num"]
                 serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]
-                (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains)
+                (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme)
                 data = {"result":int_dict,"success": success, "e_msg":errors}
             else:
                 data = {"result":None,"success": False, "e_msg":"Session error."}
@@ -768,15 +766,7 @@ def index(request, dyn_id):
 
 
 
-#TEST:
-def pre_viewer(request):
-    all_dyn=DyndbDynamics.objects.all()
-    dyn_ids=[dyn.id for dyn in all_dyn]
-    dyn_ids.sort()
-    context={
-        "dyn_ids" : dyn_ids
-    }
-    return render(request, 'view/pre_viewer.html', context)
+
 
 #########################
 
@@ -896,7 +886,7 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
 
 
 
-def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains):
+def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme):
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     try:
@@ -928,7 +918,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
         first=True
         try:
             for itraj in itertraj:
-                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme='closest-heavy')
+                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme=dist_scheme)
                 if first:
                     alldists=dists
                     allres_p=res_p

@@ -37,6 +37,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+CACHE_PATH = "/tmp/django_cache_dev"
+
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 os.environ['wsgi.url_scheme'] = 'https'

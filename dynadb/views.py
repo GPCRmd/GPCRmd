@@ -38,7 +38,7 @@ from rdkit.Chem import MolFromInchi,MolFromSmiles
 from .molecule_download import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
 #from .models import Question,Formup
 #from .forms import PostForm
-from .models import DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp, DyndbReferences
+from .models import DyndbReferences,DyndbEfficacy,DyndbBinding, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
 
@@ -160,6 +160,11 @@ def show_alig(request, alignment_key):
     if request.method=='POST':
         wtseq=request.POST.get('wtseq')
         mutseq=request.POST.get('mutant')
+        if '\n' in mutseq or '>' in mutseq:
+            mutlines=mutseq.split('\n')
+            if '>' in mutlines[0]:
+                mutlines=mutlines[1:]
+            mutseq=''.join(mutlines)
         result=align_wt_mut(wtseq,mutseq)
         result='>uniprot:\n'+result[0]+'\n>mutant:\n'+result[1]
         request.session[alignment_key]=result
@@ -2172,14 +2177,11 @@ def query_protein_fasta(request,protein_id):
             fseq=fseq+char
         count=count+1
 
-    with open('/tmp/'+protein_id+'_gpcrmd.fasta','w') as fh:
-        fh.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
-        fh.write(fseq)
-    with open('/tmp/'+protein_id+'_gpcrmd.fasta','r') as f:
-        data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+protein_id+'_gpcrmd.fasta')[0])
-        response['Content-Disposition']="attachment;filename=%s" % (protein_id+'_gpcrmd.fasta') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+protein_id+'_gpcrmd.fasta')
+    response = HttpResponse('', content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename="protein_'+'protein_id'+'.fa"'
+    response.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
+    response.write(fseq)
+
     return response
 
 def query_molecule(request, molecule_id,incall=False):
@@ -2302,10 +2304,48 @@ def query_complex(request, complex_id,incall=False):
             clistorto.append([ccompound.id_compound.id,imagelink])
         else:
             clistalo.append([ccompound.id_compound.id,imagelink])
-    #for match in DyndbReferencesCompound.objects.filter(id_compound=compound_id):
-        #comp_dic['references'].append([match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url])
 
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list}
+    q = DyndbComplexExp.objects.filter(pk=complex_id)
+    q = q.annotate(ec_fifty_val=F('dyndbexpinteractiondata__dyndbefficacy__id'))
+    q = q.annotate(binding_val=F('dyndbexpinteractiondata__dyndbbinding__id'))
+    q = q.annotate(references=F('dyndbexpinteractiondata__dyndbreferencesexpinteractiondata__id_references__id'))  
+    q = q.values('ec_fifty_val','binding_val','references')
+    efficacy=dict()
+    binding=dict()
+    reference_list=[]
+    references=dict()
+    for row in q:
+        print (row['ec_fifty_val'],row['binding_val'],row['references'])
+        if row['ec_fifty_val']!=None:
+            efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
+            efficacy['value']=efficacyrow.rvalue
+            efficacy['units']=efficacyrow.units
+            efficacy['description']=efficacyrow.description
+   
+        if row['binding_val']!=None:
+            bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
+            binding['value']=bindrow.rvalue
+            binding['units']=bindrow.units
+            binding['description']=bindrow.description
+
+        if row['references']!=None:
+            references=dict()
+            refrow=DyndbReferences.objects.get(pk=row['references'])
+            references['url']=refrow.url
+            references['journal']=refrow.journal_press          
+            references['volume']=refrow.volume
+            references['issue']=refrow.issue
+            references['doi']=refrow.doi           
+            references['pmid']=refrow.pmid
+            references['authors']=refrow.authors
+            references['title']=refrow.title
+            references['pub_year']=refrow.pub_year
+            for keys in references:
+                if references[keys]==None:
+                    references[keys]=''
+            reference_list.append(references)
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy}
+    print(comdic)
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -2852,7 +2892,6 @@ def pdbcheck(request,submission_id):
         submission_url = get_file_paths("model",url=True,submission_id=submission_id)
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
-
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
@@ -2953,7 +2992,7 @@ def pdbcheck(request,submission_id):
                 data = json.dumps(tojson)
                 return HttpResponse(data, content_type='application/json')
 
-            counter=+1
+            counter+=1
 
         if isinstance(finalguide, list) and len(finalguide)>0:
             results['type']='fullrun'
@@ -2986,11 +3025,11 @@ def pdbcheck(request,submission_id):
 @textonly_500_handler
 def servecorrectedpdb(request,pdbname):
     ''' Allows the download of a PDB file with the correct resids, according to the aligment performed by pdbcheck function. '''
-    with open('/tmp/'+pdbname,'r') as f:
+    with open('/'+pdbname,'r') as f:
         data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+pdbname)[0])
-        response['Content-Disposition']="attachment;filename=%s" % (pdbname) #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+pdbname)
+        response=HttpResponse(data, content_type=mimetypes.guess_type(pdbname)[0])
+        response['Content-Disposition']="attachment;filename=%s" % (pdbname[pdbname.rfind('/')+1:])
+        response['Content-Length']=os.path.getsize('/'+pdbname)
     return response
 
 @textonly_500_handler

@@ -142,7 +142,7 @@ TEMPLATES = [
 ]
 
 MAX_UPLOAD_SIZE=2147483648
-
+FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 if DEBUG:
    TEMPLATES[0]['OPTIONS']['debug'] = True
@@ -209,7 +209,7 @@ SESSION_ENGINE="django.contrib.sessions.backends.file"
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/tmp/django_cache',
+        'LOCATION': CACHE_PATH,
     }
 }
 
