@@ -8869,13 +8869,13 @@ chunks=['chunk0_from2870096_to_5487587.sdf',
     'chunk19_from50960816_to_53419225.sdf',
     'chunk1_from5487587_to_8107333.sdf',
     'chunk20_from53419225_to_55867575.sdf',
-    'chunk21_from55867575_to_58318805.sdf',
+    'chunk21_from55867575_to_58318805.sdf', #13
     'chunk2_from8107333_to_10673062.sdf',
     'chunk3_from10673062_to_12925257.sdf',
     'chunk4_from12925257_to_15613041.sdf',
     'chunk5_from15613041_to_18280168.sdf',
     'chunk6_from18280168_to_20874179.sdf',
-    'chunk7_from20874179_to_23536254.sdf',
+    'chunk7_from20874179_to_23536254.sdf', #corrupted
     'chunk8_from23536254_to_26041971.sdf',
     'chunk9_from26041971_to_28600899.sdf'
     ]
@@ -8915,7 +8915,15 @@ def fill_db(chunks):
                     ligkey+=lines_list[j].strip()
                     j+=1
 
-            if '<Ligand InChI>' in lines_list[i]:
+            #elif '$$$$' in lines_list[i-1] or i==0:
+            #    compstr=lines_list[i]
+            #    j=i+1
+            #    while not lines_list[j].startswith('Vconf'):
+            #        compstr+=lines_list[j]
+            #        j+=1
+            #    print('the compound name',compstr)
+
+            elif '<Ligand InChI>' in lines_list[i]:
                 liginchi=''
                 j=i+1
                 while '> <' not in lines_list[j]:
@@ -9328,7 +9336,7 @@ def fill_db(chunks):
 
                     unicount+=1
                 
-                #Create the compound and complxcompound, if it does not exist
+                #Create the compound and complexcompound, if it does not exist
                 print('Protein recorded, now the compound')
                 DBcompound=DyndbCompound.objects.filter(pubchem_cid=comple[2])
                 compdbsinchi=DyndbCompound.objects.filter(sinchi=comple[1],sinchikey=comple[0])
@@ -9465,7 +9473,7 @@ def fill_db(chunks):
         print('All records from this chunk completed.')
 
 ##############################################################################################################################################
-fill_db(chunks[12:])
+#fill_db(chunks[0:1])
 ##############################################################################################################################################
 ##############################################################################################################################################
 ##############################################################################################################################################
