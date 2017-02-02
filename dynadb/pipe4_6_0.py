@@ -51,8 +51,14 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 					cpos2=int(cpos,16)
 					flag=1
 					hexflag=1
+					
 				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
-					if cpos2>=ppos2+1:
+					
+					if cpos2!=ppos2+1 and ppos2!=0:
+						return 'Resid numbering is not continous. There is a jump from '+str(ppos2)+' to '+str(cpos2)+'.This means that either the PDB numbering is corrupted or that there is another segment inside the interval you defined. If it is the latter case, define a new segment ending at this point and another one afterwards.'
+					
+					
+					if cpos2==ppos2+1:
 						try:
 							seqplain.append([d[fields[3]],cpos,cpos2])
 						except: #Modified aminoacid
@@ -88,7 +94,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
 	 the changes in the pdb numbering according to the database sequence.'''
 
-	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
+	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-1)[0] #select the aligment with the best score.
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
 	#print(bestalig)
 	biglist=list()
@@ -106,6 +112,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 			newpos=format(i+1,'x')	#hexadecimal once 9999 resid is used.
 		
 		if pdbalig[i]=='-':
+			return 'There is a gap in the pdb alignment. That means that you should define a new segment in the table ending before the gap and other one after it. The gap is in position:'+str(tablepdb[i][0])+str(tablepdb[i][1])
 			tablepdb.insert(i,'-')
 			minilist=[tablepdb[i],[fastalig[i],newpos]]
 			duos.append(minilist)
@@ -123,6 +130,16 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 	if len(mismatchlist)>0:
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
 
+	print(duos)
+	#now check if there is any jump/discontinuity in the PDB corrected numbering. If there is, the reason is that there are more that one segments in that user defined interval.
+	counter=0
+	for minilist in duos:
+		if counter>0 and minilist[0][2]!=previous_resid+1:
+			return 'There is a jump in the pdb alignment. That means that you should define a new segment in the table. From '+ str(previous_resid) + ' to ' + str(minilist[0][2])
+			
+		previous_resid=minilist[0][2]
+		counter+=1    
+	
 	return (duos)
 
 #############################################################################################################################################
@@ -349,6 +366,7 @@ def segment_id(pdbname, segid, start, stop, chain):
 
 def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	'''Takes a PDB file and two resids that define an interval in the PDB, extracts the interval's sequence and aligns it to the one in sequence. '''
+	print(str(start),str(stop))
 	result=checkpdb(pdbfile,segid,start,stop,chain)
 	if isinstance(result,str):
 		return result
@@ -401,9 +419,3 @@ def main(pdbname,fastaname,segid='',start=-1,starthex=False,stop=99999,stophex=F
 		repairpdb(pdbname,guide,segid,start,stop,chain)
 		#print(segment_id(pdbname, segid, start, stop, chain),'\n')
 
-#############################################################################################################################################
-
-
-#############################################################################################################################################
-#############################################################################################################################################
-#############################################################################################################################################
