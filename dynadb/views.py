@@ -2107,14 +2107,16 @@ def query_protein(request, protein_id,incall=False):
         fiva['other_names'].append(match.other_names)
 
     for match in DyndbModel.objects.values('id').filter(id_protein=protein_id):
-        fiva['models'].append(match['id'])
+        if match['id']!=None:
+            fiva['models'].append(match['id'])
 
     q = DyndbComplexProtein.objects.filter(id_protein=protein_id)
     q = q.annotate(model_id=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
     q = q.values('id_protein','model_id')
 
     for row in q:
-        fiva['models'].append(row['model_id'])
+        if row['model_id']!=None:
+            fiva['models'].append(row['model_id'])
 
     fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
 
