@@ -100,7 +100,7 @@ $(document).ready(function(){
                 rowid--;
               }
               var namelab1 = name1.replace(/-[0-9]+$/,"-"+rowid);
-              var idlab1 = id1.replace(/-[0-9]$/,"-"+rowid);
+              var idlab1 = id1.replace(/-[0-9]+$/,"-"+rowid);
               $(this).attr({'placeholder':idlab1,'id':idlab1, 'name':namelab1});
               $(this).val(values[i]);
               $(this).prop("disabled",false);
