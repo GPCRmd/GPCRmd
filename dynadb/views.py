@@ -8712,10 +8712,10 @@ def dictfetchall(cursor):
     ]
 
 
-###################################################################################
-###################################################################################
-###################################################################################
-###################################################################################
+######################################################################################################################################################################
+######################################################################################################################################################################
+######################################################################################################################################################################
+######################################################################################################################################################################
 #let's python
 #fill the database
 from protein.models import Protein
@@ -8880,7 +8880,7 @@ chunks=['chunk0_from2870096_to_5487587.sdf',
     'chunk9_from26041971_to_28600899.sdf'
     ]
 
-
+#http://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?&reactant_set_id=154401&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM
 def fill_db(chunks):
     '''Fills the GPCRmd database with data from the BindingDB. It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created.'''
     for chunk in chunks:
@@ -8902,7 +8902,7 @@ def fill_db(chunks):
 
             if '$$$$' in lines_list[i]:
                 if (len(kd)>0 or len(ec50)>0) and emptyprot==False and len(set(protlist).intersection(set(GPCRlist)))>0:
-                    complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF]) 
+                    complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
                 protlist=[]
                 reference={} 
                 seqlist=[]
@@ -8922,6 +8922,10 @@ def fill_db(chunks):
             #        compstr+=lines_list[j]
             #        j+=1
             #    print('the compound name',compstr)
+
+            elif '> <BindingDB Reactant_set_id>' in lines_list[i]:
+                binding_id=lines_list[i+1].strip()
+
 
             elif '<Ligand InChI>' in lines_list[i]:
                 liginchi=''
@@ -9104,8 +9108,8 @@ def fill_db(chunks):
             if complex_interaction_id=='undef':
                 print('This complex does not exist yet. Record the complex exp and the intdata')
                 with closing(connection.cursor()) as cursor:
-                    lastid=DyndbComplexExp.object.latest('id').id+1
-                    cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id', (lastid))
+                    lastid=DyndbComplexExp.objects.latest('id').id+1
+                    cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id' % lastid)
                     complex_id=cursor.fetchone()[0]
                 #with closing(connection.cursor()) as cursor:
                 #   cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
@@ -9178,13 +9182,13 @@ def fill_db(chunks):
             print('Complex recorded. Now, record the kinetic values')
             if complextype==1: #kd, binding
                 if len(DyndbBinding.objects.filter(id=complex_interaction_id))==0:
-                    newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id,'rvalue':kd,'units':'nM','description':comple[9]['bindingdblink']})
+                    newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id,'rvalue':kd,'units':'nM','description':comple[12]})
                 else:
                     print('that record of binding affinity already existed')
 
             if complextype==2: #ec_50, efficacy
                 if len(DyndbEfficacy.objects.filter(id=complex_interaction_id))==0:
-                    newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[9]['bindingdblink']})
+                    newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
 
                 else:
                     print('that record of efficacy was already registered')
@@ -9192,14 +9196,14 @@ def fill_db(chunks):
 
             if complextype==3:
                 if len(DyndbEfficacy.objects.filter(id=complex_interaction_id1))==0:
-                    newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id0,'rvalue':ec_fifty,'units':'nM','description':comple[9]['bindingdblink']})
+                    newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id0,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
 
                 else:
                     print('that record of efficacy was already registered')
 
 
                 if len(DyndbBinding.objects.filter(id=complex_interaction_id0))==0:
-                    newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id1,'rvalue':kd,'units':'nM','description':comple[9]['bindingdblink']})
+                    newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id1,'rvalue':kd,'units':'nM','description':comple[12]})
 
                 else:
                     print('that record of binding affinity already existed')
@@ -9477,9 +9481,6 @@ def fill_db(chunks):
 
         print('All records from this chunk completed.')
 
-##############################################################################################################################################
-#fill_db(chunks[0:1])
-##############################################################################################################################################
-##############################################################################################################################################
-##############################################################################################################################################
+fill_db(chunks[17:])
+
 
