@@ -3200,6 +3200,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
     prefix_ps='formps'
     
     if request.method == 'POST':
+
             submission_path = get_file_paths(form_type,url=False,submission_id=submission_id)
             submission_url = get_file_paths(form_type,url=True,submission_id=submission_id)
             pdbname = get_file_name_submission(form_type,submission_id,0,ext="pdb",forceext=False,subtype="pdb")
@@ -3314,7 +3315,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 #molintdict[int_id]['numberofmol'].append(fieldset_mc[key]['numberofmol'])
             del fieldset_mc    
             int_ids = molintdict.keys()
-            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
             if form_type == "model":
                 int_ids_db = int_ids_db.filter(not_in_model=False)
             int_ids_db = int_ids_db.values('int_id')
@@ -4012,10 +4013,12 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
     
     if component_type == 'model':
         q = DyndbSubmissionModel.objects.filter(submission_id=submission_id,model_id__dyndbmodelcomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
+        q = q.exclude(model_id__dyndbmodelcomponents__id_molecule=None).exclude(model_id__dyndbmodelcomponents__type=None)
         fields_list = DyndbModelComponents._meta.get_fields()
         path = 'model_id__dyndbmodelcomponents__'
     elif component_type == 'dynamics':
         q = DyndbDynamics.objects.filter(submission_id=submission_id,dyndbdynamicscomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
+        q = q.exclude(dyndbdynamicscomponents__id_molecule=None).exclude(dyndbdynamicscomponents__type=None)
         fields_list = DyndbDynamicsComponents._meta.get_fields()
         path = 'dyndbdynamicscomponents__' 
         
@@ -4036,7 +4039,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
     
-    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
     q = q.annotate(id_molecule=F('molecule_id'))
     field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
@@ -4056,6 +4059,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     for row in result:
         result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
         i +=1
+    
     return result
     
 def MODELview(request, submission_id):
@@ -4080,7 +4084,6 @@ def MODELview(request, submission_id):
              initFiles['filename']="".join(val['path'].split("/")[-1])
              initFiles['filepath']=val['path']
              initFiles['description']="pdb crystal-derived assembly coordinates"
-             print("HOLA initFiles\n", initFiles)
              fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
              dicfmod={}
              fdbFM={}
@@ -4095,10 +4098,10 @@ def MODELview(request, submission_id):
                  dicfmod['id_model']=MFpk
                  prev_entryFile.update(update_timestamp=timezone.now(),last_update_by_dbengine=user,filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
                  #prev_entryFile.update(filename=initFiles['filename'],filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
-            #    error=("- ").join(["Error when storing MODEL file info, dyndb_Files form"])
-            #    print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-            #    response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
-            #    return response
+                 error=("- ").join(["Error when storing MODEL file info, dyndb_Files form"])
+                 print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+                 return response
 
              fdbFM[key]=dyndb_Files_Model(dicfmod)
              if fdbFM[key].is_valid():
@@ -4590,28 +4593,28 @@ def MODELview(request, submission_id):
           #     DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
             return response
         #Fill the dyndb_Submission_Model form. Remember there is just a single Model for each submission !!!!
-     #  dictSMd={'model_id':MFpk,'submission_id':submission_id}
-     #  fdbSMd=dyndb_Submission_Model(dictSMd)
-     #  if fdbSMd.is_valid():
-     #      fdbSMd.save()
-     #  else:
-     #      iii1=fdbSMd.errors.as_text()
-     #      print("fdbSMd no es valido")
-     #      print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
-     #      response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-     #      if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
-     #          DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
-     #          DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
-     #          DyndbComplexExp.objects.filter(id=CEpk).delete()
-     #      else:
-     #          for comp_type_t in Upd_Comp_Type_l:
-     #              if comp_type_t[0]:
-     #                  DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
-     #      if CM_exists==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
-     #          DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
-     #          DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
-     #      DyndbModel.objects.filter(id=MFpk).delete()
-     #      return response
+        dictSMd={'model_id':MFpk,'submission_id':submission_id}
+        fdbSMd=dyndb_Submission_Model(dictSMd)
+        if fdbSMd.is_valid():
+            fdbSMd.save()
+        else:
+            iii1=fdbSMd.errors.as_text()
+            print("fdbSMd no es valido")
+            print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+         #  if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+         #      DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexExp.objects.filter(id=CEpk).delete()
+         #  else:
+         #      for comp_type_t in Upd_Comp_Type_l:
+         #          if comp_type_t[0]:
+         #              DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+         #  if CM_exists==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
+         #      DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+         #  DyndbModel.objects.filter(id=MFpk).delete()
+            return response
 
         print("HHHHHHHHHHHHH")
         #Create storage directory: Every MODEL has its own directory in which the corresponding pdb file is saved. This directory is labeled as "PDBmodel"+ MFpk (primary key of the model)
@@ -7101,6 +7104,7 @@ def DYNAMICSview(request, submission_id):
             response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
             return response
         else:
+            
             file_types_items = file_types.items()
             dd=dyndb_Dynamics()
             ddC =dyndb_Dynamics_Components()
@@ -10951,7 +10955,7 @@ def dictfetchall(cursor):
 
 def submission_summaryiew(request,submission_id):
 #protein section
-    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id')
     print(qSub)
     int_id=[]
     int_id0=[]
@@ -11027,7 +11031,7 @@ def submission_summaryiew(request,submission_id):
     fdbSubs = dyndb_Submission_Molecule()
 
 #model section
-    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel=submission_id)
+    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id=submission_id)
     print("qModel",qModel)
     p=qModel
     print("p ", p)
