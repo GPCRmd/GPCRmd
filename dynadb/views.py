@@ -8738,8 +8738,8 @@ def scorenames(names_list):
         oriname=name
         score=0
         name=name.lower()
-        score=len(name)*-1 #the longer the name, the worse the score
-        score=score+(name.count('a')+name.count('e')+name.count('i')+name.count('o')+name.count('u'))*100/len(name)
+        score=len(name)*-0.4 #the longer the name, the worse the score
+        score=score+ 3*((name.count('a')+name.count('e')+name.count('i')+name.count('o')+name.count('u'))*100/len(name))
         score=score-len(re.findall("\d", name))
         if score>maxscore and len(name)<60:
             maxscore=score
@@ -9104,8 +9104,13 @@ def fill_db(chunks):
             if complex_interaction_id=='undef':
                 print('This complex does not exist yet. Record the complex exp and the intdata')
                 with closing(connection.cursor()) as cursor:
-                    cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
-                    complex_id=cursor.fetchone()[0] #returns the id of the last insert command
+                    lastid=DyndbComplexExp.object.latest('id').id+1
+                    cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id', (lastid))
+                    complex_id=cursor.fetchone()[0]
+                #with closing(connection.cursor()) as cursor:
+                #   cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
+                #   complex_id=cursor.fetchone()[0] #returns the id of the last insert command
+                    
                 cmol_id=newrecord(['dyndb_complex_molecule',DyndbComplexMolecule],{'id_complex_exp':complex_id},True)
 
                 #Create the complex_exp_interaction_data record
@@ -9343,7 +9348,7 @@ def fill_db(chunks):
                 if len(DBcompound)>0:
                     compound_id=DBcompound[0].id
                     print('compound already existed, no need to record it') #warning check if the cmolmol alreadyexist?
-                    molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form')[0].id
+                    molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
                     cmolmol=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=molecule_id).filter(id_complex_molecule=cmol_id).filter(type=0)
                     if len(cmolmol)==0:
                         newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
@@ -9352,7 +9357,7 @@ def fill_db(chunks):
                 elif len(compdbsinchi)>0:
                     compound_id=compdbsinchi[0].id
                     print('compound already existed, mo need to record it')
-                    molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form')[0].id
+                    molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
                     cmolmol=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=molecule_id).filter(id_complex_molecule=cmol_id).filter(type=0)
                     if len(cmolmol)==0:
                         newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
@@ -9439,7 +9444,7 @@ def fill_db(chunks):
 
 
                     try:
-                        molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles']},True)
+                        molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles']},True)
 
                     except:
                         maxcol=1
@@ -9448,7 +9453,7 @@ def fill_db(chunks):
                             if col>maxcol:
                                 maxcol=col
                         maxcol=maxcol+1
-                        molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
+                        molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
                     with closing(connection.cursor()) as cursor:
                         cursor.execute ("""
                            UPDATE dyndb_compound
