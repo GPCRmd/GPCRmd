@@ -4,7 +4,7 @@
 
 {% block content %}
 
-<form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+<form method="post" action="{{ action }}" enctype="multipart/form-data" id="myformRef">{% csrf_token %}
 
  <!-- description column -->
  <div class="col-md-4">
@@ -53,7 +53,7 @@
          </div><br>
 {% for field in fdbREFF %}
 	 <div class="row">   
-		 <div class="col-md-5 col-md-offset-1 " style="height:30px"> <a title="{{field.help_text|safe}}"> {{ field.label }}:</a></div> <div class="col-md-6"> {{field.as_widget}}{{ field.errors }} </div> 
+		 <div class="col-md-5 col-md-offset-1 " style="height:30px"> <a title="{{field.help_text|safe}}"> {{ field.label }}:</a></div> <div class="col-md-6"> {{field.as_widget}}{{field.errors }} </div> 
 </div>
 {% endfor %}
 </div><br><br>
@@ -62,8 +62,16 @@
 	</div> -->
 	</div>
    </div>
+   </div>
 
-        <th><input type="submit" value="Submit" /> </th><br>   
+<div class="col-md-7 col-md-offset-4"> 
+      <div class="col-md-12 panel panel-primary">
+          <!--Submit prueba -->
+  	  <div class="panel-body" id="selection-">
+                          <input id="id_submit" name="submit" type="submit" value="Submit" class="btn btn-success btn-lg btn-block has-spinner"  />
+      	  </div>
+      	  </div>
+      	  </div>
 </form>
 
 <!--           <div id="selection-buttons"> 
@@ -89,6 +97,7 @@
 
 {% block addon_js %} 
 
-    <script src="{% static 'dynadb/addProtein.js' %}"></script>
+    <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
+    <script src="{% static 'dynadb/REFERENCESpost.js' %}"></script>
 
 {% endblock %}

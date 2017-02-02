@@ -185,8 +185,10 @@ def show_alig(request, alignment_key):
         alignment=request.session[alignment_key]
         return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
+<<<<<<< HEAD
 @login_required
 @user_passes_test_submission_id(is_submission_owner)
+=======
 
 def delProtByUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
     
@@ -420,6 +422,7 @@ def deleteModelbyUpdateMolecule(molecule_id,ii,submission_id):
                 deleteComplexByUpdateMolecule(molecule_id,ii,submission_id,model_del_molec=False)#Borrar Complex si es posible
 
 
+>>>>>>> 4e473273b910000eced45c8b015a80f05fe78a53
 def PROTEINview(request, submission_id):
     
     p= submission_id
