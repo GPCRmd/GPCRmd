@@ -26,7 +26,7 @@
 {% if answer.compoundsorto %} 
     <b>Orthosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsorto %}
-       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a> 
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="300" width="300" /> </a> 
     {%endfor%}
      <br>
 {% endif %} 
@@ -34,7 +34,7 @@
 {% if answer.compoundsalo %} 
     <b>Allosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsalo %}
-       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a>
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="300" width="300" /> </a>
     {%endfor%}
      <br>
 {% endif %} 
