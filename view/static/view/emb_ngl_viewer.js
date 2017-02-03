@@ -220,6 +220,11 @@ $(document).ready(function(){
     }
 
 ///////////////
+    $(".high_pd").each(function(){
+        if ($(this).data("pdbpos").toString() == "None"){
+            $(this).attr("disabled", true);
+        }
+    })
     function getSelectedPosLists(selector){
         var selPosList=[];
         $(selector).each(function(){
@@ -299,7 +304,7 @@ $(document).ready(function(){
     function disableMissingClasses(){
         $("li.cons_nav").each(function(){ 
             if ($(this).data("TF") == "False"){
-                $(this).addClass("disabled")
+                $(this).addClass("disabled");
             }
         })
         $("a.cons_nav").each(function(){ 
