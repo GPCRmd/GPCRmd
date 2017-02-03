@@ -7,10 +7,8 @@ import os
 #The way to detect which format is used is to check if the residue after resid 9999 is 2710. if after 9999 there is a 2710 then all coming numbers are hexadecimal. If after 9999 comes 10000 they are using the insertion code. 
 
 d={'CYSF': 'C', 'OLS': 'S', 'HE6': 'H', 'HEX': 'H', 'CCY0': 'C', 'TRP': 'W', 'TYR': 'Y', 'HEJ': 'H', 'CCY1': 'C', 'CM2L': 'K', 'HDY': 'H', 'HEB': 'H', 'CYSL': 'C', 'NCY4': 'C', 'ASN1': 'N', 'DAB': 'X', 'CCY6': 'C', 'HE4': 'H', 'CYX': 'C', 'CH2E': 'H', 'ARGN': 'R', 'CSEP': 'S', 'HES': 'H', 'ASPH': 'D', 'LYSH': 'K', 'HEG': 'H', 'CCYM': 'C', 'NASH': 'D', 'HDQ': 'H', 'GLYM': 'G', 'OLP': 'P', 'HD9': 'H', 'HS2': 'H', 'HSE': 'H', 'NCY8': 'C', 'HEL': 'H', 'HID': 'H', 'CY0': 'C', 'PTR': 'T', 'HEI': 'H', 'HEY': 'H', 'HD3': 'H', 'M2L': 'K', 'Y1P': 'Y', 'NPTR': 'T', 'HSC': 'H', 'HDT': 'H', 'NY1P': 'Y', 'MELE': 'L', 'NCY6': 'C', 'NCCS': 'C', 'CY7': 'C', 'LYS': 'K', 'ILE': 'I', 'HEC': 'H', 'CHYP': 'P', 'HEH': 'H', 'CT2P': 'T', 'KCX': 'K', 'NCY1': 'C', 'CH2D': 'H', 'NM3L': 'K', 'CACK': 'K', 'CM3L': 'K', 'ACK': 'K', 'HISA': 'H', 'HEU': 'H', 'CCY4': 'C', 'ALY': 'K', 'CASH': 'D', 'HDK': 'H', 'CCME': 'C', 'NH1E': 'H', 'HDH': 'H', 'HIS2': 'H', 'ASP': 'D', 'NCY3': 'C', 'LSN': 'K', 'HD7': 'H', 'CNLN': 'N', 'HISE': 'H', 'CS1P': 'S', 'CY8': 'C', 'NOLP': 'P', 'HSD': 'H', 'SEP': 'S', 'COLT': 'T', 'HD8': 'H', 'CSRM': 'R', 'NM2L': 'K', 'CS2P': 'S', 'HDD': 'H', 'COLS': 'S', 'HEZ': 'H', 'NCYX': 'C', 'GLUP': 'E', 'HDE': 'H', 'NTPO': 'T', 'HDS': 'H', 'NS2P': 'S', 'CCS': 'C', 'NLE': 'L', 'CY2P': 'Y', 'CY3': 'C', 'HIN': 'H', 'ASP1': 'A', 'H2E': 'H', 'HISH': 'H', 'NCY9': 'C', 'MGY': 'G', 'CH1D': 'H', 'NSRM': 'R', 'CCY9': 'C', 'NDAB': 'X', 'NNLN': 'N', 'CY6': 'C', 'CYSG': 'C', 'CHIP': 'H', 'SER': 'S', 'CDRM': 'R', 'OLT': 'T', 'LYN': 'K', 'GLY': 'G', 'NH2D': 'H', 'PHEU': 'F', 'ASN': 'N', 'HET': 'H', 'HDO': 'H', 'HD4': 'H', 'HEE': 'H', 'HE7': 'H', 'DHSE': 'H', 'HE3': 'H', 'CDAB': 'X', 'MLYS': 'K', 'NLN': 'N', 'HEP': 'H', 'MLEU': 'L', 'Y2P': 'Y', 'CGUP': 'E', 'NT2P': 'T', 'CY9': 'C', 'T1P': 'T', 'HIS1': 'H', 'HDV': 'H', 'HDB': 'H', 'HIS': 'H', 'HEM': 'H', 'HDX': 'H', 'M3L': 'K', 'HDW': 'H', 'HDZ': 'H', 'GLUH': 'E', 'GLH': 'E', 'MEVA': 'V', 'SERD': 'S', 'CHID': 'H', 'DRM': 'R', 'HEO': 'H', 'CKCX': 'K', 'NCY0': 'C', 'HEF': 'H', 'CCY5': 'C', 'NCY7': 'C', 'NHYP': 'P', 'NY2P': 'Y', 'HE0': 'H', 'CMLY': 'K', 'MVAL': 'V', 'H2D': 'H', 'SRM': 'R', 'HDC': 'H', 'NT1P': 'T', 'NHID': 'H', 'CARM': 'R', 'HE5': 'H', 'TPO': 'T', 'HDU': 'H', 'LEU': 'L', 'GLU': 'E', 'CTPO': 'T', 'HEK': 'H', 'HE2': 'H', 'MEL': 'L', 'S2P': 'S', 'HDN': 'H', 'CGU': 'E', 'HD5': 'H', 'HD6': 'H', 'AP1': 'D', 'S1P': 'S', 'DHSP': 'H', 'NACK': 'K', 'GLN': 'Q', 'NARM': 'R', 'NCY2': 'C', 'CYS': 'C', 'ARG': 'R', 'HYP': 'P', 'CY1': 'C', 'NHIN': 'H', 'CYSH': 'C', 'HD0': 'H', 'NLYN': 'K', 'NHIP': 'H', 'CY5': 'C', 'CH1E': 'H', 'HDL': 'H', 'HEA': 'H', 'NDRM': 'R', 'NCME': 'C', 'NCYM': 'C', 'CY2': 'C', 'CHIN': 'H', 'HDR': 'H', 'COLP': 'P', 'CCYX': 'C', 'CGLH': 'E', 'MEV': 'V', 'CYS2': 'C', 'HER': 'H', 'HEW': 'H', 'HEQ': 'H', 'HED': 'H', 'ZAFF': 'D', 'HISP': 'H', 'HISD': 'H', 'NGLH': 'E', 'HEV': 'H', 'HDJ': 'H', 'CY1P': 'Y', 'HDM': 'H', 'CY4': 'C', 'THR': 'T', 'NMLY': 'K', 'HDI': 'H', 'MLY': 'K', 'HEN': 'H', 'NSEP': 'S', 'H1D': 'H', 'MET': 'M', 'HIE': 'H', 'NKCX': 'K', 'HD1': 'H', 'NOLT': 'T', 'T2P': 'T', 'ALA': 'A', 'HD2': 'H', 'DHSD': 'H', 'HDP': 'H', 'CYM': 'C', 'HDF': 'H', 'HDA': 'H', 'NS1P': 'S', 'CHIE': 'H', 'CLYN': 'K', 'HISB': 'H', 'ARM': 'R', 'CT1P': 'T', 'CPTR': 'T', 'HSP': 'H', 'CME': 'C', 'HE1': 'H', 'CYSD': 'C', 'PHE': 'F', 'NH2E': 'H', 'CCY3': 'C', 'NH1D': 'H', 'NCY5': 'C', 'PRO': 'P', 'HIP': 'H', 'NHIE': 'H', 'ASPP': 'D', 'CCCS': 'C', 'HE8': 'H', 'VAL': 'V', 'HE9': 'H', 'CYSP': 'C', 'NOLS': 'S', 'CCY2': 'C', 'CCY7': 'C', 'ASH': 'D', 'TRPU': 'W', 'CCY8': 'C', 'HDG': 'H', 'H1E': 'H','CYS':'C', 'ASP':'D', 'SER':'S', 'GLN':'Q', 'LYS':'K', 'ILE':'I', 'PRO':'P', 'THR':'T', 'PHE':'F', 'ASN':'N', 'GLY':'G', 'HIS':'H', 'LEU':'L', 'ARG':'R', 'TRP':'W', 'ALA':'A', 'VAL':'V', 'GLU':'E', 'TYR':'Y', 'MET':'M', 'DCYS':'C', 'DASP':'D', 'DSER':'S', 'DGLN':'Q', 'DLYS':'K', 'DILE':'I', 'DPRO':'P', 'DTHR':'T', 'DPHE':'F', 'DASN':'N', 'DGLY':'G', 'DHIS':'H', 'DLEU':'L', 'DARG':'R', 'DTRP':'W', 'DALA':'A', 'DVAL':'V', 'DGLU':'E', 'DTYR':'Y', 'DMET':'M', 'CCYS':'C', 'CASP':'D', 'CSER':'S', 'CGLN':'Q', 'CLYS':'K', 'CILE':'I', 'CPRO':'P', 'CTHR':'T', 'CPHE':'F', 'CASN':'N', 'CGLY':'G', 'CHIS':'H', 'CLEU':'L', 'CARG':'R', 'CTRP':'W', 'CALA':'A', 'CVAL':'V', 'CGLU':'E', 'CTYR':'Y', 'CMET':'M', 'NCYS':'C', 'NASP':'D', 'NSER':'S', 'NGLN':'Q', 'NLYS':'K', 'NILE':'I', 'NPRO':'P', 'NTHR':'T', 'NPHE':'F', 'NASN':'N', 'NGLY':'G', 'NHIS':'H', 'NLEU':'L', 'NARG':'R', 'NTRP':'W', 'NALA':'A', 'NVAL':'V', 'NGLU':'E', 'NTYR':'Y', 'NMET':'M'}
-
-#############################################################################################################################################
-
-def checkpdb(name_of_file,segid,start,stop,chain):
+		
+def checkpdb_ngl(name_of_file,segid,start,stop,chain):
 	'''Get sequence from a PDB file in a given interval defined by a combination of Segment Identifier (segid), starting residue number (start), end residue number (stop), chain identifier (chain). All can be left in blank. Returns 1) a list of minilist: each minilist has the resid and the aminoacid code. 2) a string with the sequence.'''
 	fpdb=open(name_of_file,'r')
 	cpos=0 #current residue position
@@ -51,14 +49,8 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 					cpos2=int(cpos,16)
 					flag=1
 					hexflag=1
-					
 				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
-					
-					if cpos2!=ppos2+1 and ppos2!=0:
-						return 'Resid numbering is not continous. There is a jump from '+str(ppos2)+' to '+str(cpos2)+'.This means that either the PDB numbering is corrupted or that there is another segment inside the interval you defined. If it is the latter case, define a new segment ending at this point and another one afterwards.'
-					
-					
-					if cpos2==ppos2+1:
+					if cpos2>=ppos2+1:
 						try:
 							seqplain.append([d[fields[3]],cpos,cpos2])
 						except: #Modified aminoacid
@@ -80,11 +72,156 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 		return 'Unable to extract sequence from PDB file. Double check if the elements that define your interval exist: chain, segid, resid.'
 	return (seqplain,onlyaa,hexflag)
 
+		
+def get_number_segments(pdbname):
+	fpdb=open(pdbname,'r')
+	cpos=0 #current residue position
+	ppos=0 #previous residue position
+	ppos2='0' #previous position after converting hexadecimals to decimals
+	pchain='' #previous chain
+	seqplain=list() #list of minilist. each minilist contains the residue number and its aminoacid.
+	breaklines=[]
+	flag=0
+	hexflag=0
+	pfields=['','' ,'','AAA','Z','0','0','0','0','']
+	jumps=0
+	jumpflag=0
+	for line in fpdb:
+		if useline(line):
+			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
+			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
+			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
+			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
+			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
+
+			if fields[5]!=pfields[5]: #resid has changed->new aa
+				
+				if (fields[4]!=pfields[4]  or fields[9]!=pfields[9]) and pfields!=['','' ,'','AAA','Z','0','0','0','0','']: #resid count has been reseted by new chain or new segid. 
+					ppos='0'
+					flag=0
+					jumps+=1
+					jumpflag=1
+				cpos=fields[5] #current position (resid) in the pdb during the present loop cycle
+				if flag==1:
+					cpos2=int(str(cpos),16)
+					ppos2=int(str(ppos),16)
+				elif flag==0:
+					cpos2=int(cpos)
+					ppos2=int(ppos)
+				if cpos=='2710' and ppos=='9999':
+					cpos2=int(cpos,16)
+					flag=1
+					hexflag=1			
+					
+				if cpos2!=ppos2+1 and jumpflag==0 and ppos2!=0:
+					jumps=+1
+					jumpflag=1
+
+				elif cpos2<ppos2 and cpos!=1: 
+					return 'Residue numbering order is corrupted in position:'+str(cpos2)
+
+			if jumpflag==1:
+				breaklines.append(line.strip())
+			pchain=fields[4]
+			pfields=fields
+			ppos=cpos
+			jumpflag=0
+	breaklines='<br>'.join(breaklines)
+	fpdb.close()
+	return (jumps+1,breaklines)	
+		
+#############################################################################################################################################
+
+def checkpdb(name_of_file,segid,start,stop,chain):
+	'''Get sequence from a PDB file in a given interval defined by a combination of Segment Identifier (segid), starting residue number (start), end residue number (stop), chain identifier (chain). All can be left in blank. Returns 1) a list of minilist: each minilist has the resid and the aminoacid code. 2) a string with the sequence.'''
+	fpdb=open(name_of_file,'r')
+	startexists=False
+	stopexists=False
+	cpos=0 #current residue position
+	ppos=0 #previous residue position
+	ppos2='0' #previous position after converting hexadecimals to decimals
+	pchain='' #previous chain
+	seqplain=list() #list of minilist. each minilist contains the residue number and its aminoacid.
+	flag=0
+	hexflag=0
+	pfields=['','' ,'','AAA','Z','0','0','0','0','']
+	for line in fpdb:
+		if useline(line):
+			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
+			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
+			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
+			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
+			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
+			i=3
+			while i<9:
+				if fields[i].strip()=='':
+					return 'Missing required field in the PDB file at line: '+line
+				i+=1
+
+			if fields[5]!=pfields[5]: #resid has changed->new aa
+				
+				if fields[4]!=pfields[4] or fields[9]!=pfields[9] or fields[5]=='1': #resid count has been reseted by new chain, new segid or whatever. 
+					ppos='0'
+					flag=0
+				cpos=fields[5] #current position (resid) in the pdb during the present loop cycle
+				if flag==1:
+					cpos2=int(str(cpos),16)
+					ppos2=int(str(ppos),16)
+				elif flag==0:
+					cpos2=int(cpos)
+					ppos2=int(ppos)
+				if cpos=='2710' and ppos=='9999':
+					cpos2=int(cpos,16)
+					flag=1
+					hexflag=1
+					
+				if (fields[4]==chain or chain == '') and (segid in line[72:77] or segid=='') and cpos2 == start:
+					startexists=True
+					
+				if (fields[4]==chain or chain == '') and (segid in line[72:77] or segid=='') and cpos2 == stop:
+					stopexists=True					
+					
+				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
+
+					if cpos2!=ppos2+1 and ppos2!=0 and (ppos2 >= start and ppos2 <= stop): #if previous position is inside the segment and it is not continuous with the current one:
+						return 'Resid numbering is not continous. There is a jump from '+str(ppos2)+' to '+str(cpos2)+'.This means that either the PDB numbering is corrupted or that there is another segment inside the interval you defined. If it is the latter case, define a new segment ending at this point and another one afterwards.'
+
+					elif cpos2<ppos2 and cpos!=1: 
+						return 'Residue numbering order is corrupted in position:'+str(cpos2)					
+					
+					else:
+						try:
+							seqplain.append([d[fields[3]],cpos,cpos2])
+						except: #Modified aminoacid
+							seqplain.append(('X',cpos,cpos2))
+
+			pchain=fields[4]
+			pfields=fields
+			ppos=cpos
+
+	fpdb.close()
+	onlyaa='' #ignore the resids, pick the aa and that is it.
+	for minilist in seqplain:
+		onlyaa=onlyaa+minilist[0]
+
+	if len(onlyaa)==0:
+		return 'Unable to extract sequence from PDB file. Double check if the elements that define your interval exist: chain, segid, resid.'
+
+	if not startexists:
+		return 'Start resid does not exist in the given combination: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid
+	
+	if not stopexists:
+		return 'Stop resid does not exist in the given combination: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid
+
+	return (seqplain,onlyaa,hexflag)
+
 
 
 #############################################################################################################################################
 def align_wt_mut(wtseq,mutseq):
-	bestalig=pairwise2.align.localms(wtseq,mutseq,100,-1,-10,-10)[0]
+	bestalig=pairwise2.align.localms(wtseq,mutseq,100,-1,-10,-1)[0]
 	return bestalig
 
 #############################################################################################################################################
@@ -93,8 +230,67 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 	'''Get the sequence from database, compare this sequence with the one given in the pdb.
 	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
 	 the changes in the pdb numbering according to the database sequence.'''
+	try:
+		bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-1)[0] #select the aligment with the best score.
+		#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
+	except:
+		return 'Incorrect alignment. There are not any matches.'
 
-	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-1)[0] #select the aligment with the best score.
+	biglist=list()
+	counterepair=1
+	i=0
+	pdbalig=bestalig[1] #PDB sequence after alignment
+	fastalig=bestalig[0]
+	if '-' in fastalig: 
+		return 'PDB file contains insertions with respect to fasta, this is not allowed'
+	duos=list()
+	mismatchlist=list()
+	while i < len(fastalig):
+		newpos=i+start  #IT USED TO BE i+1, but now we use start=1 as default!
+		if i+1>9999 and hexflag==1: #hexflag==1 means that the original PDB uses hexadecimal notation
+			newpos=format(i+1,'x')	#hexadecimal once 9999 resid is used.
+
+		if pdbalig[i]=='-':
+			tablepdb.insert(i,'-')
+			try:
+				return 'There is a gap in the pdb alignment. That means that you should define a new segment in the table ending before the gap and other one after it. The gap is in position:'+str(tablepdb[i][0])+str(tablepdb[i][1])
+			except IndexError:
+				return 'There is a gap in the pdb alignment. Maybe you should define a new segment or check if the length of the PDB segment and the sequence match. If your segment is one resid long, put the same resid in res from and res to, also, put the same resid in seq from and seq to. Like: Res from:81 Res to:81; Seq from:81 Seq to:81. Or Res from:81 Res to:81; Seq from:83 Seq to:83 '
+			minilist=[tablepdb[i],[fastalig[i],newpos]]
+			duos.append(minilist)
+
+		elif fastalig[i]!=pdbalig[i] and pdbalig[i]!='-':
+			minilist=[tablepdb[i], [fastalig[i],newpos]]
+			duos.append(minilist)
+			mismatchlist.append(minilist)
+
+		else:
+			minilist=[tablepdb[i],[fastalig[i],newpos]]
+			duos.append(minilist)
+		i=i+1
+
+	if len(mismatchlist)>0:
+		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
+
+	#now check if there is any jump/discontinuity in the PDB corrected numbering. If there is, the reason is that there are more that one segments in that user defined interval.
+	counter=0
+	for minilist in duos:
+		if counter>0 and minilist[0][2]!=previous_resid+1:
+			return 'There is a jump in the pdb alignment. That means that you should define a new segment in the table. From '+ str(previous_resid) + ' to ' + str(minilist[0][2])
+			
+		previous_resid=minilist[0][2]
+		counter+=1    
+	
+	return (duos)
+
+#############################################################################################################################################
+
+def matchpdbfa_ngl(sequence,pdbseq,tablepdb,hexflag,start=1):
+	'''Get the sequence from database, compare this sequence with the one given in the pdb.
+	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
+	 the changes in the pdb numbering according to the database sequence.'''
+
+	bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-10)[0] #select the aligment with the best score.
 	#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
 	#print(bestalig)
 	biglist=list()
@@ -112,7 +308,6 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 			newpos=format(i+1,'x')	#hexadecimal once 9999 resid is used.
 		
 		if pdbalig[i]=='-':
-			return 'There is a gap in the pdb alignment. That means that you should define a new segment in the table ending before the gap and other one after it. The gap is in position:'+str(tablepdb[i][0])+str(tablepdb[i][1])
 			tablepdb.insert(i,'-')
 			minilist=[tablepdb[i],[fastalig[i],newpos]]
 			duos.append(minilist)
@@ -130,18 +325,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 	if len(mismatchlist)>0:
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
 
-	print(duos)
-	#now check if there is any jump/discontinuity in the PDB corrected numbering. If there is, the reason is that there are more that one segments in that user defined interval.
-	counter=0
-	for minilist in duos:
-		if counter>0 and minilist[0][2]!=previous_resid+1:
-			return 'There is a jump in the pdb alignment. That means that you should define a new segment in the table. From '+ str(previous_resid) + ' to ' + str(minilist[0][2])
-			
-		previous_resid=minilist[0][2]
-		counter+=1    
-	
 	return (duos)
-
 #############################################################################################################################################
 
 def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):	
@@ -366,14 +550,14 @@ def segment_id(pdbname, segid, start, stop, chain):
 
 def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	'''Takes a PDB file and two resids that define an interval in the PDB, extracts the interval's sequence and aligns it to the one in sequence. '''
-	print(str(start),str(stop))
+
 	result=checkpdb(pdbfile,segid,start,stop,chain)
 	if isinstance(result,str):
-		return result
+		return 'Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+result
 	else:
 		tablepdb,simplified_sequence,hexflag=result
 
-	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-10)[0] #select the aligment with the best score.
+	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-1)[0] #select the aligment with the best score.
 	'''
 	The resulting alignment should be like:
     ARTNIRRAWLALEKQYL

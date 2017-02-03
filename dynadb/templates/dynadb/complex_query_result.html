@@ -43,13 +43,13 @@
 {% if answer.efficacy %}
     <b>EC50 according to BindingDB:</b><br>
     {{answer.efficacy.value}} {{answer.efficacy.units}}
-    <a class='btn btn-info' role='button' href={{answer.efficacy.description}}>Binding DB</a><br>
+    <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.efficacy.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a><br>
 
 {% endif %} 
 <br>
 {% if answer.binding %}
     <b>Kd according to BindingDB:</b><br>
-    {{answer.binding.value}} {{answer.binding.units}} <a href={{answer.binding.description}}>See it in Binding DB</a>
+    {{answer.binding.value}} {{answer.binding.units}} <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.binding.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a>
 {% endif %} 
 <br>
 
