@@ -30,11 +30,11 @@ function sendpar() {
 //      parseInt: If the first non-whitespace character is 0, the number is in octal (only in old browsers). 
 //      If the two first non-whitespace characters are '0x' or '0X', the number is in hexadecimal.
 //      Otherwise, the number is in decimal. A base can be forced by adding an extra parameter.
-        if (parseInt(bigarray[i][3])>=parseInt(bigarray[i][4])){
+        if (parseInt(bigarray[i][3])>parseInt(bigarray[i][4])){
             alert('Res from is bigger than or equal to Res to');
             goon=false;
         }
-        if (parseInt(bigarray[i][5],10)>=parseInt(bigarray[i][6],10)){
+        if (parseInt(bigarray[i][5],10)>parseInt(bigarray[i][6],10)){
             alert('Seq Res from is bigger than or equal to Seq Res to');
             goon=false;
         }   
@@ -48,10 +48,12 @@ function sendpar() {
             dataType: "json",
             success: function(data) {
                 $("#pdbchecker2").prop("disabled",false);
+                console.log(data);
                 if (data.message==''){
                     newwindow=window.open('./ajax_pdbchecker/');
                     if (window.focus) {newwindow.focus()}
                 }else{
+                    console.log(data.message);
                     alert(data.message);
                 }
             },

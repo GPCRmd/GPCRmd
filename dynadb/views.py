@@ -2814,6 +2814,7 @@ def search_top(request,submission_id):
         #print(arrays)
         counter=0
         resultsdict=dict()
+        resultsdict['message']=''
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
@@ -2836,14 +2837,13 @@ def search_top(request,submission_id):
                 
                 
             
-            if start>=stop:
-                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
+            if start>stop:
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
-            #print('chain'+chain+'segid'+segid+'stop')
-            #print(len(chain),len(segid))
+
             try:
                 protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
                 sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
@@ -2856,9 +2856,8 @@ def search_top(request,submission_id):
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
                 resultsdict[counter]=[seq_res_from,seq_res_to]
-                resultsdict['message']=''
             elif isinstance(res,str):
-                 resultsdict['message']=res
+                resultsdict['message']=res
             if pstop!='undef':
                 bonded=False
                 if len(chain)>0 and len(segid)>0:
@@ -2908,7 +2907,6 @@ def pdbcheck(request,submission_id):
             prot_id=array[0]
             chain=array[1].strip().upper()
             segid=array[2].strip().upper()
-  
 
             for r in range(3,7):
                 current_value = array[r].strip()
@@ -2934,8 +2932,9 @@ def pdbcheck(request,submission_id):
             stop=int(array[4])
             seqstart=int(array[5])
             seqstop=int(array[6])
-            if seqstart>=seqstop:
-                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
+
+            if seqstart>seqstop:
+                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" greater than "Seq Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')                 
             try:
@@ -2946,13 +2945,23 @@ def pdbcheck(request,submission_id):
                 results={'type':'string_error','title':'Range error', 'message':'The protein you have selected does not exist.'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')  
-            
-            if stop-start<1:
-                results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value','message':''}
-                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
-                data = json.dumps(tojson)
+
+            if start>stop:
+                results={'type':'string_error','title':'Range error', 'message':'"Res from" value is bigger to the "Res to" value'}
+                #tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                data = json.dumps(results)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
+                
+            number_segments,breaklines=get_number_segments(pdbname)
+            if number_segments!=len(arrays):
+                results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
+                request.session[combination_id] = results
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                data = json.dumps(tojson)
+                request.session[combination_id] = results
+                return HttpResponse(data, content_type='application/json')  
+
             uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
@@ -2973,7 +2982,8 @@ def pdbcheck(request,submission_id):
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
                     else: #PDB has insertions error
-                        results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide,'message':''}
+                        guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
+                        results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
                         request.session[combination_id] = results
                         request.session.modified = True
                         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
