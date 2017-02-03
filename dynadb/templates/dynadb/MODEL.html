@@ -226,7 +226,7 @@ font-weight:normal
                                  {% endif %}{% endfor %}{% endfor %}
                                 
                                {%else%}
-				<tr id="Element1_{{intps0}}"><td style="width:60px;padding:5px 0px 5px 0px"><input id="id_prot" name="prot" type="number" style="width:58px" placeholder="  1" /></td>
+				<tr id="Element1"><td style="width:60px;padding:5px 0px 5px 0px"><input id="id_prot" name="prot" type="number" style="width:58px" placeholder="  1" /></td>
 				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input id="id_id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
 				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_chain" maxlength="1" name="chain" type="text" style="width:58px" placeholder=" E"/></td>
 				<td style="width:60px;padding:5px 2px 5px 2px"><input id="id_segid" maxlength="4" name="segid" type="text" style="width:58px" placeholder="PROA"/></td>
@@ -284,18 +284,18 @@ font-weight:normal
                                 <tbody id="pElement2">
 {%if model_id or saved %}
 {% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
-                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
  
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
                                         {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_form-{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{d}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{d}}"/></td>
                                         {%endif%}{%endfor%}
 
                                         {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
  
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_form-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
 
-                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_form-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
                                 {% for ll in lmtype %}
                                    {% if forloop.counter == forloop.parentloop.counter %}
                                                     <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
@@ -408,7 +408,7 @@ font-weight:normal
 
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
-    <script src="{% static 'dynadb/MODELpost.js' %}"></script> 
+<!--    <script src="{% static 'dynadb/MODELpost.js' %}"></script>  -->
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
 <!--    <script src="{% static 'dynadb/addFields.js' %}"></script> -->
