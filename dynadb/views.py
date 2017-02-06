@@ -8713,11 +8713,7 @@ def dictfetchall(cursor):
 
 
 ######################################################################################################################################################################
-######################################################################################################################################################################
-######################################################################################################################################################################
-######################################################################################################################################################################
-#let's python
-#fill the database
+
 from protein.models import Protein
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot, retreive_isoform_data_uniprot
 from contextlib import closing
@@ -8856,30 +8852,6 @@ def fetch_abstract(pmid):
     return refdic
 
 
-chunks=['chunk0_from2870096_to_5487587.sdf',
-    'chunk10_from28600899_to_31150286.sdf',
-    'chunk11_from31150286_to_33730861.sdf',
-    'chunk12_from33730861_to_36373039.sdf',
-    'chunk13_from36373039_to_38807745.sdf',
-    'chunk14_from38807745_to_41292353.sdf',
-    'chunk15_from41292353_to_43720827.sdf',
-    'chunk16_from43720827_to_46164765.sdf',
-    'chunk17_from46164765_to_48529918.sdf',
-    'chunk18_from48529918_to_50960816.sdf',
-    'chunk19_from50960816_to_53419225.sdf',
-    'chunk1_from5487587_to_8107333.sdf',
-    'chunk20_from53419225_to_55867575.sdf',
-    'chunk21_from55867575_to_58318805.sdf', #13
-    'chunk2_from8107333_to_10673062.sdf',
-    'chunk3_from10673062_to_12925257.sdf',
-    'chunk4_from12925257_to_15613041.sdf',
-    'chunk5_from15613041_to_18280168.sdf',
-    'chunk6_from18280168_to_20874179.sdf',
-    'chunk7_from20874179_to_23536254.sdf', #corrupted
-    'chunk8_from23536254_to_26041971.sdf',
-    'chunk9_from26041971_to_28600899.sdf'
-    ]
-
 #http://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?&reactant_set_id=154401&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM
 def fill_db(chunks):
     '''Fills the GPCRmd database with data from the BindingDB. It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created.'''
@@ -8915,14 +8887,6 @@ def fill_db(chunks):
                 while '> <' not in lines_list[j]:
                     ligkey+=lines_list[j].strip()
                     j+=1
-
-            #elif '$$$$' in lines_list[i-1] or i==0:
-            #    compstr=lines_list[i]
-            #    j=i+1
-            #    while not lines_list[j].startswith('Vconf'):
-            #        compstr+=lines_list[j]
-            #        j+=1
-            #    print('the compound name',compstr)
 
             elif '> <BindingDB Reactant_set_id>' in lines_list[i]:
                 binding_id=lines_list[i+1].strip()
@@ -9109,7 +9073,7 @@ def fill_db(chunks):
             if complex_interaction_id=='undef':
                 print('This complex does not exist yet. Record the complex exp and the intdata')
                 with closing(connection.cursor()) as cursor:
-                    lastid=DyndbComplexExp.objects.latest('id').id+1
+                    lastid=str(DyndbComplexExp.objects.latest('id').id+1)
                     cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id' % lastid)
                     complex_id=cursor.fetchone()[0]
                 #with closing(connection.cursor()) as cursor:
@@ -9482,6 +9446,30 @@ def fill_db(chunks):
 
         print('All records from this chunk completed.')
 
+
+chunks=['chunk0_from2870096_to_5487587.sdf',
+    'chunk10_from28600899_to_31150286.sdf',
+    'chunk11_from31150286_to_33730861.sdf',
+    'chunk12_from33730861_to_36373039.sdf',
+    'chunk13_from36373039_to_38807745.sdf',
+    'chunk14_from38807745_to_41292353.sdf',
+    'chunk15_from41292353_to_43720827.sdf',
+    'chunk16_from43720827_to_46164765.sdf',
+    'chunk17_from46164765_to_48529918.sdf',
+    'chunk18_from48529918_to_50960816.sdf',
+    'chunk19_from50960816_to_53419225.sdf',
+    'chunk1_from5487587_to_8107333.sdf',
+    'chunk20_from53419225_to_55867575.sdf',
+    'chunk21_from55867575_to_58318805.sdf', #13
+    'chunk2_from8107333_to_10673062.sdf',
+    'chunk3_from10673062_to_12925257.sdf',
+    'chunk4_from12925257_to_15613041.sdf',
+    'chunk5_from15613041_to_18280168.sdf',
+    'chunk6_from18280168_to_20874179.sdf',
+    'chunk7_from20874179_to_23536254.sdf', #corrupted
+    'chunk8_from23536254_to_26041971.sdf',
+    'chunk9_from26041971_to_28600899.sdf'
+    ]
 fill_db(chunks)
 
 
