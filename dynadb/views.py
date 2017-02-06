@@ -2138,14 +2138,16 @@ def query_protein(request, protein_id,incall=False):
         fiva['other_names'].append(match.other_names)
 
     for match in DyndbModel.objects.values('id').filter(id_protein=protein_id):
-        fiva['models'].append(match['id'])
+        if match['id']!=None:
+            fiva['models'].append(match['id'])
 
     q = DyndbComplexProtein.objects.filter(id_protein=protein_id)
     q = q.annotate(model_id=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
     q = q.values('id_protein','model_id')
 
     for row in q:
-        fiva['models'].append(row['model_id'])
+        if row['model_id']!=None:
+            fiva['models'].append(row['model_id'])
 
     fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
 
@@ -2843,6 +2845,7 @@ def search_top(request,submission_id):
         #print(arrays)
         counter=0
         resultsdict=dict()
+        resultsdict['message']=''
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
@@ -2865,14 +2868,13 @@ def search_top(request,submission_id):
                 
                 
             
-            if start>=stop:
-                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater or equal than "Res to"'}
+            if start>stop:
+                results={'type':'string_error','title':'Missing information or wrong information', 'message':'"Res from" greater than "Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json') 
             chain=array[1].strip().upper() #avoid whitespace problems
             segid=array[2].strip().upper() #avoid whitespace problems
-            #print('chain'+chain+'segid'+segid+'stop')
-            #print(len(chain),len(segid))
+
             try:
                 protid=DyndbSubmissionProtein.objects.filter(int_id=prot_id).filter(submission_id=submission_id)[0].protein_id.id
                 sequence=DyndbProteinSequence.objects.filter(id_protein=protid)[0].sequence
@@ -2885,9 +2887,8 @@ def search_top(request,submission_id):
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to=res
                 resultsdict[counter]=[seq_res_from,seq_res_to]
-                resultsdict['message']=''
             elif isinstance(res,str):
-                 resultsdict['message']=res
+                resultsdict['message']=res
             if pstop!='undef':
                 bonded=False
                 if len(chain)>0 and len(segid)>0:
@@ -2937,7 +2938,6 @@ def pdbcheck(request,submission_id):
             prot_id=array[0]
             chain=array[1].strip().upper()
             segid=array[2].strip().upper()
-  
 
             for r in range(3,7):
                 current_value = array[r].strip()
@@ -2963,8 +2963,9 @@ def pdbcheck(request,submission_id):
             stop=int(array[4])
             seqstart=int(array[5])
             seqstop=int(array[6])
-            if seqstart>=seqstop:
-                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" equal or greater than "Seq Res to"'}
+
+            if seqstart>seqstop:
+                results={'type':'string_error','title':'Range error', 'message':'"Seq Res from" greater than "Seq Res to"'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')                 
             try:
@@ -2975,13 +2976,23 @@ def pdbcheck(request,submission_id):
                 results={'type':'string_error','title':'Range error', 'message':'The protein you have selected does not exist.'}
                 data = json.dumps(results)
                 return HttpResponse(data, content_type='application/json')  
-            
-            if stop-start<1:
-                results={'type':'string_error','title':'Range error', 'errmess':'"Res from" value is bigger or equal to the "Res to" value','message':''}
-                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
-                data = json.dumps(tojson)
+
+            if start>stop:
+                results={'type':'string_error','title':'Range error', 'message':'"Res from" value is bigger to the "Res to" value'}
+                #tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
+                data = json.dumps(results)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
+                
+            number_segments,breaklines=get_number_segments(pdbname)
+            if number_segments!=len(arrays):
+                results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
+                request.session[combination_id] = results
+                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                data = json.dumps(tojson)
+                request.session[combination_id] = results
+                return HttpResponse(data, content_type='application/json')  
+
             uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest==True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
@@ -3002,7 +3013,8 @@ def pdbcheck(request,submission_id):
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
                     else: #PDB has insertions error
-                        results={'type':'string_error', 'title':'Insertion in PDB according to FASTA file' ,'errmess':guide,'message':''}
+                        guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
+                        results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
                         request.session[combination_id] = results
                         request.session.modified = True
                         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
@@ -3231,6 +3243,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
     prefix_ps='formps'
     
     if request.method == 'POST':
+
             submission_path = get_file_paths(form_type,url=False,submission_id=submission_id)
             submission_url = get_file_paths(form_type,url=True,submission_id=submission_id)
             pdbname = get_file_name_submission(form_type,submission_id,0,ext="pdb",forceext=False,subtype="pdb")
@@ -3345,7 +3358,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 #molintdict[int_id]['numberofmol'].append(fieldset_mc[key]['numberofmol'])
             del fieldset_mc    
             int_ids = molintdict.keys()
-            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+            int_ids_db = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
             if form_type == "model":
                 int_ids_db = int_ids_db.filter(not_in_model=False)
             int_ids_db = int_ids_db.values('int_id')
@@ -4043,10 +4056,12 @@ def get_components_info_from_components_by_submission(submission_id,component_ty
     
     if component_type == 'model':
         q = DyndbSubmissionModel.objects.filter(submission_id=submission_id,model_id__dyndbmodelcomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
+        q = q.exclude(model_id__dyndbmodelcomponents__id_molecule=None).exclude(model_id__dyndbmodelcomponents__type=None)
         fields_list = DyndbModelComponents._meta.get_fields()
         path = 'model_id__dyndbmodelcomponents__'
     elif component_type == 'dynamics':
         q = DyndbDynamics.objects.filter(submission_id=submission_id,dyndbdynamicscomponents__id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
+        q = q.exclude(dyndbdynamicscomponents__id_molecule=None).exclude(dyndbdynamicscomponents__type=None)
         fields_list = DyndbDynamicsComponents._meta.get_fields()
         path = 'dyndbdynamicscomponents__' 
         
@@ -4067,7 +4082,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     if component_type not in {'model','dynamics'}:
         raise ValueError('"component_type" keyword must be defined as "model" or "dynamics"')
     
-    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    q = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
     q = q.annotate(id_molecule=F('molecule_id'))
     field_ref = 'molecule_id__id_compound__name'
     if component_type == 'model':
@@ -4087,6 +4102,7 @@ def get_components_info_from_submission(submission_id,component_type=None):
     for row in result:
         result[i]['type'] = smol_to_dyncomp_type[result[i]['type']]
         i +=1
+    
     return result
     
 def MODELview(request, submission_id):
@@ -4111,7 +4127,6 @@ def MODELview(request, submission_id):
              initFiles['filename']="".join(val['path'].split("/")[-1])
              initFiles['filepath']=val['path']
              initFiles['description']="pdb crystal-derived assembly coordinates"
-             print("HOLA initFiles\n", initFiles)
              fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
              dicfmod={}
              fdbFM={}
@@ -4126,10 +4141,10 @@ def MODELview(request, submission_id):
                  dicfmod['id_model']=MFpk
                  prev_entryFile.update(update_timestamp=timezone.now(),last_update_by_dbengine=user,filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
                  #prev_entryFile.update(filename=initFiles['filename'],filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
-            #    error=("- ").join(["Error when storing MODEL file info, dyndb_Files form"])
-            #    print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-            #    response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
-            #    return response
+                 error=("- ").join(["Error when storing MODEL file info, dyndb_Files form"])
+                 print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+                 return response
 
              fdbFM[key]=dyndb_Files_Model(dicfmod)
              if fdbFM[key].is_valid():
@@ -4631,18 +4646,18 @@ def MODELview(request, submission_id):
             print("fdbSMd no es valido")
             print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
             response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-            if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
-                DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
-                DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
-                DyndbComplexExp.objects.filter(id=CEpk).delete()
-            else:
-                for comp_type_t in Upd_Comp_Type_l:
-                    if comp_type_t[0]:
-                        DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
-            if CM_exists==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
-                DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
-                DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
-            DyndbModel.objects.filter(id=MFpk).delete()
+         #  if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
+         #      DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexExp.objects.filter(id=CEpk).delete()
+         #  else:
+         #      for comp_type_t in Upd_Comp_Type_l:
+         #          if comp_type_t[0]:
+         #              DyndbComplexCompound.objects.filter(id_compound=comp_type_t[1]).filter(id_complex_exp=comp_type_t[2]).update(type=comp_type_t[3])
+         #  if CM_exists==False:#There wasn't any entry for the current complex molecule after submitting the current data. We have to delete the registered info if the view raises an error 
+         #      DyndbComplexMolecule.objects.filter(id_complex_exp=CEpk).delete()
+         #      DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_molecule).delete()
+         #  DyndbModel.objects.filter(id=MFpk).delete()
             return response
 
         print("HHHHHHHHHHHHH")
@@ -7133,6 +7148,7 @@ def DYNAMICSview(request, submission_id):
             response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
             return response
         else:
+            
             file_types_items = file_types.items()
             dd=dyndb_Dynamics()
             ddC =dyndb_Dynamics_Components()
@@ -10606,7 +10622,7 @@ def dictfetchall(cursor):
 
 def submission_summaryiew(request,submission_id):
 #protein section
-    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).order_by('int_id')
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id')
     print(qSub)
     int_id=[]
     int_id0=[]
@@ -10682,7 +10698,7 @@ def submission_summaryiew(request,submission_id):
     fdbSubs = dyndb_Submission_Molecule()
 
 #model section
-    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel=submission_id)
+    qModel=DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id=submission_id)
     print("qModel",qModel)
     p=qModel
     print("p ", p)

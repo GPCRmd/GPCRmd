@@ -125,7 +125,7 @@
 
                     var sele_final = "";
                     if (sel && sel_method=="sel"){
-	               var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
+                       var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                        sele_final = "("+rc_sel + all_cp + ") and ("+ sel_deco +")" ;
                     } else{
                        sele_final = rc_sel + all_cp;
@@ -149,8 +149,8 @@
                     }
 
                     if (struc) {
-			    stage.loadFile( path + struc , {sele: sele_final, visible: visibility}).then( function( o ){
-				stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
+                        stage.loadFile( path + struc , {sele: sele_final, visible: visibility}).then( function( o ){
+                       //stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
                                 o.setName("my_comp");
                                 if (rc=="y"){
                                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
@@ -172,6 +172,7 @@
                                      }*/
 
                                  }
+                                stage.centerView();
                                 if (cp){
                                     o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )
                                 }
@@ -180,15 +181,15 @@
                                     var pd_all = [pdA,pdB,pdC,pdF];
                                     var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
 
-   				    if (sel ){
-				        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
+                                    if (sel ){
+                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                                         if (sel_method == "high"){
-					    o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
+                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
                                             for (ind in pd_all) {
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-					            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
                                                 }
                                             }   
 
@@ -201,17 +202,17 @@
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-					            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
                                                 }
                                             }   
-				            //o.setSelection( sel_deco );
+                                            //o.setSelection( sel_deco );
                                         }
-				     } else {
+                                     } else {
                                          for (ind in pd_all) {
                                              class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                              if (class_li){
                                                  var cons_pos_ok = class_li.replace(/,/g," OR ")
-					         o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
+                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
                                              }
                                          }   
 
@@ -221,15 +222,15 @@
                                      }
 
                                 } else {
-   				    if (sel ){
-				        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
+                                    if (sel ){
+                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                                         if (sel_method == "high"){
-					    o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
+                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
                                      /*   } else {
-				            //o.setSelection( sel_deco );
+                                          //o.setSelection( sel_deco );
                                         */
                                         }
-				     }
+                                     }
                                  }
 
 /////////////////////////////////////////////////////////////
@@ -414,56 +415,18 @@
                                             }
                                          }
                                     } );
-                                   /* var clicktrue = true;
-                                    var atom1 , atom2 , res2 , res2, myrepr;
-                                    stage.signals.clicked.add( function( d ){
-                                       // hovrep.repr.clear()
-                                        if (clicktrue){
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                $("#atomClicked").text(info)
-                                                myrepr = o.addRepresentation( "label", {
-                                                    sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                    color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal"  } );
-                                                atom1 = d.atom.serial.toString();
-                                                //res1 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
- 
-                                                clicktrue = false;
-                                            }
-                                        }else{
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                $("#atomClicked").text(info)                                            
-                                                atom2 = d.atom.serial.toString();
-                                                //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
-                                                clicktrue = true;
-                                                if (atom1 != atom2){
-                                                    o.addRepresentation( "label", {
-                                                        sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                        color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" } );
-                                                    var atomPair = [[ Number(atom1), Number(atom2) ]];
-                                                    o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal"} );
-                                                }
-                                            } else {
-                                                $("#atomClicked").text("")
-                                                clicktrue = true;
-                                                myrepr.repr.clear()
-                                            }
-                                        };
-                                    } );*/
-
                                 } 
-                                o.centerView();
 
-				} );
+                            } );
+                            stage.centerView();
                     }
-		
-            $("#trajRange").change(function(){
-                if (trajComp){
-                    var toframe=$(".ui-slider-handle").attr("aria-valuenow");
-                    trajComp.setFrame(toframe);
-                }
-            });
+
+                    $("#trajRange").change(function(){
+                        if (trajComp){
+                            var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                            trajComp.setFrame(toframe);
+                        }
+                    });
         } );
     </script>
     <div id="toiframe" style="width:540px">

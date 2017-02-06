@@ -86,7 +86,6 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
     if gpcr_class_pre:
         gpcr_class=gpcr_class_pre.group(1)
     else:
-        print(1)
         error = "Error: GPCR generic numbering cannot be used."
         seq_db= DyndbProteinSequence.objects.get(id_protein=dprot_id).sequence
         return (error , seq_db)
@@ -104,9 +103,10 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
         all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
     if DyndbProtein.objects.get(id=dprot_id).is_mutated:
         mutations=DyndbProteinMutations.objects.filter(id_protein=dprot_id)
-        mutations_s=sorted(mutations, key=lambda m: m.id)
+        mutations_s=sorted(mutations, key=lambda m: m.resid)
         for seq_num in all_num_schemes.values():
             if seq_num:
+#________________________________
                 for mut in mutations_s:
                     res_position =mut.resid #rememper that in the sequence, the position is res -1
                     res_from = mut.resletter_from
