@@ -219,6 +219,9 @@ MDSRV_PORT=8081
 
 
 AUTH_USER_MODEL = 'accounts.User'
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'accounts:memberpage'
+LOGOUT_REDIRECT_URL = 'accounts:memberpage'
 
 # Configure this so that it works with real mail, not terminal
 EMAIL_USE_SSL = True

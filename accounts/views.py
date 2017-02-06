@@ -19,12 +19,13 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.cache import never_cache
 from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
+from django.conf import settings
 
-@login_required(login_url='/accounts/login/')
+@login_required
 def memberpage(request):
     return render_to_response('accounts/memberpage.html',{'username':request.user.username},  context_instance=RequestContext(request))
 
-@user_passes_test(lambda user: not user.username, login_url='/accounts/memberpage', redirect_field_name=None)
+@user_passes_test(lambda user: not user.username,login_url='accounts:memberpage', redirect_field_name=None)
 def login(request):
     """allows active users to log in and enter to the memberpage"""
     if request.method == 'POST':
@@ -36,7 +37,9 @@ def login(request):
             if user is not None:
                 if user.is_active:
                     django_login(request, user)
-                    return HttpResponseRedirect("/accounts/memberpage/")
+                    if 'next' in request.GET:
+                        return redirect(request.GET['next'])
+                    return redirect('accounts:memberpage')
     else:
         form = AuthenticationForm()
     return render_to_response('accounts/login.html', {
@@ -230,13 +233,13 @@ def mail_confirm(request, uidb64=None, token=None,
 
 ##############################
 
-@login_required(login_url='/accounts/login/')
+@login_required
 def logout(request):
     django_logout(request)
-    return redirect('/accounts/login')
+    return redirect(settings.LOGOUT_REDIRECT_URL)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required
 def change_data(request):
     """change user data"""
     if request.method == 'POST':
@@ -244,7 +247,7 @@ def change_data(request):
         form.actual_user = request.user
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect("/accounts/memberpage/")
+            return redirect(settings.LOGIN_REDIRECT_URL)
     else:
         form = ChangeForm(initial={'first_name':request.user.first_name,'last_name':request.user.last_name,'username':request.user.username, 'country':request.user.country, 'institution':request.user.institution, 'department':request.user.department, 'lab':request.user.lab})
     return render_to_response('accounts/change_data.html', {
@@ -252,7 +255,7 @@ def change_data(request):
     }, context_instance=RequestContext(request))
 
 
-@login_required(login_url='/accounts/login/')
+@login_required
 def change_passw(request):
     """a logged-in user can change its password"""
     if request.method=='POST':
@@ -261,7 +264,7 @@ def change_passw(request):
         if form.is_valid():
             form.save()
             update_session_auth_hash(request, form.user)
-            return HttpResponseRedirect("/accounts/memberpage/")
+            return redirect(settings.LOGIN_REDIRECT_URL)
     else:
         form = ChangePassw()
     return render_to_response('accounts/change_passw.html', {
