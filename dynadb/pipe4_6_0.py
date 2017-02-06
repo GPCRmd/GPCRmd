@@ -115,7 +115,7 @@ def get_number_segments(pdbname):
 					hexflag=1			
 					
 				if cpos2!=ppos2+1 and jumpflag==0 and ppos2!=0:
-					jumps=+1
+					jumps+=1
 					jumpflag=1
 
 				elif cpos2<ppos2 and cpos!=1: 

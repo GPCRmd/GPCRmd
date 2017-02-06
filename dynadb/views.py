@@ -2954,7 +2954,7 @@ def pdbcheck(request,submission_id):
                 return HttpResponse(data, content_type='application/json')
                 
             number_segments,breaklines=get_number_segments(pdbname)
-            if number_segments!=len(arrays):
+            if number_segments>len(arrays):
                 results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
                 request.session[combination_id] = results
                 tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
