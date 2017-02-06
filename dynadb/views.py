@@ -8884,6 +8884,7 @@ chunks=['chunk0_from2870096_to_5487587.sdf',
 def fill_db(chunks):
     '''Fills the GPCRmd database with data from the BindingDB. It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created.'''
     for chunk in chunks:
+        time.sleep(1)
         print('\n\n\n\n\n\nProccessing chunk: ',chunk)
         fh=open('./dynadb/'+chunk,'r')
         complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
@@ -9481,6 +9482,6 @@ def fill_db(chunks):
 
         print('All records from this chunk completed.')
 
-fill_db(chunks[17:])
+fill_db(chunks)
 
 
