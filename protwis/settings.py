@@ -12,7 +12,7 @@ Django settings for protwis project.
 try:
     from protwis.settings_local import *
 except ImportError:
-    from protwis.settings_local_production import *
+    from protwis.settings_local_development import *
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
