@@ -231,3 +231,6 @@ EMAIL_PORT = 465
 EMAIL_HOST_USER = '***REMOVED***'
 EMAIL_HOST_PASSWORD = '***REMOVED***'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+import mimetypes
+mimetypes.add_type('text/plain; charset=UTF-8', '.log', strict=True)
