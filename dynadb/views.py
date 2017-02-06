@@ -181,46 +181,46 @@ def delProtByUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
 
     Prot_in_other_sub=DyndbSubmissionProtein.objects.filter(protein_id=protein_id).exclude(submission_id=submission_id)
     if not Prot_in_other_sub.exists():
-        qisit_Canprot=DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id,id_cannonical_protein=protein_id)
+        qisit_Canprot=DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id,id_cannonical_proteins=protein_id)
         if qisit_Canprot.exists(): #if so protein_id is the cannonical protein!!! look for other non-canonical proteins linked to it
-            qProt_CanProt_all=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_protein=protein_id)
-            qProt_CanProt_others=qProt_CanProt_all.exclude(id_protein__dyndbsubmissionprotein_submission_id=submission_id)
+            qProt_CanProt_all=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_proteins=protein_id)
+            qProt_CanProt_others=qProt_CanProt_all.exclude(id_protein__dyndbsubmissionprotein__submission_id=submission_id)
             if not qProt_CanProt_others.exists():
                 if qProt_CanProt_all.exists(): #there is only the protein_id linked to the canonical which is itself
                     print("Protein_id is the only protein linked to the canonical protein which is itself and it can be deleted if only is involved in the current model and complex")
                     DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
-                DyndbCannonicalProtein.objects.filter(id_protein=protein_id).delete()
+                DyndbCannonicalProteins.objects.filter(id_protein=protein_id).delete()
                 DyndbOtherProteinNames.objects.filter(id_protein=protein_id).delete()
                 DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
                 DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii).update(protein_id=None)
                 DyndbProtein.objects.filter(id=protein_id).delete()
         else: #protein_id is not the canonical but maybe there is no other proteins linked to its canonical
             qrelCanprot=DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id)
-            qrelProtCanprot=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_protein=qrelCanprot.values(id_cannonical_protein))
+            qrelProtCanprot=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_proteins=qrelCanprot.values('id_cannonical_proteins'))
             if len(qrelProtCanprot)==1:
                 print("Protein_id is the only protein linked to the canonical protein and both can be deleted if they only are involved in the current model and complex")
                 qPdP=list(DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).values_list('id_cannonical_proteins',flat=True))
                 DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
-                DyndbCannonicalProtein.objects.filter(id_protein__in=qPdP).delete()
+                DyndbCannonicalProteins.objects.filter(id_protein__in=qPdP).delete()
                 DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=None,protein_id__in=qPdP).delete()
                 DyndbOtherProteinNames.objects.filter(id_protein__in=qPdP).delete()
                 DyndbProteinSequence.objects.filter(id_protein__in=qPdP).delete()
-                DyndbProtein.objects.filter(id__in=qPdP).delete()
                 DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
-                
-                if is_mutated_val:
+                if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
                     DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
                 DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None)
+                DyndbProtein.objects.filter(id__in=qPdP).delete()
                 DyndbProtein.objects.filter(id=protein_id).delete()
             else:
                 print("Protein_id is not the only protein linked to the canonical protein and only it can be deleted if it is only involved in the current model and complex")
-                DyndbProteinCannonicalProteins.objects.filter(id_protein=protein_id).delete()
+                DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
                 DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
-                if is_mutated_val:
-                    DyndbProteinMutations.objects.filter(id_protein=formPF[ii].pk).delete()
+                if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
+                    DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
+                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None)
                 DyndbProtein.objects.filter(id=protein_id).delete()
 
-def deleteComplexByUpdateProtein(protein_id,submission_id,is_mutated_val,model_del_molec=False):
+def deleteComplexByUpdateProtein(protein_id,ii,submission_id,is_mutated_val,model_del_prot=False):
 
     qAllCexp_invg_prot =DyndbComplexExp.objects.filter(dyndbcomplexprotein__id_protein=protein_id)
     qOthersCexp_invg_prot = qAllCexp_invg_prot.exclude(dyndbcomplexmolecule__dyndbmodel__dyndbsubmissionmodel__submission_id=submission_id) 
@@ -290,7 +290,7 @@ def deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
                 DyndbModeledResidues.objects.filter(id_model__dyndbsubmissionmodel__submission_id=submission_id,bonded_to_id_modeled_residues_id__in=DyndbModeledResidues.objects.filter(id_model__dyndbsubmissionmodel__submission_id=submission_id).values('id')).exclude(id_protein=protein_id).update(bonded_to_id_modeled_residues=None)
                 DyndbModeledResidues.objects.filter(id_protein=protein_id,id_model__dyndbsubmissionmodel__submission_id=submission_id).delete()
                 DyndbModel.objects.filter(id__in=qMod_comp_all).update(id_complex_molecule=None,id_protein=None,model_creation_submission_id=None)
-                deleteComplexByUddpdateProtein(protein_id,ii,submission_id,is_mutated_val,model_del_prot=False)        
+                deleteComplexByUpdateProtein(protein_id,ii,submission_id,is_mutated_val,model_del_prot=False)        
 
 
 
@@ -298,6 +298,7 @@ def deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
 #   _____________________________________________________________ 
 #   _____________________________________________________________ 
 def delMolByUpdateMolecule(molecule_id,ii,submission_id):
+    print("\ndeleteComplexByUpdateMolecule ")
     qisit_Std_mol =DyndbMolecule.objects.filter(id=molecule_id,id_compound__std_id_molecule=molecule_id)
     if qisit_Std_mol.exists(): #if so protein_id is the cannonical protein!!! look for other non-canonical proteins linked to it
         qcompo_mol =DyndbCompound.objects.filter(dyndbmolecule__id_compound=F('id'),std_id_molecule=molecule_id)#includes the molecule to be updated
@@ -348,6 +349,8 @@ def delMolByUpdateMolecule(molecule_id,ii,submission_id):
                        
 def deleteComplexByUpdateMolecule(molecule_id,ii,submission_id,model_del_molec=False):
 
+    print("ideleteComplexByUpdateMolecule ")
+
     qAllCexp_invg_mol =DyndbComplexExp.objects.filter(dyndbcomplexmolecule__dyndbcomplexmoleculemolecule__id_molecule=molecule_id)
     qOthersCexp_invg_mol = qAllCexp_invg_mol.exclude(dyndbcomplexmolecule__dyndbmodel__dyndbsubmissionmodel__submission_id=submission_id) 
     qCexp_invd_this_sub = qAllCexp_invg_mol.filter(dyndbcomplexmolecule__dyndbmodel__dyndbsubmissionmodel__submission_id=submission_id) 
@@ -375,6 +378,8 @@ def deleteComplexByUpdateMolecule(molecule_id,ii,submission_id,model_del_molec=F
                #do not delete molecule by updating molecule!!!! it is needed in other complexes
 
 def deleteModelbyUpdateMolecule(molecule_id,ii,submission_id):
+
+    print("deleteModelbyUpdateMolecule ")
      
     #dynamics components are updated to be reused here!!!
     Dyn_comp_link_mol =DyndbDynamicsComponents.objects.filter(id_molecule=molecule_id)
@@ -491,61 +496,79 @@ def PROTEINview(request, submission_id):
         
         indexl.sort()
         qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None)
-        qSub_protl=list(qSub.values_list('submission_id','protein_id','int_id'))
-        qSub_p_sid_int_id=[]
-        for ll in qSub_protl:
-            qSub_p_sid_int_id.append((ll[0],ll[2]))
+        if qSub.exists():
+            qSub_protl=list(qSub.values_list('submission_id','protein_id','int_id','protein_id__dyndbproteinsequence__sequence'))
+            qSub_p_sid_int_id=[]
+            for ll in qSub_protl:
+                qSub_p_sid_int_id.append((ll[0],ll[2]))
 
         for ii in indexl:
             
              
-            print("\n\nNOOOOOOOOOOOOOOOO\n")
-            if 'isoform' not in dictprot[ii].keys() or dictprot[ii]['isoform']=='':
-                dictprot[ii]['isoform']=None
+           #print("\n\nNOOOOOOOOOOOOOOOO\n")
+           #if 'isoform' not in dictprot[ii].keys() or dictprot[ii]['isoform']=='':
+           #    dictprot[ii]['isoform']=''
 
             if 'is_mutated' in dictprot[ii].keys():
                 is_mutated_val=True
             #### Check if the Protein in the HTML is already in the database 
                 browse_protein_response=check_protein_entry_exist(dictprot[ii]['uniprotkbac'],is_mutated_val,dictprot[ii]['msequence'],dictprot[ii]['isoform'])#### POR AQUI!!!!!!!!!!!!!! 
+                if "ERROR" in browse_protein_response.keys():
+                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
+                    prev_sub_prot_match_formprotidyseq=False
+                    print("                    prev_sub_prot_match_formprotidyseq=False")
+                else:
+                    print("Valor funcion ", len(browse_protein_response), browse_protein_response)
+                    prev_sub_prot_match_formProtidySeq=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['msequence']).exists() 
             else:
                 is_mutated_val=False
                 #### Check if the Protein in the HTML is already in the database 
                 browse_protein_response=check_protein_entry_exist(dictprot[ii]['uniprotkbac'],is_mutated_val,dictprot[ii]['sequence'],dictprot[ii]['isoform'])#### POR AQUI!!!!!!!!!!!!!! 
+                if "ERROR" in browse_protein_response.keys():
+                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
+                if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
+                    prev_sub_prot_match_formprotidyseq=False
+                    print("                    prev_sub_prot_match_formprotidyseq=False")
+                else: 
+                    print("Valor funcion ", len(browse_protein_response), browse_protein_response)
+                    prev_sub_prot_match_formProtidySeq=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['sequence']).exists() 
             
-            if "ERROR" in browse_protein_response.keys():
-                response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
-                return 
-            print("Valor funcion ", len(browse_protein_response), browse_protein_response)
             if len(browse_protein_response['id_protein'])==1:
                 print(browse_protein_response['Message'])
-
-                if not qSub.filter(protein_id=int(browse_protein_response['id_protein'][0]),int_id=ii).exists(): #the protein_id in the submission table is different than the one in the current form. An update is needed!! first remove saved protein from the table
-
-                    protein_id=qSub.filter(int_id=ii).values_list('protein_id',flat=True)[0]
-                    deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
-
-                     
+                
                 dictSP[ii]={'submission_id':int(submission_id), 'protein_id':int(browse_protein_response['id_protein'][0]), 'int_id':ii} #int_id is 0 for the protein #1, 1 for the protein #2, ...
                 fdbSP[ii]=dyndb_Submission_Protein(dictSP[ii])
-                if (int(submission_id),int(browse_protein_response['id_protein'][0]),int(ii)) in qSub_protl:
-                    browseres=(int(submission_id),int(browse_protein_response['id_protein'][0]))
-                    print("\n ESTA en la DB COMPARA ",browseres,"  ",ii," con ", qSub_protl[0])
-                    print("PPPPPPPPPP",browse_protein_response['Message'])
-                elif fdbSP[ii].is_valid():
-                    fdbSP[ii].save()
-                else:
-                    iii1=fdbSP[ii].errors.as_text()
-                    print("fdbSP[",ii,"] no es valido")
-                    print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    return response
+                if qSub.filter(int_id=ii).exists():
+                    if not prev_sub_prot_match_formProtidySeq: #the protein_id and sequence in the submission table is different than the one in the current form. An update is needed!! first remove saved protein from the table
+                        protein_id=qSub.filter(int_id=ii).values_list('protein_id',flat=True)[0]
+                        deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
+                        DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=int(ii)).update(protein_id=int(browse_protein_response['id_protein'][0]))
+                        continue
 
-                if ii==indexl[-1]:#if ii is the last element of the list indexl
-                    print("\nThis is the last protein in the form",browse_protein_response['Message'])
-                    break
+                    else:                    
+                        browseres=(int(submission_id),int(browse_protein_response['id_protein'][0]))
+                        print("\n ESTA en la DB COMPARA ",browseres,"  ",ii," con ", qSub_protl[0])
+                        print("PPPPPPPPPP",browse_protein_response['Message'])
+                        continue
                 else:
-                    print("\nStill there are more proteins to be submitted",browse_protein_response['Message'])
-                    continue
+                    if fdbSP[ii].is_valid():
+                        fdbSP[ii].save()
+                    else:
+                        iii1=fdbSP[ii].errors.as_text()
+                        print("fdbSP[",ii,"] no es valido")
+                        print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
+                 
+                    if ii==indexl[-1]:#if ii is the last element of the list indexl
+                        print("\nThis is the last protein in the form",browse_protein_response['Message'])
+                        break
+                    else:
+                        print("\nStill there are more proteins to be submitted",browse_protein_response['Message'])
+                        continue
             else:
                 if len(browse_protein_response['id_protein'])>1:
                     print(browse_protein_response['Message'])
@@ -554,12 +577,14 @@ def PROTEINview(request, submission_id):
 
 #### If the protein ii is not found in our database create a new entry
             
-            if qSub.filter(int_id=ii).exclude(protein_id=None).exists(): #there is a protein_id in the submission table but the protein in the form is not in the database so the stored one is different than the one in the current form. An update is needed!! first remove saved protein from the table
-                print("\n\nNOOOOOOOOOOOOOOOO\n")
-                protein_id=qSub.filter(int_id=ii).values_list('protein_id',flat=True)[0]
-                deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
+            if qSub.exists():
+                if qSub.filter(int_id=ii).exclude(protein_id=None).exists(): #there is a protein_id in the submission table but the protein in the form is not in the database so the stored one is different than the one in the current form. An update is needed!! first remove saved protein from the table
+                    print("\n\nThe protein in the form is not in the database but a protein with this submission_id exists in the database. This one must be removed if possible\n")
+                    protein_id=qSub.filter(int_id=ii).values_list('protein_id',flat=True)[0]
+                    deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
 
             print("valor ii=", ii, "dictprot[ii]=\n", dictprot[ii])
+            dictprot[ii]['protein_creation_submission_id']=submission_id
             dictprot[ii]['id_species']=1
             initPF['id_uniprot_species']=dictprot[ii]['id_species']
             p=Protein.objects.filter(accession=dictprot[ii]['uniprotkbac'])
@@ -588,9 +613,13 @@ def PROTEINview(request, submission_id):
                 return response
 
 ##### Fill the submission protein table  (Submission PROTEIN dictionary dictSP) 
-            if (int(submission_id),int(ii)) in qSub_p_sid_int_id:
-                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=int(ii)).update(protein_id=int(formPF[ii].pk))
-            else:   
+            New_Sub_Object=False
+            if qSub.exists():
+                if (int(submission_id),int(ii)) in qSub_p_sid_int_id:
+                    DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=int(ii)).update(protein_id=int(formPF[ii].pk))
+                else:
+                    New_Sub_Object=True
+            if not qSub.exists() or New_Sub_Object:  
                 dictSP[ii]={'submission_id':int(submission_id), 'protein_id':formPF[ii].pk, 'int_id':ii} #int_id is 0 for the protein #1, 1 for the protein #2, ...
                 print("dictSP[ii]=\n",dictSP[ii])
                 fdbSP[ii]=dyndb_Submission_Protein(dictSP[ii])
@@ -799,7 +828,7 @@ def PROTEINview(request, submission_id):
 
 
             #### Check if canonical Protein has been already submitted to the database. 
-            #### First we browse the non mutated proteins matching UniProtKbac. We have to decide if we want CANONICAL or WILDTYPE (WILDTYPE involves one entry per isoform in DyndbCannonicalProtein and add a constrain in the query:filter(isoform=isoform).
+            #### First we browse the non mutated proteins matching UniProtKbac. We have to decide if we want CANONICAL or WILDTYPE (WILDTYPE involves one entry per isoform in DyndbCannonicalProteins and add a constrain in the query:filter(isoform=isoform).
 #            qCanProt[ii]=DyndbProtein.objects.filter(uniprotkbac=dictprot[ii]['uniprotkbac']).filter(isoform=isoform).exclude(is_mutated=True)#NO BUSCA CANONICAL SINO EL ISOMORF ESPECIFICADO!!
             qCanProt[ii]=DyndbProtein.objects.filter(uniprotkbac=dictprot[ii]['uniprotkbac']).exclude(is_mutated=True).exclude(id=formPF[ii].pk) # BUSCA CANONICAL PROTEIN !!!
 #            qCanProt[ii]=DyndbProtein.objects.filter(uniprotkbac=formPF[ii].uniprotkbac).exclude(id=formPF[ii].pk).exclude(is_mutated=True)
@@ -4129,7 +4158,7 @@ def MODELview(request, submission_id):
         author="jmr"
         user="jmr"
         author_id=1
-        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None,'id_structure_model':None, 'template_id_model':None,}
+        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id}
         initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
         
         lkeyprotsour=["id_protein","id_model","chain","resid_from","resid_to","seq_resid_from","seq_resid_to","pdbidps","source_typeps","template_id_model","bonded_to_id_modeled_residues","prot"]  
@@ -5005,7 +5034,7 @@ def MODELview(request, submission_id):
                 mrstype=l.SOURCE_TYPE[l.source_type]
                 lmrstype.append(mrstype)
             print ("residues!!",lmrstype)
-            qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id).exclude(type=None)
+            qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id).exclude(type=None).exclude(molecule_id=None)
             qMODCOMP=qMODCOMP.order_by('id')
             lmtype=[]
             lformmc=list(range(0,len(qMODCOMP)))
@@ -5035,7 +5064,7 @@ def MODELview(request, submission_id):
             return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id, 'saved':True,'protlist':protlist})
 
         else:
-            lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
+            lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(molecule_id=None).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
             Smol_to_Modcomp_type=smol_to_dyncomp_type
             lmol_MOD_type_tup=[]
             molecule_type_dict=dict(DyndbModelComponents.MOLECULE_TYPE)
@@ -7853,7 +7882,7 @@ def check_compound_entry_exist(pubchem_cid, chembleid, sinchikey, inchikey):
 
 
 def check_protein_entry_exist(uniprotkbac,  is_mutated, sequence, isoform=None):
-    if isoform==None:
+    if isoform=="":
        qDP=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac)
     else:
        qDP=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac).filter(isoform=isoform)
@@ -7899,7 +7928,7 @@ def check_protein_entry_exist(uniprotkbac,  is_mutated, sequence, isoform=None):
             return browse_protein_response 
 
         if len(lm_match_seq)>1:
-            browse_protein_response={'ERROR':True,'Message':"ERROR: There are several mutant sequences in the db matching the UniProtKB AC, the isoform number and the sequence of the one is being processed... This should be checked and fixed by removing redundant entries from the database. The DyndbProtein.pk values are "+str(lm_match_seq),'id_protein':lm_match_seq}
+            browse_protein_response={'ERROR':True,'Message':"ERROR: There are several mutant sequences in the db matching the UniProtKB AC, the isoform number and the sequence of the one is being processed... This should be checked and fixed by removing redundant entries from the database. The DyndbProtein.pk values are "+str(lm_match_seq)+". Please, make the GPCRmd database admininstrator know.",'id_protein':lm_match_seq}
             return browse_protein_response 
 
     else:
@@ -7907,7 +7936,7 @@ def check_protein_entry_exist(uniprotkbac,  is_mutated, sequence, isoform=None):
         print("length QUERY ",len(qPS.values()))
         if len(qPS.values())<len(lpkw):
             if len(qPS.values())==0:
-                browse_protein_response={'ERROR':True,'Message':"ERROR: There is one or more wild type proteins in DyndbProtein matching the UniProtKB AC and the isoform number of the one is being processed but there is not any sequence for them in DyndbProteinSequence...  This should be checked and fixed. The pk of these proteins in DyndbProtein is "+str(lpkw)+"\nIn addition if there are more than one pk several entries exists for the same isoform and UniProtKB AC which is redundat... fix this if it occurs",'id_protein':lpkw}
+                browse_protein_response={'ERROR':True,'Message':"ERROR: There is one or more wild type proteins in DyndbProtein matching the UniProtKB AC and the isoform number of the one is being processed but there is not any sequence for them in DyndbProteinSequence...  This should be checked and fixed. The pk of these proteins in DyndbProtein is "+str(lpkw)+".\nIn addition if there are more than one pk, several entries exist for the same isoform and UniProtKB AC. This is redundant. Please, make the GPCRmd database admininstrator know.",'id_protein':lpkw}
                 return browse_protein_response 
             if len(qPS.values())>0:
                 browse_protein_response={'ERROR':True,'Message':"ERROR: There are several repeated entries in the Protein table for the wild type protein matching the UniProtKB AC and the isoform number of the one is being processed. This should be checked and fixed. Please make the database administrator know. The pk of these entries in the Protein table are "+str(lpkw)+"\n",'id_protein':lpkw}
@@ -7925,7 +7954,7 @@ def check_protein_entry_exist(uniprotkbac,  is_mutated, sequence, isoform=None):
             return browse_protein_response 
 
         if len(lm_match_seq)>1:
-            browse_protein_response={'ERROR':True,'Message':"ERROR: There are several mutant sequence in the db matching the UniProtKB AC, the isoform number and the sequence of the one is being processed... This should be checked and fixed by removing redundant entries from the database. The DyndbProtein.pk values are "+str(lm_match_seq),'id_protein':lm_match_seq}
+            browse_protein_response={'ERROR':True,'Message':"ERROR: There are several entries in the db matching the UniProtKB AC, the isoform number and the sequence of the one is being processed... This should be checked and fixed by removing redundant entries from the database. The DyndbProtein.pk values are "+str(lm_match_seq)+"Please make the database administrator know. " ,'id_protein':lm_match_seq}
             return browse_protein_response 
 
 
@@ -9864,8 +9893,6 @@ def generate_molecule_properties2(submission_id,molid):
 
 def SMALL_MOLECULEview(request, submission_id):
 
- 
-
     def handle_uploaded_file(f,p,name):
         print("file name = ", f.name , "path =", p)
         f.name=name
@@ -10036,14 +10063,29 @@ def SMALL_MOLECULEview(request, submission_id):
         Std_id_mol_update={}
         NewCompoundEntry={}
         
+        prev_Mol_in_Sub_exists=False
         print("\nPRUEBAfallo\n")
         #Molecules in the  submission if has been used before.
+#        qSm=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
         qSm=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
         if qSm.exists():
             prev_Mol_in_Sub_exists=True
-            qSMstd=DyndbCompound.objects.filter(std_id_molecule__in=qSm.values('molecule_id')).values_list('std_id_molecule',flat=True) #list of molecules which are std molecules submitted in this sumbission
+            #if len(indexl) >1 and len(qSm)>len(indexl):
+            if len(qSm)>len(indexl):
+                molec_to_Checkfordeletion=list(qSm.exclude(int_id__in=indexl).values_list('molecule_id','int_id'))
+                for (mol_id,int_id) in molec_to_Checkfordeletion:
+                    print("OJO",mol_id,int_id)
+                    print(type(mol_id),"   int_id= ",int_id,"  type(int_id)=", type(int_id))
+                    if mol_id != None and int_id != None:
+                        deleteModelbyUpdateMolecule(mol_id,int_id,submission_id)
+                        if qSm.filter(molecule_id=int(mol_id),int_id=int(int_id)).exists():
+                              
+                            updatedsub=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=int(int_id)).update(molecule_id=None,not_in_model=None,type=None)
+                            print("updated", updatedsub.values())
+                        print("Molecula ",mol_id," ha sido enviada a la funcion deleteModelbyUpdateMolecule para ver si puede ser borrada")
         else:
             prev_Mol_in_Sub_exists=False
+
         print("\nPRUEBAfallo\n")
         
         
@@ -10068,14 +10110,33 @@ def SMALL_MOLECULEview(request, submission_id):
             #### Check if the molecule is already in our Database. If so the standar molecule shoud be as well!!!!! 
             qMF=DyndbMolecule.objects.filter(inchikey=dictmol[ii]['inchikey']).filter(inchi=dictmol[ii]['inchi'].split('=')[1])
             if qMF.exists():
-                if not qMF.filter(dyndbsubmissionmolecule_submission_id=submission_id,dyndbsubmissionmolecule_int_id=ii).exists():
-                    #that means the molecule in the db for this submission is not the one in the form and the first has to be checked for deletion
-                    print(dictmol[ii]['inchikey'])
-                    print("\nQuery Molecule antes aux\n ",qMF)
-            else:
                 if qSm.filter(int_id=ii).exists():
-
-                    print("Molecule previously submitted in the database not matching the one in the form!!! TTPPPPP")
+                    if not qMF.filter(dyndbsubmissionmolecule__submission_id=submission_id,dyndbsubmissionmolecule__int_id=ii).exists():
+                        #that means the molecule in the db for this submission is not the one in the form and the first has to be checked for deletion
+                        deleteModelbyUpdateMolecule(qSm.filter(int_id=ii).values_list('molecule_id',flat=True)[0],ii,submission_id)
+                        print("Previously submitted molecule in the database not matching the one in the form!!! TTPPPPP")
+                        print(dictmol[ii]['inchikey'])
+                        print("\nQuery Molecule antes aux\n ",qMF)
+                    else:
+                        if not qSm.filter(type=dictPMod[ii]['type'],int_id=ii).exists():
+                            if dictmol[ii]['type'] > 5:
+                                qSm.filter(int_id=ii).update(type=dictPMod[ii]['type'],not_in_model=True)
+                            else:
+                                qSm.filter(int_id=ii).update(type=dictPMod[ii]['type'],not_in_model=False)
+                            print("The molecule ", ii," in the form already appears in the db to be involved in this submission, but type and possibly presence in model have been modified")
+                        else:
+                            print("The molecule ", ii," in the form already appears in the db to be involved in this submission")
+                        
+                    if len(indexl)>1 and ii==indexl[-1]:#if ii is the last element of the list indexl
+                        print("Molecule #", ii, "has been found in our database")
+                        response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
+                        return response
+                        continue
+            else:
+                dictmol[ii]['molecule_creation_submission_id']=submission_id
+                if qSm.filter(int_id=ii).exists():
+                    print("There is a molecule in the database with this submission_id and int_id not matching the one in the form which in addition is not contained in the db!!! TTPPPPP")
+                    deleteModelbyUpdateMolecule(qSm.filter(int_id=ii).values_list('molecule_id',flat=True)[0],ii,submission_id)
  
                                          #generation of the sinchi
             print(dictcomp[ii])
@@ -10117,10 +10178,12 @@ def SMALL_MOLECULEview(request, submission_id):
                         qSMol=qSm.filter(molecule_id=MFpk,int_id=ii)
                         print("antes de comprobar si la submission esta hecha previamente")
                         if qSMol.exists():
-                            print("En efecto, la submission esta hecha previamente")
-                        continue 
+                            print("En efecto, la submission esta hecha previamente con la misma molecula en el form")
+                            continue 
                         if qSm.filter(int_id=ii,not_in_model=None,molecule_id=None).exists():
-                            qSm.filter(int_id=ii,not_in_model=None,molecule_id=None).update(molecule_id=MFpk,not_in_model=dictPMod[ii]['not_in_model'])
+
+                            qSm.filter(int_id=ii,not_in_model=None,molecule_id=None).update(molecule_id=MFpk,not_in_model=dictPMod[ii]['not_in_model'],type=dictPMod[ii]['type'])
+                            print("\nHay update?\n")
                             continue
                     fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
              

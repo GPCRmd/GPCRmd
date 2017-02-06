@@ -27,7 +27,7 @@
                 $(protform).find("[id|=id_form][id$='-isoform']").show().prop('readonly',false);
                 console.log("f2");
             }else{
-                $(protform).find("[id|=id_form][id$='-isoform']").val("").hide().prop('readonly',true);
+                $(protform).find("[id|=id_form][id$='-isoform']").hide().prop('readonly',true);
             };
           
         });
@@ -60,11 +60,32 @@
            if ($(this).is(':checked')){
                $(mut_iso).show();  
            }else{
-               $(mut_iso).val("").hide();  
+               $(mut_iso).hide();  
               // $(mut_iso).css("display","none");  
            }
            self.prop('disabled',false);
        });
+
+       $(document).on('change',"[id|=id_form][id$='-uniprotkbac']",function(){
+           var self=$(this)
+           var value= self.val()
+           var recoverydata=$(this).parents("[id|=protform]").find("[id|=id_form][id$='-uniprotdata']").show();
+           //var  SEGUIR
+           console.log("cambi")
+           $(this).resetProteinByButton();
+           console.log(value)
+           $(this).val(value)
+       });
+           
+
+       $(document).on('change',"[id|=id_form][id$='-uniprotdata']",function(){
+ // ACABAR
+           var self=$(this)
+
+
+
+       });
+
 
 
 $(document).ready(function(){

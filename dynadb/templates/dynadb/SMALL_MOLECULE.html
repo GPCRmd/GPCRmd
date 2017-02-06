@@ -13,6 +13,11 @@ label{
 cursor:pointer;
 font-weight:normal
 }
+{%else%}
+label{
+cursor:pointer;
+font-weight:normal
+}
 {%endif%}
 #left {
 }
@@ -117,18 +122,18 @@ font-weight:normal
 		       <div class="col-md-4"><select id="id_form-{{int0}}-co_type" {% if saved %}{% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}  name="form-{{int0}}-type" rows="2" style="width:180px"  >
                           {% if model_id %} 
                               {% for t in labtypel %} {% if t.0 < 6 %} 
-                                  {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" > {{t.1}} </option>{%endif%} 
+                                  {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" selected> {{t.1}} </option>{%endif%} 
                               {%endif%} {%endfor%}
                           {% else %}
                              {% if saved %}
                               {% for t in labtypel %} {% if t.0 < 6 %} 
-                                  {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" > {{t.1}} </option>{%endif%} 
+                                  {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" selected > {{t.1}} </option>{%endif%} 
                               {%endif%} {%endfor%}
                               {%endif%}
                           {%endif%}
                           {% if not model_id %} 
                	              {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
-                                 {% if forloop.counter0 < 6 %} <option value="{{i.0}}" {% if forloop.counter = 0 %} selected {% endif %}> {{i.1}}</option>{%endif%}
+                                 {% if forloop.counter0 < 6 %} <option value="{{i.0}}" {% if forloop.counter = 0 and not saved%} selected {% endif %}> {{i.1}}</option>{%endif%}
                	            {% endfor %}
                           {%endif%}
                              
@@ -147,7 +152,7 @@ font-weight:normal
                              {% else %}
                                  {% if saved %}
                                      {% for t in labtypel %} {% if t.0 > 5 %} 
-                                          {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" > {{t.1}} </option>{%endif%} 
+                                          {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" selected > {{t.1}} </option>{%endif%} 
                                      {%endif%} {%endfor%}
                                  {%endif%}
                              {%endif%}
@@ -155,7 +160,7 @@ font-weight:normal
                           {% if not model_id %} 
                			 {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
                                      {% if forloop.counter0 > 5 %}
-                  			<option value="{{i.0}}" {% if forloop.counter = 5 %} selected {% endif %} > {{i.1}}</option>
+                  			<option value="{{i.0}}" {% if forloop.counter = 5 and not saved %} selected {% endif %} > {{i.1}}</option>
                                      {%endif%}
                			 {% endfor %}
                           {%endif%}           
@@ -401,6 +406,7 @@ font-weight:normal
 
                                   <button id="id_form-{{int0}}-reset" name="form-{{int0}}-reset" title="Clears the molecule form" style="width:160px;height:30px" type="button">Clear molecule</button>
                                </div><br> 
+
                                </div>
                     {%endif%}    
                 </div>
@@ -461,7 +467,7 @@ font-weight:normal
     <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
     <script src="{% static 'dynadb/addSmallMol.js' %}"></script>
     <script src="{% static 'dynadb/delSmallMol.js' %}"></script>
-    <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script>
+    <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script> 
     <script src="{% static 'dynadb/cocrystalised.js' %}"></script>
 <!--   <script src="{% static 'dynadb/fixedleft.js' %}"></script> -->
 
