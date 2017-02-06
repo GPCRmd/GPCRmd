@@ -10,6 +10,12 @@ label{
 cursor:pointer;
 font-weight:normal
 }
+{%else%}
+label{
+cursor:pointer;
+font-weight:normal
+}
+
 {%endif%}
   .ui-autocomplete {
     max-height: 100px;
@@ -253,8 +259,8 @@ font-weight:normal
 <!--_________________________________________________________________________________________________________________________________________________________-->
 
 {%endif%} {%endfor%}
-{%endfor%}
 </div>
+{%endfor%}
 
 {%else%} <!-- FORM NO REUSE!!!!!!!!!!!! -->
 {% for o in qPROT %} 		{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %}
@@ -284,9 +290,12 @@ font-weight:normal
                         <div class="col-md-1" style="height:35px"><input id="id_form-{{int0}}-is_not_uniprot"  name="form-{{int0}}-is_not_uniprot"  type="checkbox" /></div>
                 <div class="col-md-5"><label for="id_is_not_uniprot"><a title="Not in UniprotKB: NOT RECOMENDED. This value must be checked if the protein sequence is not found in UniProtKB. This protein could be difficult to find in future queries!">Not available in UniprotKB?</a></label></div>
 		</div>
-                <br>
-			
-	        <div class="row" style="height:35px">
+	        <div class="row" id="id_form-{{int0}}-uniprotdata" hidden>
+			<div class="col-md-8 col-md-offset-4" style="height:30px"><!-- jQuery static/retrieve_data.js -->
+        	<a id='aaa' href="/dynadb/protein/{{submission_id}}/"  >Before UniProtKb AC update</a>
+		</div>
+                </div>
+	        <div class="row" style="height:35px;margin-top:20px">
 			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" value="1" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div><div class="col-md-2"><input id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" min="1" style="width:140px" value="{{o.isoform}}" /></div>
 		<br></div>
 
@@ -464,6 +473,7 @@ font-weight:normal
 {%endif%} 
 
 {% if model_id %}
+      </div>
 
         <div class="col-md-7 col-md-offset-4"> 
               <div class="col-md-12 panel panel-primary">
@@ -484,6 +494,7 @@ font-weight:normal
         </div>
 
 {% else %}
+
 <div class="col-md-7 col-md-offset-4"> 
       <div class="col-md-12 panel panel-primary">
           <!--Submit prueba -->

@@ -194,7 +194,7 @@ font-weight:normal
                                 <tbody id="pElement1">
                                 {% if model_id or saved %}  
 {% for o in rowsMR.values %} 		{%for intps0 in lformps%}{% if forloop.counter == forloop.parentloop.counter %}	
-				<tr id="Element1_{{intps0}}" {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-prot" name="formps-{{intps0}}-prot" value="{{o.int_id|add:"1"}}" type="number" style="width:58px" placeholder="  1" /></td>
+				<tr id="Element1_{{intps0}}" {% if forloop.counter == lformps|length %} style="height:30px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%}><td style="width:60px;padding:5px 0px 5px 0px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-prot" name="formps-{{intps0}}-prot" value="{{o.int_id|add:"1"}}" type="number" style="width:58px" placeholder="  1" /></td>
 				<!--<td style="width:60px;padding:5px 5px 5px 5px"><input readonly id="id_form-{{intps0}}-id_protein" name="id_protein" type="number" style="width:60px" placeholder=" 1"/></td>-->
 				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-chain" value="{{o.chain}}"  maxlength="1" name="formps-{{intps0}}-chain" type="text" style="width:58px" placeholder=" E"/></td>
 				<td style="width:60px;padding:5px 2px 5px 2px"><input {% if model_id %} readonly {%endif%} id="id_formps-{{intps0}}-segid" value="{{o.segid}}"  maxlength="4" name="formps-{{intps0}}-segid" type="text" style="width:58px" /></td>
@@ -408,7 +408,7 @@ font-weight:normal
 
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
-<!--    <script src="{% static 'dynadb/MODELpost.js' %}"></script>  -->
+    <script src="{% static 'dynadb/MODELpost.js' %}"></script> 
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
 <!--    <script src="{% static 'dynadb/addFields.js' %}"></script> -->
