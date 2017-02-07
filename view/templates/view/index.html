@@ -117,10 +117,10 @@
               {% if prot_seq_pos %}
               <div style="margin-bottom:20px">
               <div class="row" style="">
-              <button style="padding:5px;margin-left:3px" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
+                <button style="padding:5px;margin-left:3px;" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
               </div>
               <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                <button  class="btn btn-link" id="addToSel" ><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
+                <button  class="btn btn-link" id="addToSel" type="button"><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
                 <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
                   {% for prot_name, seq_pos in prot_seq_pos %}
                     <div style="clear: left;padding-bottom:20px">
@@ -409,22 +409,26 @@
                   
                 </div>
                 {% if traj_list %}
-                <div style="margin-left:18px;margin-bottom:15px">
-                 At trajectory: 
-                   <span style="margin-left:5px">
-                        <select id="" name="dist_traj">
-                           <option disabled selected value> </option>
-                           {% for traj in traj_list %}
-                           <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
-                           {% endfor %}
-                        </select>
-                   </span>
-                <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                <div style="margin-left:18px;">
+                    <div>
+                     At trajectory: 
+                       <span style="margin-left:5px">
+                            <select id="" name="dist_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+                       </span>
+                    </div>
+                    <div class=row>
+                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                    </div>
                 </div>
                 {% else %}
                 <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:40px" >Obtain result</button>
                 {% endif %}
-                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;z-index: 10;" id="dist_alert"> </div>
+                <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" ></div>
                 <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
 		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
@@ -434,77 +438,73 @@
 <!-- ============= RMSD Analysis =========== --> 
             <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>
               <div class="collapse" id="analysis_rmsd">
-                <div style="margin-left:18px;margin-bottom:10px;">
-                 Trajectory: 
-                        <select id="rmsd_traj" name="rmsd_traj">
-                           <option disabled selected value> </option>
-                           {% for traj in traj_list %}
-                           <option   value="{{traj.0}}">{{traj.1}}</option>
-                           {% endfor %}
-                        </select>
+                <div style="margin-bottom:15px">
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="rmsd_traj" name="rmsd_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
 
-                </div>
-                <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
-                   <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
-                   </div>
-                   <div id="rmsd_sel_frames_id" class="col-md-10" >
-                      <div class="row">
-                         <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
-                              All
-                      </div>
-                      <div class="row" >
-                         <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
-                             From 
-                             <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-                             to 
-                             <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-                      </div>
-                      <div id="rmsd_sel_frames_error" class="row" >
-                      </div>
                     </div>
-                </div>
-                <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
-                    Reference: frame 
-                        <input placeholder=0 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-                        from trajectory 
-                        <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
-                           <option disabled selected value> </option>
-                           {% for traj in traj_list %}
-                           <option   value="{{traj.0}}">{{traj.1}}</option>
-                           {% endfor %}
-                        </select>
-                      <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >
-                      </div>
-                </div>
-                <div id="rmsd_sel_id" style="margin-left:18px;margin-bottom:20px"> 
-                   <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="rmsd_sel_frames_id" class="col-md-10" >
+                          <div class="row">
+                             <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
+                                 From 
+                                 <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 to 
+                                 <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                          </div>
+                          <div id="rmsd_sel_frames_error" class="row" >
+                          </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                        Reference: frame 
+                            <input placeholder=0 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                            from trajectory 
+                            <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+                          <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >
+                          </div>
+                    </div>
+                    <div id="rmsd_sel_id" style="margin-left:18px;margin-bottom:20px"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                       </div>
+                       <div class="col-md-10" >
+                          <div title="Protein alpha carbons." class="row">
+                             <input type="radio" name="rmsd_sel" value="bck" checked> Backbone
+                          </div>
+                          <div title="All non-hydrogen protein atoms." class="row">
+                             <input type="radio" name="rmsd_sel" value="noh"> noh
+                          </div>
+                          <div title="Protein CA, CB, C, N, O." class="row">
+                             <input type="radio" name="rmsd_sel" value="min"> Minimal
+                          </div>
+                          <div class="row">
+                             <input type="radio" name="rmsd_sel" value="all_atoms"> All atoms
+                          </div>
+                    </div>
                    </div>
-                   <div class="col-md-10" >
-                      <div title="Protein alpha carbons." class="row">
-                         <input type="radio" name="rmsd_sel" value="bck" checked> Backbone
-                      </div>
-                      <div title="All non-hydrogen protein atoms." class="row">
-                         <input type="radio" name="rmsd_sel" value="noh"> noh
-                      </div>
-                      <div title="Protein CA, CB, C, N, O." class="row">
-                         <input type="radio" name="rmsd_sel" value="min"> Minimal
-                      </div>
-                      <div class="row" style="margin-bottom:10px">
-                         <input type="radio" name="rmsd_sel" value="all_atoms"> All atoms
-                      </div>
-                      <!--<div class="row" style="margin-bottom:10px">
-                         <div style="margin-left:0;padding-left:0;width:110px" class="col-md-3">
-                             <input id="rmds_my_sel_id" type="radio" name="rmsd_sel" value="rmds_my_sel"> My selection 
-                         </div>
-                         <div style="margin-left:0;padding-left:0;" class="col-md-9">
-                             <input class="form-control input-sm" id="rmsd_my_sel_sel" type="text" style="width:100%;padding-left:7px;">
-                         </div>
-                      </div>-->
-              <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:5px" >Obtain result</button>
+                    <div class=row>
+                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                    </div>
+                    <div class="row" style="margin-left:14px;margin-top:5px;padding-right:40px;clear:left;" id="rmsd_alert"> </div>
+                  <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
                 </div>
-               </div>
-                <div class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;" id="rmsd_alert"> </div>
-              <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
               </div>
 
 

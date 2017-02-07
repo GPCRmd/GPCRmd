@@ -535,7 +535,7 @@ function isEmptyDict(mydict){
                             var int_data=int_data.result;
                             if (! isEmptyDict(int_data)){
                                 var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
-                                  <table class="table table-condensed" style="font-size:12px">\
+                                  <table class="table table-condensed" style="font-size:12px;">\
                                     <thead>\
                                       <tr>\
                                       	<th>Ligand</th>\
@@ -1147,7 +1147,7 @@ function isEmptyDict(mydict){
             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
             $("#rmsd_alert").html(add_error);
         } else {//class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;"
-            $("#rmsd_chart").after("<div class='col-md-12'><p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p></div>")        
+            $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>")        
             $("#rmsd_alert").html("");
             if (r_id==1){
                 $("#gotoRMSDPg").addClass("disabled");
