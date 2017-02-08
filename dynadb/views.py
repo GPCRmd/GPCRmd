@@ -8850,11 +8850,103 @@ def fetch_abstract(pmid):
     refdic={'title':title, 'volume':volume, 'issue':issue, 'pubyear':year, 'issn':issn, 'journal':journal,'doi':doi}
 
     return refdic
+#####################################################3
+def iuphar_parser(file_name):
+    with open(file_name,'r') as fh: #delete first line!
+        records=[]
+        for line in fh:
+            line=line.strip()
+            linelist=list(line)
+            counterchar=0
+            cleanline=''
+            state='off'
+            for char in linelist:
+                if char=='"':
+                    counterchar+=1
+                    if counterchar%2==0:
+                        state='off'
+                    else:
+                        state='on'
+                if char==',' and state=='on':
+                    char=';'
+                cleanline+=str(char)
+            line=cleanline
+            fields=line.split(',')
+            if len(fields)==34:
+                interaction=dict()
+                interaction['uniprot']=fields[3]
+                if '|' in interaction['uniprot']:
+                    interaction['uniprot']=interaction['uniprot'].split('|')
+                else:
+                    interaction['uniprot']=[interaction['uniprot']]
+                interaction['uniprot2']=fields[7]
+                if '|' in interaction['uniprot2']:
+                    interaction['uniprot2']=interaction['uniprot2'].split('|')     
+                else:
+                    interaction['uniprot2']=[interaction['uniprot2']]
+                interaction['pubchem_sid']=fields[14] #https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/252827410/cids/XML?cids_type=all to convert to compound id
+                interaction['experiment_type']=fields[25]
+                interaction['median_value']=fields[27]
+                interaction['pmid']=fields[-1]
+                if '|' in interaction['pmid']:
+                    interaction['pmid']=interaction['pmid'].split('|')[0] #warning! missing references!
+                else:
+                   interaction['pmid']=interaction['pmid']
+                emptyflag=0
+                
+                interaction['uniprot']=interaction['uniprot']+interaction['uniprot2']
+                interaction['uniprot']=list(filter(lambda x: len(x)!=0, interaction['uniprot']))
+                if len(interaction['uniprot'])!=0 and len(interaction['pubchem_sid'])!=0 and len(interaction['experiment_type'])!=0 and len(interaction['median_value'])!=0 and len(interaction['pmid'])!=0:
+                    records.append(interaction)
+                    
+    return records
 
+records=iuphar_parser('./dynadb/interactions.csv')
 
+def to_bindingdb_format(records):
+    for record in records:
+        kd=''
+        ec50=''
+        complexes=[]
+        #complexes=[ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]
+        protlist=record['uniprot']
+        if record['experiment_type']=='kd':
+            kd=record['median_value']
+        elif record['experiment_type']=='EC50':
+            ec50=record['median_value']
+        else:
+            continue #we have no interest in ki or ic50
+            
+        seqlist=[]
+        gpcr_flag=0
+        print(protlist)
+        for protein in protlist:
+            if protein in GPCRlist:
+                gpcr_flag=1
+            response = requests.get("http://www.uniprot.org/uniprot/"+protein+"-1.fasta")
+            sequenceraw=response.text.split('\n')[1:] #skip header
+            seq=''.join(sequenceraw)
+            print(protein,seq)
+            seqlist.append(seq)
+        
+        if gpcr_flag==1:
+            continue #no interest in non gpcr coomplexes
+        pubchemid=requests.get('https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/'+str(record['pubchem_sid'])+'/cids/json?cids_type=all')
+        pubchemid=pubchemid.json()['InformationList']['Information'][0]['CID'][0]
+        datapubchem,errdata = retreive_compound_sdf_pubchem('cid',pubchemid,outputfile='/protwis/sites/protwis/dynadb/sdfiles/myfile.sdf',in3D=True)
+        sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchemid,operation='property',outputproperty='InChI')
+        sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
+        sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchemid,operation='property',outputproperty='InChIKey')
+        sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
+        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,'','',{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'',''])
+        break
+    return (complexes)
+################
+#retreive_compound_sdf_pubchem
 #http://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?&reactant_set_id=154401&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM
 def fill_db(chunks):
     '''Fills the GPCRmd database with data from the BindingDB. It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created.'''
+    chunkcounter=0
     for chunk in chunks:
         time.sleep(1)
         print('\n\n\n\n\n\nProccessing chunk: ',chunk)
@@ -8899,7 +8991,7 @@ def fill_db(chunks):
                     liginchi+=lines_list[j].strip()
                     j+=1
 
-            elif lines_list[i].startswith('Vconf'):
+            elif lines_list[i].startswith('Vconf') or 'Mrv' in lines_list[i]: #old:   elif lines_list[i].startswith('Vconf'):
                 SDF='\n\n\n'
                 j=i+1
                 while 'M  END' not in lines_list[j]:
@@ -8987,6 +9079,9 @@ def fill_db(chunks):
         #all records in memory, now record them in the DB.
         complexcounter=0
         isoformid=1
+        if chunkcounter==0:
+            records=iuphar_parser('./dynadb/interactions.csv')
+            complexes=complexes+to_bindingdb_format(records)
         for comple in complexes:
             print('\n\n\n\nProgress in this chunk ',chunk,':',str((complexcounter/len(complexes))*100),'\n\n\n\n')
             print(comple[:-2])
@@ -9074,30 +9169,27 @@ def fill_db(chunks):
                 print('This complex does not exist yet. Record the complex exp and the intdata')
                 with closing(connection.cursor()) as cursor:
                     lastid=str(DyndbComplexExp.objects.latest('id').id+1)
+                    print('this is the last complexexp::',lastid)
                     cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id' % lastid)
                     complex_id=cursor.fetchone()[0]
-                #with closing(connection.cursor()) as cursor:
-                #   cursor.execute('INSERT INTO dyndb_complex_exp DEFAULT VALUES RETURNING id')
-                #   complex_id=cursor.fetchone()[0] #returns the id of the last insert command
                     
                 cmol_id=newrecord(['dyndb_complex_molecule',DyndbComplexMolecule],{'id_complex_exp':complex_id},True)
 
                 #Create the complex_exp_interaction_data record
 
                 if complextype==3: #both kd and ec50 info in same sdf segment.
-                    complex_interaction_id0=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':1,'id_complex_exp':i},True)
+                    complex_interaction_id0=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':1,'id_complex_exp':complex_id},True)
 
-                    complex_interaction_id1=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':2,'id_complex_exp':i},True)
+                    complex_interaction_id1=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':2,'id_complex_exp':complex_id},True)
               
                 else:
                     complex_interaction_id=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':complextype,'id_complex_exp':complex_id},True)
-                    print('\n\n\n\n\nSUCCESS!\n\n\n')
 
             #Create the references
             print('Recording references...')
             doiresdoi=DyndbReferences.objects.filter(doi=comple[9]['DOI'])
             doiresurl=DyndbReferences.objects.filter(url=str(comple[9]['bindingdblink']))
-            doirespmid=DyndbReferences.objects.filter(pmid=comple[9]['pmid'] )
+            doirespmid=DyndbReferences.objects.filter(pmid=str(comple[9]['pmid']) )
 
             #does this reference already exist?
             if (len(doiresdoi)>0 and comple[9]['DOI']!=None) or (len(doiresurl)>0 and str(comple[9]['bindingdblink'])!='') or (len(doirespmid)>0 and comple[9]['pmid']!=None):
@@ -9406,9 +9498,12 @@ def fill_db(chunks):
                         if len(name)<200:
                             newrecord(['dyndb_other_compound_names',DyndbOtherCompoundNames],{'id_compound':compound_id,'other_names':name},True)
 
-                    urlcompo='https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?cid='+str(pubchem_id)
-                    creference_id=newrecord(['dyndb_references',DyndbReferences],{'url':urlcompo,'authors':'National Center for Biotechnology Information. PubChem Compound Database','dbname':'PubChem Compound Database'},True)
-
+                    urlcompo='https://pubchem.ncbi.nlm.nih.gov/summary/summary.cgi?cid=[compound id]'
+                    compound_reference=DyndbReferences.objects.filter(authors='National Center for Biotechnology Information. PubChem Compound Database').filter(title='Compound data comes from Pubchem')
+                    if len(compound_reference)==0:
+                        creference_id=newrecord(['dyndb_references',DyndbReferences],{'url':urlcompo,'authors':'National Center for Biotechnology Information. PubChem Compound Database','dbname':'PubChem Compound Database','title':'Compound data comes from Pubchem'},True)
+                    else:
+                        creference_id=compound_reference[0].id
                     newrecord(['dyndb_references_compound',DyndbReferencesCompound],{'id_compound':compound_id,'id_references':creference_id},True)
 
 
@@ -9430,10 +9525,13 @@ def fill_db(chunks):
                            WHERE id=%s
                         """, ( str(molecule_id),str(compound_id) )  )
 
-
                     newrecord(['dyndb_files_molecule',DyndbFilesMolecule],{'id_molecule':molecule_id,'id_files':dyndbfilesid,'type':0},True)
                     newrecord(['dyndb_files_molecule',DyndbFilesMolecule],{'id_molecule':molecule_id,'id_files':dyndbpngid,'type':2},True)
-                    mreference_id=newrecord(['dyndb_references',DyndbReferences],{'url':urlcompo,'authors':'National Center for Biotechnology Information. PubChem Compound Database','title':'Information of this molecule was obtained via PubChem API and RDKit tools','dbname':'PubChem Compound Database'},True)
+                    pubchemref=DyndbReferences.objects.filter(title='Information for this molecule was obtained via PubChem API and RDKit tools')
+                    if len(pubchemref)==0:
+                        mreference_id=newrecord(['dyndb_references',DyndbReferences],{'url':'https://pubchem.ncbi.nlm.nih.gov/','authors':'National Center for Biotechnology Information. PubChem Compound Database','title':'Information for this molecule was obtained via PubChem API and RDKit tools','dbname':'PubChem Compound Database'},True)
+                    else:
+                        mreference_id=pubchemref[0].id
                     newrecord(['dyndb_references_molecule',DyndbReferencesMolecule],{'id_molecule':molecule_id,'id_references':mreference_id},True)
                     newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
 
@@ -9445,9 +9543,9 @@ def fill_db(chunks):
             complexcounter+=1
 
         print('All records from this chunk completed.')
+        chunkcounter+=1
 
-
-chunks=['chunk0_from2870096_to_5487587.sdf',
+chunks_old=['chunk0_from2870096_to_5487587.sdf',
     'chunk10_from28600899_to_31150286.sdf',
     'chunk11_from31150286_to_33730861.sdf',
     'chunk12_from33730861_to_36373039.sdf',
@@ -9470,6 +9568,31 @@ chunks=['chunk0_from2870096_to_5487587.sdf',
     'chunk8_from23536254_to_26041971.sdf',
     'chunk9_from26041971_to_28600899.sdf'
     ]
+    
+chunks=['chunk0_from0_to_2877815.sdf',
+    'chunk1_from2877815_to_5504028.sdf',
+    'chunk2_from5504028_to_8151249.sdf',
+    'chunk3_from8151249_to_11018459.sdf',
+    'chunk4_from11018459_to_13818354.sdf',
+    'chunk5_from13818354_to_16543442.sdf',
+    'chunk6_from16543442_to_19213992.sdf',
+    'chunk7_from19213992_to_21738775.sdf',
+    'chunk8_from21738775_to_24128210.sdf',
+    'chunk9_from24128210_to_26366733.sdf',
+    'chunk10_from26366733_to_28681630.sdf',
+    'chunk11_from28681630_to_31259106.sdf',
+    'chunk12_from31259106_to_34057944.sdf',
+    'chunk13_from34057944_to_36687703.sdf',
+    'chunk14_from36687703_to_39231449.sdf',
+    'chunk15_from39231449_to_41899410.sdf',
+    'chunk16_from41899410_to_44554372.sdf',
+    'chunk17_from44554372_to_47343614.sdf',
+    'chunk18_from47343614_to_49618541.sdf',
+    'chunk19_from49618541_to_52328318.sdf',
+    'chunk20_from52328318_to_54812741.sdf',
+    'chunk21_from54812741_to_57584405.sdf',
+    'chunk22_from57584405_to_60232038.sdf',
+    ]
+    
 fill_db(chunks)
-
 
