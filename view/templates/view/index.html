@@ -3,6 +3,7 @@
     <script type="text/javascript">
         google.load("visualization", "1", {packages:["corechart"]});
     </script>
+    <script>document.domain=document.domain;</script>
 <style>
 .falselist{
     margin-bottom:4px;
@@ -571,7 +572,9 @@
      	        </div>
 
                 <div>
-                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe><!--width:540px-->
+                   <!--<iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe>--><!--width:540px-->
+                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed2.html" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe>
+
                 </div>
                 <div id="legend"> </div>
                 </div>

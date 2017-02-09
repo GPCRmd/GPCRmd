@@ -708,7 +708,6 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
-                        #"traj_list":[],  
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "other_prots":other_prots,

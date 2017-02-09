@@ -131,7 +131,7 @@ $(document).ready(function(){
             }
         }
         //alert(sel);
-        sel_enc = encode(sel);
+        sel_enc = sel;
         return sel_enc
     };
 
@@ -148,7 +148,7 @@ $(document).ready(function(){
             if (index == -1) {
                 rep[rep.length]=newRep;
             }
-            url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
+            //url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
             $(id).addClass("active");
             return  2;
         } else {
@@ -156,7 +156,7 @@ $(document).ready(function(){
             if (index > -1) {
                 rep.splice(index, 1);
             }
-            url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
+            //url = url_orig + ("&sel=" + sel_enc + "&rep=" + encode(rep));
             $(id).removeClass("active");
             return  1;
         }
@@ -420,7 +420,7 @@ $(document).ready(function(){
             }
 
         });       
-        return (encode(dist_of))
+        return (dist_of);
     }
 
 
@@ -685,7 +685,7 @@ function isEmptyDict(mydict){
             distToComp += d_from+"-"+d_to+"a";
         });
         if (distToComp){
-            return (encode(distToComp.slice(0, -1)))
+            return (distToComp.slice(0, -1));
         } else {
             return ""
         }
@@ -1111,7 +1111,7 @@ function isEmptyDict(mydict){
                 if (/^[\d]+$/.test(frameFrom + frameTo)){
                  //   if (Number(frameFrom) >= 1){
                     if (Number(frameFrom) < Number(frameTo)){
-                        rmsdFrames=encode(frameFrom + "-" + frameTo);
+                        rmsdFrames=frameFrom + "-" + frameTo;
                     } else {
                         showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
                         rmsdFrames=false;
@@ -1301,14 +1301,14 @@ function isEmptyDict(mydict){
     var struc_id = struc_info[1];
     var dyn_id=struc_info[2];*/
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
-    var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
-    var seeReceptor = "y" 
+    //var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
+    var seeReceptor = "y";
     var sel = "";
-    var sel_enc = encode(sel);
+    var sel_enc = sel;
 
     
     var traj=obtainCheckedTrajs()
-    $("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
+    //$("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
     $("#receptor").addClass("active");
     $(".nonGPCR").addClass("active");
     var chains_str = $("#chains").text();
@@ -1339,18 +1339,19 @@ function isEmptyDict(mydict){
         $(".rep_elements").removeClass("active");
     });
 
-
-
-
-    $("#submit").click(function(){
+    
+    //$("#submit").click(function(){
+    var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
-        cp = results[0];
+        window.results=results;
+        /*cp = results[0];
         high_pre=results[1];
         sel_enc=results[2];
         var rad_option =results[3];
         var traj =results[4];
-        var nonGPCR =results[5];
+        var nonGPCR =results[5];*/
         var view_dist=showDist();
+        window.view_dist=view_dist;
         var pd = "n";
         var legend_el=[];
         for (key in high_pre){
@@ -1359,19 +1360,27 @@ function isEmptyDict(mydict){
                 legend_el[legend_el.length]=key;
             }
         }
+        window.pd=pd;
         var dist_of=obtainDistSel();  // For the dist selection
+        window.dist_of=dist_of;
         var distToComp = obtainDistToComp();
+        window.distToComp=distToComp;
         var traj_id=checkTrajUsedInDistComputatiion(distToComp);
         var onlyChains="";
         if (seeReceptor=="n" && nonGPCR == ""){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
+        window.distToComp=distToComp;
+        window.seeReceptor=seeReceptor;
         obtainLegend(legend_el);
-        url = url_orig + ("&sel=" + sel_enc + "&traj=" + encode(traj) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains);
+        //$("#embed_mdsrv")[0].contentWindow.test();
+        //document.getElementById("embed_mdsrv").contentWindow.hello;
+        
+        //url = url_orig + ("&sel=" + sel_enc + "&traj=" + encode(traj) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains);
        // alert(url);
-       $("iframe").attr("src", url);
-    });
-
+//       $("iframe").attr("src", url);
+    };
+    window.passInfoToIframe=passInfoToIframe;
     $("#to_mdsrv").click(function(){
          var distToComp = obtainDistToComp();
          var traj_id=checkTrajUsedInDistComputatiion(distToComp);
@@ -1395,7 +1404,8 @@ function isEmptyDict(mydict){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
         var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + sel_enc + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
+        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
+
         $(this).attr("href", url_mdsrv);
     });    
 
