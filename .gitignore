@@ -5,3 +5,6 @@ solr-4.10.2/example/logs/*
 *~
 *.sdf
 dynadb/interactions.csv
+dynadb/mininter.csv
+iuphar_useful_complexes_pickle
+
