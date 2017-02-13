@@ -244,7 +244,11 @@ def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_
                 s=re.search("([A-Z]?)([\d\.]+)",pos_nm)
                 AA=s.group(1)
                 bw_pos_ok=s.group(2)
-                current_bw_pos=gnum_classes_rel[gpcr_class][bw_pos_ok]
+                try:
+                    current_bw_pos=gnum_classes_rel[gpcr_class][bw_pos_ok]
+                except Exception:
+                    current_bw_pos="Position not found"
+                    el[2]="None"
                 el[0]=AA + bw_pos_ok + gpcr_class.lower()
                 el[1]=current_bw_pos
         motif_info = motifs_dict[gpcr_class]
@@ -437,8 +441,8 @@ def obtain_DyndbProtein_id_list(dyn_id):
             prot_li_gpcr=[(model.id_protein, gprot)]
             is_gpcr=True
         dprot_li_all=[model.id_protein]
-        dprot_seq=DyndbProteinSequence.objects.get(id_protein=model.id_protein.name.id).sequence
-        dprot_li_all_info=[model.id_protein.id, model.id_protein.name, is_gpcr , dprot_seq ]     
+        dprot_seq=DyndbProteinSequence.objects.get(id_protein=model.id_protein.id).sequence
+        dprot_li_all_info=[(model.id_protein.id, model.id_protein.name, is_gpcr , dprot_seq )]     
     else:
         dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
         for dprot in dprot_li_all:
@@ -614,10 +618,10 @@ def index(request, dyn_id):
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
-                    checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
+                    checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
                         tablepdb,pdb_sequence,hexflag=checkpdb_res 
-                        result=matchpdbfa(prot_seq,pdb_sequence, tablepdb, hexflag)
+                        result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
                         if isinstance(result, list):
                             #chain_results[chain_name]=result
                             if chain_name not in chains_taken:
@@ -691,7 +695,6 @@ def index(request, dyn_id):
                                 (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
                                 (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
-                                
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                             motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
                             find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict_mod,motifs)
@@ -711,7 +714,6 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
-                        #"traj_list":[],  
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "other_prots":other_prots,
@@ -900,11 +902,13 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
     except Exception:
         return (False,None, "Error loading the file.")
     all_lig_res=[]
+###
     for res in res_li:
-        lig_sel=struc.topology.select("resname "+res)
+        lig_sel=struc.topology.select("resname '"+res+"'")
         if len(lig_sel)>0:
             lig_res=[residue.index for residue in struc.atom_slice(lig_sel).topology.residues]
             all_lig_res.append(lig_res[0])
+####
     if len(all_lig_res)>0:
         if gpcr_chains:
             gpcr_chains_sel=""
@@ -914,14 +918,10 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
             gpcr_sel=struc.topology.select(gpcr_chains_sel)
         else:
             gpcr_sel=struc.topology.select("protein") 
-        #if num_prots > 1:
-        #    gpcr_sel=obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd)
-        #else:
-        #    gpcr_sel=struc.topology.select("protein") 
         gpcr_res=[residue.index for residue in struc.atom_slice(gpcr_sel).topology.residues]
         pairs = list(itertools.product(gpcr_res, all_lig_res))
         itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
-        first=True
+        first=True 
         try:
             for itraj in itertraj:
                 (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme=dist_scheme)
