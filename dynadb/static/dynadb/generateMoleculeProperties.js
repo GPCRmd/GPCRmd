@@ -105,6 +105,19 @@ $(document).ready(function() {
                 sinchikey.val(data.sinchikey);
                 net_charge.val(data.charge);
                 smiles.val(data.smiles);
+                var ret_pubchem =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='retrieve_type_pubchem']");
+                var neu_pubchem =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='neutralize_pubchem']");
+                var ret_chembl =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='retrieve_type_chembl']");
+                var neu_chembl =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='neutralize_chembl']");
+                if ($(net_charge).val()==0){
+                    console.log("EEEEEEEEE"+$(net_charge).val());
+                    $(neu_pubchem).prop('checked',true);
+                    $(neu_chembl).prop('checked',true);
+                }else{
+                    $(neu_pubchem).prop('checked',false);
+                    $(neu_chembl).prop('checked',false);
+                }  
+                console.log("complete");
                 
                 var newuploadmol = $("<img>")
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
@@ -155,9 +168,11 @@ $(document).ready(function() {
             complete: function(xhr,status,msg){
                 $(self).prop('disabled',false);
 
-                console.log("complete");
             }
         });
     });
+                // change Search Settings default depending on the charge
+         
+
         
 });

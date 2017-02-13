@@ -889,7 +889,7 @@ class DyndbModeledResidues(models.Model):
     seq_resid_from = models.SmallIntegerField()
     seq_resid_to = models.SmallIntegerField()
     bonded_to_id_modeled_residues = models.ForeignKey('self', models.DO_NOTHING, db_column='bond_to_id_modeled_residues', blank=True, null=True, related_name='dyndbmodeledresidues_bond_to_id_modeled_residues')#!!!!
-    pdbid = models.CharField(max_length=6, blank=False, null=True)
+    pdbid = models.CharField(max_length=6, blank=True, null=True)
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0)
     template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', blank=True, null=True, related_name='dyndbmodeledresidues_template_id_protein')
 

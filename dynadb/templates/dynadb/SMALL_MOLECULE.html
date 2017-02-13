@@ -47,7 +47,7 @@ font-weight:normal
 
        {% for o in qMOL %} 	{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %} 	
       {% if model_id %}
-	    {% if forloop.counter == 1%}    <div class="col-md-12 panel panel-primary" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse"  data-target="{%for l in qMOL %}[id|='molform'][id$='{{forloop.counter0}}']{% if not forloop.last %},{%endif%}{%endfor%}"  style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;">
+	    {% if forloop.counter == 1%}    <div class="col-md-12 panel panel-primary" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse"  data-target="{%for l in int_id0 %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}"  style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;">
                    <div class="row" style="padding:5px 0px 5px 0px;color:#555;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:0px">Toggle the (<b>1</b>) <b>summary of crystalized components</b> </div>
                                            </div>
             {%endif%}
@@ -117,7 +117,7 @@ font-weight:normal
                 </div><br>
 
 	        <div class="row"{% if model_id  %} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}>
-	               <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_present"> <a title="Check this field if the molecule has been co-crystalized with the GPCR. In addition, choose an option about function in the drop-down menu."> Co-crystalized molecule:</a></label></div><div class="col-md-1 collapse in" style="height:30px"><input type="radio" style="float:left"id="id_form-{{int0}}-co-is_present" name="form-{{int0}}-is_present" value="is_present" {% if model_id or saved%} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %} checked {% endif %}{% endif %}{%endfor%} {%else%}checked {% endif %} /> </div>
+	               <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_present"> <a title="Check this field if the molecule has been co-crystalized with the GPCR. In addition, choose an option about function in the drop-down menu."> Co-crystalized molecule:</a></label></div><div class="col-md-1 collapse in" style="height:30px"><input type="radio" style="float:left"id="id_form-{{int0}}-co-is_present" name="form-{{int0}}-is_present" value="True" {% if model_id or saved%} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %} checked {% endif %}{% endif %}{%endfor%} {%else%}checked {% endif %} /> </div>
 
 		       <div class="col-md-4"><select id="id_form-{{int0}}-co_type" {% if saved %}{% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}  name="form-{{int0}}-type" rows="2" style="width:180px"  >
                           {% if model_id %} 
@@ -204,7 +204,7 @@ font-weight:normal
                     {% if model_id or saved %}
 			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div> 
                     {% else %}
-			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" readonly type="number" /></div> <!-- placeholder=" 0" -->
+			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" readonly type="text" /></div> <!-- placeholder=" 0" -->
                     {% endif %}
 		<br></div>
 	
@@ -235,7 +235,7 @@ font-weight:normal
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-description"><a title="Description: Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
                     {% if model_id or saved %}
-			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" {%if model_id%}readonly{%endif%} placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated.">{{o.description}}</textarea></div>
+			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" {%if model_id%}readonly {%else%} placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated." {%endif%}>{{o.description}}</textarea></div>
                     {% else %}
 			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated."></textarea></div>
                     {% endif %}
@@ -466,8 +466,9 @@ font-weight:normal
     <script src="{% static 'dynadb/resetMolecule.js' %}"></script>
     <script src="{% static 'dynadb/generateMoleculeProperties.js' %}"></script>
     <script src="{% static 'dynadb/addSmallMol.js' %}"></script>
+    <script src="{% static 'dynadb/SubType_SettingsPubchembl.js' %}"></script>
     <script src="{% static 'dynadb/delSmallMol.js' %}"></script>
-    <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script> 
+    <script src="{% static 'dynadb/passMoleculePOST.js' %}"></script>  
     <script src="{% static 'dynadb/cocrystalised.js' %}"></script>
 <!--   <script src="{% static 'dynadb/fixedleft.js' %}"></script> -->
 

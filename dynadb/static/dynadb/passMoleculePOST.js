@@ -10,16 +10,22 @@ $(document).ready(function(){
         
         if ( $(this).is("[id='id_passAllMoleculePOST'],[id|=id_form][id$='-passAllMoleculePOST']"))  {
             molforml = $(this).parents("[id='content']");
-            molform=$(molforml).find("[id='MOLECULE_f']");
-            console.log(molform.attr('class'));
-            var multi=true
+            var urllist=window.location.href.split("/");
+            if (urllist.length ==8){ // http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
+                molform=$(molforml).find("[id='pmolform']");
+            }else{
+                molform=$(molforml).find("[id='MOLECULE_f']");
+            }
+            console.log($(molform).attr('class')+"  MENSAJE");
+            var multi=true;
         } 
         else if  ( $(this).is("[id='id_passMoleculePOST'],[id|=id_form][id$='-passMoleculePOST']") ) {
             var molform = $(this).parents("[id|=molform]");
-            var multi=false
+            console.log($(molform).attr('id')+"  MENSAJE");
+            var multi=false;
         }
         var self = $(this);
-        console.log(self.attr('name'));
+        console.log($(self).attr('name'));
         console.log($(molform).attr('class'));
         var data ={};
         var element={};
@@ -31,19 +37,32 @@ $(document).ready(function(){
           data[element.name]=element.value;
           console.log("PIPOL  "+element.value);
 }); 
+        data["model_id"]=$(document).find("[id='Choose_reused_model']").val();
         console.log(data);
-        $.post("./",
+       
+        var urllist=window.location.href.split("/");
+        if (urllist.length ==8){ //explanation: http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
+            var submission_id=urllist[urllist.length-3];
+            var model_id=urllist[urllist.length-2];
+            var url_post="../../../molecule/"+submission_id+"/";
+            var url_success="../../modelreuse/"+submission_id+"/"+model_id+"/";
+        }else {
+            var submission_id=urllist[urllist.length-2];
+            var url_post="./";
+            var url_success="../../model/"+submission_id+"/";
+        }
+        
+        $.post(url_post,
                 data, 
                 function(data){
                     var urllist=window.location.href.split("/");
                     var submission_id=urllist[urllist.length-2];
                     alert("Congratulations!! "+data);
                     if (multi===true){
-                        window.location.replace("../../model/"+submission_id+"/");
+                        window.location.replace(url_success);
                     }else{
                         alert("Please, submit other molecules in your system or continue to step 3.");
                     }
-                  
                 },  
                 "text" )
         .fail(function(xhr,status,msg) {

@@ -24,10 +24,10 @@ $(document).ready(function(){
             type: 'POST',
             dataType:'text',
             success: function(data) {
-                console.log("Congratulations!! "+data);
+                console.log(data);
                 //var urllist=window.location.href.split("/");
                 alert("Congratulations!! "+data);
-                window.location.replace("../REFERENCEfilled/"+submission_id+"/");
+                window.location.replace("../reference/");
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {
