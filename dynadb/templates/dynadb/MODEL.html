@@ -287,18 +287,20 @@ font-weight:normal
                                 <tbody id="pElement2">
 {%if model_id or saved %}
 {% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
-                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
  
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
                                         {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{intmc0}}-id_molecule" name="formmc-{{intmc0}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
+
                                         {%endif%}{%endfor%}
 
                                         {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
  
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
 
-                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
                                 {% for ll in lmtype %}
                                    {% if forloop.counter == forloop.parentloop.counter %}
                                                     <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
@@ -316,7 +318,7 @@ font-weight:normal
                                       <td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-resname" maxlength="4" name="formmc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" value="{{mc.resname}}"/></td>
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-numberofmol" min="0" name="formmc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{forloop.counter0}}-molecule" maxlength="4" name="formmc-{{forloop.counter0}}-molecule" type="number" readonly placeholder=" 1 " value="{{mc.int_id}}"/></td>
-					<td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="text" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{forloop.counter0}}-id_molecule" name="formmc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{forloop.counter0}}-namemc" maxlength="60" name="formmc-{{forloop.counter0}}-namemc" type="text" style="width:140px" readonly placeholder=" Clozapine" value="{{mc.namemc}}"/></td>
 					<td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{forloop.counter0}}-typemc" name="formmc-{{forloop.counter0}}-typemc" readonly style="width:60px;height:23px">
                                 {% for ll in lmol_MOD_type_tup %}
