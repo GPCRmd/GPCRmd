@@ -3563,6 +3563,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     for int_id in water_int_id_list:
                         for resname in molintdict[int_id]['resname']:
                             data['num_of_solvent'] += datares[resname]['num_of_mol']
+                
 
                     
                 print("\nEND\n",file=logfile)
@@ -5596,17 +5597,19 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
                 datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='property',outputproperty='IUPACName')
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
-                data['iupac_name'] = datapubchem["PropertyTable"]["Properties"][0]["IUPACName"]
+                if "IUPACName" in datapubchem["PropertyTable"]["Properties"][0]:
+                    data['iupac_name'] = datapubchem["PropertyTable"]["Properties"][0]["IUPACName"]
 
                 time.sleep(5)
                 datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='synonyms')
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
-                lastidx = len(datapubchem["InformationList"]["Information"][0]["Synonym"])
-                if (lastidx > 51):
-                    lastidx = 51
-                data['synonyms'] = ';'.join(datapubchem["InformationList"]["Information"][0]["Synonym"][1:lastidx])
-                data['name'] = datapubchem["InformationList"]["Information"][0]["Synonym"][0]
+                if "Synonym" in datapubchem["InformationList"]["Information"][0]: 
+                    lastidx = len(datapubchem["InformationList"]["Information"][0]["Synonym"])
+                    if (lastidx > 51):
+                        lastidx = 51
+                    data['synonyms'] = ';'.join(datapubchem["InformationList"]["Information"][0]["Synonym"][1:lastidx])
+                    data['name'] = datapubchem["InformationList"]["Information"][0]["Synonym"][0]
                 del datapubchem
 
                 time.sleep(5)
