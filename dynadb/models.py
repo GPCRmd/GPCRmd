@@ -649,7 +649,7 @@ class DyndbEfficacy(models.Model):
     id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
     rvalue = models.FloatField()
     units = models.CharField(max_length=10)
-    description = models.CharField(max_length=900)
+    description = models.CharField(max_length=900,blank=True, null=True)
     type = models.SmallIntegerField( choices=EFFICACY_TYPE, default=0)
     reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound',null=True)   
     id_functional = models.ForeignKey('DyndbFunctional', models.DO_NOTHING, blank=True, db_column='id_functional', null=True) 

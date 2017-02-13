@@ -8832,9 +8832,13 @@ def fetch_abstract(pmid):
             j=i+1
             while not re.search('</AuthorList>', linelist[j], re.IGNORECASE):
                 if '<Author' in linelist[j]:
-                    lastname=re.search('<LastName>(.*)</LastName>', linelist[j+1], re.IGNORECASE).group(1)
-                    firstname=re.search('<ForeName>(.*)</ForeName>', linelist[j+2], re.IGNORECASE).group(1)
-                    initials=re.search('<Initials>(.*)</Initials>', linelist[j+3], re.IGNORECASE).group(1)
+                    lastname=''
+                    initials=''
+                    if re.search('<LastName>(.*)</LastName>', linelist[j+1], re.IGNORECASE):
+                        lastname=re.search('<LastName>(.*)</LastName>', linelist[j+1], re.IGNORECASE).group(1)
+
+                    if re.search('<Initials>(.*)</Initials>', linelist[j+3], re.IGNORECASE):
+                        initials=re.search('<Initials>(.*)</Initials>', linelist[j+3], re.IGNORECASE).group(1)
                     author=lastname+', '+initials+'; '
                     authors+=author
                 j+=1
@@ -8945,7 +8949,7 @@ def to_bindingdb_format(records):
             seq=''.join(sequenceraw)
             seqlist.append(seq)
         
-        if gpcr_flag==1:
+        if gpcr_flag==0:
             continue #no interest in non gpcr coomplexes
         pubchemid=requests.get('https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/'+str(record['pubchem_sid'])+'/cids/json?cids_type=all')
         pubchemid=pubchemid.json()
@@ -8967,7 +8971,7 @@ def to_bindingdb_format(records):
             print(errdata)
             time.sleep(1)
             continue
-        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,'','',{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar',''])
+        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,'','',{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar',None])
         print('\n\n\nONE RECORD READY',record)
 
     with open('iuphar_useful_complexes_pickle', 'wb') as fp:
@@ -9229,7 +9233,7 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                     try:
                         doi=fullref['doi']
                     except KeyError:
-                        doi=''
+                        doi=None #used to be ''
 
                     reference_id=newrecord(['dyndb_references',DyndbReferences],{'doi':doi, 'authors':fullref['authors'], 'url':'http://www.guidetopharmacology.org/','dbname':'IUPHAR','pmid':str(reference),'title':fullref['title'],'issue':fullref['issue'],'volume':fullref['volume'],'pub_year':fullref['pubyear'],'journal_press':fullref['journal']},True)
                 
@@ -9423,9 +9427,18 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                             ij+=1
 
                         data,errdata = retreive_data_uniprot(uniprot,isoform=isoformid,columns='id,entry name,organism,length,')
+                        print(data,errdata,'here')
                         #BEFORE ISOFORM: data,errdata = retreive_data_uniprot(uniprot,isoform=None,columns='id,entry name,organism,length,')
-                        #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
-                        data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+                        #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'}
+                        try:
+                            data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+                        except KeyError:
+                            print(data,errdata,uniprot,isoformid)
+                            time.sleep(6)
+                            try:
+                                data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+                            except KeyError:
+                                pass
                         id_uniprot_species=data['speciesid']
                         namedata,errdata = retreive_protein_names_uniprot(uniprot)
                         namedataori=namedata
@@ -9607,11 +9620,9 @@ def fill_db(chunks):
             
 def fill_db_iuphar(filename):
     records=iuphar_parser(filename) #'./dynadb/interactions.csv'
-    print('hre',records)
     with open ('iuphar_useful_complexes_pickle', 'rb') as fp:
         complexes = pickle.load(fp)
     #complexes=to_bindingdb_format(records)
-    print('to put in the DB!',complexes)
     record_complex_in_DB(complexes,fromiuphar=True)
 
 
