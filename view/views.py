@@ -612,10 +612,10 @@ def index(request, dyn_id):
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
-                    checkpdb_res=checkpdb(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
+                    checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
                         tablepdb,pdb_sequence,hexflag=checkpdb_res 
-                        result=matchpdbfa(prot_seq,pdb_sequence, tablepdb, hexflag)
+                        result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
                         if isinstance(result, list):
                             #chain_results[chain_name]=result
                             if chain_name not in chains_taken:
@@ -708,7 +708,6 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
-                        #"traj_list":[],  
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "other_prots":other_prots,
