@@ -9675,5 +9675,5 @@ chunks=['chunk0_from0_to_2877815.sdf',
     'chunk22_from57584405_to_60232038.sdf',
     ]
     
-#fill_db(chunks)
+fill_db(chunks)
 #fill_db_iuphar('./dynadb/interactions.csv')
