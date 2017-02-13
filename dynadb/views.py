@@ -3563,7 +3563,10 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     for int_id in water_int_id_list:
                         for resname in molintdict[int_id]['resname']:
                             data['num_of_solvent'] += datares[resname]['num_of_mol']
-                
+                else:
+                    # protein is not checked
+                    diff_protein = False
+                    diff_nonprotein = False
 
                     
                 print("\nEND\n",file=logfile)
