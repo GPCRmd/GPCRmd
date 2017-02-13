@@ -6576,8 +6576,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
                     
                 
-                dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
-                dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
+                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url})
                 
                 data['download_url_file'].append(download_url)
                 os.makedirs(submission_path,exist_ok=True)
@@ -6594,6 +6593,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         pass
                     try:
                         os.remove(deleteme_filepath)
+                    except:
+                        pass
+                    try:
+                        file_entry.delete()
                     except:
                         pass
                     response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
