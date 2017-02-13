@@ -491,12 +491,18 @@ def obtain_domain_url(request):
         protocol = 'https'
     else:
         protocol = 'http'
+        
+    if hasattr(settings, 'MDSRV_PORT'):
+        port = settings.MDSRV_PORT
+    else:
+        port = 80
+        
     if hasattr(settings, 'MDSRV_URL'):
         mdsrv_url = settings.MDSRV_URL.strip()
         if mdsrv_url.find('/') == len(mdsrv_url) - 1:
            mdsrv_url = mdsrv_url[:-1]
     else:
-        mdsrv_url = protocol+'://'+domain+':'+str(settings.MDSRV_PORT)
+        mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
 
 

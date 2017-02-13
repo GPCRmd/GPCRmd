@@ -60,6 +60,7 @@ INSTALLED_APPS = (
     'haystack',
     'drugs',
     'graphos',
+    'revproxy',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -214,9 +215,9 @@ CACHES = {
     }
 }
 
-MDSRV_PORT=8081
-
-
+MDSRV_PORT=8001
+MDSRV_UPSTREAM='http://localhost:8081'
+MDSRV_REVERSE_PROXY = 'POST'
 
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'

@@ -104,7 +104,7 @@ urlpatterns = [
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted'),
-    url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank')]
+    url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank'),]
 
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
@@ -120,7 +120,7 @@ if settings.DEBUG:
 )
 else:
     urlpatterns += patterns('',
-        url(r'^files/(?P<obj_folder>.*)/(?P<submission_folder>.*)/(?P<path>.*)$', views.serve_submission_files, name='serve_submission_files'),
+        url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', views.serve_submission_files, name='serve_submission_files'),
 
 )
 

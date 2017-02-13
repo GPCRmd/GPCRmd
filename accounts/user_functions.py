@@ -5,9 +5,9 @@ from django.shortcuts import resolve_url
 #from django.utils import six
 from django.utils.decorators import available_attrs
 from django.utils.six.moves.urllib.parse import urlparse
+from dynadb.models import DyndbSubmission
 
-
-def user_passes_test_submission_id(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
+def user_passes_test_args(test_func, login_url=None, redirect_field_name=REDIRECT_FIELD_NAME):
     """
     Decorator for views that checks that the user passes the given test,
     redirecting to the log-in page if necessary. The test should be a callable
@@ -16,9 +16,9 @@ def user_passes_test_submission_id(test_func, login_url=None, redirect_field_nam
 
     def decorator(view_func):
         @wraps(view_func, assigned=available_attrs(view_func))
-        def _wrapped_view(request,submission_id, *args, **kwargs):
-            if test_func(request.user,submission_id,*args, **kwargs):
-                return view_func(request,submission_id, *args, **kwargs)
+        def _wrapped_view(request, *args, **kwargs):
+            if test_func(request.user,*args, **kwargs):
+                return view_func(request, *args, **kwargs)
             path = request.build_absolute_uri()
             resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
             # If the login url is the same scheme and net location then just
@@ -33,3 +33,7 @@ def user_passes_test_submission_id(test_func, login_url=None, redirect_field_nam
                 path, resolved_login_url, redirect_field_name)
         return _wrapped_view
     return decorator
+    
+def is_submission_owner(user,submission_id,*args,**kwargs):
+    entry = DyndbSubmission.objects.filter(pk=submission_id,user_id=user)
+    return entry.exists()
