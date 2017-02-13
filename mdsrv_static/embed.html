@@ -33,7 +33,6 @@
 
     <!-- MDSRV -->
     <script src="mdsrv/webapp/js/mdsrv.js"></script>
-
     <script>
         NGL.cssDirectory = "mdsrv/webapp/css/";
         NGL.documentationUrl = "http://arose.github.io/ngl/api/";
@@ -48,21 +47,8 @@
             stage = new NGL.Stage( "viewport" );
 
 ////////////////// Functions
-        function click_unclick(class_name, some_clicked){
-            $(class_name).click(function(){
-                pos_class=$(this).attr("class");
-                if(pos_class.indexOf("active") > -1){
-//                    alert("inactivate");
-//                    $(this).removeClass("active");
-                    $(this).attr("class","btn btn-success btn-xs traj_btn");
-                    some_clicked=false;
-                } else if (! some_clicked){
-                    //$(this).addClass("active");
-                    $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
-                    some_clicked=true;
-                }
-            });
-        }
+        document.domain=document.domain;
+
         function selWithinComponent(o,dist_comp){
             var radius=Number(dist_comp[0]);
             var ligSele =dist_comp[1];
@@ -75,359 +61,393 @@
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
             return([restriction,sele, sele2])
         }
-/////////// URL variables:
-            //var load = NGL.getQuery( "load" );
-                   var  struc= NGL.getQuery("struc");
-                   var  rc= NGL.getQuery("rc");
-                   var  sel= NGL.getQuery("sel");
-                   var  sel_method= NGL.getQuery("sh");
-                   var  cons_pos= NGL.getQuery("pd");
-                   var  pdA= NGL.getQuery("la");
-                   var  pdB= NGL.getQuery("lb");
-                   var  pdC= NGL.getQuery("lc");
-                   var  pdF= NGL.getQuery("lf");
-                   var  cp= NGL.getQuery("cp");
-                   var  path= "/mdsrv/file/_DB/";
-                   var  traj_path= "_DB/";
-                   var traj = NGL.getQuery( "traj" );
-                   var  dist_within= NGL.getQuery("wth");
-                   var  show_dist= NGL.getQuery("sd");
-                   var  comp_dist= NGL.getQuery("di");
-                   var  nonGPCR= NGL.getQuery("ng");
-                   var  onlyChains= NGL.getQuery("och");
-                   var trajComp;
+        
+        function trajButtons(o,dist_within_li){
+            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+            $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"2px"});
+            var some_clicked=false;
+            $(".traj_btn").click( function(){
+                var btn_traj_Bid=$(this).attr("id");
+                var tPatt = /\d*$/g;
+                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var pos_class=$(this).attr("class");
+                if(pos_class.indexOf("active") > -1){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $(this).attr("class","btn btn-success btn-xs traj_btn");
+                    $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.play();
+                    player.pause();
+                    some_clicked=false;
+                } else if (! some_clicked){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
+                    player.play();
+                    $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
+                    $(this).children().attr("class","glyphicon glyphicon-pause");
+                    some_clicked=true;
+                    trajComp.signals.frameChanged.add(function(){
+                        var fnum=trajComp.trajectory.currentFrame;
+                        $("#trajRange").val(fnum);
+                        $("#trajRange").slider("refresh");
+                    })
+                    if (dist_within_li.length > 0){
+                        trajComp.signals.frameChanged.add(function(){
+                            for (wth_n in dist_within_li){
+                                var dist_comp=  dist_within_li[wth_n].split("-");
+                                var result=selWithinComponent(o,dist_comp);
+                                var restriction=result[0];
+                                var sele = result[1];
+                                var sele2 = result[2];
+                                WthRepName="sel"+dist_comp[1];
+                                stage.getRepresentationsByName(WthRepName).setSelection("protein and "+restriction + sele.toSeleString())
+                                stage.getRepresentationsByName(WthRepName+"2").setSelection("protein and "+restriction + sele2.toSeleString())
+                            }
 
-
-                    var rc_sel = "";
-                    var all_cp = "";
-                    if (rc=="y" || ! nonGPCR){
-                        rc_sel = "protein";
-                        if (cp) {
-                            rc_sel="protein or ";
-                        }
-                    }
-                    if (cp){
-                        var cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
-                        for (comp in cp_li){
-                            all_cp += (cp_li[comp] + " or ");
-                        }
-                        all_cp = all_cp.slice(0, -3);
-                    }
-
-                    /*var cart_scheme ="sstruc";
-                    if (sel_method=="high" || cons_pos=="y"){
-                        cart_scheme = "uniform";
-                    }*/
-                    var visibility=true;
-                    if (rc=="n" && ! cp && nonGPCR){
-                        visibility = false;
-                    }
-
-                    var sele_final = "";
-                    if (sel && sel_method=="sel"){
-                       var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                       sele_final = "("+rc_sel + all_cp + ") and ("+ sel_deco +")" ;
-                    } else{
-                       sele_final = rc_sel + all_cp;
-                    }
-                  
-                    function fromChainLiToNGL(nonGPCR){ 
-                        var nonGPCR_li=nonGPCR.split(",");
-                        var nonGPCR_mod="";
-                        for (chain_n in nonGPCR_li){
-                            nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
-                        }
-                        nonGPCR_mod=nonGPCR_mod.slice(0,-3);
-                        return nonGPCR_mod
+                        })
                     }
 
-                    var substr_nonGPCR="";
+                }
+            });
+        }
 
-                    if (nonGPCR){
-                        var nonGPCR_mod = fromChainLiToNGL(nonGPCR);
-                        substr_nonGPCR=" and not ("+ nonGPCR_mod+")";
+        function fromChainLiToNGL(nonGPCR){ 
+            var nonGPCR_li=nonGPCR.split(",");
+            var nonGPCR_mod="";
+            for (chain_n in nonGPCR_li){
+                nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
+            }
+            nonGPCR_mod=nonGPCR_mod.slice(0,-3);
+            return nonGPCR_mod
+        }
+
+        function clickDists(){
+            var clicktrue = true;
+            $("#submit", window.parent.document).click(function(){
+                if (! clicktrue && lbl_name1){
+                    clicktrue = true;
+                    stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                    stage.getRepresentationsByName(lbl_name1).setVisibility(false)
+                }
+            });
+            $("#clear_dist_reps", window.parent.document).click(function(){
+                if (! clicktrue && lbl_name1){
+                    clicktrue = true;
+                    stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                    stage.getRepresentationsByName(lbl_name1).setVisibility(false);
+                }
+                for (repN in clickedRepLi){
+                    var repNm =clickedRepLi[repN];
+                    var rep_to_rv=stage.getRepresentationsByName(repNm);
+                    rep_to_rv.list[0].repr.clear();
+                    rep_to_rv.setVisibility(false);
+                }
+                clickedRep={};
+                clickedRepLi=[];
+                clicktrue = true;
+            });
+            var o=stage.getComponentsByName("my_comp").list[0];
+            var hovrep;
+            stage.signals.hovered.add( function( d ){
+                if (d.atom){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.serial+")";
+                    $("#atomInfo").text(info);
+                } 
+                $("#viewport").mousemove(function(){$("#atomInfo").text("")});
+            })
+            var atom1 , atom2 , res2 , res2, myrepr;
+            var lbl_id=0;
+            var dist_id=0;
+            var lbl_name1, lbl_name2, dist_name;
+            stage.signals.clicked.add( function( d ){
+                if (clicktrue){
+                    if (d.atom){
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                        $("#atomClicked").text(info)
+                        lbl_name1="label_"+lbl_id.toString();
+                        lbl_id+=1;
+                        myrepr = o.addRepresentation( "label", {
+                            sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                            color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                        atom1 = d.atom.serial.toString();
+                        clicktrue = false;
+                    }else {
+                        $("#atomClicked").text("")
                     }
-
-                    if (struc) {
-                        stage.loadFile( path + struc , {sele: sele_final, visible: visibility}).then( function( o ){
-                       //stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
-                                o.setName("my_comp");
-                                if (rc=="y"){
-                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
-                                    /*if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
-                                        o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein"+substr_nonGPCR } );
-                                     }else{
-                                        o.addRepresentation( "cartoon", { colorScheme: "sstruc", sele: "protein" +substr_nonGPCR } );
-                                     }*/
-                                 } else {
-                                    if (onlyChains){ //When we don't have receptor but have other prots
-                                        var nonGPCR_add = fromChainLiToNGL(onlyChains);
-                                        var add_nonGPCR=" and ("+ nonGPCR_add+")";
-                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+ add_nonGPCR } );
-                                    }
-                                    /* if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
-                                        o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein"+add_nonGPCR } );
-                                     }else{
-                                        o.addRepresentation( "cartoon", { colorScheme: "sstruc", sele: "protein" +add_nonGPCR } );
-                                     }*/
-
-                                 }
-                                stage.centerView();
-                                if (cp){
-                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )
+                }else{
+                    if (d.atom){
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                        $("#atomClicked").text(info)                                            
+                        atom2 = d.atom.serial.toString();
+                        //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
+                        clicktrue = true;
+                        if (atom1 != atom2){
+                            lbl_name2="label_"+lbl_id.toString();
+                            lbl_id+=1;
+                            dist_name="dist_"+dist_id.toString();
+                            dist_id+=1;
+                            var add1=[lbl_name1, lbl_name2 , dist_name];
+                            var add2 = [lbl_name1, lbl_name2 , dist_name];
+                            if (! clickedRep[atom1]){
+                                clickedRep[atom1]=[];
+                            }
+                            if (! clickedRep[atom2]){
+                                clickedRep[atom2]=[];
+                            }
+                            for (an in add1){
+                                var repNm=add1[an];
+                                clickedRep[atom1][clickedRep[atom1].length]=repNm;
+                                if (!(repNm in clickedRepLi)){
+                                    clickedRepLi.push(repNm);
                                 }
+                            }
+                            for (an in add2){
+                                clickedRep[atom2][clickedRep[atom2].length]=add2[an];
+                            }
+                            o.addRepresentation( "label", {
+                                sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                                color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                            var atomPair = [[ Number(atom1), Number(atom2) ]];
+                            o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
 
-                                if (cons_pos == "y"){
-                                    var pd_all = [pdA,pdB,pdC,pdF];
-                                    var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
-
-                                    if (sel ){
-                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                                        if (sel_method == "high"){
-                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
-                                            for (ind in pd_all) {
-                                                class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                                if (class_li){
-                                                    var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
-                                                }
-                                            }   
-
-                                        } else {
-                                            /*if (rc=="y"){
-                                                o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: sel_deco });
-                                            }*/
-
-                                            for (ind in pd_all) {
-                                                class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                                if (class_li){
-                                                    var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
-                                                }
-                                            }   
-                                            //o.setSelection( sel_deco );
-                                        }
-                                     } else {
-                                         for (ind in pd_all) {
-                                             class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                             if (class_li){
-                                                 var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
-                                             }
-                                         }   
-
-                                        /*if (rc=="y"){
-                                            o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein" } );
-                                        }*/
-                                     }
-
-                                } else {
-                                    if (sel ){
-                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                                        if (sel_method == "high"){
-                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
-                                     /*   } else {
-                                          //o.setSelection( sel_deco );
-                                        */
-                                        }
-                                     }
-                                 }
-
-/////////////////////////////////////////////////////////////
-
-                                if (dist_within){
-                                    var dist_within_li = decodeURIComponent(dist_within.replace(/\+/g, " ")).split(",");
-                                    for (wth_n in dist_within_li){
-                                        var dist_comp=  dist_within_li[wth_n].split("-");
-                                        var result=selWithinComponent(o,dist_comp);
-                                        var restriction=result[0];
-                                        var sele = result[1];
-                                        var sele2 = result[2];
-                                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: "protein and "+restriction + sele.toSeleString(), name:"sel_within" } );
-                                        o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: "protein and "+restriction + sele2.toSeleString() , name:"sel_within2"} );
-                                    }
-
+                        } else {
+                            if (atom1 in clickedRep){
+                                var toRv=clickedRep[atom1];
+                                for (rvN in toRv){
+                                    var repName=toRv[rvN];
+                                    stage.getRepresentationsByName(repName).list[0].repr.clear();
+                                    stage.getRepresentationsByName(repName).setVisibility(false)
                                 }
-                                if( traj ) {
-                                    var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
-                                    var traj_li=traj_str.split(",")
-                                    //var playing = false;
-                                    var some_clicked=false;
-                                    for (t in traj_li) {
-                                        o.addTrajectory( traj_path + traj_li[t] );
-                                        //$("#buttons").append("<button id='playerButton"+t+"'>"+traj_li[t].match(/(\w*)(\.\w*)$/)[1]);
-                                        $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+traj_li[t].match(/(\w*)(\.\w*)$/)[1]);
-                                    }
-                                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0];
-////////////////
-                                    $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
-                                    $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-                                    $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"2px"});
-///////////////////
-                                    $(".traj_btn").click( function(){
-                                        var btn_traj_Bid=$(this).attr("id");
-                                        var tPatt = /\d*$/g;
-                                        var btn_traj_id = tPatt.exec(btn_traj_Bid);
-                                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                                        var player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                                        pos_class=$(this).attr("class");
-                                        if(pos_class.indexOf("active") > -1){
-                                            $(this).attr("class","btn btn-success btn-xs traj_btn");
-                                            $(this).children().attr("class","glyphicon glyphicon-play");
-                                            player.play();
-                                            player.pause();
-                                            some_clicked=false;
-                                        } else if (! some_clicked){
-                                            $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
-                                            player.play();
-                                            $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
-                                            $(this).children().attr("class","glyphicon glyphicon-pause");
-                                            some_clicked=true;
-                                            $("#trajRange").attr("max",trajComp.trajectory.numframes);
-                                            trajComp.signals.frameChanged.add(function(){
-                                                //console.log(trajComp.trajectory.currentFrame);
-                                                var fnum=trajComp.trajectory.currentFrame;
-                                                $("#trajRange").val(fnum);
-                                                $("#trajRange").slider("refresh");
-                                            })
-                                            if (dist_within){
-                                                trajComp.signals.frameChanged.add(function(){
-                                                    for (wth_n in dist_within_li){
-                                                        var dist_comp=  dist_within_li[wth_n].split("-");
-                                                        var result=selWithinComponent(o,dist_comp);
-                                                        var restriction=result[0];
-                                                        var sele = result[1];
-                                                        var sele2 = result[2];
-                                                        stage.getRepresentationsByName("sel_within").setSelection("protein and "+restriction + sele.toSeleString())
-                                                        stage.getRepresentationsByName("sel_within2").setSelection("protein and "+restriction + sele2.toSeleString())
-                                                    }
- 
-                                                })
-                                            }
-
-                                        }
-                                    });
-                                    //some_clicked=click_unclick(".traj_btn", some_clicked);
+                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                                stage.getRepresentationsByName(lbl_name1).setVisibility(false)
+                                delete clickedRep[atom1];
+                            } else {
+                                if (! clickedRep[atom1]){
+                                    clickedRep[atom1]=[];
                                 }
-                                if (show_dist =="y"){
-                                    if (comp_dist){ 
-                                        var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
-                                        var dist_pairs  = decodeURIComponent(comp_dist.replace(/\+/g, " "));
-                                        var dist_pair_li=dist_pairs.split("a");
-                                        for (pair_n in dist_pair_li){
-                                            var d_from_to = dist_pair_li[pair_n].split("-");
-                                            var d_from = d_from_to[0];
-                                            var d_to = d_from_to[1];
-                                           // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
-                                            o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" } );
-                                        }
-                                    }
-                                    var hovrep;
-                                    stage.signals.hovered.add( function( d ){
-                                    if (d.atom){
-                                        var hatom = d.atom;
-                                        var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.serial+")";
-                                        $("#atomInfo").text(info);
-                                    } /*else {
-                                        $("#atomInfo").text("");
-                                    }*/
-                                    $("#viewport").mousemove(function(){$("#atomInfo").text("")});
-                                    })
-                                    var clicktrue = true;
-                                    var atom1 , atom2 , res2 , res2, myrepr;
-                                    var lbl_id=0;
-                                    var dist_id=0;
-                                    var clickedRep={};
-                                    var lbl_name1, lbl_name2, dist_name;
-                                    stage.signals.clicked.add( function( d ){
-                                       // hovrep.repr.clear()
-                                        if (clicktrue){
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                $("#atomClicked").text(info)
-                                                lbl_name1="label_"+lbl_id.toString();
-                                                lbl_id+=1;
-                                                myrepr = o.addRepresentation( "label", {
-                                                    sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                    color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
-                                                atom1 = d.atom.serial.toString();
-                                                /*if (! clickedRep[atom1]){
-                                                    clickedRep[atom1]=[];
-                                                }
-                                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;*/
-                                                clicktrue = false;
-                                            }else {
-                                                $("#atomClicked").text("")
-                                            }
-                                        }else{
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                $("#atomClicked").text(info)                                            
-                                                atom2 = d.atom.serial.toString();
-                                                //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
-                                                clicktrue = true;
-                                                if (atom1 != atom2){
-                                                    lbl_name2="label_"+lbl_id.toString();
-                                                    lbl_id+=1;
-                                                    dist_name="dist_"+dist_id.toString();
-                                                    dist_id+=1;
-                                                    var add1=[lbl_name1, lbl_name2 , dist_name];
-                                                    var add2 = [lbl_name1, lbl_name2 , dist_name];
-                                                    if (! clickedRep[atom1]){
-                                                        clickedRep[atom1]=[];
-                                                    }
-                                                    if (! clickedRep[atom2]){
-                                                        clickedRep[atom2]=[];
-                                                    }
-                                                    for (an in add1){
-                                                        clickedRep[atom1][clickedRep[atom1].length]=add1[an]
-                                                    }
-                                                    for (an in add2){
-                                                        clickedRep[atom2][clickedRep[atom2].length]=add2[an]
-                                                    }
-                                                    o.addRepresentation( "label", {
-                                                        sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                        color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
-                                                    var atomPair = [[ Number(atom1), Number(atom2) ]];
-                                                    o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
-
-                                                } else {
-                                                    if (atom1 in clickedRep){
-                                                        var toRv=clickedRep[atom1];
-                                                        for (rvN in toRv){
-                                                            var repName=toRv[rvN];
-                                                            stage.getRepresentationsByName(repName).list[0].repr.clear();
-                                                        }
-                                                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                                        delete clickedRep[atom1];
-                                                    } else {
-                                                        if (! clickedRep[atom1]){
-                                                            clickedRep[atom1]=[];
-                                                        }
-                                                        clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
-                                                    }
-                                                }
-                                            } else {
-                                                $("#atomClicked").text("");
-                                                clicktrue = true;
-                                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                                //lbl_id -=1;
-                                            }
-                                         }
-                                    } );
-                                } 
-
-                            } );
-                            stage.centerView();
-                    }
-
-                    $("#trajRange").change(function(){
-                        if (trajComp){
-                            var toframe=$(".ui-slider-handle").attr("aria-valuenow");
-                            trajComp.setFrame(toframe);
+                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
+                                if (!(lbl_name1 in clickedRepLi)){
+                                    clickedRepLi.push(lbl_name1);
+                                }
+                            }
                         }
+                    } else {
+                        $("#atomClicked").text("");
+                        clicktrue = true;
+                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                        stage.getRepresentationsByName(lbl_name1).setVisibility(false)
+                    }
+                 }
+            } );
+
+        }
+        
+        
+        function createReps(){
+            parent.passInfoToIframe();
+
+            var results = parent.results;
+            //alert(results);
+            cp = results[0];
+            high_pre=results[1];
+            sel=results[2];
+            var sel_method =results[3];
+            var traj =results[4];
+            var nonGPCR =results[5];
+            var show_dist=parent.view_dist;
+            var cons_pos = parent.pd;
+            var dist_within_li=parent.dist_of;
+            var comp_dist = parent.distToComp;
+            var onlyChains="";
+            var rc = parent.seeReceptor;
+            var onlyChains=parent.onlyChains;
+            var  pdA= high_pre["A"];
+            var  pdB= high_pre["B"];
+            var  pdC= high_pre["C"];
+            var  pdF= high_pre["F"];
+            var rc_sel = "";
+            var all_cp = "";
+            if (trajComp && player){
+                player.pause();
+            }
+            
+            if (rc=="y" || ! nonGPCR){
+                rc_sel = "protein";
+                if (cp.length > 0) {
+                    rc_sel="protein or ";
+                }
+            }
+            if (cp.length > 0){
+                for (comp in cp){
+                    all_cp += (cp[comp] + " or ");
+                }
+                all_cp = all_cp.slice(0, -3);
+            }
+
+            var visibility=true;
+            if (rc=="n" && cp.length == 0 && nonGPCR){
+                visibility = false;
+            }
+
+            var sele_final = "";
+            if (sel && sel_method=="sel"){
+               sele_final = "("+rc_sel + all_cp + ") and ("+ sel +")" ;
+            } else{
+               sele_final = rc_sel + all_cp;
+            }
+
+            var substr_nonGPCR="";
+
+            if (nonGPCR){
+                var nonGPCR_mod = fromChainLiToNGL(nonGPCR);
+                substr_nonGPCR=" and not ("+ nonGPCR_mod+")";
+            }
+            var o=stage.getComponentsByName("my_comp").list[0];
+            o.eachRepresentation(function(rep, comp){
+                if (clickedRepLi.indexOf(rep.name) == -1){
+                    //rep.clearRepresentations();
+                    //rep.removeRepresentation();
+                    //rep.stage.tasks.clear(),
+                    rep.repr.clear();
+                    rep.setVisibility(false);
+
+                }
+            }); 
+            //o.updateRepresentations();
+            //console.log(o);
+            $("#buttons").html("");
+            o.setSelection( sele_final );
+            if (rc=="y"){
+                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
+            } else {
+                if (onlyChains){ //When we don't have receptor but have other prots
+                    var nonGPCR_add = fromChainLiToNGL(onlyChains);
+                    var add_nonGPCR=" and ("+ nonGPCR_add+")";
+                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+ add_nonGPCR } );
+                }
+
+            }
+            if (cp.length > 0){
+                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )
+            }
+            if (cons_pos == "y"){
+                var pd_all = [pdA,pdB,pdC,pdF];
+                var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
+                if (sel ){
+                    if (sel_method == "high"){
+                        o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel  } ); 
+                    }
+                }
+                for (ind in pd_all) {
+                    class_li=pd_all[ind];
+                    if (class_li.length > 0){
+                        var cons_pos_ok = class_li.join(" OR ");
+                        o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } );
+                    }
+                }   
+            } else {
+                if (sel ){
+                    if (sel_method == "high"){
+                        o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel  } );
+                    }
+                }
+            }
+
+
+            if (dist_within_li.length > 0){
+                for (wth_n in dist_within_li){
+                    var dist_comp=  dist_within_li[wth_n].split("-");
+                    var result=selWithinComponent(o,dist_comp);
+                    var restriction=result[0];
+                    var sele = result[1];
+                    var sele2 = result[2];
+                    WthRepName="sel"+dist_comp[1];
+                    o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: "protein and "+restriction + sele.toSeleString(), name:WthRepName } );
+                    o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: "protein and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
+                }
+
+            }
+            if( traj.length > 0) {
+                traj_li=traj;
+                //var playing = false;
+                for (t in traj_li_all) {
+                    var mytraj=traj_li_all[t];
+                    if (traj_li.indexOf(mytraj) > -1){
+                        $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]);                                
+                    }
+                }
+                trajButtons(o,dist_within_li);
+            }
+            if (show_dist =="y"){
+                if (comp_dist){ 
+                    var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
+                    var dist_pair_li=comp_dist.split("a");
+                    for (pair_n in dist_pair_li){
+                        var d_from_to = dist_pair_li[pair_n].split("-");
+                        var d_from = d_from_to[0];
+                        var d_to = d_from_to[1];
+                       // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
+                        o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" } );
+                    }
+                }
+            } 
+            //o.centerView();
+        }
+/////////// Set variables:
+            var struc=$(".str_file", window.parent.document).data("struc_file");
+            var traj_li_all = [];
+            var  path= "/mdsrv/file/_DB/";
+            var  traj_path= "_DB/";
+            $(".traj_element",window.parent.document).each(function(){
+                traj_li_all[traj_li_all.length]=$(this).attr("value");
+            });
+
+            var trajComp, player;
+            var clickedRep={};
+            var clickedRepLi=[];
+            var traj_li=[];
+            if (struc) {
+                stage.loadFile( path + struc , {visible: true}).then( function( o ){
+                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein" } );
+                        o.setName("my_comp");
+                    if( traj_li_all.length > 0 ) {
+                        for (t in traj_li_all) {
+                            o.addTrajectory( traj_path + traj_li_all[t] );                        
+                        }
+                        mytraj=traj_li_all[0];
+                        traj_li=[mytraj]
+                        $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]); 
+                        //trajButtons(o,[]);
+                    }
+                    createReps();
+                    o.centerView();
+                    $("#submit", window.parent.document).click(function(){
+                        createReps();
                     });
-        } );
+                    clickDists();
+                });
+                $("#trajRange").change(function(){
+                    if (trajComp){
+                        var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                        trajComp.setFrame(toframe);
+                    }
+                });
+                $("#screenshot", window.parent.document).click(function(){
+                    stage.makeImage( {
+                        factor: 5,
+                        antialias: true,
+                        trim: false,
+                        transparent: false
+                    } ).then( function( blob ){
+                        NGL.download( blob, "screenshot.png" );
+                    } );
+                });
+            }
+        });
     </script>
     <div id="toiframe" style="width:540px">
         <div id="viewport" style="width:540px; height:370px;"></div>

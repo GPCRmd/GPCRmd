@@ -86,21 +86,20 @@
 
 <!-- ============= Comp buttonss =========== -->
             <div class="row">
-                <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default receptor active"  id="receptor">Receptor</button>
+                <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default receptor active"  id="receptor">Receptor</button>
                 {% if other_prots%}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements nonGPCR active" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements nonGPCR active" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
                 {% endif %}
                 {% for long_n, short_n in compounds %}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
-                <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2">All</button>
-                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8">Clear</button>
+                <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
+                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
             </div>
 <!-- ============= Input selection =========== -->
             <div id="selection_all" style="margin-bottom:5px">
             <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
-                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#selection">Atom selection </span></button>-->
             </div>
             <div id="selection" class="collapse" style="padding-right:15px;">
              <div style="padding-left:15px">
@@ -568,16 +567,20 @@
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c;">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                       <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
+                      <button class="btn btn-default pull-right" type="button" id="screenshot">Save image</button>
                    </div>
      	        </div>
 
-                <div>
+                <div style="text-align:center;width:100%;">
                    <!--<iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe>--><!--width:540px-->
-                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed2.html" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe>
+                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" style="width:540px;height:420px;border:none;overflow:hidden" scrolling="no"></iframe>
 
                 </div>
-                <div id="legend"> </div>
+                <div style=width:540px;margin:auto>
+                    <div id="legend" style="float:left"> </div>
+                    <button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>
                 </div>
+             </div>
           </div>
 
 
