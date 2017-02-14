@@ -3563,6 +3563,10 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     for int_id in water_int_id_list:
                         for resname in molintdict[int_id]['resname']:
                             data['num_of_solvent'] += datares[resname]['num_of_mol']
+                else:
+                    # protein is not checked
+                    diff_protein = False
+                    diff_nonprotein = False
 
                     
                 print("\nEND\n",file=logfile)
@@ -5596,17 +5600,19 @@ def get_compound_info_pubchem(request,submission_id,model_id=1):
                 datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='property',outputproperty='IUPACName')
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
-                data['iupac_name'] = datapubchem["PropertyTable"]["Properties"][0]["IUPACName"]
+                if "IUPACName" in datapubchem["PropertyTable"]["Properties"][0]:
+                    data['iupac_name'] = datapubchem["PropertyTable"]["Properties"][0]["IUPACName"]
 
                 time.sleep(5)
                 datapubchem,errdata = retreive_compound_data_pubchem_post_json('cid',cids[0],operation='synonyms')
                 if 'Error' in errdata.keys():
                     raise DownloadGenericError(errdata['reason'])
-                lastidx = len(datapubchem["InformationList"]["Information"][0]["Synonym"])
-                if (lastidx > 51):
-                    lastidx = 51
-                data['synonyms'] = ';'.join(datapubchem["InformationList"]["Information"][0]["Synonym"][1:lastidx])
-                data['name'] = datapubchem["InformationList"]["Information"][0]["Synonym"][0]
+                if "Synonym" in datapubchem["InformationList"]["Information"][0]: 
+                    lastidx = len(datapubchem["InformationList"]["Information"][0]["Synonym"])
+                    if (lastidx > 51):
+                        lastidx = 51
+                    data['synonyms'] = ';'.join(datapubchem["InformationList"]["Information"][0]["Synonym"][1:lastidx])
+                    data['name'] = datapubchem["InformationList"]["Information"][0]["Synonym"][0]
                 del datapubchem
 
                 time.sleep(5)
@@ -6570,8 +6576,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
                     
                 
-                dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
-                dyndb_submission_dynamics_files.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filename=filename,filepath=filepath,url=download_url)
+                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url})
                 
                 data['download_url_file'].append(download_url)
                 os.makedirs(submission_path,exist_ok=True)
@@ -6588,6 +6593,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         pass
                     try:
                         os.remove(deleteme_filepath)
+                    except:
+                        pass
+                    try:
+                        file_entry.delete()
                     except:
                         pass
                     response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')

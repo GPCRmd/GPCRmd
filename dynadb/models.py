@@ -768,11 +768,12 @@ class DyndbSubmissionDynamicsFiles(models.Model):
     filename = models.CharField(unique=True, max_length=80)
     filepath = models.CharField(max_length=520, blank=False, null=False)
     url = models.CharField(max_length=520, blank=False, null=True)
-    framenum = models.IntegerField(null=True,default=None)
+    filenum = models.PositiveSmallIntegerField(null=False,default=0)
+    framenum = models.PositiveIntegerField(null=True,default=None)
     class Meta:
         managed = True
         db_table = 'dyndb_submission_dynamics_files'
-        unique_together = (('submission_id', 'filepath'))
+        unique_together = (('submission_id', 'filepath'),('submission_id','type','filenum'))
 
 class DyndbFilesModel(models.Model):
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')
