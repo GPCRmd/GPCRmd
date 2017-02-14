@@ -8712,7 +8712,9 @@ def dictfetchall(cursor):
     ]
 
 
-######################################################################################################################################################################
+############################################### IUPHAR and BindingDB parsing#######################################################################################################################
+
+#the following code and its dependencies should probably be included in a separated script so it can be run whenever is needed to update the DB.
 
 from protein.models import Protein
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot, retreive_isoform_data_uniprot
@@ -8722,9 +8724,69 @@ from django.utils import timezone
 from django.conf import settings
 from .GPCRuniprot import GPCRlist
 from django.db.models import Q
+from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein, DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, StructureType, WebResource, StructureModelLoopTemplates, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel
 from Bio import Entrez
 from Bio.Entrez import efetch
 Entrez.email = 'alejandrovarelarial@yahoo.es'
+
+#from .views import do_boolean,dealwithquery,do_query_complex_exp,prepare_to_boolean
+
+def main_complex_exp(arrays,return_type):
+    rowdict=dealwithquery(arrays)
+    results=dict()
+    for keys,values in rowdict.items():
+        #we need to differentiate between list of lists, and simples lists
+        #parenthesis lines are like: dict[key]=[ [ID, TYPE]  [AND, ID, TYPE], [OR, ID, TYPE], [AND, ID, TYPE]  ]
+        #other lines are like: dickt[key]=[AND, ID, TYPE]
+        inner_results=list()
+        if type(values[0])==list: #inside of parenthesis
+            for item in values: #values is a list, so it keeps the order of the rows, so does inner_results.
+                if item[0]=='AND' or item[0]=='OR' or item[0]=='NOT':
+                    inner_results.append([ item[0] , do_query_complex_exp(item[1:4],return_type) ]) #inner_results=[ ['AND', [1,2,3] ]  ],  ['OR', [2,3,5] ]  ]
+
+                else: #first line inside parenthesis, the boolean of this row aplies to the whole parenthesis and it is stored in the rowdict.                
+                    inner_results.append([ 'NONE' , do_query_complex_exp(item[0:3], return_type)])
+            results[keys]=list(do_boolean(inner_results)) #results[counter,boolean]=[1,2,3,4] #counter is the row number where the '(' appears
+
+
+        else: #simple row
+            results[keys]=do_query_complex_exp(values,return_type) #do query for each value, save it under same key
+    aaa=do_boolean( prepare_to_boolean(results) )
+    return aaa
+
+
+
+def exactmatchtest_complex_exp(arrays,return_type,result_id):
+    ''' Extracts every element from each complex, model or dynamic in result_id and checks if there are elements in it which are not in the querylist '''
+    rowdict=dealwithquery(arrays)
+    querylist=list()
+    for keys,values in rowdict.items():
+        if keys[1]!='NOT':
+            if type(values[1])==list:
+                for item in values:
+                    if len(item)==3:
+                        querylist.append(item)
+                    elif len(item)>3 and item[0]!='NOT':
+                        querylist.append(item[1:])
+            else:
+                querylist.append(values)
+    #hack the list to add the corresponding molecules and compounds to the ones the user has queried.
+    tmpquerylist=[]
+    for item in querylist:
+        if item[0]=='compound':
+            for molid in DyndbMolecule.objects.filter(id_compound=item[1]):
+                tmpquerylist.append(['molecule',str(molid.id),item[2]])
+        elif item[0]=='molecule':
+            tmpquerylist.append(['compound',str(DyndbMolecule.objects.get(pk=item[1]).id_compound.id),item[2]])
+
+    querylist+=tmpquerylist
+    if return_type=='complex':
+        return complexmatch_complex_exp(result_id,querylist)
+
+    return 'pass'
+##########################################################################################################################################
+
 
 def scorenames(names_list):
     '''Given a list of synomins, returns the most human friendly'''
@@ -8918,10 +8980,6 @@ def iuphar_parser(file_name):
                     records.append(interaction)
                     
     return records
-
-records=iuphar_parser('./dynadb/interactions.csv')
-import pickle
-
 
 def to_bindingdb_format(records):
     '''Transforms data from iuphar format into the one we use to fill the database'''
@@ -9619,7 +9677,9 @@ def fill_db(chunks):
         record_complex_in_DB(complexes,fromiuphar=False)
             
 def fill_db_iuphar(filename):
-    records=iuphar_parser(filename) #'./dynadb/interactions.csv'
+    '''Fills Binding and efficacy table with IUPHAR csv data. The file iuphar_useful_complexes_pickle is a serialized python list,
+     containing the csv records in a format available to the record_complex_in_DB function. This file is created after the first use. '''
+    records=iuphar_parser(filename)
     with open ('iuphar_useful_complexes_pickle', 'rb') as fp:
         complexes = pickle.load(fp)
     #complexes=to_bindingdb_format(records)
@@ -9675,5 +9735,5 @@ chunks=['chunk0_from0_to_2877815.sdf',
     'chunk22_from57584405_to_60232038.sdf',
     ]
     
-fill_db(chunks)
+#fill_db(chunks)
 #fill_db_iuphar('./dynadb/interactions.csv')
