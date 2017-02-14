@@ -1,7 +1,6 @@
 ############################################### IUPHAR and BindingDB parsing#######################################################################################################################
 
 import os, sys
-
 proj_path = "/protwis/sites/protwis/"
 # This is so Django knows where to find stuff.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "protwis.settings")
@@ -21,31 +20,30 @@ import time
 from dynadb.customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
 from django.db.models import F
 from protein.models import Protein
-from uniprotkb_utils_fillDB import retreive_data_uniprot
+from uniprotkb_utils_fillDB import retreive_data_uniprot,retreive_protein_names_uniprot,valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from contextlib import closing
 from django.db import connection
 from django.utils import timezone
 from django.conf import settings
+from rdkit.Chem import MolFromInchi,MolFromSmiles
+from molecule_download_fillDB import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
 from GPCRuniprot import GPCRlist
 from django.db.models import Q
 from dynadb.models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from dynadb.models import DyndbProteinMutations,DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames
+from dynadb.pipe4_6_0 import *
 from Bio import Entrez
 from Bio.Entrez import efetch
-from dynadb.views import dealwithquery,do_boolean,prepare_to_boolean,get_uniprot_species_id_and_screen_name
+from dynadb.views import dealwithquery,do_boolean,prepare_to_boolean,get_uniprot_species_id_and_screen_name, get_file_name,get_file_paths, generate_molecule_properties_BindingDB
 Entrez.email = 'alejandrovarelarial@yahoo.es'
+
+retreive_data_uniprot('P28222')
 
 #from .views import do_boolean,dealwithquery,do_query_complex_exp,prepare_to_boolean
 
 def complexmatch_complex_exp(result_id,querylist):
     ''' Extracts every element from each complex in result_id and checks if there are elements in the complex which are not in the querylist '''
     moltypetrans={0:'orto',1:'alo'}
-    #cmolecule=DyndbComplexMolecule.objects.select_related('id_complex_exp').get(pk=result_id)
-    #for mol in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=result_id):
-    #    print('this molecule',mol.id_molecule.id,' is in the cmol', result_id)
-    #    strid=str(mol.id_molecule.id)
-    #    if (['molecule',strid, moltypetrans[mol.type]] not in querylist) and (['molecule',strid, 'all'] not in querylist):
-    #        return 'fail'
 
     for cprotein in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein').filter(id_complex_exp=result_id):
 
@@ -307,52 +305,56 @@ def fetch_abstract(pmid):
 #####################################################3
 def iuphar_parser(file_name):
     '''Gets some columns from interactions.csv file from iuphar'''
-    with open(file_name,'r') as fh: #delete first line!
+    with open(file_name,'r') as fh: #warning: delete first line!
         records=[]
+        linecount=0
         for line in fh:
-            line=line.strip()
-            linelist=list(line)
-            counterchar=0
-            cleanline=''
-            state='off'
-            for char in linelist:
-                if char=='"':
-                    counterchar+=1
-                    if counterchar%2==0:
-                        state='off'
+            if linecount!=0: #jump first line of the csv->headers
+                line=line.strip()
+                linelist=list(line)
+                counterchar=0
+                cleanline=''
+                state='off'
+                for char in linelist:
+                    if char=='"':
+                        counterchar+=1
+                        if counterchar%2==0:
+                            state='off'
+                        else:
+                            state='on'
+                    if char==',' and state=='on':
+                        char=';'
+                    cleanline+=str(char)
+                line=cleanline
+                fields=line.split(',')
+                if len(fields)==34:
+                    interaction=dict()
+                    interaction['uniprot']=fields[3]
+                    if '|' in interaction['uniprot']:
+                        interaction['uniprot']=interaction['uniprot'].split('|')
                     else:
-                        state='on'
-                if char==',' and state=='on':
-                    char=';'
-                cleanline+=str(char)
-            line=cleanline
-            fields=line.split(',')
-            if len(fields)==34:
-                interaction=dict()
-                interaction['uniprot']=fields[3]
-                if '|' in interaction['uniprot']:
-                    interaction['uniprot']=interaction['uniprot'].split('|')
-                else:
-                    interaction['uniprot']=[interaction['uniprot']]
-                interaction['uniprot2']=fields[7]
-                if '|' in interaction['uniprot2']:
-                    interaction['uniprot2']=interaction['uniprot2'].split('|')     
-                else:
-                    interaction['uniprot2']=[interaction['uniprot2']]
-                interaction['pubchem_sid']=fields[14] #https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/252827410/cids/XML?cids_type=all to convert to compound id
-                interaction['experiment_type']=fields[25]
-                interaction['median_value']=fields[27]
-                interaction['pmid']=fields[-1]
-                interaction['pmid']=interaction['pmid'].split('|') #if there is no |, the result is a list with only one element
-                emptyflag=0
-                
-                interaction['uniprot']=interaction['uniprot']+interaction['uniprot2']
-                interaction['uniprot']=list(filter(lambda x: len(x)!=0, interaction['uniprot']))
-                
-                interaction['pmid']=list(filter(lambda x: len(x)!=0, interaction['pmid']))
+                        interaction['uniprot']=[interaction['uniprot']]
+                    interaction['uniprot2']=fields[7]
+                    if '|' in interaction['uniprot2']:
+                        interaction['uniprot2']=interaction['uniprot2'].split('|')     
+                    else:
+                        interaction['uniprot2']=[interaction['uniprot2']]
+                    interaction['pubchem_sid']=fields[14] #https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/252827410/cids/XML?cids_type=all to convert to compound id
+                    interaction['experiment_type']=fields[25]
+                    interaction['median_value']=fields[27]
+                    interaction['pmid']=fields[-1]
+                    interaction['pmid']=interaction['pmid'].split('|') #if there is no |, the result is a list with only one element
+                    emptyflag=0
+                    
+                    interaction['uniprot']=interaction['uniprot']+interaction['uniprot2']
+                    interaction['uniprot']=list(filter(lambda x: len(x)!=0, interaction['uniprot']))
+                    
+                    interaction['pmid']=list(filter(lambda x: len(x)!=0, interaction['pmid']))
 
-                if len(interaction['uniprot'])!=0 and len(interaction['pubchem_sid'])!=0 and len(interaction['experiment_type'])!=0 and len(interaction['median_value'])!=0 and len(interaction['pmid'])!=0:
-                    records.append(interaction)
+                    if len(interaction['uniprot'])!=0 and len(interaction['pubchem_sid'])!=0 and len(interaction['experiment_type'])!=0 and len(interaction['median_value'])!=0 and len(interaction['pmid'])!=0:
+                        records.append(interaction)
+           
+            linecount+=1
                     
     return records
 
@@ -787,11 +789,9 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                         #our current protein is a mutant.
                         jj=1
                         isoflag=0
-                        responselength=6
                         print('check the isoform of this sequence')
-                        while responselength>5 and isoflag==0:
+                        while jj<20 and isoflag==0:
                             response = requests.get("http://www.uniprot.org/uniprot/"+uniprot+"-"+str(jj)+".fasta")
-                            responselength=len(response.text)
                             print(jj,response.text)
                             seqlist=response.text.split('\n')[1:] #skip header
                             seq=''.join(seqlist)
@@ -799,9 +799,15 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                                 isoformid=jj
                                 isoflag=1
                             jj+=1
-                        data,errdata = retreive_data_uniprot(uniprot,isoform=isoformid,columns='id,entry name,organism,length,')
-                        #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
-                        data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+                        try:
+                            data,errdata = retreive_data_uniprot(uniprot,isoform=isoformid,columns='id,entry name,organism,length,')
+                            #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
+                            data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
+                        except:
+                            data,errdata = retreive_data_uniprot(uniprot,columns='id,entry name,organism,length,')
+                            #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
+                            data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])                            
+
                         id_uniprot_species=data['speciesid']
                         seqdata,errdata = retreive_fasta_seq_uniprot(uniprot) #THIS FAILES SOMETIMES! do they block my ip? 
                         namedata,errdata = retreive_protein_names_uniprot(uniprot)
@@ -845,21 +851,17 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                     else:
                         ij=1
                         isoflag=0
-                        responselength=6
                         print('check the isoform of the this new unicode')
-                        while responselength>5 and isoflag==0:
+                        while ij<20 and isoflag==0:
                             response = requests.get("http://www.uniprot.org/uniprot/"+uniprot+"-"+str(ij)+".fasta")
-                            responselength=len(response.text)
                             print(ij,response.text)
                             seqlist=response.text.split('\n')[1:] #skip header
                             seq=''.join(seqlist)
-                            #alignment=align_wt_mut(seq,binsequence)
-                            #print(alignment)
-                            if seq==binsequence:#alignment[0]==alignment[1]:
+                            if seq==binsequence:
                                 isoformid=ij
                                 isoflag=1
                             ij+=1
-
+                        print('the isoform is ',isoformid,binsequence,seq)
                         data,errdata = retreive_data_uniprot(uniprot,isoform=isoformid,columns='id,entry name,organism,length,')
                         print(data,errdata,'here')
                         #BEFORE ISOFORM: data,errdata = retreive_data_uniprot(uniprot,isoform=None,columns='id,entry name,organism,length,')
@@ -867,12 +869,12 @@ def record_complex_in_DB(complexes,fromiuphar=False):
                         try:
                             data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
                         except KeyError:
-                            print(data,errdata,uniprot,isoformid)
-                            time.sleep(6)
+                            time.sleep(2)
+                            data,errdata = retreive_data_uniprot(uniprot,columns='id,entry name,organism,length,') #use default isoform
                             try:
                                 data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
                             except KeyError:
-                                pass
+                                print('error retrieving data from uniprot. Invalid uniprot accession code?'+uniprot)
                         id_uniprot_species=data['speciesid']
                         namedata,errdata = retreive_protein_names_uniprot(uniprot)
                         namedataori=namedata
@@ -1056,35 +1058,12 @@ def fill_db_iuphar(filename):
     '''Fills Binding and efficacy table with IUPHAR csv data. The file iuphar_useful_complexes_pickle is a serialized python list,
      containing the csv records in a format available to the record_complex_in_DB function. This file is created after the first use. '''
     records=iuphar_parser(filename)
-    with open ('/protwis/sites/protwis/iuphar_useful_complexes_pickle', 'rb') as fp:
-        complexes = pickle.load(fp)
-    #complexes=to_bindingdb_format(records)
+    #with open ('/protwis/sites/protwis/iuphar_useful_complexes_pickle', 'rb') as fp:
+    #    complexes = pickle.load(fp)
+    complexes=to_bindingdb_format(records)
     record_complex_in_DB(complexes,fromiuphar=True)
-    
-chunks=['chunk0_from0_to_2877815.sdf',
-    'chunk1_from2877815_to_5504028.sdf',
-    'chunk2_from5504028_to_8151249.sdf',
-    'chunk3_from8151249_to_11018459.sdf',
-    'chunk4_from11018459_to_13818354.sdf',
-    'chunk5_from13818354_to_16543442.sdf',
-    'chunk6_from16543442_to_19213992.sdf',
-    'chunk7_from19213992_to_21738775.sdf',
-    'chunk8_from21738775_to_24128210.sdf',
-    'chunk9_from24128210_to_26366733.sdf',
-    'chunk10_from26366733_to_28681630.sdf',
-    'chunk11_from28681630_to_31259106.sdf',
-    'chunk12_from31259106_to_34057944.sdf',
-    'chunk13_from34057944_to_36687703.sdf',
-    'chunk14_from36687703_to_39231449.sdf',
-    'chunk15_from39231449_to_41899410.sdf',
-    'chunk16_from41899410_to_44554372.sdf',
-    'chunk17_from44554372_to_47343614.sdf',
-    'chunk18_from47343614_to_49618541.sdf',
-    'chunk19_from49618541_to_52328318.sdf',
-    'chunk20_from52328318_to_54812741.sdf',
-    'chunk21_from54812741_to_57584405.sdf',
-    'chunk22_from57584405_to_60232038.sdf',
-    ]
-    
+
+mypath='/protwis/sites/protwis/dynadb/chunks'
+chunks=[f for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 #fill_db(chunks[15:])
 #fill_db_iuphar('./dynadb/interactions.csv')
