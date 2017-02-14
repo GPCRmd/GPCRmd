@@ -2343,7 +2343,7 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['name']=comp_obj.name
     comp_dic['iupac_name']=comp_obj.iupac_name
     comp_dic['pubchem_cid']=comp_obj.pubchem_cid
-    comp_dic['chembleid']=comp_obj.chembleid
+    comp_dic['chemblid']=comp_obj.chemblid
     comp_dic['sinchi']=comp_obj.sinchi
     comp_dic['sinchikey']=comp_obj.sinchikey
     comp_dic['imagelink']=get_imagepath(compound_id,'compound')
@@ -5889,7 +5889,7 @@ def open_chembl(request,submission_id=1):
 #           dictON={}
 #           fieldsON=["other_names"]
 #           dictcomp={}
-#           fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+#           fieldscomp=["name","iupac_name","pubchem_cid","chemblid","sinchi","sinchikey","std_id_molecule","id_ligand"]
 #           dictfmol={} 
 #           fieldsPMod={"is_present","type"}
 #           dictPMod={}
@@ -6002,8 +6002,8 @@ def open_chembl(request,submission_id=1):
 #   
 #               if dictcomp[ii]['pubchem_cid']!='':
 #                   qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
-#               elif dictcomp[ii]['chembleid']!='':
-#                   qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+#               elif dictcomp[ii]['chemblid']!='':
+#                   qCFStdFormExist=DyndbCompound.objects.filter(chemblid=dictcomp[ii]['chemblid']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
 #               else: 
 #                   qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
 #               if len(qMF.values())==1: #there is a entry matching this molecule
@@ -7929,8 +7929,8 @@ def get_name(request):
     return render(request, 'dynadb/name.html', {'formset': formset})
 
 
-def check_compound_entry_exist(pubchem_cid, chembleid, sinchikey, inchikey):
-    qdcompound=DyndbCompound.objects.filter(pubchem_cid=uniprotkbac).filter(chembleid=chembleid)
+def check_compound_entry_exist(pubchem_cid, chemblid, sinchikey, inchikey):
+    qdcompound=DyndbCompound.objects.filter(pubchem_cid=uniprotkbac).filter(chemblid=chemblid)
     lpkqdcompound=qdcompound.values_list('pk',flat=True)
     qdmolecule=DyndbMolecule.objects.filter(pk__in=lpkqdcompound).filter(inchikey=inchikey)
     q=DyndbMolecule.objects.filter(pk__in=lpkqdcompound,)
@@ -8962,7 +8962,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
     dictON={}
     fieldsON=["other_names"]
     dictcomp={}
-    fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+    fieldscomp=["name","iupac_name","pubchem_cid","chemblid","sinchi","sinchikey","std_id_molecule","id_ligand"]
     dictfmol={} 
     fieldsPMod={"is_present","type"}
     dictPMod={}
@@ -9090,8 +9090,8 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
         if dictcomp[ii]['pubchem_cid']!='':
             qCFStdFormExist=DyndbCompound.objects.filter(pubchem_cid=dictcomp[ii]['pubchem_cid']) #if std form of the molecule is in the database. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be link to the DyndbCompound entry
             print("PPPPP1")
-        elif dictcomp[ii]['chembleid']!='':
-            qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+        elif dictcomp[ii]['chemblid']!='':
+            qCFStdFormExist=DyndbCompound.objects.filter(chemblid=dictcomp[ii]['chemblid']) #if std form of the molecule is in the database. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
             print("PPPPP2")
         else: 
             qCFStdFormExist=DyndbCompound.objects.filter(sinchikey=dictcomp[ii]['sinchikey']).filter(sinchi=dictcomp[ii]['sinchi']) #if std form of the molecule is in the database compound. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
@@ -9504,7 +9504,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #            dictON={}
 #            fieldsON=["other_names"]
 #            dictcomp={}
-#            fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+#            fieldscomp=["name","iupac_name","pubchem_cid","chemblid","sinchi","sinchikey","std_id_molecule","id_ligand"]
 #            dictfmol={} 
 #            fieldsPMod={"is_present","type"}
 #            dictPMod={}
@@ -10115,8 +10115,9 @@ def SMALL_MOLECULEview(request, submission_id):
         if "model_id" in request.POST.keys():
             Update_molec=False
             model_id=request.POST['model_id']
-            qSmolec_model_this_sub=DyndbSubmisssionMolecule.filter(not_in_model=False)
+            qSmolec_model_this_sub=DyndbSubmissionMolecule.objects.filter(not_in_model=False,submission_id=submission_id)
             qSmolec_model_first_sub=DyndbSubmissionModel.objects.filter(model_id=model_id,submission_id=F('model_id__model_creation_submission_id'),submission_id__dyndbsubmissionmolecule__not_in_model=False)
+            qsubmission_id=qSmolec_model_first_sub.values_list('submission_id',flat=True)[0]
             if qSmolec_model_this_sub.exists():
                 if len(qSmolec_model_this_sub) == len(qSmolec_model_first_sub):
                     if len(qSmolec_model_this_sub.filter(molecule_id__in=qSmolec_model_first_sub.values('submission_id__dyndbsubmissionmolecule__molecule_id')))==len(qSmolec_model_first_sub):
@@ -10127,26 +10128,30 @@ def SMALL_MOLECULEview(request, submission_id):
                     Update_molec=True
             else:
                 Update_molec=True
-            Submol_in_reuseM==list(qSmolec_model_first_sub.annotate(not_in_model=F('submission_id__dyndbsubmissionmolecule__not_in_model'),type=F('submission_id__dyndbsubmissionmolecule__type'),int_id=F('submission_id__dyndbsubmissionmolecule__int_id'),molecule_id=F('submission_id__dyndbsubmissionmolecule__molecule_id')).values())
-            for mol_in_model in Submol_in_reuseM:
-                mol_in_model['submission_id']=submission_id
-                SMolreuse=dyndb_Submission_Molecule(mol_in_model)
-             
-                if SMolreuse.is_valid(): # only the submission molecule table should be filled!!!!
-                    SMolreuse.save()
-                else:    
-                    iii1=SMolreuse.errors.as_text()
-                    print("SMolreuse ", mol_in_model," no es valido")
-                    print("!!!!!!Errores despues del SMolreuse\n",iii1,"\n")
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    return response
+            if Update_molec:
+                if qSmolec_model_this_sub.exists():
+                     qSmolec_model_this_sub.update(not_in_model=None,int_id=None,molecule_id=None) 
+                
+                Submol_in_reuseM=list(qSmolec_model_first_sub.annotate(not_in_model=F('submission_id__dyndbsubmissionmolecule__not_in_model'),type=F('submission_id__dyndbsubmissionmolecule__type'),int_id=F('submission_id__dyndbsubmissionmolecule__int_id'),molecule_id=F('submission_id__dyndbsubmissionmolecule__molecule_id')).values())
+                for mol_in_model in Submol_in_reuseM:
+                    mol_in_model['submission_id']=submission_id
+                    SMolreuse=dyndb_Submission_Molecule(mol_in_model)
+                 
+                    if SMolreuse.is_valid(): # only the submission molecule table should be filled!!!!
+                        SMolreuse.save()
+                    else:    
+                        iii1=SMolreuse.errors.as_text()
+                        print("SMolreuse ", mol_in_model," no es valido")
+                        print("!!!!!!Errores despues del SMolreuse\n",iii1,"\n")
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
 
         dictmol={}
         fieldsmol=["id_compound","description","net_charge","inchi","inchikey","inchicol","smiles"]
         dictON={}
         fieldsON=["other_names"]
         dictcomp={}
-        fieldscomp=["name","iupac_name","pubchem_cid","chembleid","sinchi","sinchikey","std_id_molecule","id_ligand"]
+        fieldscomp=["name","iupac_name","pubchem_cid","chemblid","sinchi","sinchikey","std_id_molecule","id_ligand"]
         dictfmol={} 
         fieldsPMod={"is_present","type"}
         dictPMod={}
@@ -10183,8 +10188,8 @@ def SMALL_MOLECULEview(request, submission_id):
                 #dictmol[0][key]=val
                 #dictON[0][key]=val
                 #dictfmol[0][key]=val
-            print("key",key," ",val)
-            print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
+            #print("key",key," ",val)
+            #print("\nINICIO: key-val== ",key," ",val,"nkey ==", nkey,"\n")
             for k,v in dfieldtype.items():
                 if nkey in v:
                     dfielddict[k][index][nkey]=val
@@ -10271,7 +10276,13 @@ def SMALL_MOLECULEview(request, submission_id):
         for ii in indexl:
             molid=ii 
             print("MOLID ",molid," INDEXL",indexl)
-            INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+            if 'model_id' in request.POST.keys():
+                if qSmolec_model_first_sub.filter(submission_id__dyndbsubmissionmolecule__int_id=molid).exists(): #the ii molecule is involved in the model to be reuse. files are in the folder of the first submission of the model!
+                    INFOstdMOL=generate_molecule_properties2(qsubmission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+                else: #molecules not in the model: files generated in this submission!!!
+                    INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
+            else: #molecules not in the model: files generated in this submission!!!
+                INFOstdMOL=generate_molecule_properties2(submission_id,molid) #:INFOstdMOL =SCRIPT_ISMA(sinchikey) #genera datos del post a partir de la sinchikey. Se obtienen los datos de la standar molecule
             print("\nPRUEBAfallo\n")
             print("AAAAa",INFOstdMOL.items())
             sinchi_fixed=INFOstdMOL['sinchi']['sinchi'].split('=')[1]
@@ -10310,21 +10321,27 @@ def SMALL_MOLECULEview(request, submission_id):
                             print("The molecule ", ii," in the form already appears in the db to be involved in this submission, but type and possibly presence in model have been modified")
                         else:
                             print("The molecule ", ii," in the form already appears in the db to be involved in this submission")
+                            #continue
                 else:
                    # qSreuse=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=None,molecule_id=None)
                     qSreuse=DyndbSubmissionMolecule.objects.filter(int_id=None,molecule_id=None)
                     if qSreuse.exists():
                         for row_to_update in qSreuse:
-                            row_to_update=qSreuse[0]
-                            row_to_update.int_id=ii
-                            row_to_update.submission_id=submission_id
-                            row_to_update.molecule_id=MFpk
-                            row_to_update.type=dictPMod[ii]['type']
-                            print("MMMMAAAMMMM")
-                            if dictPMod[ii]['type'] >5:
-                                row_to_update.not_in_model=True
+                            print("INTENTANDO UPDATE,",qSreuse.values()[0],"type ",type(dictPMod[ii]['type'])," ",dictPMod[ii]['type'] )
+                            lll=int(str(dictPMod[ii]['type']))
+                            if lll >5:
+                                not_in_model=True
                             else:
-                                row_to_update.not_in_model=False
+                                not_in_model=False
+                            
+                            qSreuse.filter(id=qSreuse.values_list('id',flat=True)[0]).update(int_id=ii,submission_id=submission_id,molecule_id=MFpk,type=int(dictPMod[ii]['type']),not_in_model=not_in_model)
+                            print("INTENTANDO UPDATE,",qSreuse.values()[0],"type ",type(dictPMod[ii]['type'])," ",dictPMod[ii]['type'] )
+                          # row_to_update=qSreuse[0]
+                          # row_to_update.int_id=ii
+                          # row_to_update.submission_id=submission_id
+                          # row_to_update.molecule_id=MFpk
+                          # row_to_update.type=dictPMod[ii]['type']
+                            print("MMMMAAAMMMM")
                             break
     
             else:
@@ -10342,10 +10359,10 @@ def SMALL_MOLECULEview(request, submission_id):
                 else:
                     qCFStdFormExist=DyndbCompound.objects.filter(sinchikey="Ñ")# Query with no result
                     print("Pubchem value =''")
-            elif 'chembleid' in dictcomp[ii].keys():
-                if dictcomp[ii]['chembleid']!='':
+            elif 'chemblid' in dictcomp[ii].keys():
+                if dictcomp[ii]['chemblid']!='':
                     print("b")
-                    qCFStdFormExist=DyndbCompound.objects.filter(chembleid=dictcomp[ii]['chembleid']) #if std form of the molecule is in the database. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
+                    qCFStdFormExist=DyndbCompound.objects.filter(chemblid=dictcomp[ii]['chemblid']) #if std form of the molecule is in the database. It is possible that other forms of the molecule are in DyndbMolecule and the std form would be in DyndbCompound
                     print("PPPPP2")
                 else:
                     qCFStdFormExist=DyndbCompound.objects.filter(sinchikey="Ñ")# Query with no result

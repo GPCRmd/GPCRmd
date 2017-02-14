@@ -449,7 +449,7 @@ class DyndbCompound(models.Model):
     name = models.CharField(unique=True, max_length=60)
     iupac_name = models.CharField(max_length=500)
     pubchem_cid = models.IntegerField(unique=True, blank=True, null=True)
-    chembleid = models.IntegerField(unique=True, blank=True, null=True)
+    chemblid = models.IntegerField(unique=True, blank=True, null=True)
     sinchi = models.TextField(null=True)
 #    sinchikey = models.CharField(max_length=27, db_index=True,null=True)
     sinchikey = models.CharField(max_length=27, null=True)

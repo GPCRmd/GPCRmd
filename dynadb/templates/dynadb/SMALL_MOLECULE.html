@@ -147,12 +147,12 @@ font-weight:normal
 		      		<div class="col-md-4" ><select   {% if model_id or saved %} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %}  {% if t.0 < 6 %} hidden {%else %}  {% endif %}{% endif %}{%endfor%} {%else%} hidden {% endif %}  id="id_form-{{int0}}-bulk_type" name="form-{{int0}}-bulk_type" rows="2" style="width:180px"  >
                              {% if model_id %} 
                                        {% for t in labtypel %} {% if t.0 > 5 %} 
-                           		    {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" > {{t.1}} </option> {%endif%}
+                           		    {% if forloop.counter == forloop.parentloop.counter %}<option value={{t.0}} > {{t.1}} </option> {%endif%}
                                        {%endif%} {%endfor%}
                              {% else %}
                                  {% if saved %}
                                      {% for t in labtypel %} {% if t.0 > 5 %} 
-                                          {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" selected > {{t.1}} </option>{%endif%} 
+                                          {% if forloop.counter == forloop.parentloop.counter %}<option value={{t.0}} selected > {{t.1}} </option>{%endif%} 
                                      {%endif%} {%endfor%}
                                  {%endif%}
                              {%endif%}
@@ -160,7 +160,7 @@ font-weight:normal
                           {% if not model_id %} 
                			 {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
                                      {% if forloop.counter0 > 5 %}
-                  			<option value="{{i.0}}" {% if forloop.counter = 5 and not saved %} selected {% endif %} > {{i.1}}</option>
+                  			<option value={{i.0}} {% if forloop.counter = 5 and not saved %} selected {% endif %} > {{i.1}}</option>
                                      {%endif%}
                			 {% endfor %}
                           {%endif%}           
@@ -324,7 +324,7 @@ font-weight:normal
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-chemblid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-3"><input id="id_form-{{int0}}-chembleid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chembleid" type="number" style="width:142px;margin-right:0%" value={{com.chembleid}} /></div> <!--  placeholder=" 42"-->
+		            <div class="col-md-3"><input id="id_form-{{int0}}-chemblid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chemblid" type="number" style="width:142px;margin-right:0%" value={{com.chemblid}} /></div> <!--  placeholder=" 42"-->
                        {%endif%} {%endfor%}
                     {% if not model_id %}
 			<div class="col-md-3"><button id="id_form-{{int0}}-update_from_chembl" name="form-{{int0}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div>
