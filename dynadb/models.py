@@ -449,7 +449,7 @@ class DyndbCompound(models.Model):
     name = models.CharField(unique=True, max_length=60)
     iupac_name = models.CharField(max_length=500)
     pubchem_cid = models.IntegerField(unique=True, blank=True, null=True)
-    chembleid = models.IntegerField(unique=True, blank=True, null=True)
+    chemblid = models.IntegerField(unique=True, blank=True, null=True)
     sinchi = models.TextField(null=True)
 #    sinchikey = models.CharField(max_length=27, db_index=True,null=True)
     sinchikey = models.CharField(max_length=27, null=True)
@@ -771,11 +771,12 @@ class DyndbSubmissionDynamicsFiles(models.Model):
     filename = models.CharField(unique=True, max_length=80)
     filepath = models.CharField(max_length=520, blank=False, null=False)
     url = models.CharField(max_length=520, blank=False, null=True)
-    framenum = models.IntegerField(null=True,default=None)
+    filenum = models.PositiveSmallIntegerField(null=False,default=0)
+    framenum = models.PositiveIntegerField(null=True,default=None)
     class Meta:
         managed = True
         db_table = 'dyndb_submission_dynamics_files'
-        unique_together = (('submission_id', 'filepath'))
+        unique_together = (('submission_id', 'filepath'),('submission_id','type','filenum'))
 
 class DyndbFilesModel(models.Model):
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')
@@ -892,7 +893,7 @@ class DyndbModeledResidues(models.Model):
     seq_resid_from = models.SmallIntegerField()
     seq_resid_to = models.SmallIntegerField()
     bonded_to_id_modeled_residues = models.ForeignKey('self', models.DO_NOTHING, db_column='bond_to_id_modeled_residues', blank=True, null=True, related_name='dyndbmodeledresidues_bond_to_id_modeled_residues')#!!!!
-    pdbid = models.CharField(max_length=6, blank=False, null=True)
+    pdbid = models.CharField(max_length=6, blank=True, null=True)
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0)
     template_id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='template_id_model', blank=True, null=True, related_name='dyndbmodeledresidues_template_id_protein')
 

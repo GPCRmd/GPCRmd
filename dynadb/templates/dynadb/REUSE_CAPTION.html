@@ -22,9 +22,9 @@
 	        <div class="row" id="PR">
 			<div class="col-md-10 col-md-offset-2" style="text-align:left">
 			    <div class="row">
-                            <div class="col-md-1 col-md-offset-1"> <input checked type="radio" style="float:left"id="id_form-1-is_present" name="form-is_present" value="is_present" /> </div>
+                            <div class="col-md-1 col-md-offset-1"> <input disabled  checked type="radio" style="float:left" id="NOT" name="NOT" value="NOT" /> </div>
 				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><a title="Choose a previous set of crystalized compounds from the GPCRmd database by providing a specific model identifier Model ID.">Model ID:</a> </div>
-			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input value="{{model_id}}" readonly style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" placeholder="1"> </input></div> 
+			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input disabled value="{{model_id}}"  style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" placeholder="1"> </input></div> 
                             {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 			    </div>
                             {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
