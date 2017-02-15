@@ -627,10 +627,13 @@ class Migration(migrations.Migration):
             name='DyndbFilesModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                    ('id_model', models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',unique=False)),
+                   ('id_files', models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files',unique=False)),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_files_model',
+                'unique_together' : (('id_model','id_files')),
             },
         ),
         migrations.CreateModel(
