@@ -1,4 +1,4 @@
-from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbProteinCannonicalProtein,  DyndbComplexCompound
+from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbProteinCannonicalProtein,  DyndbComplexCompound, DyndbReferencesModel, DyndbReferencesProtein, DyndbReferencesMolecule, DyndbReferencesDynamics, DyndbReferencesCompound
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 from haystack.forms import SearchForm
@@ -138,7 +138,30 @@ class dyndb_ReferenceForm(ModelForm):
  #       fields = '__all__'
         exclude=['dbname','update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','receptor_id_protein','id_species']
 
+class dyndb_References_Protein(ModelForm):
+    class Meta:
+        model = DyndbReferencesProtein
+        fields = '__all__'
 
+class dyndb_References_Model(ModelForm):
+    class Meta:
+        model = DyndbReferencesModel
+        fields = '__all__'
+
+class dyndb_References_Molecule(ModelForm):
+    class Meta:
+        model = DyndbReferencesMolecule
+        fields = '__all__'
+
+class dyndb_References_Dynamics(ModelForm):
+    class Meta:
+        model = DyndbReferencesDynamics
+        fields = '__all__'
+
+class dyndb_References_Compound(ModelForm):
+    class Meta:
+        model = DyndbReferencesCompound
+        fields = '__all__'
 
 class dyndb_Other_Protein_NamesForm(ModelForm):
     class Meta:

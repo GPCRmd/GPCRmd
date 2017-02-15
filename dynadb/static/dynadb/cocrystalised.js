@@ -5,9 +5,9 @@
             var not_is_present=$(this).find("[id|=id_form][id$='not-is_present']")
             var cotype= $(this).find("[id|=id_form][id$='co_type']");
             var nottype= $(this).find("[id|=id_form][id$='bulk_type']");
-            var str = cotype.attr('name'); 
-            var form_num = str.split("-")[1];
             if ($(co_is_present).is(":checked")){
+                 var str = cotype.attr('name'); 
+                 var form_num = str.split("-")[1];
                  nottype.attr('name',"form-"+form_num+"-bulk_type");
                  nottype.prop('disabled',true);
                  nottype.fadeOut();
@@ -15,6 +15,8 @@
                  cotype.fadeIn(500);
                  cotype.prop('disabled',false);
             }else{
+                 var str = nottype.attr('name'); 
+                 var form_num = str.split("-")[1];
                  cotype.attr('name',"form-"+form_num+"-bulk_type");
                  cotype.prop('disabled',true);
                  cotype.fadeOut();
@@ -22,6 +24,7 @@
                  nottype.fadeIn(500);
                  nottype.prop('disabled',false);
             };
+            console.log(form_num)
          });
        };
 
