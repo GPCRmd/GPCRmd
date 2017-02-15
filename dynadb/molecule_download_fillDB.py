@@ -340,7 +340,7 @@ def retreive_compound_sdf_pubchem(searchproperty,searchvalue,outputfile=None,in3
             data = fileh.read()
             fileh.close()
         fileh.seek(0)
-        mol = open_molecule_file(fileh,filetype='sdf')
+        mol = open_molecule_file(fileh,filetype='sdf') #original: mol = open_molecule_file(fileh,filetype='sdf')
         del mol
 
         return(data,errdata)
