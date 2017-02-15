@@ -40,18 +40,142 @@ $(document).ready(function(){
 
   
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
-
-    function obtainInputedGPCRnum(pre_sel) {
+    
+    function obtainInputedGPCRnum(pre_sel){
         var gpcr = "((\\d{1,2}\\.\\d{1,2}(x\\d{2,3})?)|(\\d{1,2}x\\d{2,3}))";
-        var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
-        var re = new RegExp(gpcr_range,"g");
+        var re = new RegExp(gpcr,"g");
         var res = pre_sel.match(re); 
         return(res);
     }
 
+    function obtainInputedGPCRrange(pre_sel) {
+        var gpcr = "((\\d{1,2}\\.\\d{1,2}(x\\d{2,3})?)|(\\d{1,2}x\\d{2,3}))";
+        var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
+        var re = new RegExp(gpcr_range,"g");
+        var res = pre_sel.match(re); 
+        //console.log(res);
+        return(res);
+    }
+    
+    function parseGPCRnum(sel,lonely_gpcrs){
+        var add_or ="";
+        if (num_gpcrs >1){
+            add_or=" or ";
+        }    
+        for (i in lonely_gpcrs) {
+            var my_gpcr = lonely_gpcrs[i];
+            var subst_pos_all ="";
+            for (gpcr_id in all_gpcr_dicts){
+                var subst_pos ="";
+                my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
+                gpcr_comb_dict=my_gpcr_dicts["combined_num"];
+                bw_dict=my_gpcr_dicts["bw_num"];
+                gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
+                
+                if(gpcr_comb_dict[my_gpcr] != undefined) {
+                    var res_chain=gpcr_comb_dict[my_gpcr];  
+                } else if (bw_dict[my_gpcr] != undefined) {
+                    var res_chain=bw_dict[my_gpcr];  
+                } else if (gpcrdb_dict[my_gpcr] != undefined){
+                    var res_chain=gpcrdb_dict[my_gpcr];                   
+                } else {
+                    res_chain=undefined;
+                    to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
+                    $("#alert").append(to_add);
+                }
+                if (res_chain){
+                    if (chains_str == "") {
+                        subst_pos=" "+res_chain[0];
+                    } else {
+                        subst_pos=" "+res_chain[0]+":"+res_chain[1];
+                    }
+                    subst_pos_all += subst_pos + add_or;
+                }
+            }
+            if (subst_pos_all){
+                if (num_gpcrs >1){
+                    subst_pos_all=subst_pos_all.slice(0,-4);
+                    subst_pos_all="("+subst_pos_all+")";
+                } 
+                sel = sel.replace(my_gpcr ,subst_pos_all );
+            } else {
+                sel="";
+            }
+        }
+        return (sel)
+    }
+    
+    function parseGPCRrange(pre_sel,gpcr_ranges){
+        var add_or ="";
+        if (num_gpcrs >1){
+            add_or=" or ";
+        }    
+        for (i in gpcr_ranges) {
+            var gpcr_pair_str = gpcr_ranges[i];
+            var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
+            var pos_range_all=""
+            for (gpcr_id in all_gpcr_dicts){
+                var pos_range="";
+                my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
+                gpcr_comb_dict=my_gpcr_dicts["combined_num"];
+                bw_dict=my_gpcr_dicts["bw_num"];
+                gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
+                var chain_pair=[]
+                var res_pair=[]
+                for (n in gpcr_pair){
+                    var gpcr_n=gpcr_pair[n];  
+                    if(gpcr_comb_dict[gpcr_n] != undefined) {
+                        var res_chain=gpcr_comb_dict[gpcr_n];  
+                    } else if (bw_dict[gpcr_n] != undefined) {
+                        var res_chain=bw_dict[gpcr_n];  
+                    } else if (gpcrdb_dict[gpcr_n] != undefined){
+                        var res_chain=gpcrdb_dict[gpcr_n];                   
+                    } else {
+                        res_chain=undefined;
+                        chain_pair=false
+                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
+                        $("#alert").append(to_add);
+                        break
+                    }
+                    res_pair[res_pair.length]=res_chain[0];
+                    chain_pair[chain_pair.length]=res_chain[1];
+                }
+                if (chain_pair){
+                    if (chains_str == "") {
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]
+                    } else if (chain_pair[0]==chain_pair[1]){
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
+                    } else {
+                        start=all_chains.indexOf(chain_pair[0]);
+                        end=all_chains.indexOf(chain_pair[1]);
+                        var middle_str="";
+                        considered_chains=all_chains.slice(start+1,end)
+                        for (chain in considered_chains){
+                            middle_str += " or :"+ considered_chains[chain];
+                        }
+                        pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
+                    }
+                    pos_range_all += pos_range + add_or; 
+                }
+            }//END FOR GPROT
+        if (pos_range_all){
+            if (num_gpcrs >1){
+                pos_range_all=pos_range_all.slice(0,-4);
+                pos_range_all="("+pos_range_all+")"
+            }  
+            pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
+        } else {
+            pre_sel="";
+        }
+        sel=pre_sel;
+        }//END FOR GPCR RANGES
+    return(sel)
+    }    
+    
+
     function inputText(gpcr_pdb_dict){
         var pre_sel = $(".sel_input").val();
-        var gpcr_ranges=obtainInputedGPCRnum(pre_sel);
+        var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
@@ -59,69 +183,17 @@ $(document).ready(function(){
             to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
             $("#alert").attr("class","alert alert-danger row").append(to_add);
         } else {
-            var add_or ="";
-            if (num_gpcrs >1){
-                add_or=" or ";
-            }
-            for (i in gpcr_ranges) {
-                var gpcr_pair_str = gpcr_ranges[i];
-                var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
-                var pos_range_all=""
-                for (gpcr_id in all_gpcr_dicts){
-                    var pos_range="";
-                    my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
-                    gpcr_comb_dict=my_gpcr_dicts["combined_num"];
-                    bw_dict=my_gpcr_dicts["bw_num"];
-                    gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
-                    var chain_pair=[]
-                    var res_pair=[]
-                    for (n in gpcr_pair){
-                        var gpcr_n=gpcr_pair[n];  
-                        if(gpcr_comb_dict[gpcr_n] != undefined) {
-                            var res_chain=gpcr_comb_dict[gpcr_n];  
-                        } else if (bw_dict[gpcr_n] != undefined) {
-                            var res_chain=bw_dict[gpcr_n];  
-                        } else if (gpcrdb_dict[gpcr_n] != undefined){
-                            var res_chain=gpcrdb_dict[gpcr_n];                   
-                        } else {
-                            res_chain=undefined;
-                            chain_pair=false
-                            to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
-                            $("#alert").append(to_add);
-                            break
-                        }
-                        res_pair[res_pair.length]=res_chain[0];
-                        chain_pair[chain_pair.length]=res_chain[1];
-                    }
-                    if (chain_pair){
-                        if (chains_str == "") {
-                            pos_range=" "+res_pair[0] + "-" +res_pair[1]
-                        } else if (chain_pair[0]==chain_pair[1]){
-                            pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
-                        } else {
-                            start=all_chains.indexOf(chain_pair[0]);
-                            end=all_chains.indexOf(chain_pair[1]);
-                            var middle_str="";
-                            considered_chains=all_chains.slice(start+1,end)
-                            for (chain in considered_chains){
-                                middle_str += " or :"+ considered_chains[chain];
-                            }
-                            pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
-                        }
-                        pos_range_all += pos_range + add_or; 
-                    }
-                }//END FOR GPROT
-            if (pos_range_all){
-                if (num_gpcrs >1){
-                    pos_range_all=pos_range_all.slice(0,-4);
-                    pos_range_all="("+pos_range_all+")"
-                }  
-                pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
+            sel=parseGPCRrange(pre_sel,gpcr_ranges);
+        }
+        var lonely_gpcrs=obtainInputedGPCRnum(sel);
+        if (lonely_gpcrs != null){
+            if (gpcr_pdb_dict=="no"){
+                sel = ""
+                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
+                $("#alert").attr("class","alert alert-danger row").append(to_add);
             } else {
-                pre_sel="";
+                sel=parseGPCRnum(sel,lonely_gpcrs);
             }
-            sel=pre_sel;
-            }//END FOR GPCR RANGES
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
         if (sel_sp != null){ //Remove white spaces between "-" and nums
@@ -130,9 +202,8 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
-        //alert(sel);
-        sel_enc = sel;
-        return sel_enc
+        console.log(sel);
+        return sel;
     };
 
     $("#gpcr_sel").change(function(){
@@ -717,7 +788,7 @@ function isEmptyDict(mydict){
                 last_to_sel.val(fstRow1);
                 if( /^[\d]+$/.test(fstRow0 + fstRow1)){
                     var last_row=$(".dist_btw").find(".dist_pair:last");
-                    last_row.find(".tick2").html('<span class="glyphicon glyphicon-ok" style=""font-size:10px;color:#7acc00;padding:0;margin:0""></span>');
+                    last_row.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
                     last_row.find(".always2").attr("style","");
                     last_row.addClass("d_ok");
                 }  
