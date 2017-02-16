@@ -22,7 +22,11 @@ $(document).ready(function() {
         var element2 = $(this).parents("[id|=Element2]");
         var id_molecule = element2.find("[id='id_id_molecule'],[id|=id_formmc][id$='-id_molecule']");
         var namemc = element2.find("[id='id_namemc'],[id|=id_formmc][id$='-namemc']");
+        var typemc = element2.find("[id='id_typemc'],[id|=id_formmc][id$='-typemc']");
+//        var typ_option = typemc.find("[id='id_typemc'],[id|=id_formmc][id$='-typemc']");
 
+//        var dict {"0":"Ions", "1":"Ligand", "2":"Lipid",  "3":"Water", "4":"Other"};
+        var val_to_text_type = {0:"Ions", 1:"Ligand", 2:"Lipid", 3:"Water", 4:"Other"};
         if (self.val() !== '') {
             $.post("./get_submission_molecule_info/",
             {
@@ -31,7 +35,8 @@ $(document).ready(function() {
             function(data){
                 id_molecule.val(data.molecule_id);
                 namemc.val(data.namemc);
-
+                $(typemc).find(":selected").val(data.type);
+                $(typemc).find(":selected").html(val_to_text_type[data.type]);
             }, 'json')
 
             .fail(function(xhr,status,msg) {
@@ -76,7 +81,18 @@ $(document).ready(function() {
     });
    
     
-    
+    $("#add_mol_new").click(function() {
+        var self=$(this)
+        var collapse=$(this).parents("#PRUEBA2").find("#addmoleculebutton")
+        if (self.prop('checked') ===true){
+            $(collapse).prop('hidden',false)
+        } else {
+            $(collapse).prop('hidden',true)
+        }
+      });
+
+
+            
     $("#id_check_pdb_mol").click(function() {
         var self = $(this);
         var modelform = $(this).parents("#myform");

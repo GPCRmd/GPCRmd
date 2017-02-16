@@ -1,0 +1,48 @@
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+<!--        	<h3 > Simulation Submission<br>Step 1:<br>Protein Information</h3> -->
+        	<h3 > Submission Summary </h3><h3>Step 1:<br>Protein Information</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary" style="height:300px">
+         <div class="panel-body" style="margin-bottom:5%;margin-top:4%;margin-left:-3%;margin-right:-5%;overflow:auto;height:91%">
+
+            <div style="text-align:center"> 
+             <h4 style="margin-top:-5%">CHECK THE PROTEIN INFO</h4>
+	    </div>
+          <p style="text-align: justify;"> Please, find here the summary of the elements to be registered in the current submission. This summary consist of four different blocks: (<b>1</b>) <b>Protein</b>, (<b>2</b>) <b>Small Molecules</b>, (<b>3</b>) <b>Crystal-derived assembly</b> and (<b>4</b>) <b>Simulation</b>blocks.</p>
+          <p style="text-align: justify;"> <p>Check the information in the summary properly describes the system to be submitted. If so, click the "Confirm Submission" button. Otherwise, every step of the submission can be revisited to change contents by clicking the corresponding button in the bottom of the summary</p>
+
+
+ showing descriptive details about the data  suplied in all the steps of the submission procedure. note that this form shows the description of the proteins involved in the complex you have selected to be reused. The information contained here must not be modified. </p>
+          <p style="text-align: justify;"> Confirm that the set of proteins involved in the chosen complex is exactly that one you have used in your simulations. When mutant proteins appear in the form, pay special attention to the "Protein Mutations" sections corresponding to those mutants!!! Mutations in your simulation must exactly match the ones in this form for each mutated protein.</p>
+       <p style="text-align: justify;">If one of the proteins in your simulation is not present in this form, please click the ‘New Submission’ button in the initial ‘Simulation Submission’ page and enter your simulations as a new system from scratch.</p>
+
+
+
+
+<!--            <p style="text-align: justify;">Fill in the form with the relevant data concerning the receptor and other proteins involved in the simulation.</p>
+             <p style="text-align: justify;">Protein information is linked to a cannonical sequence obtained from UniProtKB and identified by a UniProtKB accession number (AC).</p>
+
+ 
+	     <p style="text-align: justify;">Mutated proteins must be specified by providing wild type UniProtKB AC and the alignment between the wild type sequence and the mutated one in fasta format.<p>
+
+	     <p style="text-align: justify;">Several proteins can be added in a single submission but at least one must be a G protein-coupled receptor (GPCR) whose sequence must have been deposited on GPCRdb. </p> -->
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+ </div>
+ </div>
+
+{% include "dynadb/REUSE_CAPTION.html" with prot=True %} 

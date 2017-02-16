@@ -1,4 +1,8 @@
 $(document).ready(function(){
+
+
+
+
      $.fn.resetProteinByButton = function () {
         var protform = $(this).parents("[id|=protform]");
         var useisoform = protform.find("[id='id_use_isoform'],[id|=id_form][id$='use_isoform']");
@@ -9,7 +13,8 @@ $(document).ready(function(){
         var alignment = protform.find("[id='id_alignment'],[id|=id_form][id$='-alignment']");
         var msequence = protform.find("[id='id_msequence'],[id|=id_form][id$='-msequence']");
         var getdata = protform.find("[id='id_get_data_upkb'],[id|=id_form][id$='-get_data_upkb']");
-        
+        var is_mutated= protform.find("[id='id_is_mutated'],[id|=id_form][id$='is_mutated']");
+               
         uniprotkbac.prop("readonly",false);
         uniprotkbac.set_restore_color();
         isoform.prop("readonly",false);
@@ -42,7 +47,7 @@ $(document).ready(function(){
             $(this).prop("checked",false);
         });
         useisoform.prop("checked",true);
-        mutations.attr("class",'col-md-12 panel panel-primary collapse'); 
+        mutations.attr("class",'col-md-12 panel panel-primary '); 
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
         notuniprot.isNotUniprotChange();

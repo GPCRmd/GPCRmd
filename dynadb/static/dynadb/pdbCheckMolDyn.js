@@ -22,7 +22,8 @@ $(document).ready(function() {
         var element1 = $(this).parents("[id|=Element1]");
         var id_molecule = element1.find("[id='id_id_molecule'],[id|=id_formc][id$='-id_molecule']");
         var namef = element1.find("[id='id_name'],[id|=id_formc][id$='-name']");
-
+        var typemc = element1.find("[id='id_typemc'],[id|=id_formc][id$='-typemc']");
+        var type_int = element1.find("[id='id_typemc'],[id|=id_formc][id$='-type_int']");
         if (self.val() !== '') {
             $.post("./get_submission_molecule_info/",
             {
@@ -31,7 +32,8 @@ $(document).ready(function() {
             function(data){
                 id_molecule.val(data.molecule_id);
                 namef.val(data.name);
-
+                typemc.val(data.type_text);
+                type_int.val(data.type);
             }, 'json')
 
             .fail(function(xhr,status,msg) {
@@ -46,6 +48,8 @@ $(document).ready(function() {
             }
                 id_molecule.val('');
                 namef.val('');
+                typemc.val('');
+                type_int.val('');
             })
             
             .always(function(xhr,status,msg) {
@@ -76,6 +80,16 @@ $(document).ready(function() {
         
     });
    
+    $("#add_mol_new").click(function() {
+        var self=$(this)
+        var collapse=$(this).parents("#PRUEBA2").find("#addmoleculebutton")
+        if (self.prop('checked') ===true){
+            $(collapse).prop('hidden',false)
+            console.log("PPP")
+        } else {
+            $(collapse).prop('hidden',true)
+        }
+      });
     
     
     $("#id_check_pdb_mol").click(function() {
@@ -89,6 +103,7 @@ $(document).ready(function() {
         var logfile = dynform.find("#id_logfile");
         var pdbchecker_tar_gz = dynform.find("#id_pdbchecker_tar_gz");
         var solvent_num = dynform.find("#id_solvent_num");
+        var atom_num = dynform.find("#id_atom_num");
         fields.prop('readonly',true);
         
         self.prop('disabled',true);
@@ -107,6 +122,7 @@ $(document).ready(function() {
                     var numofmol = $(this).find("[id='numberofmol'],[id|=id_formc][id$='-numberofmol']");
                     numofmol.val(data.resnames[resname].num_of_mol);
                     solvent_num.val(data.num_of_solvent);
+                    atom_num.val(data.atom_num);
                 });
                 if (data.download_url_log != null) {
                     logfile.attr("href",data.download_url_log);

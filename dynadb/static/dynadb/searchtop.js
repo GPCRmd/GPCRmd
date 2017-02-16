@@ -28,6 +28,12 @@ function searchtop() {
                         }else if(tdcount==6){
                             $(this).find(":input").val(data[trcount][1]);
                         }
+                        else if(tdcount==7){
+                            $(this).find('[type=checkbox]').prop('checked', false);
+                            if (data['bonds'][trcount]!=undefined){
+                                $(this).find('[type=checkbox]').prop('checked',data['bonds'][trcount]);
+                            }
+                        }
                         tdcount=tdcount+1;  
                     })
                  trcount=trcount+1;

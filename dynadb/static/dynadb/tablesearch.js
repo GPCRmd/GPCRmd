@@ -17,7 +17,7 @@ function ShowResults(data, restype,is_apoform){
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
         for(i=0; i<cl.length; i++){
-            tablestr=tablestr+"<tr><td> <a target='_blank' class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
+            tablestr=tablestr+"<tr><td> <a class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
         }
     }//endif
 
@@ -26,9 +26,9 @@ function ShowResults(data, restype,is_apoform){
         var rl=data.model
         for(i=0; i<rl.length; i++){ //rl[i].length>2
             if (rl[i].length>2 && (is_apoform=='com'||is_apoform=='both') ){
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd> Ligand: <kbd>"+rl[i][2]+"</kbd> </td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd> Ligand: <kbd>"+rl[i][2]+"</kbd> </td></tr>";
             }if (rl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> Protein: <kbd>"+rl[i][1]+"</kbd> </td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> Protein: <kbd>"+rl[i][1]+"</kbd> </td></tr>";
             }
         }
     }//endif
@@ -38,9 +38,9 @@ function ShowResults(data, restype,is_apoform){
         var dl=data.dynlist;
         for(i=0; i<dl.length; i++){
             if (dl[i].length>2 && (is_apoform=='com'||is_apoform=='both')){ //dl[i].length>2
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
             }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
-                tablestr=tablestr+"<tr><td>"+ "<a target='_blank' class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
             }
         }
     } //endif
@@ -83,7 +83,8 @@ $("#tablesearch").click(function() {
     var closingpar=[]
     var flag=0; //means no errors
     $("#tablesearch").prop("disabled",true);
-
+    $('#hiddenbar').show();
+    $('#hiddenbarin').width("10%");
 
     //pick information of advanced search, parenthesis
     if ($('#gotoadvsearch').html().length==19){
@@ -154,7 +155,7 @@ $("#tablesearch").click(function() {
             bigarray.push(postarray);
         })
     } //else ends
-
+    $('#hiddenbarin').width("60%");
     //check that parenthesis are correct
     for (i=0;i<openpar.length;i++){
         if (openpar[i]=='(' && openpar[i+1]=='('){
@@ -199,13 +200,15 @@ $("#tablesearch").click(function() {
         flag=4;
         flagsms='Mismatching parenthesis!';
     }
-
+    $('#hiddenbarin').width("80%");
     var restype=$('#result_type').val();
     var ff=$('#fftype').val();
     var tstep=$('#tstep').val();
     if (! isNumber(tstep) && tstep.length>0){
         alert('Time step has to be a number');
         $("#tablesearch").prop("disabled",false);
+        $('#hiddenbar').hide();
+        $('#hiddenbarin').width("10%");
         return false;
     }
     var sof=$('#soft').val();
@@ -218,13 +221,15 @@ $("#tablesearch").click(function() {
     if (restype=='dynamics'){
         var is_apoform=$('input[name=radiosearch1]:checked', '#hidden').val();
     }
-    console.log(bigarray);
+    $('#hiddenbarin').width("90%");
     ///////////////////////////////////////////EMPTY SEARCH //////////////////////////////////////////////////////////
     //search to perform when no elements were added to the right panel
     if(bigarray.length==1 && (restype=='model' || restype=='dynamics') ){ //empty
         if (exactboo==true){
             alert('Exact match does not work if the query is empty.');
             $("#tablesearch").prop("disabled",false);
+            $('#hiddenbar').hide();
+            $('#hiddenbarin').width("10%");
             return false;
 
         }
@@ -237,10 +242,12 @@ $("#tablesearch").click(function() {
             url: "/dynadb/empty_search/",
             dataType: "json",
             success: function(data) {
+                $('#hiddenbarin').width("100%");
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 if (data.message==''){
                     $('#ajaxresults22 tbody').empty();
-                    //$('#ajaxresults22').DataTable().clear().draw(); this new, uncommented before
                     tablestr=ShowResults(data, restype,is_apoform);
                     $('#ajaxresults22').DataTable().destroy()
                     $('#ajaxresults22 tbody').append(tablestr);
@@ -253,6 +260,8 @@ $("#tablesearch").click(function() {
 
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 alert("Something unexpected happen.");
             }
         }); //end of ajax call
@@ -262,6 +271,8 @@ $("#tablesearch").click(function() {
     if (bigarray.length==1 && restype=='complex'){
         alert('Complex search does not work if there is not any protein or molecule.');
         $("#tablesearch").prop("disabled",false);
+        $('#hiddenbar').hide();
+        $('#hiddenbarin').width("10%");
         return false;
     }
 
@@ -291,9 +302,10 @@ $("#tablesearch").click(function() {
                     dataType: "json",
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();
+                        $('#hiddenbarin').width("10%");
                         if (data.message==''){
                             $('#ajaxresults22 tbody').empty(); //this new
-                            //$('#ajaxresults22').DataTable().clear().draw();
                             tablestr=ShowResults(data,restype,is_apoform);
                             $('#ajaxresults22').DataTable().destroy() //this new
                             $('#ajaxresults22 tbody').append(tablestr);
@@ -306,12 +318,16 @@ $("#tablesearch").click(function() {
 
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();
+                        $('#hiddenbarin').width("10%");
                         alert("Something unexpected happen.");
                     }
                 });
 
             }else {
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();
+                $('#hiddenbarin').width("10%");
                 if (flag==1){
                     alert('Apoforms are composed by a single protein. Try again.'); 
                 }else{
@@ -330,6 +346,7 @@ $("#tablesearch").click(function() {
                     }
                 }
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
             }
             console.log('adv',bigarray);
             if (flag==0){
@@ -343,31 +360,30 @@ $("#tablesearch").click(function() {
                     dataType: "json",
                     success: function(data) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         if (data.message==''){
                             $('#ajaxresults22 tbody').empty(); //this new
                             tablestr=ShowResults(data,restype,is_apoform);
                             $('#ajaxresults22').DataTable().destroy() //this new
                             $('#ajaxresults22 tbody').append(tablestr);
                             CreateTable();
-                            //$('#ajaxresults22 tbody').empty();
-                            //$('#ajaxresults22').DataTable().clear().draw();
-                            //tablestr=ShowResults(data,restype,is_apoform);
-                            //$('#ajaxresults22 tbody').append(tablestr);
-                            //CreateTable();
                         }else{
                             alert(data.message);
                             $("#tablesearch").prop("disabled",false);
+                            $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         }
                     },
 
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $("#tablesearch").prop("disabled",false);
+                        $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
                         alert("Something unexpected happen.");
                     }
                 });
             }else{//if flag 0
                 alert(flagsms);
                 $("#tablesearch").prop("disabled",false);
+                $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
             }
         }//end of the "advanced search" else.
 

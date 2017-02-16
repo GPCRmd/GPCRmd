@@ -480,7 +480,13 @@ def get_complexes(chunk):
 
         elif '<PubChem CID>' in lines_list[i]: 
             pubchem_id=lines_list[i+1].strip()
-
+            try:
+                sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
+                sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
+                sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
+                sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
+            except:
+                errflag=1
         elif '<ChEMBL ID of Ligand>' in lines_list[i]:
             chembl_id=lines_list[i+1].strip()[6:]
 
@@ -1012,11 +1018,11 @@ def record_complex_in_DB(comple,fromiuphar=False):
             
             if comple[3]!='': #write chembleid when available
                 try:
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chembleid':comple[3]},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3]},True)
                     recorded_ids['compound']=compound_id
                 except:
                     no_name='PubChemID:'+str(pubchem_id)
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chembleid':comple[3]},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3]},True)
                     recorded_ids['compound']=compound_id
             else:
                 try:
@@ -1045,7 +1051,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
             try:
                 molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles']},True)
 
-            except: #inchicol problem or molprop keyerror
+            except: #inchicol problem or molprop referenced before assigment
                 try:
                     maxcol=1
                     for mol in DyndbMolecule.objects.filter(inchikey=str(molprop['inchikey'])):
@@ -1053,7 +1059,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         if col>maxcol:
                             maxcol=col
                     maxcol=maxcol+1
-                except KeyError:
+                except UnboundLocalError: #local variable 'molprop' referenced before assignment
                     return recorded_ids
                 try:
                     molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
@@ -1090,7 +1096,7 @@ def fill_db(chunks):
         complexes=get_complexes(chunk)
         complecount=0
         for comple in complexes:
-            print('Progress in chunk '+chunk+' is: '+str((complecount/len(complexes))*100)+ 'with '+str(neg)+' errors and '+str(pos)+' successes')
+            print('Progress in chunk '+chunk[chunk.rfind('/')+1:]+' is: '+str((complecount/len(complexes))*100)+ 'with '+str(neg)+' errors and '+str(pos)+' successes')
             complecount+=1
             #record_complex_in_DB(comple,fromiuphar=False)
             try:

@@ -7,6 +7,9 @@ function sendpar() {
         var postarray=[];
         $('td', this).each(function () {
             var value = $(this).find(":input").val();
+            if (postarray.length==7){
+                value = $(this).find('[type=checkbox]').prop('checked');
+            }            
             postarray.push(value);
         })
         bigarray.push(postarray);
@@ -16,8 +19,8 @@ function sendpar() {
     counter=1;
     for (i=0,lenout=bigarray.length;i<lenout;i++){
         for (j=counter,len=bigarray.length;j<len;j++){
-            if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10)) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10)) ) {
-                alert('There is overlapping between the range'+bigarray[i]+' and ' +bigarray[j]);
+            if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] ) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1]) ) {
+                alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
                 goon=false;
             }
         }
@@ -27,11 +30,11 @@ function sendpar() {
 //      parseInt: If the first non-whitespace character is 0, the number is in octal (only in old browsers). 
 //      If the two first non-whitespace characters are '0x' or '0X', the number is in hexadecimal.
 //      Otherwise, the number is in decimal. A base can be forced by adding an extra parameter.
-        if (parseInt(bigarray[i][3])>=parseInt(bigarray[i][4])){
+        if (parseInt(bigarray[i][3])>parseInt(bigarray[i][4])){
             alert('Res from is bigger than or equal to Res to');
             goon=false;
         }
-        if (parseInt(bigarray[i][5],10)>=parseInt(bigarray[i][6],10)){
+        if (parseInt(bigarray[i][5],10)>parseInt(bigarray[i][6],10)){
             alert('Seq Res from is bigger than or equal to Seq Res to');
             goon=false;
         }   
@@ -45,10 +48,12 @@ function sendpar() {
             dataType: "json",
             success: function(data) {
                 $("#pdbchecker2").prop("disabled",false);
+                console.log(data);
                 if (data.message==''){
                     newwindow=window.open('./ajax_pdbchecker/');
                     if (window.focus) {newwindow.focus()}
                 }else{
+                    console.log(data.message);
                     alert(data.message);
                 }
             },

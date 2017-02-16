@@ -28,12 +28,12 @@ $(document).ready(function(){
             if (name1.startsWith('form') && name1.endsWith('is_mutated')){
                 var tt=$(this);
                 tt.prop("checked",false);
-                $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-mutations_id");
+               // $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-mutations_id");
 //                $(this).attr('checked', false);
                 }; 
-            if (name1.startsWith('form') && name1.endsWith('mutations_id')){
-                $(this).attr('class',"col-md-12 panel panel-primary collapse");
-                console.log($(this).attr('class')+" "+$(this).attr('id')+" "+$(this).attr('name'));
+            if (name1.startsWith('form') && name1.endsWith('-mutations_id')){
+                //$(this).attr('class',"col-md-12 panel panel-primary collapse");
+//                $(this).hide();
                 }; 
             if (name1.startsWith('form') && name1.endsWith('use_isoform')){
                 $(this).attr('data-target',"#"+"id_form-"+new_form_num+"-isoform");
@@ -43,7 +43,7 @@ $(document).ready(function(){
  //               $(this).attr('checked',true);
                 }; 
             if (name1.startsWith('form') && name1.endsWith('isoform')){
-                $(this).attr('class',"collapse in");
+                //$(this).attr('class',"collapse in");
                 }; 
             if ($(searchstr).exists()) {
                 $(searchstr).attr('for',idlab);
@@ -85,16 +85,11 @@ $(document).ready(function(){
         receptor.prop("checked",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
+ 
+        $(document).protein_init_config();
     });
     
     
-    $(document).on('click',"[id|=id_form][id$='is_mutated']",function(){
-        if ($(document).find("[id|=id_form][id$='is_mutated']input:checked").length > 0){
-               $("#mutations_id").show();
-        } else {
-               $("#mutations_id").hide();
-        }
-    });
 
 
     

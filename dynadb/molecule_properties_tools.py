@@ -1,6 +1,7 @@
 import os
 import re
 import io
+from os import devnull
 import sys
 from .customized_errors import ParsingError,MultipleMoleculesinSDF,InvalidMoleculeFileExtension
 from django.conf import settings
@@ -46,11 +47,60 @@ def fileno(file_or_fd):
 
 
 @contextmanager
-def stdout_redirected(to=os.devnull, stdout=None):
+def stdout_redirected(to=devnull, stdout=None):
+    
     if stdout is None:
        stdout = sys.stdout
+    try:
+        stdout_fd = fileno(stdout)
+    except (OSError,AttributeError):
+        if settings.DEBUG == False:
+            closefile = False
+            # if 'to' is a file-like object replace stdout with it. Otherwise, create a new file in 'to' to do so. 
+            try:
+                to.flush() # flush redirect destination so data is written in the correct order
+                to_file = to
+            except AttributeError:
+                to_file = open(to, 'a')
+                closefile = True
+                
+            if stdout == sys.stdout:
+                sys.stdout.flush() # flush library buffers that we know nothing about
+                stdout_old = sys.stdout # save current stdout object before it is overwritten
+                sys.stdout = to_file
+                stdout_type = 'stdout'
+            elif stdout == sys.stderr:
+                sys.stderr.flush() # flush library buffers that we know nothing about
+                stdout_old = sys.stderr # save current stdout object before it is overwritten
+                sys.stderr = to_file
+                stdout_type = 'stderr'
+            else:
+                stdout.flush() # flush library buffers that we know nothing about
+                stdout_old = stdout # save current stdout object before it is overwritten
+                stdout = to_file
+                stdout_type = 'other'              
+            try:
+                yield stdout # allow code to be run with the redirected stdout
+            finally:
+                
+                # restore stdout to its previous value
+                if stdout_type == 'stdout':
+                    sys.stdout.flush()
+                    sys.stdout = stdout_old                    
+                elif stdout_type == 'stderr':
+                    sys.stderr.flush()
+                    sys.stderr = stdout_old                    
+                else:
+                    stdout.flush()
+                    stdout = stdout_old
 
-    stdout_fd = fileno(stdout)
+                if closefile:
+                    to_file.close()
+                return
+                
+                    
+        else:
+            raise
     # copy stdout_fd before it is overwritten
     #NOTE: `copied` is inheritable on Windows when duplicating a standard stream
     with os.fdopen(os.dup(stdout_fd), 'wb') as copied: 
@@ -58,7 +108,7 @@ def stdout_redirected(to=os.devnull, stdout=None):
         try:
             
             os.dup2(fileno(to), stdout_fd)  # $ exec >&to
-            to.flush()
+            to.flush() # flush redirect destination so data is written in the correct order
         except ValueError:  # filename
             with open(to, 'ab') as to_file:
                 os.dup2(to_file.fileno(), stdout_fd)  # $ exec > to
@@ -73,7 +123,7 @@ def stdout_redirected(to=os.devnull, stdout=None):
 
 
 
-def open_molecule_file(uploadedfile,logfile=os.devnull,filetype=None):
+def open_molecule_file(uploadedfile,logfile=devnull,filetype=None):
     
     #charset = 'utf-8'
     #if "charset" in uploadedfile and uploadedfile.charset is not None:
@@ -119,7 +169,6 @@ def open_molecule_file(uploadedfile,logfile=os.devnull,filetype=None):
             print('Assigning chirality from struture...')
             AssignAtomChiralTagsFromStructure(mol,replaceExistingTags=False)
             print('Finished loading molecule.')
-
     return mol
 def generate_inchi(mol, FixedH=False, RecMet=False):
     options = "-DoNotAddH"
@@ -183,7 +232,7 @@ def generate_smiles_openbabel(molblock,obabelcmd = "/usr/bin/obabel"):
     smi = wspc.sub("",smi)
     return (smi,smierr)
 
-def generate_smiles2(mol,logfile=os.devnull):
+def generate_smiles2(mol,logfile=devnull):
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             molnoar = Mol(mol)
@@ -201,7 +250,7 @@ def generate_smiles2(mol,logfile=os.devnull):
         print(smierr,file=logfile)   
     return smi
     
-def generate_smiles(mol,logfile=os.devnull):
+def generate_smiles(mol,logfile=devnull):
     with stdout_redirected(to=logfile,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             mol2 = Mol(mol) 
@@ -230,7 +279,7 @@ def get_charge_from_inchi(inchi,removeHs=False):
     del mol
     return netc
 
-def generate_png(mol,pngpath,logfile=os.devnull,size=300):
+def generate_png(mol,pngpath,logfile=devnull,size=300):
     with stdout_redirected(to=sys.stdout,stdout=sys.stderr):
         with stdout_redirected(to=logfile,stdout=sys.stdout):
             nhmol = RemoveHs(mol,implicitOnly=False, updateExplicitCount=True, sanitize=False)

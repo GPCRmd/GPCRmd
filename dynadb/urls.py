@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+
 from django.conf.urls import url,patterns,include #antes: from django.conf.urls import url,patterns
-from django.conf.urls.static import static
-from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.views.generic import TemplateView
 from django.contrib import admin
 from django.conf import settings
+
 from . import views
+
 from haystack.query import SearchQuerySet
 from haystack.views import SearchView
 from .forms import MainSearchForm
@@ -51,6 +52,10 @@ urlpatterns = [
     url(r'^references/$', views.REFERENCEview, name='references'),
     url(r'^REFERENCEfilled/(?P<submission_id>[0-9]+)/$', views.REFERENCEview, name='REFERENCEfilled'),
     url(r'^PROTEINfilled/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='PROTEINfilled'),
+    url(r'^submission_summary/(?P<submission_id>[0-9]+)/$', views.submission_summaryiew, name='submission_summary'),
+    url(r'^protein_summary/(?P<submission_id>[0-9]+)/$', views.protein_summaryiew, name='protein_summary'),
+    url(r'^molecule_summary/(?P<submission_id>[0-9]+)/$', views.molecule_summaryiew, name='molecule_summary'),
+    url(r'^model_summary/(?P<submission_id>[0-9]+)/$', views.model_summaryiew, name='model_summary'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/$', views.SMALL_MOLECULEview, name='molecule'),
     url(r'^molecule/(?P<submission_id>[0-9]+)/delete/$', views.delete_molecule, name='delete_molecule'),
     url(r'^moleculereuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.SMALL_MOLECULEreuseview, name='moleculereuse'),
@@ -89,7 +94,7 @@ urlpatterns = [
     url(r'^empty_search/',views.emptysearcher,name='emptysearcher'),
     url(r'^autocomplete/',views.autocomplete,name='autocomplete'),
     url(r'^advanced_search/$', views.NiceSearcher,name='NiceSearcher'),
-    url(r'^tmp/(?P<pdbname>[a-zA-Z0-9_/]+_corrected[0-9]+.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'), 
+    url(r'^model/[0-9]+/ajax_pdbchecker/(?P<pdbname>[a-zA-Z0-9_/]+_corrected[0-9]+.pdb)$', views.servecorrectedpdb,name='servecorrectedpdb'),
     #url(r'^search_top/(?P<submission_id>[0-9]+)/$',views.search_top,name='search_top'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='dynamics'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/upload_files/((?P<trajectory>traj)/)?$', views.upload_dynamics_files, name='dynamics_upload_files'),

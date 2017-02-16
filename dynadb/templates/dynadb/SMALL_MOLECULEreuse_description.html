@@ -1,7 +1,7 @@
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 > Reuse Complex <br> Small Molecule Information</h3>
+        	<h3 > Reuse Crystal-Derived Assembly </h3><h3 style="margin-left:-5%;margin-right:-5%">Step 2:<br>Small Molecule Information</h3>
         <!--	<h3 > Simulation Submission<br>Step 2 <br>Small Molecule Information </h3>-->
          </div> 
      </div>
@@ -14,9 +14,17 @@
             <div style="text-align:center"> 
              <h4 style="margin-top:-5%">CHECK THE SMALL MOLECULE INFO</h4>
 	    </div>
+ <p style="text-align: justify">Please, provide a detailed chemical description of the non-protein molecules needed for completing the set of components involved in the simulation to be submitted.</p> 
+  <p style="text-align: justify">Note that this form contains two main blocks. The (<b>1</b>) <b>summary of crystalized components</b> block shows the description of the crystal-derived non-protein molecules involved in the GPCRmd DB item selected to be reused. In the (<b>2</b>) <b>list of bulk components in the simulation</b> block, the user must provide information about the components which have been randomly added during the simulation setup process (solvent, membrane lipids and ions whose coordinates have been ramdonly generated).</p>
+            <p style="text-align: justify">First, check that all molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulk waters, lipids or ions randomly generated), are exactly matching the set of molecules shown in the <b>summary of crystalized components</b>. If so, the set of crystal-derived components retrieved by the GPCRmd DB can be reused provided that the set of proteins in the crystal to be reused (previously checked in the step 1) is exactly the same than the one the user want to submit. Otherwise, please click the ‘New Submission’ button in the initial ‘Simulation Submission’ page and enter your simulations as a new system from scratch.</p>
 
-             <p style="text-align: justify">Please, check that all non-protein molecules with coordinates coming from experimental data and non-protein molecules playing a crucial role in the setup of the simulations you are submitting (not bulk waters, lipids or ions randomly generated), are exactly matching the set of molecules shown in this Small Molecule form. If so, the crystal-derived set of non-protein molecules can be reused provided that the set of protein in the crystal to be reused is exactly the same than the one the user want to submit. Then, you have to add new molecules appearing in your simulations whose coordinates have been randomly generated and remove molecules from the form which are not used in your simulations. Importantly, molecules to be added or removed must have the checkbox field “Important for the biological process” unchecked.</p>
-             <p style="text-align: justify;margin-bottom:-5%">Note that, if the set of molecules which are “Important for the biological process” in the form does not match the ones in your simulation, you have to submit it as a new system from scratch by clicking the ‘New Submission’ button in the initial ‘Simulation Submission’ page and following all the steps in the Submission index.</p>
+ <p style="text-align: justify">After cheching the exact match between crystal-derived assemblies, add new bulk components appearing in the simulation to be submitted in the (<b>list of bulk components in the simulation</b>) block. Follow the next steps for every bulk component:</p>
+  <p style="text-align: justify">(<b>A</b>) Upload for each small molecule (non-protein) a '.sdf' or '.mol' file. A 2D chemical structure will be automatically displayed.</p>
+  <p style="text-align: justify">(<b>B</b>) Indicate if the uploaded structure is a co-crystalised molecule or if it belongs to bulk.</p>
+  <p style="text-align: justify">(<b>C</b>) Revise chemoinformatics data retrieved from the upload structure.</p>
+  <p style="text-align: justify">(<b>D</b>) Obtain molecule information from PubChem and ChEMBL databases.</p>
+  <p style="text-align: justify">Click the '+ Add molecule' button on the bottom of the pannel corresponding to the last uploaded molecule to add information about another molecule in your system.</p>
+  <p style="text-align: justify;margin-bottom:-5%;">Molecule data submission can be made individually by clicking the 'Submit molecule' button on the bottom of every molecule pannel or simultaneously by clicking the 'Submit all molecules' button on the bottom of the form.</p>
 
 
 <!--             <p style="text-align: justify">Small molecule information contains data for molecules that are not proteins, including lipids, solvent and ions. General compound information can be retrieved from PubChem Compound and ChEMBL databases. User must upload a MDL Molfile or an SDF file in order to provide information about elemental composition, connectivity, net charge, protonation states and tautomerical form. Isotopical composition is optional. PubChem CIDs for typical molecules as water or most common ions will be provided. 3D coordinates information for the defined molecules must be provided later on complex (step 3) or dynamics forms (step 4).</p>
@@ -36,43 +44,5 @@
   </div>
 </div>
 
-<div class="col-md-7 "> 
-  <div class="col-lg-12 panel panel-primary"> 
+{% include "dynadb/REUSE_CAPTION.html" %} 
 
-    <div class="panel-body">
-
-		<div class=row id='PRUEBA'>
-<!-- 			<div style="text-align:center">
-            			<h4><br>Select Complex</h4><br>    
-             			<h4><br>Complex Information</h4><br>
-            		</div>   -->
-
- 			<div style="text-align:center">
-<!--       			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Reuse Complex Temporarily unavailable</a></h4><br> -->
-             			<h4><br>Complex Information</h4><br>
-<!--             			<h4><br><a title="El antiguo html esta comentado en las siguientes lineas del fichero MODEL.html" >Complex Information</a></h4><br> -->
-            		</div>
-                <div class="row">
-		  	<div class="col-md-1"></div><div class="col-md-3" style="text-align:left"><label for="Model">Complex:</label></div>
-		  	<div class="col-md-4" style="text-align:left"> Reuse Complex <input  type="radio" name="Model" checked value="Reuse Model" disabled></div>
-	 		<div class="col-md-4" style="color:gainsboro;text-align:center"><input  type="radio" name="Model" value="New Model" disabled > New Complex</div>
-                </div><br>
-
-	        <div class="row">
-			<div class="col-md-8 col-md-offset-4" style="text-align:left">
-			    <div class="row" style="height:50px">
-				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><label for="Choose_reused_model"><a title="Choose a previous complex from the GPCRmd database">Complex ID:</a> </label></div>
-				<div class="col-md-8"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1"  value="{{model_id}}" readonly ></input></div>
-                           </div>
-		       </div>
-		</div>
-
-	        <div class="row" style="height:50px;">
-                   <div class="col-md-10 col-md-offset-2" id="id_show_mol_inmodel" name="show_mol_inmodel" data-toggle="collapse"  data-target="{%for l in qMOL %}[id|='molform'][id$='{{forloop.counter0}}']{% if not forloop.last %},{%endif%}{%endfor%}"  style="cursor:pointer;padding:0px 10px 5px 10px;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Hide/show information about the molecules in the model.</div>
-           <div class="col-md-10 col-md-offset-2" id="id_show_mol_inbulk" name="show_mol_inbulk" data-toggle="collapse"   data-target="{%for l in list %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}" style="cursor:pointer;padding:0px 10px 5px 10px;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Hide/show information about new bulk molecules in your simulation.</div><br>
-                            </div>
-				
-		<br>
-		</div>
-		</div></div>
-                </div>

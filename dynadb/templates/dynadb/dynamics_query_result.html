@@ -29,7 +29,7 @@
     {%endif%}
 
     {%if answer.link_2_model%}
-    <b>Complex Structure</b>:<br> <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
+    <b>Complex Structure</b>:<br> <a class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
     {%endif%}
 
     {%if answer.solventtype%}
@@ -52,7 +52,7 @@
     {%if answer.link2protein%}
         <b>Protein(s)</b>:<br>
         {%for link in answer.link2protein%}
-            <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
+            <a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
         {%endfor%}
     {%endif%}
     <br><br>
@@ -109,6 +109,11 @@
     {% endif %}
     <br>
     <br>
+    <center><a class='btn btn-lg btn-info' role='button' href=/view/{{answer.nglviewer_id}}>Watch the simulation</a><br><br><br><br>
+    <div id="marionaiframe"></div> </center>
+
+    <br>
+    <br>
     {% if answer.references %} 
         <br><b>References in which this dynamic is mentioned</b>:<br>
         <ul>
@@ -121,13 +126,15 @@
     {% if answer.related %}
     <b>Related Dynamics</b>:<br>
         {% for dyn in answer.related %}
-            <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
+            <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
         {% endfor %}
     {% endif %}
     <br>
     <div id="marionaiframe">ddddd</div>
     </div></div></div>
     
+
+
 
     <div class="container">
     <div class="panel panel-info">
@@ -146,7 +153,7 @@
 {% block addon_js %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script>
-    $('#marionaiframe').load('/view/1/ #protform');
+    $('#marionaiframe').load('/view/{{answer.nglviewer_id}}/ #embed_mdsrv');
 </script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="{% static 'dynadb/molecular_carousel.js' %}"></script>

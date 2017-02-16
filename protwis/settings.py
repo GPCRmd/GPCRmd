@@ -7,6 +7,8 @@ Django settings for protwis project.
 # by default, local settings are in protwis/settings_local_default.py
 # you can override these settings by creating a protwis/settings_local.py file (or copying settings_local_default)
 # protwis/settings_local.py is ignored by git
+
+
 try:
     from protwis.settings_local import *
 except ImportError:
@@ -17,9 +19,6 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
-#DEBUG CAMBIAR a True
-#DEBUG=False
-#ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -63,6 +62,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
+    'protwis.custom_middlewares.MultipleProxyMiddleware',
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,7 +77,8 @@ ROOT_URLCONF = 'protwis.urls'
 
 WSGI_APPLICATION = 'protwis.wsgi.application'
 
-
+# Analytics
+GOOGLE_ANALYTICS_KEY = False
 # Internationalization
 
 LANGUAGE_CODE = 'en-us'
@@ -141,7 +142,7 @@ TEMPLATES = [
 ]
 
 MAX_UPLOAD_SIZE=2147483648
-
+FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 if DEBUG:
    TEMPLATES[0]['OPTIONS']['debug'] = True
@@ -208,9 +209,12 @@ SESSION_ENGINE="django.contrib.sessions.backends.file"
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/tmp/django_cache',
+        'LOCATION': CACHE_PATH,
     }
 }
+
+MDSRV_PORT=8081
+
 
 
 AUTH_USER_MODEL = 'accounts.User'

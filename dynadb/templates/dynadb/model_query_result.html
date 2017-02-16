@@ -33,13 +33,13 @@
 
     {% if answer.complex%}
         <b>Corresponding Complex</b>:<br>
-             <a target='_blank' class='btn btn-info' role='button' href=/dynadb/complex/id/{{answer.complex}}>Complex ID: {{answer.complex}}</a>       
+             <a class='btn btn-info' role='button' href=/dynadb/complex/id/{{answer.complex}}>Complex ID: {{answer.complex}}</a>       
     {% endif %}
     <br><br>  
     {%if answer.link2protein%}
         <b>Protein(s) involved</b>:<br>
             {%for link in answer.link2protein%}
-                <a target='_blank' class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}> Protein ID: {{link.1}}<br></a>
+                <a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}> Protein ID: {{link.1}}<br></a>
             {%endfor%}
     {%endif%}
     <br><br>
@@ -100,7 +100,7 @@
         <b>Dynamic(s) in which this complex structure appears</b>:<br>
 
     {%for compoundlink in answer.dynamics%}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{compoundlink}}> Dynamics ID: {{compoundlink}}</a>
+       <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{compoundlink}}> Dynamics ID: {{compoundlink}}</a>
     {%endfor%}
     <br>
 

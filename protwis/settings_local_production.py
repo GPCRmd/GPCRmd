@@ -36,3 +36,5 @@ SECRET_KEY = '-eqrx61@n*z3y1mc1w_@x1+yo(@^!k7i-vjaz0tx1$902a!4mu'
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
+
+CACHE_PATH = "/tmp/django_cache"

@@ -18,42 +18,64 @@
 {% if answer.proteins %}
     <b>Proteins used in this complex</b>:<br>
     {%for proid in answer.proteins%}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}}</a> 
+       <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}}</a> 
     {%endfor%}
     <br>
 {% endif %} 
-
+<br>
 {% if answer.compoundsorto %} 
     <b>Orthosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsorto %}
-       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a> 
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="300" width="300" /> </a> 
     {%endfor%}
      <br>
 {% endif %} 
-
+<br>
 {% if answer.compoundsalo %} 
     <b>Allosteric ligand(s) in this complex</b>:<br>
     {%for comid in answer.compoundsalo %}
-       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="150" width="150" /> </a>
+       <a href= /dynadb/compound/id/{{comid.0}}> <img src="{{comid.1}}"  height="300" width="300" /> </a>
     {%endfor%}
      <br>
 {% endif %} 
+<br>
+
+{% if answer.efficacy %}
+    <b>EC50 according to BindingDB:</b><br>
+    {{answer.efficacy.value}} {{answer.efficacy.units}}
+    <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.efficacy.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a><br>
+
+{% endif %} 
+<br>
+{% if answer.binding %}
+    <b>Kd according to BindingDB:</b><br>
+    {{answer.binding.value}} {{answer.binding.units}} <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.binding.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a>
+{% endif %} 
+<br>
 
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b>:<br>
     {% for modid in answer.models %}
-       <a target='_blank' class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
+       <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
         {%if modid.1%}
             using molecule(s):
             {%for mol in modid.1%}
-                <a target='_blank' class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
+                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
             {%endfor%}
         {%endif%}
+        <br>
     {% endfor %}
      <br>
 {% endif %} 
-
-
+<br>
+{% if answer.reference %}
+    <b>References for this complex:</b><br>
+    {% for reference in answer.reference%}
+    {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+    <hr><hr>
+    {%endfor%}
+{% endif %} 
+<br>
 
     </div>
     </div>

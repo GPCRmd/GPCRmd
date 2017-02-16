@@ -11,8 +11,10 @@ $(document).ready(function() {
         var newitem = item.clone();
         var idlabnod = "Element2-" + itemlastnum_1;
         newitem.attr("id",idlabnod);
-        var resname = newitem.find("[id$='-resname']:input")
-        var molecule = newitem.find("[id$='-molecule']:input")
+        var resname = newitem.find("[id$='-resname']:input");
+        var molecule = newitem.find("[id$='-molecule']:input");
+        var numberofmol = newitem.find("[id$='-numberofmol']:input");
+        numberofmol.val("");
         resname.prop("readonly",false);
         resname.set_restore_color();
         molecule.prop("readonly",false);
