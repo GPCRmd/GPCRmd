@@ -37,10 +37,6 @@ from Bio.Entrez import efetch
 from dynadb.views import dealwithquery,do_boolean,prepare_to_boolean,get_uniprot_species_id_and_screen_name, get_file_name,get_file_paths, generate_molecule_properties_BindingDB
 Entrez.email = 'alejandrovarelarial@yahoo.es'
 
-retreive_data_uniprot('P28222')
-
-#from .views import do_boolean,dealwithquery,do_query_complex_exp,prepare_to_boolean
-
 def complexmatch_complex_exp(result_id,querylist):
     ''' Extracts every element from each complex in result_id and checks if there are elements in the complex which are not in the querylist '''
     moltypetrans={0:'orto',1:'alo'}
@@ -302,7 +298,9 @@ def fetch_abstract(pmid):
     refdic={'title':title, 'volume':volume, 'issue':issue, 'authors':authors,'pubyear':year, 'issn':issn, 'journal':journal,'doi':doi}
 
     return refdic
-#####################################################3
+
+
+
 def iuphar_parser(file_name):
     '''Gets some columns from interactions.csv file from iuphar'''
     with open(file_name,'r') as fh: #warning: delete first line!
@@ -438,7 +436,7 @@ def get_complexes(chunk):
 
         if '$$$$' in lines_list[i]:
             
-            if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(GPCRlist)))>0:
+            if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(GPCRlist)))>0 and pubchem_id!='':
                 complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
             protlist=[]
             reference={} 
@@ -555,7 +553,11 @@ def record_complex_in_DB(comple,fromiuphar=False):
     ''' It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created. '''
     #all records in memory, now record them in the DB.
     isoformid=1
-
+    recorded_ids=dict() #save here the inserted ids so we can return it when failing and delete those ids
+    recorded_ids['intdata']=[]
+    recorded_ids['intdataref']=[]
+    recorded_ids['bind']=[]
+    recorded_ids['ec50']=[]
     print(comple[:-2])
 
     kd=comple[5]
@@ -616,9 +618,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
         resultlist=main_complex_exp(query_array,'complex')
         for i in resultlist:
             if exactmatchtest_complex_exp(query_array,'complex',i)=='pass':
-                print('complex_exp already exists, no need to record again')
-                exactest=1
-                #do not create again that cexp!
+                exactest=1 #this complex already exists
                 complex_id=i
                 if complextype==3:
                     intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=1) #binding
@@ -626,14 +626,16 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
                     if len(intdata)==0:
                         complex_interaction_id0=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':1,'id_complex_exp':i},True)
+                        recorded_ids['intdata'].append(complex_interaction_id0)
 
                     if len(intdata2)==0:
                         complex_interaction_id1=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':2,'id_complex_exp':i},True)
-
+                        recorded_ids['intdata'].append(complex_interaction_id1)
                 else:
                     intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype)
                     if len(intdata)==0:
                         complex_interaction_id=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':complextype,'id_complex_exp':i},True)
+                        recorded_ids['intdata'].append(complex_interaction_id)
                     else:
                         complex_interaction_id=intdata[0].id #warning! maybe i should break here already
                         return 'Full complex already recorded'
@@ -644,21 +646,22 @@ def record_complex_in_DB(comple,fromiuphar=False):
             lastid=str(DyndbComplexExp.objects.latest('id').id+1)
             cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id' % lastid)
             complex_id=cursor.fetchone()[0]
+            recorded_ids['complexid']=complex_id
             
         cmol_id=newrecord(['dyndb_complex_molecule',DyndbComplexMolecule],{'id_complex_exp':complex_id},True)
-
+        recorded_ids['complexmol']=cmol_id
         #Create the complex_exp_interaction_data record
 
         if complextype==3: #both kd and ec50 info in same sdf segment.
             complex_interaction_id0=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':1,'id_complex_exp':complex_id},True)
-
+            recorded_ids['intdata'].append(complex_interaction_id0)
             complex_interaction_id1=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':2,'id_complex_exp':complex_id},True)
-      
+            recorded_ids['intdata'].append(complex_interaction_id1)
         else:
             complex_interaction_id=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':complextype,'id_complex_exp':complex_id},True)
-
+            recorded_ids['intdata'].append(complex_interaction_id)
+            
     #Create the references
-    print('Recording references...')
     if fromiuphar:
         for reference in comple[9]['pmid']:
             doirespmid=DyndbReferences.objects.filter(pmid=str(reference) )
@@ -670,14 +673,14 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 try:
                     doi=fullref['doi']
                 except KeyError:
-                    doi=None #used to be ''
+                    doi=None
 
                 reference_id=newrecord(['dyndb_references',DyndbReferences],{'doi':doi, 'authors':fullref['authors'], 'url':'http://www.guidetopharmacology.org/','dbname':'IUPHAR','pmid':str(reference),'title':fullref['title'],'issue':fullref['issue'],'volume':fullref['volume'],'pub_year':fullref['pubyear'],'journal_press':fullref['journal']},True)
             
             intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
-            if len(intref)==0: #this if block was one tab to the left before.
-                newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id, 'id_references':reference_id},True)
-                
+            if len(intref)==0:
+                refexpintdata=newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id, 'id_references':reference_id},True)
+                recorded_ids['intdataref'].append(refexpintdata)
                 
     else:
         doiresdoi=DyndbReferences.objects.filter(doi=comple[9]['DOI'])
@@ -712,55 +715,58 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
         #now that reference exists, create the referenceexpintdata, if it does not exist already
         if complextype==3:
+            #both kd and ec50 values in a single entry
             intref0=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id0).filter(id_references=reference_id)
 
             intref1=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id1).filter(id_references=reference_id)
 
             if len(intref0)==0:
-                newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id0, 'id_references':reference_id},True)
-
+                refexpintdata=newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id0, 'id_references':reference_id},True)
+                recorded_ids['intdataref'].append(refexpintdata)
 
             if len(intref1)==0:
-                newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id1, 'id_references':reference_id},True)
-
+                refexpintdata=newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id1, 'id_references':reference_id},True)
+                recorded_ids['intdataref'].append(refexpintdata)
         else:
             intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
 
             if len(intref)==0: #this if block was one tab to the left before.
-                newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id, 'id_references':reference_id},True)
-
-    print('Complex recorded. Now, record the kinetic values')
+                refexpintdata=newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id, 'id_references':reference_id},True)
+                recorded_ids['intdataref'].append(refexpintdata)
+                
+                
+    #Complex recorded. Now, record the kinetic values
+    
     if complextype==1: #kd, binding
         if len(DyndbBinding.objects.filter(id=complex_interaction_id))==0:
             newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id,'rvalue':kd,'units':'nM','description':comple[12]})
+            recorded_ids['bind'].append(complex_interaction_id)
         else:
             print('that record of binding affinity already existed')
 
     if complextype==2: #ec_50, efficacy
         if len(DyndbEfficacy.objects.filter(id=complex_interaction_id))==0:
             newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
-
+            recorded_ids['ec50'].append(complex_interaction_id)
         else:
             print('that record of efficacy was already registered')
 
 
     if complextype==3:
         if len(DyndbEfficacy.objects.filter(id=complex_interaction_id1))==0:
-            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id0,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
-
+            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id1,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
+            recorded_ids['ec50'].append(complex_interaction_id1)
         else:
             print('that record of efficacy was already registered')
 
 
         if len(DyndbBinding.objects.filter(id=complex_interaction_id0))==0:
-            newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id1,'rvalue':kd,'units':'nM','description':comple[12]})
-
+            newrecord(['dyndb_binding',DyndbBinding],{'id':complex_interaction_id0,'rvalue':kd,'units':'nM','description':comple[12]})
+            recorded_ids['bind'].append(complex_interaction_id0)
         else:
             print('that record of binding affinity already existed')
 
-    print('kinetics recorded. Now, record the protein')
-
-    #This complex is NOT already in the DB
+    #kinetics recorded
 
     if exactest!=1: #if the complex has not been found by the NiceSearcher, we may need to create the proteins and the compounds.
         unicount=0
@@ -773,9 +779,8 @@ def record_complex_in_DB(comple,fromiuphar=False):
             binsequence=comple[10][unicount]
             prot_seq=DyndbProteinSequence.objects.filter(sequence=binsequence) #check if that sequence already exists
             if len(prot_seq)>0:
-                print('that sequence has already been conected to a proteinID in our DB ',str(prot_seq[0].id_protein.id))
-                newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_seq[0].id_protein.id},True)
-
+                cprotid=newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_seq[0].id_protein.id},True)
+                recorded_ids['cprotein']=cprotid
 
             #The sequece of this protein is NOT in the DB
             #maybe that uniprot entry exists, but with a different sequence (a new mutant with respect to the cannonical not yet recorded in our DB)
@@ -783,14 +788,13 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 DBproteins=DyndbProtein.objects.filter(uniprotkbac=uniprot).filter(is_mutated=False)
                 if len(DBproteins)>0:
                     cannonical_id=DBproteins[0].id
-                    print('the cannonical',str(cannonical_id))
                     if len(DyndbCannonicalProteins.objects.filter(id_protein=cannonical_id))==0:
                         newrecord(['dyndb_cannonical_proteins',DyndbCannonicalProteins],{'id_protein':cannonical_id})
 
                     #our current protein is a mutant.
                     jj=1
                     isoflag=0
-                    print('check the isoform of this sequence')
+                    #check the isoform of this sequence
                     while jj<20 and isoflag==0:
                         response = requests.get("http://www.uniprot.org/uniprot/"+uniprot+"-"+str(jj)+".fasta")
                         print(jj,response.text)
@@ -806,11 +810,10 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
                     except:
                         data,errdata = retreive_data_uniprot(uniprot,columns='id,entry name,organism,length,')
-                        #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'} 
                         data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])                            
 
                     id_uniprot_species=data['speciesid']
-                    seqdata,errdata = retreive_fasta_seq_uniprot(uniprot) #THIS FAILES SOMETIMES! do they block my ip? 
+                    seqdata,errdata = retreive_fasta_seq_uniprot(uniprot)
                     namedata,errdata = retreive_protein_names_uniprot(uniprot)
                     namedataori=namedata
                     seqdata=seqdata['sequence']
@@ -834,8 +837,8 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
                     newrecord(['dyndb_protein_cannonical_protein',DyndbProteinCannonicalProtein],{'id_protein':prot_id,'id_cannonical_proteins':cannonical_id},True) 
                     newrecord(['dyndb_protein_sequence',DyndbProteinSequence],{'id_protein':prot_id,'sequence':binsequence,'length':len(seqdata)})
-                    newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_id},True)
-
+                    cprotid=newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_id},True)
+                    recorded_ids['cprotein']=cprotid
                     alignment=align_wt_mut(seqdata,binsequence)
                     residcounter=0
                     while residcounter<len(alignment[0]):
@@ -852,19 +855,17 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 else:
                     ij=1
                     isoflag=0
-                    print('check the isoform of the this new unicode')
+                    #check the isoform of the this new unicode
                     while ij<20 and isoflag==0:
                         response = requests.get("http://www.uniprot.org/uniprot/"+uniprot+"-"+str(ij)+".fasta")
-                        print(ij,response.text)
                         seqlist=response.text.split('\n')[1:] #skip header
                         seq=''.join(seqlist)
                         if seq==binsequence:
                             isoformid=ij
                             isoflag=1
                         ij+=1
-                    print('the isoform is ',isoformid,binsequence,seq)
                     data,errdata = retreive_data_uniprot(uniprot,isoform=isoformid,columns='id,entry name,organism,length,')
-                    print(data,errdata,'here')
+
                     #BEFORE ISOFORM: data,errdata = retreive_data_uniprot(uniprot,isoform=None,columns='id,entry name,organism,length,')
                     #data {'Entry': 'Q9UQ88', 'Entry name': 'CD11A_HUMAN', 'Length': '783', 'Organism': 'Homo sapiens (Human)'}
                     try:
@@ -900,31 +901,42 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     newrecord(['dyndb_cannonical_proteins',DyndbCannonicalProteins],{'id_protein':cannonical_id})
                     newrecord(['dyndb_protein_cannonical_protein',DyndbProteinCannonicalProtein],{'id_protein':prot_id,'id_cannonical_proteins':cannonical_id},True)
                     newrecord(['dyndb_protein_sequence',DyndbProteinSequence],{'id_protein':prot_id,'sequence':binsequence,'length':len(binsequence)})
-                    newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_id},True)
-
+                    cprotid=newrecord(['dyndb_complex_protein',DyndbComplexProtein],{'id_complex_exp':complex_id,'id_protein':prot_id},True)
+                    recorded_ids['cprotein']=cprotid
             unicount+=1
-        
+
         #Create the compound and complexcompound, if it does not exist
-        print('Protein recorded, now the compound')
         DBcompound=DyndbCompound.objects.filter(pubchem_cid=comple[2])
         compdbsinchi=DyndbCompound.objects.filter(sinchi=comple[1],sinchikey=comple[0])
         if len(DBcompound)>0:
             compound_id=DBcompound[0].id
-            print('compound already existed, no need to record it') #warning check if the cmolmol alreadyexist?
-            molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
+            recorded_ids['compound']=compound_id
+            #compound already existed, no need to record it
+            try:
+                molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
+                recorded_ids['molecule']=molecule_id
+            except:
+                return recorded_ids
+                
             cmolmol=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=molecule_id).filter(id_complex_molecule=cmol_id).filter(type=0)
+            recorded_ids['cmolmol']=cmolmol
             if len(cmolmol)==0:
-                newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
-
+                cmolmol=newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
+                recorded_ids['cmolmol']=cmolmol
 
         elif len(compdbsinchi)>0:
             compound_id=compdbsinchi[0].id
-            print('compound already existed, mo need to record it')
-            molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
+            recorded_ids['compound']=compound_id
+            #compound already existed, mo need to record it
+            try:
+                molecule_id=DyndbMolecule.objects.filter(id_compound=compound_id).filter(description='Standard form BindingDB')[0].id
+            except:
+                return recorded_ids
             cmolmol=DyndbComplexMoleculeMolecule.objects.filter(id_molecule=molecule_id).filter(id_complex_molecule=cmol_id).filter(type=0)
+            recorded_ids['cmolmol']=cmolmol
             if len(cmolmol)==0:
                 newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
-          
+                recorded_ids['cmolmol']=cmolmol
 
         else:      
             pubchem_id=comple[2]
@@ -965,17 +977,17 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 if response.status_code==200:
                     with open(SDFpath,'w') as sdfh:
                         sdfh.write(response.text)
-                    print('file written with puchem info in:',SDFpath,'.Trying to convert it into molecule...')
                     molprop=generate_molecule_properties_BindingDB(SDFpath)
                 else:                    
-                    print('No 3D file for that compound',pubchem_id)
+                    #No 3D file for that compound, try 2d
                     url_cidtosdf='https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/'+pubchem_id+'/SDF?record_type=2d'
                     response=requests.get(url_cidtosdf)
                     if response.status_code==200:
                         with open(SDFpath,'w') as sdfh:
                             sdfh.write(response.text)
                     else:
-                        print('no 2d file for that compound',puchem_id)
+                        print('no 2d file for that compound. error.',puchem_id)
+                        return recorded_ids
                         
             iupac,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='IUPACName')
             try:
@@ -991,8 +1003,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 if len(defname)<60:
                     defname=defname
             except KeyError:
-                defname=pubchem_id+'namenotfound'
-
+                defname='PubChemID:'+str(pubchem_id)
             
             names=defname
             sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
@@ -1000,26 +1011,25 @@ def record_complex_in_DB(comple,fromiuphar=False):
             sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
             sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
             
-            print('trying to record the comopund...')
             if comple[3]!='': #write chembleid when available
                 try:
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chembleid':comple[3]},True)
-                    
+                    recorded_ids['compound']=compound_id
                 except:
-                    no_name='repeated_name_for_pubchemid'+str(pubchem_id)
+                    no_name='PubChemID:'+str(pubchem_id)
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chembleid':comple[3]},True)
-
+                    recorded_ids['compound']=compound_id
             else:
                 try:
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey},True)
-
+                    recorded_ids['compound']=compound_id
 
                 except:
-                    no_name='repeated_name_for_pubchemid'+str(pubchem_id)
+                    no_name='PubChemID:'+str(pubchem_id)
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey},True)
-
+                    recorded_ids['compound']=compound_id
+                    
             #recording alternative names
-       
             for name in cnames[:50]:
                 if len(name)<200:
                     newrecord(['dyndb_other_compound_names',DyndbOtherCompoundNames],{'id_compound':compound_id,'other_names':name},True)
@@ -1030,20 +1040,28 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 creference_id=newrecord(['dyndb_references',DyndbReferences],{'url':urlcompo,'authors':'National Center for Biotechnology Information. PubChem Compound Database','dbname':'PubChem Compound Database','title':'Compound data comes from Pubchem'},True)
             else:
                 creference_id=compound_reference[0].id
-            newrecord(['dyndb_references_compound',DyndbReferencesCompound],{'id_compound':compound_id,'id_references':creference_id},True)
-
+            refcompound=newrecord(['dyndb_references_compound',DyndbReferencesCompound],{'id_compound':compound_id,'id_references':creference_id},True)
+            recorded_ids['refcompound']=refcompound
 
             try:
                 molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles']},True)
 
-            except:
-                maxcol=1
-                for mol in DyndbMolecule.objects.filter(inchikey=str(molprop['inchikey'])):
-                    col=mol.inchicol
-                    if col>maxcol:
-                        maxcol=col
-                maxcol=maxcol+1
-                molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
+            except: #inchicol problem or molprop keyerror
+                try:
+                    maxcol=1
+                    for mol in DyndbMolecule.objects.filter(inchikey=str(molprop['inchikey'])):
+                        col=mol.inchicol
+                        if col>maxcol:
+                            maxcol=col
+                    maxcol=maxcol+1
+                except KeyError:
+                    return recorded_ids
+                try:
+                    molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
+                except:
+                    recorded_ids['molecule']=molecule_id
+                    return recorded_ids
+
             with closing(connection.cursor()) as cursor:
                 cursor.execute ("""
                    UPDATE dyndb_compound
@@ -1061,7 +1079,6 @@ def record_complex_in_DB(comple,fromiuphar=False):
             newrecord(['dyndb_references_molecule',DyndbReferencesMolecule],{'id_molecule':molecule_id,'id_references':mreference_id},True)
             newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
 
-
         newrecord(['dyndb_complex_compound',DyndbComplexCompound],{'id_compound':compound_id,'id_complex_exp':complex_id,'type':0},True)    
 
 
@@ -1074,16 +1091,73 @@ def fill_db(chunks):
         complexes=get_complexes(chunk)
         complecount=0
         for comple in complexes:
-            print('Progress in this chunk '+chunk+' is about: '+str((complecount/len(complexes))*100)+ 'with '+str(neg)+' errors and '+str(pos)+' successes')
+            print('Progress in chunk '+chunk+' is: '+str((complecount/len(complexes))*100)+ 'with '+str(neg)+' errors and '+str(pos)+' successes')
             complecount+=1
             #record_complex_in_DB(comple,fromiuphar=False)
             try:
-                record_complex_in_DB(comple,fromiuphar=False)
+                error_dict=record_complex_in_DB(comple,fromiuphar=False) #only saves the return value if it finishes without errror! keeps the prevous one!
                 print('\n\n\nComplex recorded without errors.\n\n\n')
                 pos+=1
             except:
+                print('THIS IS WHAT THE FUNCTION RETURNS',error_dict)
+                
+                if type(error_dict)!=dict:
+                    raise
+                
                 print('\n\n\nError in chunk: '+chunk+'\n\n\n')
-                raise
+                
+                for instance_id in error_dict['bind']:
+                    instance = DyndbBinding.objects.get(id=instance_id)
+                    instance.delete()                                          
+
+                for instance_id in error_dict['ec50']:
+                    instance = DyndbEfficacy.objects.get(id=instance_id)
+                    instance.delete()     
+
+                for instance_id in error_dict['intdataref']:
+                    instance = DyndbReferencesExpInteractionData.objects.get(id=instance_id)
+                    instance.delete()
+
+                for instance_id in error_dict['intdata']:
+                    instance = DyndbExpInteractionData.objects.get(id=instance_id)
+                    instance.delete()
+                try:
+                    instance = DyndbComplexMoleculeMolecule.objects.get(id=error_dict['cmolmol'])
+                    instance.delete()
+                except:
+                    pass
+                
+                try:
+                    instance = DyndbComplexMolecule.objects.get(id=error_dict['complexmol'])
+                    instance.delete()
+                except:
+                    pass
+                    
+                instance = DyndbComplexProtein.objects.get(id=error_dict['cprotein'])
+                instance.delete()
+                
+                instance = DyndbComplexExp.objects.get(id=error_dict['complexid'])
+                instance.delete()
+                
+                try:
+                    instance = DyndbReferencesCompound.objects.get(id=error_dict['refcompound'])
+                    instance.delete()
+                except:
+                    pass
+                
+                try:
+                    print ('lets delete that compound',error_dict['compound'])                
+                    instance = DyndbCompound.objects.get(id=error_dict['compound'])
+                    instance.delete()
+                except:
+                    pass
+                
+                try:
+                    instance = DyndbMolecule.objects.get(id=error_dict['molecule'])
+                    instance.delete()
+                except:
+                    pass
+
                 neg+=1
                 continue
         print('this chunk had ',str(neg),'errors and',str(pos),'successes')
@@ -1104,5 +1178,5 @@ def fill_db_iuphar(filename):
 
 mypath='/protwis/sites/protwis/dynadb/chunks'
 chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-fill_db(chunks[1:])
+fill_db(chunks)
 #fill_db_iuphar('./dynadb/interactions.csv')
