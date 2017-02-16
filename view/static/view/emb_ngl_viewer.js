@@ -1,7 +1,7 @@
 $(document).ready(function(){
     
-    $(".sel_input, #inputdist, #dist_from, #dist_to").val("")
-    $("#show_within, #show_dist").empty();
+    $(".sel_input, .inputdist, .dist_from, .dist_to").val("")
+    //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
   
@@ -40,18 +40,142 @@ $(document).ready(function(){
 
   
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
-
-    function obtainInputedGPCRnum(pre_sel) {
+    
+    function obtainInputedGPCRnum(pre_sel){
         var gpcr = "((\\d{1,2}\\.\\d{1,2}(x\\d{2,3})?)|(\\d{1,2}x\\d{2,3}))";
-        var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
-        var re = new RegExp(gpcr_range,"g");
+        var re = new RegExp(gpcr,"g");
         var res = pre_sel.match(re); 
         return(res);
     }
 
+    function obtainInputedGPCRrange(pre_sel) {
+        var gpcr = "((\\d{1,2}\\.\\d{1,2}(x\\d{2,3})?)|(\\d{1,2}x\\d{2,3}))";
+        var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
+        var re = new RegExp(gpcr_range,"g");
+        var res = pre_sel.match(re); 
+        //console.log(res);
+        return(res);
+    }
+    
+    function parseGPCRnum(sel,lonely_gpcrs){
+        var add_or ="";
+        if (num_gpcrs >1){
+            add_or=" or ";
+        }    
+        for (i in lonely_gpcrs) {
+            var my_gpcr = lonely_gpcrs[i];
+            var subst_pos_all ="";
+            for (gpcr_id in all_gpcr_dicts){
+                var subst_pos ="";
+                my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
+                gpcr_comb_dict=my_gpcr_dicts["combined_num"];
+                bw_dict=my_gpcr_dicts["bw_num"];
+                gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
+                
+                if(gpcr_comb_dict[my_gpcr] != undefined) {
+                    var res_chain=gpcr_comb_dict[my_gpcr];  
+                } else if (bw_dict[my_gpcr] != undefined) {
+                    var res_chain=bw_dict[my_gpcr];  
+                } else if (gpcrdb_dict[my_gpcr] != undefined){
+                    var res_chain=gpcrdb_dict[my_gpcr];                   
+                } else {
+                    res_chain=undefined;
+                    to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
+                    $("#alert").append(to_add);
+                }
+                if (res_chain){
+                    if (chains_str == "") {
+                        subst_pos=" "+res_chain[0];
+                    } else {
+                        subst_pos=" "+res_chain[0]+":"+res_chain[1];
+                    }
+                    subst_pos_all += subst_pos + add_or;
+                }
+            }
+            if (subst_pos_all){
+                if (num_gpcrs >1){
+                    subst_pos_all=subst_pos_all.slice(0,-4);
+                    subst_pos_all="("+subst_pos_all+")";
+                } 
+                sel = sel.replace(my_gpcr ,subst_pos_all );
+            } else {
+                sel="";
+            }
+        }
+        return (sel)
+    }
+    
+    function parseGPCRrange(pre_sel,gpcr_ranges){
+        var add_or ="";
+        if (num_gpcrs >1){
+            add_or=" or ";
+        }    
+        for (i in gpcr_ranges) {
+            var gpcr_pair_str = gpcr_ranges[i];
+            var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
+            var pos_range_all=""
+            for (gpcr_id in all_gpcr_dicts){
+                var pos_range="";
+                my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
+                gpcr_comb_dict=my_gpcr_dicts["combined_num"];
+                bw_dict=my_gpcr_dicts["bw_num"];
+                gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
+                var chain_pair=[]
+                var res_pair=[]
+                for (n in gpcr_pair){
+                    var gpcr_n=gpcr_pair[n];  
+                    if(gpcr_comb_dict[gpcr_n] != undefined) {
+                        var res_chain=gpcr_comb_dict[gpcr_n];  
+                    } else if (bw_dict[gpcr_n] != undefined) {
+                        var res_chain=bw_dict[gpcr_n];  
+                    } else if (gpcrdb_dict[gpcr_n] != undefined){
+                        var res_chain=gpcrdb_dict[gpcr_n];                   
+                    } else {
+                        res_chain=undefined;
+                        chain_pair=false
+                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
+                        $("#alert").append(to_add);
+                        break
+                    }
+                    res_pair[res_pair.length]=res_chain[0];
+                    chain_pair[chain_pair.length]=res_chain[1];
+                }
+                if (chain_pair){
+                    if (chains_str == "") {
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]
+                    } else if (chain_pair[0]==chain_pair[1]){
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
+                    } else {
+                        start=all_chains.indexOf(chain_pair[0]);
+                        end=all_chains.indexOf(chain_pair[1]);
+                        var middle_str="";
+                        considered_chains=all_chains.slice(start+1,end)
+                        for (chain in considered_chains){
+                            middle_str += " or :"+ considered_chains[chain];
+                        }
+                        pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
+                    }
+                    pos_range_all += pos_range + add_or; 
+                }
+            }//END FOR GPROT
+        if (pos_range_all){
+            if (num_gpcrs >1){
+                pos_range_all=pos_range_all.slice(0,-4);
+                pos_range_all="("+pos_range_all+")"
+            }  
+            pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
+        } else {
+            pre_sel="";
+        }
+        sel=pre_sel;
+        }//END FOR GPCR RANGES
+    return(sel)
+    }    
+    
+
     function inputText(gpcr_pdb_dict){
         var pre_sel = $(".sel_input").val();
-        var gpcr_ranges=obtainInputedGPCRnum(pre_sel);
+        var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
@@ -59,69 +183,17 @@ $(document).ready(function(){
             to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
             $("#alert").attr("class","alert alert-danger row").append(to_add);
         } else {
-            var add_or ="";
-            if (num_gpcrs >1){
-                add_or=" or ";
-            }
-            for (i in gpcr_ranges) {
-                var gpcr_pair_str = gpcr_ranges[i];
-                var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
-                var pos_range_all=""
-                for (gpcr_id in all_gpcr_dicts){
-                    var pos_range="";
-                    my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
-                    gpcr_comb_dict=my_gpcr_dicts["combined_num"];
-                    bw_dict=my_gpcr_dicts["bw_num"];
-                    gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
-                    var chain_pair=[]
-                    var res_pair=[]
-                    for (n in gpcr_pair){
-                        var gpcr_n=gpcr_pair[n];  
-                        if(gpcr_comb_dict[gpcr_n] != undefined) {
-                            var res_chain=gpcr_comb_dict[gpcr_n];  
-                        } else if (bw_dict[gpcr_n] != undefined) {
-                            var res_chain=bw_dict[gpcr_n];  
-                        } else if (gpcrdb_dict[gpcr_n] != undefined){
-                            var res_chain=gpcrdb_dict[gpcr_n];                   
-                        } else {
-                            res_chain=undefined;
-                            chain_pair=false
-                            to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
-                            $("#alert").append(to_add);
-                            break
-                        }
-                        res_pair[res_pair.length]=res_chain[0];
-                        chain_pair[chain_pair.length]=res_chain[1];
-                    }
-                    if (chain_pair){
-                        if (chains_str == "") {
-                            pos_range=" "+res_pair[0] + "-" +res_pair[1]
-                        } else if (chain_pair[0]==chain_pair[1]){
-                            pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
-                        } else {
-                            start=all_chains.indexOf(chain_pair[0]);
-                            end=all_chains.indexOf(chain_pair[1]);
-                            var middle_str="";
-                            considered_chains=all_chains.slice(start+1,end)
-                            for (chain in considered_chains){
-                                middle_str += " or :"+ considered_chains[chain];
-                            }
-                            pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
-                        }
-                        pos_range_all += pos_range + add_or; 
-                    }
-                }//END FOR GPROT
-            if (pos_range_all){
-                if (num_gpcrs >1){
-                    pos_range_all=pos_range_all.slice(0,-4);
-                    pos_range_all="("+pos_range_all+")"
-                }  
-                pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
+            sel=parseGPCRrange(pre_sel,gpcr_ranges);
+        }
+        var lonely_gpcrs=obtainInputedGPCRnum(sel);
+        if (lonely_gpcrs != null){
+            if (gpcr_pdb_dict=="no"){
+                sel = ""
+                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
+                $("#alert").attr("class","alert alert-danger row").append(to_add);
             } else {
-                pre_sel="";
+                sel=parseGPCRnum(sel,lonely_gpcrs);
             }
-            sel=pre_sel;
-            }//END FOR GPCR RANGES
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
         if (sel_sp != null){ //Remove white spaces between "-" and nums
@@ -130,9 +202,8 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
-        //alert(sel);
-        sel_enc = sel;
-        return sel_enc
+        console.log(sel);
+        return sel;
     };
 
     $("#gpcr_sel").change(function(){
@@ -339,7 +410,7 @@ $(document).ready(function(){
         });
     }
 
-    maxInputLength('#inputdist',6);
+    maxInputLength('.inputdist',6);
     maxInputLength('input.sel_input',100);
     maxInputLength('#rmsd_frame_1',8);
     maxInputLength('#rmsd_frame_2',8);
@@ -381,31 +452,37 @@ $(document).ready(function(){
         var option='<option value="'+comp_sh[comp_n]+'">'+comp_lg[comp_n]+'</option>';
         select += option;
     }
-    var first=true;
+    
     var i=1
-    $("#add_btn").click(function(){ 
-        var row='<span class="dist_sel" id=row'+i+'><br>\
-                  <span id="tick" ></span>\
-                  <span id="always" style="margin-left:14px">\
+    $(".sel_within").on("click",".add_btn",function(){ 
+        $(".sel_within").find(".add_btn").css("visibility","hidden");
+        var row='<div class="dist_sel" id=row'+i+'>\
+                  <span class="tick" ></span>\
+                  <span class="always" style="margin-left:14px">\
                     Show residues within \
-                    <input class="form-control input-sm" id="inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
+                    <input class="form-control input-sm inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
                       &#8491; of\
-                        <select id="comp" name="comp">' + select + '</select>\
-                  </span>';
-        $("#show_within").append(row);
+                        <select class="wthComp" name="comp">' + select + '</select>\
+                        <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                        <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                    </span>\
+                  </div>';
+        $(".sel_within").append(row);
         i+=1;
-        if (first){
-            $("#rm_btn").css("visibility","visible");
-            first=false;
-        }
     });
     
-    $("#rm_btn").click(function(){ 
-        $("#row"+(i-1)).remove();
-        i -=1;
-        if (i ==1){
-            $("#rm_btn").css("visibility","hidden");
-            first=true;
+    $(".sel_within").on("click", ".rm_btn" , function(){
+        var numWthRows = $(".sel_within").children().length;
+        if(numWthRows==1){
+            $(".sel_within").find(".inputdist").val("");
+        }else{
+            var wBlock =$(this).closest(".dist_sel");
+            if (wBlock.is(':last-child')){
+                wBlock.remove();
+                $(".sel_within").find(".add_btn:last").css("visibility","visible");
+            } else {
+                wBlock.remove();
+            }
         }
     });
 
@@ -428,16 +505,17 @@ $(document).ready(function(){
         var inp=$(this).find("input").val().replace(/\s+/g, '');
         $(this).find("input").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
-            $(this).find("#tick").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
-            $(this).find("#always").attr("style","");
+            $(this).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+            $(this).find(".always").attr("style","");
+            $(this).addClass("sw_ok");
         } else {
-            if ($(this).find("#tick").attr("class")=="glyphicon glyphicon-ok"){
-                $(this).find("#tick").attr({"class":"","style":""});
-                $(this).find("#always").attr("style","margin-left:14px");
+            if ($(this).attr("class").indexOf("sw_ok") > -1){
+                $(this).find(".tick").html("");
+                $(this).find(".always").attr("style","margin-left:14px");
+                $(this).removeClass("sw_ok");
             }
         }
     });    
-
 
 
 
@@ -627,51 +705,136 @@ function isEmptyDict(mydict){
     
     
 ///   Dist between residues  ///
-    var first_dist=true;
-    var i_dist=1
-    $("#add_btn2").click(function(){ 
-        if (i_dist < 20){
-            var row_d='<span class="dist_pair" id=row2_'+i_dist+'><br>\
-                  <span id="tick2" ></span>\
-                  <span id="always2" style="margin-left:14px">\
+
+    var i_dist=1;
+    $(".dist_btw").on("click",".add_btn2",function(){ 
+        if ($(".dist_btw").children().length < 20){
+            $(".dist_btw").find(".only1st").css("visibility","hidden");
+            var row_d='<div class="dist_pair" id=row2_'+i_dist+'>\
+                  <span class="tick2" ></span>\
+                  <span class="always2" style="margin-left:14px">\
                      Compute distance between \
-                     <input class="form-control input-sm" id="dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
 			and\
-                     <input class="form-control input-sm" id="dist_to" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
-                  </span>';
-            $("#show_dist").append(row_d);
+                     <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                     <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                     <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>\
+                   </span>\
+                  </div>';
+            $(".dist_btw").append(row_d);
             i_dist+=1;
-            if (first_dist){
-                $("#rm_btn2").css("visibility","visible");
-                first_dist=false;
-           }
         }
     });
     
-    $("#rm_btn2").click(function(){ 
-        $("#row2_"+(i_dist-1)).remove();
-        i_dist -=1;
-        if (i_dist ==1){
-            $("#rm_btn2").css("visibility","hidden");
-            first_dist=true;
+    function addClickedDistInputs(clickedDist){
+        for (dpairN in clickedDist){
+            var dpair0 = clickedDist[dpairN][0];
+            var dpair1 = clickedDist[dpairN][1];
+            if ($(".dist_btw").children().length < 20){
+                if( /^[\d]+$/.test(dpair0 + dpair1)){
+                    $(".dist_btw").find(".only1st").css("visibility","hidden");
+                    var row_d='<div class="dist_pair d_ok" id=row2_'+i_dist+'>\
+                          <span class="tick2"><span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span></span>\
+                          <span class="always2">\
+                             Compute distance between \
+                             <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair0+'">\
+			        and\
+                             <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair1+'">\
+                             <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                             <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                             <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>\
+                          </span>\
+                          </div>';
+                    $(".dist_btw").append(row_d);
+                    i_dist+=1;
+               }
+            }
+        }
+    }
+    
+            
+    
+    
+    function obtainDistInputed(clickedDist_pre){
+        var dPairsInp = []
+        $(".dist_btw").find(".dist_pair").each(function(){ 
+            var d_from=$(this).find(".dist_from").val();
+            var d_to=$(this).find(".dist_to").val();
+            dPairsInp.push([d_from,d_to]);
+        });
+        str_dPairsInp=JSON.stringify(dPairsInp);       
+        var clickedDist=[];
+        for (addPosN in clickedDist_pre){
+            var addpos=clickedDist_pre[addPosN];
+            if (str_dPairsInp.indexOf(JSON.stringify(addpos)) == -1){
+                clickedDist.push(addpos);
+            }
+        }
+        return(clickedDist)
+    }
+    
+    var clickedDistToAnalysis =function(clickedDist_pre){
+        if (clickedDist_pre.length > 0){
+            clickedDist=obtainDistInputed(clickedDist_pre);        
+            var last_from_sel=$(".dist_btw").find(".dist_from:last");
+            var last_from=last_from_sel.val();
+            var last_to_sel=$(".dist_btw").find(".dist_to:last")
+            var last_to=last_to_sel.val();
+            if ( last_from=="" && last_to==""){                
+                var fstRow0 =clickedDist[0][0];
+                var fstRow1 =clickedDist[0][1];
+                last_from_sel.val(fstRow0);
+                last_to_sel.val(fstRow1);
+                if( /^[\d]+$/.test(fstRow0 + fstRow1)){
+                    var last_row=$(".dist_btw").find(".dist_pair:last");
+                    last_row.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+                    last_row.find(".always2").attr("style","");
+                    last_row.addClass("d_ok");
+                }  
+                if (clickedDist.length > 1){
+                    addClickedDistInputs(clickedDist.slice(1));
+                }
+            } else {
+                addClickedDistInputs(clickedDist);
+            }
+        }
+    }
+    window.clickedDistToAnalysis=clickedDistToAnalysis;    
+    
+    
+    $(".dist_btw").on("click", ".del_btn2" , function(){ 
+        var numDistRows = $(".dist_btw").children().length;
+        if(numDistRows==1){
+            $(".dist_btw").find(".dist_from").val("");
+            $(".dist_btw").find(".dist_to").val("");
+        }else{
+            var dBlock =$(this).closest(".dist_pair");
+            if (dBlock.is(':last-child')){
+                dBlock.remove();
+                $(".dist_btw").find(".add_btn2:last , .imp_btn2:last").css("visibility","visible");
+            } else {
+                dBlock.remove();
+            }
         }
     });
 
 
 
     $(".dist_btw").on("blur", ".dist_pair" ,function(){
-        var d_from=$(this).find("#dist_from").val().replace(/\s+/g, '');
-        var d_to=$(this).find("#dist_to").val().replace(/\s+/g, '');
-        $(this).find("#dist_from").val(d_from);
-        $(this).find("#dist_to").val(d_to);
+        var d_from=$(this).find(".dist_from").val().replace(/\s+/g, '');
+        var d_to=$(this).find(".dist_to").val().replace(/\s+/g, '');
+        $(this).find(".dist_from").val(d_from);
+        $(this).find(".dist_to").val(d_to);
         if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
-            $(this).find("#tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
-            $(this).find("#always2").attr("style","");
+            $(this).find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+            //$(this).find(".tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
+            $(this).find(".always2").attr("style","");
             $(this).addClass("d_ok");
         } else {
-            if ($(this).find("#tick2").attr("class")=="glyphicon glyphicon-ok"){
-                $(this).find("#tick2").attr({"class":"","style":""});
-                $(this).find("#always2").attr("style","margin-left:14px");
+            if ($(this).attr("class").indexOf("d_ok") > -1){
+                $(this).find(".tick2").html("");
+                $(this).find(".always2").attr("style","margin-left:14px");
                 $(this).removeClass("d_ok");
             }
         }
@@ -680,8 +843,8 @@ function isEmptyDict(mydict){
     function obtainDistToComp(){
         var distToComp="";
         $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
-            var d_from=$(this).find("#dist_from").val();
-            var d_to=$(this).find("#dist_to").val();
+            var d_from=$(this).find(".dist_from").val();
+            var d_to=$(this).find(".dist_to").val();
             distToComp += d_from+"-"+d_to+"a";
         });
         if (distToComp){
@@ -1294,21 +1457,13 @@ function isEmptyDict(mydict){
 ///
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");
-    //var struc_id =$(".str_file").data("structure_file_id");
-    /*var struc_info = $(".str_file").attr("id");
-    var struc_info = struc_info.split(",");
-    var struc = struc_info[0];
-    var struc_id = struc_info[1];
-    var dyn_id=struc_info[2];*/
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
-    //var url_orig = mdsrv_url+"/html/embed.html?struc="+encode(struc);
     var seeReceptor = "y";
     var sel = "";
     var sel_enc = sel;
 
     
     var traj=obtainCheckedTrajs()
-    //$("iframe").attr("src", url_orig + "&rc=" + seeReceptor + "&sel="+"&traj=" + encode(traj) + sel_enc + "&sd=y" );
     $("#receptor").addClass("active");
     $(".nonGPCR").addClass("active");
     var chains_str = $("#chains").text();
@@ -1340,16 +1495,9 @@ function isEmptyDict(mydict){
     });
 
     
-    //$("#submit").click(function(){
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         window.results=results;
-        /*cp = results[0];
-        high_pre=results[1];
-        sel_enc=results[2];
-        var rad_option =results[3];
-        var traj =results[4];
-        var nonGPCR =results[5];*/
         var view_dist=showDist();
         window.view_dist=view_dist;
         var pd = "n";
@@ -1361,7 +1509,7 @@ function isEmptyDict(mydict){
             }
         }
         window.pd=pd;
-        var dist_of=obtainDistSel();  // For the dist selection
+        var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
         var distToComp = obtainDistToComp();
         window.distToComp=distToComp;
@@ -1373,13 +1521,8 @@ function isEmptyDict(mydict){
         window.distToComp=distToComp;
         window.seeReceptor=seeReceptor;
         obtainLegend(legend_el);
-        //$("#embed_mdsrv")[0].contentWindow.test();
-        //document.getElementById("embed_mdsrv").contentWindow.hello;
-        
-        //url = url_orig + ("&sel=" + sel_enc + "&traj=" + encode(traj) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+dist_of + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains);
-       // alert(url);
-//       $("iframe").attr("src", url);
     };
+    
     window.passInfoToIframe=passInfoToIframe;
     $("#to_mdsrv").click(function(){
          var distToComp = obtainDistToComp();
