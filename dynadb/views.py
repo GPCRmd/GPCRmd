@@ -6531,6 +6531,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                 
                 filepath = os.path.join(submission_path,filename)
                 download_url = os.path.join(submission_url,filename)
+                os.makedirs(submission_path,exist_ok=True)
                 
                 if file_type in atomnum_check_file_types:
                     if request.upload_handlers[0].activated:
@@ -6579,7 +6580,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                 (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url})
                 
                 data['download_url_file'].append(download_url)
-                os.makedirs(submission_path,exist_ok=True)
+
                 try:
                     if file_type in atomnum_check_file_types and request.upload_handlers[0].activated:
                         os.rename(deleteme_filepath,filepath)
