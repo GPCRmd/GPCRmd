@@ -3609,6 +3609,11 @@ def check_trajectories(request,submission_id):
 
 
 def MODELreuseREQUESTview(request,model_id):
+    qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+    qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
+        enabled=True
     if model_id == 0: #model_id is 0 when the view is accesed from the memberpage view!!! then the model_id selected by the user is passed to other reuse views
         return render(request,'dynadb/MODELreuseREQUEST.html', {})
     # Dealing with POST data
@@ -3680,6 +3685,14 @@ def MODELrowview(request):
 
 
 def MODELreuseview(request, submission_id, model_id  ):
+    enabled=False
+    qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).order_by('int_id')
+    qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+    qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+#    if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
+    if qSubPNew.exists() and qSubMolNew.exists(): #el submit Model is submitted when clicking the " Continue to step 4: Dynamics Information " button 
+        enabled=True
     print("reuseview")
     qModel=DyndbModel.objects.filter(id=model_id)
     INITsubmission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]
@@ -3726,15 +3739,38 @@ def MODELreuseview(request, submission_id, model_id  ):
     print(rowsMR.values)
     print("aqui",lformps)
     if request.method == 'POST':
-        return HttpResponseRedirect("/".join(["/dynadb/MODELreuse",submission_id,""]), {'submission_id':submission_id} )
+        print("POSTi aaaaaa")
+
+        print(request.POST)
+        if not qSubModNew.exists():
+            dictsubmod={'submission_id':submission_id, 'model_id':request.POST['model_id']}
+            fdbSM=dyndb_Submission_Model(dictsubmod)
+            if fdbSM.is_valid():
+                print ("TTTTTTTTTTTtt")
+                print ("MODEL SUBMISSION ITEMS", fdbSM.fields.items())
+                fdbSM.save()
+                response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been successfully submitted for this submission.",content_type='text/plain')
+            else:
+                response = HttpResponse( ("").join([fdbSM.errors.as_text(), ". The submission model form has not been saved."]),content_type='text/plain')
+        else:
+            response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been previously submitted for this submission.",content_type='text/plain')
+        return response
+       # return HttpResponseRedirect("/".join(["/dynadb/MODELreuse",submission_id,""]), {'submission_id':submission_id} )
     else:
         fdbMF = dyndb_Model()
         fdbPS = dyndb_Modeled_Residues()
         fdbMC = dyndb_Model_Components()
-        return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id})
+        return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled, 'modelr_form':True})
 
 def PROTEINreuseview(request, submission_id, model_id ):
+    enabled=False
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).order_by('int_id')
+    qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+    qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
+        enabled=True
+
     print(qSub)
     int_id=[]
     int_id0=[]
@@ -3790,10 +3826,17 @@ def PROTEINreuseview(request, submission_id, model_id ):
 #           MUTations.append('')
 #       wseq.append(llsw) 
 
-    return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id})
+    return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled })
 
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
+    enabled=False
+    qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+    qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
+    #if qSubPNew.exists() and qSubMolNew.exists():
+        enabled=True
     qSub=DyndbSubmissionMolecule.objects.exclude(int_id=None).order_by('int_id').exclude(not_in_model=True).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'))
     labtypel=[]
     print(qSub)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
@@ -3848,7 +3891,7 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #       print("AQUI", tt,alias)
 
 #    return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
-    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'last':last,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse})
+    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'last':last,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse, 'enabled':enabled})
 
 def DYNAMICSreuseview(request, submission_id, model_id ):
     if request.method == 'POST':
@@ -5171,7 +5214,7 @@ def MODELview(request, submission_id):
                 mrstype=l.SOURCE_TYPE[l.source_type]
                 lmrstype.append(mrstype)
             print ("residues!!",lmrstype)
-            qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id).exclude(type=None).exclude(id_molecule=None).order_by('id_molecule__dyndbsubmissionmolecule__int_id').annotate(int_id=F('id_molecule__dyndbsubmissionmolecule__int_id'))
+            qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id,id_molecule__dyndbsubmissionmolecule__submission_id=submission_id).exclude(type=None).exclude(id_molecule=None).order_by('id_molecule__dyndbsubmissionmolecule__int_id').annotate(int_id=F('id_molecule__dyndbsubmissionmolecule__int_id'))
             lmtype=[]
             lformmc=list(range(0,len(qMODCOMP)))
             lcompname=[]
@@ -6635,7 +6678,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
 
 
-def DYNAMICSview(request, submission_id):
+def DYNAMICSview(request, submission_id, model_id=None):
                    
     def dynamics_file_table (dname, DFpk): #d_fmolec_t, dictext_id 
         print(dname)
@@ -10125,7 +10168,25 @@ def SMALL_MOLECULEview(request, submission_id):
             Update_molec=False
             model_id=request.POST['model_id']
             qSmolec_model_this_sub=DyndbSubmissionMolecule.objects.filter(not_in_model=False,submission_id=submission_id)
+            qSprot_model_this_sub =DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
             qSmolec_model_first_sub=DyndbSubmissionModel.objects.filter(model_id=model_id,submission_id=F('model_id__model_creation_submission_id'),submission_id__dyndbsubmissionmolecule__not_in_model=False)
+            if not qSprot_model_this_sub.exists():
+                qSprot_model_first_sub=list(qSmolec_model_first_sub.annotate(int_id=F('submission_id__dyndbsubmissionprotein__int_id'),protein_id=F('submission_id__dyndbsubmissionprotein__protein_id'),name=F('submission_id__dyndbsubmissionprotein__protein_id__name')).values())
+                for entry in  qSprot_model_first_sub:
+                    entry['submission_id']=submission_id
+                    entry['submission_id_id']=submission_id
+                    entry['protein_id']=int(entry['protein_id'])
+                    entry['int_id']=int(entry['int_id'])
+                    SProtreuse=dyndb_Submission_Protein(entry)
+                    if SProtreuse.is_valid(): # only the submission molecule table should be filled!!!!
+                        SProtreuse.save()
+                    else:    
+                        iii1=SProtreuse.errors.as_text()
+                        print("SProtreuse ", entry," no es valido")
+                        print("!!!!!!Errores despues del SProtreuse\n",iii1,"\n")
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return response
+
             qsubmission_id=qSmolec_model_first_sub.values_list('submission_id',flat=True)[0]
             if qSmolec_model_this_sub.exists():
                 if len(qSmolec_model_this_sub) == len(qSmolec_model_first_sub):
