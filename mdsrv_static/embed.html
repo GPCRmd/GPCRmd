@@ -47,6 +47,7 @@
             stage = new NGL.Stage( "viewport" );
 
 ////////////////// Functions
+        $(document).ready(function(){
         document.domain=document.domain;
 
         function selWithinComponent(o,dist_comp){
@@ -147,6 +148,7 @@
                 }
                 clickedRep={};
                 clickedRepLi=[];
+                clickedDist={};
                 clicktrue = true;
             });
             var o=stage.getComponentsByName("my_comp").list[0];
@@ -189,6 +191,7 @@
                             lbl_name2="label_"+lbl_id.toString();
                             lbl_id+=1;
                             dist_name="dist_"+dist_id.toString();
+                            clickedDist[dist_name]=[atom1,atom2];
                             dist_id+=1;
                             var add1=[lbl_name1, lbl_name2 , dist_name];
                             var add2 = [lbl_name1, lbl_name2 , dist_name];
@@ -220,7 +223,12 @@
                                 for (rvN in toRv){
                                     var repName=toRv[rvN];
                                     stage.getRepresentationsByName(repName).list[0].repr.clear();
-                                    stage.getRepresentationsByName(repName).setVisibility(false)
+                                    stage.getRepresentationsByName(repName).setVisibility(false);
+                                    if (repName.substr(0, 4)=="dist"){
+                                        if (repName in clickedDist){
+                                            delete clickedDist[repName];
+                                        }
+                                    }
                                 }
                                 stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
                                 stage.getRepresentationsByName(lbl_name1).setVisibility(false)
@@ -409,6 +417,7 @@
             var trajComp, player;
             var clickedRep={};
             var clickedRepLi=[];
+            var clickedDist={};
             var traj_li=[];
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
@@ -446,7 +455,17 @@
                         NGL.download( blob, "screenshot.png" );
                     } );
                 });
+                //$(".imp_btn2", window.parent.document).click
+                $(".dist_btw", window.parent.document).on("click" , ".imp_btn2" ,function(){
+                
+                    allClickedDists=[];
+                    for (k in clickedDist){
+                        allClickedDists.push(clickedDist[k]);
+                    }
+                    parent.clickedDistToAnalysis(allClickedDists);
+                })
             }
+        });
         });
     </script>
     <div id="toiframe" style="width:540px">

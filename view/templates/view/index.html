@@ -143,15 +143,15 @@
 
 <!-- ============= Residues within x A of y =========== --> 
                <div class="row">
+               
                 <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
-                  <span class="dist_sel" id="row0">
-                    <span id="tick" ></span>
-                    <span id="always" style="margin-left:14px">
-                 <!-- <label id="checkbox_lab"><input id="checkbox_inp" type="checkbox" name="dist" value="dist"> -->Show residues within 
-
-                    <input class="form-control input-sm" id="inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                  <div class="dist_sel" id="row0">
+                    <span class="tick" ></span>
+                    <span class="always" style="margin-left:14px">
+                     Show residues within 
+                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
                       &#8491; of
-                        <select id="comp" name="comp">
+                        <select class="wthComp" name="comp">
                            {% for long_n, short_n in compounds %}
                            <option   value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}
@@ -159,15 +159,13 @@
                            <option   value="{{other_prots.0}}">Other proteins</option>
                            {% endif %}
                         </select>
-                    </span>
-                  </span>
-                  <!-- </label> -->
-                  <span id="show_within"></span>
-                  <button id="add_btn" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-                  <!-- <button id="add_btn" class="btn btn-success" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;" ><span class="glyphicon glyphicon-plus"></span></button> -->
-                  <button id="rm_btn" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
-                  <!-- <button id="rm_btn" class="btn btn-danger" style="width:27px;height:27px;border-radius:100%;text-align: center;padding:0;font-size:10px;visibility:hidden" ><span class="glyphicon glyphicon-minus"></span></button>  -->
+                        <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>
+                        <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+
+                  </div>
+                  <!--<span id="show_within"></span>-->
                 </div>
+                
                </div>
 
             </div>
@@ -391,23 +389,26 @@
 
               <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Distance</div>
                <div id="analysis_dist" class="collapse">
+               
                 <div class="dist_btw" style="margin-right:5px;margin-left:0;">
-                  <span class="dist_pair" id="row2_0">
-                    <span id="tick2" ></span>
-                    <span id="always2" style="margin-left:14px">
+                  <div class="dist_pair" id="row2_0">
+                    <span class="tick2" ></span>
+                    <span class="always2" style="margin-left:14px">
                      Compute distance between 
-                     <input class="form-control input-sm" id="dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
 			and
-                     <input class="form-control input-sm" id="dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">       
+                     <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>  
+                     <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                     <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>
+                     <!--<button id="rm_btn2"  class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button> -->
 
                     </span>
-                  </span>
+                  </div>
 
-                  <span id="show_dist"></span>
-                  <button id="add_btn2" class="btn btn-link" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-                  <button id="rm_btn2" class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button>
-                  
+                  <!--<span id="show_dist"></span>                  -->
                 </div>
+                
                 {% if traj_list %}
                 <div style="margin-left:18px;">
                     <div>

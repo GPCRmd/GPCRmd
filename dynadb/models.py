@@ -779,13 +779,12 @@ class DyndbSubmissionDynamicsFiles(models.Model):
         unique_together = (('submission_id', 'filepath'),('submission_id','type','filenum'))
 
 class DyndbFilesModel(models.Model):
-    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')
-    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files')
+    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',unique=True)
+    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files',unique=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_files_model'
-        unique_together = (('id_model', 'id_files'),)
 
 
 class DyndbFilesMolecule(models.Model):
