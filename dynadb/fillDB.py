@@ -1,5 +1,7 @@
 ############################################### IUPHAR and BindingDB parsing#######################################################################################################################
 
+#run with /env/bin/python fillDB.py
+
 import os, sys
 proj_path = "/protwis/sites/protwis/"
 # This is so Django knows where to find stuff.
@@ -416,7 +418,6 @@ def to_bindingdb_format(records):
 
 def get_complexes(chunk):
     '''Fills the GPCRmd database with data from the BindingDB.'''
-    print('\n\n\n\n\n\nProccessing chunk: ',chunk)
     fh=open(chunk,'r')
     complexes=[] #each complex has: the ligand InchiKey, the list of uniprot codes which form the PROTEIN part of the complex, Ki, IC50, Kd, EC50
     uniflag=0 
@@ -431,10 +432,10 @@ def get_complexes(chunk):
     protlist=[]
     seqlist=[]
     emptyprot=False
+    print('lines in memory')
     while i<len(lines_list):#make sure the last line is parsed.
 
         if '$$$$' in lines_list[i]:
-            
             if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(GPCRlist)))>0 and pubchem_id!='':
                 complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
             protlist=[]
@@ -480,13 +481,15 @@ def get_complexes(chunk):
 
         elif '<PubChem CID>' in lines_list[i]: 
             pubchem_id=lines_list[i+1].strip()
-            try:
-                sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
-                sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
-                sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
-                sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
-            except:
-                errflag=1
+            #too slow, but prevents mistakes:
+            #~ try:
+                #~ sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
+                #~ sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
+                #~ sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
+                #~ sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
+            #~ except:
+                #~ print('errflag fucking my patience')
+                #~ errflag=1
         elif '<ChEMBL ID of Ligand>' in lines_list[i]:
             chembl_id=lines_list[i+1].strip()[6:]
 
@@ -649,7 +652,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
         #This complex does not exist yet. Record the complex exp and the intdata
         with closing(connection.cursor()) as cursor:
             lastid=str(DyndbComplexExp.objects.latest('id').id+1)
-            cursor.execute('INSERT INTO dyndb_complex_exp (id) VALUES (%s) RETURNING id' % lastid)
+            cursor.execute('INSERT INTO dyndb_complex_exp (id,is_published) VALUES (%s,%s) RETURNING id', (lastid,True))
             complex_id=cursor.fetchone()[0]
             recorded_ids['complexid']=complex_id
             
@@ -825,10 +828,10 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     namedata=namedata['RecName'][0]['Full'][0]
                     if uniprot in GPCRlist: #if this uniprot code is a GPCR, find its id in receptor_id_protein
                         receptor_protein_id=str(Protein.objects.filter(accession=uniprot)[0].id)
-                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'True','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species},True)
+                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'True','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species, 'is_published':True},True)
 
                     else:
-                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'True','isoform':isoformid,'id_uniprot_species':id_uniprot_species},True)
+                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'True','isoform':isoformid,'id_uniprot_species':id_uniprot_species,'is_published':True},True)
          
                     try:
                         preference_id=DyndbReferences.objects.filter(doi='https://doi.org/10.1093/nar/gku989')[0].id
@@ -889,9 +892,9 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
                     if uniprot in GPCRlist:
                         receptor_protein_id=str(Protein.objects.filter(accession=uniprot)[0].id)
-                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'False','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species},True) #warning isoform=1
+                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'False','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species,'is_published':True},True) #warning isoform=1
                     else:
-                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'False','isoform':isoformid,'id_uniprot_species':id_uniprot_species},True) #warning isoform=1
+                        prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'False','isoform':isoformid,'id_uniprot_species':id_uniprot_species,'is_published':True},True) #warning isoform=1
                     try:
                         preference_id=DyndbReferences.objects.filter(doi='https://doi.org/10.1093/nar/gku989')[0].id
                     except:
@@ -1018,20 +1021,20 @@ def record_complex_in_DB(comple,fromiuphar=False):
             
             if comple[3]!='': #write chembleid when available
                 try:
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3]},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3],'is_published':True},True)
                     recorded_ids['compound']=compound_id
                 except:
                     no_name='PubChemID:'+str(pubchem_id)
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3]},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3],'is_published':True},True)
                     recorded_ids['compound']=compound_id
             else:
                 try:
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'is_published':True},True)
                     recorded_ids['compound']=compound_id
 
                 except:
                     no_name='PubChemID:'+str(pubchem_id)
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey},True)
+                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'is_published':True},True)
                     recorded_ids['compound']=compound_id
                     
             #recording alternative names
@@ -1049,7 +1052,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
             recorded_ids['refcompound']=refcompound
 
             try:
-                molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles']},True)
+                molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':molprop['inchicol'],'smiles':molprop['smiles'],'is_published':True},True)
 
             except: #inchicol problem or molprop referenced before assigment
                 try:
@@ -1062,7 +1065,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                 except UnboundLocalError: #local variable 'molprop' referenced before assignment
                     return recorded_ids
                 try:
-                    molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles']},True)
+                    molecule_id=newrecord(['dyndb_molecule',DyndbMolecule],{'id_compound':compound_id,'description':'Standard form BindingDB','net_charge':molprop['charge'],'inchi':molprop['inchi']['inchi'][6:],'inchikey':molprop['inchikey'],'inchicol':maxcol,'smiles':molprop['smiles'],'is_published':True},True)
                 except:
                     recorded_ids['molecule']=molecule_id
                     return recorded_ids

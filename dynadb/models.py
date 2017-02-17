@@ -392,7 +392,8 @@ class DyndbComplexExp(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
         managed = True #this used to be False
         db_table = 'dyndb_complex_exp'
@@ -461,7 +462,8 @@ class DyndbCompound(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     id_ligand = models.ForeignKey('Ligand', models.DO_NOTHING, db_column='id_ligand', blank=True, null=True)
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
         managed = True
         db_table = 'dyndb_compound'
@@ -541,6 +543,7 @@ class DyndbDynamics(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -865,7 +868,8 @@ class DyndbModel(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     id_structure_model = models.ForeignKey('StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
         managed = True
         db_table = 'dyndb_model'
@@ -916,6 +920,7 @@ class DyndbMolecule(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -976,7 +981,7 @@ class DyndbProtein(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
     receptor_id_protein = models.ForeignKey('Protein', on_delete=models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
     id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.DO_NOTHING, db_column='id_uniprot_species',null=False)
-
+    is_published = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_protein'
