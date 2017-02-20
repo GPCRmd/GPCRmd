@@ -31,7 +31,7 @@ font-weight:normal
 
  <!-- description column -->
  <div id="MOLECULE_f" >
- <div style="height:700px" class="col-md-4"  >
+ <div  class="col-md-4"  >
  <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
      
 {% if model_id %}
@@ -43,7 +43,7 @@ font-weight:normal
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div id="pmolform" class="col-md-7 col-sm-7 " style="width:665px{%if model_id %} margin-left:-2.5%{% endif %}" > 
+<div id="pmolform" class="col-md-7 col-sm-7 col-sm-offset-4 col-md-offset-4" > 
 
        {% for o in qMOL %} 	{%for int0 in int_id0%}{% if forloop.counter == forloop.parentloop.counter %} 	
       {% if model_id %}
@@ -360,7 +360,7 @@ font-weight:normal
                                         <th style="width:80px;text-align:center"><label for="id_form-{{int0}}-stdform"><a title="Graphical representation of the standard form of the molecule">Standard molecule</a></label></th>
 
                                 <tr><td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:200px;height:200px" id="id_form-{{int0}}-upload_mol-2"  name="form-{{int0}}-upload_mol-2"/>{%if saved%}<img  src="{%for mol in url%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" >{%endif%}</div></td>
-                                        <td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:250px;height:250px" id="id_form-{{int0}}-stdform" name="form-{{int0}}-stdform"/></textarea></td>
+                                        <td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:200px;height:200px" id="id_form-{{int0}}-stdform" name="form-{{int0}}-stdform"/>{%if saved%}<img  src="{%for mol in urlstd%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" >{%endif%}</td>
                                 </tr>
                         </table>
 </div>
