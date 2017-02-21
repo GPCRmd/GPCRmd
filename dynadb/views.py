@@ -13,7 +13,7 @@ from django.forms import formset_factory, ModelForm, modelformset_factory
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth.decorators import login_required
-from accounts.user_functions import user_passes_test_args, is_submission_owner
+from accounts.user_functions import user_passes_test_args, is_submission_owner, is_published_or_submission_owner
 from collections import OrderedDict
 from sendfile import sendfile
 from pathlib import Path
@@ -62,46 +62,51 @@ from revproxy.views import ProxyView
 
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
-# Create your views here.
+# Custom view function wrappers
 
-
-def default_500_handler(func):
-    def inner(request,*args, **kwargs):
+from functools import wraps
+from django.utils.decorators import available_attrs
+def default_500_handler(view_func):
+    @wraps(view_func, assigned=available_attrs(view_func))
+    def _wrapped_view(request,*args, **kwargs):
 
         try:
-            return func(request,*args, **kwargs)
+            return view_func(request,*args, **kwargs)
         except:
             if settings.DEBUG:
                 raise
             else:
                 return server_error(request)
-    return inner
+    return _wrapped_view
     
-def textonly_500_handler(func):
-    def inner(request,*args, **kwargs):
+def textonly_500_handler(view_func):
+    @wraps(view_func, assigned=available_attrs(view_func))
+    def _wrapped_view(request,*args, **kwargs):
 
         try:
-            return func(request,*args, **kwargs)
+            return view_func(request,*args, **kwargs)
         except:
             if settings.DEBUG:
                 raise
             else:
                 return HttpResponseServerError("Server Error (500).",content_type='text/plain')
-    return inner
+    return _wrapped_view
     
-def textonly_404_handler(func):
-    def inner(request,*args, **kwargs):
+def textonly_404_handler(view_func):
+    @wraps(view_func, assigned=available_attrs(view_func))
+    def _wrapped_view(request,*args, **kwargs):
 
         try:
-            return func(request,*args, **kwargs)
+            return view_func(request,*args, **kwargs)
         except:
             if settings.DEBUG:
                 raise
             else:
                 return HttpResponseNotFound("Not Found (404).",content_type='text/plain')
-    return inner
+    return _wrapped_view
+    
 
-
+# Create your views here.
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
@@ -2200,6 +2205,7 @@ def NiceSearcher(request):
 ##############################################################################################################################################
 ##############################################################################################################################################
 
+@user_passes_test_args(is_published_or_submission_owner)
 def query_protein(request, protein_id,incall=False):
     '''Returns database information about the given protein_id. If incall is True, it will return a dictionary, otherwise, it will retun an Http response.'''
     fiva=dict()
@@ -2282,6 +2288,7 @@ def query_protein(request, protein_id,incall=False):
     return render(request, 'dynadb/protein_query_result.html',{'answer':fiva})
 
 @textonly_500_handler
+@user_passes_test_args(is_published_or_submission_owner)
 def query_protein_fasta(request,protein_id):
     '''Gets the sequence of the given protein and returns its sequence in fasta format.'''
     yourseq=DyndbProteinSequence.objects.get(pk=protein_id)
@@ -2303,7 +2310,7 @@ def query_protein_fasta(request,protein_id):
     response.write(fseq)
 
     return response
-
+@user_passes_test_args(is_published_or_submission_owner)
 def query_molecule(request, molecule_id,incall=False):
     '''Returns information about the given molecule_id. If incall is True, it returns a simple dictionary, otherwise, an http response is returned. '''
     molec_dic=dict()
@@ -2340,7 +2347,8 @@ def query_molecule(request, molecule_id,incall=False):
     if incall==True:
         return molec_dic
     return render(request, 'dynadb/molecule_query_result.html',{'answer':molec_dic})
-
+    
+@user_passes_test_args(is_published_or_submission_owner)
 def query_molecule_sdf(request, molecule_id):
     '''Gets the sdf file of the given molecule_id '''
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
@@ -2355,7 +2363,7 @@ def query_molecule_sdf(request, molecule_id):
         response['Content-Length']=os.path.getsize('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')
     return response
             
-
+@user_passes_test_args(is_published_or_submission_owner)
 def query_compound(request,compound_id,incall=False):
     '''Returns information about the given compound_id. If incall is True, it will return a dictionary, otherwise, it returns an Http REsponse '''
     comp_dic=dict()
@@ -2391,7 +2399,7 @@ def query_compound(request,compound_id,incall=False):
         return comp_dic
     return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
 
-
+@user_passes_test_args(is_published_or_submission_owner)
 def query_complex(request, complex_id,incall=False):
     '''Returns information about the given complex_id. If incall is True, it will return a dictionary, otherwise, it returns an Http REsponse '''
     plist=list()
@@ -2407,7 +2415,7 @@ def query_complex(request, complex_id,incall=False):
     q = q.annotate(model_id=F('dyndbcomplexmolecule__dyndbmodel__id'))
     q = q.values('id','model_id')
     for row in q:
-        if row['model_id']!=None:
+        if row['model_id']!=None and is_published_or_submission_owner(request.user,object_type='model',model_id=row['model_id']):
             tmpmolecule=[]
             qq=DyndbModel.objects.filter(pk=row['model_id'])
             qq=qq.annotate(molecule_something= F('id_complex_molecule__dyndbcomplexmoleculemolecule__id_molecule__id') )
@@ -2470,7 +2478,7 @@ def query_complex(request, complex_id,incall=False):
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
 
-
+@user_passes_test_args(is_published_or_submission_owner)
 def query_model(request,model_id,incall=False):
     '''Returns information about the given model_id. If incall is True, it will return a dictionary, otherwise, it returns an Http Response '''
     model_dic=dict()
@@ -2528,7 +2536,8 @@ def query_model(request,model_id,incall=False):
         return model_dic
 
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
-
+    
+@user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
     dyna_dic=dict()
