@@ -9,24 +9,42 @@ $(document).ready(function(){
     $("#id_submit").click(function(event) {
         event.preventDefault();
 	var self = $(this);
-        var modelform = $(this).parents("#myform");
-        var file_source=modelform.find("#file_source");
+            var urllist=window.location.href.split("/");
+            if (urllist.length ==8){ // http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
+                var submission_id=urllist[urllist.length-3];
+                var model_id=urllist[urllist.length-2];
+                var url_post="../../../modelreuse/"+submission_id+"/"+model_id+"/";
+                var url_success="../../../dynamicsreuse/"+submission_id+"/"+model_id+"/";
+                var modelformdom=$(document).find("[id='Choose_reused_model_1']");
+                var key=$(modelformdom).attr('name');
+                var modelform={};
+                modelform[key]=$(modelformdom).val();
+                console.log(key+" PPP "+modelform[key]);
+                var file_source=$(document).find("#file_source");
+                var buttons = $("button,input[type='submit'],input[type='button']");
+            }else{
+                var submission_id=urllist[urllist.length-2];
+                var url_post="./";
+                var url_success="../../dynamics/"+submission_id+"/";
+                var modelform = $(this).parents("#myform");
+                var file_source=$(modelform).find("#file_source");
+                var buttons = $("button,input[type='submit'],input[type='button']");
+            }
         //fields.set_readonly_color();
-        var buttons = $("button,input[type='submit'],input[type='button']");
 
         self.prop('disabled',true);
         buttons.prop('disabled',true);
         file_source.prop('disabled',true);
-        
-        $(modelform).ajaxSubmit({
-            url: "./",
+        console.log(modelform[key])       
+        $.ajax({
+            data:modelform,
+            url: url_post,
             type: 'POST',
             dataType:'text',
             success: function(data) {
-                var urllist=window.location.href.split("/");
-                var submission_id=urllist[urllist.length-2];
+                console.log(data)
                 alert("Congratulations!! "+data);
-                window.location.replace("../../dynamics/"+submission_id+"/");
+                window.location.replace(url_success);
                 
             },
             error: function(xhr,status,msg){
