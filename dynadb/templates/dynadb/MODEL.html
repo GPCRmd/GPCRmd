@@ -85,7 +85,7 @@ font-weight:normal
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_name"><a title="Choose a name for your complex" >Name:</a></label></div>
-			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder="5-HT1B receptor in complex with Clozapine"  {% if model_id or saved  %} value="{{p.values.0.name}}" readonly {%endif%}  style="width:300px"></input></div>
+			<div class="col-md-6"><input cols="40" id="id_name" type="text" name="name" rows="2" placeholder="5-HT1B receptor in complex with Clozapine"  {% if model_id or saved  %} value="{{p.values.0.name}}" {%endif%} {% if model_id %} readonly {%endif%}  style="width:300px"></input></div>
 		<br></div>
 
 	        <div class="row">
@@ -108,7 +108,7 @@ font-weight:normal
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_pdbid"><a title="PDB ID: PDB ID from Protein Data Bank database. It should contain chain code when necessary (e.g. 4IAR.A). " >PDB ID:</a></label></div>
-			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  {% if model_id or saved %} value="{{p.values.0.pdbid}}" readonly {% endif %} placeholder=" 4IAR.A"  style="width:300px"/></div>
+			<div class="col-md-6"><input id="id_pdbid" maxlength="6" name="pdbid" type="text"  {% if model_id or saved %} value="{{p.values.0.pdbid}}"{%endif%} {% if model_id %} readonly {%endif%}   placeholder=" 4IAR.A"  style="width:300px"/></div>
 		<br></div>
 
 	        <div class="row">
@@ -285,7 +285,7 @@ font-weight:normal
 					<th style="width:90px;text-align:center"><label for="id_formmc-0-typemc"><a title="Type: Type of compound/molecule present in the simulation.">Type</a></label></th>
 				</thead>
                                 <tbody id="pElement2">
-{%if model_id or saved %}
+{%if model_id %}
 {% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
                                 	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
  
@@ -310,6 +310,34 @@ font-weight:normal
 {% endif%}{% endfor%}{% endfor%}
                         </tbody>
 			</table> </div>
+
+{%if saved%}
+
+{% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
+                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+ 
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
+                                        {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{intmc0}}-id_molecule" name="formmc-{{intmc0}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
+
+                                        {%endif%}{%endfor%}
+
+                                        {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
+ 
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
+                                {% for ll in lmtype %}
+                                   {% if forloop.counter == forloop.parentloop.counter %}
+                                                    <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
+                                   {% endif %}
+                                {% endfor %}
+
+{% endif%}{% endfor%}{% endfor%}
+                        </tbody>
+			</table> </div>
+
 
 {%else%}
                               {% for mc in mcdata %}
@@ -383,9 +411,9 @@ font-weight:normal
               	  </div>
               </div>
         </div>
-
 {% else %}
-{% if not saved %}
+
+{%if not saved%}
         </div>
 {%endif%}
   <div id="selection-buttons">

@@ -838,7 +838,7 @@ class DyndbFunctional(models.Model):
    
 class DyndbModel(models.Model):
     MODEL_TYPE=(
-        (0,'Apoform'),
+        (0,'Apoform (one single protein monomer)'),
         (1,'Complex')
     )
     SOURCE_TYPE=(
