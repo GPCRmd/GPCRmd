@@ -202,7 +202,6 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
-        console.log(sel);
         return sel;
     };
 

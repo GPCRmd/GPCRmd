@@ -17,16 +17,27 @@ $(document).ready(function(){
         self.prop('disabled',true);
         buttons.prop('disabled',true);
         //file_source.prop('disabled',true);
-        
+        var urllist=window.location.href.split("/");
+         
+        if (urllist.length ==8){ // http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
+            var submission_id=urllist[urllist.length-3];
+            var model_id=urllist[urllist.length-2];
+            var url_post="./";
+            var url_success="../../../submission_summary/"+submission_id+"/";
+            console.log(urllist.length)
+        }else{
+            var submission_id=urllist[urllist.length-2];
+            var url_post="./";
+            var url_success="../../submission_summary/"+submission_id+"/";
+            console.log(urllist.length+" lll")
+        }
         $(dynform).ajaxSubmit({
             url: "./",
             type: 'POST',
             dataType:'text',
             success: function(data) {
-                var urllist=window.location.href.split("/");
-                var submission_id=urllist[urllist.length-2];
                 alert("Congratulations!! "+data);
-                window.location.replace("../../submission_summary/"+submission_id+"/");
+                window.location.replace(url_success);
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {

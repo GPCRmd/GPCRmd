@@ -45,7 +45,7 @@ $(document).ready(function(){
             var submission_id=urllist[urllist.length-3];
             var model_id=urllist[urllist.length-2];
             var url_post="../../../molecule/"+submission_id+"/";
-            var url_success="../../modelreuse/"+submission_id+"/"+model_id+"/";
+            var url_success="../../../modelreuse/"+submission_id+"/"+model_id+"/";
         }else {
             var submission_id=urllist[urllist.length-2];
             var url_post="./";

@@ -378,7 +378,7 @@ font-weight:normal
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='id_submit' {%if not enabled%} disabled {%endif%} href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
               	  </div>
               </div>
@@ -396,7 +396,7 @@ font-weight:normal
                 <input id="id_submit" name="submit" type="submit" value="Submit " class="btn btn-success btn-lg btn-block has-spinner"  />
            </div>
   	  <div class="panel-body" id="selection-">
-        	<a id='selection-button' href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+        	<a id='selection-button' {%if not saved %} disabled {%endif%} href="/dynadb/dynamics/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
@@ -416,7 +416,7 @@ font-weight:normal
 
 {% block addon_js %}
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
- <!--    <script src="{% static 'dynadb/MODELpost.js' %}"></script> -->
+    <script src="{% static 'dynadb/MODELpost.js' %}"></script> 
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/uploadModelPDB.js' %}"></script>
 <!--    <script src="{% static 'dynadb/addFields.js' %}"></script> -->

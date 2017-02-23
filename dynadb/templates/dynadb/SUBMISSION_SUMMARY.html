@@ -142,7 +142,7 @@ font-weight:normal
 		</div>
 
 	        <div class="row">
-	               <div class="col-md-1" style="height:30px"></div><div class="col-md-3" ><label style="height:30px" for="id_form-{{int0}}-is_present">{% if submission_id %} {% for t in labtypels %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %}  <a style="height:30px;margin-right:-20px"title="Check this field if the molecule has been co-crystalized with the GPCR.">Crystalized molecule</a>{%else%}<a title="Bulk molecule, component of the simulation environment."> Bulk (no co-crystalized)</a> {% endif %}{% endif %}{%endfor%} {%else%} {% endif %}</label></div>
+	               <div class="col-md-1" style="height:30px"></div><div class="col-md-3" ><label style="height:30px;margin-right:-30px" for="id_form-{{int0}}-is_present">{% if submission_id %} {% for t in labtypels %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %}  <a style="height:30px;margin-right:-30px"title="Check this field if the molecule has been co-crystalized with the GPCR.">Crystalized molecule</a>{%else%}<a style="height:30px;margin-right:-30px" title="Bulk molecule, component of the simulation environment.">Bulk (no crystalized)</a> {% endif %}{% endif %}{%endfor%} {%else%} {% endif %}</label></div>
                        <div class="col-md-6" ><input style="width:300px" id="id_form-{{int0}}-co_type" name="form-{{int0}}-type" type="text"  {% for t in labtypels %} {% if forloop.counter == forloop.parentloop.counter %} value="{{t.1}}"  {%endif%} {%endfor%} readonly /></div>{{t.1}}
                              
                                                                           
@@ -312,15 +312,15 @@ font-weight:normal
               <div class="col-md-12 panel panel-primary">
                   <!--Submit prueba -->
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
               	  </div>
               </div>

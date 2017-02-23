@@ -179,27 +179,36 @@ font-weight:normal
 
                {% if o.is_mutated == True %}
                 <div class="col-md-8 col-md-offset-2 " > <br>
-                <div class="col-md-12 panel panel-primary" > 
+                <div class="col-md-12 panel panel-primary" style="color:black; border-color:#555;background-color:rgba(200, 150, 200, 0.0)"> 
 	        <div class="row" style="padding:0px 0px 10px 0px"><br>
 			<div class="col-md-3" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
 			<div class="col-md-1"><input data-toggle="collapse" data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id" id="id_form-{{int0}}-is_mutated" name="form-{{int0}}-is_mutated" type="checkbox" checked value='1' disabled/></div>
 		</div>
 		</div>
 		</div>  
+		</div>  
+           
                 <!--_________________________________________________________________________________________________________________________________________________________-->
 
-  <div class="col-md-12 panel collapse " id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id" style="color:black; border-color:#555;background-color:rgba(200, 150, 200, 0.1);"> 
+  <div class="col-md-12 panel collapse {% if o.is_mutated == True %} in {%endif%}" id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id" style="color:black; border-color:#555;background-color:rgba(200, 150, 200, 0.1);"> 
+               
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
 
                 </div><br>
+                 
 
+                
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-msequence"><a title="Mutant sequence: Contains mutations and deletions indicarted with the hyphen character '-'.">Mutant sequence:</a></label></div>
-			<div class="col-md-7"><textarea cols="40" id="id_form-{{int0}}-msequence" name="form-{{int0}}-msequence" disabled rows="2" style="width:300px" placeholder=""  value="{{o.msequence}}"></textarea></div>
+                                       {% for lms in mseq %} 
+                                           {% if forloop.counter == forloop.parentloop.counter %}
+			<div class="col-md-7"><textarea readonly cols="40" id="id_form-{{int0}}-msequence" name="form-{{int0}}-msequence" disabled rows="2" style="width:300px" placeholder=""  value="">{{lms}}</textarea></div>
+                                           {%endif%}  
+                                       {%endfor%}
 		</div>
-<!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"-->
-	        <div class="row" style="height:30px">
+<!--placeholder=" MEEPGAQCAPPPPAGSETWVPQANLSSAPSQNCSAKDYIYQDSISLPWKVLLVMLLALITLATTLSNAFVIATVYRTRKLHTPANYLIASLAVTDLLVSILVMPISTMYTVTGRWTLGQVVCDFWLSSDITCCTASILHLCVIALDRYWAITDAVEYSAKRTPKRAAVMIALVWVFSISISLPPFFWRQAKAEEEVSECVVNTDHILYTVYSTVGAFYFPTLLLIALYGRIYVEARSRILKQTPNRTGKRLTRAQLITDSPGSTSSVTSINSRVPDVPSESGSPVYVNQVKVRVSDALLEKKKLMAARERKATKTLGIILGAFIVCWLPFFIISLVMPICKDACWFHLAIFDFFTWLGYLNSLINPIIYTMSNEDFKQAFHKLIRFKCTS"
+	           <div class="row" style="height:30px">
 
                                 <div class="col-md-1" style="height:30px"></div>
                                 <div class="col-md-3" style="height:30px"></div>
@@ -222,7 +231,7 @@ font-weight:normal
                                 <button type='button' id='id_clean_mutations'  name='clean_mutations' title="Cleans assigned mutations and allows a new alignment." style="width:148px;" disabled>Clean mutations</button>
                                 </div>
                 </div>
-
+-->
                 <br>
 		<div class=row>
 
@@ -236,13 +245,13 @@ font-weight:normal
 				<tr>	<th><label for="id_form-{{int0}}-resid"><a title="Resid: Residue number that its mutated on wild type protein.">Resid</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
-				<tr> 	<td><input style="width:140px;" disabled id="id_form-{{int0}}-resid" name="form-{{int0}}-resid" type="number"  value="{{o.number}}"/></td> <!--placeholder=" 95"-->
-					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" disabled name="form-{{int0}}-resletter_from" value="{{o.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->
-					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" disabled name="form-{{int0}}-resletter_to" type="text" value="{{o.resletter_to}}" /></td>	<!--placeholder=" A"-->	
-				</tr>
+                                {% for protM in MUTations%} {% if forloop.counter == forloop.parentloop.counter %}{% for o in protM %} 
+				<tr> 	<td><input style="width:140px;" readonly id="id_form-{{int0}}-resid" name="form-{{int0}}-resid" type="number"  value="{{o.resid}}"/></td> <!--placeholder=" 95"-->
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" readonly name="form-{{int0}}-resletter_from" value="{{o.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" readonly name="form-{{int0}}-resletter_to" type="text" value="{{o.resletter_to}}" /></td>	<!--placeholder=" A"-->	
+				</tr>{%endfor%}{% endif%}{%endfor%}
 
 			</table>
-                </div>
 
 
 
@@ -421,7 +430,7 @@ font-weight:normal
 					<th><label for="id_form-{{int0}}-resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
 
-{%if MUTations%}{%for mut in MUTations%}{{mut.0.resid}}{% if forloop.counter == forloop.parentloop.counter %}{%if mut|length > 0 %} {%for m in mut%} 
+{%if MUTations%}{%for mut in MUTations%}{% if forloop.counter == forloop.parentloop.counter %}{%if mut|length > 0 %} {%for m in mut%} 
 
 				<tr> 	<td><input style="width:140px;" id="id_form-{{int0}}-resid" name="form-{{int0}}-resid-{{forloop.counter}}" type="number" {%if  mut%} readonly {%else%} disabled {%endif%} value="{{m.resid}}"/></td> <!--placeholder=" 95"-->
 					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%}    name="form-{{int0}}-resletter_from-{{forloop.counter}}" value="{{m.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->{{mut.resletter_from}}
@@ -486,10 +495,10 @@ font-weight:normal
               	  </div>
           	  <div class="panel-body" id="selection-">
                 	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
-                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Crystalized Components Information (Step 3)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='selection-button' {%if not enabled%} disabled {%endif%} href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
               	  </div>
               </div>
