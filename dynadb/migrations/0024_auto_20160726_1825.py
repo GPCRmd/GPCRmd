@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='dyndbreferences',
             name='doi',
-            field=models.CharField(blank=True, help_text='Digital object identifier.', max_length=80, null=True, unique=True, verbose_name='DOI'),
+            field=models.CharField(blank=True, help_text='Digital object identifier.', max_length=80, null=True, unique=False, verbose_name='DOI'),
         ),
         migrations.AlterField(
             model_name='dyndbreferences',

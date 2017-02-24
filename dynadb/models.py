@@ -353,10 +353,10 @@ class DyndbBinding(models.Model):
     id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
     rvalue = models.FloatField()
     units = models.CharField(max_length=10)
-    description = models.CharField(max_length=60, blank=True, null=True)
+    description = models.CharField(max_length=900, blank=True, null=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_binding'
 
 
@@ -392,9 +392,10 @@ class DyndbComplexExp(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
-        managed = False
+        managed = True #this used to be False
         db_table = 'dyndb_complex_exp'
 
 
@@ -461,7 +462,8 @@ class DyndbCompound(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     id_ligand = models.ForeignKey('Ligand', models.DO_NOTHING, db_column='id_ligand', blank=True, null=True)
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
         managed = True
         db_table = 'dyndb_compound'
@@ -541,6 +543,7 @@ class DyndbDynamics(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -653,13 +656,13 @@ class DyndbEfficacy(models.Model):
     id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
     rvalue = models.FloatField()
     units = models.CharField(max_length=10)
-    description = models.CharField(max_length=60)
+    description = models.CharField(max_length=900,blank=True, null=True)
     type = models.SmallIntegerField( choices=EFFICACY_TYPE, default=0)
     reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound',null=True)   
     id_functional = models.ForeignKey('DyndbFunctional', models.DO_NOTHING, blank=True, db_column='id_functional', null=True) 
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_efficacy'
 
 
@@ -865,7 +868,8 @@ class DyndbModel(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     id_structure_model = models.ForeignKey('StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
-
+    is_published = models.BooleanField(default=False)
+    
     class Meta:
         managed = True
         db_table = 'dyndb_model'
@@ -916,6 +920,7 @@ class DyndbMolecule(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
+    is_published = models.BooleanField(default=False)
 
     class Meta:
         managed = True
@@ -976,7 +981,7 @@ class DyndbProtein(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
     receptor_id_protein = models.ForeignKey('Protein', on_delete=models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
     id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.DO_NOTHING, db_column='id_uniprot_species',null=False)
-
+    is_published = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_protein'
@@ -1027,17 +1032,17 @@ class DyndbProteinSequence(models.Model):
 
 class DyndbReferences(models.Model):
     doi = models.CharField("DOI", help_text="Digital object identifier.", unique=True, max_length=80, blank=True, null=True)
-    authors = models.CharField("Authors", help_text="List of the authors separated by semicolon.", max_length=60, blank=True, null=True)
-    title = models.CharField("Title",help_text="Title of the paper.", max_length=100, blank=True, null=True)
+    authors = models.CharField("Authors", help_text="List of the authors separated by semicolon.", max_length=600, blank=True, null=True)
+    title = models.CharField("Title",help_text="Title of the paper.", max_length=900, blank=True, null=True)
              #institution = models.CharField(max_length=100, blank=True, null=True)
     pmid = models.IntegerField("PMID", help_text="PubMed identifier or PubMed unique identifier", unique=True, blank=True, null=True)
-    journal_press = models.CharField("Journal or Press", help_text="Name of the Journal or Press in case of a book.", max_length=60, blank=True, null=True)
+    journal_press = models.CharField("Journal or Press", help_text="Name of the Journal or Press in case of a book.", max_length=200, blank=True, null=True)
     issue = models.CharField("Issue", help_text="Issue number.",max_length=10, blank=True, null=True)
     volume = models.CharField("Volume", help_text="Volume number.", max_length=10, blank=True, null=True)
     pages = models.CharField("Pages", help_text="Initial and final pages of the publication separated by dash." ,max_length=16, blank=True, null=True)
     pub_year = models.SmallIntegerField("Publication year", help_text="Year of publication",blank=True, null=True)
     dbname = models.CharField(max_length=30, blank=True, null=True)
-    url = models.URLField("URL", help_text="Uniform Resource Locator to the publication resource", max_length=100,  blank=True, null=True)
+    url = models.URLField("URL", help_text="Uniform Resource Locator to the publication resource", max_length=250,  blank=True, null=True)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)
