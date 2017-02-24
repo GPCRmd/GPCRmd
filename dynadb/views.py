@@ -25,6 +25,7 @@ import math
 import itertools
 import numpy as np
 import tarfile
+from operator import itemgetter
 from os import listdir
 from os.path import isfile, join
 from django.db.models.functions import Concat
@@ -5301,26 +5302,46 @@ def MODELview(request, submission_id):
                 mrstype=l.SOURCE_TYPE[l.source_type]
                 lmrstype.append(mrstype)
             print ("residues!!",lmrstype)
-            #qMODCOMP=DyndbModelComponents.objects.filter(id_model=model_id,id_molecule__dyndbsubmissionmolecule__submission_id=submission_id).exclude(type=None).exclude(id_molecule=None).order_by('id_molecule__dyndbsubmissionmolecule__int_id').annotate(int_id=F('id_molecule__dyndbsubmissionmolecule__int_id'))
-           # qMODCOMP=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(molecule_id__dyndbmodelcomponents__id_model__lt=model_id).exclude(molecule_id__dyndbmodelcomponents__id_model__gt=model_id,).annotate(resname=F('submission_id__dyndbmodel__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbmodel__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbmodel__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbmodel__dyndbmodelcomponents__id_model')) 
-            qMODCOMP=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(submission_id__dyndbmodel__dyndbmodelcomponents__id_model__lt=model_id).exclude(submission_id__dyndbmodel__dyndbmodelcomponents__id_model__gt=model_id,).annotate(resname=F('submission_id__dyndbmodel__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbmodel__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbmodel__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbmodel__dyndbmodelcomponents__id_model'))
+            molinmodel_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model=model_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule=F('molecule_id')).annotate(name=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule__id_compound__name'),resname=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model'))
+            molinmodel_not_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(id__in=molinmodel_in_modelcomp)
+            molinmodel_in_modelcompl=list(molinmodel_in_modelcomp.values())
+            molinmodel_not_in_modelcompl=list(molinmodel_not_in_modelcomp.values())
+
+#            molinmodel_not_in_modelcompl=list(DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(id__in=molinmodel_in_modelcomp).annotate(name=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule__id_compound'),resname=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model')).values())
+            all_molinmodel=[]
+            
+            for entry in molinmodel_in_modelcompl:
+                entry['typemc']=DyndbModelComponents.MOLECULE_TYPE[smol_to_dyncomp_type[entry['type']]]
+                print(entry['type'])
+                all_molinmodel.append(entry)
+            for entry in molinmodel_not_in_modelcompl:
+                qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=entry['molecule_id_id']).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+                entry['name']=qName
+                entry['resname']=str()
+                entry['numberofmol']=int()
+                entry['typemc']=DyndbModelComponents.MOLECULE_TYPE[smol_to_dyncomp_type[entry['type']]]
+                all_molinmodel.append(entry)
+            qMODCOMP = sorted(all_molinmodel, key=itemgetter('int_id'))                    
+            print("MIRA",qMODCOMP)
+
+            #qMODCOMP=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(submission_id__dyndbmodel__dyndbmodelcomponents__id_model__lt=model_id).exclude(submission_id__dyndbmodel__dyndbmodelcomponents__id_model__gt=model_id,).annotate(resname=F('submission_id__dyndbmodel__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbmodel__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbmodel__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbmodel__dyndbmodelcomponents__id_model'))
             lmtype=[]
             lformmc=list(range(0,len(qMODCOMP)))
             lcompname=[]
             l_ord_mol=[]
             d=0
-            for l in qMODCOMP:
-                d=d+1
-                print("query list element",l.id," ",d)
-                mtype=DyndbModelComponents.MOLECULE_TYPE[smol_to_dyncomp_type[l.type]]
-                lmtype.append(mtype)
-                qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.molecule_id_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
-                lcompname.append(qName)
-                l_ord_mol.append(d)
-            print(lmtype)
-            print(l_ord_mol)
-            rowsMC=qMODCOMP.values('resname','numberofmol','molecule_id','int_id','id_model')
-            print("OOO\n",rowsMC)
+           #for l in qMODCOMP:
+           #    d=d+1
+           #    print("query list element",l.id," ",d)
+           #    mtype=DyndbModelComponents.MOLECULE_TYPE[smol_to_dyncomp_type[l.type]]
+           #    lmtype.append(mtype)
+           # #   qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.molecule_id_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
+             #   lcompname.append(qName)
+             #   l_ord_mol.append(d)
+          # print(lmtype)
+          # print(l_ord_mol)
+            rowsMC=qMODCOMP
+           # print("OOO\n",rowsMC)
          
             reuse_model=model_id
             print(rowsMR.values)
@@ -5330,7 +5351,7 @@ def MODELview(request, submission_id):
             fdbPS = dyndb_Modeled_Residues()
             fdbMC = dyndb_Model_Components()
             #return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id, 'saved':True,'protlist':protlist})
-            return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id, 'saved':True,'protlist':protlist})
+            return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id, 'saved':True,'protlist':protlist})
 
         else:
             lmol_MOD_type_num=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(molecule_id=None).exclude(int_id=None).exclude(type__gt=5).order_by('int_id').values_list('type',flat=True)
@@ -11137,7 +11158,7 @@ def submission_summaryiew(request,submission_id):
         l_ord_mol=[]
         lcompname=[]
         for l in qDC:
-            dctype=qDC.model.MOLECULE_TYPE[l.type][1]
+            dctype=DyndbDynamicsComponents.MOLECULE_TYPE[l.type][1]
             dctypel.append(dctype)
             d=d+1
             qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=l.id_molecule_id).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
@@ -11151,8 +11172,77 @@ def submission_summaryiew(request,submission_id):
     qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
     qAT =DyndbAssayTypes.objects.all().order_by('id')
 
-    
-    
+    with open('/tmp/'+str(submission_id)+'_summary_review.sdf','w') as fh:
+        i=0      
+        fh.write("".join(["\tPROTEINS INVOLVED IN THE SUBMISSION ",str(submission_id),"\n\n"])) 
+        for prot in qPROT:
+            i=i+1
+            if prot.is_mutated:
+                fh.write("".join(["\t\tPROTEIN #",str(i),"\t(Mutant Protein)"])) 
+            else:
+                fh.write("".join(["\t\tPROTEIN #",str(i)])) 
+            fh.write("".join(["\n\t\tName:  ", prot.name])) 
+            fh.write("".join(["\n\t\tSpecies:  ", sci_na_codel[i-1]])) 
+            fh.write("".join(["\n\t\tUniProtKB AC:  ", prot.uniprotkbac]))
+            fh.write("".join(["\n\t\tIsoform:  ", str(prot.isoform),"\n"]))
+            if prot.is_mutated:
+                fh.write(str("\t\tMutations:\n"))
+                for mut in MUTations[i-1]:
+                    fh.write("".join(["\t\t\tResid: ", str(mut.resid),"\tResletter from: ",  mut.resletter_from,"\tResletter to: ",  mut.resletter_to,"\n"]))
+                    if mut == MUTations[i-1][len(MUTations[i-1])-1]:
+                        fh.write("\n")
+            else:
+                fh.write("\n")
+             
+        fh.write("".join(["\tSMALL MOLECULES INVOLVED IN THE SUBMISSION ",str(submission_id),"\n"])) 
+        i=0   
+        print(int_id)
+        for mol in qMOL:
+            i=i+1
+            fh.write("".join(["\n\t\tSMALL MOLECULE #",str(int_ids[i-1])])) 
+            fh.write("".join(["\n\t\tName: ", mol.id_compound.name])) 
+            fh.write("".join(["\n\t\tNet charge: ", str(mol.net_charge), "\tPubChem cid: ", str(mol.id_compound.pubchem_cid)])) 
+            if qSub.filter(molecule_id=mol.id).values("not_in_model"): 
+               fh.write("".join(["\n\t\tBulk Molecule",str(DyndbSubmissionMolecule.COMPOUND_TYPE[qSub.filter(molecule_id=mol).values_list('type',flat=True)[0]])]))
+            else:
+               fh.write("".join(["\n\t\tCrystalized Molecule:  ",str(DyndbSubmissionMolecule.COMPOUND_TYPE[qSub.filter(molecule_id=mol).values_list('type',flat=True)[0]])]))
+            fh.write("\n")
+             
+        pp=p[0]
+        fh.write("".join(["\n\tMODEL INVOLVED IN THE SUBMISSION ",str(submission_id),"\n"])) 
+        fh.write("".join(["\n\t\tMODEL #",str(model_id)])) 
+        fh.write("".join(["\n\t\tName: ", pp.name])) 
+        fh.write("".join(["\n\t\tPDB ID: ", pp.pdbid])) 
+        fh.write("".join(["\n\t\tSource type: ", DyndbModel.SOURCE_TYPE[pp.source_type][1]])) 
+        fh.write("".join(["\n\t\tDescription: ", pp.description,"\n"])) 
+           
+        fh.write("".join(["\n\tSIMULATION SUBMITTED IN THE SUBMISSION ",str(submission_id),"\n"])) 
+        fh.write("".join(["\n\t\tSIMULATION COMPONENTS "])) 
+        i=0
+        for comp in qDC:
+            if qSub.filter(molecule_id=comp.id_molecule).values("not_in_model"):
+                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"\tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "No ","  Name:  ", lcompname[i]]))
+            else:
+                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"\tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "Yes","  Name:  ", lcompname[i]]))
+            i=i+1
+        qDSs=qDS[0]
+        fh.write("\n")
+        fh.write("".join(["\n\t\tSIMULATION DETAILS\n "])) 
+        fh.write("".join(["\n\t\tMethod: ", qDSs.id_dynamics_methods.type_name])) 
+        fh.write("".join(["\n\t\tSoftware: ", qDSs.software])) 
+        fh.write("".join(["\n\t\tSoftware version: ", qDSs.sversion])) 
+        fh.write("".join(["\n\t\tForce Field: ", qDSs.ff])) 
+        fh.write("".join(["\n\t\tFF version: ", qDSs.ffversion])) 
+        fh.write("".join(["\n\t\tAssay Type: ", qDSs.id_assay_types.type_name])) 
+        fh.write("".join(["\n\t\tMembrane type: ", qDSs.id_dynamics_membrane_types.type_name])) 
+        fh.write("".join(["\n\t\tSolvent type: ", qDSs.id_dynamics_solvent_types.type_name])) 
+        fh.write("".join(["\n\t\tSolvent num: ", str(qDSs.solvent_num)])) 
+        fh.write("".join(["\n\t\tNum. atoms: ", str(qDSs.atom_num)])) 
+        fh.write("".join(["\n\t\tTime step: ", str(qDSs.timestep)])) 
+        fh.write("".join(["\n\t\tDelta: ", str(qDSs.delta)])) 
+        fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description])) 
+
+
 
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id })

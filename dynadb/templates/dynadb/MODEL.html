@@ -311,30 +311,21 @@ font-weight:normal
                         </tbody>
 			</table> </div>
 
-{%if saved%}
+{%elif saved%}
 
-{% for o in rowsMC.values %}  {% for intmc0 in lformmc %}  {% if forloop.counter == forloop.parentloop.counter %}
-                                	<tr id="Element2-{{intmc0}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px{%if model_id%}{% if forloop.counter == rowsMC.values|length %};margin-bottom:30px{%endif%}{%endif%}" id="id_formmc-{{intmc0}}-resname" maxlength="4" name="formmc-{{intmc0}}-resname" type="text"  value="{{o.resname}}" readonly/></td>
+{% for o in rowsMC %}  
+                                	<tr id="Element2-{{o.int_id}}" {% if forloop.counter == rowsMC.values|length %} style="height:40px;vertical-align:top;padding:0px 0px 20px 0px" {%endif%} ><td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{o.int_id}}-resname" maxlength="4" name="formmc-{{o.int_id}}-resname" type="text"  {%if o.resname|length > 0 %} value="{{o.resname}}" readonly {%endif%}/></td>
  
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-numberofmol"  name="formmc-{{intmc0}}-numberofmol" value="{{o.numberofmol}}" type="number" style="width:70px" readonly  /></td>
-                                        {% for d in l_ord_mol %}{% if forloop.counter == forloop.parentloop.counter %}
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{intmc0}}-molecule"  maxlength="4" name="formmc-{{intmc0}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
-                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{intmc0}}-id_molecule" name="formmc-{{intmc0}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-numberofmol"  name="formmc-{{o.int_id}}-numberofmol" type="number" style="width:70px" {%if o.resname|length > 0 %} value="{{o.numberofmol}}" readonly {%endif%}  /></td>
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{o.int_id}}-molecule"  maxlength="4" name="formmc-{{o.int_id}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{o.int_id}}-id_molecule" name="formmc-{{o.int_id}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
 
-                                        {%endif%}{%endfor%}
+					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-namemc" maxlength="60" name="formmc-{{o.int_id}}-namemc" type="text" style="width:70px" {%if o.name|length > 0 %} value="{{o.name}}" readonly {%endif%} /></td>                        
 
-                                        {% for name in lcompname %}  {% if forloop.counter == forloop.parentloop.counter %}
- 
-					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{intmc0}}-namemc" maxlength="60" name="formmc-{{intmc0}}-namemc" type="text" style="width:70px" value="{{name}}" readonly /></td>                        {%endif%}{%endfor%}
+                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{o.int_id}}-typemc" readonly name="formmc-{{o.int_id}}-typemc"   type="text" style="width:70px;height:23px" />
+                                                    <option selected value="{{o.typemc.0}}"> {{o.typemc.1}}</option> </td>
 
-                                        <td style="text-align:center;padding:5px 5px 5px 5px"><select id="id_formmc-{{intmc0}}-typemc" readonly name="formmc-{{intmc0}}-typemc"   type="text" style="width:70px;height:23px" />
-                                {% for ll in lmtype %}
-                                   {% if forloop.counter == forloop.parentloop.counter %}
-                                                    <option selected value="{{ll.0}}"> {{ll.1}}</option> </td>
-                                   {% endif %}
-                                {% endfor %}
-
-{% endif%}{% endfor%}{% endfor%}
+{% endfor%}
                         </tbody>
 			</table> </div>
 
