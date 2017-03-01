@@ -1,5 +1,7 @@
 from dynadb.pipe4_6_0 import *
-from dynadb.models import  Residue, Protein, DyndbModel, DyndbModeledResidues, DyndbProteinSequence, DyndbProtein, DyndbProteinMutations, ResidueGenericNumber
+from dynadb.models import  DyndbModel, DyndbModeledResidues, DyndbProteinSequence, DyndbProtein, DyndbProteinMutations
+from protein.models import  Residue, Protein
+from residue.models import  ResidueGenericNumber
 import re 
 
 

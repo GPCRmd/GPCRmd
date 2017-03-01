@@ -214,6 +214,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	
 	if not stopexists:
 		return 'Stop resid does not exist in the given combination: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid
+	print(seqplain, "   " , onlyaa)
 
 	return (seqplain,onlyaa,hexflag)
 
@@ -237,6 +238,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		return 'Incorrect alignment. There are not any matches.'
 
 	biglist=list()
+	print("bestalig    ", bestalig)
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
