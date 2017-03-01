@@ -1306,7 +1306,7 @@ def count_dynamics(result_id,result_type):
     for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
-            if modelobj !=None:
+            if modelobj is not None:
                 if modelobj.id==result_id:
                     dynset.add(simu.id)
                     continue
@@ -1391,7 +1391,7 @@ def ajaxsearcher(request):
                 try:
                     protein=DyndbProtein.objects.filter(is_published=True).get(pk=user_input)
                     isrec=protein.receptor_id_protein
-                    if isrec!=None:
+                    if isrec is not None:
                         gpcrlist.append([str(protein.id),str(protein.name)])
                 except:
                     gpcrlist=[]
@@ -1400,7 +1400,7 @@ def ajaxsearcher(request):
                 try:
                     protein=DyndbProtein.objects.filter(is_published=True).get(pk=user_input)
                     isrec=protein.receptor_id_protein
-                    if isrec==None:
+                    if isrec is None:
                         proteinlist.append([str(protein.id),str(protein.name)])
                 except:
                     proteinlist=[]
@@ -1437,7 +1437,7 @@ def ajaxsearcher(request):
 
                     for rmatch in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein').filter(id_complex_exp=user_input):
                         isrec=rmatch.id_protein.receptor_id_protein
-                        if isrec!=None:
+                        if isrec is not None:
                             receptorlist.append(isrec.name)
 
                     if len(receptorlist)!=0:
@@ -1483,7 +1483,7 @@ def ajaxsearcher(request):
                         if ([str(res.id_protein),str(res.name)] not in gpcrlist) and ([str(res.id_protein),str(res.name)] not in proteinlist) and published:
                             protein=DyndbProtein.objects.get(pk=res.id_protein)
                             isrec=protein.receptor_id_protein
-                            if isrec==None:
+                            if isrec is None:
                                 proteinlist.append([str(protein.id),str(protein.name)])
                             else:
                                 gpcrlist.append([str(protein.id),str(protein.name)])
@@ -1566,7 +1566,7 @@ def emptysearcher(request):
             if request.POST.get('is_apo')=='com' or request.POST.get('is_apo')=='both':
                 for model in DyndbModel.objects.select_related('id_protein').filter(is_published=True):
                     modprot=model.id_protein
-                    if modprot==None:
+                    if modprot is None:
                         modelids.append(model.id)
 
                 modelresult=modelresult+getligrec(modelids,'model')
@@ -1685,7 +1685,7 @@ def complexmatch(result_id,querylist):
 
     for cprotein in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein').filter(id_complex_exp=cmolecule.id_complex_exp.id):
 
-        is_receptor=cprotein.id_protein.receptor_id_protein!=None
+        is_receptor=cprotein.id_protein.receptor_id_protein is not None
         if is_receptor is True:
             is_receptor='true'
         cprotstr=str(cprotein.id_protein.id)
@@ -1740,7 +1740,7 @@ def exactmatchtest(arrays,return_type,result_id):
                     print(['molecule',str(comp.id_molecule.id),'other'],'MISSING!')
                     return 'fail'
         apotest=DyndbModel.objects.select_related('id_complex_molecule').get(pk=result_id).id_complex_molecule
-        if apotest!=None:
+        if apotest is not None:
             return complexmatch(apotest.id,querylist)
 
         else:
@@ -1759,7 +1759,7 @@ def exactmatchtest(arrays,return_type,result_id):
                 if (['molecule',compstr,'other'] not in querylist) and (['molecule',compstr,'all'] not in querylist):
                     print(['molecule',str(comp.id_molecule.id),'other'],'MISSSING!')
                     return 'fail'
-        if DyndbDynamics.objects.get(pk=result_id).id_model.id_complex_molecule!=None:
+        if DyndbDynamics.objects.get(pk=result_id).id_model.id_complex_molecule is not None:
             return complexmatch(modelobj.id_complex_molecule.id,querylist)
 
     return 'pass'
@@ -1810,7 +1810,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
     if return_type=='complex':
         if table_row[0]=='protein':
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
+            if (table_row[2]=='true' and is_receptor is not None) or (table_row[2]==False and is_receptor is None):
                 q=DyndbProtein.objects.filter(pk=table_row[1])
                 q=q.annotate(cmol_id=F('dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule__id'))
                 q=q.values('cmol_id')
@@ -1844,7 +1844,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
         if table_row[0]=='protein':
 
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein
-            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
+            if (table_row[2]=='true' and is_receptor is not None) or (table_row[2]==False and is_receptor is None):
                 q = DyndbComplexProtein.objects.filter(id_protein=table_row[1])
                 q = q.annotate(model_id=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__id'))
                 q = q.values('id_protein','model_id')
@@ -1898,7 +1898,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
     else: #return Dynamics
         if table_row[0]=='protein':
             is_receptor=DyndbProtein.objects.get(pk=table_row[1]).receptor_id_protein 
-            if (table_row[2]=='true' and is_receptor!=None) or (table_row[2]==False and is_receptor==None):
+            if (table_row[2]=='true' and is_receptor is not None) or (table_row[2]==False and is_receptor is None):
                 q=DyndbComplexProtein.objects.filter(id_protein=table_row[1])
                 q=q.annotate(id_dynamics=F('id_complex_exp__dyndbcomplexmolecule__dyndbmodel__dyndbdynamics__id'))
                 q=q.values('id_dynamics')
@@ -1960,7 +1960,7 @@ def do_query(table_row,return_type): #table row will be a list as [id,type]
                         for dyn in DyndbDynamics.objects.filter(id_model=row['typemodel']):
                             if dyn.id not in rowlist:
                                 rowlist.append(dyn.id)
-    rowlist=[res_id for res_id in rowlist if res_id!=None]
+    rowlist=[res_id for res_id in rowlist if res_id is not None]
     return rowlist
 
 
@@ -2042,7 +2042,6 @@ def NiceSearcher(request):
             if array[4]=='false':
                 array[4]=False
             arrays_def.append(array)
-        print('\n\nHOLAAAAAAAAAAAA\n\n',arrays_def)
 
     #{(1, 'AND'): ['protein', '1', 'true'], (0, ' '): ['molecule', '1', 'orto']}
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
@@ -2088,12 +2087,12 @@ def NiceSearcher(request):
             tmplist=[]
             if request.POST.get('is_apo')=='apo' or request.POST.get('is_apo')=='both':
                 for model_id in resultlist:
-                    if DyndbModel.objects.select_related('id_protein').get(pk=model_id).id_protein!=None:
+                    if DyndbModel.objects.select_related('id_protein').get(pk=model_id).id_protein is not None:
                         tmplist.append(model_id)
 
             if request.POST.get('is_apo')=='com' or request.POST.get('is_apo')=='both':
                 for model_id in resultlist:
-                    if DyndbModel.objects.select_related('id_protein').get(pk=model_id).id_protein==None:
+                    if DyndbModel.objects.select_related('id_protein').get(pk=model_id).id_protein is None:
                         tmplist.append(model_id)
             
             resultlist=tmplist
@@ -2129,7 +2128,7 @@ def NiceSearcher(request):
 
         if request.POST.get('is_apo')=='com' or request.POST.get('is_apo')=='both':
             for dyn_id in resultlist:
-                if DyndbDynamics.objects.select_related('id_model__id_protein').get(pk=dyn_id).id_model.id_protein==None:
+                if DyndbDynamics.objects.select_related('id_model__id_protein').get(pk=dyn_id).id_model.id_protein is None:
                     tmplist.append(dyn_id)
 
         resultlist=tmplist
@@ -2272,7 +2271,7 @@ def query_protein(request, protein_id,incall=False):
         fiva['other_names'].append(match.other_names)
 
     for match in DyndbModel.objects.values('id').filter(id_protein=protein_id):
-        if match['id']!=None:
+        if match['id'] is not None:
             fiva['models'].append(match['id'])
 
     q = DyndbComplexProtein.objects.filter(id_protein=protein_id)
@@ -2280,7 +2279,7 @@ def query_protein(request, protein_id,incall=False):
     q = q.values('id_protein','model_id')
 
     for row in q:
-        if row['model_id']!=None:
+        if row['model_id'] is not None:
             fiva['models'].append(row['model_id'])
 
     fiva['Protein_sequence']=DyndbProteinSequence.objects.get(pk=protein_id).sequence #Let's make the sequence fancier:
@@ -2315,7 +2314,7 @@ def query_protein(request, protein_id,incall=False):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
         for element in ref:
-            if element==None:
+            if element is None:
                 ref[counter]=''
             counter+=1            
         fiva['references'].append(ref)  
@@ -2380,7 +2379,7 @@ def query_molecule(request, molecule_id,incall=False):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
         for element in ref:
-            if element==None:
+            if element is None:
                 ref[counter]=''
             counter+=1            
         molec_dic['references'].append(ref)  
@@ -2430,7 +2429,7 @@ def query_compound(request,compound_id,incall=False):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
         for element in ref:
-            if element==None:
+            if element is None:
                 ref[counter]=''
             counter+=1            
         comp_dic['references'].append(ref)  
@@ -2454,13 +2453,13 @@ def query_complex(request, complex_id,incall=False):
     q = q.annotate(model_id=F('dyndbcomplexmolecule__dyndbmodel__id'))
     q = q.values('id','model_id')
     for row in q:
-        if row['model_id']!=None:
+        if row['model_id'] is not None:
             tmpmolecule=[]
             qq=DyndbModel.objects.filter(pk=row['model_id'])
             qq=qq.annotate(molecule_something= F('id_complex_molecule__dyndbcomplexmoleculemolecule__id_molecule__id') )
             qq=qq.values('molecule_something')
             for row2 in qq:
-                if row2['molecule_something']!=None:
+                if row2['molecule_something'] is not None:
                     tmpmolecule.append(row2['molecule_something'])
             #print([row['model_id'],tmpmolecule])
             model_list.append([row['model_id'],tmpmolecule])   
@@ -2483,19 +2482,19 @@ def query_complex(request, complex_id,incall=False):
     references=dict()
     for row in q:
         print (row['ec_fifty_val'],row['binding_val'],row['references'])
-        if row['ec_fifty_val']!=None:
+        if row['ec_fifty_val'] is notNone:
             efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
             efficacy['value']=efficacyrow.rvalue
             efficacy['units']=efficacyrow.units
             efficacy['description']=efficacyrow.description
    
-        if row['binding_val']!=None:
+        if row['binding_val'] is not None:
             bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
             binding['value']=bindrow.rvalue
             binding['units']=bindrow.units
             binding['description']=bindrow.description
 
-        if row['references']!=None:
+        if row['references'] is not None:
             references=dict()
             refrow=DyndbReferences.objects.get(pk=row['references'])
             references['url']=refrow.url
@@ -2508,7 +2507,7 @@ def query_complex(request, complex_id,incall=False):
             references['title']=refrow.title
             references['pub_year']=refrow.pub_year
             for keys in references:
-                if references[keys]==None:
+                if references[keys] is None:
                     references[keys]=''
             reference_list.append(references)
     comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy}
@@ -2555,7 +2554,7 @@ def query_model(request,model_id,incall=False):
     for match in DyndbDynamics.objects.filter(id_model=model_id):
         model_dic['dynamics'].append(match.id)
 
-    if modelobj.id_complex_molecule!=None:
+    if modelobj.id_complex_molecule is not None:
         cmol_id=modelobj.id_complex_molecule.id
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
             if match.type==0:
@@ -2567,7 +2566,7 @@ def query_model(request,model_id,incall=False):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
         for element in ref:
-            if element==None:
+            if element is None:
                 ref[counter]=''
             counter+=1            
         model_dic['references'].append(ref)  
@@ -2607,7 +2606,7 @@ def query_dynamics(request,dynamics_id):
             #dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
             dyna_dic['link_2_molecules'].append(candidatecomp)
     cmolid=dynaobj.id_model.id_complex_molecule
-    if cmolid !=None:
+    if cmolid is not None:
         cmol_id=cmolid.id
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
             if match.type==0:
@@ -2635,7 +2634,7 @@ def query_dynamics(request,dynamics_id):
         ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
         counter=0
         for element in ref:
-            if element==None:
+            if element is None:
                 ref[counter]=''
             counter+=1            
         dyna_dic['references'].append(ref)
