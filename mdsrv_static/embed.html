@@ -134,7 +134,8 @@
                     stage.getRepresentationsByName(lbl_name1).setVisibility(false)
                 }
             });
-            $("#clear_dist_reps", window.parent.document).click(function(){
+            //$("#clear_dist_reps", window.parent.document).click(function(){
+            $("#clear_dists_btn").on("click","#clear_dist_reps",function(){
                 if (! clicktrue && lbl_name1){
                     clicktrue = true;
                     stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
@@ -142,10 +143,22 @@
                 }
                 for (repN in clickedRepLi){
                     var repNm =clickedRepLi[repN];
-                    var rep_to_rv=stage.getRepresentationsByName(repNm);
-                    rep_to_rv.list[0].repr.clear();
-                    rep_to_rv.setVisibility(false);
+                    if (typeof repNm =="string"){
+                        var rep_to_rv=stage.getRepresentationsByName(repNm);
+                        rep_to_rv.list[0].repr.clear();
+                        rep_to_rv.setVisibility(false);
+                    }
                 }
+                /*for (cdN in compDistsLi){
+                    var repNm =compDistsLi[cdN];
+                    if (typeof repNm =="string"){
+                        console.log(repNm)
+                        var rep_to_rv=stage.getRepresentationsByName(repNm);
+                        rep_to_rv.list[0].repr.clear();
+                        rep_to_rv.setVisibility(false);
+                    }                
+                }*/
+                $("#clear_dists_btn").html("");
                 clickedRep={};
                 clickedRepLi=[];
                 clickedDist={};
@@ -229,9 +242,16 @@
                                             delete clickedDist[repName];
                                         }
                                     }
+                                    var rvIndex = clickedRepLi.indexOf(repName);
+                                    if (rvIndex > -1){
+                                        clickedRepLi.splice(rvIndex, 1);
+                                    }
+                                }
+                                if (clickedRepLi.length ==0){
+                                    $("#clear_dists_btn").html("");
                                 }
                                 stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                stage.getRepresentationsByName(lbl_name1).setVisibility(false)
+                                stage.getRepresentationsByName(lbl_name1).setVisibility(false);
                                 delete clickedRep[atom1];
                             } else {
                                 if (! clickedRep[atom1]){
@@ -242,6 +262,9 @@
                                     clickedRepLi.push(lbl_name1);
                                 }
                             }
+                        }
+                        if (clickedRepLi.length > 0){
+                            $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear dists.</button>');
                         }
                     } else {
                         $("#atomClicked").text("");
@@ -352,9 +375,11 @@
                 }
                 for (ind in pd_all) {
                     class_li=pd_all[ind];
-                    if (class_li.length > 0){
-                        var cons_pos_ok = class_li.join(" OR ");
-                        o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } );
+                    if (typeof class_li == "object"){
+                        if (class_li.length > 0){
+                            var cons_pos_ok = class_li.join(" OR ");
+                            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } );
+                        }
                     }
                 }   
             } else {
@@ -382,24 +407,36 @@
             if( traj.length > 0) {
                 traj_li=traj;
                 //var playing = false;
+                var traj_html="<div style='width:536px;height:30px;overflow: auto;'>";
                 for (t in traj_li_all) {
                     var mytraj=traj_li_all[t];
                     if (traj_li.indexOf(mytraj) > -1){
-                        $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]);                                
+                        traj_html+="<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]+"</button>"; 
                     }
                 }
+                traj_html+="</div>";
+                $("#buttons").html(traj_html);
                 trajButtons(o,dist_within_li);
+            } else {
+                $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
             }
             if (show_dist =="y"){
                 if (comp_dist){ 
                     var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
                     var dist_pair_li=comp_dist.split("a");
+                    var cd_id=0;
                     for (pair_n in dist_pair_li){
-                        var d_from_to = dist_pair_li[pair_n].split("-");
-                        var d_from = d_from_to[0];
-                        var d_to = d_from_to[1];
-                       // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
-                        o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" } );
+                        var d_from_to_str = dist_pair_li[pair_n];
+                        if (typeof d_from_to_str == "string"){
+                            var d_from_to = d_from_to_str.split("-");
+                            var d_from = d_from_to[0];
+                            var d_to = d_from_to[1];
+                            var comp_dist_name="comp_dist_"+cd_id.toString();
+                           // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
+                            o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" ,name : comp_dist_name } );
+                            //compDistsLi.push(comp_dist_name);
+                            cd_id +=1;
+                        }
                     }
                 }
             } 
@@ -417,6 +454,7 @@
             var trajComp, player;
             var clickedRep={};
             var clickedRepLi=[];
+            //var compDistsLi=[];
             var clickedDist={};
             var traj_li=[];
             if (struc) {
@@ -428,8 +466,8 @@
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
                         mytraj=traj_li_all[0];
-                        traj_li=[mytraj]
-                        $("#buttons").append("<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]); 
+                        traj_li=[mytraj];
+                        $("#buttons").html("<div style='width:536px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
                         //trajButtons(o,[]);
                     }
                     createReps();
@@ -470,13 +508,16 @@
     </script>
     <div id="toiframe" style="width:540px">
         <div id="viewport" style="width:540px; height:370px;"></div>
-        <div id="buttons" style="width:536px;height:30px;overflow: auto;margin-top:36px;margin-left:2px">
-            <!--<button id="playerButton">play/pause</button>-->
+        <div style="height:80px">
+            <div id="buttons" style="width:536px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+            </div>
+            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:1px">
+            </div>
         </div>
-        <div id="trajRangeDiv" style="position:absolute;width:536px;height:30px;margin-top:295px;margin-left:2px;visibility:hidden">
+        <div id="trajRangeDiv" style="position:absolute;width:536px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
-        <div style="width:536px;height:30px;margin-top:335px;margin-left:2px;">
+        <div style="width:536px;height:30px;margin-top:285px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>
