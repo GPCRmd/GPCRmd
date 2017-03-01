@@ -1,7 +1,4 @@
-from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics,  DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbProteinCannonicalProtein,  DyndbComplexCompound, DyndbReferencesModel, DyndbReferencesProtein, DyndbReferencesMolecule, DyndbReferencesDynamics, DyndbReferencesCompound
-from protein.models import Protein
-from structure.models import StructureModel
-from ligand.models import Ligand
+from dynadb.models import DyndbFiles, DyndbFileTypes, DyndbModel, DyndbModeledResidues, DyndbProtein, DyndbOtherProteinNames, DyndbProteinSequence, DyndbCannonicalProteins, DyndbProteinMutations, DyndbCompound, DyndbOtherCompoundNames, DyndbMolecule, DyndbFiles, DyndbFilesMolecule, DyndbComplexExp, DyndbComplexProtein, DyndbComplexMolecule, DyndbComplexMoleculeMolecule, DyndbModelComponents, DyndbDynamicsComponents, DyndbFilesModel, DyndbDynamics,DyndbDynamicsComponents, DyndbDynamicsTags, DyndbDynamicsTagsList, DyndbFilesDynamics, DyndbRelatedDynamics, DyndbRelatedDynamicsDynamics, WebResource, StructureType, StructureModelLoopTemplates, DyndbReferences, DyndbDynamicsMembraneTypes, DyndbSubmission, DyndbSubmissionModel, DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbProteinCannonicalProtein,  DyndbComplexCompound, DyndbReferencesModel, DyndbReferencesProtein, DyndbReferencesMolecule, DyndbReferencesDynamics, DyndbReferencesCompound
 from django import forms
 from django.forms import ModelForm, formset_factory, modelformset_factory, Textarea
 from haystack.forms import SearchForm
@@ -110,6 +107,16 @@ class ModelSearcher(SearchForm):
 class FileUploadForm(forms.Form):
     file_source = forms.FileField()
 
+class NameForm(forms.Form):
+    your_name = forms.CharField(label='Your name', max_length=100)
+#class ContactForm(forms.Form):
+    subject = forms.CharField(max_length=100)
+#    message = forms.CharField(widget=forms.Textarea)
+    sender = forms.EmailField()
+#    cc_myself = forms.BooleanField(required=False)
+
+class FormsetForm(forms.Form):
+    delete= forms.BooleanField(required=False, initial=False)
 
 #################################
 
@@ -186,7 +193,7 @@ class dyndb_Protein_MutationsForm(ModelForm):
 class dyndb_CompoundForm(ModelForm):
     class Meta:
         model = DyndbCompound
-        exclude= ['id_ligand']
+        fields = '__all__'
 
 class dyndb_Other_Compound_Names(ModelForm):
     class Meta:
@@ -296,6 +303,12 @@ class dyndb_Dynamics_Tags_List(ModelForm):
     class Meta:
         model = DyndbDynamicsTagsList
         fields = '__all__'
+####################################
+class Pdyndb_Dynamics(ModelForm):
+    class Meta:
+        model = DyndbDynamics
+        fields = '__all__'
+        exclude = ['id_model', 'id_dynamics_methods']
 # falta dyndb_dynamics_components
 class Pdyndb_Dynamics_tags(ModelForm):
     class Meta:
@@ -327,8 +340,8 @@ class dyndb_Related_Dynamics_Dynamics(ModelForm):
 class dyndb_Model(ModelForm):       
     class Meta:
         model = DyndbModel
-      #  fields = '__all__'
-        exclude=['id_structure_model']
+        fields = '__all__'
+     #   exclude=['update_timestamp','creation_timestamp','created_by_dbengine','last_update_by_dbengine','created_by','last_update_by','id_structure_model']
 
     #class Media:
     #    js = ('addInput.js',)     
@@ -340,4 +353,45 @@ class dyndb_Model_Components(ModelForm):
         fields = '__all__'
 
 
+class AlertForm(forms.ModelForm):
+    class Meta:
+        model=StructureModelLoopTemplates
+        fields = '__all__'
+        widgets = {
+            'user':  forms.HiddenInput()
+        }
     
+#    AlertCountFormset = modelformset_factory(WebResource,form = AlertForm)
+    
+class NotifierForm(forms.ModelForm):
+#    high = forms.ChoiceField(choices=NOTIFIER_TYPE)
+#    medium = forms.ChoiceField(choices=NOTIFIER_TYPE)
+#    low = forms.ChoiceField(choices=NOTIFIER_TYPE)  
+    
+    def save(self, commit=True):
+        alert = super(NotifierForm, self).save(commit=False)
+#       alert.high = self.cleaned_data["high"]
+#       alert.medium = self.cleaned_data["medium"]
+#       alert.low = self.cleaned_data["low"]
+        alert.save()
+        return alert
+    
+    class Meta:
+        model=StructureType
+        fields = '__all__'
+#        fields = ('high','medium', 'low', 'user')
+        widgets = {
+            'user': forms.HiddenInput()
+        }
+
+#NotifierFormset = modelformset_factory(Notifier, form = NotifierForm)
+class Formup(forms.Form):
+    UNIPROTid = forms.CharField(max_length=20)
+    iso = forms.CharField(max_length=100)
+    MUT = forms.CharField(max_length=4)
+    Nam = forms.CharField(max_length=30)
+    ORGAN = forms.CharField(max_length=200)
+    DescMOL = forms.CharField()
+    NETc = forms.IntegerField()
+    INCHI = forms.CharField()
+            

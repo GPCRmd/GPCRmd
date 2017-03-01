@@ -6,12 +6,54 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from __future__ import unicode_literals
-#from ligand.models import Ligand
-#from protein.models import Protein
-#from structure.models import StructureModel
 
 from django.db import models
 from django.forms import ModelForm, Textarea
+
+
+
+class DjangoAdminLog(models.Model):
+    action_time = models.DateTimeField()
+    object_id = models.TextField(blank=True, null=True)
+    object_repr = models.CharField(max_length=200)
+    action_flag = models.SmallIntegerField()
+    change_message = models.TextField()
+    content_type = models.ForeignKey('DjangoContentType', models.DO_NOTHING, blank=True, null=True)
+    user = models.ForeignKey(AuthUser, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'django_admin_log'
+
+
+class DjangoContentType(models.Model):
+    app_label = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'django_content_type'
+        unique_together = (('app_label', 'model'),)
+
+
+class DjangoMigrations(models.Model):
+    app = models.CharField(max_length=255)
+    name = models.CharField(max_length=255)
+    applied = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_migrations'
+
+
+class DjangoSession(models.Model):
+    session_key = models.CharField(primary_key=True, max_length=40)
+    session_data = models.TextField()
+    expire_date = models.DateTimeField()
+
+    class Meta:
+        managed = False
+        db_table = 'django_session'
 
 
 class DyndbAssayTypes(models.Model):
@@ -134,7 +176,7 @@ class DyndbCompound(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    id_ligand = models.ForeignKey('ligand.Ligand', models.DO_NOTHING, db_column='id_ligand', blank=True, null=True)
+    id_ligand = models.ForeignKey('Ligand', models.DO_NOTHING, db_column='id_ligand', blank=True, null=True)
     is_published = models.BooleanField(default=False)
     
     class Meta:
@@ -540,7 +582,7 @@ class DyndbModel(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    id_structure_model = models.ForeignKey('structure.StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
+    id_structure_model = models.ForeignKey('StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
     is_published = models.BooleanField(default=False)
     
     class Meta:
@@ -652,7 +694,7 @@ class DyndbProtein(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    receptor_id_protein = models.ForeignKey('protein.Protein', on_delete=models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
+    receptor_id_protein = models.ForeignKey('Protein', on_delete=models.DO_NOTHING, db_column='receptor_id_protein', blank=True, null=True)
     id_uniprot_species = models.ForeignKey(DyndbUniprotSpecies, on_delete=models.DO_NOTHING, db_column='id_uniprot_species',null=False)
     is_published = models.BooleanField(default=False)
     class Meta:
@@ -817,4 +859,545 @@ class DyndbRelatedDynamicsDynamics(models.Model):
         
 
 
+
+class Protein(models.Model):
+    entry_name = models.CharField(unique=True, max_length=100)
+    accession = models.CharField(max_length=100, blank=True, null=True)
+    name = models.CharField(max_length=200)
+    sequence = models.TextField()
+    family = models.ForeignKey('ProteinFamily', models.DO_NOTHING)
+    parent = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
+    residue_numbering_scheme = models.ForeignKey('ResidueGenericNumberingScheme', models.DO_NOTHING)
+    sequence_type = models.ForeignKey('ProteinSequenceType', models.DO_NOTHING)
+    source = models.ForeignKey('ProteinSource', models.DO_NOTHING)
+    species = models.ForeignKey('Species', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein'
+
+
+class ProteinAlias(models.Model):
+    name = models.CharField(max_length=200)
+    position = models.SmallIntegerField()
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_alias'
+
+
+class ProteinAnomaly(models.Model):
+    anomaly_type = models.ForeignKey('ProteinAnomalyType', models.DO_NOTHING)
+    generic_number = models.ForeignKey('ResidueGenericNumber', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_anomaly'
+        unique_together = (('anomaly_type', 'generic_number'),)
+
+
+class ProteinAnomalyRule(models.Model):
+    amino_acid = models.CharField(max_length=1)
+    negative = models.BooleanField()
+    generic_number = models.ForeignKey('ResidueGenericNumber', models.DO_NOTHING)
+    rule_set = models.ForeignKey('ProteinAnomalyRuleSet', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_anomaly_rule'
+
+
+class ProteinAnomalyRuleSet(models.Model):
+    exclusive = models.BooleanField()
+    protein_anomaly = models.ForeignKey(ProteinAnomaly, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_anomaly_rule_set'
+
+
+class ProteinAnomalyType(models.Model):
+    slug = models.CharField(unique=True, max_length=20)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_anomaly_type'
+
+
+class ProteinConformation(models.Model):
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+    state = models.ForeignKey('ProteinState', models.DO_NOTHING)
+    template_structure = models.ForeignKey('Structure', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_conformation'
+
+
+class ProteinConformationProteinAnomalies(models.Model):
+    proteinconformation = models.ForeignKey(ProteinConformation, models.DO_NOTHING)
+    proteinanomaly = models.ForeignKey(ProteinAnomaly, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_conformation_protein_anomalies'
+        unique_together = (('proteinconformation', 'proteinanomaly'),)
+
+
+class ProteinConformationTemplateStructure(models.Model):
+    protein_conformation = models.ForeignKey(ProteinConformation, models.DO_NOTHING)
+    protein_segment = models.ForeignKey('ProteinSegment', models.DO_NOTHING)
+    structure = models.ForeignKey('Structure', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_conformation_template_structure'
+
+
+class ProteinEndogenousLigands(models.Model):
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+    ligand = models.ForeignKey(Ligand, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_endogenous_ligands'
+        unique_together = (('protein', 'ligand'),)
+
+
+class ProteinFamily(models.Model):
+    slug = models.CharField(unique=True, max_length=100)
+    name = models.CharField(max_length=200)
+    parent = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_family'
+
+
+class ProteinFusion(models.Model):
+    name = models.CharField(unique=True, max_length=100)
+    sequence = models.TextField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_fusion'
+
+
+class ProteinFusionProtein(models.Model):
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+    protein_fusion = models.ForeignKey(ProteinFusion, models.DO_NOTHING)
+    segment_after = models.ForeignKey('ProteinSegment',   models.DO_NOTHING,  related_name='ProteinFusionProtein_segment_after_fky')
+    segment_before = models.ForeignKey('ProteinSegment',   models.DO_NOTHING, related_name='ProteinFusionProtein_segment_before_fky')
+
+    class Meta:
+        managed = False
+        db_table = 'protein_fusion_protein'
+
+
+class ProteinSegment(models.Model):
+    slug = models.CharField(unique=True, max_length=100)
+    name = models.CharField(max_length=50)
+    category = models.CharField(max_length=50)
+    fully_aligned = models.BooleanField()
+    partial = models.BooleanField()
+
+    class Meta:
+        managed = False
+        db_table = 'protein_segment'
+
+
+class ProteinSequenceType(models.Model):
+    slug = models.CharField(unique=True, max_length=20)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_sequence_type'
+
+
+class ProteinSet(models.Model):
+    name = models.CharField(unique=True, max_length=50)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_set'
+
+
+class ProteinSetProteins(models.Model):
+    proteinset = models.ForeignKey(ProteinSet, models.DO_NOTHING)
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_set_proteins'
+        unique_together = (('proteinset', 'protein'),)
+
+
+class ProteinSource(models.Model):
+    name = models.CharField(unique=True, max_length=20)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_source'
+
+
+class ProteinState(models.Model):
+    slug = models.CharField(unique=True, max_length=20)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_state'
+
+
+class ProteinWebLinks(models.Model):
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+    weblink = models.ForeignKey('WebLink', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'protein_web_links'
+        unique_together = (('protein', 'weblink'),)
+
+
+class Publication(models.Model):
+    title = models.TextField()
+    authors = models.TextField()
+    year = models.IntegerField()
+    reference = models.TextField()
+    journal = models.ForeignKey('PublicationJournal', models.DO_NOTHING)
+    web_link = models.ForeignKey('WebLink', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'publication'
+
+
+class PublicationJournal(models.Model):
+    slug = models.CharField(max_length=200, blank=True, null=True)
+    name = models.TextField(unique=True)
+
+    class Meta:
+        managed = False
+        db_table = 'publication_journal'
+
+
+class ReleaseNotes(models.Model):
+    date = models.DateField()
+    html = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'release_notes'
+
+
+class ReleaseStatistics(models.Model):
+    value = models.IntegerField()
+    release = models.ForeignKey(ReleaseNotes, models.DO_NOTHING)
+    statistics_type = models.ForeignKey('ReleaseStatisticsType', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'release_statistics'
+
+
+class ReleaseStatisticsType(models.Model):
+    name = models.CharField(max_length=200)
+
+    class Meta:
+        managed = False
+        db_table = 'release_statistics_type'
+
+
+class Residue(models.Model):
+    sequence_number = models.SmallIntegerField()
+    amino_acid = models.CharField(max_length=1)
+    display_generic_number = models.ForeignKey('ResidueGenericNumber', models.DO_NOTHING, blank=True, null=True, related_name='Residue_display_generic_number_fky' )
+    generic_number = models.ForeignKey('ResidueGenericNumber', models.DO_NOTHING, blank=True, null=True, related_name='Residue_generic_number_fky')
+    protein_conformation = models.ForeignKey(ProteinConformation, models.DO_NOTHING)
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'residue'
+
+
+class ResidueAlternativeGenericNumbers(models.Model):
+    residue = models.ForeignKey(Residue, models.DO_NOTHING)
+    residuegenericnumber = models.ForeignKey('ResidueGenericNumber', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_alternative_generic_numbers'
+        unique_together = (('residue', 'residuegenericnumber'),)
+
+
+class ResidueGenericNumber(models.Model):
+    label = models.CharField(max_length=10)
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING, blank=True, null=True)
+    scheme = models.ForeignKey('ResidueGenericNumberingScheme', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_generic_number'
+        unique_together = (('scheme', 'label'),)
+
+
+class ResidueGenericNumberEquivalent(models.Model):
+    label = models.CharField(max_length=10)
+    default_generic_number = models.ForeignKey(ResidueGenericNumber, models.DO_NOTHING)
+    scheme = models.ForeignKey('ResidueGenericNumberingScheme', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_generic_number_equivalent'
+        unique_together = (('scheme', 'label'),)
+
+
+class ResidueGenericNumberingScheme(models.Model):
+    slug = models.CharField(max_length=20)
+    short_name = models.CharField(max_length=20)
+    name = models.CharField(max_length=100)
+    parent = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_generic_numbering_scheme'
+
+
+class ResidueSet(models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_set'
+
+
+class ResidueSetResidue(models.Model):
+    residueset = models.ForeignKey(ResidueSet, models.DO_NOTHING)
+    residue = models.ForeignKey(Residue, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'residue_set_residue'
+        unique_together = (('residueset', 'residue'),)
+
+
+class Species(models.Model):
+    latin_name = models.CharField(unique=True, max_length=100)
+    common_name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'species'
+
+
+class Structure(models.Model):
+    preferred_chain = models.CharField(max_length=20)
+    resolution = models.DecimalField(max_digits=5, decimal_places=3)
+    publication_date = models.DateField()
+    representative = models.BooleanField()
+    pdb_code = models.ForeignKey('WebLink', models.DO_NOTHING)
+    pdb_data = models.ForeignKey('StructurePdbData', models.DO_NOTHING, blank=True, null=True)
+    protein_conformation = models.ForeignKey(ProteinConformation, models.DO_NOTHING)
+    publication = models.ForeignKey(Publication, models.DO_NOTHING, blank=True, null=True)
+    state = models.ForeignKey(ProteinState, models.DO_NOTHING)
+    structure_type = models.ForeignKey('StructureType', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure'
+
+
+class StructureCoordinates(models.Model):
+    description = models.ForeignKey('StructureCoordinatesDescription', models.DO_NOTHING)
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_coordinates'
+
+
+class StructureCoordinatesDescription(models.Model):
+    text = models.CharField(unique=True, max_length=200)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_coordinates_description'
+
+
+class StructureEngineering(models.Model):
+    description = models.ForeignKey('StructureEngineeringDescription', models.DO_NOTHING)
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_engineering'
+
+
+class StructureEngineeringDescription(models.Model):
+    text = models.CharField(unique=True, max_length=200)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_engineering_description'
+
+
+class StructureFragment(models.Model):
+    ligand = models.ForeignKey(Ligand, models.DO_NOTHING)
+    pdbdata = models.ForeignKey('StructurePdbData', models.DO_NOTHING)
+    residue = models.ForeignKey(Residue, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_fragment'
+
+
+class StructureModel(models.Model):
+    pdb = models.TextField()
+    main_template = models.ForeignKey(Structure, models.DO_NOTHING)
+    protein = models.ForeignKey(Protein, models.DO_NOTHING)
+    state = models.ForeignKey(ProteinState, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_model'
+
+
+class StructureModelAnomalies(models.Model):
+    reference = models.CharField(max_length=1)
+    anomaly = models.ForeignKey(ProteinAnomaly, models.DO_NOTHING)
+    homology_model = models.ForeignKey(StructureModel, models.DO_NOTHING)
+    template = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_model_anomalies'
+
+
+class StructureModelLoopTemplates(models.Model):
+    homology_model = models.ForeignKey(StructureModel, models.DO_NOTHING)
+    segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    template = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_model_loop_templates'
+
+
+class StructureModelResidues(models.Model):
+    sequence_number = models.IntegerField()
+    origin = models.CharField(max_length=15)
+    homology_model = models.ForeignKey(StructureModel, models.DO_NOTHING)
+    residue = models.ForeignKey(Residue, models.DO_NOTHING)
+    rotamer = models.ForeignKey('StructureRotamer', models.DO_NOTHING, blank=True, null=True)
+    segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    template = models.ForeignKey(Structure, models.DO_NOTHING, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_model_residues'
+
+
+class StructurePdbData(models.Model):
+    pdb = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'structure_pdb_data'
+
+
+class StructureProteinAnomalies(models.Model):
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+    proteinanomaly = models.ForeignKey(ProteinAnomaly, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_protein_anomalies'
+        unique_together = (('structure', 'proteinanomaly'),)
+
+
+class StructureRotamer(models.Model):
+    pdbdata = models.ForeignKey(StructurePdbData, models.DO_NOTHING)
+    residue = models.ForeignKey(Residue, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_rotamer'
+
+
+class StructureSegment(models.Model):
+    start = models.IntegerField()
+    end = models.IntegerField()
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_segment'
+
+
+class StructureSegmentModeling(models.Model):
+    start = models.IntegerField()
+    end = models.IntegerField()
+    protein_segment = models.ForeignKey(ProteinSegment, models.DO_NOTHING)
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_segment_modeling'
+
+
+class StructureStabilizingAgent(models.Model):
+    slug = models.CharField(unique=True, max_length=50)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_stabilizing_agent'
+
+
+class StructureStabilizingAgents(models.Model):
+    structure = models.ForeignKey(Structure, models.DO_NOTHING)
+    structurestabilizingagent = models.ForeignKey(StructureStabilizingAgent, models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_stabilizing_agents'
+        unique_together = (('structure', 'structurestabilizingagent'),)
+
+
+class StructureType(models.Model):
+    slug = models.CharField(unique=True, max_length=20)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        managed = False
+        db_table = 'structure_type'
+
+
+class WebLink(models.Model):
+    index = models.TextField()
+    web_resource = models.ForeignKey('WebResource', models.DO_NOTHING)
+
+    class Meta:
+        managed = False
+        db_table = 'web_link'
+        unique_together = (('web_resource', 'index'),)
+
+
+class WebResource(models.Model):
+    slug = models.CharField(max_length=20)
+    name = models.CharField(max_length=200)
+    url = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'web_resource'
 
