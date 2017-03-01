@@ -28,7 +28,7 @@ from django.utils import timezone
 from django.conf import settings
 from rdkit.Chem import MolFromInchi,MolFromSmiles
 from molecule_download_fillDB import retreive_compound_data_pubchem_post_json, retreive_compound_sdf_pubchem, retreive_compound_png_pubchem, CIDS_TYPES, pubchem_errdata_2_response, retreive_molecule_chembl_similarity_json, chembl_get_compound_id_query_result_url,get_chembl_molecule_ids, get_chembl_prefname_synonyms, retreive_molecule_chembl_id_json, retreive_compound_png_chembl, chembl_get_molregno_from_html, retreive_compound_sdf_chembl, chembl_errdata_2_response
-from GPCRuniprot import GPCRlist
+from UniprotCodes import gpcr_uniprot_codes
 from django.db.models import Q
 from dynadb.models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins, Protein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from dynadb.models import DyndbProteinMutations,DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames
@@ -376,7 +376,7 @@ def to_bindingdb_format(records):
         seqlist=[]
         gpcr_flag=0
         for protein in protlist:
-            if protein in GPCRlist:
+            if protein in gpcr_uniprot_codes:
                 gpcr_flag=1
                 
             response = requests.get("http://www.uniprot.org/uniprot/"+protein+".fasta") #seq of cannonicalid
@@ -436,7 +436,7 @@ def get_complexes(chunk):
     while i<len(lines_list):#make sure the last line is parsed.
 
         if '$$$$' in lines_list[i]:
-            if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(GPCRlist)))>0 and pubchem_id!='':
+            if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(gpcr_uniprot_codes)))>0 and pubchem_id!='':
                 complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
             protlist=[]
             reference={} 
@@ -591,7 +591,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
     unicount=0 
     while unicount<len(comple[4]) and flag==0: #build the query for the proteins
         uniprot=comple[4][unicount]
-        isGPCR=uniprot in GPCRlist
+        isGPCR=uniprot in gpcr_uniprot_codes
         if isGPCR is True:
             isGPCR='true'
         binsequence=comple[10][unicount]
@@ -826,7 +826,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     namedataori=namedata
                     seqdata=seqdata['sequence']
                     namedata=namedata['RecName'][0]['Full'][0]
-                    if uniprot in GPCRlist: #if this uniprot code is a GPCR, find its id in receptor_id_protein
+                    if uniprot in gpcr_uniprot_codes: #if this uniprot code is a GPCR, find its id in receptor_id_protein
                         receptor_protein_id=str(Protein.objects.filter(accession=uniprot)[0].id)
                         prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'True','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species, 'is_published':True},True)
 
@@ -890,7 +890,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     namedataori=namedata
                     namedata=namedata['RecName'][0]['Full'][0]
 
-                    if uniprot in GPCRlist:
+                    if uniprot in gpcr_uniprot_codes:
                         receptor_protein_id=str(Protein.objects.filter(accession=uniprot)[0].id)
                         prot_id=newrecord(['dyndb_protein',DyndbProtein],{'uniprotkbac':uniprot,'name':namedata,'is_mutated':'False','isoform':isoformid,'receptor_id_protein':receptor_protein_id,'id_uniprot_species':id_uniprot_species,'is_published':True},True) #warning isoform=1
                     else:
