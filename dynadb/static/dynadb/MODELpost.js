@@ -36,35 +36,65 @@ $(document).ready(function(){
         buttons.prop('disabled',true);
         file_source.prop('disabled',true);
         console.log(modelform[key])       
-        $.ajax({
-            data:modelform,
-            url: url_post,
-            type: 'POST',
-            dataType:'text',
-            success: function(data) {
-                console.log(data)
-                alert("Congratulations!! "+data);
-                window.location.replace(url_success);
-                
-            },
-            error: function(xhr,status,msg){
-                if (xhr.readyState == 4) {
-                    alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+        if (urllist.length ==8){ // http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
+            $.ajax({
+                data:modelform,
+                url: url_post,
+                type: 'POST',
+                dataType:'text',
+                success: function(data) {
+                    console.log(data)
+                    alert("Congratulations!! "+data);
+                    window.location.replace(url_success);
+                    
+                },
+                error: function(xhr,status,msg){
+                    if (xhr.readyState == 4) {
+                        alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+                    }
+                    else if (xhr.readyState == 0) {
+                        alert("Connection error. Please, try later.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+                complete: function(xhr,status,msg){
+                    buttons.prop('disabled',false);
+                    file_source.prop('disabled',false);
+                    self.prop('disabled',false);
                 }
-                else if (xhr.readyState == 0) {
-                    alert("Connection error. Please, try later.");
+            });
+        }else{
+            $(modelform).ajaxSubmit({
+              //  data:modelform,
+                url: url_post,
+                type: 'POST',
+                dataType:'text',
+                success: function(data) {
+                    console.log(data)
+                    alert("Congratulations!! "+data);
+                    window.location.replace(url_success);
+                    
+                },
+                error: function(xhr,status,msg){
+                    if (xhr.readyState == 4) {
+                        alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+                    }
+                    else if (xhr.readyState == 0) {
+                        alert("Connection error. Please, try later.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+                complete: function(xhr,status,msg){
+                    buttons.prop('disabled',false);
+                    file_source.prop('disabled',false);
+                    self.prop('disabled',false);
                 }
-                else {
-                    alert("Unknown error");
-                }
-            },
-            complete: function(xhr,status,msg){
-                buttons.prop('disabled',false);
-                file_source.prop('disabled',false);
-                self.prop('disabled',false);
-            }
-        });
-    
+            });
+         }
     
     
     

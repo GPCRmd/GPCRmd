@@ -825,7 +825,7 @@ class Migration(migrations.Migration):
             name='DyndbReferences',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('doi', models.CharField(blank=True, max_length=80, null=True, unique=True)),
+                ('doi', models.CharField(blank=True, max_length=80, null=True, unique=False)),
                 ('authors', models.CharField(blank=True, max_length=60, null=True)),
                 ('title', models.CharField(blank=True, max_length=100, null=True)),
                 ('institution', models.CharField(blank=True, max_length=100, null=True)),
@@ -1938,20 +1938,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='DyndbEfficacy',
-            fields=[
-                ('id', models.ForeignKey(db_column='id', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='dynadb.DyndbExpInteractionData')),
-                ('rvalue', models.FloatField()),
-                ('units', models.CharField(max_length=10)),
-                ('description', models.CharField(max_length=60)),
-                ('type', models.TextField()),
-            ],
-            options={
-                'managed': False,
-                'db_table': 'dyndb_efficacy',
-            },
-        ),
-        migrations.CreateModel(
             name='DyndbFunctional',
             fields=[
                 ('id', models.ForeignKey(db_column='id', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='dynadb.DyndbExpInteractionData')),
@@ -1961,6 +1947,22 @@ class Migration(migrations.Migration):
             options={
                 'managed': False,
                 'db_table': 'dyndb_functional',
+            },
+        ),
+        migrations.CreateModel(
+            name='DyndbEfficacy',
+            fields=[
+                ('id', models.ForeignKey(db_column='id', on_delete=django.db.models.deletion.DO_NOTHING, primary_key=True, serialize=False, to='dynadb.DyndbExpInteractionData')),
+                ('rvalue', models.FloatField()),
+                ('units', models.CharField(max_length=10)),
+                ('description', models.CharField(max_length=60)),
+                ('type', models.SmallIntegerField()),
+                ('id_functional', models.ForeignKey('DyndbFunctional', models.DO_NOTHING, blank=True, db_column='id_functional', null=True)),
+                ('reference_id_compound',models.ForeignKey('DyndbCompound', models.DO_NOTHING, db_column='reference_id_compound',null=False)),
+            ],
+            options={
+                'managed': False,
+                'db_table': 'dyndb_efficacy',
             },
         ),
         migrations.CreateModel(

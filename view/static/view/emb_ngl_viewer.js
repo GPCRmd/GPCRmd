@@ -202,7 +202,6 @@ $(document).ready(function(){
                 sel=sel.replace(sp,"-");
             }
         }
-        console.log(sel);
         return sel;
     };
 
@@ -1466,8 +1465,9 @@ function isEmptyDict(mydict){
     var traj=obtainCheckedTrajs()
     $("#receptor").addClass("active");
     $(".nonGPCR").addClass("active");
-    var chains_str = $("#chains").text();
-    var all_chains = $("#chains").data("all_chains").split(",");
+    //var chains_str = $("#chains").text();//!
+    var chains_str =$("#receptor").attr("title"); //!
+    var all_chains = $(".str_file").data("all_chains").split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;

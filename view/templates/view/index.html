@@ -69,23 +69,41 @@
 
 <div id="pprotform"class="col-md-7 "> 
   <div id="protform" class="col-md-12 panel panel-primary"> 
-    <div class="panel-body">
+    <div class="panel-body" style="padding-top:10px">
 
 <!-- 			<div style="text-align:center">
              			<h4><br>GPCR visualizaion</h4>
             		</div><br>   -->
 
-        <div class="container-fluid" style="padding-top:15px">
-            {% if chains %}
-            <div class=row><p class="str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}}> {{structure_name}} <span id="chains" data-all_chains="{{all_chains}}">({{chains}})</span></p></div>
-            {% else %}
-            <div class=row><p class="str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}}> {{structure_name}} <span id="chains" data-all_chains="{{all_chains}}">{{chains}}</span></p></div>
-            {% endif %}
+        <div class="container-fluid">
             
-           <!-- <div id="chart_div"></div>-->
+<!-- ============= IFRAME =========== -->
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}">
+                <div class="row" style=max-width:540px;margin:auto>
+                    <div id="legend" style="float:left;min-height:20px"> </div>
+                    <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
+                </div>  
+                <div >
+                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:540px;">
+                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="540px"></iframe>
+                    </div>
 
+                </div>          
+            </div>            
+           
+
+<!-- ============= Apply buttonss =========== -->
+            <div style="margin-bottom:5px">
+                <div class="row" style="margin-top:5px;margin-bottom:10px;border-bottom:1px solid #D8D8D8;padding-bottom:10px" >
+                   <div style="padding-right:3px;padding-left:3px"> 
+                      <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
+                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
+                      <button class="btn btn-default pull-right" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                   </div>
+     	        </div>
+             </div>
 <!-- ============= Comp buttonss =========== -->
-            <div class="row">
+            <div class="row"><center>
                 <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default receptor active"  id="receptor">Receptor</button>
                 {% if other_prots%}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements nonGPCR active" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
@@ -93,13 +111,15 @@
                 {% for long_n, short_n in compounds %}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
+                {% if compounds|length > 0%}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
-            </div>
+                {% endif %}
+            </center></div>
 <!-- ============= Input selection =========== -->
             <div id="selection_all" style="margin-bottom:5px">
             <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
             </div>
             <div id="selection" class="collapse" style="padding-right:15px;">
              <div style="padding-left:15px">
@@ -142,6 +162,7 @@
              </div>
 
 <!-- ============= Residues within x A of y =========== --> 
+              {% if compounds|length > 0%}
                <div class="row">
                
                 <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
@@ -167,6 +188,7 @@
                 </div>
                 
                </div>
+               {% endif %}
 
             </div>
             </div>
@@ -563,25 +585,6 @@
             </div>
             </div>
             {% endif %}
-            <div style="margin-bottom:5px">
-                <div class="row" style="margin-top:10px;margin-bottom:0" >
-                   <div style="padding-right:3px;padding-left:3px"> 
-                      <button  class="btn" id="submit" style="background-color:#e6f4d7;border-color:#bfe39c;">Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
-                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">Open in MDsrv</a>
-                      <button class="btn btn-default pull-right" type="button" id="screenshot">Save image</button>
-                   </div>
-     	        </div>
-
-                <div style="text-align:center;width:100%;">
-                   <!--<iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html?sd=y" style="width:100%;height:430px;border:none;overflow:hidden" scrolling="no"></iframe>--><!--width:540px-->
-                   <iframe id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" style="width:540px;height:420px;border:none;overflow:hidden" scrolling="no"></iframe>
-
-                </div>
-                <div style=width:540px;margin:auto>
-                    <div id="legend" style="float:left"> </div>
-                    <button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>
-                </div>
-             </div>
           </div>
 
 
