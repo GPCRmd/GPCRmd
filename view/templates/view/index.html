@@ -98,7 +98,13 @@
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                       <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
-                      <button class="btn btn-default pull-right" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                      <div class="pull-right">
+                          <div class="btn-group">
+                            <button type="button" id="bckg_dark" class="btn btn-default active bckg_theme" style="padding-left:5px;padding-right:5px">Dark</button>
+                            <button type="button" id="bckg_light" class="btn btn-default bckg_theme" style="padding-left:5px;padding-right:5px">Light</button>
+                          </div>                      
+                          <button class="btn btn-default" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                      </div>
                    </div>
      	        </div>
              </div>
@@ -111,7 +117,7 @@
                 {% for long_n, short_n in compounds %}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
-                {% if compounds|length > 0%}
+                {% if compounds|length > 1%}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
                 {% endif %}
@@ -454,7 +460,7 @@
                 <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" ></div>
                 <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
-		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
+		            <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
                </div>
               <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
@@ -578,6 +584,9 @@
                     </div>
                     <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px" id="int_alert"> </div>
                     <div style="margin-top:5px;padding-right:40px;"  id="int_info" ></div>
+                    <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
+		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
+                   </div>-->
               </div>
             {% endif %}
             </div>

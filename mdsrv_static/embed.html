@@ -502,6 +502,17 @@
                     }
                     parent.clickedDistToAnalysis(allClickedDists);
                 })
+                $(".bckg_theme", window.parent.document).click(function(){
+                    if (! $(this).hasClass("active")){
+                        $(this).siblings(".bckg_theme").removeClass("active");
+                        $(this).addClass("active");
+                        if ($(this).attr("id")=="bckg_light"){
+                            stage.setParameters( { backgroundColor: "white" } );
+                        } else {
+                            stage.setParameters( { backgroundColor: "black" } );
+                        }
+                    }
+                });
             }
         });
         });
