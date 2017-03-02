@@ -109,13 +109,10 @@
     {% endif %}
     <br>
     <br>
-    <center><a class='btn btn-lg btn-info' role='button' href=/view/{{answer.nglviewer_id}}>Watch the simulation</a><br><br><br><br></center>
-    
-    
-    
-    <div style="border: solid black; overflow: hidden; margin: 15px auto; max-width: 575px; max-height: 575px;">
-        <iframe scrolling="no" src="/view/{{answer.nglviewer_id}}/" style="border: 0px none; margin-left: -100px; height: 3500px; margin-top: -800px; width: 800px;">
-        </iframe>
+    <center><a class='btn btn-lg btn-info' role='button' href=/view/{{answer.nglviewer_id}}>Analysis tools</a><br><br><br><br></center>
+
+    <div style=" overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
+        <iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>
     </div>
 
     <br>
