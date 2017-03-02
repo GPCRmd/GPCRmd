@@ -12,34 +12,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='dyndbcomplexexp',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='dyndbcompound',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='dyndbdynamics',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='dyndbmodel',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='dyndbmolecule',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='dyndbprotein',
-            name='is_published',
-            field=models.BooleanField(default=False),
-        ),
     ]
