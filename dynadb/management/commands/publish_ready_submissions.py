@@ -1,8 +1,10 @@
 from django.core.management.base import BaseCommand, CommandError
 from dynadb.models import DyndbSubmission, DyndbProtein, DyndbCompound, DyndbDynamics, DyndbMolecule,  DyndbComplexExp, DyndbComplexMolecule, DyndbModel
-from dynadb.models import DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbSubmissionModel
-from django.db.models import Count, F
-
+from dynadb.models import DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbSubmissionModel, DyndbFilesMolecule, DyndbFilesModel , DyndbFilesDynamics, DyndbFiles
+from dynadb.views import get_file_name, get_file_name_dict, get_file_paths
+from django.db.models import Count, F, Value as V, SmallIntegerField
+import re
+from os import path, rename as os_rename
 
 
 class Command(BaseCommand):
@@ -16,7 +18,20 @@ class Command(BaseCommand):
         'model'            : {'dbobject': DyndbModel,           'ref_obj_id_field': 'id_model',    'path_to_ref': 'dyndbreferencesmodel',    'path_to_submission': 'dyndbsubmissionmodel',                                   'sub_dbobject': DyndbSubmissionModel,    'submission_id_field': 'submission_id', 'path_from_submission': 'model_id'},
         'dynamics'         : {'dbobject': DyndbDynamics,        'ref_obj_id_field': 'id_dynamics', 'path_to_ref': 'dyndbreferencesdynamics', 'path_to_submission': None,                                                     'sub_dbobject': DyndbDynamics,           'submission_id_field': 'submission_id', 'path_from_submission': None},
     }
-       
+    
+    __filenamedict=get_file_name_dict()
+    
+    __numberre = re.compile(r'(\d+)')
+    __molre = re.compile(r'mol',flags=re.IGNORECASE)
+    __imgre = re.compile(r'ima?g',flags=re.IGNORECASE)
+            
+    __coorre = re.compile(r'coor',flags=re.IGNORECASE)
+    __strre = re.compile(r'str',flags=re.IGNORECASE)
+    __topre = re.compile(r'top',flags=re.IGNORECASE)
+    __trjre = re.compile(r'tra?j',flags=re.IGNORECASE)
+    __prmre = re.compile(r'(pa?ra?m)|(par)',flags=re.IGNORECASE)
+    __otherre = re.compile(r'other',flags=re.IGNORECASE)
+    
     def add_arguments(self, parser):
         parser.add_argument(
            'submission_id',
@@ -67,7 +82,13 @@ class Command(BaseCommand):
             default=False,
             help='Forces publishing (or sets "ready for publication" flag) without doing any check. DANGEROUS, especially with non "closed" submissions or if no id(s) are provided.'
         )
-    
+        parser.add_argument(
+            '--verbose',
+            action='store_true',
+            dest='verbose',
+            default=False,
+            help='Gives details about the files published.'
+        )
     
             
     
@@ -144,9 +165,112 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.SUCCESS('Following objects were publish due to missing submissions:'))
                         header_printed = True
                     self.stdout.write(self.style.SUCCESS('"object_type": "%s", "IDs":\n%s') % (object_type,','.join(str(x) for x in object_ids[object_type])))   
+                    
+        def get_file_subtypes_dict():
+            file_subtypes_dict = dict()
+            
+            mol_types=dict(DyndbFilesMolecule.filemolec_types)
+            file_subtypes_dict["molecule"] = {}
+            for typenum in mol_types:
+                type_text = mol_types[typenum]
+                if self.__imgre.search(type_text):
+                    subtype = "image"
+                    m = self.__numberre.search(type_text)
+                    if m:
+                        imgsize=int(m.group(0))
+                    else:
+                        imgsize=300
+                elif self.__molre.search(type_text):
+                    subtype = "molecule"
+                    imgsize = None
+                else:
+                    raise ValueError('Non-defined type: "'+type_text+'".')
+                file_subtypes_dict["molecule"][typenum] = {'subtype':subtype,'imgsize':imgsize}
+                
+            file_subtypes_dict["dynamics"] = {}
+            dyn_types=dict(DyndbFilesDynamics.file_types)
+            for typenum in dyn_types:
+                type_text = dyn_types[typenum]
+                if self.__coorre.search(type_text) or self.__coorre.search(type_text):
+                    subtype = "pdb"
+                elif self.__topre.search(type_text):
+                    subtype = "topology"
+                elif self.__trjre.search(type_text):
+                    subtype = "trajectory"
+                elif self.__prmre.search(type_text):
+                    subtype = "parameters"
+                elif self.__otherre.search(type_text):
+                    subtype = "other"
+                else:
+                    raise ValueError('Non-defined type: "'+type_text+'".')    
+                file_subtypes_dict["dynamics"][typenum] = {'subtype':subtype,'imgsize':None}
+            file_subtypes_dict["model"] = {}
+            file_subtypes_dict["model"][0] = {'subtype':"pdb",'imgsize':None} 
+            
+            return file_subtypes_dict
         
+        def publish_files(submission_ids=None,object_id_dict=None,verbose=False):
+            objects = ["molecule","model","dynamics"]
+            path_to_files_dict = {"molecule":{"file_obj":"dyndbfilesmolecule","file_type_field":"type"},
+            "model":{"file_obj":"dyndbfilesmodel","file_type_field":None},
+            "dynamics":{"file_obj":"dyndbfilesdynamics","file_type_field":"type"}}
+            file_subtypes_dict = get_file_subtypes_dict()
+            print(file_subtypes_dict)
+            work_dict = dict()
+            if submission_ids is not None and object_id_dict is not None:
+                raise ValueError("Only one keyword, 'submission_ids' or 'object_id_dict', can be defined.")
+            
+            elif submission_ids is not None:
+                for obj in objects:
+                    path_to_submission_id_list = [self.__object_type_dict[obj]['path_to_submission'],\
+                    self.__object_type_dict[obj]['submission_id_field']]
+                    path_to_submission_id_list = filter(lambda x: not(x is None or x == ''), path_to_submission_id_list)
+                    path_to_submission_id = '__'.join(path_to_submission_id_list)
+                    
+                    work_dict[obj] = {}
+                    work_dict[obj]['dbobject'] = self.__object_type_dict[obj]['dbobject'].objects.filter(**{path_to_submission_id+'__in':submission_ids})
+                    
+                
+            elif object_id_dict is not None:
+                if object_id_dict.keys() != set(objects):
+                    raise ValueError("'object_id_dict' keyword must be a dictionary with keys: "+','.join(objects)+'.')
+                for obj in objects:
+                    work_dict[obj]['dbobject'] = self.__object_type_dict[obj]['dbobject'].objects.filter(pk__in=object_id_dict[obj])
+            else:
+                raise ValueError("One keyword, 'submission_ids' or 'object_id_dict', must be defined.")
+            for obj in objects:
+                dbobj = work_dict[obj]['dbobject']
+                path_to_file_obj = path_to_files_dict[obj]["file_obj"]
+                path_to_id_files = path_to_file_obj+'__id_files'
+                path_to_filepath = path_to_id_files+'__filepath'
+                path_to_ext = path_to_id_files+'__id_file_types__extension'
+                dbobj = dbobj.annotate(object_id=F('pk'),id_files=F(path_to_id_files),filepath=F(path_to_filepath),ext=F(path_to_ext))
+                if len(file_subtypes_dict[obj]) == 1:
+                    file_type = list(file_subtypes_dict[obj])[0]
+                    if isinstance(file_type, int):
+                        output_field=SmallIntegerField()
+                    else:
+                        output_field=TextField()
+                    dbobj = dbobj.annotate(file_type=V(file_type,output_field=output_field))
+                else:
+                    path_to_file_type = path_to_file_obj +'__'+path_to_files_dict[obj]["file_type_field"]
+                    dbobj = dbobj.annotate(file_type=F(path_to_file_type))
+                dbobj = dbobj.values('object_id','id_files','file_type','filepath','ext')
+                newdir = get_file_paths(obj,url=False,submission_id=None)
+                for fileobj in  dbobj:
+                    subtype = file_subtypes_dict[obj][fileobj['file_type']]['subtype']
+                    imgsize = file_subtypes_dict[obj][fileobj['file_type']]['imgsize']
 
-        
+                    newfilename = get_file_name(objecttype=obj,fileid=fileobj['id_files'],objectid=fileobj['object_id'],ext=fileobj['ext'],forceext=False,subtype=subtype,imgsize=imgsize)
+                    newpath = path.join(newdir,newfilename)
+                    self.stdout.write(''.join(('Moving "',fileobj['filepath'],'" to "',newpath,'".')))
+                    os_rename(fileobj['filepath'],newpath)
+                    try:
+                        DyndbFiles.objects.filter(pk=fileobj['id_files']).update(filepath=newpath)
+                    except:
+                        os_rename(newpath,fileobj['filepath'])
+                        raise
+                    
         if options['set-ready-only'] and options['full']:
             raise CommandError('Incompatible options "--set-ready-only" and "--full".')
         subobj = DyndbSubmission.objects.all()
@@ -247,6 +371,7 @@ class Command(BaseCommand):
                     if options['full']:
                         mainobj = mainobj.filter(**{path_to_submission_id+'__is_published':True})
                     mainobj.update(is_published=True)
+                publish_files(submission_ids=submission_ids_full)
             
         self.stdout.write(self.style.SUCCESS('%s%s' % (msg,','.join(str(x) for x in submission_ids))))        
             
