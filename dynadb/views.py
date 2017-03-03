@@ -9133,7 +9133,7 @@ def get_file_name_dict():
     
     filenamedict['dynamics']['subtypes']["pdb"]["ext"] = ["pdb"]
     filenamedict['dynamics']['subtypes']["topology"]["ext"] = ["psf","prmtop","top"]
-    filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["dcd","xtc"]
+    filenamedict['dynamics']['subtypes']["trajectory"]["ext"] = ["xtc","dcd"]
     filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
     filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
     filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
@@ -9147,30 +9147,40 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["log"]["part"] = "dyn"
     
     return filenamedict
-
+filenamedict = get_file_name_dict()
 def get_file_name_particles(objecttype,ext=None,forceext=False,subtype=None,imgsize=300):
-    filenamedict = get_file_name_dict()
-    extf = ext.lower()
-    subtypes = filenamedict[objecttype].keys()
-    if len(subtypes) > 1:
-        if subtype is None:
-            raise ValueError("a subtype must be specified for objecttype '"+objecttype+"'.")
+    
+    
+    subtypes = filenamedict[objecttype]['subtypes'].keys()
+    
+    if subtype is None:
+        subtypeslen = len(subtypes)
+        if subtypeslen  > 1 :
+            raise ValueError("a subtype must be specified for objecttype '"+objecttype+"'.")   
+        elif subtypeslen == 1:
+            subtype = subtypes.pop()
         else:
-            exts = filenamedict[objecttype]['subtypes'][subtype]["ext"]
-            if filenamedict[objecttype]['part'] is None:
-                part = filenamedict[objecttype]['subtypes'][subtype]['part']
-            else:
-                part = filenamedict[objecttype]['part']
+            raise ValueError("No subtypes found for objecttype '"+objecttype+\
+        "'. Please, check get_file_name_dict() definition.")
         
+    exts = filenamedict[objecttype]['subtypes'][subtype]["ext"]
+    if filenamedict[objecttype]['part'] is None:
+        part = filenamedict[objecttype]['subtypes'][subtype]['part']
     else:
-        subtype = subtypes.pop()
-        exts = filenamedict[objecttype]['subtypes'][subtype]["ext"]
-    if len(exts) > 1:
-        if ext is None:
+        part = filenamedict[objecttype]['part']
+    if ext is None:
+        extslen = len(exts)
+        if extslen  > 1:
             raise ValueError("a file extension must be specified for objecttype '"+objecttype+":"+subtype+"' using 'ext' keyword.")
-        elif not forceext and extf not in exts :
-            raise ValueError(extf+" is not a valid file extension for objecttype '"+objecttype+":"+subtype+"'.\
-            To force the use of this extension use the 'forceext' keyword.")
+        elif extslen == 1:
+            extf = exts[0]
+    else:
+        extf = ext.lower()
+        
+    if not forceext and extf not in exts :
+        raise ValueError(extf+" is not a valid file extension for objecttype '"+objecttype+":"+subtype+"'.\
+        To force the use of this extension use the 'forceext' keyword.")
+        
     if subtype == "image":
         sizepart='_'+str(imgsize)
     else:
