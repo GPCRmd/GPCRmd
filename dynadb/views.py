@@ -274,32 +274,43 @@ def delProtByUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
                 DyndbCannonicalProteins.objects.filter(id_protein=protein_id).delete()
                 DyndbOtherProteinNames.objects.filter(id_protein=protein_id).delete()
                 DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
-                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii).update(protein_id=None)
+                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii).update(protein_id=None,int_id=None)
                 DyndbProtein.objects.filter(id=protein_id).delete()
         else: #protein_id is not the canonical but maybe there is no other proteins linked to its canonical
             qrelCanprot=DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id)
-            qrelProtCanprot=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_proteins=qrelCanprot.values('id_cannonical_proteins'))
-            if len(qrelProtCanprot)==1:
+            qrelProtCanprot=DyndbProteinCannonicalProtein.objects.filter(id_cannonical_proteins=qrelCanprot.values('id_cannonical_proteins')).exclude(id_protein=protein_id)
+            if len(qrelProtCanprot)==1: # only the entry relating the canonical protein with itself is included as the one involving the current protein was excluded
                 print("Protein_id is the only protein linked to the canonical protein and both can be deleted if they only are involved in the current model and complex")
                 qPdP=list(DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).values_list('id_cannonical_proteins',flat=True))
-                DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
-                DyndbCannonicalProteins.objects.filter(id_protein__in=qPdP).delete()
-                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=None,protein_id__in=qPdP).delete()
-                DyndbOtherProteinNames.objects.filter(id_protein__in=qPdP).delete()
-                DyndbProteinSequence.objects.filter(id_protein__in=qPdP).delete()
-                DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
-                if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
-                    DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
-                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None)
-                DyndbProtein.objects.filter(id__in=qPdP).delete()
-                DyndbProtein.objects.filter(id=protein_id).delete()
+                qSubCanProt_with_int_id=DyndbSubmissionProtein.objects.filter(submission_id=submission_id,protein_id=protein_id,int_id=ii).exclude(int_id=None)
+                print("if the canonical protein has a int_id in this submission should not be removed")
+                if not qSubCanProt_with_int_id.exists(): #if the canonical protein has int_id it is being used instead the original mutated protein. Then remove it does not exist
+                    DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
+                    DyndbCannonicalProteins.objects.filter(id_protein__in=qPdP).delete()
+                    DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=None,protein_id__in=qPdP).delete()
+                    DyndbOtherProteinNames.objects.filter(id_protein__in=qPdP).delete()
+                    DyndbProteinSequence.objects.filter(id_protein__in=qPdP).delete()
+                    DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
+                    if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
+                        DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
+                    DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None,int_id=None)
+                    DyndbProtein.objects.filter(id__in=qPdP).delete()
+                    DyndbProtein.objects.filter(id=protein_id).delete()
+                else:
+                    DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).exclude(id_cannonical_proteins=qrelCanprot.values('id_cannonical_proteins')).delete()
+                    DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
+                    if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
+                        DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
+                    DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None,int_id=None)
+                    DyndbProtein.objects.filter(id=protein_id).delete()
+                    
             else:
                 print("Protein_id is not the only protein linked to the canonical protein and only it can be deleted if it is only involved in the current model and complex")
                 DyndbProteinCannonicalProtein.objects.filter(id_protein=protein_id).delete()
                 DyndbProteinSequence.objects.filter(id_protein=protein_id).delete()
                 if is_mutated_val or DyndbProtein.objects.filter(id=protein_id,is_mutated=True).exists():
                     DyndbProteinMutations.objects.filter(id_protein=protein_id).delete()
-                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None)
+                DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=ii,protein_id=protein_id).update(protein_id=None,int_id=None)
                 DyndbProtein.objects.filter(id=protein_id).delete()
 
 def deleteComplexByUpdateProtein(protein_id,ii,submission_id,is_mutated_val,model_del_prot=False):
@@ -389,9 +400,13 @@ def delMolByUpdateMolecule(molecule_id,ii,submission_id):
             if not other_sub_invg_mol.exists():#the molecule and the compound have been used only in this submission and can be removed
                  DyndbDynamicsComponents.objects.filter(id_molecule=molecule_id,id_dynamics__submission_id=submission_id).delete()
                  DyndbModelComponents.objects.filter(id_molecule=molecule_id,id_model__dyndbsubmissionmodel__submission_id=submission_id).delete()
-                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
+                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None,int_id=None)
                  compid=qcompo_mol.values_list('id',flat=True)[0]
+                 DyndbFiles.objects.filter(dyndbfilesmolecule__id_molecule=molecule_id).delete()
+                 DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).delete()
+                 print(qcompo_mol,"ANTES UPDATE")
                  qcompo_mol.update(std_id_molecule=None)
+                 print(qcompo_mol,"DESPUES UPDATE")
                  DyndbMolecule.objects.filter(id_compound=compid).delete()
                  DyndbOtherCompoundNames.objects.filter(id_compound=compid).delete()
                  DyndbCompound.objects.filter(id=compid).delete()
@@ -399,9 +414,9 @@ def delMolByUpdateMolecule(molecule_id,ii,submission_id):
             else:
                  DyndbDynamicsComponents.objects.filter(id_molecule=molecule_id,id_dynamics__submission_id=submission_id).delete()
                  DyndbModelComponents.objects.filter(id_molecule=molecule_id,id_model__dyndbsubmissionmodel__submission_id=submission_id).delete()
-                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
+                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None,int_id=None)
         else:
-             DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
+             DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None,int_id=None)
     else:#the molecule_id object is not the std molecule 
         std_mol=DyndbMolecule.objects.filter(id=molecule_id).values('id_compound__std_id_molecule')  
         qcompo_mol =DyndbCompound.objects.filter(dyndbmolecule__id_compound=F('id'),std_id_molecule=std_mol)#includes the molecule to be updated
@@ -415,6 +430,10 @@ def delMolByUpdateMolecule(molecule_id,ii,submission_id):
                         DyndbModelComponents.objects.filter(id_molecule=molecule_id,id_model__dyndbsubmissionmodel__submission_id=submission_id).delete()
                         sub_invg_stdmol.update(molecule_id=None,not_in_model=None)
                         sub_invg_mol.update(molecule_id=None,not_in_model=None)
+                        DyndbFiles.objects.filter(dyndbfilesmolecule__id_molecule=molecule_id).delete()
+                        DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).delete()
+                        DyndbFiles.objects.filter(dyndbfilesmolecule__id_molecule=std_mol).delete()
+                        DyndbFilesMolecule.objects.filter(id_molecule=std_mol).delete()
                         compid=qcompo_mol.values_list('id',flat=True)[0]
                         qcompo_mol.update(std_id_molecule=None)
                         DyndbMolecule.objects.filter(id_compound=compid).delete()
@@ -427,7 +446,7 @@ def delMolByUpdateMolecule(molecule_id,ii,submission_id):
                 else:
                     DyndbDynamicsComponents.objects.filter(id_molecule=molecule_id,id_dynamics__submission_id=submission_id).delete()
                     DyndbModelComponents.objects.filter(id_molecule=molecule_id,id_model__dyndbsubmissionmodel__submission_id=submission_id).delete()
-                    DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
+                    DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None,int_id=None)
     print("\nLLLdeleteComplexByUpdateMolecule ")
                        
 def deleteComplexByUpdateMolecule(molecule_id,ii,submission_id,model_del_molec=False):
@@ -583,6 +602,8 @@ def PROTEINview(request, submission_id):
         
         indexl.sort()
         qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None)
+        qSubreuse=DyndbSubmissionProtein.objects.filter(int_id=None,protein_id=None) #entry list to be reused
+        lqSubreuse_used=[] 
         if qSub.exists():
             qSub_protl=list(qSub.values_list('submission_id','protein_id','int_id','protein_id__dyndbproteinsequence__sequence'))
             qSub_p_sid_int_id=[]
@@ -604,11 +625,13 @@ def PROTEINview(request, submission_id):
                     response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
                     return response
                 if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
-                    prev_sub_prot_match_formprotidyseq=False
+                    prev_sub_prot_match_formProtidySeqyIntid=False #protein submitted in this submission
+                    prev_sub_prot_match_formProtidySeq=False #protein submitted in this submission
                     print("                    prev_sub_prot_match_formprotidyseq=False")
                 else:
                     print("Valor funcion ", len(browse_protein_response), browse_protein_response)
-                    prev_sub_prot_match_formProtidySeq=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['msequence']).exists() 
+                    prev_sub_prot_match_formProtidySeqyIntid=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['msequence']).exists() #protein submitted in this submission
+                    prev_sub_prot_match_formProtidySeq=DyndbSubmissionProtein.objects.filter(protein_id=int((browse_protein_response['id_protein'])[0]),protein_id__dyndbproteinsequence__sequence=dictprot[ii]['msequence']).exists() #protein submitted in this submission
             else:
                 is_mutated_val=False
                 #### Check if the Protein in the HTML is already in the database 
@@ -617,11 +640,14 @@ def PROTEINview(request, submission_id):
                     response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
                     return response
                 if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
-                    prev_sub_prot_match_formprotidyseq=False
+                    prev_sub_prot_match_formProtidySeqyIntid=False #protein submitted in this submission
+                    prev_sub_prot_match_formProtidySeq=False #protein submitted in this submission
                     print("                    prev_sub_prot_match_formprotidyseq=False")
                 else: 
                     print("Valor funcion ", len(browse_protein_response), browse_protein_response)
-                    prev_sub_prot_match_formProtidySeq=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['sequence']).exists() 
+                    prev_sub_prot_match_formProtidySeqyIntid=qSub.filter(protein_id=int((browse_protein_response['id_protein'])[0]),int_id=ii,protein_id__dyndbproteinsequence__sequence=dictprot[ii]['sequence']).exists() #protein submitted in this submission
+                    prev_sub_prot_match_formProtidySeq=DyndbSubmissionProtein.objects.filter(protein_id=int((browse_protein_response['id_protein'])[0]),protein_id__dyndbproteinsequence__sequence=dictprot[ii]['sequence']).exists() 
+                    print ("prev_sub_prot_match_formProtidySeq   ",prev_sub_prot_match_formProtidySeq)
             
             if len(browse_protein_response['id_protein'])==1:
                 print(browse_protein_response['Message'])
@@ -629,10 +655,22 @@ def PROTEINview(request, submission_id):
                 dictSP[ii]={'submission_id':int(submission_id), 'protein_id':int(browse_protein_response['id_protein'][0]), 'int_id':ii} #int_id is 0 for the protein #1, 1 for the protein #2, ...
                 fdbSP[ii]=dyndb_Submission_Protein(dictSP[ii])
                 if qSub.filter(int_id=ii).exists():
-                    if not prev_sub_prot_match_formProtidySeq: #the protein_id and sequence in the submission table is different than the one in the current form. An update is needed!! first remove saved protein from the table
+                    if not prev_sub_prot_match_formProtidySeqyIntid: #the protein_id and sequence in the submission table is different than the one in the current form. An update is needed!! first remove saved protein from the table
                         protein_id=qSub.filter(int_id=ii).values_list('protein_id',flat=True)[0]
-                        deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
-                        DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=int(ii)).update(protein_id=int(browse_protein_response['id_protein'][0]))
+                        qSub.filter(int_id=ii).update(int_id=1000) 
+                        if prev_sub_prot_match_formProtidySeq: #the protein_id and sequence in the submission table is different than the one in the current form. An update is needed!! first remove saved protein from the table
+                            print("ACTUALIZACION DE INT ID")
+                            DyndbSubmissionProtein.objects.filter(submission_id=submission_id,protein_id=int(dictSP[ii]['protein_id'])).update(int_id=int(ii))
+                            Update_canProt_to_formProt=True #info from canonical protein wont be erased if it is eventually used in this submission
+                        else:
+                            DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=int(ii)).update(protein_id=int(browse_protein_response['id_protein'][0]))
+                        
+                        Check_protein_id_tbremoved_is_in_othersubmission=DyndbSubmissionProtein.objects.filter(protein_id=protein_id).exclude(int_id=1000)
+                        if not Check_protein_id_tbremoved_is_in_othersubmission.exists():
+                            
+                            deleteModelbyUpdateProtein(protein_id,1000,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
+
+                        DyndbSubmissionProtein.objects.filter(submission_id=submission_id,int_id=1000).update(protein_id=None,int_id=None)
                         continue
 
                     else:                    
@@ -641,14 +679,20 @@ def PROTEINview(request, submission_id):
                         print("PPPPPPPPPP",browse_protein_response['Message'])
                         continue
                 else:
-                    if fdbSP[ii].is_valid():
-                        fdbSP[ii].save()
+                    if qSubreuse.exists():
+                        for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                            qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=int(dictSP[ii]['int_id']),protein_id=int(dictSP[ii]['protein_id'])) 
+                            lqSubreuse_used.append(rows.id) 
+                            break
                     else:
-                        iii1=fdbSP[ii].errors.as_text()
-                        print("fdbSP[",ii,"] no es valido")
-                        print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                        return response
+                        if fdbSP[ii].is_valid():
+                            fdbSP[ii].save()
+                        else:
+                            iii1=fdbSP[ii].errors.as_text()
+                            print("fdbSP[",ii,"] no es valido")
+                            print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
                  
                     if ii==indexl[-1]:#if ii is the last element of the list indexl
                         print("\nThis is the last protein in the form",browse_protein_response['Message'])
@@ -710,15 +754,20 @@ def PROTEINview(request, submission_id):
                 dictSP[ii]={'submission_id':int(submission_id), 'protein_id':formPF[ii].pk, 'int_id':ii} #int_id is 0 for the protein #1, 1 for the protein #2, ...
                 print("dictSP[ii]=\n",dictSP[ii])
                 fdbSP[ii]=dyndb_Submission_Protein(dictSP[ii])
-                if fdbSP[ii].is_valid():
-                    fdbSP[ii].save()
+                if qSubreuse.exists():
+                    for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                        qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=int(dictSP[ii]['int_id']),protein_id=int(dictSP[ii]['protein_id'])) 
+                        break
                 else:
-                    iii1=fdbSP[ii].errors.as_text()
-                    print("fdbSP[",ii,"] no es valido")
-                    print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                    DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
-                    return response
+                    if fdbSP[ii].is_valid():
+                        fdbSP[ii].save()
+                    else:
+                        iii1=fdbSP[ii].errors.as_text()
+                        print("fdbSP[",ii,"] no es valido")
+                        print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
+                        return response
 
 #### Complex protein should be filled in the Model form
 
@@ -930,6 +979,8 @@ def PROTEINview(request, submission_id):
                 auxdictprot[ii]={}
                 dunikb=PROTEINv_get_data_upkb(request, uniprotkbac=dictprot[ii]['uniprotkbac']) #Request the data of the canonical protein in the UniProtKB DB
                 print("PPPPPPP dunikb",dunikb)
+                if isinstance(dunikb,HttpResponse):
+                    return dunikb 
                 if "Aliases" in  dunikb.keys():
                     translate={'Entry':'uniprotkbac','Isoform':'isoform','Name':'name','Aliases':'other_names','Sequence':'sequence','Organism':'id_species_autocomplete','speciesid':'id_species'} #dictionary for the translation between the data in uniprot and the data in our tables
                 else:
@@ -974,21 +1025,26 @@ def PROTEINview(request, submission_id):
                                   #to the user uploaded mutant protein,                                                             
                 
                     fdbSPaux[ii]=dyndb_Submission_Protein(dictSPaux[ii])
-                    
-                    if fdbSPaux[ii].is_valid():
-                        fdbSPaux[ii].save()
+                    if qSubreuse.exists():
+                        for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                            qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=None,protein_id=int(dictSPaux[ii]['protein_id'])) 
+                            break
                     else:
-                        iii1=fdbSPaux[ii].errors.as_text()
-                        print("fdbSPaux[",ii,"] no es valido")
-                        print("!!!!!!Errores despues del fdbSPaux[",ii,"]\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                        DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
-                        DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
-                        DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
-                        DyndbProteinSequence.objects.filter(id_protein=formPF[ii].pk).delete()
-                        if is_mutated_val:
-                            DyndbProteinMutations.object.filter(id_protein=formPF[ii].pk).delete()
-                        return response
+                    
+                        if fdbSPaux[ii].is_valid():
+                            fdbSPaux[ii].save()
+                        else:
+                            iii1=fdbSPaux[ii].errors.as_text()
+                            print("fdbSPaux[",ii,"] no es valido")
+                            print("!!!!!!Errores despues del fdbSPaux[",ii,"]\n",iii1,"\n")
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
+                            DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
+                            DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
+                            DyndbProteinSequence.objects.filter(id_protein=formPF[ii].pk).delete()
+                            if is_mutated_val:
+                                DyndbProteinMutations.object.filter(id_protein=formPF[ii].pk).delete()
+                            return response
 
 ##### Createe a  a dictionary for each alias of each protein (a.k.a. 'other_names'). A dyndb_Other_Protein_NamesForm instace correspond to each alias.
 #####           
@@ -3446,9 +3502,11 @@ def pdbcheck_molecule(request,submission_id,form_type):
  
             fieldset_mc = dict()
             fieldset_ps = dict()
+            print("POST ",request.POST)
             for key in request.POST:
+                print("keyi ", key)
                 if key.find(prefix_mc) == 0:
-                    
+                    print(" key.find(prefix_mc) == 0")
                     fieldsplit = key.split('-')
                     fieldname = fieldsplit[2]
                     if fieldname in postkeys_mc:
@@ -3464,7 +3522,6 @@ def pdbcheck_molecule(request,submission_id,form_type):
                                 return JsonResponse({'msg':msgtype[0].title()+' '+msgtype[1]+' "'+str(fieldset_mc[num][fieldname])+'" is invalid or empty.'},status=422,reason='Unprocessable Entity')
 
                 elif key.find(prefix_ps) == 0 and form_type == "model":
-                        
                     fieldsplit = key.split('-')
                     fieldname = fieldsplit[2]
                     if fieldname in postkeys_ps:
@@ -3483,6 +3540,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
         
                 elif key in postkeys_mc:
                     if 0 not in fieldset_mc.keys():
+                        print ("if 0 not in fieldset_mc.keys():")
                         fieldset_mc[0] = dict()
                     fieldset_mc[0][key] = request.POST[key].strip()
                     if key in {'molecule','id_molecule','numberofmol'}:
@@ -3498,7 +3556,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     fieldset_ps[0][key] = request.POST[key].strip()
                     if key in {'resid_from','resid_to'}:
                         if fieldset_ps[0][key].isdigit():
-                            fieldset_ps[0][key] = int(fieldset_ps[num][key])
+                            fieldset_ps[0][key] = int(fieldset_ps[0][key])
                         else:
                             try:
                                 fieldset_ps[0][key] = int(fieldset_ps[0][key],16)
@@ -5442,8 +5500,8 @@ def MODELview(request, submission_id):
                 mrstype=l.SOURCE_TYPE[l.source_type]
                 lmrstype.append(mrstype)
             print ("residues!!",lmrstype)
-            molinmodel_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model=model_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule=F('molecule_id')).annotate(name=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule__id_compound__name'),resname=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model'))
-            molinmodel_not_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(id__in=molinmodel_in_modelcomp)
+            molinmodel_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model=model_id,submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule=F('molecule_id')).annotate(name=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_molecule__id_compound__name'),resname=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__resname'),numberofmol=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__numberofmol'),typemc=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__type'),id_model=F('submission_id__dyndbsubmissionmodel__model_id__dyndbmodelcomponents__id_model')).exclude(not_in_model=None,int_id=None,molecule_id_id=None)
+            molinmodel_not_in_modelcomp=DyndbSubmissionMolecule.objects.filter(type__lt=6,submission_id=submission_id).exclude(id__in=molinmodel_in_modelcomp).exclude(not_in_model=None,int_id=None,molecule_id_id=None)
             molinmodel_in_modelcompl=list(molinmodel_in_modelcomp.values())
             molinmodel_not_in_modelcompl=list(molinmodel_not_in_modelcomp.values())
 
@@ -5455,6 +5513,8 @@ def MODELview(request, submission_id):
                 print(entry['type'])
                 all_molinmodel.append(entry)
             for entry in molinmodel_not_in_modelcompl:
+                print("PPPP\n",type(entry))
+                print(entry.items())
                 qName=DyndbCompound.objects.filter(id=DyndbMolecule.objects.filter(id=entry['molecule_id_id']).values_list('id_compound',flat=True)).values_list('name',flat=True)[0]
                 entry['name']=qName
                 entry['resname']=str()
@@ -9053,14 +9113,17 @@ def get_file_paths(objecttype,url=False,submission_id=None,return_main_submissio
     filepathdict['molecule'] = dict()
     filepathdict['model'] = dict()
     filepathdict['dynamics'] = dict()
+    filepathdict['summary'] = dict()
     #define main folders
     filepathdict['molecule']['main'] = "Molecule"
     filepathdict['model']['main'] = "Model"
     filepathdict['dynamics']['main'] = "Dynamics"
+    filepathdict['summary']['main'] = "Summary"
     #define submission folders
     filepathdict['molecule']['submission'] = "mol"
     filepathdict['model']['submission'] = "model"
     filepathdict['dynamics']['submission'] = "dyn"
+    filepathdict['summary']['submission'] = "sum"
     if return_main_submission_dict:
         main_submission_dict= dict()
         for key in filepathdict:
@@ -9101,10 +9164,12 @@ def get_file_name_dict():
     filenamedict['molecule'] = dict()
     filenamedict['model'] = dict()
     filenamedict['dynamics'] = dict()
+    filenamedict['summary'] = dict()
     #define part(icles)
     filenamedict['molecule']['part'] = "mol"
     filenamedict['model']['part'] = "model"
     filenamedict['dynamics']['part'] = None
+    filenamedict['summary']['part'] = "sum"
     #define subtypes
     filenamedict['molecule']['subtypes'] = dict()
     filenamedict['molecule']['subtypes']["image"] = dict()
@@ -9123,6 +9188,9 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["other"] = dict()
     filenamedict['dynamics']['subtypes']["log"] = dict()
 
+    filenamedict['summary']['subtypes'] = dict()
+    filenamedict['summary']['subtypes']['summary']=dict()
+
     #define file ext(ensions)
     filenamedict['molecule']['subtypes']["image"]["ext"] = ["png"]
     filenamedict['molecule']['subtypes']["molecule"]["ext"] = ["sdf","mol"]
@@ -9137,6 +9205,8 @@ def get_file_name_dict():
     filenamedict['dynamics']['subtypes']["parameters"]["ext"] = ["prm","tar.gz"]
     filenamedict['dynamics']['subtypes']["other"]["ext"] = ["tar.gz"]
     filenamedict['dynamics']['subtypes']["log"]["ext"] = ["log"]
+
+    filenamedict['summary']['subtypes']['summary']['ext']=['txt']
     
     #define subtype part(icles)
     filenamedict['dynamics']['subtypes']["pdb"]["part"] = "dyn"
@@ -10629,6 +10699,8 @@ def SMALL_MOLECULEview(request, submission_id):
         #Molecules in the  submission if has been used before.
 #        qSm=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
         qSm=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+        qSubreuse=DyndbSubmissionMolecule.objects.filter(int_id=None,molecule_id=None) #entry list to be reused
+        lqSubreuse_used=[] 
         if qSm.exists():
             prev_Mol_in_Sub_exists=True
             #if len(indexl) >1 and len(qSm)>len(indexl):
@@ -10791,14 +10863,20 @@ def SMALL_MOLECULEview(request, submission_id):
                     fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
                     print("PPPPPPPP", fdbSM[ii].__dict__['data'], "KKKKKKKKKK  ",fdbSM[ii].__dict__['fields'])
              
-                    if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
-                        fdbSM[ii].save()
-                    else:    
-                        iii1=fdbSM[ii].errors.as_text()
-                        print("fdbSM",ii," no es valido")
-                        print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                        return response
+                    if qSubreuse.exists():
+                        for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                            qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=int(dictPMod[ii]['int_id']),molecule_id=int(dictPMod[ii]['molecule_id']),not_in_model=dictPMod[ii]['not_in_model']) 
+                            lqSubreuse_used.append(rows.id) 
+                            break
+                    else:
+                        if fdbSM[ii].is_valid(): # only the submission molecule table should be filled!!!!
+                            fdbSM[ii].save()
+                        else:    
+                            iii1=fdbSM[ii].errors.as_text()
+                            print("fdbSM",ii," no es valido")
+                            print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            return response
              
                     if ii==indexl[-1]:#if ii is the last element of the list indexl
                         print("Molecule #", ii, "has been found in our database")
@@ -10969,18 +11047,24 @@ def SMALL_MOLECULEview(request, submission_id):
                         fdbSMaux=dyndb_Submission_Molecule(auxdictPMod)
                         
 ##                       if qSm.filter(molecule_id=F('molecule_id__id_compound__std_id_molecule'),int_id__gte=0)
-                        if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
-                            fdbSMaux.save()
+                        if qSubreuse.exists():
+                            for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                                qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=None,molecule_id=int(auxdictPMod[ii]['molecule_id']),not_in_model=True) 
+                                lqSubreuse_used.append(rows.id) 
+                                break
                         else:    
-                            iii1=fdbSMaux.errors.as_text()
-                            print("fdbSMaux",ii," no es valido")
-                            print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                            response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
-                            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
-                            DyndbMolecule.objects.filter(id=MFauxpk).delete()
-                            DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
-                            DyndbCompound.objects.filter(id=CFpk).delete()
-                            return response
+                            if fdbSMaux.is_valid(): # only the submission molecule table should be filled!!!!
+                                fdbSMaux.save()
+                            else:    
+                                iii1=fdbSMaux.errors.as_text()
+                                print("fdbSMaux",ii," no es valido")
+                                print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+                                response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
+                                DyndbMolecule.objects.filter(id=MFauxpk).delete()
+                                DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
+                                DyndbCompound.objects.filter(id=CFpk).delete()
+                                return response
                  
                         dnameref={'dnamesdf':{'path':path_namefrefsdf,'url':url_namefrefsdf},'dnamepng':{'path':path_namefrefpng,'url':url_namefrefpng}}
                         print("AUX",dnameref)
@@ -11046,26 +11130,32 @@ def SMALL_MOLECULEview(request, submission_id):
             dictPMod[ii]['submission_id']=submission_id
             dictPMod[ii]['molecule_id']=MFpk
             fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
-            if fdbSM[ii].is_valid():
-                fdbSM[ii].save()
-                response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain')
-            else:    
-                iii1=fdbSM[ii].errors.as_text()
-                print("fdbSM",ii," no es valido")
-                print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
-                DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
-                DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
-                DyndbMolecule.objects.filter(id=MFpk).delete()
-                if NewCompoundEntry[ii]==True:
-                    DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
-                    DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
-                    DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
-                    DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
-                    DyndbMolecule.objects.filter(id=MFauxpk).delete()
-                    DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
-                    DyndbCompound.objects.filter(id=CFpk).delete()
-                return response
+            if qSubreuse.exists():
+                for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
+                    qSubreuse.filter(id=rows.id).update(submission_id=int(submission_id),int_id=int(dictPMod[ii]['int_id']),molecule_id=int(dictPMod[ii]['molecule_id']),not_in_model=dictPMod[ii]['not_in_model']) 
+                    lqSubreuse_used.append(rows.id) 
+                    break
+            else:
+                if fdbSM[ii].is_valid():
+                    fdbSM[ii].save()
+                    response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                else:    
+                    iii1=fdbSM[ii].errors.as_text()
+                    print("fdbSM",ii," no es valido")
+                    print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
+                    DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
+                    DyndbMolecule.objects.filter(id=MFpk).delete()
+                    if NewCompoundEntry[ii]==True:
+                        DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
+                        DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
+                        DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
+                        DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
+                        DyndbMolecule.objects.filter(id=MFauxpk).delete()
+                        DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
+                        DyndbCompound.objects.filter(id=CFpk).delete()
+                    return response
         moleculelist=str(indexl)
  
         response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
@@ -11381,14 +11471,22 @@ def submission_summaryiew(request,submission_id):
     qDMeth =DyndbDynamicsMethods.objects.all().order_by('id')
     qAT =DyndbAssayTypes.objects.all().order_by('id')
 
-    direct='/protwis/sites/files/Summary/submission_'+str(submission_id)+'/'
-    url='/dynadb/files/Summary/submission_'+str(submission_id)+'/'
-    print("\nDirectorio a crear ", direct)
-    if not os.path.exists(direct):
-        os.makedirs(direct)
-    summarypath=direct+str(submission_id)+'_submission_summary.txt'
-    summaryurl=url+str(submission_id)+'_submission_summary.txt'
+
+
+    submission_path = get_file_paths("summary",url=False,submission_id=submission_id)
+    submission_url = get_file_paths("summary",url=True,submission_id=submission_id)    
+    filename = get_file_name_submission("summary",submission_id,0,ext='txt',forceext=False,subtype='summary')
+                
+    summarypath = os.path.join(submission_path,filename)
+    summaryurl = os.path.join(submission_url,filename)
+
+    fh= HttpResponse("",content_type='text/plain',)
+    fh.charset="UTF-8"
+    if not os.path.exists(submission_path):
+        os.makedirs(submission_path)
+    
     with open(summarypath,'w') as fh:
+
         i=0      
         fh.write("".join(["\tPROTEINS INVOLVED IN THE SUBMISSION ",str(submission_id),"\n\n"])) 
         for prot in qPROT:
@@ -11434,7 +11532,7 @@ def submission_summaryiew(request,submission_id):
            
         fh.write("".join(["\n\tSIMULATION SUBMITTED IN THE SUBMISSION ",str(submission_id),"\n"])) 
         fh.write("".join(["\n\t\tSIMULATION COMPONENTS\n\n"])) 
-
+ 
         i=0      
         for prot in qPROT:
             i=i+1
@@ -11445,9 +11543,9 @@ def submission_summaryiew(request,submission_id):
         i=0
         for comp in qDC:
             if qSub.filter(molecule_id=comp.id_molecule).values("not_in_model"):
-                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"\tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "No ","  Name:  ", lcompname[i]]))
+                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"    \tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "No ","  Name:  ", lcompname[i]]))
             else:
-                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"\tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "Yes","  Name:  ", lcompname[i]]))
+                fh.write("".join(["\n\t\tResname:  ",comp.resname,"\tMolecule:  ", str(l_ord_mol[i]), "\tNum of mol:  ", str(comp.numberofmol),"    \tType:  ", DyndbDynamicsComponents.MOLECULE_TYPE[comp.type][1],"\tCryst:  ", "Yes","  Name:  ", lcompname[i]]))
             i=i+1
         qDSs=qDS[0]
         fh.write("\n")
@@ -11465,8 +11563,6 @@ def submission_summaryiew(request,submission_id):
         fh.write("".join(["\n\t\tTime step: ", str(qDSs.timestep)])) 
         fh.write("".join(["\n\t\tDelta: ", str(qDSs.delta)])) 
         fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description])) 
-
-
 
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl })
