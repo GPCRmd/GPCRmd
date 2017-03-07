@@ -38,6 +38,7 @@ function searchtop() {
                     })
                  trcount=trcount+1;
                  })
+                 alert(data.warningmess);
             }else{
                 alert(data.message);
             }

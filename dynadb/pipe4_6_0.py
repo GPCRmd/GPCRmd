@@ -25,8 +25,8 @@ def checkpdb_ngl(name_of_file,segid,start,stop,chain):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
 			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
 			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
-			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
-				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
+			#~ if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				#~ return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
 			i=3
 			while i<9:
 				if fields[i].strip()=='':
@@ -86,17 +86,23 @@ def get_number_segments(pdbname):
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
 	jumps=0
 	jumpflag=0
+	sequences=[]
+	firstsegid=0
+	cseq=''
 	for line in fpdb:
 		if useline(line):
+			if firstsegid==0:
+				breaklines.append(line.strip())
+				firstsegid=1
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
 			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
 			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
-			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
-				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
+			#~ if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				#~ return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
 
 			if fields[5]!=pfields[5]: #resid has changed->new aa
-				
+
 				if (fields[4]!=pfields[4]  or fields[9]!=pfields[9]) and pfields!=['','' ,'','AAA','Z','0','0','0','0','']: #resid count has been reseted by new chain or new segid. 
 					ppos='0'
 					flag=0
@@ -117,17 +123,39 @@ def get_number_segments(pdbname):
 				if cpos2!=ppos2+1 and jumpflag==0 and ppos2!=0:
 					jumps+=1
 					jumpflag=1
-
 				elif cpos2<ppos2 and cpos!=1: 
 					return 'Residue numbering order is corrupted in position:'+str(cpos2)
+					
+			elif (fields[4]!=pfields[4] or fields[9]!=pfields[9]) and pfields!=['','' ,'','AAA','Z','0','0','0','0','']:
+				jumpflag=1
+				jumps+=1
 
 			if jumpflag==1:
 				breaklines.append(line.strip())
+				sequences.append(cseq)
+				if (fields[5]!=pfields[5]) or ((fields[4]!=pfields[4] or fields[9]!=pfields[9]) and pfields!=['','' ,'','AAA','Z','0','0','0','0','']):				
+					try:
+						cseq=d[fields[3]]
+					except KeyError:
+						cseq='X'
+			else:
+				if (fields[5]!=pfields[5]) or ((fields[4]!=pfields[4] or fields[9]!=pfields[9]) and pfields!=['','' ,'','AAA','Z','0','0','0','0','']):				
+					try:
+						cseq=cseq+d[fields[3]]
+					except KeyError:
+						cseq=cseq+'X'
+								
 			pchain=fields[4]
 			pfields=fields
 			ppos=cpos
 			jumpflag=0
-	breaklines='<br>'.join(breaklines)
+			
+	sequences.append(cseq) #append last segment, no jump is detected for last segment.
+	print(sequences)
+	segment_sequence_table=[]
+	for i in range(len(breaklines)):
+		segment_sequence_table.append(breaklines[i] +' --> '+ sequences[i][:8]+ ' (...)')
+	breaklines='<br>'.join(segment_sequence_table)
 	fpdb.close()
 	return (jumps+1,breaklines)	
 		
@@ -152,8 +180,8 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
 			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
 			fields[5]=fields[5].strip() #if it is a standard RESID with 4 characters, eliminate whitespace.
-			if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
-				return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
+			#~ if fields[5]==pfields[5] and fields[3]!=pfields[3]: #avoids that same resid is used by different resnames.
+				#~ return 'Corrupted PDB in position: '+pfields[5]+' Same resid has two or more different aminoacid codes/resnames'
 			i=3
 			while i<9:
 				if fields[i].strip()=='':
@@ -193,9 +221,9 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 					
 					else:
 						try:
-							seqplain.append([d[fields[3]],cpos,cpos2])
+							seqplain.append([d[fields[3]],cpos,cpos2,str(fields[3]) ])
 						except: #Modified aminoacid
-							seqplain.append(('X',cpos,cpos2))
+							seqplain.append(('X',cpos,cpos2, str(fields[3]))) #include resname to check during alig if X is allowed in sequence or not.
 
 			pchain=fields[4]
 			pfields=fields
@@ -214,7 +242,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	
 	if not stopexists:
 		return 'Stop resid does not exist in the given combination: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid
-	print(seqplain, "   " , onlyaa)
+	#print(seqplain, "   " , onlyaa)
 
 	return (seqplain,onlyaa,hexflag)
 
@@ -226,11 +254,13 @@ def align_wt_mut(wtseq,mutseq):
 	return bestalig
 
 #############################################################################################################################################
-
+natural_aa=['TRP', 'PHE', 'ASN', 'GLY', 'MET', 'VAL', 'ARG', 'PRO', 'LYS', 'GLU', 'TYR', 'ALA', 'THR', 'HIS', 'CYS', 'SER', 'LEU', 'GLN', 'ILE', 'ASP']
+non_natural_aa=['CYSL', 'CCY6', 'CHID', 'HED', 'ARGN', 'NGLU', 'NGLH', 'CTHR', 'LYN', 'NCY9', 'OLP', 'CY5', 'HEP', 'CCYX', 'CCME', 'DALA', 'NCY0', 'COLS', 'CY1', 'NACK', 'OLT', 'GLUH', 'NHIP', 'CGLY', 'CYS2', 'DVAL', 'HISP', 'HDX', 'NGLY', 'CH1E', 'HEK', 'NOLS', 'NCY4', 'CCYM', 'DHIS', 'CCY5', 'CY4', 'CCY9', 'ACK', 'NM2L', 'NOLT', 'CY6', 'HDF', 'CGLU', 'HE1', 'CCYS', 'HIN', 'GLH', 'CYSF', 'HEF', 'NTYR', 'CME', 'CS1P', 'HE8', 'CILE', 'S1P', 'CCY4', 'MVAL', 'ASPP', 'NCY8', 'HS2', 'NHIS', 'NTHR', 'NPHE', 'MEV', 'HDU', 'HDE', 'NCCS', 'HIE', 'DHSE', 'NPTR', 'CCY1', 'NVAL', 'HE4', 'HDO', 'HE6', 'CMLY', 'NALA', 'DTHR', 'NOLP', 'CCY8', 'NMET', 'HEJ', 'NCY6', 'DRM', 'NCY7', 'NASP', 'HIS1', 'HSP', 'COLP', 'CARG', 'NLEU', 'MLYS', 'HEA', 'NDRM', 'LYSH', 'CTRP', 'DGLU', 'MEL', 'HDS', 'HE7', 'CCS', 'CT1P', 'HISB', 'CYSP', 'CT2P', 'TRPU', 'CY9', 'HEH', 'HIS2', 'SRM', 'HDC', 'HDW', 'HDV', 'HDK', 'HEQ', 'CNLN', 'HDZ', 'CS2P', 'DPHE', 'CCY2', 'HE5', 'HDL', 'CASH', 'NTPO', 'CGLN', 'PHEU', 'CH2D', 'ARM', 'NH2E', 'NNLN', 'NTRP', 'ASH', 'NARM', 'CMET', 'HDG', 'CALA', 'DGLY', 'NCY5', 'NSEP', 'ALY', 'NY1P', 'CASN', 'MEVA', 'NM3L', 'HEX', 'GLUP', 'CYSG', 'HDA', 'HDR', 'CPRO', 'HSE', 'HEL', 'NLE', 'NCY3', 'NCY1', 'HER', 'HSD', 'CCCS', 'HEG', 'HEN', 'NARG', 'CTPO', 'CY1P', 'NS2P', 'DASP', 'HDH', 'CACK', 'M2L', 'CH1D', 'HD2', 'CSEP', 'HEY', 'H1D', 'NCME', 'HE0', 'CTYR', 'NS1P', 'ASPH', 'CVAL', 'CGLH', 'Y1P', 'DHSD', 'HD7', 'Y2P', 'ZAFF', 'NH1D', 'CH2E', 'CKCX', 'CYSD', 'AP1', 'NCYM', 'DARG', 'NLYS', 'HEW', 'CM2L', 'CGU', 'CHIN', 'HISH', 'HEU', 'NT1P', 'SEP', 'HDQ', 'CYX', 'COLT', 'HISA', 'HD1', 'HDD', 'HE3', 'T2P', 'M3L', 'CHIP', 'CCY7', 'HE9', 'NKCX', 'CYSH', 'GLYM', 'DHSP', 'HEE', 'CY7', 'HD0', 'NPRO', 'H1E', 'CDAB', 'DTYR', 'HEC', 'NSER', 'CYM', 'HSC', 'HEI', 'NH1E', 'NMLY', 'OLS', 'CLEU', 'NCY2', 'DTRP', 'CPHE', 'CDRM', 'NHIN', 'HDM', 'DMET', 'CSER', 'HISD', 'H2E', 'HDP', 'HDY', 'CHIE', 'NHYP', 'CLYN', 'HDJ', 'NY2P', 'HET', 'HD9', 'HDN', 'NLYN', 'NCYS', 'MGY', 'HEO', 'DASN', 'CASP', 'DLYS', 'DILE', 'HID', 'TPO', 'HEZ', 'CCY0', 'HD3', 'DSER', 'HDI', 'NILE', 'NCYX', 'S2P', 'HYP', 'NASH', 'NH2D', 'CY2', 'CM3L', 'CGUP', 'HISE', 'HEV', 'H2D', 'CHIS', 'NHID', 'CLYS', 'HE2', 'MLEU', 'NASN', 'HEM', 'HIP', 'CY2P', 'CY3', 'NDAB', 'T1P', 'NGLN', 'HDB', 'HD5', 'KCX', 'DPRO', 'DLEU', 'PTR', 'HD4', 'HES', 'CY0', 'NSRM', 'NLN', 'DAB', 'DGLN', 'MELE', 'HD6', 'NHIE', 'SERD', 'NT2P', 'ASN1', 'LSN', 'CY8', 'DCYS', 'CSRM', 'HDT', 'CCY3', 'MLY', 'HD8', 'CARM', 'CHYP', 'HEB', 'ASP1', 'CPTR']
 def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 	'''Get the sequence from database, compare this sequence with the one given in the pdb.
 	 Do an alignment to check if the resids are corrupted in the pdb. Returns a table showing
 	 the changes in the pdb numbering according to the database sequence.'''
+	warningmessage=''
 	try:
 		bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-1)[0] #select the aligment with the best score.
 		#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
@@ -238,7 +268,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		return 'Incorrect alignment. There are not any matches.'
 
 	biglist=list()
-	print("bestalig    ", bestalig)
+	#print("bestalig    ", bestalig)
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
@@ -261,10 +291,22 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 			minilist=[tablepdb[i],[fastalig[i],newpos]]
 			duos.append(minilist)
 
-		elif fastalig[i]!=pdbalig[i] and pdbalig[i]!='-':
-			minilist=[tablepdb[i], [fastalig[i],newpos]]
-			duos.append(minilist)
-			mismatchlist.append(minilist)
+		elif fastalig[i]!=pdbalig[i]:
+			if fastalig[i]=='X' and tablepdb[i][3] in natural_aa:
+				return 'Error: Unknown residue in submited protein sequence but natural/standard resid in its PDB file. Check submited sequence in position:'+str(newpos) + ' and PDB in resid '+ str(tablepdb[i][2])
+			elif fastalig[i]=='X' and tablepdb[i][3] in non_natural_aa:
+				warningmessage='Warning: Unknown residue in submited protein and non natural resid in its PDB file at position: '+str(tablepdb[i])				
+				minilist=[tablepdb[i], [fastalig[i],newpos]]
+				duos.append(minilist)
+				
+			elif tablepdb[i][0]=='X':
+				warningmessage='Warning: Unknown residue in PDB file: '+ str(tablepdb[i])		
+				minilist=[tablepdb[i], [fastalig[i],newpos]]
+				duos.append(minilist)
+							
+			else:
+				minilist=[tablepdb[i], [fastalig[i],newpos]]	
+				mismatchlist.append(minilist)
 
 		else:
 			minilist=[tablepdb[i],[fastalig[i],newpos]]
@@ -273,6 +315,9 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 
 	if len(mismatchlist)>0:
 		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
+
+	if len(warningmessage)>0:
+		return (warningmessage,duos)
 
 	#now check if there is any jump/discontinuity in the PDB corrected numbering. If there is, the reason is that there are more that one segments in that user defined interval.
 	counter=0
@@ -465,6 +510,14 @@ def unique(pdbname, usechain=False,usesegid=False):
 #############################################################################################################################################
 
 def useline(line):
+	if line.startswith('ATOM') or line.startswith('HETATM'):
+		return True
+
+	return False
+	
+#########################################################################################################################################
+	
+def useline2(line):
 	'''returns True if line starts with ATOM, or HETATM with a resname included in the d dictionary''' 
 	if line.startswith('ATOM') or line.startswith('HETATM'):
 		trykey=line[17:21]
@@ -567,9 +620,10 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	'''
 	i=0
 	flag=0
+	warningmessage= ''
 	while i<len(bestalig[1]): #bestalig[1] holds the aligned pdbseq
 		if bestalig[1][i]!='-' and (bestalig[1][i]!=bestalig[0][i]): #mistmatchs not allowed
-			return 'Mismatch between PDB sequence and submited protein sequence. PDB has '+str(bestalig[1][i])+' while submited sequence has '+ str(bestalig[0][i])+' in resid: '+str(i+1) #+1?? not sure!
+			warningmessage= 'Mismatch between PDB sequence and submited protein sequence. PDB has '+str(bestalig[1][i])+' while submited sequence has '+ str(bestalig[0][i])+' in resid: '+str(i+1)+ '. The suggested "seq from" and "seq to" values might be wrong.' #+1?? not sure!
 		if bestalig[1][i]!='-' and flag==0: #find first NON-gap	
 			seq_res_from=i+1
 			flag=1
@@ -582,7 +636,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	if '-' in bestalig[0][seq_res_from-1:seq_res_to]:
 		return 'The selected PDB sequence can not align with the uniprot sequence without gaps.'
 
-	return (seq_res_from, seq_res_to)
+	return (seq_res_from, seq_res_to, warningmessage)
 
 
 #############################################################################################################################################

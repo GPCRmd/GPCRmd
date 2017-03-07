@@ -1490,6 +1490,15 @@ def ajaxsearcher(request):
                                 proteinlist.append([str(protein.id),str(protein.name)])
                             else:
                                 gpcrlist.append([str(protein.id),str(protein.name)])
+                                
+                            #include all mutants of the found protein:    
+                            for mutants in DyndbProtein.objects.filter(uniprotkbac=protein.uniprotkbac):
+                                isrecm=mutants.receptor_id_protein
+                                if isrecm is None and [str(mutants.id),str(mutants.name)] not in proteinlist:
+                                    proteinlist.append([str(protein.id),str(protein.name)])
+                                if isrecm is not None and [str(mutants.id),str(mutants.name)] not in gpcrlist:
+                                    gpcrlist.append([str(protein.id),str(protein.name)])
+
 
                     elif 'molecule' in str(res.id):
                         mol_id=res.id.split('.')[2]
@@ -3019,8 +3028,11 @@ def search_top(request,submission_id):
 
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
             if isinstance(res,tuple):
-                seq_res_from,seq_res_to=res
+                seq_res_from,seq_res_to,warningmess=res
+                print(res)
                 resultsdict[counter]=[seq_res_from,seq_res_to]
+                if len(warningmess)>0:
+                    resultsdict['warningmess']=warningmess
             elif isinstance(res,str):
                 resultsdict['message']=res
             if pstop!='undef':
@@ -3061,14 +3073,13 @@ def pdbcheck(request,submission_id):
         if os.path.isfile(pdbname) is False: 
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
-        results['strlist']=list()
-        results['pathlist']=list()
-        finalguide=[]
         arrays=request.POST.getlist('bigarray[]')
         counter=0
+        tuple_error_dict=dict()
+        full_run_dict=dict()
         for array in arrays:
             array=array.split(',')
-            results['strlist'].append('Protein: '+str(array[0])+' Start:'+str(array[3])+' Stop: '+str(array[4]))
+            segment_def='Protein: '+str(array[0])+' Start:'+str(array[3])+' Stop: '+str(array[4])+ ' SEGID: '+str(array[2])
             prot_id=array[0]
             chain=array[1].strip().upper()
             segid=array[2].strip().upper()
@@ -3090,9 +3101,7 @@ def pdbcheck(request,submission_id):
                         start = int(current_value)
                     if r == 4:
                         stop = int(current_value)
-            #prot_id= 1 warning!
             prot_id= int(array[0])-1 #int(array[0]) #OLD: int(request.POST.get('id_protein')) #current submission ID.
-
             start=int(array[3])
             stop=int(array[4])
             seqstart=int(array[5])
@@ -3113,39 +3122,32 @@ def pdbcheck(request,submission_id):
 
             if start>stop:
                 results={'type':'string_error','title':'Range error', 'message':'"Res from" value is bigger to the "Res to" value'}
-                #tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,}
                 data = json.dumps(results)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
-                
-            number_segments,breaklines=get_number_segments(pdbname)
-            if number_segments>len(arrays):
-                results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
-                request.session[combination_id] = results
-                tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
-                data = json.dumps(tojson)
-                request.session[combination_id] = results
-                return HttpResponse(data, content_type='application/json')  
+                    
+            #~ number_segments,breaklines=get_number_segments(pdbname)
+            results['segments']=get_number_segments(pdbname)
+            #~ request.session[combination_id]['segments'] = number_segments,breaklines
+            #~ if number_segments>len(arrays):
+                #~ results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
+                #~ request.session[combination_id] = results
+                #~ tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
+                #~ data = json.dumps(tojson)
+                #~ request.session[combination_id]['segments'] = results
+                #~ return HttpResponse(data, content_type='application/json')  
 
             uniquetest=unique(pdbname, chain!='',segid!='')
-            if uniquetest==True:
+            if uniquetest is True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
                 if isinstance(checkresult,tuple):
                     tablepdb,simplified_sequence,hexflag=checkresult
                     guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
-
                     if isinstance(guide, list):
                         path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain,counter)
-                        results['pathlist'].append(path_to_repaired)
-                        segments=segment_id(path_to_repaired, segid, start, stop, chain)
-                        finalguide.append(guide)
+                        full_run_dict[(segment_def,path_to_repaired)]=guide
                     elif isinstance(guide, tuple):
-                        results={'type':'tuple_error', 'title':'Mismatch found', 'mismatchlist':guide[1],'errmess':guide[0]}
-                        request.session[combination_id] = results
-                        request.session.modified = True
-                        tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
-                        data = json.dumps(tojson)
-                        return HttpResponse(data, content_type='application/json')
+                        tuple_error_dict[segment_def]=guide
                     else: #PDB has insertions error
                         guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
                         results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
@@ -3171,12 +3173,10 @@ def pdbcheck(request,submission_id):
 
             counter+=1
 
-        if isinstance(finalguide, list) and len(finalguide)>0:
+        if isinstance(full_run_dict, dict) and len(full_run_dict)>0:
             results['type']='fullrun'
-            results['table']=finalguide
-            results['seg']=segments
-            results['path']=path_to_repaired
-
+            results['table']=full_run_dict #finalguide
+            results['tuple_errors']=tuple_error_dict #tuple_error_list
         request.session[combination_id] = results
         request.session.modified = True
         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
@@ -3186,10 +3186,8 @@ def pdbcheck(request,submission_id):
     else: #NOT POST, simply display of results in the POP UP window. See pdbcheck.js
         combination_id='submission_id'+submission_id
         fav_color = request.session[combination_id]
-        if fav_color['type']=='tuple_error':
-            return render(request,'dynadb/tuple_error.html', {'answer':fav_color})
 
-        elif fav_color['type']=='string_error':
+        if fav_color['type']=='string_error':
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
         elif fav_color['type']=='fullrun':
