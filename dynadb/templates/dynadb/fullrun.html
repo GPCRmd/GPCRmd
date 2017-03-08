@@ -26,8 +26,13 @@
 
 
 
-    <div style="width:100%;" class="panel panel-success">
-    <div class="panel-heading"><center><b>All right: PDB and submited sequence match!</b></center></div>
+    <div style="width:100%;" class="panel panel-info">
+    {%if answer.result_header%}
+        <div class="panel-heading"><center><b>{{answer.result_header}}</b></center></div>    
+    {%else%}
+        <div class="panel-heading"><center><b>All right: PDB and submited sequence match!</b></center></div>
+
+    {%endif%}
     <div class="panel-body">
 
    {%for key,values in answer.table.items%}

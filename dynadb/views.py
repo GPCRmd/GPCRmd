@@ -2989,6 +2989,7 @@ def search_top(request,submission_id):
         counter=0
         resultsdict=dict()
         resultsdict['message']=''
+        resultsdict['warningmess']=''
         for array in arrays:
             array=array.split(',') #array is a string with commas.
             prot_id= int(array[0])-1 #int(request.POST.get('id_protein')) #current submission ID. #WARNING! ##CHANGED to array[0]-1 ISMA!!!!
@@ -3029,12 +3030,12 @@ def search_top(request,submission_id):
             res=searchtop(pdbname,sequence, start,stop,chain,segid)
             if isinstance(res,tuple):
                 seq_res_from,seq_res_to,warningmess=res
-                print(res)
+                print('RESULTS SEARCH TOP', res)
                 resultsdict[counter]=[seq_res_from,seq_res_to]
                 if len(warningmess)>0:
-                    resultsdict['warningmess']=warningmess
+                    resultsdict['warningmess']=resultsdict['warningmess']+'\n\n -'+warningmess
             elif isinstance(res,str):
-                resultsdict['message']=res
+                resultsdict['message']=resultsdict['message']+'\n\n -'+res
             if pstop!='undef':
                 bonded=False
                 if len(chain)>0 and len(segid)>0:
@@ -3077,6 +3078,7 @@ def pdbcheck(request,submission_id):
         counter=0
         tuple_error_dict=dict()
         full_run_dict=dict()
+        errorflag=2
         for array in arrays:
             array=array.split(',')
             segment_def='Protein: '+str(array[0])+' Start:'+str(array[3])+' Stop: '+str(array[4])+ ' SEGID: '+str(array[2])
@@ -3148,6 +3150,10 @@ def pdbcheck(request,submission_id):
                         full_run_dict[(segment_def,path_to_repaired)]=guide
                     elif isinstance(guide, tuple):
                         tuple_error_dict[segment_def]=guide
+                        if guide[0].startswith('Error'):
+                            errorflag=1
+                        elif guide[0].startswith('Warning'):
+                            errorflag=0
                     else: #PDB has insertions error
                         guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
                         results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
@@ -3177,6 +3183,8 @@ def pdbcheck(request,submission_id):
             results['type']='fullrun'
             results['table']=full_run_dict #finalguide
             results['tuple_errors']=tuple_error_dict #tuple_error_list
+            errorcode_to_message={0:'One or more warnings',1:'One or more errors found', 2: 'All right! PDB segment matches the submited sequence'}
+            results['result_header']=errorcode_to_message[errorflag]
         request.session[combination_id] = results
         request.session.modified = True
         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}

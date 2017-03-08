@@ -268,7 +268,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		return 'Incorrect alignment. There are not any matches.'
 
 	biglist=list()
-	#print("bestalig    ", bestalig)
+	print("bestalig    ", bestalig)
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
@@ -300,7 +300,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 				duos.append(minilist)
 				
 			elif tablepdb[i][0]=='X':
-				warningmessage='Warning: Unknown residue in PDB file: '+ str(tablepdb[i])		
+				warningmessage='Warning: Unknown residue in PDB file: '+ str(tablepdb[i]) #if you change this, change also checkpdb view to allow this view to detect if the return value is a warning or an error		
 				minilist=[tablepdb[i], [fastalig[i],newpos]]
 				duos.append(minilist)
 							
@@ -314,7 +314,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		i=i+1
 
 	if len(mismatchlist)>0:
-		return ('One or more missmatches were found, this is not allowed. ',mismatchlist)
+		return ('Error: One or more missmatches were found, this is not allowed. ',mismatchlist) #if you change this, change also checkpdb view to allow this view to detect if the return value is a warning or an error
 
 	if len(warningmessage)>0:
 		return (warningmessage,duos)
@@ -613,6 +613,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		tablepdb,simplified_sequence,hexflag=result
 
 	bestalig=pairwise2.align.localms(sequence, simplified_sequence,100,-1,-10,-1)[0] #select the aligment with the best score.
+	print(bestalig)
 	'''
 	The resulting alignment should be like:
     ARTNIRRAWLALEKQYL
@@ -634,7 +635,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		i+=1
   
 	if '-' in bestalig[0][seq_res_from-1:seq_res_to]:
-		return 'The selected PDB sequence can not align with the uniprot sequence without gaps.'
+		return 'The selected PDB sequence can not align with the uniprot sequence without gaps. This is the aligment between the sequence and the PDB '+ str(bestalig)
 
 	return (seq_res_from, seq_res_to, warningmessage)
 
