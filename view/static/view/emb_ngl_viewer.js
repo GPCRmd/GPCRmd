@@ -212,8 +212,6 @@ $(document).ready(function(){
                         to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                         $("#alert").append(to_add);
                     } else {
-                        //to_add=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
-                        //to_add='<div class="alert alert-danger row" style = "font-size:12px;padding:5px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:12px >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                         to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                         $("#"+rownum).find(".alert_sel_wth").html(to_add);
                     }
@@ -272,7 +270,7 @@ $(document).ready(function(){
                             to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                             $("#alert").append(to_add);
                         } else {
-                            to_add=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                            to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                             $("#"+rownum).find(".alert_sel_wth").html(to_add);
                         }
                         break;
@@ -323,7 +321,7 @@ $(document).ready(function(){
                 to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
                 $("#alert").attr("class","alert alert-danger row").append(to_add);
             } else {
-                to_add='GPCR generic residue numbering is not supported for this stricture.';
+                to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                 $("#"+rownum).find(".alert_sel_wth").html(to_add);
             }
         } else {
@@ -337,7 +335,7 @@ $(document).ready(function(){
                     to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
                     $("#alert").attr("class","alert alert-danger row").append(to_add);
                 } else {
-                    to_add='GPCR generic residue numbering is not supported for this stricture.'
+                    to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                     $("#"+rownum).find(".alert_sel_wth").html(to_add);
                 }
             } else {
@@ -760,7 +758,7 @@ $(document).ready(function(){
                             $("#int_alert").html(add_error);    
                         }
                         var t1= performance.now();
-                        console.log("INT : "+((t1 - t0)/1000));
+                        //console.log("INT : "+((t1 - t0)/1000));
                     },
                     error: function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
@@ -1101,7 +1099,7 @@ $(document).ready(function(){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
                         var t1=performance.now();
-                        console.log("DIST: "+((t1 - t0)/1000));
+                        //console.log("DIST: "+((t1 - t0)/1000));
                     },
                     error: function() {
                         if (d_id==1){
@@ -1532,7 +1530,7 @@ $(document).ready(function(){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                     }
                 var t1= performance.now();
-                console.log("RMSD : "+((t1 - t0)/1000));
+                //console.log("RMSD : "+((t1 - t0)/1000));
                 },
                 error: function() {
                     if (r_id==1){
