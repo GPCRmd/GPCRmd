@@ -76,7 +76,7 @@
                 if(pos_class.indexOf("active") > -1){
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                    $(this).attr("class","btn btn-success btn-xs traj_btn");
+                    $(this).attr("class","btn btn-info btn-xs traj_btn");
                     $(this).children().attr("class","glyphicon glyphicon-play");
                     player.play();
                     player.pause();
@@ -88,6 +88,7 @@
                     $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
                     player.play();
                     $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
+                    $(this).siblings().attr("class","btn btn-success btn-xs traj_btn"); 
                     $(this).children().attr("class","glyphicon glyphicon-pause");
                     some_clicked=true;
                     trajComp.signals.frameChanged.add(function(){
@@ -289,6 +290,7 @@
             var sel_method =results[3];
             var traj =results[4];
             var nonGPCR =results[5];
+            var int_res_li =results[6];
             var show_dist=parent.view_dist;
             var cons_pos = parent.pd;
             var dist_within_li=parent.dist_of;
@@ -440,6 +442,23 @@
                     }
                 }
             } 
+            if (int_res_li.length > 0){
+                for (pos_info_n in int_res_li){
+                    var pos_info = int_res_li[pos_info_n];
+                    var pos = pos_info[0]+":"+pos_info[1];
+                    o.addRepresentation( "licorice", {  radius: "0.210", sele: pos , colorValue: "#8e74ff" } );// colorValue: "#00d215"
+                    var label = pos_info[2];
+                    var res_sele =  new NGL.Selection( pos );
+                    var label_pos="";
+                    o.structure.eachAtom(function(a){
+                        if (a.atomname == "CA"){
+                            label_pos=a.serial;
+                        }
+                    },res_sele)
+                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                }
+
+            }
             //o.centerView();
         }
 /////////// Set variables:
@@ -471,7 +490,7 @@
                         //trajButtons(o,[]);
                     }
                     createReps();
-                    o.centerView();
+                    stage.centerView("protein");
                     $("#submit", window.parent.document).click(function(){
                         createReps();
                     });

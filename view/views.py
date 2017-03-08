@@ -708,6 +708,7 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
+                        #"traj_list": [("Dynamics/f500.dcd","f500.dcd",1),("Dynamics/f1000.dcd","f1000.dcd",2),("Dynamics/f2500.dcd","f2500.dcd",3),("Dynamics/f5000.dcd","f5000.dcd",4)],#[!] TEST
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "other_prots":other_prots,

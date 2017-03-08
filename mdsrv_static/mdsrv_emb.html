@@ -78,6 +78,7 @@
             var  comp_dist= NGL.getQuery("di");
             var  nonGPCR= NGL.getQuery("ng");
             var  onlyChains= NGL.getQuery("och");
+            var int_res_s=NGL.getQuery("in");
 
             var rc_sel = "";
             var all_cp = "";
@@ -127,9 +128,10 @@
              }
                   
                     if (struc) {
-			    stage.loadFile( s_path + struc, {sele: sele_final, visible: visibility}  ).then( function( o ){
-//				stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
+                        stage.loadFile( s_path + struc, {sele: sele_final, visible: visibility}  ).then( function( o ){
+                        //stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
                                 o.setName("my_comp");
+                                var aa=2515;
                                 if (rc=="y"){
                                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
                                     /*if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
@@ -159,15 +161,15 @@
                                     var pd_all = [pdA,pdB,pdC,pdF];
                                     var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
 
-   				    if (sel ){
-				        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
+                                    if (sel ){
+                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                                         if (sel_method == "high"){
-					    o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
+                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
                                             for (ind in pd_all) {
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-					            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
                                                 }
                                             }   
 
@@ -180,17 +182,17 @@
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-					            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
                                                 }
                                             }   
-				            //o.setSelection( sel_deco );
+                                            //o.setSelection( sel_deco );
                                         }
-				     } else {
+                                     } else {
                                          for (ind in pd_all) {
                                              class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                              if (class_li){
                                                  var cons_pos_ok = class_li.replace(/,/g," OR ")
-					         o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
+                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
                                              }
                                          }   
 
@@ -203,15 +205,15 @@
                                      }
 
                                 } else {
-   				    if (sel ){
-				        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
+                                    if (sel ){
+                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                                         if (sel_method == "high"){
-					    o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
+                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
                                      /*   } else {
-				            //o.setSelection( sel_deco );
+                                              //o.setSelection( sel_deco );
                                         */
                                         }
-				     }
+                                     }
                                  }
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
@@ -341,7 +343,27 @@
                                     } );
 /////////////////////////////////////
                                 } 
-                              o.centerView();
+                                if (int_res_s.length > 0){
+                                    var int_res_s_d =decodeURIComponent(int_res_s.replace(/\+/g, " "));
+                                    var int_res_li = int_res_s_d.split(",");
+                                    for (pos_info_n in int_res_li){
+                                        var pos_info_s = int_res_li[pos_info_n];
+                                        var pos_info = pos_info_s.split("-");
+                                        var pos = pos_info[0]+":"+pos_info[1];
+                                        o.addRepresentation( "licorice", {  radius: "0.210", sele: pos , colorValue: "#8e74ff" } );
+                                        var label = pos_info[2];
+                                        var res_sele =  new NGL.Selection( pos );
+                                        var label_pos="";
+                                        o.structure.eachAtom(function(a){
+                                            if (a.atomname == "CA"){
+                                                label_pos=a.serial;
+                                            }
+                                        },res_sele)
+                                        //o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                                    }
+
+                                }
+                              o.centerView("protein");
                           } );
                     }
 

@@ -120,8 +120,8 @@ $(document).ready(function(){
 
 //-------- Control text inputs --------
 
-    function maxInputLength(select, maxlength){
-        $(select).on('keyup blur', function() {
+    function maxInputLength(select, select2, maxlength){
+        $(select).on('keyup blur',select2, function() {
             var val = $(this).val();
             if (val.length > maxlength) {
                 $(this).val(val.slice(0, maxlength));
@@ -129,13 +129,15 @@ $(document).ready(function(){
         });
     }
 
-    maxInputLength('.inputdist',6);
-    maxInputLength('input.sel_input',100);
-    maxInputLength('#rmsd_frame_1',8);
-    maxInputLength('#rmsd_frame_2',8);
-    maxInputLength('#rmsd_my_sel_sel',50);
-    maxInputLength('#rmsd_ref_frame',8);
-    maxInputLength("#int_thr", 3);
+    maxInputLength('.inputdist',"",6);
+    maxInputLength('input.sel_input',"",100);
+    maxInputLength('#rmsd_frame_1',"",8);
+    maxInputLength('#rmsd_frame_2',"",8);
+    maxInputLength('#rmsd_my_sel_sel',"",50);
+    maxInputLength('#rmsd_ref_frame',"",8);
+    maxInputLength("#int_thr", "",3);
+    maxInputLength(".sel_within", ".user_sel_input",40);
+
 
 
     function removeSpacesInInput(my_selector){
@@ -180,11 +182,10 @@ $(document).ready(function(){
         var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
         var re = new RegExp(gpcr_range,"g");
         var res = pre_sel.match(re); 
-        //console.log(res);
         return(res);
     }
     
-    function parseGPCRnum(sel,lonely_gpcrs){
+    function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -207,8 +208,15 @@ $(document).ready(function(){
                     var res_chain=gpcrdb_dict[my_gpcr];                   
                 } else {
                     res_chain=undefined;
-                    to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                    $("#alert").append(to_add);
+                    if (inpSource=="main"){
+                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                        $("#alert").append(to_add);
+                    } else {
+                        //to_add=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                        //to_add='<div class="alert alert-danger row" style = "font-size:12px;padding:5px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:12px >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                        to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                        $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                    }
                 }
                 if (res_chain){
                     if (chains_str == "") {
@@ -232,7 +240,7 @@ $(document).ready(function(){
         return (sel)
     }
     
-    function parseGPCRrange(pre_sel,gpcr_ranges){
+    function parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -260,8 +268,13 @@ $(document).ready(function(){
                     } else {
                         res_chain=undefined;
                         chain_pair=false;
-                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $("#alert").append(to_add);
+                        if (inpSource=="main"){
+                            to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                            $("#alert").append(to_add);
+                        } else {
+                            to_add=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                            $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                        }
                         break;
                     }
                     res_pair[res_pair.length]=res_chain[0];
@@ -300,26 +313,35 @@ $(document).ready(function(){
     }    
     
 
-    function inputText(gpcr_pdb_dict){
-        var pre_sel = $(".sel_input").val();
+    function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource){
         var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
             sel = "";
-            to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-            $("#alert").attr("class","alert alert-danger row").append(to_add);
+            if (inpSource=="main"){
+                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
+                $("#alert").attr("class","alert alert-danger row").append(to_add);
+            } else {
+                to_add='GPCR generic residue numbering is not supported for this stricture.';
+                $("#"+rownum).find(".alert_sel_wth").html(to_add);
+            }
         } else {
-            sel=parseGPCRrange(pre_sel,gpcr_ranges);
+            sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource);
         }
         var lonely_gpcrs=obtainInputedGPCRnum(sel);
         if (lonely_gpcrs != null){
             if (gpcr_pdb_dict=="no"){
                 sel = "";
-                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-                $("#alert").attr("class","alert alert-danger row").append(to_add);
+                if (inpSource=="main"){
+                    to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
+                    $("#alert").attr("class","alert alert-danger row").append(to_add);
+                } else {
+                    to_add='GPCR generic residue numbering is not supported for this stricture.'
+                    $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                }
             } else {
-                sel=parseGPCRnum(sel,lonely_gpcrs);
+                sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource);
             }
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
@@ -502,28 +524,31 @@ $(document).ready(function(){
         select += option;
     }
     
-    var i=1;
+    var wth_i=1;
     $(".sel_within").on("click",".add_btn",function(){ 
         $(".sel_within").find(".add_btn").css("visibility","hidden");
-        var row='<div class="dist_sel" id=row'+i+'>\
+        var row='<div class="dist_sel" id=row'+wth_i.toString()+' style="margin-bottom:5px;">\
                   <span class="tick" ></span>\
                   <span class="always" style="margin-left:14px">\
                     Show residues within \
-                    <input class="form-control input-sm inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
+                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px">\
                       &#8491; of\
-                        <select class="wthComp" name="comp">' + select + '</select>\
+                        <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
+                        <span class="user_sel_input_p"></span>\
                         <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                         <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                     </span>\
+                    <div class="alert_sel_wth"></div>\
                   </div>';
         $(".sel_within").append(row);
-        i+=1;
+        wth_i+=1;
     });
     
     $(".sel_within").on("click", ".rm_btn" , function(){
         var numWthRows = $(".sel_within").children().length;
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
+            $(".sel_within").find(".alert_sel_wth").html("");
         }else{
             var wBlock =$(this).closest(".dist_sel");
             if (wBlock.is(':last-child')){
@@ -539,9 +564,20 @@ $(document).ready(function(){
     function obtainDistSel(){
         var dist_of=[];
         $(".sel_within").find(".dist_sel").each(function(){ 
-            var inp=$(this).find("input").val();
+            var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
                 var comp=$(this).find("select").val();
+                if (comp=="user_sel"){
+                    pre_sel=$(this).find(".user_sel_input").val();
+                    var rownum = $(this).attr("id");
+                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth");
+                    if (def_sel ==""){
+                        comp="none";
+                        $(this).find(".user_sel_input").val("");
+                    } else {
+                        comp=def_sel;
+                    }
+                }
                 dist_of[dist_of.length]=inp+"-"+comp;
             }
 
@@ -551,8 +587,8 @@ $(document).ready(function(){
 
 
     $(".sel_within").on("blur", ".dist_sel" ,function(){
-        var inp=$(this).find("input").val().replace(/\s+/g, '');
-        $(this).find("input").val(inp);
+        var inp=$(this).find(".inputdist").val().replace(/\s+/g, '');
+        $(this).find(".inputdist").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
             $(this).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
             $(this).find(".always").attr("style","");
@@ -566,7 +602,14 @@ $(document).ready(function(){
         }
     });    
 
-
+    $(".sel_within").on('change', ".wthComp" ,function(){//[!]it would be better if the green tick was removed when the select input was empty!!
+        if ($(this).val()=="user_sel"){
+            var sw_input='<input class="form-control input-sm user_sel_input" type="text" style="width:95px;padding-left:7px">';
+            $(this).siblings(".user_sel_input_p").html(sw_input);
+        } else {
+            $(this).siblings(".user_sel_input_p").html("");
+        }
+    });
 
 
 //-------- Freq of Interaction --------
@@ -628,6 +671,7 @@ $(document).ready(function(){
                     $("#gotoInt").addClass("disabled");
                 }
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                var t0= performance.now();
                 $.ajax({
                     type: "POST",
                     url: "/view/"+dyn_id+"/", 
@@ -668,7 +712,7 @@ $(document).ready(function(){
                                     var num_res_int=res_int.length;
                                     table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                     var res_int_1st=res_int[0];
-                                    var res_int_1st_ok=[res_int_1st[2]+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
+                                    var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
                                     for (info in res_int_1st_ok){
                                         table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                     }
@@ -676,7 +720,7 @@ $(document).ready(function(){
                                     var res_int_rest=res_int.slice(1,res_int.length);
                                     for (res_infoN in res_int_rest){
                                         var res_info=res_int_rest[res_infoN];
-                                        var res_info_ok=[res_info[2]+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
+                                        var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
                                         table_html+='<tr>';
                                         for (infoN in res_info_ok){
                                             var info=res_info_ok[infoN];
@@ -689,6 +733,9 @@ $(document).ready(function(){
                                 var trajFile = patt.exec(traj_path);
                                 table_html+="</tbody></table>\
                                  <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
+                                    <div class='checkbox' style='font-size:12px;'>\
+		                                <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
+                                    </div>\
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
@@ -712,6 +759,8 @@ $(document).ready(function(){
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ int_error;
                             $("#int_alert").html(add_error);    
                         }
+                        var t1= performance.now();
+                        console.log("INT : "+((t1 - t0)/1000));
                     },
                     error: function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
@@ -742,7 +791,29 @@ $(document).ready(function(){
         $('#'+IntToRv).remove();
     });
     
-    
+    function displayIntResids(){
+        var int_res_li=[];
+        $(".int_tbl").each(function(){
+            if ($(this).find(".display_int").is(":checked")){
+                $(this).find("tbody > tr").each(function(){
+                    var td_list= $(this).children();
+                    if(td_list.length > 4){
+                        var pos = $(this).find("td:nth-child(2)").html();
+                        var chain =$(this).find("td:nth-child(3)").html();
+                        var freq =$(this).find("td:nth-child(5)").html();
+                    } else{
+                        var pos =$(this).find("td:first-child").html();
+                        var chain =$(this).find("td:nth-child(2)").html();
+                        var freq =$(this).find("td:nth-child(4)").html();
+                    }
+                    var pos_aa = /\d*$/.exec(pos)[0];
+                    int_res_li.push([pos_aa, chain,freq])
+                });
+            }  
+        })
+        int_res_li=uniq(int_res_li);
+        return (int_res_li);
+    }
     
     
     
@@ -933,6 +1004,7 @@ $(document).ready(function(){
                     $("#gotoDistPg").addClass("disabled");
                 }
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                var t0= performance.now();
                 $.ajax({
                     type: "POST",
                     url: "/view/"+dyn_id+"/",  //Change 1 for actual number
@@ -1028,6 +1100,8 @@ $(document).ready(function(){
                         if ($.active<=1){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
+                        var t1=performance.now();
+                        console.log("DIST: "+((t1 - t0)/1000));
                     },
                     error: function() {
                         if (d_id==1){
@@ -1347,6 +1421,7 @@ $(document).ready(function(){
                 $("#gotoRMSDPg").addClass("disabled");
             }
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
+            var t0=performance.now();
             $.ajax({
                 type: "POST",
                 url: "/view/"+dyn_id+"/",  
@@ -1456,6 +1531,8 @@ $(document).ready(function(){
                     if ($.active<=1){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                     }
+                var t1= performance.now();
+                console.log("RMSD : "+((t1 - t0)/1000));
                 },
                 error: function() {
                     if (r_id==1){
@@ -1500,9 +1577,11 @@ $(document).ready(function(){
 //-------- Pass data to MDsrv --------
 
     function obtainURLinfo(gpcr_pdb_dict){
+        var int_res_li=displayIntResids();
         cp = obtainCompounds();
         nonGPCR=obtainNonGPCRchains(".nonGPCR:not(.active)");
-        sel_enc =inputText(gpcr_pdb_dict);
+        var pre_sel = $(".sel_input").val();
+        sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
         if (gpcr_pdb_dict=="no"){
             high_pre = [];
         } else {
@@ -1510,7 +1589,7 @@ $(document).ready(function(){
         }
         rad_option=$(".sel_high:checked").attr("value");
         var traj=obtainCheckedTrajs();
-        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR]; 
+        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li]; 
     }
     
     var passInfoToIframe = function(){
@@ -1552,6 +1631,13 @@ $(document).ready(function(){
          var rad_option =results[3];
          var traj =results[4];
          var nonGPCR =results[5];
+         var int_res_lil =results[6];
+         var int_res_li=[];
+         for (e in int_res_lil){
+             var res_s = int_res_lil[e].join("-");
+             int_res_li[int_res_li.length]=res_s.slice(0, -1);
+         }
+         var int_res_s = int_res_li.join();
          var view_dist= showDist();
          var pd = "n";
          for (key in high_pre){
@@ -1565,8 +1651,7 @@ $(document).ready(function(){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
         var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
-
+        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains + "&in="+encode(int_res_s);
         $(this).attr("href", url_mdsrv);
     });    
 
