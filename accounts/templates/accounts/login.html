@@ -10,7 +10,7 @@
 {% block content %} 
 <form action="{% url 'accounts:login' %}" method="post">
 {% csrf_token %}
-
+{% if next_url %} <input type="hidden" name="next" value="{{next_url}}"> {% endif %}
  <!-- description column -->
  <div class="col-md-4">
 
@@ -48,8 +48,8 @@
   </div>
  <!--   <body> -->
 
-<div id="pprotform"class="col-md-7 "> 
-  <div id="protform" class="col-md-12 panel panel-primary"> 
+<div class="col-md-7 "> 
+  <div class="col-md-12 panel panel-primary"> 
     <div class="panel-body">
 
  			<div style="text-align:center">

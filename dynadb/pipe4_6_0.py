@@ -214,6 +214,7 @@ def checkpdb(name_of_file,segid,start,stop,chain):
 	
 	if not stopexists:
 		return 'Stop resid does not exist in the given combination: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid
+	print(seqplain, "   " , onlyaa)
 
 	return (seqplain,onlyaa,hexflag)
 
@@ -237,6 +238,7 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		return 'Incorrect alignment. There are not any matches.'
 
 	biglist=list()
+	print("bestalig    ", bestalig)
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
@@ -566,6 +568,8 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	i=0
 	flag=0
 	while i<len(bestalig[1]): #bestalig[1] holds the aligned pdbseq
+		if bestalig[1][i]!='-' and (bestalig[1][i]!=bestalig[0][i]): #mistmatchs not allowed
+	        	return 'Mismatch between PDB sequence and submited protein sequence. PDB has '+str(bestalig[1][i])+' while submited sequence has '+ str(bestalig[0][i])+' in resid: '+str(i+1) #+1?? not sure!
 
 		if bestalig[1][i]!='-' and flag==0: #find first NON-gap	
 			seq_res_from=i+1

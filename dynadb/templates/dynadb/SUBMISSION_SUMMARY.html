@@ -35,13 +35,13 @@ font-weight:normal
 <form method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
  <!-- description column -->
- <div class="col-md-4"style="height:800px" >
+ <div class="col-md-4" >
  <div id="left" class="col-md-12 affix"  style="padding: 0px 0px 0px 0px; width:350px" data-spy="affix" >
 {% include "dynadb/SUBMISSION_SUMMARY_description.html" %} 
  <!--   _____________________________________________________________________________________________-->
 
 <!-- middle column -->
-<div id="ssform" class="col-md-7 " style="margin-bottom:0px"> 
+<div id="ssform" class="col-md-7 col-md-offset-4" style="margin-bottom:0px"> 
   <div id="sform" class="col-md-12 panel  " style="margin-bottom:0px" > 
   <div class="col-md-12 panel panel-primary" id="PROTEIN_BUTTON" style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;" > 
 
@@ -81,8 +81,8 @@ font-weight:normal
 
                {% if o.is_mutated == True %}
 		<div class="row" style="margin:0px;height:30px">
-                <div class="col-md-6 col-md-offset-3 panel panel-primary" > 
-	        <div class="row" style="text-align:center;vertical-align:middle;padding:0px 0px 0px 0px;cursor:pointer;background-color:AliceBlue" id="show_protmut-{{int0}}" data-toggle="collapse"  data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id"> 
+                <div class="col-md-6 col-md-offset-3 panel panel-primary" style="border-color:#555" > 
+	        <div class="row" style="text-align:center;vertical-align:middle;padding:0px 0px 0px 0px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555" id="show_protmut-{{int0}}" data-toggle="collapse"  data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id"> 
              			<h4 style="margin:5px">Toggle protein mutations</h4>
 		</div>
 		</div> 
@@ -95,10 +95,11 @@ font-weight:normal
 				<tr>	<th><label for="id_form-{{int0}}-resid"><a title="Resid: Residue number that its mutated on wild type protein.">Resid</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_from"><a title=" Resletter from: Residue name in IUPAC one letter code that is present on wild type protein. '-' character is used in case of insertions.">Resletter from</a></label></th>
 					<th><label for="id_form-{{int0}}-resletter_to"><a title=" Resletter to: Residue name in IUPAC one letter code that is present on mutated protein. '-' character is used in case of deletions and 'X' for engineered residues.">Resletter to</a></label></th></tr>
-				<tr> 	<td><input style="width:140px;" disabled id="id_form-{{int0}}-resid" name="form-{{int0}}-resid" type="number"  value="{{o.number}}"/></td> <!--placeholder=" 95"-->
+                                {% for protM in MUTations%} {% if forloop.counter == forloop.parentloop.counter %}{% for o in protM %} 
+				<tr> 	<td><input style="width:140px;" disabled id="id_form-{{int0}}-resid" name="form-{{int0}}-resid" type="number"  value="{{o.resid}}"/></td> <!--placeholder=" 95"-->
 					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" disabled name="form-{{int0}}-resletter_from" value="{{o.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->
 					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" disabled name="form-{{int0}}-resletter_to" type="text" value="{{o.resletter_to}}" /></td>	<!--placeholder=" A"-->	
-				</tr>
+				</tr>{%endfor%}{% endif%}{%endfor%}
 
 			</table>
                 </div>
@@ -111,7 +112,7 @@ font-weight:normal
 <!-- SMALL MOLECULES -->
   <div class="col-md-12 panel panel-primary" id="SMALL_BUTTON"style="cursor:pointer;height:50px;margin-top:0px;margin-bottom:15px;background-color:rgb(200, 150, 200);border-color:#555;" > 
 
-                   <h4 style="padding:5px 0px 5px 0px;color:#555;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:0px">Toggle the (<b>2</b>) <b>Small Molecule </b>block </h4>
+                   <h4 style="padding:5px 0px 5px 0px;color:#555;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:0px;">Toggle the (<b>2</b>) <b>Small Molecule </b>block </h4>
                 </div>
 
        {% for o in qMOL %} 	{%for int0 in int_ids0%}{% if forloop.counter == forloop.parentloop.counter %} 	
@@ -196,7 +197,7 @@ font-weight:normal
 
      <div class="col-md-12 panel panel-primary" id="DYNAMICS_BLOCK" style="border-color:#555;background-color:rgba(200, 150, 200, 0.1);">
                 <div class="row">
-	        <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA2" style="margin-top:20px;margin-bottom:20px;cursor:pointer" >
+	        <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA2" style="margin-top:20px;margin-bottom:20px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555" >
                 <h4 style="padding:0px;margin:10px 0px 10px 0px;text-align:center">Toggle simulation components</h4>
 		</div>
 		</div>
@@ -233,7 +234,7 @@ font-weight:normal
 		</div>
 
                 <div class="row">
-	        <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA3" style="margin-bottom:20px;margin-top:10px;cursor:pointer" >
+	        <div class="col-md-6 col-md-offset-3 panel panel-primary" id="collapse-PRUEBA3" style="margin-bottom:20px;margin-top:10px;cursor:pointer;background-color:rgba(200, 150, 200, 0.1);border-color:#555" >
                 <h4 style="padding:0px;margin:10px 0px 10px 0px;text-align:center">Toggle simulation details</h4>
 		</div>
 		</div>
@@ -311,17 +312,25 @@ font-weight:normal
         <div class="col-md-7 col-md-offset-4"> 
               <div class="col-md-12 panel panel-primary">
                   <!--Submit prueba -->
+          	  <div class="panel-body" id="selection-confirm">
+                	<a id='selection-button' href="/" style="color:black;font-size:20px" class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Confirm Submission</a>
+              	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                	<a id='selection-button' href="/dynadb/protein/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Protein Information (Step 1)</a>
+              	  </div>
+          	  <div class="panel-body" id="selection-">
+                	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                     <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Small Molecule Information (Step 2)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
-                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Complex Information (Step 3)</a>
+                	<a id='selection-button' href="/dynadb/model/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Crystalized Components Information (Step 3)</a>
               	  </div>
           	  <div class="panel-body" id="selection-">
-                	<a id='selection-button' href="/dynadb/dynamicsreuse/{{submission_id}}/{{model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
-                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 4: Dynamics Information </a>
+                	<a id='selection-button' href="/dynadb/dynamics/{{submission_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                    <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Check Dynamics Information (Step 4)</a>
               	  </div>
               </div>
         </div>
@@ -348,6 +357,9 @@ font-weight:normal
     <script src="{% static 'dynadb/changeMutant.js' %}"></script>
     
 <script>
+    $(document).on('click',"#selection-confirm",function(){
+    alert("Congratulations!!! The simulation has been successfully submitted. ");
+        });
     $(document).on('click',"[id|=show_protmut]",function(){
     self=$(this);
     tablemut=$(this).parents("[id|=sform]").find("[id$=mutationtable]");

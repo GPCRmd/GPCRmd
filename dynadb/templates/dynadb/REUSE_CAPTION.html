@@ -1,7 +1,7 @@
 
 <div class="col-md-7 "> 
     <!-- filters -->
-  <div class="col-lg-12 panel panel-primary" style="background-color:GhostWhite"> 
+  <div class="col-lg-12 panel panel-primary" style="margin-top:0px;margin-bottom:15px;background-color:rgba(200, 150, 200, 0.1);border-color:#555"> 
 
     <div class="panel-body">
  <!------------------------------------------------------------------------------ middle column -->
@@ -35,6 +35,11 @@
                             <div class="row">
                                  <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>
                             </div>{%endif%}
+                   {% if SUMMARY %}
+			<div style="text-align:center;height:30px;margin-top:red">
+                            <a id="id_download_pdb" style="color:red" name="download_pdb" noreferrer noopener href="{{urlsummary}}" target="_blank">Download submission summary file.</a>
+			</div>
+                   {%endif%}
                 </div>
                 </div>
                 </div>

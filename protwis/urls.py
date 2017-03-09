@@ -1,4 +1,4 @@
-﻿from django.conf.urls import include, url,handler404, handler500
+from django.conf.urls import include, url,handler404, handler500
 from django.contrib import admin
 from django.conf import settings
 from protwis import views
@@ -32,6 +32,9 @@ urlpatterns = [
     url(r'^construct/',include('construct.urls')),
     url(r'^sitesearch/',include('sitesearch.urls')),
     url(r'^drugs/',include('drugs.urls')),
+    url(r'^mdsrv/(?P<path_dir>dir/_DB/[^/\\]+/[^/\\]+)|mdsrv/(?P<path>.*/_DB/[^/\\]+/[^/\\]+/.*)$','dynadb.views.mdsrv_redirect_login',name='mdsrv_redirect_login'),
+    url(r'^mdsrv/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
+    
 ]
 
 handler404 = views.error404

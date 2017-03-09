@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence, Protein
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence
+from protein.models import Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
 from view.data import *
@@ -495,12 +496,18 @@ def obtain_domain_url(request):
         protocol = 'https'
     else:
         protocol = 'http'
+        
+    if hasattr(settings, 'MDSRV_PORT'):
+        port = settings.MDSRV_PORT
+    else:
+        port = 80
+        
     if hasattr(settings, 'MDSRV_URL'):
         mdsrv_url = settings.MDSRV_URL.strip()
         if mdsrv_url.find('/') == len(mdsrv_url) - 1:
            mdsrv_url = mdsrv_url[:-1]
     else:
-        mdsrv_url = protocol+'://'+domain+':'+str(settings.MDSRV_PORT)
+        mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
 
 
