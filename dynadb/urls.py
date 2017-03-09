@@ -119,7 +119,7 @@ if settings.DEBUG:
         url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
             'document_root': settings.STATIC_ROOT,
         }),
-)
+    )
 else:
     urlpatterns += patterns('',
         url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', views.serve_submission_files, name='serve_submission_files'),
