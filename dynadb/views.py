@@ -642,7 +642,8 @@ def PROTEINview(request, submission_id):
                     deleteModelbyUpdateProtein(protein_id,ii,submission_id,is_mutated_val)#starts the deletions of objects involving the protein to be updated!!!
 
             print("valor ii=", ii, "dictprot[ii]=\n", dictprot[ii])
-            dictprot[ii]['protein_creation_submission_id']=submission_id
+            dictprot[ii]['protein_creation_submission_id']=int(submission_id)
+            print("\nAAAA",dictprot[ii]['protein_creation_submission_id'])
             dictprot[ii]['id_species']=1
             initPF['id_uniprot_species']=dictprot[ii]['id_species']
             p=Protein.objects.filter(accession=dictprot[ii]['uniprotkbac'])
@@ -658,7 +659,7 @@ def PROTEINview(request, submission_id):
 #####  Fill the empty fields in the fdbPF instance with data from the initPF dictionary
             for key,value in initPF.items():
                 fdbPF[ii].data[key]=value
-
+            print("\nDICT dbPF[ii].data", fdbPF[ii].data  )
 ##### Check whether the fdbPF instance of dyndb_ProteinForm is valid and save formPF entry in the database:
             if fdbPF[ii].is_valid(): 
                 formPF[ii]=fdbPF[ii].save()
@@ -811,7 +812,9 @@ def PROTEINview(request, submission_id):
                     if len(dictPM[ii][nm]) == 1:    # solo hay la id_protein en dictPM[ii][nm]
                         print ("len(dictPM[ii][nm]) ", len(dictPM[ii][nm])) 
                     else:
+                         
                         el=(int(dictPM[ii][nm]['resid']),dictPM[ii][nm]['resletter_from'],dictPM[ii][nm]['resletter_to'])
+                        print ("AAAAAAA ",el)
                         if len(qlmut_list)>0:
                             for x in qlmut_list:
                                 if x[:3] == el:  #rows in the form are exactly matching values in db so both elements are not used in further updates
@@ -3039,13 +3042,10 @@ def search_top(request,submission_id):
             if pstop!='undef':
                 bonded=False
                 if len(chain)>0 and len(segid)>0:
-                    #print('BOTH')
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=[psegid,segid])
                 elif len(chain)>0:
-                    #print('only chain')
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=[pchain,chain],seg_pair=None)
                 elif len(segid)>0:
-                    #print('only segid')
                     bonded=bonds_between_segments2(pdbname,pstop,start,chain_pair=None,seg_pair=[psegid,segid])
 
                 bond_list[counter]=bonded
@@ -3078,7 +3078,7 @@ def pdbcheck(request,submission_id):
         counter=0
         tuple_error_dict=dict()
         full_run_dict=dict()
-        errorflag=2
+        errorflag=2 #initialize with no-error status. 0: error, 1:warning, 2: full run
         for array in arrays:
             array=array.split(',')
             segment_def='Protein: '+str(array[0])+' Start:'+str(array[3])+' Stop: '+str(array[4])+ ' SEGID: '+str(array[2])
@@ -3127,9 +3127,8 @@ def pdbcheck(request,submission_id):
                 data = json.dumps(results)
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
-                    
+            results['segments']=get_number_segments(pdbname)        
             #~ number_segments,breaklines=get_number_segments(pdbname)
-            results['segments']=get_number_segments(pdbname)
             #~ request.session[combination_id]['segments'] = number_segments,breaklines
             #~ if number_segments>len(arrays):
                 #~ results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
@@ -3143,18 +3142,21 @@ def pdbcheck(request,submission_id):
             if uniquetest is True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
                 if isinstance(checkresult,tuple):
+                    print('hell55')
                     tablepdb,simplified_sequence,hexflag=checkresult
                     guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
                     if isinstance(guide, list):
                         path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain,counter)
                         full_run_dict[(segment_def,path_to_repaired)]=guide
                     elif isinstance(guide, tuple):
+                        print('heello5')
                         tuple_error_dict[segment_def]=guide
                         if guide[0].startswith('Error'):
                             errorflag=1
                         elif guide[0].startswith('Warning'):
                             errorflag=0
                     else: #PDB has insertions error
+                        print('ERROR PDB INSERTION')
                         guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
                         results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
                         request.session[combination_id] = results
@@ -3162,6 +3164,7 @@ def pdbcheck(request,submission_id):
                         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
+                        print('hre3')
                 else: #checkpdb has an error
                     results={'type':'string_error','title':'Corrupted resid numbering or missing field in PDB', 'errmess':checkresult} #prints the error resid.
                     request.session[combination_id] = results
@@ -3169,6 +3172,7 @@ def pdbcheck(request,submission_id):
                     tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                     data = json.dumps(tojson)
                     return HttpResponse(data, content_type='application/json')
+                    print('here2')
             else: #unique test failed
                 results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
                 request.session[combination_id] = results
@@ -3179,11 +3183,12 @@ def pdbcheck(request,submission_id):
 
             counter+=1
 
-        if isinstance(full_run_dict, dict) and len(full_run_dict)>0:
+        if len(full_run_dict)>0 or len(tuple_error_dict)>0:
+            print('full RUN')
             results['type']='fullrun'
             results['table']=full_run_dict #finalguide
             results['tuple_errors']=tuple_error_dict #tuple_error_list
-            errorcode_to_message={0:'One or more warnings',1:'One or more errors found', 2: 'All right! PDB segment matches the submited sequence'}
+            errorcode_to_message={0:'One or more warnings found',1:'One or more errors found', 2: 'All right! PDB segment matches the submited sequence'}
             results['result_header']=errorcode_to_message[errorflag]
         request.session[combination_id] = results
         request.session.modified = True
@@ -3194,7 +3199,7 @@ def pdbcheck(request,submission_id):
     else: #NOT POST, simply display of results in the POP UP window. See pdbcheck.js
         combination_id='submission_id'+submission_id
         fav_color = request.session[combination_id]
-
+        print('\n\nFavColor:,',fav_color)
         if fav_color['type']=='string_error':
             return render(request,'dynadb/string_error.html', {'answer':fav_color})
 
@@ -10906,7 +10911,7 @@ def SMALL_MOLECULEview(request, submission_id):
                 return response
  
             dname={'dnamesdf':{'path':path_namefsdf,'url':url_namefsdf},'dnamepng':{'path':path_namefpng,'url':url_namefpng}}
-            print(dname,"PIPOL")
+            print(dname,"")
             ooo= molec_file_table(dname,MFpk)
            #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule
            # if the Std_id_mol_update flag is set to True the molecule in the form is the standard one and the std_id_molecule field in DyndbCompound should be update with MFpk

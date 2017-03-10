@@ -14,7 +14,7 @@
 {% block content %}
 
     <div style="width:100%;" class="panel panel-info">
-    <div class="panel-heading"><b> These are the lines which could define the start of a new protein segment. Next to each one, you have the result of trying to convert their residues into a protein sequence. Please, include in your "Curated Data Protein" table those segments which retrieve a correct protein sequence. That most likely means the segments whose sequence is not only composed by "X"s, although this may not be true -in the case of a segment composed by artificial residues which we do not know about-. This is the reason why we need you! </b></div>
+    <div class="panel-heading"><b> These are the lines which could define the start of a new protein segment. Next to each one, you have the result of trying to convert their residues into a protein sequence. Please, include in your "Curated Data Protein" table those segments which retrieve a correct protein sequence. That most likely means the segments whose sequence is not only composed by "X"s, although this may not be true, as in the case of a segment composed by artificial residues which we do not know about. This is the reason why we need you! </b></div>
     <div class="panel-body">
     {% if '<br>' in answer.segments.1 %}  
       {% autoescape off %}{{answer.segments.1}}{% endautoescape %}

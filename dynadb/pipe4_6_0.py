@@ -265,31 +265,28 @@ def matchpdbfa(sequence,pdbseq,tablepdb,hexflag,start=1):
 		bestalig=pairwise2.align.localms(sequence, pdbseq,100,-1,-10,-1)[0] #select the aligment with the best score.
 		#pairwise2.align.localms(seq1,seq2,score for identical matches, score for mismatches, score for opening a gap, score for extending a gap)
 	except:
-		return 'Incorrect alignment. There are not any matches.'
+		return 'Incorrect alignment. Make sure you have defined a correct range of sequence and PDB. '
 
 	biglist=list()
-	print("bestalig    ", bestalig)
 	counterepair=1
 	i=0
 	pdbalig=bestalig[1] #PDB sequence after alignment
 	fastalig=bestalig[0]
 	if '-' in fastalig: 
-		return 'PDB file contains insertions with respect to fasta, this is not allowed'
+		return 'PDB file contains insertions with respect to fasta, this is not allowed. This is the alignment: <br> PDB <br>:'+str(bestalig[0])+'<br>Submited Sequence:<br>'+str(bestalig[1])
 	duos=list()
 	mismatchlist=list()
 	while i < len(fastalig):
-		newpos=i+start  #IT USED TO BE i+1, but now we use start=1 as default!
+		newpos=i+start  #Sequence from 100 to 150 -> interval_seq= fullseq[100-1:150]-> interval_seq first residue is, actually, 100 of the full seq, That is why we sum the start value. 
 		if i+1>9999 and hexflag==1: #hexflag==1 means that the original PDB uses hexadecimal notation
 			newpos=format(i+1,'x')	#hexadecimal once 9999 resid is used.
 
 		if pdbalig[i]=='-':
 			tablepdb.insert(i,'-')
 			try:
-				return 'There is a gap in the pdb alignment. That means that you should define a new segment in the table ending before the gap and other one after it. The gap is in position:'+str(tablepdb[i][0])+str(tablepdb[i][1])
+				return 'There is a gap in the pdb alignment. That means that you should define a new segment in the table ending before the gap and other one after it. The gap is in position:'+str(tablepdb[i][0])+str(tablepdb[i][1])+'<br> This is the alignment: PDB <br>:'+str(bestalig[0])+'<br>Submited Sequence:<br>'+str(bestalig[1])
 			except IndexError:
 				return 'There is a gap in the pdb alignment. Maybe you should define a new segment or check if the length of the PDB segment and the sequence match. If your segment is one resid long, put the same resid in res from and res to, also, put the same resid in seq from and seq to. Like: Res from:81 Res to:81; Seq from:81 Seq to:81. Or Res from:81 Res to:81; Seq from:83 Seq to:83 '
-			minilist=[tablepdb[i],[fastalig[i],newpos]]
-			duos.append(minilist)
 
 		elif fastalig[i]!=pdbalig[i]:
 			if fastalig[i]=='X' and tablepdb[i][3] in natural_aa:
@@ -445,7 +442,6 @@ def repairpdb(pdbfile, guide,segid,start,stop,chain,counter):
 
 	newpdb.close()
 	oldpdb.close()
-	#return pdbfile[:-4]+'_corrected.pdb'
 	return pdbfile[:-4]+'_corrected'+str(counter)+'.pdb' #'/tmp/'+tmppdbfile[tmppdbfile.rfind('/')+1:]+'_corrected'+str(counter)+'.pdb'
 #############################################################################################################################################
 
@@ -624,7 +620,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 	warningmessage= ''
 	while i<len(bestalig[1]): #bestalig[1] holds the aligned pdbseq
 		if bestalig[1][i]!='-' and (bestalig[1][i]!=bestalig[0][i]): #mistmatchs not allowed
-			warningmessage= 'Mismatch between PDB sequence and submited protein sequence. PDB has '+str(bestalig[1][i])+' while submited sequence has '+ str(bestalig[0][i])+' in resid: '+str(i+1)+ '. The suggested "seq from" and "seq to" values might be wrong.' #+1?? not sure!
+			warningmessage= 'Mismatch between PDB sequence and submited protein sequence.\n PDB has '+str(bestalig[1][i])+' while submited sequence has '+ str(bestalig[0][i])+' in resid: '+str(i+1)+ '.\n The suggested "seq from" and "seq to" values might be wrong.' #+1?? not sure!
 		if bestalig[1][i]!='-' and flag==0: #find first NON-gap	
 			seq_res_from=i+1
 			flag=1
@@ -635,7 +631,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 		i+=1
   
 	if '-' in bestalig[0][seq_res_from-1:seq_res_to]:
-		return 'The selected PDB sequence can not align with the uniprot sequence without gaps. This is the aligment between the sequence and the PDB '+ str(bestalig)
+		return 'The selected PDB sequence can not align with the uniprot sequence without gaps.\n This is the aligment between the sequence and the PDB: \n SEQ: '+ str(bestalig[0])+'\n PDB: '+ str(bestalig[1])
 
 	return (seq_res_from, seq_res_to, warningmessage)
 
