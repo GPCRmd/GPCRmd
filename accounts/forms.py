@@ -1,3 +1,4 @@
+from django.conf import settings
 from django import forms
 from accounts.models import User
 from django.forms import ModelForm, PasswordInput
@@ -9,6 +10,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text
 from django.template import loader
 from django.core.mail import EmailMultiAlternatives
+from django.contrib.auth.forms import PasswordResetForm as PasswordResetForm_default
 
 class RegistrationForm(forms.ModelForm):
     """
@@ -41,7 +43,7 @@ class RegistrationForm(forms.ModelForm):
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
-        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email],headers=settings.EMAIL_TRANSACTIONAL_HEADERS)
         if html_email_template_name is not None:
             html_email = loader.render_to_string(html_email_template_name, context)
             email_message.attach_alternative(html_email, 'text/html')
@@ -161,7 +163,7 @@ class ChangeMailForm(forms.ModelForm):
         # Email subject *must not* contain newlines
         subject = ''.join(subject.splitlines())
         body = loader.render_to_string(email_template_name, context)
-        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email],headers=settings.EMAIL_TRANSACTIONAL_HEADERS)
         if html_email_template_name is not None:
             html_email = loader.render_to_string(html_email_template_name, context)
             email_message.attach_alternative(html_email, 'text/html')
@@ -201,4 +203,22 @@ class ChangeMailForm(forms.ModelForm):
                 user.email_new, html_email_template_name=html_email_template_name,
             )
 
+
+class PasswordResetForm(PasswordResetForm_default):
+    def send_mail(self, subject_template_name, email_template_name,
+                context, from_email, to_email, html_email_template_name=None):
+        """
+        Sends a django.core.mail.EmailMultiAlternatives to `to_email`.
+        """
+        subject = loader.render_to_string(subject_template_name, context)
+        # Email subject *must not* contain newlines
+        subject = ''.join(subject.splitlines())
+        body = loader.render_to_string(email_template_name, context)
+
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email],headers=settings.EMAIL_TRANSACTIONAL_HEADERS)
+        if html_email_template_name is not None:
+            html_email = loader.render_to_string(html_email_template_name, context)
+            email_message.attach_alternative(html_email, 'text/html')
+
+        email_message.send()
 
