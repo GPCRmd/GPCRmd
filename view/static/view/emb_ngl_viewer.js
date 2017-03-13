@@ -583,24 +583,46 @@ $(document).ready(function(){
         return (dist_of);
     }
 
+    function activate_row(selector){
+        $(selector).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+        $(selector).find(".always").attr("style","");
+        $(selector).addClass("sw_ok");
+    }
+    function inactivate_row(selector){
+        $(selector).find(".tick").html("");
+        $(selector).find(".always").attr("style","margin-left:14px");
+        $(selector).removeClass("sw_ok");
+    }
 
-    $(".sel_within").on("blur", ".dist_sel" ,function(){
-        var inp=$(this).find(".inputdist").val().replace(/\s+/g, '');
-        $(this).find(".inputdist").val(inp);
+    function activate_or_inactivate_row(selector){
+        var inp=$(selector).find(".inputdist").val().replace(/\s+/g, '');
+        $(selector).find(".inputdist").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
-            $(this).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
-            $(this).find(".always").attr("style","");
-            $(this).addClass("sw_ok");
+            if ($(selector).find(".wthComp").val()=="user_sel"){
+                if ($(selector).find(".user_sel_input").val() == ""){
+                    inactivate_row(selector);
+                }else {
+                    activate_row(selector);
+                }            
+            } else {
+                activate_row(selector);
+            }
         } else {
-            if ($(this).attr("class").indexOf("sw_ok") > -1){
-                $(this).find(".tick").html("");
-                $(this).find(".always").attr("style","margin-left:14px");
-                $(this).removeClass("sw_ok");
+            if ($(selector).attr("class").indexOf("sw_ok") > -1){
+                inactivate_row(selector);
             }
         }
+    }
+
+    $(".sel_within").on("blur", ".dist_sel" ,function(){
+        activate_or_inactivate_row(this);
+    });   
+    
+    $(".sel_within").on("click", ".dist_sel" ,function(){
+        activate_or_inactivate_row(this);
     });    
 
-    $(".sel_within").on('change', ".wthComp" ,function(){//[!]it would be better if the green tick was removed when the select input was empty!!
+    $(".sel_within").on('change', ".wthComp" ,function(){
         if ($(this).val()=="user_sel"){
             var sw_input='<input class="form-control input-sm user_sel_input" type="text" style="width:95px;padding-left:7px">';
             $(this).siblings(".user_sel_input_p").html(sw_input);
@@ -965,24 +987,12 @@ $(document).ready(function(){
         }
     }
 
-    function checkTrajUsedInDistComputatiion(res_ids){
-        if (res_ids){
-            var traj_id = $(".trajForDist:selected").val();
-            if (traj_id){
-                $("#traj_id_"+traj_id)[0].checked=true;
-                return (traj_id);
-            }
-        }
-        return (false);
-    }
-
     function obtainTrajUsedInDistComputatiion(res_ids){
         if (res_ids){
             var traj_id = $(".trajForDist:selected").val();
             var traj_path = $(".trajForDist:selected").attr("name");
             if (traj_id){
-                $("#traj_id_"+traj_id)[0].checked=true;
-                return (traj_path);
+                return ([traj_path,traj_id]);
             }
         }
         return (false);
@@ -992,12 +1002,13 @@ $(document).ready(function(){
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
-
         var res_ids = obtainDistToComp();
         if ($(this).attr("class").indexOf("withTrajs") > -1){
-            var traj_p=obtainTrajUsedInDistComputatiion(res_ids);
-            if (traj_p){                
-                $("#dist_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
+            var traj_results=obtainTrajUsedInDistComputatiion(res_ids);
+            if (traj_results){        
+                var traj_p=traj_results[0];
+                var traj_id=traj_results[1];        
+                $("#dist_chart").append("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
                 }
@@ -1028,7 +1039,7 @@ $(document).ready(function(){
                                 var data = google.visualization.arrayToDataTable(dist_array,false);
                                 var options = {'title':'Residue Distance ('+trajFile+')',
                                     "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"10","left":"40","top":"50","bottom":"60"}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'Distance (angstroms)'}};
                                 newgraph_sel="dist_chart_"+d_id.toString();
                                 var plot_html;
                                 if ($.active<=1){
@@ -1045,14 +1056,20 @@ $(document).ready(function(){
                                                                 <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
                                                             </a>\
                                                         </div>\
-                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
                                                             <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
                                                         </div>\
+                                                        <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
+                                                        </div>\
                                                     </div>\
-                                                </div>";//color:#239023
+                                                </div>";
                                 }else{
                                     plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div id="+newgraph_sel+"></div>\
+                                                    <div class='checkbox' style='font-size:12px;'>\
+		                                                <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" >Display distance</label>\
+                                                    </div>\
                                                     <div style='margin:5px'>\
                                                         <div style='display:inline-block;margin:5px;cursor:pointer;'>\
                                                             <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
@@ -1064,8 +1081,11 @@ $(document).ready(function(){
                                                                 <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
                                                             </a>\
                                                         </div>\
-                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
                                                             <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
+                                                        </div>\
+                                                        <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
                                                         </div>\
                                                     </div>\
                                                 </div>";                            
@@ -1155,16 +1175,18 @@ $(document).ready(function(){
         var plotToRv=$(this).parents(".dist_plot").attr("id");
         $('#'+plotToRv).remove();
     });
+   
 
-
-    
-    function showDist(){
-        if ($(".view_dist").is(":checked")){
-            return ("y");
-        } else {
-            return ("n");
-        }
+    function displayCheckedDists(){
+        var dist_li=[];
+        $(".display_this_dist:checked").each(function(){
+            dist_li[dist_li.length]=$(this).data("this_dist");
+            var tr_id_act=$(this).data("traj_id");
+            $("#traj_id_"+tr_id_act)[0].checked=true;
+        });
+        return uniq(dist_li)
     };
+    
     
 //-------- Select protein segment to highligh/select from the sequence --------
     function selectFromSeq(){
@@ -1449,8 +1471,8 @@ $(document).ready(function(){
                             var rmsdSelOk=SelectionName(rmsdSel);
                             var data = google.visualization.arrayToDataTable(rmsd_array,false);
                             var options = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
-                                "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
-                                "chartArea":{"right":"10","left":"40","top":"50","bottom":"60"}};
+                                "height":350, "width":500, "legend":{"position":"none"}, 
+                                "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
                             newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                             var RMSDplot_html;
                             if ($.active<=1){
@@ -1575,6 +1597,7 @@ $(document).ready(function(){
 //-------- Pass data to MDsrv --------
 
     function obtainURLinfo(gpcr_pdb_dict){
+        var dist_groups_li=displayCheckedDists()
         var int_res_li=displayIntResids();
         cp = obtainCompounds();
         nonGPCR=obtainNonGPCRchains(".nonGPCR:not(.active)");
@@ -1587,14 +1610,12 @@ $(document).ready(function(){
         }
         rad_option=$(".sel_high:checked").attr("value");
         var traj=obtainCheckedTrajs();
-        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li]; 
+        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li,dist_groups_li]; 
     }
     
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         window.results=results;
-        var view_dist=showDist();
-        window.view_dist=view_dist;
         var pd = "n";
         var legend_el=[];
         for (key in high_pre){
@@ -1606,22 +1627,17 @@ $(document).ready(function(){
         window.pd=pd;
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
-        var distToComp = obtainDistToComp();
-        window.distToComp=distToComp;
-        var traj_id=checkTrajUsedInDistComputatiion(distToComp);
         var onlyChains="";
         if (seeReceptor=="n" && nonGPCR == ""){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
-        window.distToComp=distToComp;
         window.seeReceptor=seeReceptor;
         obtainLegend(legend_el);
     };
     
     window.passInfoToIframe=passInfoToIframe;
+    
     $("#to_mdsrv").click(function(){
-         var distToComp = obtainDistToComp();
-         var traj_id=checkTrajUsedInDistComputatiion(distToComp);
          var results = obtainURLinfo(gpcr_pdb_dict);
          cp = results[0];
          high_pre=results[1];
@@ -1630,13 +1646,13 @@ $(document).ready(function(){
          var traj =results[4];
          var nonGPCR =results[5];
          var int_res_lil =results[6];
+         var dist_groups_li = results[7].join();
          var int_res_li=[];
          for (e in int_res_lil){
              var res_s = int_res_lil[e].join("-");
              int_res_li[int_res_li.length]=res_s.slice(0, -1);
          }
          var int_res_s = int_res_li.join();
-         var view_dist= showDist();
          var pd = "n";
          for (key in high_pre){
              if (high_pre[key].length > 0){
@@ -1649,7 +1665,14 @@ $(document).ready(function(){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
         var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains + "&in="+encode(int_res_s);
+        var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc)+ "&rc=" + seeReceptor + "&sh=" + rad_option  + "&pd=" + pd;
+        var add_url_var = {"traj":encode(traj),"sel":encode(sel_enc),"cp":encode(cp),"la":encode(high_pre["A"]),"lb":encode(high_pre["B"]),"lc":encode(high_pre["C"]),"lf":encode(high_pre["F"]),"wth":encode(dist_of),"in":encode(int_res_s),"ng":nonGPCR,"och":onlyChains , "dc":encode(dist_groups_li)};
+        for (varn in add_url_var){
+            var myvar =add_url_var[varn];
+            if (myvar.length > 0){
+                url_mdsrv += "&"+varn+"="+myvar;
+            }
+        }
         $(this).attr("href", url_mdsrv);
     });    
 

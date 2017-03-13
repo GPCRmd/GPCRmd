@@ -291,10 +291,9 @@
             var traj =results[4];
             var nonGPCR =results[5];
             var int_res_li =results[6];
-            var show_dist=parent.view_dist;
+            var dist_groups_li=results[7];
             var cons_pos = parent.pd;
             var dist_within_li=parent.dist_of;
-            var comp_dist = parent.distToComp;
             var onlyChains="";
             var rc = parent.seeReceptor;
             var onlyChains=parent.onlyChains;
@@ -422,11 +421,12 @@
             } else {
                 $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
             }
-            if (show_dist =="y"){
-                if (comp_dist){ 
-                    var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
-                    var dist_pair_li=comp_dist.split("a");
-                    var cd_id=0;
+            if (dist_groups_li.length>0){
+                var cd_id=0;
+                var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
+                for (distgN in dist_groups_li){
+                    var dist_group=dist_groups_li[distgN];
+                    var dist_pair_li=dist_group.split("a");
                     for (pair_n in dist_pair_li){
                         var d_from_to_str = dist_pair_li[pair_n];
                         if (typeof d_from_to_str == "string"){
@@ -441,7 +441,7 @@
                         }
                     }
                 }
-            } 
+            }
             if (int_res_li.length > 0){
                 for (pos_info_n in int_res_li){
                     var pos_info = int_res_li[pos_info_n];
