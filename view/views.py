@@ -496,12 +496,18 @@ def obtain_domain_url(request):
         protocol = 'https'
     else:
         protocol = 'http'
+        
+    if hasattr(settings, 'MDSRV_PORT'):
+        port = settings.MDSRV_PORT
+    else:
+        port = 80
+        
     if hasattr(settings, 'MDSRV_URL'):
         mdsrv_url = settings.MDSRV_URL.strip()
         if mdsrv_url.find('/') == len(mdsrv_url) - 1:
            mdsrv_url = mdsrv_url[:-1]
     else:
-        mdsrv_url = protocol+'://'+domain+':'+str(settings.MDSRV_PORT)
+        mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
 
 
@@ -709,6 +715,7 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
+                        #"traj_list": [("Dynamics/f500.dcd","f500.dcd",1),("Dynamics/f1000.dcd","f1000.dcd",2),("Dynamics/f2500.dcd","f2500.dcd",3),("Dynamics/f5000.dcd","f5000.dcd",4)],#[!] TEST
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "other_prots":other_prots,

@@ -33,6 +33,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'sendfile',
     'debug_toolbar',
     'rest_framework',
     'rest_framework_swagger',
@@ -59,6 +60,7 @@ INSTALLED_APPS = (
     'haystack',
     'drugs',
     'graphos',
+    'revproxy',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -101,7 +103,7 @@ MEDIA_URL = '/files/'
 #past: MEDIA_URL = '/media/'
 MEDIA_ROOT = '/protwis/sites/files/'
 #past: MEDIA_ROOT = '/protwis/media/protwis'
-
+SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 #Search Engine
 
@@ -213,11 +215,16 @@ CACHES = {
     }
 }
 
+QUERY_CHECK_PUBLISHED = True
+
 MDSRV_PORT=8081
-
-
+MDSRV_UPSTREAM='http://localhost:8081'
+MDSRV_REVERSE_PROXY = 'POST'
 
 AUTH_USER_MODEL = 'accounts.User'
+LOGIN_URL = 'accounts:login'
+LOGIN_REDIRECT_URL = 'accounts:memberpage'
+LOGOUT_REDIRECT_URL = 'accounts:memberpage'
 
 # Configure this so that it works with real mail, not terminal
 EMAIL_USE_SSL = True
@@ -227,3 +234,6 @@ EMAIL_PORT = 465
 EMAIL_HOST_USER = '***REMOVED***'
 EMAIL_HOST_PASSWORD = '***REMOVED***'
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+import mimetypes
+mimetypes.add_type('text/plain; charset=UTF-8', '.log', strict=True)

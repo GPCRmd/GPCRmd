@@ -1,11 +1,94 @@
 $(document).ready(function(){
     
-    $(".sel_input, .inputdist, .dist_from, .dist_to").val("")
+    $(".sel_input, .inputdist, .dist_from, .dist_to").val("");
     //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
+
+
+    function click_unclick(class_name){
+        $(class_name).click(function(){
+            pos_class=$(this).attr("class");
+            if(pos_class.indexOf("active") > -1){
+                $(this).removeClass("active");
+            } else {
+                $(this).addClass("active");
+            }
+        });
+    }
   
-/// AJAX
+    function uniq(a) {
+        var seen = {};
+        return a.filter(function(item) {
+            return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+        });
+    }
+    
+    function isEmptyDict(mydict){
+        empty=true;
+        for (key in mydict){
+            if (mydict[key].length >= 1){
+                empty=false;
+                break;
+            }
+        }
+      return empty;
+    }
+
+
+//-------- Obtain important data from template --------
+    var struc = $(".str_file").data("struc_file");
+    var dyn_id=$(".str_file").data("dyn_id");
+    var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
+    var seeReceptor = "y";
+    var sel = "";
+    var sel_enc = sel;
+    
+    function obtainCheckedTrajs(){
+        var traj = [];
+        $(".traj_element:checked").each(function(){
+            traj[traj.length]=$(this).attr("value");
+        }); 
+        return traj;
+    }
+    
+    function obtainDicts(gpcr_pdb_dict){
+        all_gpcr_dicts={};
+        var num_gpcrs=0;
+        for (gpcr_id in gpcr_pdb_dict){
+            var bw_dict={};
+            var gpcrdb_dict={};
+            for (gen_num in gpcr_pdb_dict[gpcr_id]) {
+                split=gen_num.split(new RegExp('[\.x]','g'));
+                bw = split[0]+"."+ split[1];
+                db = split[0]+"x"+ split[2];
+                bw_dict[bw]=gpcr_pdb_dict[gpcr_id][gen_num];
+                gpcrdb_dict[db]=gpcr_pdb_dict[gpcr_id][gen_num];
+            }
+            num_gpcrs++;
+            all_gpcr_dicts[gpcr_id]={"combined_num":gpcr_pdb_dict[gpcr_id], "bw_num": bw_dict, "gpcrDB_num":gpcrdb_dict};
+        }
+        return [all_gpcr_dicts , num_gpcrs];
+    }
+    
+    var traj=obtainCheckedTrajs();
+    $("#receptor").addClass("active");
+    $(".nonGPCR").addClass("active");
+    //var chains_str = $("#chains").text();//!
+    var chains_str =$("#receptor").attr("title"); //!
+    var all_chains = $(".str_file").data("all_chains").split(",");
+
+    var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
+    var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
+    if (gpcr_pdb_dict !="no"){
+        gpcr_id_name=$("#cons_pos_box_all").data("gpcr_id_name");
+        //gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
+        dicts_results=obtainDicts(gpcr_pdb_dict);
+        all_gpcr_dicts=dicts_results[0];
+        num_gpcrs =dicts_results[1];
+    }
+    
+//-------- AJAX --------
 
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
@@ -35,8 +118,54 @@ $(document).ready(function(){
     }
     var csrftoken = getCookie('csrftoken');
 
+//-------- Control text inputs --------
 
-////////
+    function maxInputLength(select, select2, maxlength){
+        $(select).on('keyup blur',select2, function() {
+            var val = $(this).val();
+            if (val.length > maxlength) {
+                $(this).val(val.slice(0, maxlength));
+            }
+        });
+    }
+
+    maxInputLength('.inputdist',"",6);
+    maxInputLength('input.sel_input',"",100);
+    maxInputLength('#rmsd_frame_1',"",8);
+    maxInputLength('#rmsd_frame_2',"",8);
+    maxInputLength('#rmsd_my_sel_sel',"",50);
+    maxInputLength('#rmsd_ref_frame',"",8);
+    maxInputLength("#int_thr", "",3);
+    maxInputLength(".sel_within", ".user_sel_input",40);
+
+
+
+    function removeSpacesInInput(my_selector){
+        $(my_selector).blur(function(){
+            my_input=$(this).val().replace(/\s+/g, '');
+            $(this).val(my_input);
+         });
+    }
+
+    removeSpacesInInput("#rmsd_frame_1");
+    removeSpacesInInput("#rmsd_frame_2");
+    removeSpacesInInput("#rmsd_ref_frame");
+    removeSpacesInInput("#int_thr");
+
+
+
+//-------- Collapse Arrow
+    $(".section_pan").click(function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        if(upOrDown.indexOf("in") > -1){
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-down");
+        } else {
+            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
+        }
+    });
+
+//-------- Parse input selection --------
 
   
     function encode (sth) {return encodeURIComponent(sth).replace(/%20/g,'+');}
@@ -53,11 +182,10 @@ $(document).ready(function(){
         var gpcr_range = gpcr + "\\s*\\-\\s*"+gpcr;
         var re = new RegExp(gpcr_range,"g");
         var res = pre_sel.match(re); 
-        //console.log(res);
         return(res);
     }
     
-    function parseGPCRnum(sel,lonely_gpcrs){
+    function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -80,8 +208,13 @@ $(document).ready(function(){
                     var res_chain=gpcrdb_dict[my_gpcr];                   
                 } else {
                     res_chain=undefined;
-                    to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
-                    $("#alert").append(to_add);
+                    if (inpSource=="main"){
+                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                        $("#alert").append(to_add);
+                    } else {
+                        to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                        $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                    }
                 }
                 if (res_chain){
                     if (chains_str == "") {
@@ -105,7 +238,7 @@ $(document).ready(function(){
         return (sel)
     }
     
-    function parseGPCRrange(pre_sel,gpcr_ranges){
+    function parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -113,15 +246,15 @@ $(document).ready(function(){
         for (i in gpcr_ranges) {
             var gpcr_pair_str = gpcr_ranges[i];
             var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
-            var pos_range_all=""
+            var pos_range_all="";
             for (gpcr_id in all_gpcr_dicts){
                 var pos_range="";
                 my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
                 gpcr_comb_dict=my_gpcr_dicts["combined_num"];
                 bw_dict=my_gpcr_dicts["bw_num"];
                 gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
-                var chain_pair=[]
-                var res_pair=[]
+                var chain_pair=[];
+                var res_pair=[];
                 for (n in gpcr_pair){
                     var gpcr_n=gpcr_pair[n];  
                     if(gpcr_comb_dict[gpcr_n] != undefined) {
@@ -132,24 +265,29 @@ $(document).ready(function(){
                         var res_chain=gpcrdb_dict[gpcr_n];                   
                     } else {
                         res_chain=undefined;
-                        chain_pair=false
-                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>'
-                        $("#alert").append(to_add);
-                        break
+                        chain_pair=false;
+                        if (inpSource=="main"){
+                            to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                            $("#alert").append(to_add);
+                        } else {
+                            to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
+                            $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                        }
+                        break;
                     }
                     res_pair[res_pair.length]=res_chain[0];
                     chain_pair[chain_pair.length]=res_chain[1];
                 }
                 if (chain_pair){
                     if (chains_str == "") {
-                        pos_range=" "+res_pair[0] + "-" +res_pair[1]
+                        pos_range=" "+res_pair[0] + "-" +res_pair[1];
                     } else if (chain_pair[0]==chain_pair[1]){
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
                     } else {
                         start=all_chains.indexOf(chain_pair[0]);
                         end=all_chains.indexOf(chain_pair[1]);
                         var middle_str="";
-                        considered_chains=all_chains.slice(start+1,end)
+                        considered_chains=all_chains.slice(start+1,end);
                         for (chain in considered_chains){
                             middle_str += " or :"+ considered_chains[chain];
                         }
@@ -161,7 +299,7 @@ $(document).ready(function(){
         if (pos_range_all){
             if (num_gpcrs >1){
                 pos_range_all=pos_range_all.slice(0,-4);
-                pos_range_all="("+pos_range_all+")"
+                pos_range_all="("+pos_range_all+")";
             }  
             pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
         } else {
@@ -173,26 +311,35 @@ $(document).ready(function(){
     }    
     
 
-    function inputText(gpcr_pdb_dict){
-        var pre_sel = $(".sel_input").val();
+    function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource){
         var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
-            sel = ""
-            to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-            $("#alert").attr("class","alert alert-danger row").append(to_add);
+            sel = "";
+            if (inpSource=="main"){
+                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
+                $("#alert").attr("class","alert alert-danger row").append(to_add);
+            } else {
+                to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
+                $("#"+rownum).find(".alert_sel_wth").html(to_add);
+            }
         } else {
-            sel=parseGPCRrange(pre_sel,gpcr_ranges);
+            sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource);
         }
         var lonely_gpcrs=obtainInputedGPCRnum(sel);
         if (lonely_gpcrs != null){
             if (gpcr_pdb_dict=="no"){
-                sel = ""
-                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-                $("#alert").attr("class","alert alert-danger row").append(to_add);
+                sel = "";
+                if (inpSource=="main"){
+                    to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
+                    $("#alert").attr("class","alert alert-danger row").append(to_add);
+                } else {
+                    to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
+                    $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                }
             } else {
-                sel=parseGPCRnum(sel,lonely_gpcrs);
+                sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource);
             }
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
@@ -205,13 +352,7 @@ $(document).ready(function(){
         return sel;
     };
 
-    $("#gpcr_sel").change(function(){
-        var gpcr_id=$(this).children(":selected").val();
-        var chosen_id = "#gpcr_id_"+gpcr_id;
-        $(chosen_id).css("display","inline");
-        $(".gpcr_prot_show_cons:not("+chosen_id+")").css("display","none");
-    })
-
+//-------- Selected molecules to display --------
     function clickRep (id, newRep, clicked) {
         if ( clicked == 1 ) {
             var index = $.inArray(newRep,rep);
@@ -232,17 +373,6 @@ $(document).ready(function(){
         }
     }
 
-    function click_unclick(class_name){
-        $(class_name).click(function(){
-            pos_class=$(this).attr("class");
-            if(pos_class.indexOf("active") > -1){
-                $(this).removeClass("active");
-            } else {
-                $(this).addClass("active");
-            }
-        });
-    }
-
     function click_unclick_specialRec(class_name){
         $(class_name).click(function(){
             pos_class=$(this).attr("class");
@@ -254,7 +384,7 @@ $(document).ready(function(){
                 seeReceptor="y";
             }
         });
-        return seeReceptor 
+        return seeReceptor;
     }
 
 
@@ -266,6 +396,7 @@ $(document).ready(function(){
         return comp;
     }
     
+//-------- Protein chains
     function obtainNonGPCRchains(selector){
         nonGPCR_chains = $(selector).attr("id");
         if (nonGPCR_chains){
@@ -281,15 +412,14 @@ $(document).ready(function(){
         return ("");
     }
 
+//-------- Predefined GPCR positions --------
+    $("#gpcr_sel").change(function(){
+        var gpcr_id=$(this).children(":selected").val();
+        var chosen_id = "#gpcr_id_"+gpcr_id;
+        $(chosen_id).css("display","inline");
+        $(".gpcr_prot_show_cons:not("+chosen_id+")").css("display","none");
+    })
 
-    function uniq(a) {
-        var seen = {};
-        return a.filter(function(item) {
-            return seen.hasOwnProperty(item) ? false : (seen[item] = true);
-        });
-    }
-
-///////////////
     $(".high_pd").each(function(){
         if ($(this).data("pdbpos").toString() == "None"){
             $(this).attr("disabled", true);
@@ -326,7 +456,7 @@ $(document).ready(function(){
         high_pre["B"]=getSelectedPosLists(".high_pdB.active");
         high_pre["C"]=getSelectedPosLists(".high_pdC.active");
         high_pre["F"]=getSelectedPosLists(".high_pdF.active");
-        return (high_pre)
+        return (high_pre);
     }
 
     $(".clear_conspos").click(function(){;
@@ -335,41 +465,6 @@ $(document).ready(function(){
         });
     });    
 
-
-    function obtainDicts(gpcr_pdb_dict){
-        all_gpcr_dicts={};
-        var num_gpcrs=0;
-        for (gpcr_id in gpcr_pdb_dict){
-            var bw_dict={};
-            var gpcrdb_dict={};
-            for (gen_num in gpcr_pdb_dict[gpcr_id]) {
-                split=gen_num.split(new RegExp('[\.x]','g'));
-                bw = split[0]+"."+ split[1];
-                db = split[0]+"x"+ split[2];
-                bw_dict[bw]=gpcr_pdb_dict[gpcr_id][gen_num];
-                gpcrdb_dict[db]=gpcr_pdb_dict[gpcr_id][gen_num];
-            }
-            num_gpcrs++;
-            all_gpcr_dicts[gpcr_id]={"combined_num":gpcr_pdb_dict[gpcr_id], "bw_num": bw_dict, "gpcrDB_num":gpcrdb_dict}
-        }
-        return [all_gpcr_dicts , num_gpcrs];
-    }
-
-
-
-    function obtainURLinfo(gpcr_pdb_dict){
-        cp = obtainCompounds();
-        nonGPCR=obtainNonGPCRchains(".nonGPCR:not(.active)");
-        sel_enc =inputText(gpcr_pdb_dict);
-        if (gpcr_pdb_dict=="no"){
-            high_pre = [];
-        } else {
-            high_pre = obtainPredefPositions();
-        }
-        rad_option=$(".sel_high:checked").attr("value");
-        var traj=obtainCheckedTrajs()
-        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR] 
-    }
 
     function disableMissingClasses(){
         $("li.cons_nav").each(function(){ 
@@ -383,9 +478,10 @@ $(document).ready(function(){
             }
         })         
     }
+    disableMissingClasses();
 
     function obtainLegend(legend_el){
-        var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"}
+        var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"};
         var legend="";
         if (legend_el.length > 1){
             for (el in legend_el){
@@ -393,42 +489,16 @@ $(document).ready(function(){
                 legend+=add;
             }
             var legend_fin = "<span style='margin-top:5px'>" + legend + "</span>";
-            $("#legend").html(legend_fin)
+            $("#legend").html(legend_fin);
         } else {
-            $("#legend").html("")
+            $("#legend").html("");
         }
     }
 
 
-    function maxInputLength(select, maxlength){
-        $(select).on('keyup blur', function() {
-            var val = $(this).val();
-            if (val.length > maxlength) {
-                $(this).val(val.slice(0, maxlength));
-            }
-        });
-    }
-
-    maxInputLength('.inputdist',6);
-    maxInputLength('input.sel_input',100);
-    maxInputLength('#rmsd_frame_1',8);
-    maxInputLength('#rmsd_frame_2',8);
-    maxInputLength('#rmsd_my_sel_sel',50);
-    maxInputLength('#rmsd_ref_frame',8);
-    maxInputLength("#int_thr", 3)
-    disableMissingClasses();
-
-    $(".section_pan").click(function(){
-        var target=$(this).attr("data-target");
-        var upOrDown=$(target).attr("class");
-        if(upOrDown.indexOf("in") > -1){
-            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-down");
-        } else {
-            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
-        }
-    });
-
-///    Res within xA of compounf  ///
+    
+    
+//-------- Residues within xA of compound --------
 
     var comp_lg=[];
     var comp_sh=[];
@@ -452,28 +522,31 @@ $(document).ready(function(){
         select += option;
     }
     
-    var i=1
+    var wth_i=1;
     $(".sel_within").on("click",".add_btn",function(){ 
         $(".sel_within").find(".add_btn").css("visibility","hidden");
-        var row='<div class="dist_sel" id=row'+i+'>\
+        var row='<div class="dist_sel" id=row'+wth_i.toString()+' style="margin-bottom:5px;">\
                   <span class="tick" ></span>\
                   <span class="always" style="margin-left:14px">\
                     Show residues within \
-                    <input class="form-control input-sm inputdist" type="text" style="margin-bottom:5px;width:40px;padding-left:7px">\
+                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px">\
                       &#8491; of\
-                        <select class="wthComp" name="comp">' + select + '</select>\
+                        <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
+                        <span class="user_sel_input_p"></span>\
                         <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                         <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                     </span>\
+                    <div class="alert_sel_wth"></div>\
                   </div>';
         $(".sel_within").append(row);
-        i+=1;
+        wth_i+=1;
     });
     
     $(".sel_within").on("click", ".rm_btn" , function(){
         var numWthRows = $(".sel_within").children().length;
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
+            $(".sel_within").find(".alert_sel_wth").html("");
         }else{
             var wBlock =$(this).closest(".dist_sel");
             if (wBlock.is(':last-child')){
@@ -489,9 +562,20 @@ $(document).ready(function(){
     function obtainDistSel(){
         var dist_of=[];
         $(".sel_within").find(".dist_sel").each(function(){ 
-            var inp=$(this).find("input").val();
+            var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
                 var comp=$(this).find("select").val();
+                if (comp=="user_sel"){
+                    pre_sel=$(this).find(".user_sel_input").val();
+                    var rownum = $(this).attr("id");
+                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth");
+                    if (def_sel ==""){
+                        comp="none";
+                        $(this).find(".user_sel_input").val("");
+                    } else {
+                        comp=def_sel;
+                    }
+                }
                 dist_of[dist_of.length]=inp+"-"+comp;
             }
 
@@ -501,8 +585,8 @@ $(document).ready(function(){
 
 
     $(".sel_within").on("blur", ".dist_sel" ,function(){
-        var inp=$(this).find("input").val().replace(/\s+/g, '');
-        $(this).find("input").val(inp);
+        var inp=$(this).find(".inputdist").val().replace(/\s+/g, '');
+        $(this).find(".inputdist").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
             $(this).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
             $(this).find(".always").attr("style","");
@@ -516,31 +600,28 @@ $(document).ready(function(){
         }
     });    
 
-
-
-function isEmptyDict(mydict){
-    empty=true
-    for (key in mydict){
-        if (mydict[key].length >= 1){
-            empty=false
-            break
+    $(".sel_within").on('change', ".wthComp" ,function(){//[!]it would be better if the green tick was removed when the select input was empty!!
+        if ($(this).val()=="user_sel"){
+            var sw_input='<input class="form-control input-sm user_sel_input" type="text" style="width:95px;padding-left:7px">';
+            $(this).siblings(".user_sel_input_p").html(sw_input);
+        } else {
+            $(this).siblings(".user_sel_input_p").html("");
         }
-    }
-  return empty;
-}
+    });
 
-///   Freq on Interaction  ///
+
+//-------- Freq of Interaction --------
     function gnumFromPosChain(pos, chain){
-        result="-"
+        result="-";
         for (gpcr in all_gpcr_dicts){ //[1]["combined_num"]
-            var search_dict=all_gpcr_dicts[gpcr]["combined_num"]
+            var search_dict=all_gpcr_dicts[gpcr]["combined_num"];
             for (gnum in search_dict){
                 if (search_dict[gnum][0] == pos && search_dict[gnum][1] ==chain){
-                    result = gnum
+                    result = gnum;
                 }
             }
         }
-        return result
+        return result;
     }
 
     var i_id=1;
@@ -564,15 +645,15 @@ function isEmptyDict(mydict){
             }
             var traj_path = $(".trajForInt:selected").attr("name");
             if (traj_path){
-                var intof=$(".ligInt:selected").val()
+                var intof=$(".ligInt:selected").val();
                 if (intof=="allLig"){
-                    var all_lig_sel=[]
+                    var all_lig_sel=[];
                     $(".unitInt").each(function(){
                         var lig_s=$(this).val();
                         all_lig_sel[all_lig_sel.length]=lig_s;        
                     });
                 } else {
-                    all_lig_sel=[intof]
+                    all_lig_sel=[intof];
                 }
                 var dist_scheme= $(".dist_scheme_opt:selected").val();
                 var dist_scheme_name;
@@ -583,11 +664,12 @@ function isEmptyDict(mydict){
                 }
                 $("#int_alert , #int_thr_error , #int_traj_error").html("");
                 ///AJAX!!!
-                $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>")
+                $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                 if (i_id==1){
                     $("#gotoInt").addClass("disabled");
                 }
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                var t0= performance.now();
                 $.ajax({
                     type: "POST",
                     url: "/view/"+dyn_id+"/", 
@@ -628,7 +710,7 @@ function isEmptyDict(mydict){
                                     var num_res_int=res_int.length;
                                     table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                     var res_int_1st=res_int[0];
-                                    var res_int_1st_ok=[res_int_1st[2]+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"]
+                                    var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
                                     for (info in res_int_1st_ok){
                                         table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                     }
@@ -636,7 +718,7 @@ function isEmptyDict(mydict){
                                     var res_int_rest=res_int.slice(1,res_int.length);
                                     for (res_infoN in res_int_rest){
                                         var res_info=res_int_rest[res_infoN];
-                                        var res_info_ok=[res_info[2]+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"]
+                                        var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
                                         table_html+='<tr>';
                                         for (infoN in res_info_ok){
                                             var info=res_info_ok[infoN];
@@ -649,6 +731,9 @@ function isEmptyDict(mydict){
                                 var trajFile = patt.exec(traj_path);
                                 table_html+="</tbody></table>\
                                  <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
+                                    <div class='checkbox' style='font-size:12px;'>\
+		                                <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
+                                    </div>\
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
@@ -663,7 +748,7 @@ function isEmptyDict(mydict){
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
-                                </div>"
+                                </div>";
                                 $("#int_info").append(noInt_msg);
                             }
                             i_id+=1;
@@ -672,6 +757,8 @@ function isEmptyDict(mydict){
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ int_error;
                             $("#int_alert").html(add_error);    
                         }
+                        var t1= performance.now();
+                        //console.log("INT : "+((t1 - t0)/1000));
                     },
                     error: function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
@@ -691,8 +778,8 @@ function isEmptyDict(mydict){
                 $("#int_alert").html(add_error_d);
             }
         } else {
-            $("#int_thr_error").text("Threshold must be an integer.")
-            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            $("#int_thr_error").text("Threshold must be an integer.");
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
             $("#int_alert").html(add_error);   
         }
     });
@@ -702,8 +789,33 @@ function isEmptyDict(mydict){
         $('#'+IntToRv).remove();
     });
     
+    function displayIntResids(){
+        var int_res_li=[];
+        $(".int_tbl").each(function(){
+            if ($(this).find(".display_int").is(":checked")){
+                $(this).find("tbody > tr").each(function(){
+                    var td_list= $(this).children();
+                    if(td_list.length > 4){
+                        var pos = $(this).find("td:nth-child(2)").html();
+                        var chain =$(this).find("td:nth-child(3)").html();
+                        var freq =$(this).find("td:nth-child(5)").html();
+                    } else{
+                        var pos =$(this).find("td:first-child").html();
+                        var chain =$(this).find("td:nth-child(2)").html();
+                        var freq =$(this).find("td:nth-child(4)").html();
+                    }
+                    var pos_aa = /\d*$/.exec(pos)[0];
+                    int_res_li.push([pos_aa, chain,freq])
+                });
+            }  
+        })
+        int_res_li=uniq(int_res_li);
+        return (int_res_li);
+    }
     
-///   Dist between residues  ///
+    
+    
+//-------- Dist between residues --------
 
     var i_dist=1;
     $(".dist_btw").on("click",".add_btn2",function(){ 
@@ -756,7 +868,7 @@ function isEmptyDict(mydict){
     
     
     function obtainDistInputed(clickedDist_pre){
-        var dPairsInp = []
+        var dPairsInp = [];
         $(".dist_btw").find(".dist_pair").each(function(){ 
             var d_from=$(this).find(".dist_from").val();
             var d_to=$(this).find(".dist_to").val();
@@ -770,7 +882,7 @@ function isEmptyDict(mydict){
                 clickedDist.push(addpos);
             }
         }
-        return(clickedDist)
+        return(clickedDist);
     }
     
     var clickedDistToAnalysis =function(clickedDist_pre){
@@ -778,7 +890,7 @@ function isEmptyDict(mydict){
             clickedDist=obtainDistInputed(clickedDist_pre);        
             var last_from_sel=$(".dist_btw").find(".dist_from:last");
             var last_from=last_from_sel.val();
-            var last_to_sel=$(".dist_btw").find(".dist_to:last")
+            var last_to_sel=$(".dist_btw").find(".dist_to:last");
             var last_to=last_to_sel.val();
             if ( last_from=="" && last_to==""){                
                 var fstRow0 =clickedDist[0][0];
@@ -849,7 +961,7 @@ function isEmptyDict(mydict){
         if (distToComp){
             return (distToComp.slice(0, -1));
         } else {
-            return ""
+            return "";
         }
     }
 
@@ -858,10 +970,10 @@ function isEmptyDict(mydict){
             var traj_id = $(".trajForDist:selected").val();
             if (traj_id){
                 $("#traj_id_"+traj_id)[0].checked=true;
-                return (traj_id)
+                return (traj_id);
             }
         }
-        return (false)
+        return (false);
     }
 
     function obtainTrajUsedInDistComputatiion(res_ids){
@@ -870,10 +982,10 @@ function isEmptyDict(mydict){
             var traj_path = $(".trajForDist:selected").attr("name");
             if (traj_id){
                 $("#traj_id_"+traj_id)[0].checked=true;
-                return (traj_path)
+                return (traj_path);
             }
         }
-        return (false)
+        return (false);
     }
 
     //var distResultDict={};
@@ -885,11 +997,12 @@ function isEmptyDict(mydict){
         if ($(this).attr("class").indexOf("withTrajs") > -1){
             var traj_p=obtainTrajUsedInDistComputatiion(res_ids);
             if (traj_p){                
-                $("#dist_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>")
+                $("#dist_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
                 }
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                var t0= performance.now();
                 $.ajax({
                     type: "POST",
                     url: "/view/"+dyn_id+"/",  //Change 1 for actual number
@@ -936,7 +1049,7 @@ function isEmptyDict(mydict){
                                                             <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
                                                         </div>\
                                                     </div>\
-                                                </div>"//color:#239023
+                                                </div>";//color:#239023
                                 }else{
                                     plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div id="+newgraph_sel+"></div>\
@@ -955,7 +1068,7 @@ function isEmptyDict(mydict){
                                                             <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
                                                         </div>\
                                                     </div>\
-                                                </div>"                            
+                                                </div>";                            
                                 } 
                                 $("#dist_chart").append(plot_html);
                                 var chart_div = document.getElementById(newgraph_sel);
@@ -968,8 +1081,8 @@ function isEmptyDict(mydict){
                               });*/
                                 
                                 google.visualization.events.addListener(chart, 'ready', function () {
-                                    var img_source =  chart.getImageURI() 
-                                    $(".save_img_dist_plot").attr("href",img_source)
+                                    var img_source =  chart.getImageURI(); 
+                                    $(".save_img_dist_plot").attr("href",img_source);
                                 });
                                 
                                 chart.draw(data, options);
@@ -985,6 +1098,8 @@ function isEmptyDict(mydict){
                         if ($.active<=1){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
+                        var t1=performance.now();
+                        //console.log("DIST: "+((t1 - t0)/1000));
                     },
                     error: function() {
                         if (d_id==1){
@@ -994,14 +1109,13 @@ function isEmptyDict(mydict){
                         if ($.active<=1){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                         }
-                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                         $("#dist_alert").html(add_error);                
                     }
                 });
-///////////////////////////////////////
                 $("#dist_alert").html("");
             } else {
-                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
                 $("#dist_alert").html(add_error_d);
             }
         } else {
@@ -1046,17 +1160,18 @@ function isEmptyDict(mydict){
     
     function showDist(){
         if ($(".view_dist").is(":checked")){
-            return ("y")
+            return ("y");
         } else {
-            return ("n")
+            return ("n");
         }
     };
-///////////////////////////
+    
+//-------- Select protein segment to highligh/select from the sequence --------
     function selectFromSeq(){
         var click_n=1;
         var seq_pos_1;
         var seq_pos_fin;
-        var pos_li=[]
+        var pos_li=[];
         $(".seq_sel").click(function(){    
             if (click_n==1){
                 var range=$(this).attr("class"); 
@@ -1069,10 +1184,10 @@ function isEmptyDict(mydict){
                     i=Number(selRange[0]);
                     end=Number(selRange[1]);
                     while (i <= end) {
-                        var mid_id="#" + String(i)
+                        var mid_id="#" + String(i);
                         $(mid_id).css("background-color","#f2f2f2");
                         $(mid_id).attr("class", "seq_sel");
-                        i++
+                        i++;
                     }
                 }
             } else  {
@@ -1081,7 +1196,7 @@ function isEmptyDict(mydict){
                 seq_pos_fin = Number($(this).attr("id"));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_fin){
-                    var mid_id="#" + String(i)
+                    var mid_id="#" + String(i);
                     $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
                     $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
@@ -1096,9 +1211,9 @@ function isEmptyDict(mydict){
                 var seq_pos_2 = Number($(this).attr("id"));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i)
+                    var mid_id="#" + String(i);
                     $(mid_id).children().css("background-color","#337ab7");
-                    i++
+                    i++;
                 }
             }
         }, function(){
@@ -1106,9 +1221,9 @@ function isEmptyDict(mydict){
                 var seq_pos_2 = Number($(this).attr("id"));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i)
+                    var mid_id="#" + String(i);
                     $(mid_id).children().css("background-color","");
-                    i++
+                    i++;
                 }
             }
         });
@@ -1118,7 +1233,7 @@ function isEmptyDict(mydict){
     function fromIdsToPositions(id_l, id_r){
         var pos_l=$(id_l).children("#ss_pos").text();
         var pos_r=$(id_r).children("#ss_pos").text();
-        return [pos_l, pos_r]
+        return [pos_l, pos_r];
     }
 
     function fromIdsToPositionsInChain(id_l, id_r){
@@ -1132,7 +1247,7 @@ function isEmptyDict(mydict){
             start=all_chains.indexOf(chain_l);
             end=all_chains.indexOf(chain_r);
             var middle_str="";
-            considered_chains=all_chains.slice(start+1,end)
+            considered_chains=all_chains.slice(start+1,end);
             for (chain in considered_chains){
                 middle_str += " or :"+ considered_chains[chain];
             }
@@ -1143,7 +1258,7 @@ function isEmptyDict(mydict){
 
 
     function joinContiguousRanges(sel_ranges){
-        var sel_ranges_def=[]
+        var sel_ranges_def=[];
         var o_max;
         var o_min;
         sel_ranges=uniq(sel_ranges);
@@ -1182,14 +1297,12 @@ function isEmptyDict(mydict){
                }
             }
         }
-        return sel_ranges_def
+        return sel_ranges_def;
     }
 
 
-
-
     function obtainSelectedAtSeq(){
-        var sel_ranges=[]
+        var sel_ranges=[];
         $(".seq_sel.sel").each(function(){
             var class_str=$(this).attr("class");
             var id_range= class_str.match(/(\d)+/g);
@@ -1204,20 +1317,20 @@ function isEmptyDict(mydict){
         sel_ranges=obtainSelectedAtSeq();
         if (sel_ranges.length > 0){
             sel_ranges_ok=joinContiguousRanges(sel_ranges);
-            var pos_str=""
+            var pos_str="";
             p=0;
             while (p < (sel_ranges_ok.length -1)) {
-                pos_str += sel_ranges_ok[p] + " or "
-                p ++
+                pos_str += sel_ranges_ok[p] + " or ";
+                p ++;
             }
-            pos_str += sel_ranges_ok[sel_ranges_ok.length-1]
+            pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
             var act_val=$(".sel_input").val();
-            var or=""
+            var or="";
             if (act_val){
-                or = " or "
+                or = " or ";
             }
             var fin_val = act_val + or + "protein and ("+ pos_str +")";
-            $(".sel_input").val(fin_val)
+            $(".sel_input").val(fin_val);
         }
     });    
 
@@ -1230,17 +1343,8 @@ function isEmptyDict(mydict){
         }
     });
 
-    function removeSpacesInInput(my_selector){
-        $(my_selector).blur(function(){
-            my_input=$(this).val().replace(/\s+/g, '');
-            $(this).val(my_input);
-         });
-    }
+//-------- RMSD computation --------
 
-    removeSpacesInInput("#rmsd_frame_1");
-    removeSpacesInInput("#rmsd_frame_2");
-    removeSpacesInInput("#rmsd_ref_frame");
-    removeSpacesInInput("#int_thr");
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
@@ -1248,17 +1352,17 @@ function isEmptyDict(mydict){
     }
 
     function SelectionName(traj_sel){
-        var set_sel
+        var set_sel;
         if (traj_sel == "bck"){
-            set_sel="backbone"
+            set_sel="backbone";
         } else if (traj_sel == "noh"){
-            set_sel="noh"
+            set_sel="noh";
         } else if (traj_sel == "min"){
-            set_sel="minimal"
+            set_sel="minimal";
         } else if (traj_sel == "all_atoms"){
-            set_sel="all atoms"
+            set_sel="all atoms";
         }
-        return (set_sel)
+        return (set_sel);
     }
     var r_id=1;
     $("#gotoRMSDPg").click(function(){
@@ -1306,15 +1410,16 @@ function isEmptyDict(mydict){
             rmsdSel=$("#rmsd_my_sel_sel").val(); //Curate this so that mdtraj understands it            
         }
         if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
-            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
             $("#rmsd_alert").html(add_error);
         } else {//class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;"
-            $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>")        
+            $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
             $("#rmsd_alert").html("");
             if (r_id==1){
                 $("#gotoRMSDPg").addClass("disabled");
             }
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
+            var t0=performance.now();
             $.ajax({
                 type: "POST",
                 url: "/view/"+dyn_id+"/",  
@@ -1341,7 +1446,7 @@ function isEmptyDict(mydict){
                             var patt = /[^/]*$/g;
                             var trajFile = patt.exec(rmsdTraj);
                             var refTrajFile = patt.exec(rmsdRefTraj);
-                            var rmsdSelOk=SelectionName(rmsdSel)
+                            var rmsdSelOk=SelectionName(rmsdSel);
                             var data = google.visualization.arrayToDataTable(rmsd_array,false);
                             var options = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
                                 "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
@@ -1366,7 +1471,7 @@ function isEmptyDict(mydict){
                                                         <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
                                                     </div>\
                                                 </div>\
-                                            </div>"//color:#239023
+                                            </div>";//color:#239023
                             }else{
                                 RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                 <div id="+newRMSDgraph_sel+"></div>\
@@ -1385,15 +1490,15 @@ function isEmptyDict(mydict){
                                                         <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
                                                     </div>\
                                                 </div>\
-                                            </div>"                            
+                                            </div>"  ;                          
                             } 
                             $("#rmsd_chart").append(RMSDplot_html);
                             var rmsd_chart_div = document.getElementById(newRMSDgraph_sel);
                             var chart = new google.visualization.LineChart(rmsd_chart_div);
                             
                             google.visualization.events.addListener(chart, 'ready', function () {
-                                var rmsd_img_source =  chart.getImageURI() 
-                                $(".save_img_rmsd_plot").attr("href",rmsd_img_source)
+                                var rmsd_img_source =  chart.getImageURI(); 
+                                $(".save_img_rmsd_plot").attr("href",rmsd_img_source);
                             });
                             
                             chart.draw(data, options);
@@ -1424,13 +1529,15 @@ function isEmptyDict(mydict){
                     if ($.active<=1){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
                     }
+                var t1= performance.now();
+                //console.log("RMSD : "+((t1 - t0)/1000));
                 },
                 error: function() {
                     if (r_id==1){
                         $("#gotoRMSDPg").removeClass("disabled");
                     }
                     $("#wait_rmsd").remove();
-                    add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.'
+                    add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                     $("#rmsd_alert").html(add_error);  
                     if ($.active<=1){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
@@ -1446,39 +1553,8 @@ function isEmptyDict(mydict){
         $('#'+plotToRv).remove();
     });
 
-    function obtainCheckedTrajs(){
-        var traj = [];
-        $(".traj_element:checked").each(function(){
-            traj[traj.length]=$(this).attr("value");
-        }); 
-        return traj;
-    }
-///
-    var struc = $(".str_file").data("struc_file");
-    var dyn_id=$(".str_file").data("dyn_id");
-    var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
-    var seeReceptor = "y";
-    var sel = "";
-    var sel_enc = sel;
 
-    
-    var traj=obtainCheckedTrajs()
-    $("#receptor").addClass("active");
-    $(".nonGPCR").addClass("active");
-    //var chains_str = $("#chains").text();//!
-    var chains_str =$("#receptor").attr("title"); //!
-    var all_chains = $(".str_file").data("all_chains").split(",");
-
-    var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
-    var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
-    if (gpcr_pdb_dict !="no"){
-        gpcr_id_name=$("#cons_pos_box_all").data("gpcr_id_name");
-        //gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
-        dicts_results=obtainDicts(gpcr_pdb_dict);
-        all_gpcr_dicts=dicts_results[0];
-        num_gpcrs =dicts_results[1];
-    }
-
+//-------- Buttons --------
 
     click_unclick(".high_pdA");
     click_unclick(".high_pdB");
@@ -1495,6 +1571,25 @@ function isEmptyDict(mydict){
     });
 
     
+    
+//-------- Pass data to MDsrv --------
+
+    function obtainURLinfo(gpcr_pdb_dict){
+        var int_res_li=displayIntResids();
+        cp = obtainCompounds();
+        nonGPCR=obtainNonGPCRchains(".nonGPCR:not(.active)");
+        var pre_sel = $(".sel_input").val();
+        sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
+        if (gpcr_pdb_dict=="no"){
+            high_pre = [];
+        } else {
+            high_pre = obtainPredefPositions();
+        }
+        rad_option=$(".sel_high:checked").attr("value");
+        var traj=obtainCheckedTrajs();
+        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li]; 
+    }
+    
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         window.results=results;
@@ -1504,7 +1599,7 @@ function isEmptyDict(mydict){
         var legend_el=[];
         for (key in high_pre){
             if (high_pre[key].length > 0){
-                pd = "y"
+                pd = "y";
                 legend_el[legend_el.length]=key;
             }
         }
@@ -1534,12 +1629,19 @@ function isEmptyDict(mydict){
          var rad_option =results[3];
          var traj =results[4];
          var nonGPCR =results[5];
+         var int_res_lil =results[6];
+         var int_res_li=[];
+         for (e in int_res_lil){
+             var res_s = int_res_lil[e].join("-");
+             int_res_li[int_res_li.length]=res_s.slice(0, -1);
+         }
+         var int_res_s = int_res_li.join();
          var view_dist= showDist();
          var pd = "n";
          for (key in high_pre){
              if (high_pre[key].length > 0){
-                 pd = "y"
-                 break
+                 pd = "y";
+                 break;
              }
         }
         var onlyChains="";
@@ -1547,8 +1649,7 @@ function isEmptyDict(mydict){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
         var dist_of=obtainDistSel(); // For the dist selection
-        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains;
-
+        var url_mdsrv = mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&traj=" + encode(traj) + "&sel=" + encode(sel_enc) + "&rc=" + seeReceptor  + "&cp=" + encode(cp) + "&sh=" + rad_option + "&pd=" + pd + "&la=" + encode(high_pre["A"])+ "&lb=" + encode(high_pre["B"])+ "&lc=" + encode(high_pre["C"])+ "&lf=" + encode(high_pre["F"]) + "&wth="+encode(dist_of) + "&sd="+view_dist + "&di="+encode(distToComp)+ "&ng="+ nonGPCR + "&och="+ onlyChains + "&in="+encode(int_res_s);
         $(this).attr("href", url_mdsrv);
     });    
 

@@ -60,7 +60,7 @@
      <!-- link to docs -->
      <div class="col-md-12 panel panel-primary">
          <div class="panel-body">
-             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             <p>For more information, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
              </p>
          </div>
      </div>
@@ -98,7 +98,13 @@
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                       <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
-                      <button class="btn btn-default pull-right" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                      <div class="pull-right">
+                          <div class="btn-group">
+                            <button type="button" id="bckg_dark" class="btn btn-default active bckg_theme" style="padding-left:5px;padding-right:5px">Dark</button>
+                            <button type="button" id="bckg_light" class="btn btn-default bckg_theme" style="padding-left:5px;padding-right:5px">Light</button>
+                          </div>                      
+                          <button class="btn btn-default" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                      </div>
                    </div>
      	        </div>
              </div>
@@ -111,7 +117,7 @@
                 {% for long_n, short_n in compounds %}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
                 {% endfor %}
-                {% if compounds|length > 0%}
+                {% if compounds|length > 1%}
                 <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
                 <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
                 {% endif %}
@@ -166,11 +172,11 @@
                <div class="row">
                
                 <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
-                  <div class="dist_sel" id="row0">
+                  <div class="dist_sel" id="row0" style="margin-bottom:5px">
                     <span class="tick" ></span>
                     <span class="always" style="margin-left:14px">
                      Show residues within 
-                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px;">
                       &#8491; of
                         <select class="wthComp" name="comp">
                            {% for long_n, short_n in compounds %}
@@ -179,10 +185,13 @@
                            {% if other_prots%}
                            <option   value="{{other_prots.0}}">Other proteins</option>
                            {% endif %}
+                           <option   value="user_sel">Selection</option>
                         </select>
+                        <span class="user_sel_input_p"></span>
                         <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>
                         <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-
+                    </span>
+                    <div class="alert_sel_wth"></div>
                   </div>
                   <!--<span id="show_within"></span>-->
                 </div>
@@ -192,22 +201,7 @@
 
             </div>
             </div>
-<!-- ============= Trajectories =========== --> 
-          {% if traj_list %}
-           <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
-              <div class="row">
-                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
-              </div>
-              <div id="emb_trajectories" class="collapse" >
-                  <div class="checkbox" >
-			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj_list.0.2}}" value="{{traj_list.0.0}}" checked>{{traj_list.0.1}}</label></span>
-			{% for traj in traj_list|slice:"1:" %}
-			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
-			{% endfor %}
-		  </div>
-              </div>
-          </div>
-          {% endif %}
+
 <!-- ============= Predefined views of cons pos =========== -->
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
@@ -399,6 +393,22 @@
             </div>
             {% endif %}
 
+<!-- ============= Trajectories =========== --> 
+          {% if traj_list %}
+           <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
+              <div class="row">
+                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+              </div>
+              <div id="emb_trajectories" class="collapse" >
+                  <div class="checkbox" >
+			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj_list.0.2}}" value="{{traj_list.0.0}}" checked>{{traj_list.0.1}}</label></span>
+			{% for traj in traj_list|slice:"1:" %}
+			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
+			{% endfor %}
+		  </div>
+              </div>
+          </div>
+          {% endif %}
 <!-- ============= Analysis =========== --> 
            {% if traj_list %}          
            <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
@@ -454,7 +464,7 @@
                 <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" ></div>
                 <div class="checkbox" style="margin-left:18px;margin-bottom:15px">
-		    <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
+		            <label><input type="checkbox" name="view_dist" class="view_dist" checked >Display distances</label>
                </div>
               <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
@@ -578,6 +588,9 @@
                     </div>
                     <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px" id="int_alert"> </div>
                     <div style="margin-top:5px;padding-right:40px;"  id="int_info" ></div>
+                    <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
+		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
+                   </div>-->
               </div>
             {% endif %}
             </div>
