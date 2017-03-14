@@ -1,0 +1,228 @@
+
+	      <div class="col-md-12 panel panel-primary" id="id_show_mol_inbulk" name="show_mol_inbulk" data-toggle="collapse"   data-target="{%for l in list %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}" style="cursor:pointer;height:50px;margin-bottom:15px;margin-top:0px;background-color:rgba(0, 250, 220, 0.7);">
+                   <div class="row"  style="padding:5px 0px 5px 0px;color:DarkBlue;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:5px">Toggle the (<b>2</b>) <b>list of bulk components in the simulation</b></div>
+              </div>
+       {% for o in qMOLNotMod %} 	{%for int0 in int_id0NotMod%}{% if forloop.counter == forloop.parentloop.counter %} 	
+ <div id="molform-{{int0}}" class="col-md-12 panel collapse in" style="margin-bottom:0px">
+  <form id="small_molecule" name="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+    <div id="molnumb" class="col-md-12 panel panel-primary" style="background-color:AliceBlue;text-align:center;color:black;height:50px" > 
+    <div class="panel-body" style="height:50px"> 
+             <h4 style="font-size:20px;color:DarkBlue"><b>Small Molecule #{%for int in int_idNotMod%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%} General Information</b></h4>
+	    </div>
+	    </div>
+  <div  class="col-md-12 panel panel-primary collapse in" id="id_form-{{int0}}-A_section">
+
+	        <div class="row"><br>
+                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4> Upload molecule </h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{{int0|add:1}}</h4></div>
+                </div><br>
+
+	 	<div class="row"  style="height:30px">
+        		 <div class="col-md-1" style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_form-{{int0}}-molsdf"><a title="Upload .mol, .sdf: Upload either a .mol or a .sdf file describing geometry of the small molecule"> Upload .mol/.sdf </a> </label></th></div>
+			<div class="col-md-6"><td><input id="id_form-{{int0}}-molsdf" name="form-{{int0}}-molsdf" style="height:30px;text-align:center;" type="file" placeholder="   "/></td></tr></div>
+      		</div>
+
+		<div class="row" style="height:30px">
+        		 <div class="col-md-1" style="height:20px"></div><div class="col-md-4"></div>
+			<div class="col-md-6"><button id="id_form-{{int0}}-upload_button" name="form-{{int0}}-upload_button" style="width:34%;height:20px;text-align:center;vertical-align:text-middle;font-size:13px" type="button" >Upload</button>
+			<a id="id_form-{{int0}}-logfile"  name="form-{{int0}}-logfile" href="" hidden target="_blank">Download log file.</a></div>
+      		</div>
+                <br>
+                  
+                <div class="row "  id="id_form-{{int0}}-imagentable" >
+                        <table align='center'>
+				<tr><th style="width:80px;text-align:center"><label for="id_form-{{int0}}-upload_mol-1"><a title="Graphical representation of the uploaded molecule if provided">Uploaded Molecule</a></label></th>
+				<tr><td style="padding:5px 5px 5px 5px"><img  src="{%for mol in urlNotMod%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" id="id_form-{{int0}}-upload_mol-1" ></td>
+				</tr>
+			</table><br>
+                </div>
+</div>
+
+
+
+  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-B_section" >
+
+	        <div class="row"><br>
+	                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px">Indicate if the uploaded structure is a co-crystalized molecule or if it belongs to bulk</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black " id="id_form-{{int0}}-mlnumb">SMOL #{{int0|add:1}}</h4></div>
+                </div><br>
+
+                                                                          
+
+	        <div class="row" >
+        	       <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_present"> <a title="Bulk (not co-crystalized): Check this field if the molecule belongs to the simulation environment, i.e. bulk solvent and lipid membrane molecules, ions and other molecules whose coordinates are randomly generated or not specified when building the system."> Bulk (not co-crystalized):</a></label></div><div class="col-md-1" style="height:30px"><input type="radio"id="id_form-{{int0}}-not-is_present"  name="form-{{int0}}-is_present" checked /> </div>
+		      		<div class="col-md-4" ><select  id="id_form-{{int0}}-bulk_type" name="form-{{int0}}-bulk_type" rows="2" style="width:180px"  >
+                                     {% for t in labtypelNotMod %} {% if t.0 > 5 %} 
+                                          {% if forloop.counter == forloop.parentloop.counter %}<option value={{t.0}} selected > {{t.1}} </option>{%endif%} 
+                                          {% if forloop.counter == forloop.parentloop.counter %}
+               					   {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
+                                                        {% if forloop.counter0 > 5 and not forloop.counter0 == t.0 %}
+                  				           <option value="{{i.0}}"   > {{i.1}}</option>
+                                                              {%endif%}
+               					 	 {% endfor %}
+                                                   {%endif%}
+
+                                     {%endif%} {%endfor%}
+
+                                        </select> </div>
+                </div>
+                <!--  <img src="/dynadb/files/Molecule/mol50/tmp_mol_0_50 _300.png?1480958682316" id="id_form-{{int0}}-upload_mol-1" name="form-{{int0}}-upload_mol-1" height="300" width="300">-->
+                 <br>                                                     
+                </div>
+                                                                          
+   <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-C_section">                        
+                                                                          
+ 	        <div class="row"><br>                                    
+                 <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> Retrieved chemoinformatics data from the uploaded structure</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{{int0|add:1}}</h4></div>
+                 </div>                                                   
+                 <br>                                                     
+ 
+ 	        <div class="row">                                        
+ 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
+                                                                          
+                		<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_form-{{int0}}-inchi" name="form-{{int0}}-inchi"   readonly rows="2">InChI={{o.inchi}}</textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"--><br></div>
+                                                                          
+ 	        <div class="row">                                        
+ 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-sinchikey"><a title="SInChIKey: Molecule Standard InChI's hash">SInChIKey:</a></label></div>
+                            <div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly type="text" {% for com in qCOMPNotMod  %}{% if forloop.counter == forloop.parentloop.counter %}  value="{{com.sinchikey}}"{%endif%} {%endfor%} /></div> </div> 
+
+	        <div class="row">
+                        <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-net_charge"><a title="Net charge: Net charge of the molecule structure.">Net charge:</a></label></div>
+			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" readonly type="number" value="{{o.net_charge}}"/></div> <!-- placeholder=" 0" -->
+		<br></div>
+	
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-inchikey"><a title="InChIKey: Molecule InChI's hash">InChIKey:</a></label></div>
+			<div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-inchikey" maxlength="27" name="form-{{int0}}-inchikey" readonly type="text" value="{{o.inchikey}}"  /></div> 
+		<br></div>
+	        
+	        <div class="row" style="height:65px">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-smiles"><a title="Open SMILES: Canonical SMILES representation of the molecule.">Open SMILES:</a></label></div>
+			<div class="col-md-6"><textarea cols="70" style="width:300px" id="id_form-{{int0}}-smiles" name="form-{{int0}}-smiles" readonly rows="2" >{{o.smiles}}</textarea> 
+		</div><br></div>
+
+		<div class=row id='PRUEBA'>
+			<div class="col-md-12"style="height:75px"><p style="font-size:11px;text-align:justify;margin-left:10%;margin-right:14%">The data above are generated by RDKit and OpenBabel. Please, check for potential errors in chemical structure in terms of protonation state, tautomery or isotopical composition (if needed). Please provide also a brief description about these properties.</p></div>
+		</div>
+
+	        <div class="row" style="height:60px">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-description"><a title="Description: Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
+			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated.">{{o.description}}</textarea></div>
+		</div>
+		</div>
+
+
+  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{int0}}-D_section" >
+	        <div class="row" style="height:70px">
+                <br>
+                <div class="col-md-1"><h4>(<b>D</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px">Obtain PubChem & ChEMBL information</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black;margin-left:0px" id="id_form-{{int0}}-mlnumb">SMOL #{{int0|add:1}}</h4></div>
+                </div>
+
+            <div class="row">
+	        <div class="row" id="id_form-{{int0}}-avail" style="height:30px"name="form-{{int0}}-avail" >
+                        <div class="col-md-1" style="height:30px"></div><div class="col-md-2" style="text-align:left"><button class="collapse in" id="id_form-{{int0}}-get_mol_info" name="form-{{int0}}-get_mol_info" title="Retrieve compound information searching by Standard InChIKey." style="width:160px;height:30px" type="button">Retrieve data</button>
+                        </div>
+			<div class="col-md-2"style="height:30px;margin-top:5px"></div><div class="col-md-1" style="height:30px;margin-top:5px;margin-left:-25px"><input data-toggle="collapse" data-target="[id|=id_form-{{int0}}][id$=-get_mol_info],[id|='id_form-{{int0}}'][id$='nodb']"  id="id_form-{{int0}}-is_not_in_databases" name="form-{{int0}}-is_not_in_databases" type="checkbox"  /></div>
+			<div class="col-md-6 center" style="margin-left:-30px;height:30px;margin-top:5px"><label style="height:30px" for="id_form-{{int0}}-is_not_in_databases"><a title="Check this field if you could not find the compound in these databases ">Unavailable in PubChem and ChEMBL.</a></label></div>
+		</div>
+
+		<div class="row collapse in" id="id_form-{{int0}}-x-nodb"><br>
+			<div class="col-md-12" style="height:20px"><p style="font-size:11px;text-align:justify;margin-left:11%;margin-right:14%"> If no result has been retrieved, please change the search setup by clicking the "Search settings" collapsable panel. </p></div>
+		</div>
+                <div class="row" id="id_form-{{int0}}-retrieve_id"  style="text-align:left">
+                </div>
+
+{% include "dynadb/SMALL_MOLECULE_search_settings.html" %} 
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-name"><a title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem.">Name:</a></label></div>
+			<div class="col-md-6"><input  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" readonly name="form-{{int0}}-name" type="text"   {% for com in qCOMPNotMod  %} {% if forloop.counter == forloop.parentloop.counter %}value= {{com.name}} {%endif%}{%endfor%}/></div> <!-- placeholder=" Clozapine"--> 	</div>
+
+	        <div class="row">
+			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-iupac_name"><a title="IUPAC name: IUPAC name downloaded from PubChem.">IUPAC name:</a></label></div>
+			<div class="col-md-6"><input id="id_form-{{int0}}-iupac_name" style="width:300px" maxlength="500" readonly name="form-{{int0}}-iupac_name" {% for com in qCOMPNotMod  %} {% if forloop.counter == forloop.parentloop.counter %}value= {{com.iupac_name}} {%endif%}{%endfor%}type="text"/></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->
+		</div>
+			
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-pubchem_cid"><a title="PubChem cid: PubChem chemical identifier">PubChem cid:</a></label></div>
+			<div class="col-md-3"><input id="id_form-{{int0}}-pubchem_cid"  name="form-{{int0}}-pubchem_cid"  style="width:142px;margin-right:0%" {% for com in qCOMPNotMod  %} {% if forloop.counter == forloop.parentloop.counter %}value= {{com.pubchem_cid}} {%endif%}{%endfor%}type="number" /></div> <!--placeholder=" 2818" -->
+	 		<div class="col-md-3"><button id="id_form-{{int0}}-update_from_pubchem" name="form-{{int0}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div>
+		</div>
+			
+
+	        <div class="row">
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-chemblid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
+			<div class="col-md-3"><input id="id_form-{{int0}}-chemblid" name="form-{{int0}}-chemblid" type="number" {% for com in qCOMPNotMod %} {% if forloop.counter == forloop.parentloop.counter %}value="{{com.chemblid}}" {%endif%}{%endfor%} style="width:142px;margin-right:0%"/></div> <!--  placeholder=" 42"-->
+			<div class="col-md-3"><button id="id_form-{{int0}}-update_from_chembl" name="form-{{int0}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div>
+		</div>
+	
+	        <div class="row">
+<div class="col-md-1" style="height:70px"></div><div class="col-md-3"><label for="id_form-{{int0}}-other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-6">
+		        <textarea cols="40" id="id_form-{{int0}}-other_names" name="form-{{int0}}-other_names" readonly rows="2" style="width:300px" >{% for llo in aliasNotMod %}{% if forloop.counter == forloop.parentloop.counter %}{{llo}} {%endif%}{%endfor%}</textarea></div> 
+                </div>
+		</div>
+
+
+
+
+<!-- ________________________________________________________-->
+
+<!-- ________________________________________________________-->
+		<div id="id_form-{{int0}}-y-nodb" class="row collapse in" style="height:90px">
+			<p style="font-size:13px;text-align:justify;margin-left:11%;margin-right:14%">Please check the retrieved Compound information is correct. In addition, to facilitate the revision you can compare the <b>upload molecule</b> to the retrieved <b>standard molecule</b> from PubChem or ChEMBL. Please be aware that the <b>standard molecule</b> corresponds to the most common form which can differ from the <b>uploaded molecule</b> in terms of tautomeric and protonation states.</p>
+                </div>
+               <div style="height:30px" id="id_form-{{int0}}-y2-nodb" class="row collapse in" class="row ">
+               </div>
+               <div style="height:290px" id="id_form-{{int0}}-z-nodb"class="row collapse in">
+                        <table align='center'>
+                                <tr><th style="width:80px;text-align:center"><label for="id_form-{{int0}}-upload_mol-2"><a title="Graphical representation of the uploaded molecule if provided">Uploaded molecule</a></label></th>
+                                        <th style="width:80px;text-align:center"><label for="id_form-{{int0}}-stdform"><a title="Graphical representation of the standard form of the molecule">Standard molecule</a></label></th>
+
+                                <tr><td style="padding:5px 5px 5px 5px"><img id="id_form-{{int0}}-upload_mol-2" src="{%for mol in urlNotMod%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" ></td>
+				<td style="padding:5px 5px 5px 5px"><img d="id_form-{{int0}}-stdform" src="{%for mol in urlstdNotMod%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" ></td>
+                                </tr>
+                        </table>
+</div>
+               <div style="height:30px" class="row ">
+               </div>
+
+
+
+
+
+
+  </div>
+
+                                <div class="col-md-12 panel panel-primary" style="text-align:center;height:160px;padding:20px 0px 40px 0px" > 
+	 			<div class="col-md-12 " style="text-align:center;height:40px">
+			     		<button type="button" value="passMoleculePOST" id="id_form-{{int0}}-passMoleculePOST"  name="form-{{int0}}-passMoleculePOST"  style="height:30px;width:160px" > Submit molecule</button>
+		        	</div> 		
+	 			<div class="col-md-5 " style="text-align:center;height:40px">
+			     		<button type="button" value="+ Add molecule" id="id_form-{{int0}}-add_molecule"  name="form-{{int0}}-add_molecule"  style="height:30px;width:160px" >  + Add molecule </button>
+		        	</div> 		
+	 			<div class="col-md-5 col-md-offset-2" style="text-align:center;height:40px">
+			     		<input type="button" value="- Remove molecule"  id="id_form-{{int0}}-del_molecule"  name="form-{{int0}}-del_molecule" style="height:30px;width:160px" />
+	         		</div> 
+	 			<div class="col-md-12" style="text-align:center">
+
+                                  <button id="id_form-{{int0}}-reset" name="form-{{int0}}-reset" title="Clears the molecule form" style="width:160px;height:30px" type="button">Clear molecule</button>
+                               </div>
+                               </div>
+                </div>
+<!--        <th><input type="submit" value="Submit"  id="id_form-{{int0}}-submit"  name="submit" /> </th><br>   -->
+</form>
+
+{%endif%}{%endfor%}{%endfor%}
+    {% include "dynadb/EXTRA_MOLECULE2.html"   %}
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
