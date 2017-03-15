@@ -66,9 +66,8 @@ class DyndbComplexExp(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
-    
     class Meta:
-        managed = True #this used to be False
+        managed = True
         db_table = 'dyndb_complex_exp'
 
 
@@ -80,14 +79,14 @@ class DyndbComplexMolecule(models.Model):
 #       (3,'Other')
 #   )
     #type = models.SmallIntegerField(choices=COMPOUND_TYPE, default=0)#modified by juanma 
-    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp')
+    id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp',null=False)
     update_timestamp = models.DateTimeField()
     creation_timestamp = models.DateTimeField()
     created_by_dbengine = models.CharField(max_length=40)
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-
+    is_published = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_complex_molecule'
@@ -142,12 +141,15 @@ class DyndbCompound(models.Model):
         db_table = 'dyndb_compound'
 
 class DyndbSubmission(models.Model):
-    user_id=models.IntegerField(blank=True, null=True)
-
+    user_id = models.ForeignKey('accounts.User',models.DO_NOTHING, db_column='user_id', blank=True, null=True)
+    is_reuse_model = models.BooleanField(default=False)
+    is_closed = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False)
+    is_ready_for_publication = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_submission'
-
+        unique_together = (('id','user_id'),)
 
 
 class DyndbSubmissionProtein(models.Model):
@@ -217,7 +219,6 @@ class DyndbDynamics(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
     submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
     is_published = models.BooleanField(default=False)
-
     class Meta:
         managed = True
         db_table = 'dyndb_dynamics'
@@ -542,7 +543,6 @@ class DyndbModel(models.Model):
     last_update_by = models.IntegerField(blank=True, null=True)
     id_structure_model = models.ForeignKey('structure.StructureModel', models.DO_NOTHING,db_column='id_structure_model',  blank=True, null=True) 
     is_published = models.BooleanField(default=False)
-    
     class Meta:
         managed = True
         db_table = 'dyndb_model'
@@ -729,71 +729,71 @@ class DyndbReferences(models.Model):
 
 
 class DyndbReferencesCompound(models.Model):
-    id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='id_compound')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='id_compound',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_compound'
         unique_together = (('id_compound', 'id_references'),)
 
 
 class DyndbReferencesDynamics(models.Model):
-    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_dynamics'
         unique_together = (('id_dynamics', 'id_references'),)
 
 
 class DyndbReferencesExpInteractionData(models.Model):
-    id_exp_interaction_data = models.ForeignKey(DyndbExpInteractionData, models.DO_NOTHING, db_column='id_exp_interaction_data')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_exp_interaction_data = models.ForeignKey(DyndbExpInteractionData, models.DO_NOTHING, db_column='id_exp_interaction_data',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_exp_interaction_data'
         unique_together = (('id_exp_interaction_data', 'id_references'),)
 
 
 class DyndbReferencesExpProteinData(models.Model):
-    id_exp_protein_data = models.ForeignKey(DyndbExpProteinData, models.DO_NOTHING, db_column='id_exp_protein_data')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_exp_protein_data = models.ForeignKey(DyndbExpProteinData, models.DO_NOTHING, db_column='id_exp_protein_data',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_exp_protein_data'
         unique_together = (('id_exp_protein_data', 'id_references'),)
 
 
 class DyndbReferencesModel(models.Model):
-    id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='id_model')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_model = models.ForeignKey(DyndbModel, models.DO_NOTHING, db_column='id_model',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_model'
         unique_together = (('id_model', 'id_references'),)
 
 
 class DyndbReferencesMolecule(models.Model):
-    id_molecule = models.ForeignKey(DyndbMolecule, models.DO_NOTHING, db_column='id_molecule')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_molecule = models.ForeignKey(DyndbMolecule, models.DO_NOTHING, db_column='id_molecule',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_molecule'
         unique_together = (('id_molecule', 'id_references'),)
 
 
 class DyndbReferencesProtein(models.Model):
-    id_protein = models.ForeignKey(DyndbProtein, models.DO_NOTHING, db_column='id_protein')
-    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references')
+    id_protein = models.ForeignKey(DyndbProtein, models.DO_NOTHING, db_column='id_protein',null=False)
+    id_references = models.ForeignKey(DyndbReferences, models.DO_NOTHING, db_column='id_references',null=False)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_references_protein'
         unique_together = (('id_protein', 'id_references'),)
 
@@ -802,7 +802,7 @@ class DyndbRelatedDynamics(models.Model):
     id_dynamics = models.ForeignKey(DyndbDynamics, models.DO_NOTHING, db_column='id_dynamics', primary_key=True)
 
     class Meta:
-        managed = False
+        managed = True
         db_table = 'dyndb_related_dynamics'
 
 

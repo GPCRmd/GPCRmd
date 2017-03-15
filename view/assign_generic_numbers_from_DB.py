@@ -44,7 +44,7 @@ def modify_helix_num(align_key,align_seq, aa, num, helix_pos, exp, exp2, rel_to_
 def obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids):
     """Creates a list where each element corresponds to an AA of the seq and the generic GPCR number of that position. Uses the numbering of the class specified at the argiments"""
     alt_scheme="gpcrdb"+ alt_class.lower()
-    alt_rgn=ResidueGenericNumber.objects.filter(residuealternativegenericnumbers__residue_id__in=rgn_ids, scheme_id__slug=alt_scheme)
+    alt_rgn=ResidueGenericNumber.objects.filter(alternative__pk__in=rgn_ids, scheme_id__slug=alt_scheme)
     alt_res_gpcr_li=res_gpcr_li.copy()
     res_gpcr_n=0
     rgn_n=0

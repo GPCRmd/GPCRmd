@@ -38,8 +38,13 @@ function searchtop() {
                     })
                  trcount=trcount+1;
                  })
+                 if (data.warningmess.length>1){
+                    $('#aligcontent').html( "<pre>"+data.warningmess+"</pre>" );
+                    $('#showerroralig').show();
+                 }
             }else{
-                alert(data.message);
+                $('#aligcontent').html( "<pre>"+data.message+"</pre>" );
+                $('#showerroralig').show();
             }
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -93,4 +98,9 @@ $.ajaxSetup({
 
 $("#pdbchecker1").click(function() {
     searchtop();
+});
+
+$('#showerroralig').hide();
+$('#hidealig').click(function(){
+    $('#showerroralig').hide();    
 });

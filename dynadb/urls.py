@@ -22,18 +22,18 @@ urlpatterns = [
     url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
     url(r'^db_inputform/(?P<submission_id>[0-9]+)?/?$', views.db_inputformMAIN, name='db_inputform'),
     url(r'^before_db_inputform_prev_moddb_inputform/(?P<submission_id>[0-9]+)?/?$', views.db_inputformMAIN, name='before_db_inputform_prev_mod'),
-    url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
-    url(r'^db_dynamics/$', views.get_Dynamics, name='db_dynamics'),
-    url(r'^db_files/$', views.get_FilesCOMPLETE, name='db_files'),
-    url(r'^db_protein/$', views.get_ProteinForm, name='db_protein'),
-    url(r'^db_molecule/$', views.get_Molecule, name='db_molecule'),
-    url(r'^db_molecule/$', views.get_Molecule, name='db_molecule'),
-    url(r'^db_component/$', views.get_Component, name='db_component'),
-    url(r'^db_model/$', views.get_Model, name='db_model'),
-    url(r'^db_compoundform/$', views.get_CompoundForm, name='db_compoundform'),
-    url(r'^your_name/$', views.get_name, name='your_name'),
-    url(r'^thanks/$', views.get_name, name='thanks'),
-    url(r'^admin/', admin.site.urls),
+#    url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
+#    url(r'^db_dynamics/$', views.get_Dynamics, name='db_dynamics'),
+#    url(r'^db_files/$', views.get_FilesCOMPLETE, name='db_files'),
+#    url(r'^db_protein/$', views.get_ProteinForm, name='db_protein'),
+#    url(r'^db_molecule/$', views.get_Molecule, name='db_molecule'),
+#    url(r'^db_molecule/$', views.get_Molecule, name='db_molecule'),
+#    url(r'^db_component/$', views.get_Component, name='db_component'),
+#    url(r'^db_model/$', views.get_Model, name='db_model'),
+#    url(r'^db_compoundform/$', views.get_CompoundForm, name='db_compoundform'),
+#    url(r'^your_name/$', views.get_name, name='your_name'),
+#    url(r'^thanks/$', views.get_name, name='thanks'),
+#    url(r'^admin/', admin.site.urls),
     url(r'^protein/(?P<submission_id>[0-9]+)/$', views.PROTEINview, name='protein'),
     url(r'^protein/(?P<submission_id>[0-9]+)/delete/$', views.delete_protein, name='delete_protein'),
     url(r'^protein/get_data_upkb/?([A-Z0-9-]+)?$', views.protein_get_data_upkb, name='protein_get_data_upkb'),
@@ -85,7 +85,7 @@ urlpatterns = [
     url(r'^modelreuse/(?P<submission_id>-?[0-9]+)/(?P<model_id>[0-9]+)/$', views.MODELreuseview, name='modelreuse'),
     url(r'^proteinreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.PROTEINreuseview, name='proteinreuse'),
 #    url(r'^moleculereuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.SMALL_MOLECULEreuseview, name='moleculereuse'),
-    url(r'^modelrow/$', views.MODELrowview, name='modelrow'),
+#    url(r'^modelrow/$', views.MODELrowview, name='modelrow'),
     url(r'^modelreuserequest/(?P<model_id>[0-9]+)/$', views.MODELreuseREQUESTview, name='modelreuserequest'),
     url(r'^MODELfilled/(?P<submission_id>[0-9]+)/$', views.MODELview, name='MODELfilled'),
     #url(r'^ajax_pdbchecker/(?P<submission_id>[0-9]+)/$', views.pdbcheck, name='pdbcheck'), 
@@ -107,7 +107,7 @@ urlpatterns = [
     url(r'^form/$', views.get_formup, name='form'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted'),
-    url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank')]
+    url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank'),]
 
 #    url(r'^some_temp/$', views.some_view, name='some_temp')
 #    url(r'^prueba_varios/$', views.profile_setting, name='PRUEBA_varios'),
@@ -120,5 +120,10 @@ if settings.DEBUG:
         url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
             'document_root': settings.STATIC_ROOT,
         }),
+    )
+else:
+    urlpatterns += patterns('',
+        url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', views.serve_submission_files, name='serve_submission_files'),
+
 )
 

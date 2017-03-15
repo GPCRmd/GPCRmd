@@ -853,80 +853,104 @@ class Migration(migrations.Migration):
             name='DyndbReferencesCompound',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_compound', models.ForeignKey('DyndbCompound', models.DO_NOTHING, db_column='id_compound')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_compound',
+                'unique_together': (('id_compound', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesDynamics',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_dynamics', models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_dynamics',
+                'unique_together': (('id_dynamics', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesExpInteractionData',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_exp_interaction_data', models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id_exp_interaction_data')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_exp_interaction_data',
+                'unique_together': (('id_exp_interaction_data', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesExpProteinData',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_exp_protein_data', models.ForeignKey('DyndbExpProteinData', models.DO_NOTHING, db_column='id_exp_protein_data')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_exp_protein_data',
+                'unique_together': (('id_exp_protein_data', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesModel',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_model', models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_model',
+                'unique_together': (('id_model', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesMolecule',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_molecule', models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_molecule',
+                'unique_together': (('id_molecule', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbReferencesProtein',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_protein', models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein')),
+                ('id_references', models.ForeignKey('DyndbReferences', models.DO_NOTHING, db_column='id_references')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_references_protein',
+                'unique_together': (('id_protein', 'id_references'),),
             },
         ),
         migrations.CreateModel(
             name='DyndbRelatedDynamicsDynamics',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id_dynamics', models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics')),
+                ('id_related_dynamics', models.ForeignKey('DyndbRelatedDynamics', models.DO_NOTHING, db_column='id_related_dynamics')),
             ],
             options={
                 'managed': False,
                 'db_table': 'dyndb_related_dynamics_dynamics',
+                'unique_together': (('id_dynamics', 'id_related_dynamics'),),
             },
         ),
         migrations.CreateModel(
