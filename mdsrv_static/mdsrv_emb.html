@@ -57,6 +57,85 @@
             return([restriction,sele, sele2])
         }
 
+        function clickDists(o){
+            var clicktrue = true;
+            var atom1 , atom2 , res2 , res2, myrepr;
+            var lbl_id=0;
+            var dist_id=0;
+            var clickedRep={};
+            var lbl_name1, lbl_name2, dist_name;
+            stage.signals.clicked.add( function( d ){
+               // hovrep.repr.clear()
+                if (clicktrue){
+                    if (d.atom){
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                        lbl_name1="label_"+lbl_id.toString();
+                        lbl_id+=1;
+                        myrepr = o.addRepresentation( "label", {
+                            sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                            color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                        atom1 = d.atom.serial.toString();
+                        /*if (! clickedRep[atom1]){
+                            clickedRep[atom1]=[];
+                        }
+                        clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;*/
+                        clicktrue = false;
+                    }
+                }else{
+                    if (d.atom){
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                        atom2 = d.atom.serial.toString();
+                        //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
+                        clicktrue = true;
+                        if (atom1 != atom2){
+                            lbl_name2="label_"+lbl_id.toString();
+                            lbl_id+=1;
+                            dist_name="dist_"+dist_id.toString();
+                            dist_id+=1;
+                            var add1=[lbl_name1, lbl_name2 , dist_name];
+                            var add2 = [lbl_name1, lbl_name2 , dist_name];
+                            if (! clickedRep[atom1]){
+                                clickedRep[atom1]=[];
+                            }
+                            if (! clickedRep[atom2]){
+                                clickedRep[atom2]=[];
+                            }
+                            for (an in add1){
+                                clickedRep[atom1][clickedRep[atom1].length]=add1[an]
+                            }
+                            for (an in add2){
+                                clickedRep[atom2][clickedRep[atom2].length]=add2[an]
+                            }
+                            o.addRepresentation( "label", {
+                                sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                                color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                            var atomPair = [[ Number(atom1), Number(atom2) ]];
+                            o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
+
+                        } else {
+                            if (atom1 in clickedRep){
+                                var toRv=clickedRep[atom1];
+                                for (rvN in toRv){
+                                    var repName=toRv[rvN];
+                                    stage.getRepresentationsByName(repName).list[0].repr.clear();
+                                }
+                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                                delete clickedRep[atom1];
+                            } else {
+                                if (! clickedRep[atom1]){
+                                    clickedRep[atom1]=[];
+                                }
+                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
+                            }
+                        }
+                    } else {
+                        clicktrue = true;
+                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                        //lbl_id -=1;
+                    }
+                }
+            } );
+        }
 
 ///////////////
             //var load = NGL.getQuery( "load" );
@@ -74,11 +153,10 @@
             var  pdF= NGL.getQuery("lf");
             var  cp= NGL.getQuery("cp");
             var  dist_within= NGL.getQuery("wth");
-            var  show_dist= NGL.getQuery("sd");
-            var  comp_dist= NGL.getQuery("di");
             var  nonGPCR= NGL.getQuery("ng");
             var  onlyChains= NGL.getQuery("och");
             var int_res_s=NGL.getQuery("in");
+            var dist_groups_s=NGL.getQuery("dc");
 
             var rc_sel = "";
             var all_cp = "";
@@ -249,101 +327,30 @@
                                     }
 
                                 }
-                                if (show_dist =="y"){
-////////////////////////////////////
-                                    if (comp_dist){ 
-                                        var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
-                                        var dist_pairs  = decodeURIComponent(comp_dist.replace(/\+/g, " "));
-                                        var dist_pair_li=dist_pairs.split("a");
+                                if (dist_groups_s){
+                                    dist_groups_s_deco=decodeURIComponent(dist_groups_s.replace(/\+/g, " "));
+                                    dist_groups_li=dist_groups_s_deco.split(",");
+                                    var cd_id=0;
+                                    var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
+                                    for (distgN in dist_groups_li){
+                                        var dist_group=dist_groups_li[distgN];
+                                        var dist_pair_li=dist_group.split("a");
                                         for (pair_n in dist_pair_li){
-                                            var d_from_to = dist_pair_li[pair_n].split("-");
-                                            var d_from = d_from_to[0];
-                                            var d_to = d_from_to[1];
-                                           // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
-                                            o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" } );
+                                            var d_from_to_str = dist_pair_li[pair_n];
+                                            if (typeof d_from_to_str == "string"){
+                                                var d_from_to = d_from_to_str.split("-");
+                                                var d_from = d_from_to[0];
+                                                var d_to = d_from_to[1];
+                                                var comp_dist_name="comp_dist_"+cd_id.toString();
+                                               // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
+                                                o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" ,name : comp_dist_name } );
+                                                //compDistsLi.push(comp_dist_name);
+                                                cd_id +=1;
+                                            }
                                         }
                                     }
-/////////////
-                                    var clicktrue = true;
-                                    var atom1 , atom2 , res2 , res2, myrepr;
-                                    var lbl_id=0;
-                                    var dist_id=0;
-                                    var clickedRep={};
-                                    var lbl_name1, lbl_name2, dist_name;
-                                    stage.signals.clicked.add( function( d ){
-                                       // hovrep.repr.clear()
-                                        if (clicktrue){
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                lbl_name1="label_"+lbl_id.toString();
-                                                lbl_id+=1;
-                                                myrepr = o.addRepresentation( "label", {
-                                                    sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                    color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
-                                                atom1 = d.atom.serial.toString();
-                                                /*if (! clickedRep[atom1]){
-                                                    clickedRep[atom1]=[];
-                                                }
-                                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;*/
-                                                clicktrue = false;
-                                            }
-                                        }else{
-                                            if (d.atom){
-                                                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                                                atom2 = d.atom.serial.toString();
-                                                //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
-                                                clicktrue = true;
-                                                if (atom1 != atom2){
-                                                    lbl_name2="label_"+lbl_id.toString();
-                                                    lbl_id+=1;
-                                                    dist_name="dist_"+dist_id.toString();
-                                                    dist_id+=1;
-                                                    var add1=[lbl_name1, lbl_name2 , dist_name];
-                                                    var add2 = [lbl_name1, lbl_name2 , dist_name];
-                                                    if (! clickedRep[atom1]){
-                                                        clickedRep[atom1]=[];
-                                                    }
-                                                    if (! clickedRep[atom2]){
-                                                        clickedRep[atom2]=[];
-                                                    }
-                                                    for (an in add1){
-                                                        clickedRep[atom1][clickedRep[atom1].length]=add1[an]
-                                                    }
-                                                    for (an in add2){
-                                                        clickedRep[atom2][clickedRep[atom2].length]=add2[an]
-                                                    }
-                                                    o.addRepresentation( "label", {
-                                                        sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                                        color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
-                                                    var atomPair = [[ Number(atom1), Number(atom2) ]];
-                                                    o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
-
-                                                } else {
-                                                    if (atom1 in clickedRep){
-                                                        var toRv=clickedRep[atom1];
-                                                        for (rvN in toRv){
-                                                            var repName=toRv[rvN];
-                                                            stage.getRepresentationsByName(repName).list[0].repr.clear();
-                                                        }
-                                                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                                        delete clickedRep[atom1];
-                                                    } else {
-                                                        if (! clickedRep[atom1]){
-                                                            clickedRep[atom1]=[];
-                                                        }
-                                                        clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
-                                                    }
-                                                }
-                                            } else {
-                                                clicktrue = true;
-                                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                                //lbl_id -=1;
-                                            }
-                                        }
-                                    } );
-/////////////////////////////////////
-                                } 
-                                if (int_res_s.length > 0){
+                                }
+                                if (int_res_s){
                                     var int_res_s_d =decodeURIComponent(int_res_s.replace(/\+/g, " "));
                                     var int_res_li = int_res_s_d.split(",");
                                     for (pos_info_n in int_res_li){
@@ -363,7 +370,8 @@
                                     }
 
                                 }
-                              o.centerView("protein");
+                                clickDists(o);
+                                o.centerView("protein");
                           } );
                     }
 

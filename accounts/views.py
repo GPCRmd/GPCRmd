@@ -2,7 +2,7 @@ from django.shortcuts import render_to_response, redirect
 from accounts.models import User
 from django.template import RequestContext
 from django.contrib.auth import login as django_login , authenticate, logout as django_logout, get_user_model
-from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm
+from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm, PasswordResetForm
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
@@ -299,6 +299,7 @@ def reset(request):
         template_name='accounts/registration/password_reset_form.html',
         email_template_name='accounts/registration/password_reset_email.html',
         post_reset_redirect='/accounts/password_reset/done',
+        password_reset_form=PasswordResetForm
         )
 
 def reset_done(request):

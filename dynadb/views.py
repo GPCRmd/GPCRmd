@@ -257,7 +257,6 @@ def show_alig(request, alignment_key):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-
 def delProtByUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
     
 
@@ -2752,7 +2751,6 @@ def query_dynamics(request,dynamics_id):
     
 @textonly_500_handler
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def protein_get_data_upkb(request, uniprotkbac=None):
     print("HELLO")
     
@@ -10470,7 +10468,6 @@ def generate_molecule_properties2(submission_id,molid):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-
 def SMALL_MOLECULEview(request, submission_id):
 
   # def handle_uploaded_file(f,p,name):
