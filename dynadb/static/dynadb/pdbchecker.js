@@ -31,12 +31,14 @@ function sendpar() {
                 
                 if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] && bigarray[i][2]==bigarray[j][2]) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] && bigarray[i][2]==bigarray[j][2]) ) {
                     alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
-                    goon=false;
+                    return false;
+                    //goon=false;
                 }
                 
                 //check if there is more than one pdb segment aligned to the same sequence segment: overlapping.
                 if (( (parseInt(bigarray[i][5],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][5],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) || (parseInt(bigarray[i][6],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][6],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) )) {
                     alert('Two different PDB segments partially or totally aligned with the same protein interval. This is not allowed');
+                    return false;
                 }    
                 
             }
