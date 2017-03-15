@@ -2754,8 +2754,11 @@ def query_dynamics(request,dynamics_id):
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def protein_get_data_upkb(request, uniprotkbac=None):
+    print("HELLO")
+    
     KEYS = set(('entry','entry name','organism','length','name','aliases','sequence','isoform','speciesid'))
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
+      print("POST\n",request.POST)
       uniprotkbac = request.POST['uniprotkbac']
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
@@ -3175,6 +3178,7 @@ def pdbcheck(request,submission_id):
             return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
 
         arrays=request.POST.getlist('bigarray[]')
+        
         counter=0
         tuple_error_dict=dict()
         full_run_dict=dict()

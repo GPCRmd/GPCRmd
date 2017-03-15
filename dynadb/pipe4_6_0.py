@@ -630,7 +630,7 @@ def searchtop(pdbfile,sequence, start,stop,chain='', segid=''):
 
 		i+=1
   
-	if '-' in bestalig[0][seq_res_from-1:seq_res_to]:
+	if '-' in bestalig[0][seq_res_from-1:seq_res_to] or '-' in bestalig[1][seq_res_from-1:seq_res_to]:
 		return 'The selected PDB sequence can not align with the uniprot sequence without gaps.\n This is the aligment between the sequence and the PDB: \n SEQ: '+ str(bestalig[0])+'\n PDB: '+ str(bestalig[1])
 
 	return (seq_res_from, seq_res_to, warningmessage)

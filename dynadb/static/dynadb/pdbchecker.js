@@ -33,8 +33,20 @@ function sendpar() {
                     alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
                     goon=false;
                 }
+                
+                //check if there is more than one pdb segment aligned to the same sequence segment: overlapping.
+                if (( (parseInt(bigarray[i][5],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][5],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) || (parseInt(bigarray[i][6],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][6],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) )) {
+                    alert('Two different PDB segments partially or totally aligned with the same protein interval. This is not allowed');
+                }    
+                
             }
         }
+        
+        
+        
+        
+        
+        
 //      if there is a number that is not zero, remove all zeros on left except the one that next to an 'x' or 'X'  
         bigarray[i][3] = bigarray[i][3].trim().replace('^(?!0+$)0+(?![xX])');
         bigarray[i][4] = bigarray[i][4].trim().replace('^(?!0+$)0+(?![xX])');
