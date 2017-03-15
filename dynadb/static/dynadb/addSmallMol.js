@@ -101,8 +101,20 @@ $(document).ready(function(){
         //Clone the current molform
         var newitem = $(item).clone();
 
-        
+        var cocrist_type=$(this).parents("[id|=molform]").find("[id|=id_form][id$='-co_type']");
+        var ret_pubchem =  $(newitem).find("[id|=id_form][id$='retrieve_type_pubchem']");
+        var neu_pubchem = $(newitem).find("[id|=id_form][id$='neutralize_pubchem']");
+        var ret_chembl =  $(newitem).find("[id|=id_form][id$='retrieve_type_chembl']");
+        var neu_chembl =  $(newitem).find("[id|=id_form][id$='neutralize_chembl']");
         $(newitem).formrenum(next_form_num);
+        console.log("VALOR bulk-type "+$(newitem).find("[id|=id_form][id$='bulk_type']").val());
+        console.log($(ret_pubchem)+"  "+$(ret_pubchem).val());
+//        if ($(newitem).parents("[id|=molform]").find("[id|=id_form][id$='bulk_type']").value ==6 || $(newitem).parents("[id|=molform]").find("[id|=id_form][id$='co_type']").value ==4) {
+        if ($(newitem).find("[id|=id_form][id$='bulk_type']").val() ==6) {
+           console.log("value 6 o 4");
+           $(ret_pubchem).val('original');
+           $(ret_chembl).val('original');
+        }
         console.log("pipolnew",next_form_num)
         //$(newitem).children(":first").resetMoleculeByButton();
         //Insert after last molform
