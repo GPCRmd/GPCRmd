@@ -20,6 +20,7 @@
     border-bottom: 15px solid transparent;
     border-top: 15px solid transparent;
     white-space: pre;
+    font-size: 16px;
 }
 
 .paginate_button {
@@ -184,7 +185,7 @@ kbd{
   <div class="col-sm-12">
     <div id="headerbrowser" style="word-break: normal" class="jumbotron">
     <h2>Simulation browser</h2>
-    <p style="font-size:14px">Use the panel in the left to search for the elements which form the simulation (GPCR's, other proteins, molecules and compounds). Click "Add to Search" button next to every result to join those elements in the right panel and find a system containing them.</p>
+    <p style="font-size:18px">Use the panel in the left to search for the elements which form the simulation (GPCR's, other proteins, molecules and compounds). Click "Add to Search" button next to every result to join those elements in the right panel and find a system containing them.</p>
     <center><button  id="helpbutton" type="button" value="Help" class="btn btn-primary btn-xs">Show Help</button></center>
 
       <div id="help" style="word-break: normal">
@@ -257,20 +258,22 @@ kbd{
  <div class="row">
   <div class="col-sm-6">
     <div class="panel panel-info" id="haystacksearch">
-      <div class="panel-heading" style="padding:1px;margin:0px">
-            <center><h5>Search for proteins, molecules or compounds.</h5> 
-            <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
+      <div id="fakeheader" style="background-color:#d9edf7; width:100%">  
+          <div class="panel-heading" style="padding:1px;margin:0px">
+                <center><h5 style="font-size:18px;">Search for proteins, molecules or compounds.</h5> 
+                <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
 
-                <input id="protein22" type="text" class="form-control" name="name" placeholder="5-HT1B receptor"></input>
-                <select id="simpletype"><option selected="selected" value="All">All</option><option title="G protein coupled receptor" value="gpcr">GPCR</option><option title="G protein, arrestin, peptide ligand, nanobody, etc." value="protein">Other proteins</option><option title="Molecule in the classical sense, altough different protonation states or different tautomers constitute a molecule on their own. CH3-COOH and CH3COO- wold be two different molecules with its own ID." value="molecule">Molecule</option><option title="Comprises a set of moleculs and it is represented by the standard form of that set. 'Acetic Acid' would join molecules CH3-COOH and CH3COO- and it would be represented by the former" value="compound">Compound</option><option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option><option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> <option title="Simulations" value="dynamics">Dynamics (only with ID search)</option></select>
-                <button id="Searcher" type="button" value="Search" class="btn btn-info btn-md"> <span class="glyphicon glyphicon-search"> </button>
-                <br><input id="idsearch" type="checkbox" value="val">Search by GPCRmd ID
-                
+                    <input id="protein22" type="text" class="form-control" name="name" placeholder="5-HT1B receptor"></input>
+                    <select id="simpletype"><option selected="selected" value="All">All</option><option title="G protein coupled receptor" value="gpcr">GPCR</option><option title="G protein, arrestin, peptide ligand, nanobody, etc." value="protein">Other proteins</option><option title="Molecule in the classical sense, altough different protonation states or different tautomers constitute a molecule on their own. CH3-COOH and CH3COO- wold be two different molecules with its own ID." value="molecule">Molecule</option><option title="Comprises a set of moleculs and it is represented by the standard form of that set. 'Acetic Acid' would join molecules CH3-COOH and CH3COO- and it would be represented by the former" value="compound">Compound</option><option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option><option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> <option title="Simulations" value="dynamics">Dynamics (only with ID search)</option></select>
+                    <button id="Searcher" type="button" value="Search" class="btn btn-info btn-md"> <span class="glyphicon glyphicon-search"> </button>
+                    <br><input id="idsearch" type="checkbox" value="val">Search by GPCRmd ID
+                    
 
-            </form> 
-            </center>
-            <br>
-      </div>
+                </form> 
+                </center>
+                <br>
+          </div>
+      </div> <!-- fakeheader-->
       
       
       
@@ -293,7 +296,7 @@ kbd{
   <div class="col-sm-6">
 
         <div class="panel panel-info" id="floatdiv">
-            <div class="panel-heading" id="lightup"> <center><h5>Search for complexes, complex structures or dynamics</h5></center>
+            <div class="panel-heading" id="lightup"> <center><h5 style="font-size:18px;">Search for complexes, complex structures or dynamics</h5></center>
                 <center><button id="gotoadvsearch" class="btn btn-info" type="button" value="Advanced Search">Go to Advanced Search</button></center>
             </div>
 
@@ -316,7 +319,7 @@ kbd{
         </table>
         <br>
         <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br><br>
-        Return: <select id="result_type"><option selected="selected" value="complex">Complex</option><option value="model">Complex Structure</option><option value="dynamics">Dynamics</option></select>
+        Return: <select id="result_type"><option selected="selected" value="dynamics">Dynamics</option><option value="model">Complex Structure</option><option value="complex">Complex</option></select>
 
 
         <div id='hiddenmodel'>

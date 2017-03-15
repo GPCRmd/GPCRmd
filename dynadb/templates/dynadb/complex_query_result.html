@@ -54,7 +54,7 @@
 <br>
 
 {% if answer.models %} 
-    <b>Complex structures in which this complex is used: </b>:<br>
+    <b>Complex structures in which this complex is used: </b><br><br>
     {% for modid in answer.models %}
        <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
         {%if modid.1%}
@@ -63,7 +63,7 @@
                 <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
             {%endfor%}
         {%endif%}
-        <br>
+        <br><hr><hr>
     {% endfor %}
      <br>
 {% endif %} 
@@ -71,8 +71,8 @@
 {% if answer.reference %}
     <b>References for this complex:</b><br>
     {% for reference in answer.reference%}
-    {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
-    <hr><hr>
+        {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+        <hr><hr>
     {%endfor%}
 {% endif %} 
 <br>

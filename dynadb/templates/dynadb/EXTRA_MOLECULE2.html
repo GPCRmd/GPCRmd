@@ -1,15 +1,16 @@
 
+{%if enabled%} {%else%}
 	      <div class="col-md-12 panel panel-primary" id="id_show_mol_inbulk" name="show_mol_inbulk" data-toggle="collapse"   data-target="{%for l in list %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}" style="cursor:pointer;height:50px;margin-bottom:15px;margin-top:0px;background-color:rgba(0, 250, 220, 0.7);">
                    <div class="row"  style="padding:5px 0px 5px 0px;color:DarkBlue;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:5px">Toggle the (<b>2</b>) <b>list of bulk components in the simulation</b></div>
-              </div>
+              </div> {%endif%}
  <div id="molform-{{last|add:1}}" class="col-md-12 panel collapse in" style="margin-bottom:0px">
   <form id="small_molecule" name="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
     <div id="molnumb" class="col-md-12 panel panel-primary" style="background-color:AliceBlue;text-align:center;color:black;height:50px" > 
     <div class="panel-body" style="height:50px">
-             <h4 style="font-size:20px;color:DarkBlue"><b>Small Molecule #{%for int in int_id%}{%if forloop.last %}{{int|add:1}}{%endif%}{%endfor%} General Information</b></h4>
+             <h4 style="font-size:20px;color:DarkBlue"><b>Small Molecule #{%if enabled%}{{last|add:2}}   {%else%}{%for int in int_id%}{%if forloop.last %}{{int|add:1}}{%endif%}{%endfor%}{%endif%} General Information</b></h4>
 	    </div>
 	    </div>
-  <div  class="col-md-12 panel panel-primary collapse in" id="id_form-{{last|add:1}}-A_section">
+  <div  class="col-md-12 panel panel-primary collapse in" id="id_form-{{last|add:1}}-A_section" name="form-{{last|add:1}}-A_section">
 
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4> Upload molecule </h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{last|add:1}}-mlnumb">SMOL #{{last|add:2}}</h4></div>
@@ -38,7 +39,7 @@
 
 
 
-  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-B_section" >
+  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-B_section" name="form-{{last|add:1}}-B_section" >
 
 	        <div class="row"><br>
 	                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px">Indicate if the uploaded structure is a co-crystalized molecule or if it belongs to bulk</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black " id="id_form-{{last|add:1}}-mlnumb">SMOL #{{last|add:2}}</h4></div>
@@ -60,7 +61,7 @@
                  <br>                                                     
                 </div>
                                                                           
-   <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-C_section">                        
+   <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-C_section" name="form-{{last|add:1}}-C_section">                        
                                                                           
  	        <div class="row"><br>                                    
                  <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> Retrieved chemoinformatics data from the uploaded structure</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{last|add:1}}-mlnumb">SMOL #{{last|add:2}}</h4></div>
@@ -103,7 +104,7 @@
 		</div>
 
 
-  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-D_section" >
+  <div  class="col-md-12 panel-primary panel collapse in" id="id_form-{{last|add:1}}-D_section" name="form-{{last|add:1}}-D_section">
 	        <div class="row" style="height:70px">
                 <br>
                 <div class="col-md-1"><h4>(<b>D</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px">Obtain PubChem & ChEMBL information</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black;margin-left:0px" id="id_form-{{last|add:1}}-mlnumb">SMOL #{{last|add:2}}</h4></div>
@@ -123,7 +124,7 @@
                 <div class="row" id="id_form-{{last|add:1}}-retrieve_id"  style="text-align:left">
                 </div>
 
-{% include "dynadb/SMALL_MOLECULE_search_settings.html" %} 
+{% include "dynadb/SMALL_MOLECULE_search_settings.html" with enabled=false %} 
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-name"><a title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem.">Name:</a></label></div>
@@ -192,7 +193,7 @@
 			     		<button type="button" value="+ Add molecule" id="id_form-{{last|add:1}}-add_molecule"  name="form-{{last|add:1}}-add_molecule"  style="height:30px;width:160px" >  + Add molecule </button>
 		        	</div> 		
 	 			<div class="col-md-5 col-md-offset-2" style="text-align:center;height:40px">
-			     		<input type="button" value="- Remove molecule"  id="id_form-{{last|add:1}}-del_molecule"  name="form-{{last|add:1}}-del_molecule" style="height:30px;width:160px" disabled/>
+			     		<input type="button" value="- Remove molecule"  id="id_form-{{last|add:1}}-del_molecule"  name="form-{{last|add:1}}-del_molecule" style="height:30px;width:160px" />
 	         		</div> 
 	 			<div class="col-md-12" style="text-align:center">
 
@@ -202,9 +203,10 @@
                 </div>
 <!--        <th><input type="submit" value="Submit"  id="id_form-{{last|add:1}}-submit"  name="submit" /> </th><br>   -->
 </form>
-
+{%if enabled%}
+{%else%}
 </div>
-
+{%endif%}
 
 
 

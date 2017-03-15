@@ -513,6 +513,7 @@ def obtain_domain_url(request):
 
 def index(request, dyn_id):
     mdsrv_url=obtain_domain_url(request)
+    delta=DyndbDynamics.objects.get(id=dyn_id).delta
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
             struc_p= request.POST.get("rmsdStr")
@@ -523,6 +524,16 @@ def index(request, dyn_id):
             traj_sel= request.POST.get("rmsdSel")
             (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel)
             if success:
+                data_frame=data_fin
+                data_store=copy.deepcopy(data_frame)
+                data_store[0].insert(1,"Time")
+                data_time=[data_store[0][1:]]
+                for row in data_store[1:]:
+                    frame=row[0]
+                    time=frame*delta
+                    row.insert(1,time)
+                    d_time=row[1:]
+                    data_time.append(d_time)  
                 p=re.compile("\w*\.\w*$")
                 struc_filename=p.search(struc_p).group(0)
                 traj_filename=p.search(traj_p).group(0)
@@ -534,9 +545,9 @@ def index(request, dyn_id):
                 else:
                     new_rmsd_id=1
                     rmsd_dict={}
-                rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_fin,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)
+                rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)
                 request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                data_rmsd = {"result":data_fin,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors}
+                data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors}
             else: 
                 data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
@@ -552,6 +563,16 @@ def index(request, dyn_id):
             dist_traj_p=request.POST.get("distTraj")
             (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p)
             if success:
+                data_frame=data_fin
+                data_store=copy.deepcopy(data_frame)
+                data_store[0].insert(1,"Time")
+                data_time=[data_store[0][1:]]
+                for row in data_store[1:]:
+                    frame=row[0]
+                    time=frame*delta
+                    row.insert(1,time)
+                    d_time=row[1:]
+                    data_time.append(d_time)                 
                 p=re.compile("\w*\.\w*$")
                 struc_filename=p.search(dist_struc_p).group(0)
                 traj_filename=p.search(dist_traj_p).group(0)
@@ -562,10 +583,10 @@ def index(request, dyn_id):
                 else:
                     new_id=1
                     dist_dict={}
-                dist_dict["dist_"+str(new_id)]=(data_fin,struc_filename,traj_filename)
+                dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename)
                 request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                      "traj_filename":traj_filename, "struc_filename":struc_filename}
-                data = {"result":data_fin,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
+                data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
             else: 
                  data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       

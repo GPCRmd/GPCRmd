@@ -1007,7 +1007,7 @@ $(document).ready(function(){
             var traj_results=obtainTrajUsedInDistComputatiion(res_ids);
             if (traj_results){        
                 var traj_p=traj_results[0];
-                var traj_id=traj_results[1];        
+                var traj_id=traj_results[1];
                 $("#dist_chart").append("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
@@ -1030,22 +1030,36 @@ $(document).ready(function(){
                         }
                         var success=data_dist_wt.success;
                         if (success){
-                            var dist_array=data_dist_wt.result;
+                            var dist_array_t=data_dist_wt.result_t;
+                            var dist_array_f=data_dist_wt.result_f;
                             var dist_id=data_dist_wt.dist_id;
-                            //distResultDict["dist_"+d_id.toString()]=dist_array;                                                    
                             function drawChart(){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_p);
-                                var data = google.visualization.arrayToDataTable(dist_array,false);
-                                var options = {'title':'Residue Distance ('+trajFile+')',
+                                var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
+                                var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
+                                var options_t = {'title':'Residue Distance ('+trajFile+')',
                                     "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'Distance (angstroms)'}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                var options_f = {'title':'Residue Distance ('+trajFile+')',
+                                    "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
                                 newgraph_sel="dist_chart_"+d_id.toString();
                                 var plot_html;
                                 if ($.active<=1){
                                     plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                    <div id="+newgraph_sel+"></div>\
-                                                    <div style='margin:5px'>\
+                                                    <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                    <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                    <div class='settings' style='margin:5px'>\
+                                                        <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                          Plot distance by\
+                                                            <span >\
+                                                                <select class='plot_dist_by_sel' name='frame_time'>\
+                                                                    <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                    <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                </select>\
+                                                            </span>\
+                                                        </div>\
                                                         <div style='display:inline-block;margin:5px;cursor:pointer;'>\
                                                             <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
@@ -1066,7 +1080,18 @@ $(document).ready(function(){
                                                 </div>";
                                 }else{
                                     plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                    <div id="+newgraph_sel+"></div>\
+                                                    <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                    <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                    <div class='settings' style='margin:5px'>\
+                                                        <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                          Plot distance by\
+                                                            <span >\
+                                                                <select  name='frame_time' class='plot_dist_by_sel'>\
+                                                                    <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                    <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                </select>\
+                                                            </span>\
+                                                        </div>\
                                                     <div class='checkbox' style='font-size:12px;'>\
 		                                                <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" >Display distance</label>\
                                                     </div>\
@@ -1091,21 +1116,20 @@ $(document).ready(function(){
                                                 </div>";                            
                                 } 
                                 $("#dist_chart").append(plot_html);
-                                var chart_div = document.getElementById(newgraph_sel);
-                                var chart = new google.visualization.LineChart(chart_div);
-                                
-                                /*//Wait for the chart to finish drawing before calling the getImageURI() method.
-                                google.visualization.events.addListener(chart, 'ready', function () {
-                                    chart_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
-                                    console.log(chart_div.innerHTML);
-                              });*/
-                                
-                                google.visualization.events.addListener(chart, 'ready', function () {
-                                    var img_source =  chart.getImageURI(); 
-                                    $(".save_img_dist_plot").attr("href",img_source);
-                                });
-                                
-                                chart.draw(data, options);
+                                var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
+                                for (chartN in chart_cont_li){
+                                    var chart_cont=chart_cont_li[chartN][0];
+                                    var data=chart_cont_li[chartN][1];
+                                    var options=chart_cont_li[chartN][2];
+                                    var chart_div = document.getElementById(chart_cont);
+                                    var chart = new google.visualization.LineChart(chart_div);                                
+                                    google.visualization.events.addListener(chart, 'ready', function () {
+                                        var img_source =  chart.getImageURI(); 
+                                        $("#"+chart_cont).attr("data-url",img_source);
+                                    });                                
+                                    chart.draw(data, options);                                    
+                                }
+                                $("#"+newgraph_sel+"f").css("display","none");  
                                 d_id+=1;
                                 
                             };
@@ -1170,6 +1194,24 @@ $(document).ready(function(){
             }
         }
     });
+
+    $("#dist_chart").on("change",".plot_dist_by_sel", function(){
+        xAxis=$(this).val();
+        var dist_frame_cont=$(this).closest(".settings").siblings(".dist_frame");
+        var dist_time_cont=$(this).closest(".settings").siblings(".dist_time");
+        if (xAxis == "time"){
+            dist_frame_cont.css("display","none");
+            dist_time_cont.css("display","inline");            
+            var img_source=dist_time_cont.data("url");
+            $(this).closest(".settings").find(".save_img_dist_plot").attr("href",img_source);
+
+        } else {            
+            dist_time_cont.css("display","none");
+            dist_frame_cont.css("display","inline");
+            var img_source=dist_frame_cont.data("url");
+            $(this).closest(".settings").find(".save_img_dist_plot").attr("href",img_source);
+        }
+    })
 
     $('body').on('click','.delete_dist_plot', function(){
         var plotToRv=$(this).parents(".dist_plot").attr("id");
@@ -1434,7 +1476,7 @@ $(document).ready(function(){
         if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
             $("#rmsd_alert").html(add_error);
-        } else {//class="col-md-12" style="margin-top:5px;padding-right:40px;clear:left;"
+        } else {
             $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
             $("#rmsd_alert").html("");
             if (r_id==1){
@@ -1452,7 +1494,7 @@ $(document).ready(function(){
                   "rmsdFrames": rmsdFrames,
                   "rmsdRefFr": rmsdRefFr,
                   "rmsdRefTraj": rmsdRefTraj,
-                  "rmsdSel": rmsdSel
+                  "rmsdSel": rmsdSel,
                 },
                 success: function(data_rmsd) {
                     $("#wait_rmsd").remove();
@@ -1462,23 +1504,39 @@ $(document).ready(function(){
                     var success=data_rmsd.success;
                     if (success){
 /////////////////////                    
-                        var rmsd_array=data_rmsd.result;
+                        var rmsd_array_t=data_rmsd.result_t;
+                        var rmsd_array_f=data_rmsd.result_f;
                         var rmsd_id=data_rmsd.rmsd_id;                               
                         function drawChart2(){
                             var patt = /[^/]*$/g;
                             var trajFile = patt.exec(rmsdTraj);
+                            var patt = /[^/]*$/g;
                             var refTrajFile = patt.exec(rmsdRefTraj);
                             var rmsdSelOk=SelectionName(rmsdSel);
-                            var data = google.visualization.arrayToDataTable(rmsd_array,false);
-                            var options = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                            var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
+                            var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
+                            var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                "height":350, "width":500, "legend":{"position":"none"}, 
+                                "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
+                            var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
                                 "height":350, "width":500, "legend":{"position":"none"}, 
                                 "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
                             newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                             var RMSDplot_html;
                             if ($.active<=1){
                                 RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                <div id="+newRMSDgraph_sel+"></div>\
-                                                <div id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
+                                                <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
+                                                <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
+                                                <div class='rmsd_settings' id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
+                                                    <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                      Plot RMSD by\
+                                                        <span >\
+                                                            <select class='plot_rmsd_by_sel' name='frame_time'>\
+                                                                <option class='plot_rmsd_by' selected value='time'>time</option>\
+                                                                <option class='plot_rmsd_by' value='frame'>frame</option>\
+                                                            </select>\
+                                                        </span>\
+                                                    </div>\
                                                     <div style='display:inline-block;margin:5px;cursor:pointer;'>\
                                                         <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                             <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
@@ -1496,8 +1554,18 @@ $(document).ready(function(){
                                             </div>";//color:#239023
                             }else{
                                 RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                <div id="+newRMSDgraph_sel+"></div>\
-                                                <div style='margin:5px'>\
+                                                <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
+                                                <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
+                                                <div id='opt_"+newRMSDgraph_sel+"' class='rmsd_settings' style='margin:5px'>\
+                                                    <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                      Plot RMSD by\
+                                                        <span >\
+                                                            <select class='plot_rmsd_by_sel' name='frame_time'>\
+                                                                <option class='plot_rmsd_by' selected value='time'>time</option>\
+                                                                <option class='plot_rmsd_by' value='frame'>frame</option>\
+                                                            </select>\
+                                                        </span>\
+                                                    </div>\
                                                     <div style='display:inline-block;margin:5px;cursor:pointer;'>\
                                                         <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                             <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
@@ -1515,15 +1583,20 @@ $(document).ready(function(){
                                             </div>"  ;                          
                             } 
                             $("#rmsd_chart").append(RMSDplot_html);
-                            var rmsd_chart_div = document.getElementById(newRMSDgraph_sel);
-                            var chart = new google.visualization.LineChart(rmsd_chart_div);
-                            
-                            google.visualization.events.addListener(chart, 'ready', function () {
-                                var rmsd_img_source =  chart.getImageURI(); 
-                                $(".save_img_rmsd_plot").attr("href",rmsd_img_source);
-                            });
-                            
-                            chart.draw(data, options);
+                            var chart_cont_li =[[newRMSDgraph_sel+"t",data_t,options_t],[newRMSDgraph_sel+"f",data_f,options_f]];
+                            for (chartN in chart_cont_li){
+                                var chart_cont=chart_cont_li[chartN][0];
+                                var data=chart_cont_li[chartN][1];
+                                var options=chart_cont_li[chartN][2];
+                                var rmsd_chart_div = document.getElementById(chart_cont);
+                                var chart = new google.visualization.LineChart(rmsd_chart_div);    
+                                google.visualization.events.addListener(chart, 'ready', function () {
+                                    var rmsd_img_source =  chart.getImageURI(); 
+                                    $("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                });
+                                chart.draw(data, options);   
+                            }
+                            $("#"+newRMSDgraph_sel+"f").css("display","none");  
                             r_id+=1;
                             
                             
@@ -1575,7 +1648,23 @@ $(document).ready(function(){
         $('#'+plotToRv).remove();
     });
 
+    $("#rmsd_chart").on("change",".plot_rmsd_by_sel", function(){
+        xAxis=$(this).val();
+        var rmsd_frame_cont=$(this).closest(".rmsd_settings").siblings(".rmsd_frame");
+        var rmsd_time_cont=$(this).closest(".rmsd_settings").siblings(".rmsd_time");
+        if (xAxis == "time"){
+            rmsd_frame_cont.css("display","none");
+            rmsd_time_cont.css("display","inline");            
+            var img_source=rmsd_time_cont.data("url");
+            $(this).closest(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",img_source);
 
+        } else {            
+            rmsd_time_cont.css("display","none");
+            rmsd_frame_cont.css("display","inline");
+            var img_source=rmsd_frame_cont.data("url");
+            $(this).closest(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",img_source);
+        }
+    })
 //-------- Buttons --------
 
     click_unclick(".high_pdA");
