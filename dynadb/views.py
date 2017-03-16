@@ -7744,6 +7744,12 @@ def DYNAMICSview(request, submission_id, model_id=None):
 
     else:
         qDYNs=DyndbDynamics.objects.filter(submission_id=submission_id)
+        qMOD=DyndbSubmissionModel.objects.filter(submission_id=submission_id).order_by('id').values('model_id')
+        qSubMOD=DyndbSubmissionModel.objects.filter(model_id=qMOD)
+        ModelReuse=False
+        if len(qSubMOD) > 1:
+            ModelReuse=True
+
         protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
         if len(qDYNs)==1:
             qDYNsids=qDYNs.values_list('id',flat=True)[0]
@@ -7798,7 +7804,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
         
  
 ##       return HttpResponse(qDS.values_list()[0])
-            return render(request,'dynadb/DYNAMICS.html', {'dd':dd, 'ddctypel':ddctypel,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDYNs,'compl':compl,'ddown':ddown,'submission_id':submission_id,'protlist':protlist, 'saved':True,'file_types':file_types })
+            return render(request,'dynadb/DYNAMICS.html', {'dd':dd, 'ddctypel':ddctypel,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDYNs,'compl':compl,'ddown':ddown,'submission_id':submission_id,'protlist':protlist, 'saved':True,'file_types':file_types, 'qMOD':qMOD, 'ModelReuse':ModelReuse })
 
         elif len(qDYNs)>1:
             response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
@@ -7847,7 +7853,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
           
           
              
-            return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,'protlist':protlist, 'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types})
+            return render(request,'dynadb/DYNAMICS.html', {'dd':dd,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth,'protlist':protlist, 'qAT':qAT, 'submission_id' : submission_id,'data':data, 'file_types':file_types, 'ModelReuse':ModelReuse, 'qMOD':qMOD })
 ##############################################################################################################
 
 
