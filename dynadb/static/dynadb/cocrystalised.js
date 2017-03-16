@@ -24,7 +24,7 @@
                  nottype.fadeIn(500);
                  nottype.prop('disabled',false);
             };
-            console.log(form_num)
+            console.log(form_num);
          });
        };
 

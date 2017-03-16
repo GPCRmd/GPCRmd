@@ -16,6 +16,7 @@ $(document).ready(function(){
         var notuniprot = protform.find("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var notuniprotall = $("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var isoformval = isoform.val();
+        console.log("after variables");
         if (isoformval == '') {
           uniprotkbac_isoform = uniprotkbacval;
         } else {
@@ -67,7 +68,8 @@ $(document).ready(function(){
         name.val('Retrieving...');
         aliases.val('Retrieving...');
         sequence.val('Retrieving...');
-        
+        console.log("before post");
+        console.log("HERE"+window.location.href);
         $.post("../get_data_upkb/",
         {
             uniprotkbac:uniprotkbac_isoform
@@ -76,6 +78,7 @@ $(document).ready(function(){
           uniprotkbac.val(data.Entry);
           isoform.val(data.Isoform);
           name.val(data.Name);
+          console.log(data);
           aliases.val(data.Aliases);
           sequence.val(data.Sequence);
           species.val(data.Organism);

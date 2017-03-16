@@ -18,12 +18,37 @@ function sendpar() {
 
     counter=1;
     for (i=0,lenout=bigarray.length;i<lenout;i++){
-        for (j=counter,len=bigarray.length;j<len;j++){
-            if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] ) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1]) ) {
-                alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
-                goon=false;
+        for (j=0,len=bigarray.length;j<len;j++){
+            if (i!=j){
+                console.log(i,j);
+                console.log('segid and chain match',bigarray[i][1]==bigarray[j][1] && bigarray[i][2]==bigarray[j][2]);
+                console.log('overlap numbers',parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10));
+                console.log('overlap numbers2',parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10));
+
+                // From 300 to 320
+                //from 301 to 304
+                //if 301 or 304 is inside 300 to 320, then there is overlap: (301>300? AND 301 < 320? ) OR (304>300 AND 304<320)
+                
+                if ( (parseInt(bigarray[i][3],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][3],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] && bigarray[i][2]==bigarray[j][2]) || (parseInt(bigarray[i][4],10)>=parseInt(bigarray[j][3],10) && parseInt(bigarray[i][4],10)<=parseInt(bigarray[j][4],10) && bigarray[i][1]==bigarray[j][1] && bigarray[i][2]==bigarray[j][2]) ) {
+                    alert('There is overlapping between the range '+bigarray[i]+' and ' +bigarray[j]);
+                    return false;
+                    //goon=false;
+                }
+                
+                //check if there is more than one pdb segment aligned to the same sequence segment: overlapping.
+                if (( (parseInt(bigarray[i][5],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][5],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) || (parseInt(bigarray[i][6],10)>=parseInt(bigarray[j][5],10) && parseInt(bigarray[i][6],10)<=parseInt(bigarray[j][6],10) && bigarray[i][0]==bigarray[j][0]) )) {
+                    alert('Two different PDB segments partially or totally aligned with the same protein interval. This is not allowed');
+                    return false;
+                }    
+                
             }
         }
+        
+        
+        
+        
+        
+        
 //      if there is a number that is not zero, remove all zeros on left except the one that next to an 'x' or 'X'  
         bigarray[i][3] = bigarray[i][3].trim().replace('^(?!0+$)0+(?![xX])');
         bigarray[i][4] = bigarray[i][4].trim().replace('^(?!0+$)0+(?![xX])');
