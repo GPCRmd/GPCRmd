@@ -5968,19 +5968,16 @@ def _generate_molecule_properties(request,submission_id):
             return JsonResponse(data,safe=False)
         else:
             data['msg'] = 'Unknown molecule file reference.'
-            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-    elif request.upload_handlers[0].exception is not None:
-        try:
-            raise request.upload_handlers[0].exception
-        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
-            data['msg'] = e.args[0]
-            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            
-            
-        
+            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
     else:
-        print("no POST")
         data['msg'] = 'No file was selected or cannot find molecule file reference.'
+        for upload_handler in request.upload_handlers:
+            if hasattr(upload_handler,'exception'):
+                if upload_handler.exception is not None:
+                    try:
+                        raise upload_handler.exception
+                    except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+                        data['msg'] = e.args[0]
         return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
         
 @textonly_500_handler
