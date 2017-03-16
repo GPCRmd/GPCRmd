@@ -11955,8 +11955,20 @@ def in_directory(file, directory):
 def mdsrv_redirect(request,path):
     if hasattr(settings, 'MDSRV_REVERSE_PROXY'):
         if settings.MDSRV_REVERSE_PROXY == 'ALL' or settings.MDSRV_REVERSE_PROXY == 'POST' and request.method in {'POST','PUT'}:
+            content_type = None
+            path_segments = path.split('/')
+            if path_segments[0] == 'dir':
+                content_type = 'application/json'
+            elif path_segments[0] == 'traj' and len(path_segments) > 2:
+                if path_segments[1] == 'frame' or path_segments[1] == 'path':
+                    content_type = 'application/octet-stream'
+                elif path_segments[1] == 'numframes':
+                    content_type = 'text/plain; charset=UTF-8'
             proxyview = ProxyView.as_view(upstream=settings.MDSRV_UPSTREAM)
-            return proxyview(request,request.path)
+            response = proxyview(request,request.path)
+            if content_type is not None:
+                response['Content-Type'] = content_type
+            return response
     response = HttpResponse()
     response['Location'] = "/mdsrv_redirect/"+path+request.META['QUERY_STRING']
     response.status_code = 200
