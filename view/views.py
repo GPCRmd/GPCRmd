@@ -329,16 +329,16 @@ def findGPCRclass(num_scheme):
     """Uses the numbering scheme name to determine the GPCR family (A, B, C or F). Also sets the values of a dict that will determine the class shown at the template."""
     if num_scheme == "gpcrdba" or num_scheme == "gpcrdb":
         current_class ="A"
-        active_class["A"]=["active","in active"]
+        active_class["A"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbb":
         current_class ="B"
-        active_class["B"]=["active","in active"]
+        active_class["B"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbc":
         current_class ="C"
-        active_class["C"]=["active","in active"]
+        active_class["C"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbf":
         current_class ="F"
-        active_class["F"]=["active","in active"]
+        active_class["F"]=["active gpcrbold","in active"]
     return current_class
 
 def generate_motifs_all_info(all_gpcrs_info):
@@ -1021,3 +1021,6 @@ def download_rmsd(request, rmsd_id):
         writer = csv.writer(response)
         writer.writerow([" "])
     return response
+    
+def viewer_docs(request):
+    return render(request, 'view/viewer_docs.html', {} )

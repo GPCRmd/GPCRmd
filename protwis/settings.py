@@ -65,8 +65,7 @@ INSTALLED_APPS = [
 if DEBUG_TOOLBAR:
     INSTALLED_APPS.append('debug_toolbar')
 
-DEBUG_TOOLBAR_MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware',
-    'protwis.custom_middlewares.NonHtmlDebugToolbarMiddleware']
+DEBUG_TOOLBAR_MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware']
     
 if not DEBUG_TOOLBAR:
     DEBUG_TOOLBAR_MIDDLEWARE = []

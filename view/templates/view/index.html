@@ -13,7 +13,9 @@
 .nav-tabs > li.active > a{
     background-color:#F3F3F3 !important; 
 }
-
+.gpcrbold{
+    font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -44,11 +46,12 @@
 
 	     <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
         {% if gpcr_pdb != "no" %}
-            <p style="text-align: justify;">Protein residues must be indicated as residue positions or  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
+            <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
-        <p style="text-align: justify;">If you wish a more complete visualization or to add a trajectory, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
+        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
              <p style="text-align: justify;margin-bottom:4px">Mouse controls:</p>
 		<span><p class="falselist">Left button hold and move: rotate camera around center.</p>
+		<p class="falselist">Left button click: pick atom or distance.</p>
 		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
 		<p class="falselist">Middle button click: center camera on atom.</p>
 		<p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
@@ -60,14 +63,14 @@
      <!-- link to docs -->
      <div class="col-md-12 panel panel-primary">
          <div class="panel-body">
-             <p>For more information, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             <p>For more information, see the <a href="#">docs</a>.
              </p>
          </div>
      </div>
   </div>
  <!--   <body> -->
 
-<div id="pprotform"class="col-md-7 "> 
+<div id="pprotform"class="col-md-8 "> 
   <div id="protform" class="col-md-12 panel panel-primary"> 
     <div class="panel-body" style="padding-top:10px">
 
@@ -79,13 +82,13 @@
             
 <!-- ============= IFRAME =========== -->
             <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}">
-                <div class="row" style=max-width:540px;margin:auto>
+                <div class="row" style=max-width:590px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                 </div>  
                 <div >
-                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:540px;">
-                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="540px"></iframe>
+                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;">
+                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="590px"></iframe>
                     </div>
 
                 </div>          
@@ -135,7 +138,7 @@
                   </div>
                   <div class="col-sm-2 radio" style="margin-top:0; " >
 	                <label><input class="sel_high" type="radio" name="sel_high" id="rad_high" class="high" value="high" checked>Highlight</label>
-          	        <label><input class="sel_high" type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" >Select</label>
+          	        <label><input class="sel_high" type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" >Restrict</label>
                   </div>
               </div>
               <div id="alert"> </div>
@@ -175,7 +178,14 @@
                   <div class="dist_sel" id="row0" style="margin-bottom:5px">
                     <span class="tick" ></span>
                     <span class="always" style="margin-left:14px">
-                     Show residues within 
+                     Show 
+                        <select class="resWthComp" name="rescomp">
+                            <option  selected value="protein">residues</option>
+                           {% for long_n, short_n in compounds %}
+                                <option   value="{{short_n}}">{{long_n}}</option>
+                           {% endfor %}
+                        </select>                     
+                      within 
                     <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px;">
                       &#8491; of
                         <select class="wthComp" name="comp">
@@ -572,7 +582,7 @@
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
                           <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;">
@@ -586,7 +596,7 @@
                             <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px;margin-top:5px" >Obtain result</button>
                     </div>
                     <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px" id="int_alert"> </div>
-                    <div style="margin-top:5px;padding-right:40px;"  id="int_info" ></div>
+                    <div style="margin-top:5px;padding-right:25px;"  id="int_info" ></div>
                     <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
 		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
                    </div>-->
