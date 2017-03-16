@@ -4147,8 +4147,10 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
     fdbSub = dyndb_Submission_Molecule()
     last=int_id0[-1]
 
-    if enabled:
-        qSubNotMod=DyndbSubmissionMolecule.objects.exclude(int_id=None).exclude(not_in_model=False).filter(submission_id=submission_id,molecule_id__dyndbfilesmolecule__id_files__id_file_types=19,molecule_id__id_compound__std_id_molecule__dyndbfilesmolecule__id_files__id_file_types=19).order_by('int_id').annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'),urlstd=F('molecule_id__id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url'))
+    qSubNotMod=DyndbSubmissionMolecule.objects.exclude(int_id=None).exclude(not_in_model=False).filter(submission_id=submission_id,molecule_id__dyndbfilesmolecule__id_files__id_file_types=19,molecule_id__id_compound__std_id_molecule__dyndbfilesmolecule__id_files__id_file_types=19).order_by('int_id').annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'),urlstd=F('molecule_id__id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url'))
+    print("VALUES XXXXX",qSubNotMod.values(),"   qSubNotMod.exists ",qSubNotMod.exists())
+    print("ENABLED???? ",enabled," ")
+    if enabled and qSubNotMod.exists():
       #  qSubNotMod=DyndbSubmissionMolecule.objects.exclude(int_id=None).exclude(not_in_model=False).filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).order_by('id').values_list('submission_id',flat=True)[0],molecule_id__dyndbfilesmolecule__id_files__id_file_types=19).annotate(url=F('molecule_id__dyndbfilesmolecule__id_files__url'),urlstd=F('molecule_id__id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url')).order_by('int_id')
         labtypelNotMod=[]
         print(qSubNotMod)  ######POR AQUI!!!! ORDENAR POR INT_ID LA QUERY qMOL!!! 
@@ -4223,8 +4225,8 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
         lastNotMod=int_id0[-1]
         last=int_id0[-1]
 
-    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'urlstd':urlstd,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'last':last,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse, 'enabled':enabled, 'urlNotMod':urlNotMod,'urlstdNotMod':urlstdNotMod,'qMOLNotMod':qMOLNotMod,'labtypelNotMod':labtypelNotMod,'TypeNotMod':TypeNotMod,'impNotMod':impNotMod,'qCOMPNotMod':qCOMPNotMod,'int_idNotMod':int_idNotMod,'int_id0NotMod':int_id0NotMod,'lastNotMod':lastNotMod,'aliasNotMod':aliasNotMod,'listNotMod':listExtraMolColapseNotMod })
-
+    return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'urlstd':urlstd,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'last':last,'alias':alias,'submission_id':submission_id,'model_id':model_id,'list':listExtraMolColapse, 'enabled':enabled, 'urlNotMod':urlNotMod,'urlstdNotMod':urlstdNotMod,'qMOLNotMod':qMOLNotMod,'labtypelNotMod':labtypelNotMod,'TypeNotMod':TypeNotMod,'impNotMod':impNotMod,'qCOMPNotMod':qCOMPNotMod,'int_idNotMod':int_idNotMod,'int_id0NotMod':int_id0NotMod,'lastNotMod':lastNotMod,'aliasNotMod':aliasNotMod,'listNotMod':listExtraMolColapseNotMod, 'qSubNotModsaved':qSubNotMod.exists() })
+ 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def DYNAMICSreuseview(request, submission_id, model_id ):
