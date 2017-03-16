@@ -5872,9 +5872,9 @@ def _generate_molecule_properties(request,submission_id):
                 data['msg'] = e.args[0]
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
             except:
-                logfile.close()
                 data['msg'] = 'Cannot load molecule from uploaded file. Please, see log file.'
                 print(data['msg'],file=logfile)
+                logfile.close()
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
             finally:
                 uploadfile.close()
