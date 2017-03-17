@@ -604,7 +604,29 @@ def index(request, dyn_id):
                 serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]
                 (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme)
-                data = {"result":int_dict,"success": success, "e_msg":errors}
+                int_id = None
+                if success:
+                    if request.session.get('int_data', False):
+                        int_data=request.session['int_data']
+                        int_info=int_data["int_info"]
+                        new_int_id=int_data["new_int_id"]
+                        print("\nFrom session")
+                        print(new_int_id)
+                    else:
+                        print("\nNew")
+                        new_int_id=1
+                        int_info={}
+                    print(1)
+                    p=re.compile("\w*\.\w*$")
+                    struc_fileint=p.search(int_traj_p).group(0)
+                    traj_fileint=p.search(int_struc_p).group(0)
+                    print(2)
+                    int_id="int_"+str(new_int_id)
+                    int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)
+                    print(3)
+                    request.session['int_data']={"int_info":int_info, "new_id":new_int_id+1 }
+                    print(4)
+                data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id}
             else:
                 data = {"result":None,"success": False, "e_msg":"Session error."}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
@@ -640,18 +662,10 @@ def index(request, dyn_id):
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
-                    print("\nChain name:\n")
-                    print(chain_name)
-                    print("\n\n")
                     checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
                         tablepdb,pdb_sequence,hexflag=checkpdb_res
-                        print("\nprot_seq")
-                        print(prot_seq)
-                        print("\npdb_sequence")
-                        print(pdb_sequence)
                         result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
-                        print(result)
                         if isinstance(result, list):
                             #chain_results[chain_name]=result
                             if chain_name not in chains_taken:
