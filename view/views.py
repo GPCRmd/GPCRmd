@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
@@ -510,7 +511,7 @@ def obtain_domain_url(request):
         mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
 
-
+@ensure_csrf_cookie
 def index(request, dyn_id):
     mdsrv_url=obtain_domain_url(request)
     delta=DyndbDynamics.objects.get(id=dyn_id).delta
@@ -610,25 +611,18 @@ def index(request, dyn_id):
                         int_data=request.session['int_data']
                         int_info=int_data["int_info"]
                         new_int_id=int_data["new_int_id"]
-                        print("\nFrom session")
-                        print(new_int_id)
                     else:
-                        print("\nNew")
                         new_int_id=1
                         int_info={}
-                    print(1)
                     p=re.compile("\w*\.\w*$")
                     struc_fileint=p.search(int_traj_p).group(0)
                     traj_fileint=p.search(int_struc_p).group(0)
-                    print(2)
                     int_id="int_"+str(new_int_id)
                     int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)
-                    print(3)
-                    request.session['int_data']={"int_info":int_info, "new_id":new_int_id+1 }
-                    print(4)
+                    request.session['int_data']={"int_info":int_info, "new_int_id":new_int_id+1 }
                 data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id}
             else:
-                data = {"result":None,"success": False, "e_msg":"Session error."}
+                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None }
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -912,6 +906,47 @@ def download_dist(request, dist_id):
         writer = csv.writer(response)
         writer.writerow([" "])
     return response
+    
+def download_int(request, int_id):
+    if request.session.get('int_data', False):
+        int_data_s=request.session['int_data']
+        int_info=int_data_s["int_info"]
+        int_data_all=int_info[int_id]
+        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)=int_data_all
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["#Structure: "+struc_fileint])
+        writer.writerow(["#Trajectory: "+traj_fileint])
+        if (dist_scheme=="closest"):
+            dist_scheme_name="All atoms";
+        else:
+            dist_scheme_name="Heavy atoms only";
+
+        writer.writerow(["#Structure: "+struc_fileint])
+        writer.writerow(["#Trajectory: "+traj_fileint])
+        if (dist_scheme=="closest"):
+            dist_scheme_name="All atoms";
+        else:
+            dist_scheme_name="Heavy atoms only";
+
+        writer.writerow(["#Threshold: "+thresh+ " angstroms ("+dist_scheme+")"])
+        writer.writerow(["'Ligand'","'Position'" ,"'Residue'", "'Chain'", "'Frequency (%)'"])
+        for (lig, lig_int) in int_dict.items():
+            (pos,chain,res,freq)=lig_int[0]
+            all_first=["'"+lig+"'", pos,"'"+res+"'","'"+chain+"'",freq]
+            writer.writerow(all_first)
+            for inter in lig_int[1:]:
+                (pos,chain,res,freq)=inter
+                writer.writerow(["", pos,"'"+res+"'","'"+chain+"'",freq])
+
+    else:
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="x.csv"'
+        writer = csv.writer(response)
+        writer.writerow([" "])
+    return response
+    
     
 def proper_name(traj_sel):
     if traj_sel == "bck":
