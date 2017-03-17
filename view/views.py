@@ -186,7 +186,7 @@ def obtain_prot_chains(pdb_name):
     chain_name_s=set()
     fpdb=open(pdb_name,'r')
     for line in fpdb:
-        if useline(line):
+        if useline2(line):
             chain_name_s.add(line[21])
     return list(chain_name_s)
 
@@ -640,10 +640,18 @@ def index(request, dyn_id):
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
+                    print("\nChain name:\n")
+                    print(chain_name)
+                    print("\n\n")
                     checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
-                        tablepdb,pdb_sequence,hexflag=checkpdb_res 
+                        tablepdb,pdb_sequence,hexflag=checkpdb_res
+                        print("\nprot_seq")
+                        print(prot_seq)
+                        print("\npdb_sequence")
+                        print(pdb_sequence)
                         result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
+                        print(result)
                         if isinstance(result, list):
                             #chain_results[chain_name]=result
                             if chain_name not in chains_taken:
