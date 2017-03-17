@@ -12,6 +12,10 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
         self.max_files = max_files
         self.__acum_size = 0
         self.__acum_file_num = 0
+        self.max_post_size = max_size + 2621440
+        if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
+            if settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
+                self.max_post_size = max_size + settings.DATA_UPLOAD_MAX_MEMORY_SIZE
         super(TemporaryFileUploadHandlerMaxSize, self).__init__(request,*args, **kwargs)
     
     
@@ -22,7 +26,7 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
         """
         # Check the content-length header to see if we should
         # If the post is too large, reset connection.
-        if content_length > self.max_size:
+        if content_length > self.max_post_size:
             raise StopUpload(connection_reset=True)
         
     def new_file(self, *args, **kwargs):

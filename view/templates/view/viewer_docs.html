@@ -1,0 +1,97 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>document.domain=document.domain;</script>
+<style>
+.myheader {
+    margin-top: 20px;
+    font-weight:bold;
+    border-bottom:2px solid blue;
+    padding-bottom:5px;
+}
+
+.subsect{
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color:#4d4dff;
+
+}
+
+</style>
+</head>
+<body>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} 
+{% csrf_token %}
+ <div class="col-md-10 col-md-offset-1  panel panel-primary" style="background-color:blue;text-align:center;color:white;">
+  <div class="panel-body">
+	<h3 >GPCR viewer</h3>
+ </div> 
+ </div>
+ <div class="col-md-10 col-md-offset-1  panel panel-primary">
+    <div class="panel-body">
+        <!--<div style="text-align:center"> 
+            <h4>DOCUMENTATION</h4>
+	    </div>-->
+<div style="margin:40px;text-align:justify">
+<p>The GPCR viewer provides online visualization and analysis of the dynamics stored at GPCRmd.</p>
+<div>
+        <h4 class=myheader>General features</h4>
+        <p>After selecting the molecular representations and trajectories you want to represent, click the Apply button to view them in the screen. If you wish to use more complex visualization options, you can open the structure and trajectories in MDsrv (a web server for on-line display of trajectories that runs in combination with NGL), just by clicking at the MDsrv button.</p>
+
+        <p>Mouse controls:</p>
+        <ul>
+        <li>Left button hold and move: rotate camera around center.</li>
+        <li>Middle button hold and move: zoom camera in and out.</li>
+        <li>Middle button click: center camera on atom.</li>
+        <li>Right button hold and move: translate camera in screen plane.</li>
+        <li>Left button click: pick atom or distance: when an atom is clicked, it appears a label with information about it. Click at the background to deselect it, the label will disappear. If you doubleclick on an atom, its label will be fixed. Otherwise, you can draw a distance line between two atoms by just single-clicking one after the other.
+        Labels or distance can be removed by double clicking on the atom (or one of the atoms) corresponding to them. It is also possible to remove all of them at once, with the clear dists. button.</li>
+        </ul>
+
+        <h4 class=myheader>Selection tools</h4>
+        <p>The viewer offers a set of tools to ease the selections of the elements to be displayed.
+        Buttons for fast selection of the molecules present at the dynamics. In case you want to know the abbreviated name of these molecules, which can be used to create your own selection, just hover the buttons with your mouse.</p>
+
+        <p>Text input field to specify a personalized selection. It can be used to restrict the molecular representation to the inputted set of molecules or atoms or to highlight them. The highlighted residues appear as green licorice representation.</p>
+
+        <p>Selections must be expressed using the NGL selection language. To indicate protein residues, however, it is also possible to use generic GPCR residue numbering: Ballesteros-Weinstein (ex. 1.50), GPCRdb structure-based numbering (ex. 1x50) or a combination of both (ex. 1.50x50). There can be cases in which generic GPCR residue numbering is not allowed, which would be indicated.</p>
+
+        <p>Moreover, there is the option to select a protein segment from its sequence. To do that, click at Select from the sequence and make your selection by clicking at the desired range or ranges of residues. Selected segments will appear at the sequence in green. Finally, click at Add your selection: the residue range(s) will be added to the text input field. To deselect a residue range from the sequence, just click on it.</p>
+
+        <p>It is also possible to select the residues that are found within a certain distance of a ligand. It is only needed to input the wanted threshold distance (in angstroms). Apart from the residues that are close to a ligand, it is possible to show the residues close to a personalized selection, which, again, can include generic GPCR residue numbering. If the selection is correct, a green tick will appear at the left, and more than one distance selection can be displayed at the same time. Residues selected with this tool will appear in coral red, with residue atoms that are within the threshold distance shown opaque and the rest of them with transparency. The  distance selection will be updated for each trajectory frame, as the disposition of atoms may change.</p> 
+
+        <p>The <b>GPCR conserved positions</b> selection provides the possibility to select conserved positions or domains in the different GPCRs family classes. In this section, the GPCR class of the protein being represented will appear in bold. It is also possible to visualize in your protein the positions that correspond to conserved positions of other GPCR classes. For example, if your protein belongs to class A, you can represent the residue that corresponds to class B 2.50 (2.50b). Hover the buttons with your mouse for more information. Class A positions are shown in blue, B in orange, C in yellow and F in pink.</p>
+
+        <h4 class=myheader>Trajectories</h4>
+        <p>In this section you can find a checklist of the trajectories that are available. A play button will appear in the viewer screen for each of the selected trajectories. When a trajectory is played (or have been played and paused), a range bar appears, which allow you to easily navigate through all the different frames. You can move through the range bar or enter a desired frame in the small input field at its left.</p>
+
+        <h4 class=myheader>Analysis tools</h4>
+        <h5 class=subsect>Distance within 2 atoms</h5>
+        <p>This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. To calculate a distance, you can manually input pairs of atom indices at the text input fields. You can also select them in the viewer screen by clicking on the atoms and, afterwards, import the created distances with the blue arrow button. It is necessary to select the trajectory that will be used for the calculation. Finally, just click at Obtain result. Only atom pairs which are marked with a green tick will be considered, since the absence of a tick indicates an error in the input (only numbers are allowed).
+        The result will appear as a plot of distance by time or by frame, which can be downloaded as an image (first button at the bottom). It is also possible to download the data obtained as a csv file (second button at the bottom). Moreover, the distances calculated can be displayed at the viewer screen, indicated in the color indicated at the plot legend.</p>
+
+        <h5 class=subsect>RMSD</h5>
+        <p>In order to calculate the RMSD it is necessary to indicate the trajectory to be used and the frames to be considered. Also, a reference frame of a given trajectory. It is possible to chose which protein atoms are going to be considered in the calculation: only alpha carbons (backbone), non-hydrogen protein atoms (noh), protein C-alpha, C-beta, C, N, O (minimal) or all protein atoms.
+        As in the case of distance analysis, the result will be shown in a plot (RMSD by time or by frame). It is possible to download the plot as an image (first button at the bottom) or all the obtained data as a csv file (second button at the bottom).</p>
+
+        <h5 class=subsect>Ligand-residue interaction frequency</h5>
+        <p>This analysis tool calculates the frequency of interaction between the protein residues and a given ligand across a trajectory. When the distance between any of their atoms and the ligand is smaller than the threshold, it is considered to be an interaction. It is possible to chose which residue atoms will be considered (heavy atoms only or all atoms).
+        The result is presented as table, and the residues that are found to interact can be dislayed at the viewer screen (shown in purple).</p>
+
+    </div>
+    </div>
+ </div>
+ </div>
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+{% endblock %}
+
+</body>

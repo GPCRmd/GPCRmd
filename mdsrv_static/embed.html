@@ -51,22 +51,19 @@
         document.domain=document.domain;
 
         function selWithinComponent(o,dist_comp){
-            var radius=Number(dist_comp[0]);
-            var ligSele =dist_comp[1];
-            var restriction="";
-            if (ligSele.indexOf("protein and") > -1){
-                restriction="not "+ligSele.slice(12)+" and ";
-            }
+            var show = dist_comp[0];
+            var radius=Number(dist_comp[1]);
+            var ligSele =dist_comp[2];
             var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
             //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
-            return([restriction,sele, sele2])
+            return([sele, sele2])
         }
         
         function trajButtons(o,dist_within_li){
             $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-            $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"2px"});
+            $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"6px"});
             var some_clicked=false;
             $(".traj_btn").click( function(){
                 var btn_traj_Bid=$(this).attr("id");
@@ -100,13 +97,19 @@
                         trajComp.signals.frameChanged.add(function(){
                             for (wth_n in dist_within_li){
                                 var dist_comp=  dist_within_li[wth_n].split("-");
+                                var show=dist_comp[0];
+                                var ligSele=dist_comp[2];
+                                var restriction="";
+                                var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                                if (show_sup != "NONE"){
+                                    restriction="not ("+ligSele+") and ";
+                                } 
                                 var result=selWithinComponent(o,dist_comp);
-                                var restriction=result[0];
-                                var sele = result[1];
-                                var sele2 = result[2];
-                                WthRepName="sel"+dist_comp[1];
-                                stage.getRepresentationsByName(WthRepName).setSelection("protein and "+restriction + sele.toSeleString())
-                                stage.getRepresentationsByName(WthRepName+"2").setSelection("protein and "+restriction + sele2.toSeleString())
+                                var sele = result[0];
+                                var sele2 = result[1];
+                                WthRepName="sel"+dist_comp[2];
+                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
+                                stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
                             }
 
                         })
@@ -188,7 +191,7 @@
                         lbl_id+=1;
                         myrepr = o.addRepresentation( "label", {
                             sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                            color: "#ffffff", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                            color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
                         atom1 = d.atom.serial.toString();
                         clicktrue = false;
                     }else {
@@ -227,7 +230,7 @@
                             }
                             o.addRepresentation( "label", {
                                 sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                color: "#ffffff", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                                color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
                             var atomPair = [[ Number(atom1), Number(atom2) ]];
                             o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
 
@@ -297,19 +300,21 @@
             var onlyChains="";
             var rc = parent.seeReceptor;
             var onlyChains=parent.onlyChains;
+            var cons_comp=parent.consider_comp;
             var  pdA= high_pre["A"];
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
             var rc_sel = "";
             var all_cp = "";
+            var all_conscp="";
             if (trajComp && player){
                 player.pause();
             }
             
             if (rc=="y" || ! nonGPCR){
                 rc_sel = "protein";
-                if (cp.length > 0) {
+                if (cp.length > 0 || cons_comp.length > 0) {
                     rc_sel="protein or ";
                 }
             }
@@ -319,17 +324,42 @@
                 }
                 all_cp = all_cp.slice(0, -3);
             }
+            
+            if (cons_comp.length > 0){
+                if (cp.length > 0){
+                    var cons_comp_p=[];
+                    for (compN in cons_comp){
+                        var mycomp =cons_comp[compN];
+                        if (cp.indexOf(mycomp)==-1){
+                            cons_comp_p[cons_comp_p.length]=mycomp;
+                        }
+                    }
+                    if (cons_comp_p.length >0){
+                        all_conscp=" or ";
+                        for (compN in cons_comp_p){
+                            all_conscp += (cons_comp_p[compN] + " or ");
+                        }
+                        all_conscp = all_conscp.slice(0, -3);
+                    }
+                } else {
+                    for (compN in cons_comp){
+                        all_conscp += (cons_comp[compN] + " or ");
+                    }
+                    all_conscp = all_conscp.slice(0, -3);
+                }
+            }
+
 
             var visibility=true;
-            if (rc=="n" && cp.length == 0 && nonGPCR){
+            if (rc=="n" && cp.length == 0 && nonGPCR && cons_comp.length == 0){
                 visibility = false;
             }
 
             var sele_final = "";
             if (sel && sel_method=="sel"){
-               sele_final = "("+rc_sel + all_cp + ") and ("+ sel +")" ;
+               sele_final = "("+rc_sel + all_cp + all_conscp+ ") and ("+ sel +")" ;
             } else{
-               sele_final = rc_sel + all_cp;
+               sele_final = rc_sel + all_cp+all_conscp;
             }
 
             var substr_nonGPCR="";
@@ -395,20 +425,27 @@
             if (dist_within_li.length > 0){
                 for (wth_n in dist_within_li){
                     var dist_comp=  dist_within_li[wth_n].split("-");
+                    var show = dist_comp[0];
+                    var ligSele=dist_comp[2];
+                    var restriction="";
+                    var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                    if (show_sup != "NONE"){
+                        o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:"sel_within_0" } );
+                        restriction="not ("+ligSele+") and ";
+                    }   
                     var result=selWithinComponent(o,dist_comp);
-                    var restriction=result[0];
-                    var sele = result[1];
-                    var sele2 = result[2];
-                    WthRepName="sel"+dist_comp[1];
-                    o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: "protein and "+restriction + sele.toSeleString(), name:WthRepName } );
-                    o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: "protein and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
+                    var sele = result[0];
+                    var sele2 = result[1];
+                    WthRepName="sel"+ligSele;
+                    o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
+                    o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
                 }
 
             }
             if( traj.length > 0) {
                 traj_li=traj;
                 //var playing = false;
-                var traj_html="<div style='width:536px;height:30px;overflow: auto;'>";
+                var traj_html="<div style='width:586px;height:30px;overflow: auto;'>";
                 for (t in traj_li_all) {
                     var mytraj=traj_li_all[t];
                     if (traj_li.indexOf(mytraj) > -1){
@@ -486,7 +523,7 @@
                         }
                         mytraj=traj_li_all[0];
                         traj_li=[mytraj];
-                        $("#buttons").html("<div style='width:536px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
+                        $("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
                         //trajButtons(o,[]);
                     }
                     createReps();
@@ -536,18 +573,18 @@
         });
         });
     </script>
-    <div id="toiframe" style="width:540px">
-        <div id="viewport" style="width:540px; height:370px;"></div>
+    <div id="toiframe" style="width:590px">
+        <div id="viewport" style="width:590px; height:370px;"></div>
         <div style="height:80px">
-            <div id="buttons" style="width:536px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+            <div id="buttons" style="width:586px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
             </div>
             <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:1px">
             </div>
         </div>
-        <div id="trajRangeDiv" style="position:absolute;width:536px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
+        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
-        <div style="width:536px;height:30px;margin-top:285px;margin-left:2px;">
+        <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>

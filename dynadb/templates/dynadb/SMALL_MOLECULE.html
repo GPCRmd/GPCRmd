@@ -69,7 +69,7 @@ font-weight:normal
 	    </div>
          
 <!--_________________________________________________________________________________________________________________-->
-  <div  class="col-md-12 panel panel-primary collapse in" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-A_section">
+  <div  class="col-md-12 panel panel-primary collapse in" style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-A_section" name="form-{{int0}}-A_section">
 
 	        <div class="row"><br>
                 <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>{%if model_id %} {%for com in qCOMP %} {% if forloop.counter == forloop.parentloop.counter %} {{com.name}} {%endif%} {%endfor%} {%else%} Upload molecule {%endif%}</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -110,7 +110,7 @@ font-weight:normal
 
 <!--_________________________________________________________________________________________________________________-->
 
-  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-B_section" >
+  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" name="form-{{int0}}-B_section" id="id_form-{{int0}}-B_section" >
 
 	        <div class="row"><br>
 	                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> {%if model_id %} Co-crystalized molecule or bulk component {%else%}Indicate if the uploaded structure is a co-crystalized molecule or if it belongs to bulk {%endif%}</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black " id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -160,7 +160,7 @@ font-weight:normal
                           {% if not model_id %} 
                			 {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
                                      {% if forloop.counter0 > 5 %}
-                  			<option value={{i.0}} {% if forloop.counter = 5 and not saved %} selected {% endif %} > {{i.1}}</option>
+                  			<option value={{i.0}} {% if forloop.counter == 5 and not saved %} selected {% endif %} > {{i.1}}</option>
                                      {%endif%}
                			 {% endfor %}
                           {%endif%}           
@@ -173,7 +173,7 @@ font-weight:normal
                                                                           
                                                                           
  <!--_________________________________________________________________________________________________________________-->
-   <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-C_section">                        
+   <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" name="form-{{int0}}-C_section" id="id_form-{{int0}}-C_section">                        
                                                                           
  	        <div class="row"><br>                                    
                  <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> Retrieved chemoinformatics data from the uploaded structure</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -250,7 +250,7 @@ font-weight:normal
 <!--_________________________________________________________________________________________________________________-->
 
 
-  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" id="id_form-{{int0}}-D_section" >
+  <div  class="col-md-12 panel-primary panel collapse in"  style="{% if model_id %} border-color:#555;background-color:rgba(200, 150, 200, 0.1);{%else%} {%endif%}" name="form-{{int0}}-D_section" id="id_form-{{int0}}-D_section" >
 	        <div class="row" style="height:70px">
                 <br>
                 <div class="col-md-1"><h4>(<b>D</b>)</h4></div> <div class="col-md-9 " style="text-align:center"><h4 style="text-align:center;margin-left:35px"> {%if model_id %} Retrieved {%else%} Obtain {%endif%}PubChem & ChEMBL information</h4></div><div class="col-md-2 " style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:1px 1px black;margin-left:0px" id="id_form-{{int0}}-mlnumb">SMOL #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
@@ -417,7 +417,11 @@ font-weight:normal
               {% endfor %} 
 </div>
 {% if model_id %} 
-{% include "dynadb/EXTRA_MOLECULE2.html"   %}
+    {% if enabled  %} 
+    {% include "dynadb/EXTRA_MOLECULE2enabled.html"   %}
+    {%else%}
+    {% include "dynadb/EXTRA_MOLECULE2.html"   %}
+    {%endif%}
 {%else%}
 {%endif%}
 
@@ -459,6 +463,7 @@ font-weight:normal
 {% endblock content %}
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/descriptionSquare.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/notInDatabases.js' %}"></script>
