@@ -238,7 +238,6 @@ def fetch_abstract(pmid):
     year=None
     while i<len(linelist):
         line=linelist[i]
-        print (line)
         if re.search('<ArticleTitle>(.*)</ArticleTitle>', line, re.IGNORECASE):
             title_search = re.search('<ArticleTitle>(.*)</ArticleTitle>', line, re.IGNORECASE)
             if title_search:
@@ -287,15 +286,12 @@ def fetch_abstract(pmid):
             while not re.search('</PubDate>',linelist[j],re.IGNORECASE):
                 line=linelist[j]
                 year_search = re.search('<Year>(.*)</Year>', line, re.IGNORECASE)
-                print(line)
                 if year_search:
-                    print(year_search.group(1),'FOUND')
                     year = year_search.group(1)
      
                 j+=1
 
         i+=1
-    print(authors)
     refdic={'title':title, 'volume':volume, 'issue':issue, 'authors':authors,'pubyear':year, 'issn':issn, 'journal':journal,'doi':doi}
 
     return refdic
@@ -436,7 +432,7 @@ def get_complexes(chunk):
     while i<len(lines_list):#make sure the last line is parsed.
 
         if '$$$$' in lines_list[i]:
-            if (len(kd)>0 or len(ec50)>0) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(gpcr_uniprot_codes)))>0 and pubchem_id!='':
+            if ( len( kd.replace('0','').replace('.','') )>0 or len( kd.replace('0','').replace('.','') )>0 ) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(gpcr_uniprot_codes)))>0 and pubchem_id!='':
                 complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
             protlist=[]
             reference={} 
@@ -633,23 +629,29 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     type3flagef=0
                     intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=1) #binding
                     intdata2=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=2) #efficacy
-
+                    #check if an intdata record of that cexp exists. if not, create it. if yes, check if a binding or efficacy record with the same rvalue as the one you
+                    #are going to insert exist. if yes, this record is already inside the db, do not record it again! if not, create a new intdata to use its id as PK of
+                    #binding or efficacy record.
+                    print('results from intdata',intdata,intdata2)
                     if len(intdata)==0: #no intdata for that Cexp
                         complex_interaction_id0=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':1,'id_complex_exp':i},True)
                         recorded_ids['intdata'].append(complex_interaction_id0)
 
                     else:
                         for expintdata in intdata:
-                            if DyndbBinding.objects.get(id=expintdata.id).rvalue==kd:
+                            print('you sure it does not exits?',expintdata.id)
+                            if len(DyndbBinding.objects.filter(id=expintdata.id).filter(rvalue=kd))>0: #intdata of type binding exists, but does the record already exist?
                                 type3flagbin=1
                                 
                     if len(intdata2)==0: #no intdata for that Cexp
+                        
                         complex_interaction_id1=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':2,'id_complex_exp':i},True)
                         recorded_ids['intdata'].append(complex_interaction_id1)
                         
                     else:
                         for expintdata in intdata2:
-                            if DyndbEfficacy.objects.get(id=expintdata.id).rvalue==kd:
+                            print('you sure it does not exist?',expintdata.id)
+                            if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(rvalue=kd))>0:
                                 type3flagef=1
                                 
                     if type3flagbin==1 and type3flagef==1:
@@ -666,15 +668,18 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
                 else:
                     intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype)
+                    print('the intdata',intdata)
                     if len(intdata)>0:
-                        for expintdata in intdata:
+                        for expintdata in intdata:		
                             if complextype==1:
-                                if DyndbBinding.objects.get(id=expintdata.id).rvalue==kd:
+                                print('asdfasf',expintdata.id,kd)
+                                if len(DyndbBinding.objects.filter(id=expintdata.id).filter(rvalue=kd))>0:
                                     #this experiment data is already recorded, do not record it again
                                     return 'This complex was already recorded'
                         
                             elif complextype==2:
-                                if DyndbEfficacy.objects.get(id=expintdata.id).rvalue==ec_fifty:
+                                print('añpoiaweoñfi',expintdata.id,ec_fifty)
+                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(rvalue=ec_fifty))>0:
                                     #this experiment data is already recorded, do not record it again
                                     return 'This complex was already recorded'
 
@@ -690,12 +695,15 @@ def record_complex_in_DB(comple,fromiuphar=False):
     if complex_interaction_id=='undef':
         #This complex does not exist yet. Record the complex exp and the intdata
         with closing(connection.cursor()) as cursor:
-            lastid=str(DyndbComplexExp.objects.latest('id').id+1)
+            try:		
+                lastid=str(DyndbComplexExp.objects.latest('id').id + 1)
+            except:
+                raise
+                lastid=1
             cursor.execute('INSERT INTO dyndb_complex_exp (id,is_published) VALUES (%s,%s) RETURNING id', (lastid,True))
             complex_id=cursor.fetchone()[0]
-            recorded_ids['complexid']=complex_id
-            
-        cmol_id=newrecord(['dyndb_complex_molecule',DyndbComplexMolecule],{'id_complex_exp':complex_id},True)
+            recorded_ids['complexid']=complex_id   
+        cmol_id=newrecord(['dyndb_complex_molecule',DyndbComplexMolecule],{'id_complex_exp':complex_id, 'is_published':True},True) #warning missing ispublished
         recorded_ids['complexmol']=cmol_id
         #Create the complex_exp_interaction_data record
 
@@ -782,7 +790,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
         else:
             intref=DyndbReferencesExpInteractionData.objects.filter(id_exp_interaction_data=complex_interaction_id).filter(id_references=reference_id)
 
-            if len(intref)==0: #this if block was one tab to the left before.
+            if len(intref)==0:
                 refexpintdata=newrecord(['dyndb_references_exp_interaction_data',DyndbReferencesExpInteractionData],{'id_exp_interaction_data':complex_interaction_id, 'id_references':reference_id},True)
                 recorded_ids['intdataref'].append(refexpintdata)
                 
@@ -989,7 +997,10 @@ def record_complex_in_DB(comple,fromiuphar=False):
         else:      
             pubchem_id=comple[2]
             #write this string into file comple[11]
-            nextid=DyndbFiles.objects.latest('id').id+1
+            try:
+                nextid=DyndbFiles.objects.latest('id').id+1
+            except:
+                nextid=1
             try:
                 nextmol=DyndbMolecule.objects.latest('id').id+1
             except:
@@ -1055,7 +1066,11 @@ def record_complex_in_DB(comple,fromiuphar=False):
             
             names=defname
             sinchi,errdata = retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChI')
-            sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
+            try:
+                sinchi=sinchi['PropertyTable']['Properties'][0]['InChI'][6:]
+            except KeyError:
+                return recorded_ids
+
             sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchem_id,operation='property',outputproperty='InChIKey')
             sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
             
@@ -1133,7 +1148,7 @@ def fill_db(chunks):
     for chunk in chunks:
         pos=0
         neg=0
-        print('Proccessing chunk:',chunk)
+        print('Proccessing chunk:',chunk, '\n\n this are all the chunks:\n',str(chunks))
         complexes=get_complexes(chunk)
         complecount=0
         for comple in complexes:
@@ -1145,10 +1160,11 @@ def fill_db(chunks):
                 print('\n\n\nComplex recorded without errors.\n\n\n')
                 pos+=1
             except:
+                #raise
                 print('THIS IS WHAT THE FUNCTION RETURNS',error_dict)
                 
-                #~ if type(error_dict)!=dict:
-                    #~ raise
+                if type(error_dict)!=dict:
+                    raise
                 
                 print('\n\n\nError in chunk: '+chunk+'\n\n\n')
                 
@@ -1222,7 +1238,7 @@ def fill_db_iuphar(filename):
         except:
             continue
 
-mypath='/protwis/sites/protwis/dynadb/chunks'
-chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-fill_db(chunks)
-#fill_db_iuphar('./dynadb/interactions.csv')
+mypath='/protwis/sites/protwis/dynadb/chunks/chunksBindingDB'
+#chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+#fill_db(chunks)
+fill_db_iuphar('./dynadb/interactions.csv')

@@ -186,7 +186,7 @@ def obtain_prot_chains(pdb_name):
     chain_name_s=set()
     fpdb=open(pdb_name,'r')
     for line in fpdb:
-        if useline(line):
+        if useline2(line):
             chain_name_s.add(line[21])
     return list(chain_name_s)
 
@@ -329,16 +329,16 @@ def findGPCRclass(num_scheme):
     """Uses the numbering scheme name to determine the GPCR family (A, B, C or F). Also sets the values of a dict that will determine the class shown at the template."""
     if num_scheme == "gpcrdba" or num_scheme == "gpcrdb":
         current_class ="A"
-        active_class["A"]=["active","in active"]
+        active_class["A"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbb":
         current_class ="B"
-        active_class["B"]=["active","in active"]
+        active_class["B"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbc":
         current_class ="C"
-        active_class["C"]=["active","in active"]
+        active_class["C"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbf":
         current_class ="F"
-        active_class["F"]=["active","in active"]
+        active_class["F"]=["active gpcrbold","in active"]
     return current_class
 
 def generate_motifs_all_info(all_gpcrs_info):
@@ -640,10 +640,18 @@ def index(request, dyn_id):
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
+                    print("\nChain name:\n")
+                    print(chain_name)
+                    print("\n\n")
                     checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
                     if isinstance(checkpdb_res, tuple):
-                        tablepdb,pdb_sequence,hexflag=checkpdb_res 
+                        tablepdb,pdb_sequence,hexflag=checkpdb_res
+                        print("\nprot_seq")
+                        print(prot_seq)
+                        print("\npdb_sequence")
+                        print(pdb_sequence)
                         result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
+                        print(result)
                         if isinstance(result, list):
                             #chain_results[chain_name]=result
                             if chain_name not in chains_taken:
@@ -1021,3 +1029,6 @@ def download_rmsd(request, rmsd_id):
         writer = csv.writer(response)
         writer.writerow([" "])
     return response
+    
+def viewer_docs(request):
+    return render(request, 'view/viewer_docs.html', {} )
