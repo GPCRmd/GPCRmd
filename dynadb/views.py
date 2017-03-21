@@ -4,9 +4,9 @@ from django.db.models import Count
 from django.db import connection
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError, Http404
 from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
@@ -2386,7 +2386,12 @@ def query_protein(request, protein_id,incall=False):
     fiva['other_names']=list()
     fiva['activity']=list()
     fiva['references']=list()
-    protein_record = DyndbProtein.objects.select_related(None).get(pk=protein_id)
+    try:
+        protein_record = DyndbProtein.objects.select_related(None).get(pk=protein_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That protein does not exist.')
+    except:
+        raise
     fiva['Uniprot_id']=protein_record.uniprotkbac    
     fiva['Protein_name']=protein_record.name
     fiva['is_mutated']=protein_record.is_mutated
@@ -2487,7 +2492,12 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic=dict()
     molec_dic['inmodels']=list()
     molec_dic['references']=list()
-    molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
+    try:
+        molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That molecule does not exist.')
+    except:
+        raise
     molec_dic['link_2_compound']=molobj.id_compound.id
     molec_dic['name']=molobj.id_compound.name
     molec_dic['sdf']=''
@@ -2544,7 +2554,12 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['othernames']=list()
     for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
         comp_dic['othernames'].append(oname.other_names)
-    comp_obj=DyndbCompound.objects.select_related('std_id_molecule').get(pk=compound_id)
+    try:
+        comp_obj=DyndbCompound.objects.select_related('std_id_molecule').get(pk=compound_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That compound does not exist.')
+    except:
+        raise
     comp_dic['name']=comp_obj.name
     comp_dic['iupac_name']=comp_obj.iupac_name
     comp_dic['pubchem_cid']=comp_obj.pubchem_cid
@@ -2655,7 +2670,13 @@ def query_model(request,model_id,incall=False):
     model_dic=dict()
     numbertostring={0:'Apomorfic (no ligands)',1:'Complex Structure (proteins and ligands)'}
     #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
-    modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
+    try:
+        modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops.This model does not exist')
+    except:
+        raise
+
     model_dic['pdbid']=modelobj.pdbid
     model_dic['type']=numbertostring[modelobj.type]
     model_dic['link2protein']=list()
@@ -2712,7 +2733,12 @@ def query_model(request,model_id,incall=False):
 def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
     dyna_dic=dict()
-    dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    try:
+        dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops. That dynamics does not exist')
+    except:
+        raise
     dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']=list()
