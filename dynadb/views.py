@@ -112,10 +112,10 @@ def textonly_404_handler(view_func):
 # Create your views here.
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+#@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def REFERENCEview(request, submission_id=None):
- 
-    if request.method == 'POST':
+    
+    if request.method == 'POST' and is_submission_owner(request.user, int(request.POST['submission_id'])):
         submission_id=request.POST['submission_id']
         if submission_id is None:
             iii1="Please, fill in the 'Submission_id' field "
@@ -128,7 +128,10 @@ def REFERENCEview(request, submission_id=None):
         now=timezone.now()
         author="jmr"
 #        forminfo={'issue':'1','url':'http://localhost:8000/ttt/prueba','doi':'8382938','title':'prinncii','journal_press':'marca','pub_year':'1996', 'volume':'agosto', 'pages':'2-3','authors':'pepe; luis', 'pmid':'4'}
-        initREFF={'dbname':None,'update_timestamp':now,'creation_timestamp':now,'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':None }
+        def_user_dbengine=settings.DATABASES['default']['USER']
+        def_user=request.user.id
+        print("HOLA  ", def_user)
+        initREFF={'dbname':None, 'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
         fdbREFF = dyndb_ReferenceForm(request.POST)
 
 #####  Fill the empty fields in the fdbREFF instance with data from the initREFF dictionary
@@ -167,6 +170,8 @@ def REFERENCEview(request, submission_id=None):
             else:
                 iii=fdbREFF.errors.as_text()
                 print("Errors", iii)
+                response = HttpResponse(iii,status=422,sreason='Unprocessable Entity',content_type='text/plain')
+                return response
                 pass
             
         qSubmission=DyndbSubmission.objects.filter(id=submission_id)
@@ -175,9 +180,9 @@ def REFERENCEview(request, submission_id=None):
         dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
         dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
         dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
-        
+        print("SubmitRef", SubmitRef)
         refprot=dyndb_References_Protein(dictprot)
-        if not SubmitRef:
+        if SubmitRef:
             if not qRFdoi.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
                 if refprot.is_valid():
                     refprot.save()
@@ -185,7 +190,7 @@ def REFERENCEview(request, submission_id=None):
                     print("refprot is not valid",refprot.errors.as_text())
                 
         refmod=dyndb_References_Model(dictmod)
-        if not SubmitRef:
+        if  SubmitRef:
             if not qRFdoi.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
                 if refmod.is_valid():
                     refmod.save()
@@ -194,10 +199,11 @@ def REFERENCEview(request, submission_id=None):
         
         refdyn=dyndb_References_Dynamics(dictdyn)
 
-        if not SubmitRef:
+        if SubmitRef:
             if not qRFdoi.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
                 if refdyn.is_valid():
                     refdyn.save()
+                    print("refdyn may  be saved ",refdyn.errors.as_text())
                 else:
                     print("refdyn is not valid",refdyn.errors.as_text())
         
@@ -208,7 +214,7 @@ def REFERENCEview(request, submission_id=None):
         for l in qT:
             dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
             refmol=dyndb_References_Molecule(dictmol[i])                                     
-            if not SubmitRef:
+            if SubmitRef:
                 if not qRFdoi.filter(dyndbreferencesmolecule__id_molecule=qT[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
                     if refmol.is_valid():                                                         
                         refmol.save()                                                             
@@ -229,9 +235,10 @@ def REFERENCEview(request, submission_id=None):
         
     # if a GET (or any other method) we'll create a blank form
         return HttpResponse("Successful reference submission!!!", content_type='application/json')
+    elif request.method == 'POST' and not is_submission_owner(request.user, int(request.POST['submission_id'])):
+        message="You are not allowed to add references to the chosen submission. "
+        return HttpResponseForbidden(message, content_type='text/plane')
     else:
-        
-
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
@@ -520,14 +527,22 @@ def deleteModelbyUpdateMolecule(molecule_id,ii,submission_id):
             else:
                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
                 
-
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def PROTEINview(request, submission_id):
     
     p= submission_id
     print ("submission_id ==",submission_id)
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    
     if request.method == 'POST':
+        
+        def_user_dbengine=settings.DATABASES['default']['USER']
+        def_user=request.user.id
+        print("HOLA  ", def_user)
+        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
         author="jmr"   #to be modified with author information. To initPF dict
         action="/".join(["/dynadb/PROTEINfilled",submission_id," "])
         now=timezone.now()
@@ -537,7 +552,6 @@ def PROTEINview(request, submission_id):
 #####
 #####  initOPN dictionary dyndb_Other_Protein_NamesForm. To be updated in the
 #####  view. Not depending on is_mutated field in dynadb_ProteinForm 
-        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
         initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
 
         form=re.compile('form-')
@@ -4627,6 +4641,12 @@ def MODELview(request, submission_id):
     print("REQUEST SESSIONS",request.session.items())
     request.session['info']="PASAR a SESSION"
     print("REQUEST SESSIONS",request.session.items())
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
     # Dealing with POST data
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
@@ -4637,8 +4657,8 @@ def MODELview(request, submission_id):
         author="jmr"
         user="jmr"
         author_id=1
-        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id}
-        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
         
         lkeyprotsour=["id_protein","id_model","chain","resid_from","resid_to","seq_resid_from","seq_resid_to","pdbidps","source_typeps","template_id_model","bonded_to_id_modeled_residues","prot"]  
         ckeyprotsour={'source_typeps':"source_type",'pdbidps':"pdbid"}
@@ -5038,7 +5058,7 @@ def MODELview(request, submission_id):
                         print("CM_exists= True ",id_complex_molecule)
             
             if CE_exists==False:
-                fdbCE=dyndb_Complex_Exp({'creation_timestamp':timezone.now(),'update_timestamp':timezone.now()}) 
+                fdbCE=dyndb_Complex_Exp(initMOD) 
                 if fdbCE.is_valid():
                     fdbCEobj=fdbCE.save()
                     CEpk=fdbCEobj.pk
@@ -7182,6 +7202,13 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def DYNAMICSview(request, submission_id, model_id=None):
+    initDyn={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() , 'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user ,  'id_model':model_id,'submission_id':submission_id }
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
                    
     def dynamics_file_table (dname, DFpk): #d_fmolec_t, dictext_id 
         print(dname)
@@ -7261,8 +7288,6 @@ def DYNAMICSview(request, submission_id, model_id=None):
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         model_id=qM.values_list('model_id',flat=True)[0]
-        initDyn={'id_model':model_id,'id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
-        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}
@@ -10720,6 +10745,10 @@ def SMALL_MOLECULEview(request, submission_id):
                 prev_entryFile.update(update_timestamp=timezone.now(),last_update_by_dbengine=user,filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
                 print("\n ENTRADA File EXISTENTE ACTUALIZADA")
 
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
 
 
 
@@ -10727,12 +10756,12 @@ def SMALL_MOLECULEview(request, submission_id):
 #    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
     now=timezone.now()
     onames="Pepito; Juanito; Herculito" #to be modified... scripted
-    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
-    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
     initON={'other_names': onames,'id_compound':None} 
     dicpost=request.POST    #postd_single_molecule
     #dicfiles=request.FILES
-    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() , 'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user, 'submission_id':submission_id }
     ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
     ft=DyndbFileTypes.objects.all()
     dict_ext_id={}
