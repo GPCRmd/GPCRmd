@@ -217,11 +217,7 @@ $(document).ready(function(){
                     }
                 }
                 if (res_chain){
-                    if (chains_str == "") {
-                        subst_pos=" "+res_chain[0];
-                    } else {
-                        subst_pos=" "+res_chain[0]+":"+res_chain[1];
-                    }
+                    subst_pos=" "+res_chain[0]+":"+res_chain[1];
                     subst_pos_all += subst_pos + add_or;
                 }
             }
@@ -279,9 +275,7 @@ $(document).ready(function(){
                     chain_pair[chain_pair.length]=res_chain[1];
                 }
                 if (chain_pair){
-                    if (chains_str == "") {
-                        pos_range=" "+res_pair[0] + "-" +res_pair[1];
-                    } else if (chain_pair[0]==chain_pair[1]){
+                    if (chain_pair[0]==chain_pair[1]){
                         pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
                     } else {
                         start=all_chains.indexOf(chain_pair[0]);
@@ -528,7 +522,10 @@ $(document).ready(function(){
         var row='<div class="dist_sel" id=row'+wth_i.toString()+' style="margin-bottom:5px;">\
                   <span class="tick" ></span>\
                   <span class="always" style="margin-left:14px">\
-                    Show residues within \
+                    Show \
+                    <select class="resWthComp" name="rescomp">\
+                        <option  selected value="protein">residues</option>' + select + '</select>\
+                     within \
                     <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px">\
                       &#8491; of\
                         <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
@@ -546,6 +543,7 @@ $(document).ready(function(){
         var numWthRows = $(".sel_within").children().length;
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
+            $(".sel_within").find(".user_sel_input").val("");
             $(".sel_within").find(".alert_sel_wth").html("");
         }else{
             var wBlock =$(this).closest(".dist_sel");
@@ -561,10 +559,11 @@ $(document).ready(function(){
 
     function obtainDistSel(){
         var dist_of=[];
+        var consider_comp=[]
         $(".sel_within").find(".dist_sel").each(function(){ 
             var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
-                var comp=$(this).find("select").val();
+                var comp=$(this).find(".wthComp").val();
                 if (comp=="user_sel"){
                     pre_sel=$(this).find(".user_sel_input").val();
                     var rownum = $(this).attr("id");
@@ -576,11 +575,17 @@ $(document).ready(function(){
                         comp=def_sel;
                     }
                 }
-                dist_of[dist_of.length]=inp+"-"+comp;
+                if (comp != "none"){
+                    var show = $(this).find(".resWthComp").val();
+                    dist_of[dist_of.length]=show+"-"+inp+"-"+comp;
+                    if (show != "protein"){
+                        consider_comp[consider_comp.length]=show;
+                    }
+                }
             }
 
-        });       
-        return (dist_of);
+        });    
+        return ([dist_of,uniq(consider_comp)]);
     }
 
     function activate_row(selector){
@@ -1039,11 +1044,11 @@ $(document).ready(function(){
                                 var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
                                 var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
                                 var options_t = {'title':'Residue Distance ('+trajFile+')',
-                                    "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                    "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                    "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
                                 var options_f = {'title':'Residue Distance ('+trajFile+')',
-                                    "height":350, "width":500, "legend":{"position":"bottom","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                    "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                    "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
                                 newgraph_sel="dist_chart_"+d_id.toString();
                                 var plot_html;
                                 if ($.active<=1){
@@ -1130,6 +1135,8 @@ $(document).ready(function(){
                                     chart.draw(data, options);                                    
                                 }
                                 $("#"+newgraph_sel+"f").css("display","none");  
+                                var img_source_t=$("#"+newgraph_sel+"t").data("url");
+                                $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
                                 d_id+=1;
                                 
                             };
@@ -1516,10 +1523,10 @@ $(document).ready(function(){
                             var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
                             var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
                             var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
-                                "height":350, "width":500, "legend":{"position":"none"}, 
+                                "height":350, "width":640, "legend":{"position":"none"}, 
                                 "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
                             var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
-                                "height":350, "width":500, "legend":{"position":"none"}, 
+                                "height":350, "width":640, "legend":{"position":"none"}, 
                                 "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
                             newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                             var RMSDplot_html;
@@ -1597,6 +1604,8 @@ $(document).ready(function(){
                                 chart.draw(data, options);   
                             }
                             $("#"+newRMSDgraph_sel+"f").css("display","none");  
+                            var rmsd_img_source_t=$("#"+newRMSDgraph_sel+"t").data("url");
+                            $("#"+newRMSDgraph_sel+"t").siblings(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",rmsd_img_source_t);
                             r_id+=1;
                             
                             
@@ -1714,8 +1723,11 @@ $(document).ready(function(){
             }
         }
         window.pd=pd;
-        var dist_of=obtainDistSel();  
+        var dist_result=obtainDistSel();  
+        var dist_of=dist_result[0]
+        var consider_comp=dist_result[1]
         window.dist_of=dist_of;
+        window.consider_comp=consider_comp;
         var onlyChains="";
         if (seeReceptor=="n" && nonGPCR == ""){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
@@ -1753,9 +1765,11 @@ $(document).ready(function(){
         if (seeReceptor=="n" && nonGPCR == ""){
             onlyChains=obtainNonGPCRchains(".nonGPCR");
         }
-        var dist_of=obtainDistSel(); // For the dist selection
+        var dist_result=obtainDistSel(); // For the dist selection
+        var dist_of=dist_result[0]
+        var consider_comp=dist_result[1]
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc)+ "&rc=" + seeReceptor + "&sh=" + rad_option  + "&pd=" + pd;
-        var add_url_var = {"traj":encode(traj),"sel":encode(sel_enc),"cp":encode(cp),"la":encode(high_pre["A"]),"lb":encode(high_pre["B"]),"lc":encode(high_pre["C"]),"lf":encode(high_pre["F"]),"wth":encode(dist_of),"in":encode(int_res_s),"ng":nonGPCR,"och":onlyChains , "dc":encode(dist_groups_li)};
+        var add_url_var = {"traj":encode(traj),"sel":encode(sel_enc),"cp":encode(cp),"la":encode(high_pre["A"]),"lb":encode(high_pre["B"]),"lc":encode(high_pre["C"]),"lf":encode(high_pre["F"]),"wth":encode(dist_of),"cc":encode(consider_comp),"in":encode(int_res_s),"ng":nonGPCR,"och":onlyChains , "dc":encode(dist_groups_li)};
         for (varn in add_url_var){
             var myvar =add_url_var[varn];
             if (myvar.length > 0){

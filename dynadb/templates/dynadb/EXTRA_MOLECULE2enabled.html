@@ -2,6 +2,7 @@
 	      <div class="col-md-12 panel panel-primary" id="id_show_mol_inbulk" name="show_mol_inbulk" data-toggle="collapse"   data-target="{%for l in list %}[id|='molform'][id$='{{l}}']{% if not forloop.last %},{%endif%}{%endfor%}" style="cursor:pointer;height:50px;margin-bottom:15px;margin-top:0px;background-color:rgba(0, 250, 220, 0.7);">
                    <div class="row"  style="padding:5px 0px 5px 0px;color:DarkBlue;font-size:20px;text-align:center;margin-top:5px;margin-left:2.5%;margin-right:2.5%;margin-bottom:5px">Toggle the (<b>2</b>) <b>list of bulk components in the simulation</b></div>
               </div>
+ {%if qSubNotModsaved%}
        {% for o in qMOLNotMod %} 	{%for int0 in int_id0NotMod%}{% if forloop.counter == forloop.parentloop.counter %} 	
  <div id="molform-{{int0}}" class="col-md-12 panel collapse in" style="margin-bottom:0px">
   <form id="small_molecule" name="small_molecule" method="post" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
@@ -211,7 +212,7 @@
 <!--        <th><input type="submit" value="Submit"  id="id_form-{{int0}}-submit"  name="submit" /> </th><br>   -->
 </form>
 
-{%endif%}{%endfor%}{%endfor%}
+{%endif%}{%endfor%}{%endfor%}{%endif%}
     {% include "dynadb/EXTRA_MOLECULE2.html"   %}
 </div>
 

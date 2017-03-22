@@ -20,7 +20,7 @@ def checkpdb_ngl(name_of_file,segid,start,stop,chain):
 	hexflag=0
 	pfields=['','' ,'','AAA','Z','0','0','0','0','']
 	for line in fpdb:
-		if useline(line):
+		if useline2(line):
 			fields=[ '','' ,'' ,line[17:21],line[21],line[22:27],line[31:39],line[39:47],line[47:55],line[72:77]] 
 			#fields[3]:Aminoacid code, fields[4]:chain, fields[5]:resid, fields[6-8]:X,Y,Z coordinates
 			fields[3]=fields[3].strip() #if it is a standard aa with 3 letters, eliminate whitespace.
@@ -51,6 +51,7 @@ def checkpdb_ngl(name_of_file,segid,start,stop,chain):
 					hexflag=1
 				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
 					if cpos2>=ppos2+1:
+						print(fields[3])
 						try:
 							seqplain.append([d[fields[3]],cpos,cpos2])
 						except: #Modified aminoacid

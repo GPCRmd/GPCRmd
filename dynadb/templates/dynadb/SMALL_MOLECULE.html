@@ -417,7 +417,7 @@ font-weight:normal
               {% endfor %} 
 </div>
 {% if model_id %} 
-    {% if enabled %} 
+    {% if enabled  %} 
     {% include "dynadb/EXTRA_MOLECULE2enabled.html"   %}
     {%else%}
     {% include "dynadb/EXTRA_MOLECULE2.html"   %}
@@ -463,6 +463,7 @@ font-weight:normal
 {% endblock content %}
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/descriptionSquare.js' %}"></script>
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/ajaxConfig.js' %}"></script>
     <script src="{% static 'dynadb/notInDatabases.js' %}"></script>

@@ -18,11 +18,11 @@ except ImportError:
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-
+DEBUG_TOOLBAR = True
 
 # Application definition
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'dynadb.apps.DynadbConfig',
     'accounts.apps.AccountsConfig',
     'view.apps.ViewConfig',
@@ -34,7 +34,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'sendfile',
-    'debug_toolbar',
     'rest_framework',
     'rest_framework_swagger',
     'common',
@@ -61,19 +60,28 @@ INSTALLED_APPS = (
     'drugs',
     'graphos',
     'revproxy',
-)
+]
 
-MIDDLEWARE_CLASSES = (
-    'protwis.custom_middlewares.MultipleProxyMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+if DEBUG_TOOLBAR:
+    INSTALLED_APPS.append('debug_toolbar')
+
+DEBUG_TOOLBAR_MIDDLEWARE = ['debug_toolbar.middleware.DebugToolbarMiddleware']
+    
+if not DEBUG_TOOLBAR:
+    DEBUG_TOOLBAR_MIDDLEWARE = []
+    
+MIDDLEWARE_CLASSES = [
+    'protwis.custom_middlewares.MultipleProxyMiddleware']+\
+    DEBUG_TOOLBAR_MIDDLEWARE+\
+    ['django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-)
+    
+]
 
 ROOT_URLCONF = 'protwis.urls'
 
@@ -142,6 +150,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 MAX_UPLOAD_SIZE=2147483648
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520
