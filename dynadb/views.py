@@ -7041,14 +7041,16 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             else:
                 response = HttpResponse('Missing POST keys.'+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
-            if  filekey not in request.FILES:
+            filekey_in_files = bool(filekey not in request.FILES)    
+            for upload_handler in request.upload_handlers:
+                if hasattr(upload_handler,'exception'):
+                    if upload_handler.exception is not None:
+                        raise upload_handler.exception
+            if  filekey_in_files:
                 msg = 'No file was selected or cannot find molecule file reference.'
-                for upload_handler in request.upload_handlers:
-                    if hasattr(upload_handler,'exception'):
-                        if upload_handler.exception is not None:
-                            raise upload_handler.exception
                 response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
+
             if trajectory is None:
                 uploadedfiles = [request.FILES[filekey]]
             else:
@@ -7066,7 +7068,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                 msg = 'Too many files selected (Max. 200).'
                 response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response   
-            
+
             
             filenum = 0
             for uploadedfile in uploadedfiles:
