@@ -19,7 +19,7 @@ $(document).ready(function() {
         if (file_type == "traj") {
             var maxsize = "2 GB";
         } else {
-            var maxsize = "50 GB";
+            var maxsize = "50 MB";
         }
         
         $(dynform).ajaxSubmit({
@@ -64,12 +64,17 @@ $(document).ready(function() {
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {
-                    alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+xhr.responseText);
+                    var responsetext = xhr.responseText;
                     $("[id^=id_"+file_type+"_download_url_div-]").remove();
                     download_file.hide();
                     if (xhr.status == 432) {
                         $("[id^=id_"+file_type+"_download_url_div-]").remove();
+                    } else if (xhr.status==413 && /text\/html/.test(xhr.getResponseHeader("content-type"))) {
+                        var responsetext = 'Request body (including files) too large.';
+                    } else if (xhr.status==500 && /text\/html/.test(xhr.getResponseHeader("content-type"))) {
+                        var responsetext = 'Apache server error. Please, check that your upload does not exceed file size or number of files limits.';
                     }
+                    alert(status.substr(0,1).toUpperCase()+status.substr(1)+":\nStatus: " + xhr.status+". "+msg+".\n"+responsetext);
                 }
                 else if (xhr.readyState == 0) {
                     alert("Connection error. Please, try later and check that your file is not larger than "+maxsize+".");

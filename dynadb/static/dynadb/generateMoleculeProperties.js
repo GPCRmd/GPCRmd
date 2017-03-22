@@ -153,6 +153,10 @@ $(document).ready(function() {
                             logfile.show();
                         }
                         var responsetext = data.msg;
+                    } else if (xhr.status==413 && /text\/html/.test(xhr.getResponseHeader("content-type"))) {
+                        var responsetext = 'Request body (including files) too large.';
+                    } else if (xhr.status==500 && /text\/html/.test(xhr.getResponseHeader("content-type"))) {
+                        var responsetext = 'Apache server error. Please, check that your upload does not exceed file size or number of files limits.';    
                     } else {
                         var responsetext = xhr.responseText;
                     }
