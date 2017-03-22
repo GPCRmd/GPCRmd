@@ -227,9 +227,8 @@ CACHES = {
 
 QUERY_CHECK_PUBLISHED = True
 
-MDSRV_PORT=8000
+
 MDSRV_UPSTREAM='http://localhost:8081'
-MDSRV_REVERSE_PROXY = 'ALL'
 
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'
