@@ -3450,8 +3450,6 @@ def _upload_model_pdb(request,submission_id):
             msg = 'No file was selected or cannot find molecule file reference.'
             return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_sdf_from_db_by_submission(submission_id,int_ids):
     
     
