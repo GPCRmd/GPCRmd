@@ -7285,6 +7285,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         model_id=qM.values_list('model_id',flat=True)[0]
+        initDyn['id_model']=model_id
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}
