@@ -33,7 +33,7 @@ from os import listdir
 from os.path import isfile, normpath
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F
-from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension,DownloadGenericError
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
@@ -92,7 +92,7 @@ def textonly_500_handler(view_func):
             if settings.DEBUG:
                 raise
             else:
-                return HttpResponseServerError("Server Error (500).",content_type='text/plain')
+                return HttpResponseServerError("Server Error (500).",content_type='text/plain; charset=UTF-8')
     return _wrapped_view
     
 def textonly_404_handler(view_func):
@@ -105,21 +105,21 @@ def textonly_404_handler(view_func):
             if settings.DEBUG:
                 raise
             else:
-                return HttpResponseNotFound("Not Found (404).",content_type='text/plain')
+                return HttpResponseNotFound("Not Found (404).",content_type='text/plain; charset=UTF-8')
     return _wrapped_view
     
 
 # Create your views here.
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+#@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def REFERENCEview(request, submission_id=None):
- 
-    if request.method == 'POST':
+    
+    if request.method == 'POST' and is_submission_owner(request.user, int(request.POST['submission_id'])):
         submission_id=request.POST['submission_id']
         if submission_id is None:
             iii1="Please, fill in the 'Submission_id' field "
-            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
             sub =''
         else:
@@ -128,7 +128,10 @@ def REFERENCEview(request, submission_id=None):
         now=timezone.now()
         author="jmr"
 #        forminfo={'issue':'1','url':'http://localhost:8000/ttt/prueba','doi':'8382938','title':'prinncii','journal_press':'marca','pub_year':'1996', 'volume':'agosto', 'pages':'2-3','authors':'pepe; luis', 'pmid':'4'}
-        initREFF={'dbname':None,'update_timestamp':now,'creation_timestamp':now,'created_by_dbengine':author, 'last_update_by_dbengine':author, 'created_by':None }
+        def_user_dbengine=settings.DATABASES['default']['USER']
+        def_user=request.user.id
+        print("HOLA  ", def_user)
+        initREFF={'dbname':None, 'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
         fdbREFF = dyndb_ReferenceForm(request.POST)
 
 #####  Fill the empty fields in the fdbREFF instance with data from the initREFF dictionary
@@ -142,14 +145,14 @@ def REFERENCEview(request, submission_id=None):
         if qRFdoi.exists():
             iii1="Please, Note that the reference you are trying to submit has a DOI previously stored in the GPCRdb. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
             print(iii1)
-            response = HttpResponse(iii1,content_type='text/plain')
+            response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             FRpk = qRFdoi.values_list('id',flat=True)
             SubmitRef=False
            # return response
         if qRFpmid.exists():
             iii1="Please, Note that the reference you are trying to submit has a PMID previously stored in the GPCRdb.  Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
             print(iii1)
-            response = HttpResponse(iii1,content_type='text/plain')
+            response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             SubmitRef=False
             FRpk = qRFpmid.values_list('id',flat=True)
            # return response
@@ -167,6 +170,8 @@ def REFERENCEview(request, submission_id=None):
             else:
                 iii=fdbREFF.errors.as_text()
                 print("Errors", iii)
+                response = HttpResponse(iii,status=422,sreason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
                 pass
             
         qSubmission=DyndbSubmission.objects.filter(id=submission_id)
@@ -175,9 +180,9 @@ def REFERENCEview(request, submission_id=None):
         dictprot={'id_protein':qT[0]['dyndbsubmissionprotein__protein_id'], 'id_references':FRpk}
         dictmod={'id_model':qT[0]['dyndbsubmissionmodel__model_id'], 'id_references':FRpk }
         dictdyn={'id_dynamics':qT[0]['dyndbdynamics__id'], 'id_references':FRpk }
-        
+        print("SubmitRef", SubmitRef)
         refprot=dyndb_References_Protein(dictprot)
-        if not SubmitRef:
+        if SubmitRef:
             if not qRFdoi.filter(dyndbreferencesprotein__id_protein=qT[0]['dyndbsubmissionprotein__protein_id'],dyndbreferencesprotein__id_references=FRpk).exists():
                 if refprot.is_valid():
                     refprot.save()
@@ -185,7 +190,7 @@ def REFERENCEview(request, submission_id=None):
                     print("refprot is not valid",refprot.errors.as_text())
                 
         refmod=dyndb_References_Model(dictmod)
-        if not SubmitRef:
+        if  SubmitRef:
             if not qRFdoi.filter(dyndbreferencesmodel__id_model=qT[0]['dyndbsubmissionmodel__model_id'],dyndbreferencesmodel__id_references=FRpk).exists():
                 if refmod.is_valid():
                     refmod.save()
@@ -194,10 +199,11 @@ def REFERENCEview(request, submission_id=None):
         
         refdyn=dyndb_References_Dynamics(dictdyn)
 
-        if not SubmitRef:
+        if SubmitRef:
             if not qRFdoi.filter(dyndbreferencesdynamics__id_dynamics=qT[0]['dyndbdynamics__id'],dyndbreferencesdynamics__id_references=FRpk).exists():
                 if refdyn.is_valid():
                     refdyn.save()
+                    print("refdyn may  be saved ",refdyn.errors.as_text())
                 else:
                     print("refdyn is not valid",refdyn.errors.as_text())
         
@@ -208,7 +214,7 @@ def REFERENCEview(request, submission_id=None):
         for l in qT:
             dictmol[i]={'id_molecule':qT[i]['dyndbsubmissionmolecule__molecule_id'],  'id_references':FRpk}
             refmol=dyndb_References_Molecule(dictmol[i])                                     
-            if not SubmitRef:
+            if SubmitRef:
                 if not qRFdoi.filter(dyndbreferencesmolecule__id_molecule=qT[i]['dyndbsubmissionmolecule__molecule_id'],dyndbreferencesmolecule__id_references=FRpk).exists():
                     if refmol.is_valid():                                                         
                         refmol.save()                                                             
@@ -229,9 +235,10 @@ def REFERENCEview(request, submission_id=None):
         
     # if a GET (or any other method) we'll create a blank form
         return HttpResponse("Successful reference submission!!!", content_type='application/json')
+    elif request.method == 'POST' and not is_submission_owner(request.user, int(request.POST['submission_id'])):
+        message="You are not allowed to add references to the chosen submission. "
+        return HttpResponseForbidden(message, content_type='text/plane')
     else:
-        
-
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
@@ -520,14 +527,22 @@ def deleteModelbyUpdateMolecule(molecule_id,ii,submission_id):
             else:
                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
                 
-
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def PROTEINview(request, submission_id):
     
     p= submission_id
     print ("submission_id ==",submission_id)
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    
     if request.method == 'POST':
+        
+        def_user_dbengine=settings.DATABASES['default']['USER']
+        def_user=request.user.id
+        print("HOLA  ", def_user)
+        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
         author="jmr"   #to be modified with author information. To initPF dict
         action="/".join(["/dynadb/PROTEINfilled",submission_id," "])
         now=timezone.now()
@@ -537,7 +552,6 @@ def PROTEINview(request, submission_id):
 #####
 #####  initOPN dictionary dyndb_Other_Protein_NamesForm. To be updated in the
 #####  view. Not depending on is_mutated field in dynadb_ProteinForm 
-        initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }
         initOPN={'id_protein':'1','other_names':'Lulu' } #other_names should be updated from UniProtKB Script Isma
 
         form=re.compile('form-')
@@ -644,7 +658,7 @@ def PROTEINview(request, submission_id):
             #### Check if the Protein in the HTML is already in the database 
                 browse_protein_response=check_protein_entry_exist(dictprot[ii]['uniprotkbac'],is_mutated_val,dictprot[ii]['msequence'],dictprot[ii]['isoform'])#### POR AQUI!!!!!!!!!!!!!! 
                 if "ERROR" in browse_protein_response.keys():
-                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
                     prev_sub_prot_match_formProtidySeqyIntid=False #protein submitted in this submission
@@ -659,7 +673,7 @@ def PROTEINview(request, submission_id):
                 #### Check if the Protein in the HTML is already in the database 
                 browse_protein_response=check_protein_entry_exist(dictprot[ii]['uniprotkbac'],is_mutated_val,dictprot[ii]['sequence'],dictprot[ii]['isoform'])#### POR AQUI!!!!!!!!!!!!!! 
                 if "ERROR" in browse_protein_response.keys():
-                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    response= HttpResponse(browse_protein_response['Message'],status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 if len(browse_protein_response['id_protein'])==0 and not "ERROR" in browse_protein_response.keys():
                     prev_sub_prot_match_formProtidySeqyIntid=False #protein submitted in this submission
@@ -713,7 +727,7 @@ def PROTEINview(request, submission_id):
                             iii1=fdbSP[ii].errors.as_text()
                             print("fdbSP[",ii,"] no es valido")
                             print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                  
                     if ii==indexl[-1]:#if ii is the last element of the list indexl
@@ -725,7 +739,7 @@ def PROTEINview(request, submission_id):
             else:
                 if len(browse_protein_response['id_protein'])>1:
                     print(browse_protein_response['Message'])
-                    response = HttpResponse(browse_protein_response['Message'],status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(browse_protein_response['Message'],status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
 
 #### If the protein ii is not found in our database create a new entry
@@ -763,7 +777,7 @@ def PROTEINview(request, submission_id):
                 iii1=fdbPF[ii].errors.as_text()
                 print("fdbPF",ii," no es valido")
                 print("!!!!!!Errores despues del fdbPF[",ii,"]\n",iii1,"\n")
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
 
 ##### Fill the submission protein table  (Submission PROTEIN dictionary dictSP) 
@@ -794,7 +808,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbSP[ii].errors.as_text()
                         print("fdbSP[",ii,"] no es valido")
                         print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         return response
 
@@ -847,7 +861,7 @@ def PROTEINview(request, submission_id):
                 dictprot[ii]['sequence']="TOTO"
                 print("No Sequence found (NORMAL)")
                 if seq is None:
-                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                     return response
@@ -873,7 +887,7 @@ def PROTEINview(request, submission_id):
                     dictPM[ii][nummut][key]=v
                 print ("nummutl ", nummutl)
                 if len(nummutl[ii])==0:
-                    response = HttpResponse('Protein mutations have not been obtained. Please follow these steps: 1) After having obtained the retrieved data about the current protein from the UniprotKB DB ("Wild-type" sequence can be manually entered if no data about the protein exist in UniprotKB) and having provided the "Mutant sequence" in the corresponding field in the form, remember to align the "Mutant sequence" to the Wild type one by clicking the "Align to the wild type" button. Then, click the "Get mutations" button and the check if the mutations in the "Protein Mutations" table are correct. If no results are obtained, please make the database administrator know.' ,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Protein mutations have not been obtained. Please follow these steps: 1) After having obtained the retrieved data about the current protein from the UniprotKB DB ("Wild-type" sequence can be manually entered if no data about the protein exist in UniprotKB) and having provided the "Mutant sequence" in the corresponding field in the form, remember to align the "Mutant sequence" to the Wild type one by clicking the "Align to the wild type" button. Then, click the "Get mutations" button and the check if the mutations in the "Protein Mutations" table are correct. If no results are obtained, please make the database administrator know.' ,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
 
 ##### Let's create the field 'id_protein' in dyndb_Protein_MutationsForm so that an entry could be registered in the version not supporting Mutations scripts
@@ -890,18 +904,18 @@ def PROTEINview(request, submission_id):
                 initPS[ii]={'id_protein':formPF[ii].pk,'sequence':mseq,'length':lmseq} 
                 print ("PIPOLLLLLLLLLLLLLLLLLLL\n",seq,"\n",mseq)
                 if mseq == seq:
-                    response = HttpResponse('Provided mutated sequence matches the wild type one!!! Please include mutations in the "Mutant sequence" field' ,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Provided mutated sequence matches the wild type one!!! Please include mutations in the "Mutant sequence" field' ,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                     return response
 
                 if mseq is None:
-                    response = HttpResponse('Mutated sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Mutated sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                     return response
                 if seq is None:
-                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                     return response
@@ -959,7 +973,7 @@ def PROTEINview(request, submission_id):
                                 iii1=fdbPM[ii][nm].errors.as_text()
                                 print("fdbPM[",ii,"][",nm,"] no es valido")
                                 print("!!!!!!Errores despues del fdbPM[",ii,"][",nm,"]\n",iii1,"\n")
-                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                                 DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                                 DyndbProteinMutations.objects.filter(id_protein=formPF[ii].pk).delete()#Some other names may have been recorded before the wrong dyndb_Protein_MutationsForm
                                 DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
@@ -970,7 +984,7 @@ def PROTEINview(request, submission_id):
                 lseq=len(seq)
                 initPS[ii]={'id_protein':formPF[ii].pk,'sequence':seq,'length':lseq} 
                 if seq is None:
-                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                     return response
@@ -986,7 +1000,7 @@ def PROTEINview(request, submission_id):
                 iii1=fdbPS[ii].errors.as_text()
                 print("fdbPS[",ii,"] no es valido")
                 print("!!!!!!Errores despues del fdbPS[",ii,"] \n",iii1,"\n")
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                 DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                 if is_mutated_val:
@@ -1043,7 +1057,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbPFaux[ii].errors.as_text()
                         print("fdbPFaux",ii," no es valido")
                         print("!!!!!!Errores despues del fdbPFaux[",ii,"]\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
                         DyndbProteinSequence.objects.filter(id_protein=formPF[ii].pk).delete()
@@ -1068,7 +1082,7 @@ def PROTEINview(request, submission_id):
                             iii1=fdbSPaux[ii].errors.as_text()
                             print("fdbSPaux[",ii,"] no es valido")
                             print("!!!!!!Errores despues del fdbSPaux[",ii,"]\n",iii1,"\n")
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                             DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
                             DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
@@ -1101,7 +1115,7 @@ def PROTEINview(request, submission_id):
                                 iii1=fdbOPN[ii][numON].errors.as_text()
                                 print("fdbOPN[",ii,"] no es valido")
                                 print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n") ####HASTA AQUI#####
-                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                                 DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                                 DyndbOtherProteinNames.objects.filter(id_protein=formPFaux[ii].pk).delete()#Some other names may have been recorded before the wrong d_Other_Protein_NamesForm
                                 DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
@@ -1126,7 +1140,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbPSaux[ii].errors.as_text()
                         print("fdbPSaux[",ii,"] no es valido")
                         print("!!!!!!Errores despues del fdbPSaux[",ii,"] \n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
                         DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete()
@@ -1147,7 +1161,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbCaPaux[ii].errors.as_text()
                         print("fdbCaPaux[",ii,"] no es valido")
                         print("!!!!!!Errores despues del fdbCaPaux[",ii,"]\n",iii1,"\n") 
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
                         DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete()
@@ -1170,7 +1184,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbPCaPaux[ii].errors.as_text()
                         print("fdbPCaPaux[",ii,"] no es valido")
                         print("!!!!!!Errores despues del fdbPCaPaux[",ii,"]\n",iii1,"\n") 
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         DyndbProtein.objects.filter(id=formPFaux[ii].pk).delete()
                         DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete()
@@ -1201,7 +1215,7 @@ def PROTEINview(request, submission_id):
                         iii1=fdbCaP[ii].errors.as_text()
                         print("fdbCaPaux[",ii,"] no es valido")
                         print("!!!!!!Errores despues del fdbCaPaux[",ii,"]\n",iii1,"\n") 
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                         DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete()
                         DyndbSubmissionProtein.objects.filter(protein_id=formPF[ii].pk).delete()
@@ -1236,7 +1250,7 @@ def PROTEINview(request, submission_id):
                                 iii1=fdbOPN[ii][numON].errors.as_text()
                                 print("fdbOPN[",ii,"] no es valido")
                                 print("!!!!!!Errores despues del fdbSP[",ii,"]\n",iii1,"\n") ####HASTA AQUI#####
-                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                                 DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                                 DyndbCannonicalProteins.objects.filter(id_protein=formPF[ii].pk).delete()
                                 DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete() #Some other names may have been recorded before the wrong dyndb_Other_Protein_NamesForm
@@ -1261,7 +1275,7 @@ def PROTEINview(request, submission_id):
                     iii1=fdbPCaP[ii].errors.as_text()
                     print("fdbPCaP[",ii,"] no es valido")
                     print("!!!!!!Errores despues del fdbPCaP[",ii,"]\n",iii1,"\n") 
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
                     DyndbOtherProteinNames.objects.filter(id_protein=formPF[ii].pk).delete()
                     DyndbCannonicalProteins.objects.filter(id_protein=formPF[ii].pk).delete()
@@ -1279,7 +1293,7 @@ def PROTEINview(request, submission_id):
                     print("OJO!!!!!!!!!!Several Canonical Protein entries exist in the DB")
                     print("Several Canonical Protein entries with UNIPROTKBAC=",qCanProt[ii].filter(pk__in=qCaP[ii].values()),"exist in the DB")
                     iii1=(" ").join[("Several Canonical Protein entries with UniprotKB AC=",str(qCanProt[ii].filter(pk__in=qCaP[ii].values())),"exist in the DB. Please, make the DB administrator know")]
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
 
            # the dyndb_Cannonical_Protein already exists so it is not created again!!!!! let's create dyndb_Protein_Cannonical_Protein entry
@@ -1294,7 +1308,7 @@ def PROTEINview(request, submission_id):
                     fdbPCaP[ii].save()
                 else:
                     iii1=fdbPCaP[ii].errors.as_text()
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     print("fdbPCaP[",ii,"] no es valido")
                     print("!!!!!!Errores despues del fdbCaP[",ii,"]\n",iii1,"\n") 
                     DyndbProtein.objects.filter(id=formPF[ii].pk).delete()
@@ -1305,7 +1319,7 @@ def PROTEINview(request, submission_id):
                     return response
 
             # redirect to a new URL:
-        response = HttpResponse("Step 1 \"Protein Information\" form has been successfully submitted.",content_type='text/plain')
+        response = HttpResponse("Step 1 \"Protein Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')
         return response
         #return HttpResponseRedirect("/".join(["/dynadb/PROTEINfilled",submission_id]), {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
  #       return HttpResponseRedirect(request, '/dynadb/PROTEINfilled.html', {'submission_id':submission_id, 'dictprotinit':dictprotinit, 'dictprot':dictprot })
@@ -1397,7 +1411,7 @@ def delete_protein(request,submission_id):
         protein_num = request.POST["protein_num"]
         
         
-        response = HttpResponse('Success.',content_type='text/plain')
+        response = HttpResponse('Success.',content_type='text/plain; charset=UTF-8')
     else:
         response = HttpResponseForbidden()
     return response
@@ -2475,7 +2489,7 @@ def query_protein_fasta(request,protein_id):
             fseq=fseq+char
         count=count+1
 
-    response = HttpResponse('', content_type='text/plain')
+    response = HttpResponse('', content_type='text/plain; charset=UTF-8')
     response['Content-Disposition'] = 'attachment; filename="protein_'+'protein_id'+'.fa"'
     response.write('> GPCRmd:'+protein_id+'|Uniprot ID:'+uniprot_id.replace(" ","")+':\n')
     response.write(fseq)
@@ -2797,10 +2811,10 @@ def protein_get_data_upkb(request, uniprotkbac=None):
         data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
         if errdata == dict():
           if data == dict():
-            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain; charset=UTF-8')
             return response
           if data['Entry'] != uniprotkbac_noiso and isoform is not None:
-            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
+            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain; charset=UTF-8')
             return response
           data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
           time.sleep(10)
@@ -2829,18 +2843,18 @@ def protein_get_data_upkb(request, uniprotkbac=None):
         if 'Error' in errdata.keys():
           if errdata['ErrorType'] == 'HTTPError':
             if errdata['status_code'] == 404 or errdata['status_code'] == 410:
-              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain; charset=UTF-8')
             else:
               response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(errdata['status_code']) \
-                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+                +'\n'+errdata['reason'],status=502,content_type='text/plain; charset=UTF-8')
           elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError' \
             or errdata['ErrorType'] == 'ParsingError':
             response = HttpResponse('Problem downloading from UniProtKB:'\
-                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+                +'\n'+errdata['reason'],status=502,content_type='text/plain; charset=UTF-8')
           elif errdata['ErrorType'] == 'Internal':
-            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
+            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain; charset=UTF-8')
           else:
-            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain')
+            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain; charset=UTF-8')
             
         else:
           datakeys = set([i.lower() for i in data.keys()])
@@ -2849,14 +2863,14 @@ def protein_get_data_upkb(request, uniprotkbac=None):
             #response={'dict':data,'json':JsonResponse(data)}
             #print (response) ###JUANMA
           else:
-            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain')
+            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain; charset=UTF-8')
         
         
         
       else:
-        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     else:
-      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     return response
 
 def get_uniprot_species_id_and_screen_name(mnemonic):
@@ -3030,7 +3044,7 @@ def get_mutations_view(request):
       else:
         raise ParsingError('Invalid fasta format.')
     except ParsingError as e:
-      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain')
+      response = HttpResponse('Parsing error: '+str(e),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
       return response
     except:
       raise
@@ -3113,7 +3127,7 @@ def search_top(request,submission_id):
         pdbname =  os.path.join(submission_path,pdbname)
         bond_list=dict()
         if os.path.isfile(pdbname) is False: 
-            return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
         arrays=request.POST.getlist('bigarray[]')
         #print(arrays)
@@ -3139,7 +3153,7 @@ def search_top(request,submission_id):
             except ValueError:
                 results={'type':'string_error','title':'Missing information or wrong information', 'message':'Missing or incorrect information in the "Res from" or "Res to" fields. Maybe some whitespace?'}
                 data = json.dumps(results)
-                return HttpResponse('Missing or incorrect information in the "Res from" or "Res to" fields.\nMaybe some whitespace?',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return HttpResponse('Missing or incorrect information in the "Res from" or "Res to" fields.\nMaybe some whitespace?',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 
                 
             
@@ -3202,7 +3216,7 @@ def pdbcheck(request,submission_id):
         pdbname = get_file_name_submission("model",submission_id,0,ext="pdb",forceext=False,subtype="pdb")
         pdbname =  os.path.join(submission_path,pdbname)
         if os.path.isfile(pdbname) is False: 
-            return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse('File not uploaded. Please upload a PDB file',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
         arrays=request.POST.getlist('bigarray[]')
         
@@ -3228,7 +3242,7 @@ def pdbcheck(request,submission_id):
                         else:
                             raise ValueError
                     except:
-                        return HttpResponse('Residue definition "'+str(current_value)+'" is invalid or empty.\n',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        return HttpResponse('Residue definition "'+str(current_value)+'" is invalid or empty.\n',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 else:
                     if r == 3:
                         start = int(current_value)
@@ -3396,9 +3410,14 @@ def get_submission_molecule_info(request,form_type,submission_id):
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def upload_model_pdb(request,submission_id):
-  request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
-  return _upload_model_pdb(request,submission_id)
-  
+
+    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+    try:
+        return _upload_model_pdb(request,submission_id)
+    except (RequestBodyTooLarge, FileTooLarge, TooManyFiles) as e:
+        return HttpResponse(e.args[0],status=413,reason='Payload Too Large',content_type='text/plain; charset=UTF-8')
+    except:
+        raise
 @csrf_protect
 def _upload_model_pdb(request,submission_id):
     pdbfilekey = 'file_source'
@@ -3418,17 +3437,19 @@ def _upload_model_pdb(request,submission_id):
                 response = JsonResponse(data)
             except:
                 os.remove(pdbfilepath)
-                response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
+                response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain; charset=UTF-8')
             finally:
                 uploadedfile.close()
                 return response
             
         else:
+            for upload_handler in request.upload_handlers:
+                if hasattr(upload_handler,'exception'):
+                    if upload_handler.exception is not None:
+                        raise upload_handler.exception
             msg = 'No file was selected or cannot find molecule file reference.'
-            return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_sdf_from_db_by_submission(submission_id,int_ids):
     
     
@@ -3474,8 +3495,6 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_model_pdb_from_db_by_submission(submission_id):
         
     submodel = DyndbSubmissionModel._meta.db_table
@@ -3717,7 +3736,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                     if settings.DEBUG:
                         raise
                     else:
-                        response = HttpResponseServerError('Unknown error while processing PDB file.',content_type='text/plain')
+                        response = HttpResponseServerError('Unknown error while processing PDB file.',content_type='text/plain; charset=UTF-8')
                         return response
                 pdb_resnames = set(resnames)
                 diff_pdb_form = pdb_resnames.difference(form_resnames)
@@ -3836,7 +3855,7 @@ def check_trajectories(request,submission_id):
         if not os.path.isfile(pdbfilepath):
             return JsonResponse({'msg':'Cannot find uploaded PDB file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
 
-        return HttpResponse("Success!",content_type='text/plain')
+        return HttpResponse("Success!",content_type='text/plain; charset=UTF-8')
         
 
 @login_required
@@ -3889,7 +3908,7 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
                     submission_model.save()
                 else:
                     print("ERROR",submission_model.errors.as_text())
-                    response = HttpResponse("Submission Model has not been registered",content_type='text/plain')
+                    response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
                     return response   
 
                 return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),str(model_id),""]), {'submission_id':str(submission_id),'model_id':str(model_id)} )
@@ -3922,7 +3941,7 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
             submission_model.save()
             print("submission modeli is valid")
         else:
-            response = HttpResponse("Submission Model has not been registered",content_type='text/plain')
+            response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
             return response   
         return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':""} )
     else:
@@ -4008,11 +4027,11 @@ def MODELreuseview(request, submission_id, model_id  ):
                 print ("TTTTTTTTTTTtt")
                 print ("MODEL SUBMISSION ITEMS", fdbSM.fields.items())
                 fdbSM.save()
-                response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been successfully submitted for this submission.",content_type='text/plain')
+                response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been successfully submitted for this submission.",content_type='text/plain; charset=UTF-8')
             else:
-                response = HttpResponse( ("").join([fdbSM.errors.as_text(), ". The submission model form has not been saved."]),content_type='text/plain')
+                response = HttpResponse( ("").join([fdbSM.errors.as_text(), ". The submission model form has not been saved."]),content_type='text/plain; charset=UTF-8')
         else:
-            response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been previously submitted for this submission.",content_type='text/plain')
+            response = HttpResponse("Step 3 \"Crystal Assembly Information\" has been previously submitted for this submission.",content_type='text/plain; charset=UTF-8')
         return response
        # return HttpResponseRedirect("/".join(["/dynadb/MODELreuse",submission_id,""]), {'submission_id':submission_id} )
     else:
@@ -4580,7 +4599,7 @@ def MODELview(request, submission_id):
                 #prev_entryFile.update(filename=initFiles['filename'],filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
             #   error=("- ").join(["Error when storing MODEL file info, dyndb_Files form"])
             #   print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-            #   response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+            #   response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             #   return response
             
             fdbFM[key]=dyndb_Files_Model(dicfmod)
@@ -4592,7 +4611,7 @@ def MODELview(request, submission_id):
 
                # print("Errores en el form dyndb_Files_Model\n ", fdbFM[key].errors.as_text())
                # error=("- ").join(["Error when storing MODEL file info, dyndb_Files_Model form"])
-               # response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+               # response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                # return response
 
 
@@ -4601,18 +4620,24 @@ def MODELview(request, submission_id):
     print("REQUEST SESSIONS",request.session.items())
     request.session['info']="PASAR a SESSION"
     print("REQUEST SESSIONS",request.session.items())
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
     # Dealing with POST data
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
         action="/".join(["/dynadb/MODELfilled",submission_id,""])
-     #   response = HttpResponse('PRUEBA MODEL',content_type='text/plain')
+     #   response = HttpResponse('PRUEBA MODEL',content_type='text/plain; charset=UTF-8')
      #   return response
         now=timezone.now()
         author="jmr"
         user="jmr"
         author_id=1
-        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id}
-        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
+        initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
         
         lkeyprotsour=["id_protein","id_model","chain","resid_from","resid_to","seq_resid_from","seq_resid_to","pdbidps","source_typeps","template_id_model","bonded_to_id_modeled_residues","prot"]  
         ckeyprotsour={'source_typeps':"source_type",'pdbidps':"pdbid"}
@@ -4746,13 +4771,13 @@ def MODELview(request, submission_id):
         apoform_NOT_ok=overlappproteins(dictprotsourmod)
         if type(apoform_NOT_ok)==str:
             resp="Please check the numbering in the \"Curated protein data\" section. \"From seq res\" < \"To seq res\". These values depends on \"From res\" and \"To res\", respectively."
-            response = HttpResponse(resp,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse(resp,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
 
         if dictmodel['type']==0:
             if apoform_NOT_ok:
                 resp="Please change the type to complex or check the numbering in the \"Curated protein data\" section"
-                response = HttpResponse(resp,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(resp,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
  
 
@@ -4841,7 +4866,7 @@ def MODELview(request, submission_id):
                         # Let's get the id_complex_exp of complexes involving just the same proteins in our submission and NO ONE ELSE!!!!! There should be only one result. To do so we have to exclude complex_exp containing compounds!!!!
                         p=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLp).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model)).exclude(id_complex_exp__in=DyndbComplexCompound.objects.filter(id_complex_exp__gt=0).values_list('id_complex_exp',flat=True))
                         if(len(p)>1):# Complexes involving exactly the same proteins in our submission is higher than one
-                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                         elif(len(p)==1):
                             ce=p[0]['id_complex_exp']
@@ -4889,7 +4914,7 @@ def MODELview(request, submission_id):
                         rowCompl=list(a&b) # if the id_complex is in both lists cep and cec this is the complex we are looking for
                         print( "JJJJJOOOOOLLLL    2"  )
                         if len(rowCompl) > 1:
-                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                             
 ##                      if(len(cec)<len(cep)):# Complexes with the same number of molecules than our submission is lower than complexes with the same number of proteins than our submission. There should be only one. Then complex_exp value is taken from the DyndbComplexCompound query "c"
@@ -5012,14 +5037,14 @@ def MODELview(request, submission_id):
                         print("CM_exists= True ",id_complex_molecule)
             
             if CE_exists==False:
-                fdbCE=dyndb_Complex_Exp({'creation_timestamp':timezone.now(),'update_timestamp':timezone.now()}) 
+                fdbCE=dyndb_Complex_Exp(initMOD) 
                 if fdbCE.is_valid():
                     fdbCEobj=fdbCE.save()
                     CEpk=fdbCEobj.pk
                 else:
                     iii1=fdbCE.errors.as_text()
                     print("Errores en el form dyndb_Complex_Exp\n ", iii1)                
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 for prot in lprot_in_model:
                     fdbComP=dyndb_Complex_Protein({'id_protein':prot,'id_complex_exp':CEpk})
@@ -5028,7 +5053,7 @@ def MODELview(request, submission_id):
                     else:
                         iii1=fdbComP.errors.as_text()
                         print("Errores en el form dyndb_Complex_Protein\n ", fdbComP.errors.as_data())    
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbComplexExp.objects.filter(id=CEpk).delete()
                         return response
  
@@ -5040,7 +5065,7 @@ def MODELview(request, submission_id):
                         else:
                             iii1=fdbComP.errors.as_text() 
                             print("Errores en el form dyndb_Complex_Compound\n ", fdbComP.errors.as_text())
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             DyndbComplexProtein.objects.filter(id_protein__in=lprot_in_model).filter(id_complex_exp=CEpk).delete()
                             DyndbComplexExp.objects.filter(id=CEpk).delete()
                             return response
@@ -5056,7 +5081,7 @@ def MODELview(request, submission_id):
                 else:
                     iii1=fdbComMol.errors.as_text() 
                     print("Errores en el form dyndb_Complex_Molecule\n ", iii1)
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     if CE_exists==False:# There was not any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
                         DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
                         DyndbComplexProtein.objects.filter(id_protein__in=lprot_in_model).filter(id_complex_exp=CEpk).delete()
@@ -5076,7 +5101,7 @@ def MODELview(request, submission_id):
                         else:
                             iii1=fdbComMolMol.errors.as_text() 
                             print("Errores en el form dyndb_Complex_Molecule_Molecule\n ", fdbComMolMol.errors.as_text())
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
                                 DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
                                 DyndbComplexProtein.objects.filter(id_protein__in=lprot_in_model).filter(id_complex_exp=CEpk).delete()
@@ -5118,7 +5143,7 @@ def MODELview(request, submission_id):
       #     else:
       #         iii1=dyn_ins[ii].errors.as_text()
       #         print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
-      #         response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+      #         response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
       #         return response
 #________________
 
@@ -5144,7 +5169,7 @@ def MODELview(request, submission_id):
                 else:
                     iii1=fdbMF.errors.as_text() 
                     print("Errores en el form dyndb_Models\n", iii1)
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             else:
                 Update_MODEL=True
         else:
@@ -5186,7 +5211,7 @@ def MODELview(request, submission_id):
        #else:
        #    iii1=fdbMF.errors.as_text() 
        #    print("Errores en el form dyndb_Models\n", iii1)
-       #    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+       #    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
           # if CE_exists==False:#There wasn't any entry for the current complex before submitting the current data. We have to delete the registered info if the view raises an error 
           #     DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
           #     DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
@@ -5210,7 +5235,8 @@ def MODELview(request, submission_id):
                 iii1=fdbSMd.errors.as_text()
                 print("fdbSMd no es valido")
                 print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
              
          #  if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
          #      DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
@@ -5285,7 +5311,7 @@ def MODELview(request, submission_id):
                                 dictprotsourmod[key]['bonded_to_id_modeled_residues']=DyndbModeledResidues.objects.filter(id_model__dyndbsubmissionmodel__submission_id=submission_id,source_type__gte=0,id_protein__dyndbsubmissionprotein__submission_id=submission_id,seq_resid_to=(int(dictprotsourmod[key]['seq_resid_from'])-1),id_protein=int(dictprotsourmod[key]['id_protein'])).values_list('id',flat=True)[0] 
                             except:
                                 keyi1=(" ").join(["Please, be careful with the 'bond' checkbox in the row ",str(key+1)," from the table 'Curated protein data'"])
-                                response = HttpResponse(keyi1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                response = HttpResponse(keyi1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                                 return response
                     else:
                         print ("\n  keys dictprot NOT form ",dictprotsourmod[key].items())
@@ -5318,7 +5344,7 @@ def MODELview(request, submission_id):
                     else:
                         keyi1=fdbPS[key].errors.as_text()
                         print("Errores en el form dyndb_Modeled_Residues\n ", fdbPS[key].errors.as_text())
-                        response = HttpResponse(keyi1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(keyi1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                       # if CE_exists==False:#There wasn't any entry for the current complex before submitting the current data. We have to delete the registered info if the view raises an error 
                       ##    DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
                       ##    DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
@@ -5364,7 +5390,7 @@ def MODELview(request, submission_id):
                 else:
                     iii1=fdbPS[ii].errors.as_text()
                     print("Errores en el form dyndb_Modeled_Residues\n ", fdbPS[ii].errors.as_text())
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response 
                
 
@@ -5386,7 +5412,7 @@ def MODELview(request, submission_id):
 #           else:
 #               iii1=fdbMC[ii].errors.as_text()
 #               print("Errores en el form dyndb_Model_Components\n ", iii1 )
-#               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+#               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 #               if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
 #                   DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
 #                   DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
@@ -5426,7 +5452,7 @@ def MODELview(request, submission_id):
                 else:
                     iii1=fdbMC[ii].errors.as_text()
                     print("Errores en el form dyndb_Model_Components\n ", iii1 )
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             #          if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
             #              DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
             #              DyndbComplexProtein.objects.filter(id_protein=prot).filter(id_complex_exp=CEpk).delete()
@@ -5565,7 +5591,7 @@ def MODELview(request, submission_id):
                                                     else:
                                                         iii1=Scom_inst.errors.as_text()
                                                         print("errors in the form Model Components", Scom_inst.errors.as_text())                                   
-                                                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                                         return response                                                                                             
                                 else:
                                     Scom_inst=dyndb_Model_Components(val)
@@ -5575,7 +5601,7 @@ def MODELview(request, submission_id):
                                     else:
                                         iii1=Scom_inst.errors.as_text()
                                         print("errors in the form Model Components", Scom_inst.errors.as_text())                                   
-                                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                         return response                                                                                                         
 
 
@@ -5609,7 +5635,7 @@ def MODELview(request, submission_id):
                                         else:
                                             iii1=Scom_inst.errors.as_text()
                                             print("errors in the form Model Components", Scom_inst.errors.as_text())                                   
-                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                             return response                                                                                             
                     else:
                         Scom_inst=dyndb_Model_Components(val)
@@ -5619,10 +5645,10 @@ def MODELview(request, submission_id):
                         else:
                             iii1=Scom_inst.errors.as_text()
                             print("errors in the form Model Components", Scom_inst.errors.as_text())                                   
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                             return response                                                                                                         
 
-        response = HttpResponse("The model has been successfully registered" ,content_type='text/plain')
+        response = HttpResponse("The model has been successfully registered" ,content_type='text/plain; charset=UTF-8')
         return response
 
     # if a GET (or any other method) we'll create a blank form
@@ -5810,144 +5836,50 @@ def SMALL_MOLECULEview2(request,submission_id):
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def generate_molecule_properties(request,submission_id):
-  request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
-  return _generate_molecule_properties(request,submission_id)
+
+    request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+    
+    try:
+        return _generate_molecule_properties(request,submission_id)
+    except (RequestBodyTooLarge, FileTooLarge, TooManyFiles) as e:
+        return HttpResponse(e.args[0],status=413,reason='Payload Too Large',content_type='text/plain; charset=UTF-8')
+    except:
+        raise
+    
 
 @csrf_protect
 def _generate_molecule_properties(request,submission_id):
-  pngsize = 300
-  RecMet = False
-  formre = re.compile('^form-(\d+)-')
-  
-             
-  if request.method == 'POST':
-    submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
-    submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
-    data = dict()
-    data['download_url_log'] = None
-    if 'molpostkey' in request.POST.keys():
-        if 'recmet' in request.POST.keys():
-            RecMet = True
-        if 'pngsize' in request.POST.keys():
-            pngsize = int(request.POST["pngsize"])
-        molpostkey = request.POST["molpostkey"]
-        
-        if molpostkey in request.FILES.keys():
-            m = formre.search(molpostkey)
-            if m:
-                molid = m.group(1)
-            else:
-                molid = 0
-            uploadfile = request.FILES[molpostkey]
-            os.makedirs(submission_path,exist_ok=True)
-            logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
-            sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
-            pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-            sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
-            pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-            
-            try:
-                os.remove(os.path.join(submission_path,sdfname))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,pngname))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,pngnameref))
-            except:
-                pass
-            try:
-                os.remove(os.path.join(submission_path,sdfnameref))
-            except:
-                pass
-            
-            logfile = open(os.path.join(submission_path,logname),'w')
-            data['download_url_log'] = join_path(submission_url,logname,url=True)
-            try:
-                mol = open_molecule_file(uploadfile,logfile=logfile)
+    pngsize = 300
+    RecMet = False
+    formre = re.compile('^form-(\d+)-')
+    
                 
-            except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
-                print(e.args[0],file=logfile)
-                logfile.close()
-                data['msg'] = e.args[0]
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            except:
-                msg = 'Cannot load molecule from uploaded file.'
-                print(msg,file=logfile)
-                data['msg'] = msg + ' Please, see log file.'
-                logfile.close()
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            finally:
-                uploadfile.close()
-              
-            if check_implicit_hydrogens(mol):
-                data['msg'] = 'Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
-                print(data['msg'],file=logfile)
-                logfile.close()
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            if check_non_accepted_bond_orders(mol):
-                data['msg'] = 'Molecule contains non-accepted bond orders. Please, provide a molecule with single, aromatic, double or triple bonds only.'
-                print(data['msg'],file=logfile)
-                logfile.close()
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+    if request.method == 'POST':
+        submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
+        submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
+        data = dict()
+        data['download_url_log'] = None
+        if 'molpostkey' in request.POST.keys():
+            if 'recmet' in request.POST.keys():
+                RecMet = True
+            if 'pngsize' in request.POST.keys():
+                pngsize = int(request.POST["pngsize"])
+            molpostkey = request.POST["molpostkey"]
             
-            
-            
-            data['sinchi'] = dict()
-            try:
-                print('Generating Standard InChI...',file=logfile)
-                sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
-                data['sinchi']['sinchi'] = sinchi
-                data['sinchi']['code'] = code
-                print(msg,file=logfile)
-                data['inchi'] = dict()
-                print('Generating Fixed Hydrogens InChI...',file=logfile)
-                inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
-                data['inchi']['inchi'] = inchi
-                data['inchi']['code'] = code
-                print(msg,file=logfile)
-                data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
-                data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
-
-            except:
-                data['msg'] ='Error while computing InChI.'
-                print(data['msg'],file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            try:
-                print('Generating Smiles...',file=logfile)
-                data['smiles'] = generate_smiles(mol,logfile)
-            except:
-                msg = 'Error while computing Smiles.'
-                print(msg,file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+            if molpostkey in request.FILES.keys():
+                m = formre.search(molpostkey)
+                if m:
+                    molid = m.group(1)
+                else:
+                    molid = 0
+                uploadfile = request.FILES[molpostkey]
+                os.makedirs(submission_path,exist_ok=True)
+                logname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="log",forceext=False,subtype="log")
+                sdfname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="sdf",forceext=False,subtype="molecule")
+                pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
+                sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
+                pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
                 
-            data['charge'] = get_net_charge(mol)
-            
-            try:
-                mol.SetProp("_Name",sdfname)
-                write_sdf(mol,os.path.join(submission_path,sdfname))
-                data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
-
-            except:
-                try:
-                    os.remove(os.path.join(submission_path,sdfname))
-                except:
-                    pass
-                msg = 'Error while storing SDF file.'
-                print(msg,file=logfile)
-                logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            print('Drawing molecule...',file=logfile)
-            try:
-                generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
-            except:
                 try:
                     os.remove(os.path.join(submission_path,sdfname))
                 except:
@@ -5956,34 +5888,135 @@ def _generate_molecule_properties(request,submission_id):
                     os.remove(os.path.join(submission_path,pngname))
                 except:
                     pass
-                raise
-                msg = 'Error while drawing molecule.'
-                print(msg,file=logfile)
+                try:
+                    os.remove(os.path.join(submission_path,pngnameref))
+                except:
+                    pass
+                try:
+                    os.remove(os.path.join(submission_path,sdfnameref))
+                except:
+                    pass
+                
+                logfile = open(os.path.join(submission_path,logname),'w')
+                data['download_url_log'] = join_path(submission_url,logname,url=True)
+                try:
+                    mol = open_molecule_file(uploadfile,logfile=logfile)
+                    
+                except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                    print(e.args[0],file=logfile)
+                    logfile.close()
+                    data['msg'] = e.args[0]
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                except:
+                    msg = 'Cannot load molecule from uploaded file.'
+                    print(msg,file=logfile)
+                    data['msg'] = msg + ' Please, see log file.'
+                    logfile.close()
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                finally:
+                    uploadfile.close()
+                
+                if check_implicit_hydrogens(mol):
+                    data['msg'] = 'Molecule contains implicit hydrogens. Please, provide a molecule with explicit hydrogens.'
+                    print(data['msg'],file=logfile)
+                    logfile.close()
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                if check_non_accepted_bond_orders(mol):
+                    data['msg'] = 'Molecule contains non-accepted bond orders. Please, provide a molecule with single, aromatic, double or triple bonds only.'
+                    print(data['msg'],file=logfile)
+                    logfile.close()
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                
+                
+                
+                data['sinchi'] = dict()
+                try:
+                    print('Generating Standard InChI...',file=logfile)
+                    sinchi,code,msg = generate_inchi(mol,FixedH=False,RecMet=False)
+                    data['sinchi']['sinchi'] = sinchi
+                    data['sinchi']['code'] = code
+                    print(msg,file=logfile)
+                    data['inchi'] = dict()
+                    print('Generating Fixed Hydrogens InChI...',file=logfile)
+                    inchi,code,msg = generate_inchi(mol,FixedH=True,RecMet=RecMet)
+                    data['inchi']['inchi'] = inchi
+                    data['inchi']['code'] = code
+                    print(msg,file=logfile)
+                    data['sinchikey'] = generate_inchikey(data['sinchi']['sinchi'])
+                    data['inchikey'] = generate_inchikey(data['inchi']['inchi'])
+
+                except:
+                    data['msg'] ='Error while computing InChI.'
+                    print(data['msg'],file=logfile)
+                    logfile.close()
+                    data['msg'] = msg+' Please, see log file.'
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                try:
+                    print('Generating Smiles...',file=logfile)
+                    data['smiles'] = generate_smiles(mol,logfile)
+                except:
+                    msg = 'Error while computing Smiles.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    data['msg'] = msg+' Please, see log file.'
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                    
+                data['charge'] = get_net_charge(mol)
+                
+                try:
+                    mol.SetProp("_Name",sdfname)
+                    write_sdf(mol,os.path.join(submission_path,sdfname))
+                    data['download_url_sdf'] = join_path(submission_url,sdfname,url=True)
+
+                except:
+                    try:
+                        os.remove(os.path.join(submission_path,sdfname))
+                    except:
+                        pass
+                    msg = 'Error while storing SDF file.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    data['msg'] = msg+' Please, see log file.'
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                print('Drawing molecule...',file=logfile)
+                try:
+                    generate_png(mol,os.path.join(submission_path,pngname),logfile,size=pngsize)
+                except:
+                    try:
+                        os.remove(os.path.join(submission_path,sdfname))
+                    except:
+                        pass
+                    try:
+                        os.remove(os.path.join(submission_path,pngname))
+                    except:
+                        pass
+                    raise
+                    msg = 'Error while drawing molecule.'
+                    print(msg,file=logfile)
+                    logfile.close()
+                    data['msg'] = msg+' Please, see log file.'
+                    return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
+                data['download_url_png'] = join_path(submission_url,pngname,url=True)
+                print('Finished with molecule.',file=logfile)
                 logfile.close()
-                data['msg'] = msg+' Please, see log file.'
-                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            data['download_url_png'] = join_path(submission_url,pngname,url=True)
-            print('Finished with molecule.',file=logfile)
-            logfile.close()
-            del mol
-            
-            return JsonResponse(data,safe=False)
+                del mol
+                
+                return JsonResponse(data,safe=False)
+            else:
+                data['msg'] = 'Unknown molecule file reference.'
+                return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
         else:
-            data['msg'] = 'Unknown molecule file reference.'
+            data['msg'] = 'No file was selected or cannot find molecule file reference.'
+            for upload_handler in request.upload_handlers:
+                if hasattr(upload_handler,'exception'):
+                    if upload_handler.exception is not None:
+                        try:
+                            raise upload_handler.exception
+                        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
+                            data['msg'] = e.args[0]
+                        except:
+                            raise
             return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-    elif request.upload_handlers[0].exception is not None:
-        try:
-            raise request.upload_handlers[0].exception
-        except(InvalidMoleculeFileExtension,MultipleMoleculesinSDF) as e :
-            data['msg'] = e.args[0]
-            return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
-            
-            
-        
-    else:
-        print("no POST")
-        data['msg'] = 'No file was selected or cannot find molecule file reference.'
-        return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')
         
 @textonly_500_handler
 @login_required
@@ -6002,7 +6035,7 @@ def get_compound_info_pubchem(request,submission_id):
         if 'molid' in request.POST.keys():
             molid = request.POST['molid']
         else:
-            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
         os.makedirs(submission_path,exist_ok=True)
         pngname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
         sdfname = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
@@ -6024,7 +6057,7 @@ def get_compound_info_pubchem(request,submission_id):
             if 'retrieve_type' in request.POST.keys():
                 retrieve_type = request.POST['retrieve_type']
                 if retrieve_type not in CIDS_TYPES:
-                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             neutralize = False
             if 'neutralize' in request.POST.keys():
                 neutralize = True
@@ -6032,7 +6065,7 @@ def get_compound_info_pubchem(request,submission_id):
                 inchi = request.POST['inchi']
                 mol = MolFromInchi(inchi,removeHs=False)
                 if mol is None:
-                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 remove_isotopes(mol)
                 mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
                 sinchi,code,msg = generate_inchi(mol, FixedH=False, RecMet=False)
@@ -6050,7 +6083,7 @@ def get_compound_info_pubchem(request,submission_id):
             elif 'sinchikey' in request.POST.keys() and search_by == 'sinchikey':
                 sinchikey = request.POST['sinchikey']
                 if not validate_inchikey(sinchikey):
-                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 
                 if neutralize:
                     nsinchikey = neutralize_inchikey(sinchikey)
@@ -6064,7 +6097,7 @@ def get_compound_info_pubchem(request,submission_id):
                 mol = MolFromSmiles(smiles,sanitize=True)
                 
                 if mol is None or smiles == '':
-                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 remove_isotopes(mol)
                 if neutralize:
                     mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
@@ -6074,7 +6107,7 @@ def get_compound_info_pubchem(request,submission_id):
                 search_property = 'smiles'        
 
             else:
-                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
            
         data['pubchem_cid'] = None
         data['chembl_id'] = None
@@ -6183,7 +6216,7 @@ def get_compound_info_chembl(request,submission_id):
         if 'molid' in request.POST.keys():
             molid = request.POST['molid']
         else:
-            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+            return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
         if 'id_only' in request.POST.keys():
                 id_only = True
         os.makedirs(submission_path,exist_ok=True)
@@ -6211,19 +6244,19 @@ def get_compound_info_chembl(request,submission_id):
                 try:
                     similarity = int(request.POST['similarity'])
                 except ValueError:
-                    return HttpResponse("'similarity' filed with invalid value.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse("'similarity' filed with invalid value.",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 except:
                     raise
                 if similarity > max_similarity:
-                    return HttpResponse("Maximum similarity is "+str(max_similarity)+"% .",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse("Maximum similarity is "+str(max_similarity)+"% .",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
                 elif similarity < min_similarity:
-                    return HttpResponse("Minimal allowed similarity is "+str(min_similarity)+"% ."+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse("Minimal allowed similarity is "+str(min_similarity)+"% ."+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
             if 'retrieve_type' in request.POST.keys():
                 retrieve_type = request.POST['retrieve_type']
                 if retrieve_type not in CIDS_TYPES:
-                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse("Invalid search criteria '"+retrieve_type+"'.",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             neutralize = False
             if 'neutralize' in request.POST.keys():
                 neutralize = True
@@ -6231,7 +6264,7 @@ def get_compound_info_chembl(request,submission_id):
                 inchi = request.POST['inchi']
                 mol = MolFromInchi(inchi,removeHs=False)
                 if mol is None:
-                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid InChI.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 remove_isotopes(mol)
                 mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
                 sinchi,code,msg = generate_inchi(mol, FixedH=False, RecMet=False)
@@ -6242,7 +6275,7 @@ def get_compound_info_chembl(request,submission_id):
             elif 'sinchikey' in request.POST.keys() and search_by == 'sinchikey':
                 sinchikey = request.POST['sinchikey']
                 if not validate_inchikey(sinchikey):
-                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid InChIKey.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 
                 if neutralize:
                     nsinchikey = neutralize_inchikey(sinchikey)
@@ -6255,7 +6288,7 @@ def get_compound_info_chembl(request,submission_id):
                 smiles = request.POST['smiles']
                 mol = MolFromSmiles(smiles,sanitize=True)
                 if mol is None or smiles == '':
-                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return HttpResponse('Invalid Smiles.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 remove_isotopes(mol)
                 if neutralize:
                     mol = standarize_mol_by_inchi(mol,neutralize=neutralize)
@@ -6265,7 +6298,7 @@ def get_compound_info_chembl(request,submission_id):
                 search_property = 'smiles'        
 
             else:
-                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                return HttpResponse('Missing POST keys.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             
         data['chembl_id'] = None
         data['name'] = None
@@ -6285,7 +6318,7 @@ def get_compound_info_chembl(request,submission_id):
                     cids = get_chembl_molecule_ids(datachembl,parents=bool(retrieve_type == 'parent'))
                 except ParsingError as e:
                     return HttpResponse('Problem downloading from ChEMBL:'\
-                    +'\n'+e.args[0],status=502,content_type='text/plain')
+                    +'\n'+e.args[0],status=502,content_type='text/plain; charset=UTF-8')
             data['chembl_id'] = cids
             
             if len(cids) == 0:
@@ -6301,7 +6334,7 @@ def get_compound_info_chembl(request,submission_id):
                     prefname,aliases = get_chembl_prefname_synonyms(datachembl)
                 except ParsingError as e:
                     return HttpResponse('Problem downloading from ChEMBL:'\
-                    +'\n'+e.args[0],status=502,content_type='text/plain')
+                    +'\n'+e.args[0],status=502,content_type='text/plain; charset=UTF-8')
                 lastidx = len(aliases)
                 if lastidx > 50:
                     lastidx = 50
@@ -6461,7 +6494,7 @@ def open_chembl(request,submission_id):
 #           #print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
 #           indexfl=[]
 #           if len(dicfiles) == 0:
-#               response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+#               response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 #               return response
 #           for key,val in dicfiles.items():
 #               if form.search(key):
@@ -6554,7 +6587,7 @@ def open_chembl(request,submission_id):
 #                       continue
 #   
 #               elif len(qMF.values())>1:
-#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain; charset=UTF-8')
 #                   return response
 #   
 #   #########   Use of functions retrieving std_molecule info from external sources!!!! It is needed for updatingi
@@ -6718,7 +6751,7 @@ def open_chembl(request,submission_id):
 #               if len(qMF.values())==1:
 #                   print("Your molecule is already present in our database")               
 #               elif len(qMF.values())>1:
-#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                   response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain; charset=UTF-8')
 #                   return response
 #               elif len(qMF.values())==0:
 #                   direct='/protwis/sites/files/Molecule/mol'+str(submission_id)
@@ -6786,7 +6819,7 @@ def delete_molecule(request,submission_id,model_id=1):
         molecule_num = request.POST["molecule_num"]
         
         
-        response = HttpResponse('Success.',content_type='text/plain')
+        response = HttpResponse('Success.',content_type='text/plain; charset=UTF-8')
     else:
         response = HttpResponseForbidden()
     return response
@@ -6874,7 +6907,12 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     else:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
-    return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
+    try:
+        return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
+    except (RequestBodyTooLarge, FileTooLarge, TooManyFiles) as e:
+        return HttpResponse(e.args[0],status=413,reason='Payload Too Large',content_type='text/plain; charset=UTF-8')
+    except:
+        raise    
 
 def get_dynamics_file_types():
     
@@ -6950,7 +6988,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     if new_window.isdigit() and not isinstance(new_window,int):
         new_window = int(new_window)
     else:
-        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
         
     if 'no_js' in request.GET:
         no_js = request.GET['no_js']
@@ -6959,7 +6997,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     if no_js.isdigit() and not isinstance(no_js,int):
         no_js = int(no_js)
     else:
-        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        return HttpResponse('Invalid new_window value.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
         
     if 'file_type' in request.GET:
         file_type = request.GET['file_type']
@@ -6970,7 +7008,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
         return HttpResponseForbidden('<h1>Forbidden<h1>')
     
     if file_type not in file_types:
-        return HttpResponse('Invalid file_type value',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        return HttpResponse('Invalid file_type value',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     
     accept_string = ',.'.join(file_types[file_type]['extension'])
     accept_string = '.' + accept_string
@@ -6983,7 +7021,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
         if file_type in filetype_subtypes_dict:
             subtype = filetype_subtypes_dict[file_type]
         else:
-            response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
             
         if file_type in atomnum_check_file_types:    
@@ -6998,12 +7036,18 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             if 'filekey' in request.POST:
                 filekey = request.POST['filekey']
             else:
-                response = HttpResponse('Missing POST keys.'+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse('Missing POST keys.'+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
-            if  filekey not in request.FILES:
+            filekey_in_files = bool(filekey not in request.FILES)    
+            for upload_handler in request.upload_handlers:
+                if hasattr(upload_handler,'exception'):
+                    if upload_handler.exception is not None:
+                        raise upload_handler.exception
+            if  filekey_in_files:
                 msg = 'No file was selected or cannot find molecule file reference.'
-                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
+
             if trajectory is None:
                 uploadedfiles = [request.FILES[filekey]]
             else:
@@ -7011,17 +7055,17 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                      
             if len(uploadedfiles) == 0:
                 msg = 'No file was selected.'
-                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response               
             elif len(uploadedfiles) > 1 and file_type != 'traj':
                 msg = 'Too many files selected (Max. 1).'
-                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response   
             elif file_type == 'traj' and len(uploadedfiles) > trajectory_max_files:
                 msg = 'Too many files selected (Max. 200).'
-                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response   
-            
+
             
             filenum = 0
             for uploadedfile in uploadedfiles:
@@ -7038,7 +7082,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                 if fileext not in file_types[file_type]['extension']:
                     invalid_ext = True
                 if invalid_ext: 
-                    response = HttpResponse('Invalid extension ".'+fileext+'" for '+file_types[file_type]['long_name'].lower(),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse('Invalid extension ".'+fileext+'" for '+file_types[file_type]['long_name'].lower(),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 if fileext == 'tgz':
                     ext = 'tar.gz'
@@ -7061,21 +7105,21 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     try:
                         numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
                     except:
-                        response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
                     if file_type != 'traj' and ref_numatoms is not None and ref_numatoms != numatoms:
                         if ref_file_type == 'traj':
                             files_text = 'file(s)'
                         else:
                             files_text = 'file'
-                        response = HttpResponse('Uploaded '+filetype_complete_names[file_type]+' file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded '+filetype_complete_names[ref_file_type]+' '+files_text+'.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse('Uploaded '+filetype_complete_names[file_type]+' file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded '+filetype_complete_names[ref_file_type]+' '+files_text+'.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
                     
                 if file_type == 'traj':
 
                     if filenum == 0:
                         if ref_numatoms is not None and ref_numatoms != numatoms:
-                            response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                         dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
                         dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
@@ -7088,7 +7132,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
                         dyndb_submission_dynamics_files.delete()
                     elif prev_numatoms != numatoms:
-                        response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from "'+prev_name+'".',status=432,reason='Partial Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from "'+prev_name+'".',status=432,reason='Partial Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
                     prev_name = uploadedfile.name
                     prev_numatoms = numatoms
@@ -7118,7 +7162,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         file_entry.delete()
                     except:
                         pass
-                    response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain')
+                    response = HttpResponseServerError('Cannot save uploaded file.',content_type='text/plain; charset=UTF-8')
                     return response
                 finally:
                     uploadedfile.close()
@@ -7156,6 +7200,12 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def DYNAMICSview(request, submission_id, model_id=None):
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    initDyn={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() , 'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user ,  'id_model':model_id,'submission_id':submission_id }
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
+    initMOD={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None,'id_structure_model':None, 'template_id_model':None,'model_creation_submission_id':submission_id,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user    }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
                    
     def dynamics_file_table (dname, DFpk): #d_fmolec_t, dictext_id 
         print(dname)
@@ -7202,7 +7252,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
           #  else:
           #      print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
           #      error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
           #      return response
              fdbFM[key]=dyndb_Files_Dynamics(dicfdyn)
              if fdbFM[key].is_valid():
@@ -7214,7 +7264,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
           #  else:
           #      error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
           #      print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain')
+          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
           #      return response
 
     def handle_uploaded_file(f,p,name):
@@ -7235,8 +7285,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         model_id=qM.values_list('model_id',flat=True)[0]
-        initDyn={'id_model':model_id,'id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
-        initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+        initDyn['id_model']=model_id
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}
@@ -7322,7 +7371,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             else:
                 iii1=dyn_ins[ii].errors.as_text()
                 print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
 
             print("\nPOSTimod",ii,POSTimod[ii])
@@ -7373,7 +7422,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                         print("Errores en el form Simulation Components ", ii, " ", Scom_inst[ii][iii].errors.as_data()) 
                         iii1=Scom_inst[ii].errors.as_text()
                         print("errors in the form Dynamics Components", ii," ", Scom_inst[ii].errors.as_text())
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
             else: 
                 print("\n __________________________else")
@@ -7498,7 +7547,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                                                         else:
                                                             iii1=Scom_inst.errors.as_text()
                                                             print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-                                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                                             return response                                                                                             
                                     else:
                                         Scom_inst=dyndb_Dynamics_Components(val)
@@ -7508,7 +7557,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                                         else:
                                             iii1=Scom_inst.errors.as_text()
                                             print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                             return response                                                                                                         
 
 
@@ -7546,7 +7595,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                                             else:
                                                 iii1=Scom_inst.errors.as_text()
                                                 print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-                                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                                 return response                                                                                             
                         else:
                             Scom_inst=dyndb_Dynamics_Components(val)
@@ -7556,7 +7605,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                             else:
                                 iii1=Scom_inst.errors.as_text()
                                 print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+                                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                                 return response                                                                                                         
 
 
@@ -7627,7 +7676,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
 #                                                       else:
 #                                                           iii1=Scom_inst.errors.as_text()
 #                                                           print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-#                                                           response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+#                                                           response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
 #                                                           return response                                                                                                         
 #                       elif len(lempty_rows) > 0:
 #                           print("\n LENGHT EMPTY ROWS", len(lempty_rows))
@@ -7648,7 +7697,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
 #                                           else:
 #                                               iii1=Scom_inst.errors.as_text()
 #                                               print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-#                                               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+#                                               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
 #                                               return response                                                                                                         
 #                       else: 
 #                           Scom_inst=dyndb_Dynamics_Components(val)
@@ -7658,7 +7707,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
 #                           else:
 #                               iii1=Scom_inst.errors.as_text()
 #                               print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-#                               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+#                               response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
 #                               return response                                                                                                         
 
 
@@ -7690,7 +7739,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
    #                                        else:
    #                                            iii1=Scom_inst.errors.as_text()
    #                                            print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-   #                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+   #                                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
    #                                            return response                                                                                                         
    #                            break
 
@@ -7717,7 +7766,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
    #                        else:
    #                            iii1=Scom_inst.errors.as_text()
    #                            print("errors in the form Dynamics Components", Scom_inst.errors.as_text())                                   
-   #                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')                         
+   #                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
    #                            return response                                                                                                         
 
             #Create storage directory: Every Simulation # has its own directory labeled as "dyn"+dyn_obj[ii].pk
@@ -7731,7 +7780,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             lfiles=list(qSDF.values('filepath','url','type'))
             for f in lfiles:
                 if not isfile(f['filepath']):
-                    response = HttpResponse((" ").join(["There is a simulation file which has not been succesfully saved (",f[filename],") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse((" ").join(["There is a simulation file which has not been succesfully saved (",f[filename],") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 else:
                     dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type']}}
@@ -7739,7 +7788,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                     if type(ooofile)==HttpResponse:
                         return ooofile 
 
-        response = HttpResponse('Step 4 "Dynamics Information" form has been successfully submitted.',content_type='text/plain')
+        response = HttpResponse('Step 4 "Dynamics Information" form has been successfully submitted.',content_type='text/plain; charset=UTF-8')
         return response
  
        # return HttpResponseRedirect("/".join(["/dynadb/DYNAMICSfilled",submission_id,""]))
@@ -7810,7 +7859,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             return render(request,'dynadb/DYNAMICS.html', {'dd':dd, 'ddctypel':ddctypel,'ddC':ddC, 'qDMT':qDMT, 'qDST':qDST, 'qDMeth':qDMeth, 'qAT':qAT, 'qDS':qDYNs,'compl':compl,'ddown':ddown,'submission_id':submission_id,'protlist':protlist, 'saved':True,'file_types':file_types, 'qMOD':qMOD, 'ModelReuse':ModelReuse })
 
         elif len(qDYNs)>1:
-            response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
         else:
             
@@ -8674,10 +8723,10 @@ def PROTEINv_get_data_upkb (request, uniprotkbac=None):
         data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
         if errdata == dict():
           if data == dict():
-            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+            response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain; charset=UTF-8')
             return response
           if data['Entry'] != uniprotkbac_noiso and isoform is not None:
-            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
+            response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain; charset=UTF-8')
             return response
           data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
           time.sleep(10)
@@ -8706,32 +8755,32 @@ def PROTEINv_get_data_upkb (request, uniprotkbac=None):
         if 'Error' in errdata.keys():
           if errdata['ErrorType'] == 'HTTPError':
             if errdata['status_code'] == 404 or errdata['status_code'] == 410:
-              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+              response = HttpResponseNotFound('No data found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain; charset=UTF-8')
             else:
               response = HttpResponse('Problem downloading from UniProtKB:\nStatus: '+str(errdata['status_code']) \
-                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+                +'\n'+errdata['reason'],status=502,content_type='text/plain; charset=UTF-8')
           elif errdata['ErrorType'] == 'StreamSizeLimitError' or errdata['ErrorType'] == 'StreamTimeoutError' \
             or errdata['ErrorType'] == 'ParsingError':
             response = HttpResponse('Problem downloading from UniProtKB:'\
-                +'\n'+errdata['reason'],status=502,content_type='text/plain')
+                +'\n'+errdata['reason'],status=502,content_type='text/plain; charset=UTF-8')
           elif errdata['ErrorType'] == 'Internal':
-            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
+            response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain; charset=UTF-8')
           else:
-            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain')
+            response = HttpResponse('Cannot connect to UniProt server:\n'+errdata['reason'],status=504,content_type='text/plain; charset=UTF-8')
             
         else:
           datakeys = set([i.lower() for i in data.keys()])
           if datakeys == KEYS:
             response = data 
           else:
-            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain')
+            response = HttpResponse('Invalid response from UniProtKB.',status=502,content_type='text/plain; charset=UTF-8')
         
         
         
       else:
-        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+        response = HttpResponse('Invalid UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     else:
-      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain')
+      response = HttpResponse('Missing UniProtKB accession number.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     return response
 
 def protein_get_data_upkb2( uniprotkbac):
@@ -8754,10 +8803,10 @@ def protein_get_data_upkb2( uniprotkbac):
     print(errdata)
     if errdata == dict():
     #   if data == dict():
-    #       response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain')
+    #       response = HttpResponseNotFound('No entries found for UniProtKB accession number "'+uniprotkbac+'".',content_type='text/plain; charset=UTF-8')
     #       print(response)
     #   if data['Entry'] != uniprotkbac_noiso and isoform is not None:
-    #       response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain')
+    #       response = HttpResponse('UniProtKB secondary accession numbers with isoform ID are not supported.',status=410,content_type='text/plain; charset=UTF-8')
     #       print(response)
         data['speciesid'], data['Organism'] = get_uniprot_species_id_and_screen_name(data['Entry name'].split('_')[1])
         time.sleep(10)
@@ -8890,7 +8939,7 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
         else:
             if len(browse_protein_response['id_protein'])>1:
                 print(browse_protein_response['Message'])
-                response = HttpResponse(browse_protein_response['Message'],content_type='text/plain')
+                response = HttpResponse(browse_protein_response['Message'],content_type='text/plain; charset=UTF-8')
                 return response
 
 # If the protein ii is not found in our database create a new entry....  
@@ -9003,10 +9052,10 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
             lmseq=len(mseq)
             initPS[ii]={'id_protein':formPF[ii].pk,'sequence':mseq,'length':lmseq} 
             if mseq is None:
-                response = HttpResponse('Mutated sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse('Mutated sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
             if seq is None:
-                response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
             #####  For each nummut (i.e. number of mutation in an specific protein ii) a dyndb_Protein_MutationsForm instace should be created to save data in the database.
             for nm in nummutl[ii]:
@@ -9036,7 +9085,7 @@ def PROTEINfunction(postd_single_protein, number_of_protein, submission_id):
             lseq=len(seq)
             initPS[ii]={'id_protein':formPF[ii].pk,'sequence':seq,'length':lseq} 
             if seq is None:
-                response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse('Wild Type sequence has not been provided',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
 
 # ###   Intance of the forms depending on the is_mutated value in dyndb_ProteinForm
@@ -9602,7 +9651,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 
 #######################################
   #  if len(dicfiles) == 0:
-  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
   #      return response
 
 #   for key,val in dicfiles.items():
@@ -9722,7 +9771,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                     iii1=fdbSM[ii].errors.as_text()
                     print("fdbSM",ii," no es valido")
                     print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
          
                 if ii==indexl[-1]:#if ii is the last element of the list indexl
@@ -9733,7 +9782,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                     continue
          
             elif len(qMF.values())>1:
-                response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",status=500,reason='Internal Server Error',content_type='text/plain')
+                response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
                 return response
 #####   No entry in the GPCRmd DB has been found for the molecule ii... Maybe the Compound and, therefore, the std molecule entries are !!!
 #####   Use of functions retrieving std_molecule info from external sources!!!! It is needed for updating
@@ -9768,7 +9817,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             CFpk=qCFStdFormExist.values_list('id',flat=True)[0]	
             Std_id_mol_update[ii]=False
         elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
-            response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator",status=500,reason='Internal Server Error',content_type='text/plain')
+            response("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator",status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
             return response
         elif len(qCFStdFormExist.values())==0: #Neither the compound nor the standard form of the molecule are in the database
             Std_id_mol_update[ii]=True
@@ -9790,7 +9839,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             else:
                 iii1=fdbCF[ii].errors.as_text()
                 print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_text())
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
        
             #### DyndbOtherCompoundNames 
@@ -9807,7 +9856,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                 else:
                     iii1=fdbON[ii][on].errors.as_text()
                     print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_text())
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbCompound.objects.filter(id=CFpk).delete()
                     return response
 ### Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
@@ -9818,7 +9867,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             if 'msg' in INFOstdMOL.keys():
                 print("HttpResponse(INFOstdMOL['msg'])" )
                 print("HttpResponse(", INFOstdMOL['msg'], ")" )
-                return HttpResponse(INFOstdMOL['msg'],status=422,reason='Unprocessable Entity',content_type='text/plain') 
+                return HttpResponse(INFOstdMOL['msg'],status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8') 
  #### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
             print("COMPROBAR ",INFOstdMOL)
             
@@ -9867,7 +9916,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                 else:
                     print("Errores en el form dyndb_Molecule aux\n ", fdbMFaux.errors.as_text())
                     iii1=fdbMFaux.errors.as_text()
-                    response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
                     DyndbCompound.objects.filter(id=CFpk).delete()
                     return response
@@ -9887,7 +9936,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
                     iii1=fdbSMaux.errors.as_text()
                     print("fdbSMaux",ii," no es valido")
                     print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                    response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
                     DyndbMolecule.objects.filter(id=MFauxpk).delete()
                     DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
@@ -9923,7 +9972,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
         else:
             iii1=fdbMF[ii].errors.as_text()
             print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_text())
-            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             if NewCompoundEntry[ii]==True:
                 DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
                 DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
@@ -9957,12 +10006,12 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
         fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
         if fdbSM[ii].is_valid():
             fdbSM[ii].save()
-            response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
         else:    
             iii1=fdbSM[ii].errors.as_text()
             print("fdbSM",ii," no es valido")
             print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
             DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
             DyndbMolecule.objects.filter(id=MFpk).delete()
@@ -9977,7 +10026,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             return response
     moleculelist=str(indexl)
 
-    response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
+    response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')
     return response
 #_____________________________________________________________________________
 
@@ -9986,7 +10035,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
    #    if len(qMF.values())==1:
    #        print("Your molecule is already present in our database")               
    #    elif len(qMF.values())>1:
-   #        response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+   #        response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain; charset=UTF-8')
    #        return response
    #    elif len(qMF.values())==0:
    #        fdbF[ii]={}
@@ -10146,7 +10195,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #            print ("number of pairs in request.POST ===", nl, "\n ", dfielddict['0'],"\n",dfielddict['1'],"\n",dfielddict['2'])
 #            indexfl=[]
 #        #    if len(dicfiles) == 0:
-#        #        response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+#        #        response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 #        #        return response
 #        ########### FILES!!!!!!
 #        #   for key,val in dicfiles.items():
@@ -10231,7 +10280,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #                        continue
 #        
 #                elif len(qMF.values())>1:
-#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain; charset=UTF-8')
 #                    return response
 #                    
 #         # check if the molecule is actually the standard form of the molecule. If this specific form of the molecule is not in the database (DyndbMolecule) but other molecules corresponding the same compound are, the one we are dealing with won`t be the standard as it is previously recorded when the first molecule corresponding the compound was registered. So, if there is no any entry in the DyndbCompound table matching the sinchikey of the molecule in the form, still will be possible that the current entry would be the standard form.
@@ -10348,7 +10397,7 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
 #                if len(qMF.values())==1:
 #                    print("Your molecule is already present in our database")               
 #                elif len(qMF.values())>1:
-#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain')
+#                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",content_type='text/plain; charset=UTF-8')
 #                    return response
 #                elif len(qMF.values())==0:
 #                    pass
@@ -10694,6 +10743,10 @@ def SMALL_MOLECULEview(request, submission_id):
                 prev_entryFile.update(update_timestamp=timezone.now(),last_update_by_dbengine=user,filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
                 print("\n ENTRADA File EXISTENTE ACTUALIZADA")
 
+    def_user_dbengine=settings.DATABASES['default']['USER']
+    def_user=request.user.id
+    print("HOLA  ", def_user)
+    initPF={'id_uniprot_species':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }
 
 
 
@@ -10701,12 +10754,12 @@ def SMALL_MOLECULEview(request, submission_id):
 #    action="/".join(["/dynadb/MOLECULEfilled",submission_id,""])
     now=timezone.now()
     onames="Pepito; Juanito; Herculito" #to be modified... scripted
-    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
-    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author  }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
+    initMF={'inchicol':1,'id_compound':None,'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  } #####HAY QUE CAMBIAR INCHICOL!!!!!!!!! OJO!!!!!!!!!
+    initCF={'sinchi':"AAAABAAAABAAAA-AAAABAAAAB-A",'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user }#####HAY QUE CAMBIAR SINCHI!!!!!!!!! OJO!!!!!!!!!
     initON={'other_names': onames,'id_compound':None} 
     dicpost=request.POST    #postd_single_molecule
     #dicfiles=request.FILES
-    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':submission_id }
+    initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() , 'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user, 'submission_id':submission_id }
     ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
     ft=DyndbFileTypes.objects.all()
     dict_ext_id={}
@@ -10756,9 +10809,9 @@ def SMALL_MOLECULEview(request, submission_id):
                             iii1=SProtreuse.errors.as_text()
                             print("SProtreuse ", entry," no es valido")
                             print("!!!!!!Errores despues del SProtreuse\n",iii1,"\n")
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
-                #return HttpResponse("FIN PROTEIN",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                #return HttpResponse("FIN PROTEIN",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             if qSmolec_model_this_sub.exists():
                 if len(qSmolec_model_this_sub) == len(qSmolec_model_first_sub):
                     if len(qSmolec_model_this_sub.filter(molecule_id__in=qSmolec_model_first_sub.values('submission_id__dyndbsubmissionmolecule__molecule_id')))==len(qSmolec_model_first_sub):
@@ -10784,7 +10837,7 @@ def SMALL_MOLECULEview(request, submission_id):
                         iii1=SMolreuse.errors.as_text()
                         print("SMolreuse ", mol_in_model," no es valido")
                         print("!!!!!!Errores despues del SMolreuse\n",iii1,"\n")
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
 
         dictmol={}
@@ -10855,7 +10908,7 @@ def SMALL_MOLECULEview(request, submission_id):
  
 ###########################################
    #  #  if len(dicfiles) == 0:
-   #  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain')
+   #  #      response = HttpResponse('No file has been uploaded',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
    #  #      return response
  
 ##      for key,val in dicfiles.items():
@@ -11096,12 +11149,12 @@ def SMALL_MOLECULEview(request, submission_id):
                             iii1=fdbSM[ii].errors.as_text()
                             print("fdbSM",ii," no es valido")
                             print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
              
                     if ii==indexl[-1]:#if ii is the last element of the list indexl
                         print("Molecule #", ii, "has been found in our database")
-                        response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
+                        response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')
                         return response
                         #break
                     else:
@@ -11109,7 +11162,7 @@ def SMALL_MOLECULEview(request, submission_id):
                         continue
              
                 elif len(qMF.values())>1:
-                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",status=500,reason='Internal Server Error',content_type='text/plain')
+                    response = HttpResponse("More than one entries with the same inchikey and the same inchi have been found in our Database. Please, report this ERROR to the GPCRmd administrator",status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
                     return response
             else:
                 print("The Molecule does not exists")
@@ -11143,7 +11196,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     CFpk=qCFStdFormExist.values_list('id',flat=True)[0]	
                     Std_id_mol_update[ii]=False
                 elif len(qCFStdFormExist.values())>1: #the compound is found more than once in the database
-                    response=HttpResponse("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator",status=500,reason='Internal Server Error',content_type='text/plain')
+                    response=HttpResponse("Several Compound entries have been found in the DATABASE. Please, report this ERROR to the GPCRmd database administrator",status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
                     return response
             else: #Neither the compound nor the standard form of the molecule are in the database
                 Std_id_mol_update[ii]=True
@@ -11167,7 +11220,7 @@ def SMALL_MOLECULEview(request, submission_id):
                 else:
                     iii1=fdbCF[ii].errors.as_text()
                     print("Errores en el form dyndb_CompoundForm\n ", fdbCF[ii].errors.as_text())
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
            
                 #### DyndbOtherCompoundNames 
@@ -11190,7 +11243,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     else:
                         iii1=fdbON[ii][on].errors.as_text()
                         print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_text())
-                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                        response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         DyndbCompound.objects.filter(id=CFpk).delete()
                         return response
 #### ## Get the standard Molecule by providing the SInChIKey to the PubChem or CHEMBL databases if the molecule is actually the standard form of the molecule.
@@ -11201,7 +11254,7 @@ def SMALL_MOLECULEview(request, submission_id):
                 if 'msg' in INFOstdMOL.keys():
                     print("HttpResponse(INFOstdMOL['msg'])" )
                     print("HttpResponse(", INFOstdMOL['msg'], ")" )
-                    return HttpResponse(INFOstdMOL['msg'],status=422,reason='Unprocessable Entity',content_type='text/plain') 
+                    return HttpResponse(INFOstdMOL['msg'],status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8') 
   ####### Check if inchi of the standard molecule matches the inchi in the current entry (HTML form)         
    ###### In the case the compound neither have Pubchem nor chembl entry, the std molecule is not required. If no std sdf file has been obtained std molecule info is not registered
    ##### Path_namefrefsdf stand for the path and name of the file in the file system in case it exists. 
@@ -11254,7 +11307,7 @@ def SMALL_MOLECULEview(request, submission_id):
                         else:
                             print("Errores en el form dyndb_Molecule aux\n ", fdbMFaux.errors.as_text())
                             iii1=fdbMFaux.errors.as_text()
-                            response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                            response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
                             DyndbCompound.objects.filter(id=CFpk).delete()
                             return response
@@ -11280,7 +11333,7 @@ def SMALL_MOLECULEview(request, submission_id):
                                 iii1=fdbSMaux.errors.as_text()
                                 print("fdbSMaux",ii," no es valido")
                                 print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                                response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain')
+                                response = HttpResponse((" ").join([iii1," aux"]),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                                 DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
                                 DyndbMolecule.objects.filter(id=MFauxpk).delete()
                                 DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
@@ -11319,7 +11372,7 @@ def SMALL_MOLECULEview(request, submission_id):
             else:
                 iii1=fdbMF[ii].errors.as_text()
                 print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_text())
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 if NewCompoundEntry[ii]==True:
                     DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
                     DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
@@ -11359,12 +11412,12 @@ def SMALL_MOLECULEview(request, submission_id):
             else:
                 if fdbSM[ii].is_valid():
                     fdbSM[ii].save()
-                    response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response= HttpResponse("SUCCESS",status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 else:    
                     iii1=fdbSM[ii].errors.as_text()
                     print("fdbSM",ii," no es valido")
                     print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
-                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
                     DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
                     DyndbMolecule.objects.filter(id=MFpk).delete()
@@ -11379,7 +11432,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     return response
         moleculelist=str(indexl)
  
-        response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain')
+        response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')
         return response
   
   
@@ -11701,7 +11754,7 @@ def submission_summaryiew(request,submission_id):
     summarypath = os.path.join(submission_path,filename)
     summaryurl = os.path.join(submission_url,filename)
 
-    fh= HttpResponse("",content_type='text/plain',)
+    fh= HttpResponse("",content_type='text/plain; charset=UTF-8',)
     fh.charset="UTF-8"
     if not os.path.exists(submission_path):
         os.makedirs(submission_path)
@@ -11966,8 +12019,20 @@ def in_directory(file, directory):
 def mdsrv_redirect(request,path):
     if hasattr(settings, 'MDSRV_REVERSE_PROXY'):
         if settings.MDSRV_REVERSE_PROXY == 'ALL' or settings.MDSRV_REVERSE_PROXY == 'POST' and request.method in {'POST','PUT'}:
+            content_type = None
+            path_segments = path.split('/')
+            if path_segments[0] == 'dir':
+                content_type = 'application/json'
+            elif path_segments[0] == 'traj' and len(path_segments) > 2:
+                if path_segments[1] == 'frame' or path_segments[1] == 'path':
+                    content_type = 'application/octet-stream'
+                elif path_segments[1] == 'numframes':
+                    content_type = 'text/plain; charset=UTF-8'
             proxyview = ProxyView.as_view(upstream=settings.MDSRV_UPSTREAM)
-            return proxyview(request,request.path)
+            response = proxyview(request,request.path)
+            if content_type is not None:
+                response['Content-Type'] = content_type
+            return response
     response = HttpResponse()
     response['Location'] = "/mdsrv_redirect/"+path+request.META['QUERY_STRING']
     response.status_code = 200
@@ -11991,5 +12056,5 @@ def mdsrv_redirect_login(request,path,path_dir):
         url_path = path_dir
         allow_dir = True
     if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir):
-        return HttpResponseForbidden("Forbidden (403).",content_type='text/plain')
+        return HttpResponseForbidden("Forbidden (403).",content_type='text/plain; charset=UTF-8')
     return mdsrv_redirect(request,url_path)
