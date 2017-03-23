@@ -5238,6 +5238,7 @@ def MODELview(request, submission_id):
                 print("fdbSMd no es valido")
                 print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
                 response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
              
          #  if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
          #      DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
