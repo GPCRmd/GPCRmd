@@ -3495,8 +3495,6 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_model_pdb_from_db_by_submission(submission_id):
         
     submodel = DyndbSubmissionModel._meta.db_table
