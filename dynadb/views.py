@@ -1627,9 +1627,9 @@ def ajaxsearcher(request):
                             for mutants in DyndbProtein.objects.filter(uniprotkbac=protein.uniprotkbac):
                                 isrecm=mutants.receptor_id_protein
                                 if isrecm is None and [str(mutants.id),str(mutants.name)] not in proteinlist:
-                                    proteinlist.append([str(protein.id),str(protein.name)])
+                                    proteinlist.append([str(mutants.id),str(mutants.name)])
                                 if isrecm is not None and [str(mutants.id),str(mutants.name)] not in gpcrlist:
-                                    gpcrlist.append([str(protein.id),str(protein.name)])
+                                    gpcrlist.append([str(mutants.id),str(mutants.name)])
 
 
                     elif 'molecule' in str(res.id):
