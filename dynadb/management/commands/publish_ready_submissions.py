@@ -263,12 +263,15 @@ class Command(BaseCommand):
 
                     newfilename = get_file_name(objecttype=obj,fileid=fileobj['id_files'],objectid=fileobj['object_id'],ext=fileobj['ext'],forceext=False,subtype=subtype,imgsize=imgsize)
                     newpath = path.join(newdir,newfilename)
-                    self.stdout.write(''.join(('Moving "',fileobj['filepath'],'" to "',newpath,'".')))
-                    os_rename(fileobj['filepath'],newpath)
+                    newurl = path.join(newurlroot,newfilename)
+                    if newpath != fileobj['filepath']:
+                        self.stdout.write(''.join(('Moving "',fileobj['filepath'],'" to "',newpath,'".')))
+                        os_rename(fileobj['filepath'],newpath)
                     try:
-                        DyndbFiles.objects.filter(pk=fileobj['id_files']).update(filepath=newpath)
+                        DyndbFiles.objects.filter(pk=fileobj['id_files']).update(filename=newfilename,url=newurl,filepath=newpath)
                     except:
-                        os_rename(newpath,fileobj['filepath'])
+                        if newpath != fileobj['filepath']:
+                            os_rename(newpath,fileobj['filepath'])
                         raise
                     
         if options['set-ready-only'] and options['full']:

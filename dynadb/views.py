@@ -1627,9 +1627,9 @@ def ajaxsearcher(request):
                             for mutants in DyndbProtein.objects.filter(uniprotkbac=protein.uniprotkbac):
                                 isrecm=mutants.receptor_id_protein
                                 if isrecm is None and [str(mutants.id),str(mutants.name)] not in proteinlist:
-                                    proteinlist.append([str(protein.id),str(protein.name)])
+                                    proteinlist.append([str(mutants.id),str(mutants.name)])
                                 if isrecm is not None and [str(mutants.id),str(mutants.name)] not in gpcrlist:
-                                    gpcrlist.append([str(protein.id),str(protein.name)])
+                                    gpcrlist.append([str(mutants.id),str(mutants.name)])
 
 
                     elif 'molecule' in str(res.id):
@@ -3450,8 +3450,6 @@ def _upload_model_pdb(request,submission_id):
             msg = 'No file was selected or cannot find molecule file reference.'
             return HttpResponse(msg,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_sdf_from_db_by_submission(submission_id,int_ids):
     
     
@@ -3497,8 +3495,6 @@ def get_sdf_from_db_by_submission(submission_id,int_ids):
 
         return dictfetchall(cursor)
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def get_model_pdb_from_db_by_submission(submission_id):
         
     submodel = DyndbSubmissionModel._meta.db_table
@@ -5240,6 +5236,7 @@ def MODELview(request, submission_id):
                 print("fdbSMd no es valido")
                 print("!!!!!!Errores despues del fdbSMd\n",iii1,"\n")
                 response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
              
          #  if CE_exists==False:#There wasn't any entry for the current complex after submitting the current data. We have to delete the registered info if the view raises an error 
          #      DyndbComplexCompound.objects.filter(id_complex_exp=CEpk).delete()
@@ -7288,6 +7285,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         model_id=qM.values_list('model_id',flat=True)[0]
+        initDyn['id_model']=model_id
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}
@@ -12060,3 +12058,16 @@ def mdsrv_redirect_login(request,path,path_dir):
     if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir):
         return HttpResponseForbidden("Forbidden (403).",content_type='text/plain; charset=UTF-8')
     return mdsrv_redirect(request,url_path)
+
+def reset_permissions(request):
+    try:
+        from django.core.cache import cache
+        cache.clear()
+        import os
+        os.system("chmod -R 777 /protwis/sites/files/")
+        #os.system("rm -fr /tmp/django_cache")
+    except Exception as e:
+        print(str(e))
+        ex_type, ex, tb = sys.exc_info()
+        traceback.print_tb(tb)
+    return HttpResponse('Done!',content_type='text/plain; charset=UTF-8')

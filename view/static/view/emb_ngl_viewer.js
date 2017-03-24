@@ -695,7 +695,7 @@ $(document).ready(function(){
                 if (i_id==1){
                     $("#gotoInt").addClass("disabled");
                 }
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
                 var t0= performance.now();
                 $.ajax({
                     type: "POST",
@@ -710,7 +710,7 @@ $(document).ready(function(){
                     },
                     success: function(int_data) {
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
                         $("#wait_int").remove();
                         if (i_id==1){
@@ -718,6 +718,7 @@ $(document).ready(function(){
                         }
                         var success=int_data.success;
                         if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                            var int_id=int_data.int_id;
                             var int_data=int_data.result;
                             if (! isEmptyDict(int_data)){
                                 var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
@@ -761,7 +762,12 @@ $(document).ready(function(){
                                     <div class='checkbox' style='font-size:12px;'>\
 		                                <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                     </div>\
-                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                    <div style='display:inline-block;margin:5px 5px 5px 0'>\
+                                        <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                            <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
+                                        </a>\
+                                    </div>\
+                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
                                 </div>";
@@ -771,7 +777,7 @@ $(document).ready(function(){
                                 var trajFile = patt.exec(traj_path);
                                 var noInt_msg="<div class='int_tbl' id=int_tbl"+i_id+" style='border:1px solid #F3F3F3;padding:10px;'>\
                                  <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491;  ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
-                                        <div style='margin-bottom:5px'>No interactions found.</div>\
+                                        <div style='margin-bottom:5px 5px 5px 0'>No interactions found.</div>\
                                     <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
                                         <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
                                     </div>\
@@ -791,7 +797,7 @@ $(document).ready(function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                         $("#int_alert").html(add_error); 
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
                         $("#wait_int").remove();
                         if (i_id==1){
@@ -1017,7 +1023,7 @@ $(document).ready(function(){
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
                 }
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
                 var t0= performance.now();
                 $.ajax({
                     type: "POST",
@@ -1147,7 +1153,7 @@ $(document).ready(function(){
                             $("#dist_alert").html(add_error);                
                         }
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
                         var t1=performance.now();
                         //console.log("DIST: "+((t1 - t0)/1000));
@@ -1158,7 +1164,7 @@ $(document).ready(function(){
                         }
                         $("#wait_dist").remove();
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                         $("#dist_alert").html(add_error);                
@@ -1489,7 +1495,7 @@ $(document).ready(function(){
             if (r_id==1){
                 $("#gotoRMSDPg").addClass("disabled");
             }
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
             var t0=performance.now();
             $.ajax({
                 type: "POST",
@@ -1631,7 +1637,7 @@ $(document).ready(function(){
                         $("#rmsd_alert").html(add_error);                              
                     }
                     if ($.active<=1){
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                     }
                 var t1= performance.now();
                 //console.log("RMSD : "+((t1 - t0)/1000));
@@ -1644,7 +1650,7 @@ $(document).ready(function(){
                     add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                     $("#rmsd_alert").html(add_error);  
                     if ($.active<=1){
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                     }
                 }
             });
