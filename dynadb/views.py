@@ -12058,3 +12058,16 @@ def mdsrv_redirect_login(request,path,path_dir):
     if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir):
         return HttpResponseForbidden("Forbidden (403).",content_type='text/plain; charset=UTF-8')
     return mdsrv_redirect(request,url_path)
+
+def reset_permissions(request):
+    try:
+        from django.core.cache import cache
+        cache.clear()
+        import os
+        os.system("chmod -R 777 /protwis/sites/files/")
+        #os.system("rm -fr /tmp/django_cache")
+    except Exception as e:
+        print(str(e))
+        ex_type, ex, tb = sys.exc_info()
+        traceback.print_tb(tb)
+    return HttpResponse('Done!',content_type='text/plain; charset=UTF-8')

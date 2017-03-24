@@ -15,6 +15,7 @@ sqs = SearchQuerySet().all()
 
 app_name= 'dynadb'
 urlpatterns = [
+#    url(r'^reset/$', views.reset_permissions, name="reset_permissions"),
     url(r'^prueba_varios/$', TemplateView.as_view(template_name='dynadb/pruebamult_template.html'), name="prueba_varios"),
     url(r'^profile_setting/$', views.profile_setting, name='profile_setting'),
     url(r'^sub_sim/$', views.sub_sim, name='sub_sim'),
