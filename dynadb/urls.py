@@ -106,6 +106,8 @@ urlpatterns = [
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),
     url(r'^form/$', views.get_formup, name='form'),
+    url(r'^model/carousel/(?P<model_id>[0-9]+)/$', views.carousel_model_components, name='carousel_model_components'),
+    url(r'^dynamics/carousel/(?P<dynamics_id>[0-9]+)/$', views.carousel_dynamics_components, name='carousel_dynamics_components'),
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted'),
     url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank'),]

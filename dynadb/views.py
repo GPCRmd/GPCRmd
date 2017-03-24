@@ -2678,6 +2678,7 @@ def query_model(request,model_id,incall=False):
     model_dic['references']=list()
     model_dic['components']=list()
     model_dic['dynamics']=list()
+    model_dic['my_id']=model_id
     try:
         model_dic['complex']=DyndbModel.objects.select_related('id_complex_molecule__id_complex_exp').get(pk=model_id).id_complex_molecule.id_complex_exp.id
     except:
@@ -2791,6 +2792,33 @@ def query_dynamics(request,dynamics_id):
         dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
     
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
+    
+    
+def carousel_model_components(request,model_id):
+    model_dic=dict()
+    model_dic['components']=[]
+    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=model_id):
+        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink']])    
+    return render(request, 'dynadb/model_carousel.html',{'answer':model_dic})
+    
+    
+    
+def carousel_dynamics_components(request,dynamics_id):
+    print('here')
+    dyna_dic=dict()
+    dyna_dic['link_2_molecules']=[]
+    for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
+        print('heereeeeee2')
+        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
+
+    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
+        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']]
+        if candidatecomp not in dyna_dic['link_2_molecules'] : 
+            #dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
+            dyna_dic['link_2_molecules'].append(candidatecomp)
+    print(dyna_dic)
+    return render(request, 'dynadb/dynamics_carousel.html',{'answer':dyna_dic})
+        
     
 @textonly_500_handler
 @login_required
