@@ -63,7 +63,7 @@ from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
 from django.conf import settings
 from django.views.defaults import server_error
 from revproxy.views import ProxyView
-
+import mdtraj as md
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 
 # Custom view function wrappers
@@ -1584,9 +1584,9 @@ def ajaxsearcher(request):
                             for mutants in DyndbProtein.objects.filter(uniprotkbac=protein.uniprotkbac):
                                 isrecm=mutants.receptor_id_protein
                                 if isrecm is None and [str(mutants.id),str(mutants.name)] not in proteinlist:
-                                    proteinlist.append([str(protein.id),str(protein.name)])
+                                    proteinlist.append([str(mutants.id),str(mutants.name)])
                                 if isrecm is not None and [str(mutants.id),str(mutants.name)] not in gpcrlist:
-                                    gpcrlist.append([str(protein.id),str(protein.name)])
+                                    gpcrlist.append([str(mutants.id),str(mutants.name)])
 
 
                     elif 'molecule' in str(res.id):
@@ -2345,6 +2345,44 @@ def generate_molecule_properties_BindingDB(SDFpath):
     SDFhandler.close()
     
     return data
+
+@textonly_500_handler
+def do_analysis(request):
+    if request.method == 'POST':
+        full_results=dict()
+        arrays=request.POST.getlist('frames[]')
+        #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
+        trajectory = md.load('./b2ar.dcd', top='./build.pdb')
+        trajectory=trajectory[int(arrays[0]):int(arrays[1])]
+        atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
+        trajectory=trajectory.atom_slice(atom_indices, inplace=False)
+        sasa=md.shrake_rupley(trajectory)
+        time=trajectory.time
+        total_sasa = sasa.sum(axis=1)
+        time=time.tolist()
+        total_sasa = total_sasa.tolist()
+        result=list(zip(time,total_sasa))
+        result=[list(i) for i in result]
+        full_results['sasa']=result
+        #calculate H-bonds
+        user_resid=601
+        user_resname='5FW'
+        label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        hbonds = md.baker_hubbard(trajectory, periodic=False)
+        hbonds_user=[]
+        print(hbonds)
+        for hbond in hbonds:
+            print(label(hbond))
+            #if (t.topology.atom(hbond[0]).residue.resSeq==user_resid and t.topology.atom(hbond[0]).residue.name==user_resname) or (t.topology.atom(hbond[1]).residue.resSeq==user_resid and t.topology.atom(hbond[1]).residue.name==user_resname):
+            if t.topology.atom(hbond[0]).residue.name==user_resname or t.topology.atom(hbond[1]).residue.name==user_resname:
+                hbonds_user.append(label(hbond))
+
+        full_results['hbonds']=hbonds_user
+        print(full_results)
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+    else:
+        return render(request, 'dynadb/analysis_results.html',{'answer':{}})
 
 
 @user_passes_test_args(is_published_or_submission_owner)
