@@ -1,3 +1,5 @@
+import traceback
+
 class MultipleProxyMiddleware(object):
     FORWARDED_FOR_FIELDS = [
         'HTTP_X_FORWARDED_FOR',
@@ -15,3 +17,10 @@ class MultipleProxyMiddleware(object):
                 if ',' in request.META[field]:
                     parts = request.META[field].split(',')
                     request.META[field] = parts[-1].strip()
+
+
+class WsgiLogErrors(object):
+    def process_exception(self, request, exception):
+        tb_text = traceback.format_exc()
+        url = request.build_absolute_uri()
+        request.META['wsgi.errors'].write(url + '\n' + str(tb_text) + '\n')

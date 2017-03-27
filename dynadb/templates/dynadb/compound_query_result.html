@@ -59,7 +59,7 @@
         <br><b>References in which this compound is mentioned</b>:<br>
         <ul>
         {%for reference in answer.references%}
-              <li>{{reference.2}} {{reference.1}} doi: {{reference.0}} Available in: {{reference.3}} </li>
+            {% autoescape off %}{{reference}}{% endautoescape %}
         {%endfor%}
         </ul>
     {% endif %} 
