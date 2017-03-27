@@ -308,13 +308,19 @@ def obtain_compounds(dyn_id):
     comp_dict={}
     lig_li=[]
     for c in comp:
-        dc=DyndbCompound.objects.get(dyndbmolecule__dyndbmodelcomponents=c.id).name #Ligands, water (and ions)
+        if c.type == 2:
+            dc = c.resname
+        else:
+            dc=DyndbCompound.objects.get(dyndbmolecule__dyndbmodelcomponents=c.id).name #Ligands, water (and ions)
         comp_dict[dc] = c.resname
         if c.type ==1:
             lig_li.append([dc,c.resname])
     ddc=DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id) # Lipids and ions
     for c in ddc:
-        dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
+        if c.type == 2:
+            dc = c.resname
+        else:
+            dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
         resn=c.resname
         if dc not in comp_dict:
             comp_dict[dc]=resn
