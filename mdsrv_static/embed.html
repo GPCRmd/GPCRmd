@@ -408,7 +408,7 @@
                     if (typeof class_li == "object"){
                         if (class_li.length > 0){
                             var cons_pos_ok = class_li.join(" OR ");
-                            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } );
+                            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: "protein and ("+ cons_pos_ok +")" } );
                         }
                     }
                 }   

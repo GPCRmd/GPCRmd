@@ -288,7 +288,7 @@
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: cons_pos_ok  } ); 
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:"protein and ("+ cons_pos_ok +")"  } ); 
                                                 }
                                             }   
 
@@ -301,7 +301,7 @@
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  cons_pos_ok  } );
+                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  "protein and ("+ cons_pos_ok +")"  } );
                                                 }
                                             }   
                                             //o.setSelection( sel_deco );
@@ -311,7 +311,7 @@
                                              class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                              if (class_li){
                                                  var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:cons_pos_ok  } );
+                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: "protein and ("+ cons_pos_ok +")" } );
                                              }
                                          }   
 
