@@ -2573,13 +2573,28 @@ def query_compound(request,compound_id,incall=False):
         comp_dic['related_mol_images'].append([molecule.id,get_imagepath(molecule.id,'molecule')])
         
     for match in DyndbReferencesCompound.objects.select_related('id_references').filter(id_compound=compound_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
-        counter=0
-        for element in ref:
-            if element is None:
-                ref[counter]=''
-            counter+=1            
-        comp_dic['references'].append(ref)  
+        if match.id_references.url is not None:
+            url_pubchem=match.id_references.url
+            url_pubchem=url_pubchem.replace('[compound id]',str(comp_dic['pubchem_cid']))
+        else:
+            url_pubchem=''
+        if match.id_references.title is not None:
+            title=match.id_references.title 
+            title=title.replace('Compound data comes from Pubchem','Data for this compound was obtained from the PubChem database')
+        else:
+            title=''
+        #~ ref=[match.id_references.doi,title,match.id_references.authors,url_pubchem]
+        full_ref=''
+        if match.id_references.authors is not None and len(match.id_references.authors)>0:
+            full_ref+=match.id_references.authors+'. '
+        if len(title)>0:
+            full_ref+='<i>'+title+'</i>. '
+        if match.id_references.doi is not None and len(match.id_references.doi)>0:
+            full_ref+='DOI: '+match.id_references.doi+'. '
+        if len(url_pubchem)>0:
+            full_ref+='Available in: <a href='+url_pubchem+'>'+url_pubchem+'</a>. '
+        print('FULL REF',full_ref)
+        comp_dic['references'].append(full_ref)  
     if incall==True:
         return comp_dic
     return render(request, 'dynadb/compound_query_result.html',{'answer':comp_dic})
