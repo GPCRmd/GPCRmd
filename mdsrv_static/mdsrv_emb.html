@@ -42,6 +42,8 @@
         document.addEventListener( "DOMContentLoaded", function(){
             stage = new NGL.Stage();
             NGL.StageWidget( stage );
+        stage.setParameters( { backgroundColor: "white" } );
+        stage.parameters.cameraType="orthographic";
 //////////////
 
         function selWithinComponent(o,dist_comp){
@@ -97,10 +99,10 @@
                             if (! clickedRep[atom2]){
                                 clickedRep[atom2]=[];
                             }
-                            for (an in add1){
+                            for (an = 0; an < add1.length;an++) {
                                 clickedRep[atom1][clickedRep[atom1].length]=add1[an]
                             }
-                            for (an in add2){
+                            for (an = 0; an < add2.length;an++) {
                                 clickedRep[atom2][clickedRep[atom2].length]=add2[an]
                             }
                             o.addRepresentation( "label", {
@@ -112,7 +114,7 @@
                         } else {
                             if (atom1 in clickedRep){
                                 var toRv=clickedRep[atom1];
-                                for (rvN in toRv){
+                                for (rvN = 0; rvN < toRv.length;rvN++) {
                                     var repName=toRv[rvN];
                                     stage.getRepresentationsByName(repName).list[0].repr.clear();
                                 }
@@ -167,10 +169,18 @@
                 }
              }
              
+
+
+             /*var va = "test";             
+             for (v in va){ 
+                console.log(v);
+                console.log(va[v]);
+             };*/
+             
              var cp_li=[];
              if (cp){
                  cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
-                 for (comp in cp_li){
+                 for (comp = 0; comp < cp_li.length; comp++){
                      all_cp += (cp_li[comp] + " or ");
                  }
                  all_cp = all_cp.slice(0, -3);
@@ -180,7 +190,7 @@
                  var cons_cp_li = decodeURIComponent(cons_comp.replace(/\+/g, " ")).split(",");
                  if (cp_li.length > 0){
                      var cons_comp_p=[];
-                     for (compN in cons_cp_li){
+                     for (compN = 0; compN < cons_cp_li.length; compN++) {
                          var mycomp =cons_cp_li[compN];
                          if (cp_li.indexOf(mycomp)==-1){
                              cons_comp_p[cons_comp_p.length]=mycomp;
@@ -188,13 +198,13 @@
                      }
                      if (cons_comp_p.length >0){
                          all_conscp=" or ";
-                         for (compN in cons_comp_p){
+                         for (compN = 0; compN < cons_comp_p.length; compN++) {
                              all_conscp += (cons_comp_p[compN] + " or ");
                          }
                          all_conscp = all_conscp.slice(0, -3);
                      }
                  } else {
-                     for (compN in cons_cp_li){
+                     for (compN = 0; compN < cons_cp_li.length; compN++){
                          all_conscp += (cons_cp_li[compN] + " or ");
                      }
                      all_conscp = all_conscp.slice(0, -3);
@@ -216,7 +226,7 @@
              function fromChainLiToNGL(nonGPCR){ 
                  var nonGPCR_li=nonGPCR.split(",");
                  var nonGPCR_mod="";
-                 for (chain_n in nonGPCR_li){
+                 for (chain_n = 0; chain_n < nonGPCR_li.length; chain_n++) {
                      nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
                  }
                  nonGPCR_mod=nonGPCR_mod.slice(0,-3);
@@ -262,7 +272,7 @@
                                 if (cons_pos == "y"){
                                     var pre_pd_all=[pdA,pdB,pdC,pdF];
                                     var pd_all = [];
-                                    for (elN in pre_pd_all){
+                                    for (elN = 0; elN < pre_pd_all.length; elN++) {
                                         var class_poss=pre_pd_all[elN];
                                         if (class_poss){
                                             pd_all[pd_all.length]=class_poss
@@ -274,7 +284,7 @@
                                         var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
                                         if (sel_method == "high"){
                                             o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
-                                            for (ind in pd_all) {
+                                            for (ind = 0; ind < pd_all.length; ind++) {
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
@@ -287,7 +297,7 @@
                                                 o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: sel_deco });
                                             }*/
 
-                                            for (ind in pd_all) {
+                                            for (ind = 0; ind < pd_all.length; ind++) {
                                                 class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                                 if (class_li){
                                                     var cons_pos_ok = class_li.replace(/,/g," OR ")
@@ -297,7 +307,7 @@
                                             //o.setSelection( sel_deco );
                                         }
                                      } else {
-                                         for (ind in pd_all) {
+                                         for (ind = 0; ind < pd_all.length; ind++) {
                                              class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                              if (class_li){
                                                  var cons_pos_ok = class_li.replace(/,/g," OR ")
@@ -327,13 +337,13 @@
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
                                     var traj_li=traj_str.split(",")
-                                    for (t in traj_li) {
+                                    for (t = 0; t < traj_li.length; t++) {
                                         o.addTrajectory( t_path + traj_li[t] );
                                     }
                                 }
                                 if (dist_within){
                                     var dist_within_li = decodeURIComponent(dist_within.replace(/\+/g, " ")).split(",");
-                                    for (wth_n in dist_within_li){
+                                    for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                                         var dist_comp=  dist_within_li[wth_n].split("-");
                                         var ligSele=dist_comp[2];
                                         var show =dist_comp[0];
@@ -353,9 +363,9 @@
                                         o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
                                     }
                                     var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
-                                    for (trajN in trajCompT){
+                                    for (trajN = 0; trajN < trajCompT.length; trajN++) {
                                         trajCompT[trajN].signals.frameChanged.add(function(){
-                                            for (wth_n in dist_within_li){
+                                            for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                                                 var dist_comp=  dist_within_li[wth_n].split("-");
                                                 var show =dist_comp[0];
                                                 var ligSele=dist_comp[2];
@@ -382,10 +392,10 @@
                                     dist_groups_li=dist_groups_s_deco.split(",");
                                     var cd_id=0;
                                     var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
-                                    for (distgN in dist_groups_li){
+                                    for (distgN = 0; distgN < dist_groups_li.length; distgN++) {
                                         var dist_group=dist_groups_li[distgN];
                                         var dist_pair_li=dist_group.split("a");
-                                        for (pair_n in dist_pair_li){
+                                        for (pair_n = 0; pair_n < dist_pair_li.length; pair_n++) {
                                             var d_from_to_str = dist_pair_li[pair_n];
                                             if (typeof d_from_to_str == "string"){
                                                 var d_from_to = d_from_to_str.split("-");
@@ -403,7 +413,7 @@
                                 if (int_res_s){
                                     var int_res_s_d =decodeURIComponent(int_res_s.replace(/\+/g, " "));
                                     var int_res_li = int_res_s_d.split(",");
-                                    for (pos_info_n in int_res_li){
+                                    for (pos_info_n = 0; pos_info_n < int_res_li.length; pos_info_n++) {
                                         var pos_info_s = int_res_li[pos_info_n];
                                         var pos_info = pos_info_s.split("-");
                                         var pos = pos_info[0]+":"+pos_info[1];

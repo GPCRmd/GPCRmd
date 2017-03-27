@@ -49,7 +49,7 @@
 ////////////////// Functions
         $(document).ready(function(){
         document.domain=document.domain;
-
+        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
             var radius=Number(dist_comp[1]);
@@ -128,7 +128,29 @@
             nonGPCR_mod=nonGPCR_mod.slice(0,-3);
             return nonGPCR_mod
         }
-
+        
+        function clearDists(clicktrue,lbl_name1){
+            if (! clicktrue && lbl_name1){
+                clicktrue = true;
+                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                stage.getRepresentationsByName(lbl_name1).setVisibility(false);
+            }
+            for (repN in clickedRepLi){
+                var repNm =clickedRepLi[repN];
+                if (typeof repNm =="string"){
+                    var rep_to_rv=stage.getRepresentationsByName(repNm);
+                    rep_to_rv.list[0].repr.clear();
+                    rep_to_rv.setVisibility(false);
+                }
+            }
+            $("#clear_dists_btn").html("");
+            clickedRep={};
+            clickedRepLi=[];
+            clickedDist={};
+            clicktrue = true;
+            return(clicktrue);
+        }
+        
         function clickDists(){
             var clicktrue = true;
             $("#submit", window.parent.document).click(function(){
@@ -140,34 +162,11 @@
             });
             //$("#clear_dist_reps", window.parent.document).click(function(){
             $("#clear_dists_btn").on("click","#clear_dist_reps",function(){
-                if (! clicktrue && lbl_name1){
-                    clicktrue = true;
-                    stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                    stage.getRepresentationsByName(lbl_name1).setVisibility(false);
-                }
-                for (repN in clickedRepLi){
-                    var repNm =clickedRepLi[repN];
-                    if (typeof repNm =="string"){
-                        var rep_to_rv=stage.getRepresentationsByName(repNm);
-                        rep_to_rv.list[0].repr.clear();
-                        rep_to_rv.setVisibility(false);
-                    }
-                }
-                /*for (cdN in compDistsLi){
-                    var repNm =compDistsLi[cdN];
-                    if (typeof repNm =="string"){
-                        console.log(repNm)
-                        var rep_to_rv=stage.getRepresentationsByName(repNm);
-                        rep_to_rv.list[0].repr.clear();
-                        rep_to_rv.setVisibility(false);
-                    }                
-                }*/
-                $("#clear_dists_btn").html("");
-                clickedRep={};
-                clickedRepLi=[];
-                clickedDist={};
-                clicktrue = true;
+                clicktrue=clearDists(clicktrue,lbl_name1);
             });
+            $("#clearAll", window.parent.document).click(function(){
+                clicktrue=clearDists(clicktrue,lbl_name1);
+            });            
             var o=stage.getComponentsByName("my_comp").list[0];
             var hovrep;
             stage.signals.hovered.add( function( d ){
@@ -531,6 +530,10 @@
                     $("#submit", window.parent.document).click(function(){
                         createReps();
                     });
+                    $("#clearAll", window.parent.document).click(function(){
+                        createReps();
+                    });
+
                     clickDists();
                 });
                 $("#trajRange").change(function(){

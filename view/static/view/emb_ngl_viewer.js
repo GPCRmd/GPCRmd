@@ -1691,12 +1691,26 @@ $(document).ready(function(){
     seeReceptor=click_unclick_specialRec("#receptor");
     $("#btn_all").click(function(){
         $(".rep_elements").addClass("active");
+        pos_class=$("#receptor").attr("class");
+        if(pos_class.indexOf("active") == -1){
+            $("#receptor").addClass("active");
+            seeReceptor="y";
+        }
     });
-    $("#btn_clear").click(function(){
+    
+    function removeCompBtns(){
         $(".rep_elements").removeClass("active");
+        pos_class=$("#receptor").attr("class");
+        if(pos_class.indexOf("active") > -1){
+            $("#receptor").removeClass("active");
+            seeReceptor="n";
+        }
+    }
+    
+    $("#btn_clear").click(function(){
+        seeReceptor=removeCompBtns();
     });
 
-    
     
 //-------- Pass data to MDsrv --------
 
@@ -1716,6 +1730,45 @@ $(document).ready(function(){
         var traj=obtainCheckedTrajs();
         return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li,dist_groups_li]; 
     }
+    
+    $("#clearAll").click(function(){
+        seeReceptor=removeCompBtns();
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr").val("");
+        $(".sel_within").find(".inputdist").val("");
+        $(".sel_within").find(".user_sel_input").val("");
+        $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){
+            $(this).remove();
+            $(".sel_within").find(".add_btn:last").css("visibility","visible");            
+        });
+        $(".sel_within").find(".dist_sel").each(function(){
+            inactivate_row(this);
+        });
+        $(".seq_sel.sel").each(function(){
+            $(this).css("background-color","#f2f2f2");
+            $(this).attr("class", "seq_sel");
+        });
+        $(".high_pd.active").each(function(){
+            $(this).removeClass("active");
+        });
+        $(".traj_element").each(function(){
+            $(this).attr("checked",false);
+        });
+        $(".dist_btw").find(".dist_pair:not(:first-child)").each(function(){
+            $(this).remove();
+            $(".dist_btw").find(".add_btn2:last , .imp_btn2:last").css("visibility","visible");
+        });
+        $(".dist_btw").find(".dist_pair").each(function(){
+            $(this).find(".tick2").html("");
+            $(this).find(".always2").attr("style","margin-left:14px");
+            $(this).removeClass("d_ok"); 
+        });
+        $("#dist_chart").find(".display_this_dist").each(function(){
+            $(this).attr("checked",false);
+        });
+        $("#int_info").find(".display_int").each(function(){
+            $(this).attr("checked",false);
+        });
+    });
     
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
