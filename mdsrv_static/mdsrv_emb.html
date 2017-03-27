@@ -67,13 +67,13 @@
                // hovrep.repr.clear()
                 if (clicktrue){
                     if (d.atom){
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         lbl_name1="label_"+lbl_id.toString();
                         lbl_id+=1;
                         myrepr = o.addRepresentation( "label", {
                             sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
                             color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
-                        atom1 = d.atom.serial.toString();
+                        atom1 = d.atom.index.toString();
                         /*if (! clickedRep[atom1]){
                             clickedRep[atom1]=[];
                         }
@@ -82,8 +82,8 @@
                     }
                 }else{
                     if (d.atom){
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.serial+") - ";
-                        atom2 = d.atom.serial.toString();
+                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                        atom2 = d.atom.index.toString();
                         //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
                         clicktrue = true;
                         if (atom1 != atom2){
@@ -423,7 +423,7 @@
                                         var label_pos="";
                                         o.structure.eachAtom(function(a){
                                             if (a.atomname == "CA"){
-                                                label_pos=a.serial;
+                                                label_pos=a.index;
                                             }
                                         },res_sele)
                                         //o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
