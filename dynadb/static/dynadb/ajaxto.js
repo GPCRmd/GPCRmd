@@ -115,13 +115,13 @@ $("#Searcher").click(function(e) {
                         return (a[0][0] < b[0][0]) ? -1 : 1;
                     }
                 }
+
                 //sort the results among each category
                 data.compound=data.compound.sort(sortFunction);
                 data.molecule=data.molecule.sort(sortFunction);
                 data.protein=data.protein.sort(sortFunction);
                 data.gpcr=data.gpcr.sort(sortFunction);
                 data.names=data.names.sort(sortNamesFunction);
-
                 //create the table rows with the results
                 for(i=0; i<data.compound.length; i++){
                     linkresult=linkresult+'<tr><td> <a class="btn btn-info" role="button" href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound ID: '+data.compound[i][0] +' '+data.compound[i][1]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.compound[i][data.compound[i].length-1]+'</span><br> <br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></td><td align="left"> <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+'%'+data.compound[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';

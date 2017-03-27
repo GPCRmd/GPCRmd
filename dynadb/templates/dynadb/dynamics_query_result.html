@@ -92,7 +92,11 @@
     <div style=" overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
         <iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>
     </div>
-
+    {%if answer.link2protein%}
+        {%for link in answer.link2protein%}
+            <center><a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a></center>
+        {%endfor%}
+    {%endif%}
     <br>
     <br>
     {% if answer.references %} 

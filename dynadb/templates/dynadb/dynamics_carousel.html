@@ -53,6 +53,16 @@
     $.widget.bridge('uibutton', $.ui.button);
     </script>
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script>                
+        $(document).ready(function() {
+            var currentimg=$('div.item.active').children('img').attr('alt');
+            $('#molecule_name').html(currentimg);           
+            $('#myCarousel').on('slid.bs.carousel', function(e) {
+                var currentimg2=$('div.item.active').children('img').attr('alt');
+                $('#molecule_name').html(currentimg2);
+            });
+        });
+    </script>
     <!-- Include custom ajax functions -->
 
     <div class="container">
@@ -67,9 +77,9 @@
           <div class="carousel-inner" role="listbox">
         {% for url in answer.link_2_molecules %}
             {% if forloop.counter == 1  %}
-            <div class="item active"> <img src="{{url.1}}" height="400" width="400"/> </div>
+            <div class="item active"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/> </div>
             {%else%}
-            <div class="item"> <img src="{{url.1}}" height="400" width="400"/></div>
+            <div class="item"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/></div>
             {%endif%}
 
         {% endfor %}
@@ -87,6 +97,7 @@
         </div></div>
     {% endif %}
     <br>
+    <center> <b><p id='molecule_name'></p></b> </center>
     <br>
     </div>
 

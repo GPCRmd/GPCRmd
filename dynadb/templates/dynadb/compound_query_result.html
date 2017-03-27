@@ -41,7 +41,7 @@
     {%endif%}
     <br>
     {%if answer.link_2_molecule%}
-        <b>Related Molecule(s)</b>:<br>
+        <b>Corresponding Molecule(s)</b>:<br>
         <table class="table table-bordered"><tr>
         {% for url in answer.related_mol_images %}
             <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Molecule ID: {{url.0}}</a></td>

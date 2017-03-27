@@ -1517,7 +1517,7 @@ def ajaxsearcher(request):
         sqs=SearchQuerySet().all() #get all indexed data.
         user_input = request.POST.get('cmolecule')
         if len(user_input)==0: #prevent the user from doing an empty search that returns the whole database.
-            tojson={'compound':compoundlist, 'protein':proteinlist,'molecule':moleculelist, 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':[],'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
@@ -2813,7 +2813,7 @@ def carousel_model_components(request,model_id):
     model_dic=dict()
     model_dic['components']=[]
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=model_id):
-        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink']])    
+        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])    
     return render(request, 'dynadb/model_carousel.html',{'answer':model_dic})
     
     
@@ -2822,16 +2822,18 @@ def carousel_dynamics_components(request,dynamics_id):
     print('here')
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=[]
+    image_name=[]
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
         print('heereeeeee2')
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
-
+        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])
+        image_name.append([match.id_molecule.id_compound.name , query_molecule(request,match.id_molecule.id,True)['imagelink']])
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']]
+        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name]
         if candidatecomp not in dyna_dic['link_2_molecules'] : 
             #dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
             dyna_dic['link_2_molecules'].append(candidatecomp)
-    print(dyna_dic)
+            image_name.append([match.id_molecule.id_compound.name , query_molecule(request,match.id_molecule.id,True)['imagelink']])
+    dyna_dic['imagetonames']= image_name
     return render(request, 'dynadb/dynamics_carousel.html',{'answer':dyna_dic})
         
     
