@@ -561,7 +561,22 @@
                     }
                     parent.clickedDistToAnalysis(allClickedDists);
                 })
-                $(".bckg_theme", window.parent.document).click(function(){
+                
+                $("#background", window.parent.document).click(function(){
+                    if ($(this).hasClass("light")){
+                        stage.setParameters( { backgroundColor: "black" } );
+                        $(this).removeClass("light");
+                        $(this).addClass("dark");
+                        $(this).attr("title","Light background");
+                    }else if ($(this).hasClass("dark")){
+                        stage.setParameters( { backgroundColor: "white" } );
+                        $(this).removeClass("dark");
+                        $(this).addClass("light");
+                        $(this).attr("title","Dark background");
+                    }
+                });
+                
+                /*$(".bckg_theme", window.parent.document).click(function(){
                     if (! $(this).hasClass("active")){
                         $(this).siblings(".bckg_theme").removeClass("active");
                         $(this).addClass("active");
@@ -571,6 +586,10 @@
                             stage.setParameters( { backgroundColor: "black" } );
                         }
                     }
+                });*/
+                $("#center", window.parent.document).click(function(){
+                    console.log(stage)
+                    stage.centerView();
                 });
             }
         });

@@ -4,6 +4,9 @@
         google.load("visualization", "1", {packages:["corechart"]});
     </script>
     <script>document.domain=document.domain;</script>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
 <style>
 .falselist{
     margin-bottom:4px;
@@ -17,11 +20,9 @@
     font-weight: bold;
 }
 </style>
+{% endblock %}
 </head>
 <body>
-{% extends "home/base.html" %} 
-{% load staticfiles %} 
-
 
 {% block content %} 
 {% csrf_token %}
@@ -103,11 +104,19 @@
                       <button  class="btn btn-danger" id="clearAll" >Clear</button>
                       <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
                       <div class="pull-right">
+                          <!--
+                          <button id="center" class="btn btn-default" type="button" style="padding-right:7px;padding-left:7px;height:35px" >Center</button>
                           <div class="btn-group">
                             <button type="button" id="bckg_dark" class="btn btn-default bckg_theme" style="padding-left:5px;padding-right:5px">Dark</button>
                             <button type="button" id="bckg_light" class="btn btn-default bckg_theme active" style="padding-left:5px;padding-right:5px">Light</button>
                           </div>                      
                           <button class="btn btn-default" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
+                          -->
+                          
+                          <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
+                          <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
+                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>
+   
                       </div>
                    </div>
      	        </div>
@@ -181,7 +190,7 @@
                     <span class="always" style="margin-left:14px">
                      Show 
                         <select class="resWthComp" name="rescomp">
-                            <option  selected value="protein">residues</option>
+                            <option  selected value="protein">residues</option> <!-- This can be improved by considering the case of multiple proteins: add option for each prot at this sel.-->
                            {% for long_n, short_n in compounds %}
                                 <option   value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}

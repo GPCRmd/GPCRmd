@@ -35,7 +35,18 @@ $(document).ready(function(){
       return empty;
     }
 
-
+    $(".settingsB").hover(function(){
+        $(this).css("color","black");
+    },
+    function(){
+        $(this).css("color","#585858");
+    });
+    
+    /*$(".settingsB").click(function(){
+        $(this).css("color","green");
+        setTimeout(function(){ $(this).css("color","#585858"); }, 1000);
+    });*/
+    
 //-------- Obtain important data from template --------
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");

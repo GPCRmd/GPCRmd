@@ -761,15 +761,15 @@ def index(request, dyn_id):
                         #"traj_list": [("Dynamics/f500.dcd","f500.dcd",1),("Dynamics/f1000.dcd","f1000.dcd",2),("Dynamics/f2500.dcd","f2500.dcd",3),("Dynamics/f5000.dcd","f5000.dcd",4)],#[!] TEST
                         "compounds" : comp_li,
                         "ligands": lig_li,
-                        "other_prots":other_prots,
                         "all_gpcrs_info" : all_gpcrs_info,
                         "cons_pos_all_info" : cons_pos_all_info,
                         "motifs_all_info" :motifs_all_info,
                         "gpcr_id_name_js" : json.dumps(gpcr_id_name),
                         "gpcr_id_name" : gpcr_id_name,
-                        "chains" : chain_str,
                         "gpcr_pdb": json.dumps(gpcr_pdb_all),
                         "prot_seq_pos": list(prot_seq_pos.values()),
+                        "other_prots":other_prots,
+                        "chains" : chain_str,
                         "all_chains": ",".join(all_chains) }
                     return render(request, 'view/index.html', context)
                 else:
