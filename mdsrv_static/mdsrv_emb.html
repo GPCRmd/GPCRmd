@@ -136,15 +136,25 @@
             } );
         }
 
+
+
+        function fromChainLiToNGL(nonGPCR){ 
+            var nonGPCR_li=nonGPCR.split(",");
+            var nonGPCR_mod="";
+            for (chain_n = 0; chain_n < nonGPCR_li.length; chain_n++) {
+                nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
+            }
+            nonGPCR_mod=nonGPCR_mod.slice(0,-3);
+            return nonGPCR_mod
+        }
 ///////////////
-            var struc =s_path=t_path =traj = rc= sel=sel_method=cons_pos= pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR=onlyChains= int_res_s=dist_groups_s="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s=dist_groups_s= receptorsel ="";
             var struc = NGL.getQuery( "struc" );
-            var s_path = "file://_DB/";// MAYBE I WILL NEED TO CHANE THIS
-            var t_path = "file://_DB/";// MAYBE I WILL NEED TO CHANE THIS
+            var s_path = "file://_DB/";
+            var t_path = "file://_DB/";
             var traj = NGL.getQuery( "traj" );
-            var  rc= NGL.getQuery("rc");
-            var  sel= NGL.getQuery("sel");
-            var  sel_method= NGL.getQuery("sh");
+            var receptorsel = NGL.getQuery("rs");
+            var layers_pre=NGL.getQuery("ly");
             var  cons_pos= NGL.getQuery("pd");
             var  pdA= NGL.getQuery("la");
             var  pdB= NGL.getQuery("lb");
@@ -154,120 +164,46 @@
             var  dist_within= NGL.getQuery("wth");
             var  cons_comp=NGL.getQuery("cc");
             var  nonGPCR= NGL.getQuery("ng");
-            var  onlyChains= NGL.getQuery("och");
             var int_res_s=NGL.getQuery("in");
             var dist_groups_s=NGL.getQuery("dc");
-
-            var rc_sel = "";
-            var all_cp = "";
-            var all_conscp="";
-
-            if (rc=="y" || ! nonGPCR){
-                rc_sel = "protein";
-                if (cp || cons_comp) {
-                    rc_sel="protein or ";
-                }
-             }
-             
-
 
              /*var va = "test";             
              for (v in va){ 
                 console.log(v);
                 console.log(va[v]);
              };*/
-             
-             var cp_li=[];
-             if (cp){
-                 cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
-                 for (comp = 0; comp < cp_li.length; comp++){
-                     all_cp += (cp_li[comp] + " or ");
-                 }
-                 all_cp = all_cp.slice(0, -3);
-             }
 
-             if (cons_comp){
-                 var cons_cp_li = decodeURIComponent(cons_comp.replace(/\+/g, " ")).split(",");
-                 if (cp_li.length > 0){
-                     var cons_comp_p=[];
-                     for (compN = 0; compN < cons_cp_li.length; compN++) {
-                         var mycomp =cons_cp_li[compN];
-                         if (cp_li.indexOf(mycomp)==-1){
-                             cons_comp_p[cons_comp_p.length]=mycomp;
-                         }
-                     }
-                     if (cons_comp_p.length >0){
-                         all_conscp=" or ";
-                         for (compN = 0; compN < cons_comp_p.length; compN++) {
-                             all_conscp += (cons_comp_p[compN] + " or ");
-                         }
-                         all_conscp = all_conscp.slice(0, -3);
-                     }
-                 } else {
-                     for (compN = 0; compN < cons_cp_li.length; compN++){
-                         all_conscp += (cons_cp_li[compN] + " or ");
-                     }
-                     all_conscp = all_conscp.slice(0, -3);
-                 }
-             }
 
-             var visibility=true;
-             if (rc=="n" && ! cp && nonGPCR && ! cons_comp){
-                 visibility = false;
-             }
-
-             var sele_final = "";
-             if (sel && sel_method=="sel"){
-                 var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                 sele_final = "("+rc_sel + all_cp +all_conscp +") and ("+ sel_deco +")" ;
-             } else{
-                 sele_final = rc_sel + all_cp+all_conscp;
-             }
-             function fromChainLiToNGL(nonGPCR){ 
-                 var nonGPCR_li=nonGPCR.split(",");
-                 var nonGPCR_mod="";
-                 for (chain_n = 0; chain_n < nonGPCR_li.length; chain_n++) {
-                     nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
-                 }
-                 nonGPCR_mod=nonGPCR_mod.slice(0,-3);
-                 return nonGPCR_mod
-             }
-
-             var substr_nonGPCR="";
-             if (nonGPCR){
-                 var nonGPCR_mod = fromChainLiToNGL(nonGPCR);
-                 substr_nonGPCR=" and not ("+ nonGPCR_mod+")";
-             }
                   
                     if (struc) {
-                        stage.loadFile( s_path + struc, {sele: sele_final, visible: visibility}  ).then( function( o ){
-                        //stage.setOrientation([[-133.5657750896191,-72.54646915024105,3.7714955141361095],[-0.06193670847497234,0.062245585853203875,-0.9961372049999252],[-0.9979991912841797,-0.38649940490722656,-3.1299991607666016],[0,0,0]]);
+                        stage.loadFile( s_path + struc, {sele:"*", visible: true}  ).then( function( o ){  
                                 o.setName("my_comp");
-                                var aa=2515;
-                                if (rc=="y"){
-                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+substr_nonGPCR } );
-                                    /*if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
-                                        o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein"+substr_nonGPCR } );
-                                     }else{
-                                        o.addRepresentation( "cartoon", { colorScheme: "sstruc", sele: "protein" +substr_nonGPCR } );
-                                     }*/
-                                } else {
-                                    if (onlyChains){ //When we don't have receptor but have other prots
-                                        var nonGPCR_add = fromChainLiToNGL(onlyChains);
-                                        var add_nonGPCR=" and ("+ nonGPCR_add+")";
-                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein"+ add_nonGPCR } );
-                                    }
-                                     /*if ((sel_method =="high" && sel) || cons_pos =="y" || dist_within ) {
-                                        o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein"+add_nonGPCR } );
-                                     }else{
-                                        o.addRepresentation( "cartoon", { colorScheme: "sstruc", sele: "protein" +add_nonGPCR } );
-                                     }*/
+                                
+                                if (receptorsel){
+                                    var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));
+                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: receptorsel_d} );
+  
+                                }
+                                
 
-                                 }
-     //    o.addRepresentation( "distance", { atomPair: [[4500,4600]] , colorValue: "#3366cc", colorScheme:"uniform", labelColor: "#7da8ff" } );
-  //       o.addRepresentation( "distance", { atomPair: [[4598, 4502]] , colorValue: "#3366cc", colorScheme:"uniform", labelColor: "white" } );
+                                if (nonGPCR){
+                                    var nonGPCR_d=decodeURIComponent(nonGPCR.replace(/\+/g, " "));
+                                    var nonGPCR_l=nonGPCR_d.split("-");
+                                    for (ng = 0; ng < nonGPCR_l.length; ng++){
+                                        chains_s = nonGPCR_l[ng];
+                                        nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
+                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: nonGPCR_sel } );
+                                    }
+                                }             
+                                
                                 if (cp){
-                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )
+                                    var all_cp="";
+                                    cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
+                                    for (comp = 0; comp < cp_li.length; comp++){
+                                        all_cp += (cp_li[comp] + " or ");
+                                    }
+                                    all_cp = all_cp.slice(0, -3);
+                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )   
                                 }
                                 if (cons_pos == "y"){
                                     var pre_pd_all=[pdA,pdB,pdC,pdF];
@@ -279,61 +215,28 @@
                                         }
                                     }
                                     var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
-
-                                    if (sel ){
-                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                                        if (sel_method == "high"){
-                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } ); 
-                                            for (ind = 0; ind < pd_all.length; ind++) {
-                                                class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                                if (class_li){
-                                                    var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:"protein and ("+ cons_pos_ok +")"  } ); 
-                                                }
-                                            }   
-
-                                        } else {
-                                            /*if (rc=="y"){
-                                                o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: sel_deco });
-                                            }*/
-
-                                            for (ind = 0; ind < pd_all.length; ind++) {
-                                                class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                                if (class_li){
-                                                    var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                    o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:  "protein and ("+ cons_pos_ok +")"  } );
-                                                }
-                                            }   
-                                            //o.setSelection( sel_deco );
-                                        }
-                                     } else {
-                                         for (ind = 0; ind < pd_all.length; ind++) {
-                                             class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
-                                             if (class_li){
-                                                 var cons_pos_ok = class_li.replace(/,/g," OR ")
-                                                 o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: "protein and ("+ cons_pos_ok +")" } );
-                                             }
-                                         }   
-
-
-
-////////////////////////////////////////////////
-                                        /*if (rc=="y"){
-                                            o.addRepresentation( "cartoon", { colorScheme: "uniform", colorValue:"#ffccf5",  sele: "protein" } );
-                                        }*/
-                                     }
-
-                                } else {
-                                    if (sel ){
-                                        var sel_deco=decodeURIComponent(sel.replace(/\+/g, " "));
-                                        if (sel_method == "high"){
-                                            o.addRepresentation( "licorice", {  colorValue: "#00d215", radius: "0.210", sele: sel_deco  } );
-                                     /*   } else {
-                                              //o.setSelection( sel_deco );
-                                        */
-                                        }
+                                    for (ind = 0; ind < pd_all.length; ind++) {
+                                         class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
+                                         if (class_li){
+                                             var cons_pos_ok = class_li.replace(/,/g," OR ")
+                                             o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:"protein and ("+ cons_pos_ok +")"  } ); 
+                                         }
+                                     } 
+                                 }  
+//////////////!                                    
+                                 if (layers_pre){
+                                     var layers_s = decodeURIComponent(layers_pre.replace(/\+/g, " "));
+                                     var layers_li=layers_s.split("-;;-");
+                                     for (lN = 0; lN < layers_li.length; lN++) {
+                                         var layer_all = layers_li[lN].split("-,,-");
+                                         var sel = layer_all[0];
+                                         var rep = layer_all[1];
+                                         var color = layer_all[2];
+                                         o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel  } ); 
                                      }
                                  }
+                                    
+/////////////////!
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
                                     var traj_li=traj_str.split(",")

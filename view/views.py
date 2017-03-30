@@ -768,8 +768,8 @@ def index(request, dyn_id):
                         "gpcr_id_name" : gpcr_id_name,
                         "gpcr_pdb": json.dumps(gpcr_pdb_all),
                         "prot_seq_pos": list(prot_seq_pos.values()),
-                        "other_prots":other_prots,
-                        "chains" : chain_str,
+                        "other_prots":other_prots,#["protein and (:A or :B or :C)" , "Chains A, B, C" , "A, B,C"]
+                        "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
                         "all_chains": ",".join(all_chains) }
                     return render(request, 'view/index.html', context)
                 else:

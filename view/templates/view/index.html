@@ -125,7 +125,7 @@
             <div class="row"><center>
                 <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active"  id="receptor">Receptor</button>
                 {% if other_prots%}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR active" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
                 {% endif %}
                 {% for long_n, short_n in compounds %}
                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
@@ -141,17 +141,29 @@
                 <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
             </div>
             <div id="selection" class="collapse" style="padding-right:15px;">
-             <div style="padding-left:15px">
-               <div class="row" style="margin-top:10px;">
-                  <div  class="col-sm-10" style="padding-bottom:10px;padding-right:3px;padding-left:3px" > 
-	                <input value="" class="form-control sel_input gpcr_pdb" type="text" data-gpcr_pdb ="{{gpcr_pdb}}"  placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8" >
-                  </div>
-                  <div class="col-sm-2 radio" style="margin-top:0; " >
-	                <label><input class="sel_high" type="radio" name="sel_high" id="rad_high" class="high" value="high" checked>Highlight</label>
-          	        <label><input class="sel_high" type="radio" name="sel_high" id="rad_sel" class="sel" value="sel" >Restrict</label>
+
+
+             <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
+               <div id="text_input_all"  style="margin-top:10px;">
+                    <div  class="text_input" id="ti_row0">
+                       <div  class="row">
+                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
+	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+                                    <select class="high_type" name="high_type0" style="padding:0;margin:0;font-size:12px">
+                                       <option value="licorice">Licorice</option>
+                                       <option value="cartoon">Cartoon</option>
+                                    </select>
+	                        </div>
+                          </div>
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                          </div>
+                      </div>
+                      <div class="ti_alert"> </div>      
                   </div>
               </div>
-              <div id="alert"> </div>
 <!-- ============= Sequence selection =========== -->
               {% if prot_seq_pos %}
               <div style="margin-bottom:20px">
