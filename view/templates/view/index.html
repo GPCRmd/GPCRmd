@@ -19,6 +19,35 @@
 .gpcrbold{
     font-weight: bold;
 }
+
+.dropbtn {
+    border: none;
+    background-color: #00d215;
+    width:16px; 
+    height: 16px;
+    cursor: pointer;
+    padding:0;
+}
+
+.dropdown {
+    cursor: pointer;
+    /*margin-top:7px;
+    margin-left:3px;*/
+
+}
+
+.dropdown-content {
+	width:100%;
+    display: none;
+    position: absolute;
+    z-index: 1;
+}
+
+/*.dropdown:hover .dropdown-content {
+    display: block;
+}*/
+
+
 </style>
 {% endblock %}
 </head>
@@ -56,7 +85,7 @@
 		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
 		<p class="falselist">Middle button click: center camera on atom.</p>
 		<p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
-             <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>
+            <!-- <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>-->
 
          </div>
      </div>
@@ -64,7 +93,7 @@
      <!-- link to docs -->
      <div class="col-md-12 panel panel-primary">
          <div class="panel-body">
-             <p>For more information, see the <a href="{% url 'view:viewer_docs' %}">docs</a>.
+             <p>For more information, see the <a href="{% url 'view:viewer_docs' %}" target="_blank" >docs</a>.
              </p>
          </div>
      </div>
@@ -145,16 +174,48 @@
 
              <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
                <div id="text_input_all"  style="margin-top:10px;">
-                    <div  class="text_input" id="ti_row0">
+                    <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
                        <div  class="row">
                           <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
 	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
 	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-                                    <select class="high_type" name="high_type0" style="padding:0;margin:0;font-size:12px">
+	                             <div style="float:left;height:27px" >
+                                    <select class="high_type" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
                                        <option value="licorice">Licorice</option>
+                                       <option value="ball+stick">Ball+stick</option>
+                                       <option value="hyperball">Hyperball</option>
+                                       <option value="line">Line</option>
+                                       <option value="spacefill">Spacefill</option>
                                        <option value="cartoon">Cartoon</option>
+                                       <option value="ribbon">Ribbon</option>
+                                       <option value="rope">Rope</option>
+                                       <option value="tube">Tube</option>
+                                       <!--<option value="axes">Axes</option>-->
                                     </select>
-	                        </div>
+                                    <select class="high_scheme" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                       <option value="element">Element</option>
+                                       <option value="uniform">Uniform</option>
+                                       <option value="chainid">Chain</option>
+                                       <option value="moleculetype">Molecule type</option>
+                                       <option value="sstruc">Structure</option>
+                                       <option value="resname">Residue name</option>
+                                       <option value="residueindex">Residue index</option>
+                                       <option value="hydrophobicity">Hydrophobicity</option>
+                                    </select>
+                                  </div>
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" ></button> 
+                                    <div class="dropdown-content" style="margin-left:3px">
+                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;"></div>
+                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;"></div>
+      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;"></div>
+      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;"></div>
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                    </div>
+                                  </div>
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+ -->
+	                       </div>
                           </div>
                           <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
                                 <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
@@ -487,13 +548,13 @@
                        </span>
                     </div>
                     <div class=row>
-                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Obtain result</button>
                     </div>
                 </div>
                 {% else %}
-                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:40px" >Obtain result</button>
+                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:15px" >Obtain result</button>
                 {% endif %}
-                <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
+                <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" style="margin-bottom:15px"></div>
               <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
@@ -564,9 +625,9 @@
                         </div>
                    </div>
                     <div class=row>
-                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px" >Obtain result</button>
+                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Obtain result</button>
                     </div>
-                    <div class="row" style="margin-left:14px;margin-top:5px;padding-right:40px;clear:left;" id="rmsd_alert"> </div>
+                    <div class="row" style="margin-left:14px;margin-top:5px;padding-right:15px;clear:left;" id="rmsd_alert"> </div>
                   <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
                 </div>
               </div>
@@ -615,9 +676,9 @@
                             </select>  
                     </div>
                     <div class="row">
-                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:40px;margin-top:5px" >Obtain result</button>
+                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Obtain result</button>
                     </div>
-                    <div class="row" style="margin-top:5px;padding-right:40px;margin-left:14px" id="int_alert"> </div>
+                    <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px" id="int_alert"> </div>
                     <div style="margin-top:5px;padding-right:25px;"  id="int_info" ></div>
                     <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
 		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>

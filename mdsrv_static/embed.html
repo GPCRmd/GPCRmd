@@ -359,7 +359,8 @@
                     var sel = layer_all[0];
                     var rep = layer_all[1];
                     var color = layer_all[2];
-                    o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel  } ); 
+                    var scheme = layer_all[3];
+                    o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
                 }
             }
 
@@ -421,10 +422,11 @@
                 }
             }
             if (int_res_li.length > 0){
+                var final_sele=[];
                 for (pos_info_n in int_res_li){
                     var pos_info = int_res_li[pos_info_n];
                     var pos = pos_info[0]+":"+pos_info[1];
-                    o.addRepresentation( "licorice", {  radius: "0.210", sele: pos , colorValue: "#8e74ff" } );// colorValue: "#00d215"
+                    final_sele.push(pos);
                     var label = pos_info[2];
                     var res_sele =  new NGL.Selection( pos );
                     var label_pos="";
@@ -435,6 +437,8 @@
                     },res_sele)
                     o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
                 }
+                final_sele=final_sele.join(" , ");
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
 
             }
             //o.centerView();

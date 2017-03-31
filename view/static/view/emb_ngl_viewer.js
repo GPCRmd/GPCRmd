@@ -100,16 +100,73 @@ $(document).ready(function(){
 
 //-------- Text Input --------
 
+    $("#text_input_all").on("click",".dropbtn",function(){
+        if ($(this).hasClass("opened")){
+            $(this).siblings(".dropdown-content").css("display","none");
+            $(this).removeClass("opened");
+        }else {
+            $(this).siblings(".dropdown-content").css("display","block");
+            $(this).addClass("opened");
+        }
+    });
+    
+    $("#text_input_all").on("click",".dropcolor",function(){
+        var dCont=$(this).parent();
+        var dBtn=dCont.siblings(".dropbtn");
+        var dDwn=dBtn.parent();
+        dCont.css("display","none");
+        dBtn.removeClass("opened");
+        if ($(this).hasClass("morecolors")){
+        
 
+            var clicked_color= $(this).css("background-color");
+            var old_color=dBtn.css("background-color");
+
+            $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors");
+            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors");
+
+            dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">');
+
+            
+        } else {     
+            if (dBtn.hasClass("morecolors")){
+                var clicked_color= $(this).css("background-color");
+                var old_color=dBtn.css("background-color");
+                dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors");
+                $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").appendTo(dCont);
+                dDwn.siblings(".span_morecolors").html('');
+
+            } else {
+                var clicked_color= $(this).css("background-color");
+                var old_color=dBtn.css("background-color");
+                $(this).css("background-color",old_color);
+                dBtn.css("background-color",clicked_color);
+            }
+        }
+    });
+    
     function obtainTextInput(){
         var layer=[];
         $("#text_input_all").find(".text_input").each(function(){
+            $(this).find(".span_morecolors").removeClass("has-error");
             var pre_sel = $(this).find(".sel_input").val();
             sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
             if (sel_enc.length > 0){
                 var ltype = $(this).find(".high_type").val();
-                console.log(ltype);
-                layer[layer.length]=[sel_enc, ltype, "#00d215"];
+                var lscheme = $(this).find(".high_scheme").val();
+                var dBtn = $(this).find(".dropbtn");
+                if (dBtn.hasClass("morecolors")){
+                    lcolor=$(this).find(".input_dd_color").val();
+                    if (lcolor == ""){
+                        lcolor = "#FFFFFF";
+                    } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+                        lcolor = "#FFFFFF";
+                        $(this).find(".span_morecolors").addClass("has-error");
+                    }
+                } else {
+                    var lcolor = dBtn.css("background-color");
+                }
+                layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
             }
         })
         return(layer);
@@ -183,24 +240,54 @@ $(document).ready(function(){
     var ti_i=1;
     $("#text_input_all").on("click",".ti_add_btn",function(){ 
         $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
-        var row='<div  class="text_input" id="ti_row'+ti_i+'" style="padding-top:10px">\
+        var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
                        <div  class="row">\
                           <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
 	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
 	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
-                                    <select name="high_type'+ti_i+'" class="high_type"  style="padding:0;margin:0;font-size:12px">\
+	                             <div style="float:left;height:27px" >\
+                                    <select class="high_type" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
                                        <option value="licorice">Licorice</option>\
+                                       <option value="ball+stick">Ball+stick</option>\
+                                       <option value="hyperball">Hyperball</option>\
+                                       <option value="line">Line</option>\
+                                       <option value="spacefill">Spacefill</option>\
                                        <option value="cartoon">Cartoon</option>\
+                                       <option value="ribbon">Ribbon</option>\
+                                       <option value="rope">Rope</option>\
+                                       <option value="tube">Tube</option>\
                                     </select>\
-	                        </div>\
+                                    <select class="high_scheme" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                       <option value="element">Element</option>\
+                                       <option value="uniform">Uniform</option>\
+                                       <option value="chainid">Chain</option>\
+                                       <option value="moleculetype">Molecule type</option>\
+                                       <option value="sstruc">Structure</option>\
+                                       <option value="resname">Residue name</option>\
+                                       <option value="residueindex">Residue index</option>\
+                                    </select>\
+                                  </div>\
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" ></button> \
+                                    <div class="dropdown-content" style="margin-left:3px">\
+                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;"></div>\
+                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;"></div>\
+      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;"></div>\
+      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;"></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                    </div>\
+                                  </div>\
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span>\
+	                       </div>\
                           </div>\
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px">\
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
                                 <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
                                 <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
                           </div>\
                       </div>\
-                      <div class="ti_alert"> </div>\
+                      <div class="ti_alert"> </div>      \
                   </div>';
+
         $("#text_input_all").append(row);
         ti_i+=1;
     });
@@ -220,6 +307,15 @@ $(document).ready(function(){
         }
     });
 
+
+    $("#text_input_all").on("change",".high_scheme",function(){
+        var repSch = $(this).val();
+        if (repSch == "uniform" || repSch == "element"){
+            $(this).closest(".text_input").find(".displaydrop").css("display","inline");
+        } else {
+            $(this).closest(".text_input").find(".displaydrop").css("display","none");
+        }  
+    })
 
 //-------- Collapse Arrow
     $(".section_pan").click(function(){
@@ -746,9 +842,9 @@ $(document).ready(function(){
                 } else {
                     dist_scheme_name="Heavy atoms only";
                 }
-                $("#int_alert , #int_thr_error , #int_traj_error").html("");
+                $("#int_alert , #int_thr_error").html("");
                 ///AJAX!!!
-                $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
+                $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                 if (i_id==1){
                     $("#gotoInt").addClass("disabled");
                 }
@@ -863,7 +959,7 @@ $(document).ready(function(){
                     }
                 });
             } else {
-                $("#int_traj_error").text("Please select a trajectory.");
+                //$("#int_traj_error").text("Please select a trajectory.");
                 add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
                 $("#int_alert").html(add_error_d);
             }
@@ -1076,7 +1172,7 @@ $(document).ready(function(){
             if (traj_results){        
                 var traj_p=traj_results[0];
                 var traj_id=traj_results[1];
-                $("#dist_chart").append("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
+                $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                 if (d_id==1){
                     $("#gotoDistPg").addClass("disabled");
                 }
@@ -1547,7 +1643,7 @@ $(document).ready(function(){
             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
             $("#rmsd_alert").html(add_error);
         } else {
-            $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
+            $("#rmsd_chart").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
             $("#rmsd_alert").html("");
             if (r_id==1){
                 $("#gotoRMSDPg").addClass("disabled");
@@ -1920,6 +2016,7 @@ $(document).ready(function(){
         $("#int_info").find(".display_int").each(function(){
             $(this).attr("checked",false);
         });
+        $("#text_input_all").find(".input_dd_color").val("");
     }); 
 
 });
