@@ -1,8 +1,6 @@
-from django.shortcuts import render_to_response, redirect
-from accounts.models import User
+from django.shortcuts import render_to_response, render, redirect
 from django.template import RequestContext
 from django.contrib.auth import login as django_login , authenticate, logout as django_logout, get_user_model
-from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm, PasswordResetForm
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django import forms
@@ -11,15 +9,21 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.views import password_reset, password_reset_confirm, password_reset_done, password_reset_complete
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text
-import datetime
 from django.contrib.auth.tokens import default_token_generator
 from django.views.decorators.csrf import csrf_protect
-from .complete import deprecate_current_app
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.cache import never_cache
 from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
 from django.conf import settings
+from django.db.models import F
+
+from dynadb.models import DyndbSubmission, DyndbDynamics
+from accounts.models import User
+from .forms import AuthenticationForm, RegistrationForm, ChangeForm, ChangePassw, ChangeMailForm, PasswordResetForm
+
+import datetime
+from .complete import deprecate_current_app
 
 @login_required
 def memberpage(request):
@@ -320,3 +324,22 @@ def reset_complete(request):
     """Displays a message confirming that the new password is set"""
     return password_reset_complete(request, template_name = 'accounts/registration/password_reset_complete.html'
     )
+
+@login_required
+def user_submissions(request):
+    submission_table = []
+    submissionq = DyndbSubmission.objects.filter(user_id=request.user.pk)
+    submissionq = submissionq.annotate(dynamics_id=F('dyndbdynamics__pk'))
+    submissionq = submissionq.values('pk','dynamics_id','is_closed','is_ready_for_publication','is_published')
+    for subinfo in submissionq:
+        if subinfo['is_published']:
+            state = 'Published'
+        elif subinfo['is_ready_for_publication']:
+            state = 'Ready for publication'
+        elif subinfo['is_closed']:
+            state = 'Closed'
+        else:
+            state = 'Open'
+        submission_table.append({'submission_id':subinfo['pk'], 'dynamics_id': subinfo['dynamics_id'], 'state':state})
+        
+    return render(request, 'accounts/user_submissions.html', {'submission_table':submission_table,'username':request.user.username})
