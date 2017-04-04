@@ -5932,6 +5932,7 @@ def _generate_molecule_properties(request,submission_id):
     
                 
     if request.method == 'POST':
+        print("HOLA")
         submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
         submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
         data = dict()
@@ -5956,7 +5957,7 @@ def _generate_molecule_properties(request,submission_id):
                 pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
                 sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
                 pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-                
+                print("PIPOL")
                 try:
                     os.remove(os.path.join(submission_path,sdfname))
                 except:
@@ -6078,16 +6079,18 @@ def _generate_molecule_properties(request,submission_id):
                 logfile.close()
                 del mol
             #####################
-            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
+                qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
 #            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'])
-            if qMOL.exists():
-                data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
-                print("\n QMOL",qMOL.values())
-                data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
-                data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
-                print("OTHER NAMES",data['other_names'])
+                print("YOGURT")
+                if qMOL.exists():
+                    data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
+                    print("\n QMOL",qMOL.values())
+                    data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
+                    data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+                    print("OTHER NAMES",data['other_names'])
                 return JsonResponse(data,safe=False)
             else:
+                print("YOGURT2")
                 data['msg'] = 'Unknown molecule file reference.'
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
         else:
@@ -10878,7 +10881,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     entry['protein_id']=int(entry['protein_id'])
                     entry['int_id']=int(entry['int_id'])
                     print(entry)
-                   # SProtreuse=dyndb_Submission_Protein(entry)
+                    SProtreuse=dyndb_Submission_Protein(entry)
 
                     if qSprot_empty_rows.exists():
                         for rows in qSprot_empty_rows:

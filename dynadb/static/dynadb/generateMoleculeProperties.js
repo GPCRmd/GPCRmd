@@ -187,9 +187,9 @@ $(document).ready(function() {
                    $(papa).append($(newuploadstd));
                    console.log("EEEEEEEEE"+$(newuploadstd).attr('id')+" "+$(newuploadstd).attr('name')+" "+ $(newuploadstd).attr('src'));
                    uploadstd = $(newuploadstd);
-                   alert("Small Molecule #"+form_num_html +" information has been found in the GPCRmd database!!!\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, proceed with the following molecule in your simulation or submit the information in the form.");
+                   alert("Small Molecule #"+form_num_html +" information has been found in the GPCRmd database!!!\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule (not elegible when reusing crystal-derived assembly) or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, proceed with the following molecule in your simulation or submit the information in the form.");
                 } else{
-                   alert("Small Molecule #"+form_num_html +" information on Chemoinformatics has been generated.\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, click the \"Retrieve data\" button in the section D of this form item. ");
+                   alert("Small Molecule #"+form_num_html +" information on Chemoinformatics has been generated.\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule (not elegible when reusing crystal-derived assembly) or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, click the \"Retrieve data\" button in the section D of this form item. ");
                 }
                    //
                    //$(papa).append("<h1>PIPOL</h1>");
