@@ -35,12 +35,22 @@ $(document).ready(function(){
       return empty;
     }
 
-
+    $(".settingsB").hover(function(){
+        $(this).css("color","black");
+    },
+    function(){
+        $(this).css("color","#585858");
+    });
+    
+    /*$(".settingsB").click(function(){
+        $(this).css("color","green");
+        setTimeout(function(){ $(this).css("color","#585858"); }, 1000);
+    });*/
+    
 //-------- Obtain important data from template --------
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
-    var seeReceptor = "y";
     var sel = "";
     var sel_enc = sel;
     
@@ -73,9 +83,9 @@ $(document).ready(function(){
     
     var traj=obtainCheckedTrajs();
     $("#receptor").addClass("active");
-    $(".nonGPCR").addClass("active");
-    //var chains_str = $("#chains").text();//!
-    var chains_str =$("#receptor").attr("title"); //!
+    //$(".nonGPCR").addClass("active");
+
+    var chains_str =$("#receptor").attr("title"); 
     var all_chains = $(".str_file").data("all_chains").split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
@@ -86,6 +96,80 @@ $(document).ready(function(){
         dicts_results=obtainDicts(gpcr_pdb_dict);
         all_gpcr_dicts=dicts_results[0];
         num_gpcrs =dicts_results[1];
+    }
+
+//-------- Text Input --------
+
+    $("#text_input_all").on("click",".dropbtn",function(){
+        if ($(this).hasClass("opened")){
+            $(this).siblings(".dropdown-content").css("display","none");
+            $(this).removeClass("opened");
+        }else {
+            $(this).siblings(".dropdown-content").css("display","block");
+            $(this).addClass("opened");
+        }
+    });
+    
+    $("#text_input_all").on("click",".dropcolor",function(){
+        var dCont=$(this).parent();
+        var dBtn=dCont.siblings(".dropbtn");
+        var dDwn=dBtn.parent();
+        dCont.css("display","none");
+        dBtn.removeClass("opened");
+        if ($(this).hasClass("morecolors")){
+        
+
+            var clicked_color= $(this).css("background-color");
+            var old_color=dBtn.css("background-color");
+
+            $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors");
+            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors");
+
+            dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">');
+
+            
+        } else {     
+            if (dBtn.hasClass("morecolors")){
+                var clicked_color= $(this).css("background-color");
+                var old_color=dBtn.css("background-color");
+                dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors");
+                $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").appendTo(dCont);
+                dDwn.siblings(".span_morecolors").html('');
+
+            } else {
+                var clicked_color= $(this).css("background-color");
+                var old_color=dBtn.css("background-color");
+                $(this).css("background-color",old_color);
+                dBtn.css("background-color",clicked_color);
+            }
+        }
+    });
+    
+    function obtainTextInput(){
+        var layer=[];
+        $("#text_input_all").find(".text_input").each(function(){
+            $(this).find(".span_morecolors").removeClass("has-error");
+            var pre_sel = $(this).find(".sel_input").val();
+            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
+            if (sel_enc.length > 0){
+                var ltype = $(this).find(".high_type").val();
+                var lscheme = $(this).find(".high_scheme").val();
+                var dBtn = $(this).find(".dropbtn");
+                if (dBtn.hasClass("morecolors")){
+                    lcolor=$(this).find(".input_dd_color").val();
+                    if (lcolor == ""){
+                        lcolor = "#FFFFFF";
+                    } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+                        lcolor = "#FFFFFF";
+                        $(this).find(".span_morecolors").addClass("has-error");
+                    }
+                } else {
+                    var lcolor = dBtn.css("background-color");
+                }
+                layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
+            }
+        })
+        return(layer);
     }
     
 //-------- AJAX --------
@@ -153,6 +237,85 @@ $(document).ready(function(){
     removeSpacesInInput("#int_thr");
 
 
+    var ti_i=1;
+    $("#text_input_all").on("click",".ti_add_btn",function(){ 
+        $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
+        var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
+                       <div  class="row">\
+                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
+	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
+	                             <div style="float:left;height:27px" >\
+                                    <select class="high_type" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
+                                       <option value="licorice">Licorice</option>\
+                                       <option value="ball+stick">Ball+stick</option>\
+                                       <option value="hyperball">Hyperball</option>\
+                                       <option value="line">Line</option>\
+                                       <option value="spacefill">Spacefill</option>\
+                                       <option value="cartoon">Cartoon</option>\
+                                       <option value="ribbon">Ribbon</option>\
+                                       <option value="rope">Rope</option>\
+                                       <option value="tube">Tube</option>\
+                                    </select>\
+                                    <select class="high_scheme" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                       <option value="element">Element</option>\
+                                       <option value="uniform">Uniform</option>\
+                                       <option value="chainid">Chain</option>\
+                                       <option value="moleculetype">Molecule type</option>\
+                                       <option value="sstruc">Structure</option>\
+                                       <option value="resname">Residue name</option>\
+                                       <option value="residueindex">Residue index</option>\
+                                    </select>\
+                                  </div>\
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" ></button> \
+                                    <div class="dropdown-content" style="margin-left:3px">\
+                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;"></div>\
+                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;"></div>\
+      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;"></div>\
+      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;"></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                    </div>\
+                                  </div>\
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span>\
+	                       </div>\
+                          </div>\
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
+                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                          </div>\
+                      </div>\
+                      <div class="ti_alert"> </div>      \
+                  </div>';
+
+        $("#text_input_all").append(row);
+        ti_i+=1;
+    });
+    
+    $("#text_input_all").on("click", ".ti_rm_btn" , function(){
+        var numTiRows = $("#text_input_all").children().length;
+        if(numTiRows==1){
+            $("#text_input_all").find(".sel_input").val("");
+        }else{
+            var wBlock =$(this).closest(".text_input");
+            if (wBlock.is(':last-child')){
+                wBlock.remove();
+                $("#text_input_all").find(".ti_add_btn:last").css("visibility","visible");
+            } else {
+                wBlock.remove();
+            }
+        }
+    });
+
+
+    $("#text_input_all").on("change",".high_scheme",function(){
+        var repSch = $(this).val();
+        if (repSch == "uniform" || repSch == "element"){
+            $(this).closest(".text_input").find(".displaydrop").css("display","inline");
+        } else {
+            $(this).closest(".text_input").find(".displaydrop").css("display","none");
+        }  
+    })
 
 //-------- Collapse Arrow
     $(".section_pan").click(function(){
@@ -210,7 +373,7 @@ $(document).ready(function(){
                     res_chain=undefined;
                     if (inpSource=="main"){
                         to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $("#alert").append(to_add);
+                        $(".ti_alert").append(to_add);
                     } else {
                         to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                         $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -264,7 +427,7 @@ $(document).ready(function(){
                         chain_pair=false;
                         if (inpSource=="main"){
                             to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                            $("#alert").append(to_add);
+                            $(".ti_alert").append(to_add);
                         } else {
                             to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                             $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -313,7 +476,7 @@ $(document).ready(function(){
             sel = "";
             if (inpSource=="main"){
                 to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                $("#alert").attr("class","alert alert-danger row").append(to_add);
+                $(".ti_alert").attr("class","alert alert-danger row").append(to_add);
             } else {
                 to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                 $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -327,7 +490,7 @@ $(document).ready(function(){
                 sel = "";
                 if (inpSource=="main"){
                     to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-                    $("#alert").attr("class","alert alert-danger row").append(to_add);
+                    $(".ti_alert").attr("class","alert alert-danger row").append(to_add);
                 } else {
                     to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                     $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -367,19 +530,6 @@ $(document).ready(function(){
         }
     }
 
-    function click_unclick_specialRec(class_name){
-        $(class_name).click(function(){
-            pos_class=$(this).attr("class");
-            if(pos_class.indexOf("active") > -1){
-                $(this).removeClass("active");
-                seeReceptor="n";
-            } else {
-                $(this).addClass("active");
-                seeReceptor="y";
-            }
-        });
-        return seeReceptor;
-    }
 
 
     function obtainCompounds(){
@@ -391,20 +541,23 @@ $(document).ready(function(){
     }
     
 //-------- Protein chains
+
     function obtainNonGPCRchains(selector){
-        nonGPCR_chains = $(selector).attr("id");
-        if (nonGPCR_chains){
+        var nonGPCR_chains_all=[];
+        $(selector).each(function(){
+            var nonGPCR_chains=$(this).attr("id");
             var patt = new RegExp("protein and \\((.*)\\)");
             var nonGPCR_substr = patt.exec(nonGPCR_chains);
             if (nonGPCR_substr){
                 nonGPCR_substr=nonGPCR_substr[1];
                 nonGPCR_li = nonGPCR_substr.match(/[A-Z]/g);
                 nonGPCR_str = nonGPCR_li.join();
-                return nonGPCR_str;
+                nonGPCR_chains_all.push(nonGPCR_str);
             }
-        }
-        return ("");
+        })
+        return (nonGPCR_chains_all);
     }
+
 
 //-------- Predefined GPCR positions --------
     $("#gpcr_sel").change(function(){
@@ -559,7 +712,7 @@ $(document).ready(function(){
 
     function obtainDistSel(){
         var dist_of=[];
-        var consider_comp=[]
+        //var consider_comp=[]
         $(".sel_within").find(".dist_sel").each(function(){ 
             var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
@@ -578,14 +731,14 @@ $(document).ready(function(){
                 if (comp != "none"){
                     var show = $(this).find(".resWthComp").val();
                     dist_of[dist_of.length]=show+"-"+inp+"-"+comp;
-                    if (show != "protein"){
+                    /*if (show != "protein"){
                         consider_comp[consider_comp.length]=show;
-                    }
+                    }*/
                 }
             }
 
         });    
-        return ([dist_of,uniq(consider_comp)]);
+        return (dist_of);
     }
 
     function activate_row(selector){
@@ -650,168 +803,187 @@ $(document).ready(function(){
         }
         return result;
     }
+    
+    var removed_int_tbls=[];
 
     var i_id=1;
     var lig_sel_str;
     $("#gotoInt").click(function(){
-        var inp_is_num=true;
-        var thr=$("#int_thr").val();
-        var correctinput=true;
-        if (thr==""){
-            var thr_ok="3";
-        } else if (/^(\d+(\.\d+)?)$/.test(thr)){
-            var thr_ok=thr;
-        } else {
-            correctinput=false;
-        }
-        if (correctinput){
+        numComputedI = $("#int_info").children().length;
+        if (numComputedI < 15){
+            var inp_is_num=true;
+            var thr=$("#int_thr").val();
+            var correctinput=true;
             if (thr==""){
                 var thr_ok="3";
-            }else{
+            } else if (/^(\d+(\.\d+)?)$/.test(thr)){
                 var thr_ok=thr;
+            } else {
+                correctinput=false;
             }
-            var traj_path = $(".trajForInt:selected").attr("name");
-            if (traj_path){
-                var intof=$(".ligInt:selected").val();
-                if (intof=="allLig"){
-                    var all_lig_sel=[];
-                    $(".unitInt").each(function(){
-                        var lig_s=$(this).val();
-                        all_lig_sel[all_lig_sel.length]=lig_s;        
-                    });
-                } else {
-                    all_lig_sel=[intof];
+            if (correctinput){
+                if (thr==""){
+                    var thr_ok="3";
+                }else{
+                    var thr_ok=thr;
                 }
-                var dist_scheme= $(".dist_scheme_opt:selected").val();
-                var dist_scheme_name;
-                if (dist_scheme=="closest"){
-                    dist_scheme_name="All atoms";
-                } else {
-                    dist_scheme_name="Heavy atoms only";
-                }
-                $("#int_alert , #int_thr_error , #int_traj_error").html("");
-                ///AJAX!!!
-                $("#int_info").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
-                if (i_id==1){
+                var traj_path = $(".trajForInt:selected").attr("name");
+                if (traj_path){
+                    var intof=$(".ligInt:selected").val();
+                    if (intof=="allLig"){
+                        var all_lig_sel=[];
+                        $(".unitInt").each(function(){
+                            var lig_s=$(this).val();
+                            all_lig_sel[all_lig_sel.length]=lig_s;        
+                        });
+                    } else {
+                        all_lig_sel=[intof];
+                    }
+                    var dist_scheme= $(".dist_scheme_opt:selected").val();
+                    var dist_scheme_name;
+                    if (dist_scheme=="closest"){
+                        dist_scheme_name="All atoms";
+                    } else {
+                        dist_scheme_name="Heavy atoms only";
+                    }
+                    $("#int_alert , #int_thr_error").html("");
+                    ///AJAX!!!
+                    $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                     $("#gotoInt").addClass("disabled");
-                }
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
-                var t0= performance.now();
-                $.ajax({
-                    type: "POST",
-                    url: "/view/"+dyn_id+"/", 
-                    dataType: "json",
-                    data: { 
-                      "all_ligs": all_lig_sel.join(),
-                      "thresh":thr_ok,
-                      "traj_p": traj_path,
-                      "struc_p": struc,
-                      "dist_scheme": dist_scheme,
-                    },
-                    success: function(int_data) {
-                        if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                        }
-                        $("#wait_int").remove();
-                        if (i_id==1){
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    var t0= performance.now();
+                    $.ajax({
+                        type: "POST",
+                        url: "/view/"+dyn_id+"/", 
+                        dataType: "json",
+                        data: { 
+                          "all_ligs": all_lig_sel.join(),
+                          "thresh":thr_ok,
+                          "traj_p": traj_path,
+                          "struc_p": struc,
+                          "dist_scheme": dist_scheme,
+                          "to_rv" : removed_int_tbls.join(),
+                        },
+                        success: function(int_data) {
+                            if ($.active<=1){
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            }
+                            $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
-                        }
-                        var success=int_data.success;
-                        if (success){  // [!]WHAT IF THERE ARE 0 INT!??
-                            var int_data=int_data.result;
-                            if (! isEmptyDict(int_data)){
-                                var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
-                                  <table class="table table-condensed" style="font-size:12px;">\
-                                    <thead>\
-                                      <tr>\
-                                      	<th>Ligand</th>\
-                                        <th>AA</th>\
-                                        <th>Chain</th>\
-                                        <th>Generic num</th>\
-                                        <th>Frequency</th>\
-                                      </tr>\
-                                    </thead>\
-                                  <tbody>';
-                                for (lig in int_data){
-                                    res_int=int_data[lig];
-                                    var num_res_int=res_int.length;
-                                    table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
-                                    var res_int_1st=res_int[0];
-                                    var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
-                                    for (info in res_int_1st_ok){
-                                        table_html+='<td>'+res_int_1st_ok[info]+'</td>';
-                                    }
-                                    table_html+='</tr>';
-                                    var res_int_rest=res_int.slice(1,res_int.length);
-                                    for (res_infoN in res_int_rest){
-                                        var res_info=res_int_rest[res_infoN];
-                                        var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
-                                        table_html+='<tr>';
-                                        for (infoN in res_info_ok){
-                                            var info=res_info_ok[infoN];
-                                            table_html+='<td>'+info+'</td>';
+                            var success=int_data.success;
+                            var to_rvI = int_data.to_rv.split(",");
+                            for (i_idN in to_rvI){
+                                var irv_id = to_rvI[i_idN];
+                                var ind = removed_int_tbls.indexOf(irv_id);
+                                if (ind > -1) {
+                                    removed_int_tbls.splice(ind, 1);
+                                }
+                            }
+                            if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                                var int_id=int_data.int_id;
+                                var int_data=int_data.result;
+                                if (! isEmptyDict(int_data)){
+                                    var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
+                                      <table class="table table-condensed" style="font-size:12px;">\
+                                        <thead>\
+                                          <tr>\
+                                          	<th>Ligand</th>\
+                                            <th>AA</th>\
+                                            <th>Chain</th>\
+                                            <th>Generic num</th>\
+                                            <th>Frequency</th>\
+                                          </tr>\
+                                        </thead>\
+                                      <tbody>';
+                                    for (lig in int_data){
+                                        res_int=int_data[lig];
+                                        var num_res_int=res_int.length;
+                                        table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
+                                        var res_int_1st=res_int[0];
+                                        var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
+                                        for (info in res_int_1st_ok){
+                                            table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                         }
                                         table_html+='</tr>';
-                                    }                              
+                                        var res_int_rest=res_int.slice(1,res_int.length);
+                                        for (res_infoN in res_int_rest){
+                                            var res_info=res_int_rest[res_infoN];
+                                            var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
+                                            table_html+='<tr>';
+                                            for (infoN in res_info_ok){
+                                                var info=res_info_ok[infoN];
+                                                table_html+='<td>'+info+'</td>';
+                                            }
+                                            table_html+='</tr>';
+                                        }                              
+                                    }
+                                    var patt = /[^/]*$/g;
+                                    var trajFile = patt.exec(traj_path);
+                                    table_html+="</tbody></table>\
+                                     <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
+                                        <div class='checkbox' style='font-size:12px;'>\
+		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
+                                        </div>\
+                                        <div style='display:inline-block;margin:5px 5px 5px 0'>\
+                                            <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
+                                            </a>\
+                                        </div>\
+                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
+                                            <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl' data-int_id='"+int_id+"' ></span>\
+                                        </div>\
+                                    </div>";
+                                    $("#int_info").append(table_html);
+                                } else {
+                                    var patt = /[^/]*$/g;
+                                    var trajFile = patt.exec(traj_path);
+                                    var noInt_msg="<div class='int_tbl' id=int_tbl"+i_id+" style='border:1px solid #F3F3F3;padding:10px;'>\
+                                     <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491;  ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
+                                            <div style='margin-bottom:5px 5px 5px 0'>No interactions found.</div>\
+                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                            <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl' data-int_id='"+int_id+"'></span>\
+                                        </div>\
+                                    </div>";
+                                    $("#int_info").append(noInt_msg);
                                 }
-                                var patt = /[^/]*$/g;
-                                var trajFile = patt.exec(traj_path);
-                                table_html+="</tbody></table>\
-                                 <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
-                                    <div class='checkbox' style='font-size:12px;'>\
-		                                <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
-                                    </div>\
-                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
-                                        <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
-                                    </div>\
-                                </div>";
-                                $("#int_info").append(table_html);
-                            } else {
-                                var patt = /[^/]*$/g;
-                                var trajFile = patt.exec(traj_path);
-                                var noInt_msg="<div class='int_tbl' id=int_tbl"+i_id+" style='border:1px solid #F3F3F3;padding:10px;'>\
-                                 <div style='font-size:12px;margin-bottom:5px' ><b>Threshold:</b> "+thr_ok+" &#8491;  ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
-                                        <div style='margin-bottom:5px'>No interactions found.</div>\
-                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
-                                        <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl'></span>\
-                                    </div>\
-                                </div>";
-                                $("#int_info").append(noInt_msg);
+                                i_id+=1;
+                            }else{
+                                var int_error=int_data.e_msg;
+                                add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ int_error;
+                                $("#int_alert").html(add_error);    
                             }
-                            i_id+=1;
-                        }else{
-                            var int_error=int_data.e_msg;
-                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ int_error;
-                            $("#int_alert").html(add_error);    
-                        }
-                        var t1= performance.now();
-                        //console.log("INT : "+((t1 - t0)/1000));
-                    },
-                    error: function(){
-                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
-                        $("#int_alert").html(add_error); 
-                        if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                        }
-                        $("#wait_int").remove();
-                        if (i_id==1){
+                            var t1= performance.now();
+                            //console.log("INT : "+((t1 - t0)/1000));
+                        },
+                        error: function(){
+                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
+                            $("#int_alert").html(add_error); 
+                            if ($.active<=1){
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            }
+                            $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
-                        }            
-                    }
-                });
+                        }
+                    });
+                } else {
+                    //$("#int_traj_error").text("Please select a trajectory.");
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                    $("#int_alert").html(add_error_d);
+                }
             } else {
-                $("#int_traj_error").text("Please select a trajectory.");
-                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
-                $("#int_alert").html(add_error_d);
+                $("#int_thr_error").text("Threshold must be an integer.");
+                add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                $("#int_alert").html(add_error);   
             }
-        } else {
-            $("#int_thr_error").text("Threshold must be an integer.");
-            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+        }else{
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Please, remove some interaction results to obtain new ones.';
             $("#int_alert").html(add_error);   
         }
     });
     
     $('body').on('click','.delete_int_tbl', function(){
+        var tbl_id= $(this).data("int_id");
+        removed_int_tbls.push(tbl_id);
         var IntToRv=$(this).parents(".int_tbl").attr("id");
         $('#'+IntToRv).remove();
     });
@@ -1003,202 +1175,219 @@ $(document).ready(function(){
         return (false);
     }
 
+    var removed_dis_plots=[];
+
     //var distResultDict={};
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
-        var res_ids = obtainDistToComp();
-        if ($(this).attr("class").indexOf("withTrajs") > -1){
-            var traj_results=obtainTrajUsedInDistComputatiion(res_ids);
-            if (traj_results){        
-                var traj_p=traj_results[0];
-                var traj_id=traj_results[1];
-                $("#dist_chart").append("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
-                if (d_id==1){
+        numComputedD = $("#dist_chart").children().length;
+        if (numComputedD < 15){
+            var res_ids = obtainDistToComp();
+            if ($(this).attr("class").indexOf("withTrajs") > -1){
+                var traj_results=obtainTrajUsedInDistComputatiion(res_ids);
+                if (traj_results){        
+                    var traj_p=traj_results[0];
+                    var traj_id=traj_results[1];
+                    $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
-                }
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled");
-                var t0= performance.now();
-                $.ajax({
-                    type: "POST",
-                    url: "/view/"+dyn_id+"/",  //Change 1 for actual number
-                    dataType: "json",
-                    data: { 
-                      "distStrWT": struc,
-                      "distTraj": traj_p,
-                      "dist_residsWT": res_ids,
-                    },
-                    success: function(data_dist_wt) {
-                        $("#wait_dist").remove();
-                        if (d_id==1){
-                            $("#gotoDistPg").removeClass("disabled");
-                        }
-                        var success=data_dist_wt.success;
-                        if (success){
-                            var dist_array_t=data_dist_wt.result_t;
-                            var dist_array_f=data_dist_wt.result_f;
-                            var dist_id=data_dist_wt.dist_id;
-                            function drawChart(){
-                                var patt = /[^/]*$/g;
-                                var trajFile = patt.exec(traj_p);
-                                var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
-                                var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
-                                var options_t = {'title':'Residue Distance ('+trajFile+')',
-                                    "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
-                                var options_f = {'title':'Residue Distance ('+trajFile+')',
-                                    "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                    "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
-                                newgraph_sel="dist_chart_"+d_id.toString();
-                                var plot_html;
-                                if ($.active<=1){
-                                    plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                    <div class='dist_time' id='"+newgraph_sel+"t'></div>\
-                                                    <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
-                                                    <div class='settings' style='margin:5px'>\
-                                                        <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                          Plot distance by\
-                                                            <span >\
-                                                                <select class='plot_dist_by_sel' name='frame_time'>\
-                                                                    <option class='plot_dist_by' selected value='time'>time</option>\
-                                                                    <option class='plot_dist_by' value='frame'>frame</option>\
-                                                                </select>\
-                                                            </span>\
-                                                        </div>\
-                                                        <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                            <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                            </a>\
-                                                        </div>\
-                                                        <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
-                                                            </a>\
-                                                        </div>\
-                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
-                                                            <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
-                                                        </div>\
-                                                        <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
-                                                        </div>\
-                                                    </div>\
-                                                </div>";
-                                }else{
-                                    plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                    <div class='dist_time' id='"+newgraph_sel+"t'></div>\
-                                                    <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
-                                                    <div class='settings' style='margin:5px'>\
-                                                        <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                          Plot distance by\
-                                                            <span >\
-                                                                <select  name='frame_time' class='plot_dist_by_sel'>\
-                                                                    <option class='plot_dist_by' selected value='time'>time</option>\
-                                                                    <option class='plot_dist_by' value='frame'>frame</option>\
-                                                                </select>\
-                                                            </span>\
-                                                        </div>\
-                                                    <div class='checkbox' style='font-size:12px;'>\
-		                                                <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" >Display distance</label>\
-                                                    </div>\
-                                                    <div style='margin:5px'>\
-                                                        <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                            <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                            </a>\
-                                                        </div>\
-                                                        <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
-                                                            </a>\
-                                                        </div>\
-                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
-                                                            <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot'></span>\
-                                                        </div>\
-                                                        <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
-                                                        </div>\
-                                                    </div>\
-                                                </div>";                            
-                                } 
-                                $("#dist_chart").append(plot_html);
-                                var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
-                                for (chartN in chart_cont_li){
-                                    var chart_cont=chart_cont_li[chartN][0];
-                                    var data=chart_cont_li[chartN][1];
-                                    var options=chart_cont_li[chartN][2];
-                                    var chart_div = document.getElementById(chart_cont);
-                                    var chart = new google.visualization.LineChart(chart_div);                                
-                                    google.visualization.events.addListener(chart, 'ready', function () {
-                                        var img_source =  chart.getImageURI(); 
-                                        $("#"+chart_cont).attr("data-url",img_source);
-                                    });                                
-                                    chart.draw(data, options);                                    
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    var t0= performance.now();
+                    $.ajax({
+                        type: "POST",
+                        url: "/view/"+dyn_id+"/",  //Change 1 for actual number
+                        dataType: "json",
+                        data: { 
+                          "distStrWT": struc,
+                          "distTraj": traj_p,
+                          "dist_residsWT": res_ids,
+                          "to_rv" :removed_dis_plots.join(),
+                        },
+                        success: function(data_dist_wt) {
+                            var to_rv = data_dist_wt.to_rv.split(",");
+                            for (d_idN in to_rv){
+                                var rv_id = to_rv[d_idN];
+                                var ind = removed_dis_plots.indexOf(rv_id);
+                                if (ind > -1) {
+                                    removed_dis_plots.splice(ind, 1);
                                 }
-                                $("#"+newgraph_sel+"f").css("display","none");  
-                                var img_source_t=$("#"+newgraph_sel+"t").data("url");
-                                $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
-                                d_id+=1;
-                                
-                            };
-                            google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
-                        } else {
-                            var msg=data_dist_wt.msg;
-                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
+                            }
+                            $("#wait_dist").remove();
+                            $("#gotoDistPg").removeClass("disabled");
+                            var success=data_dist_wt.success;
+                            if (success){
+                                var dist_array_t=data_dist_wt.result_t;
+                                var dist_array_f=data_dist_wt.result_f;
+                                var dist_id=data_dist_wt.dist_id;
+                                var small_error=data_dist_wt.msg;
+                                function drawChart(){
+                                    var patt = /[^/]*$/g;
+                                    var trajFile = patt.exec(traj_p);
+                                    var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
+                                    var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
+                                    var options_t = {'title':'Residue Distance ('+trajFile+')',
+                                        "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                    var options_f = {'title':'Residue Distance ('+trajFile+')',
+                                        "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                    newgraph_sel="dist_chart_"+d_id.toString();
+                                    var plot_html;
+                                    if ($.active<=1){
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                        <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                        <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                        <div class='settings' style='margin:5px'>\
+                                                            <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                              Plot distance by\
+                                                                <span >\
+                                                                    <select class='plot_dist_by_sel' name='frame_time'>\
+                                                                        <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                        <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                    </select>\
+                                                                </span>\
+                                                            </div>\
+                                                            <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                                <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                                </a>\
+                                                            </div>\
+                                                            <div style='display:inline-block;margin:5px;'>\
+                                                                <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                </a>\
+                                                            </div>\
+                                                            <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
+                                                                <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
+                                                            </div>\
+                                                            <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
+                                                            </div>\
+                                                        </div>\
+                                                    </div>";
+                                    }else{
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                        <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                        <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                        <div class='settings' style='margin:5px'>\
+                                                            <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                              Plot distance by\
+                                                                <span >\
+                                                                    <select  name='frame_time' class='plot_dist_by_sel'>\
+                                                                        <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                        <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                    </select>\
+                                                                </span>\
+                                                            </div>\
+                                                        <div class='checkbox' style='font-size:12px;'>\
+		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" >Display distance</label>\
+                                                        </div>\
+                                                        <div style='margin:5px'>\
+                                                            <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                                <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                                </a>\
+                                                            </div>\
+                                                            <div style='display:inline-block;margin:5px;'>\
+                                                                <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                </a>\
+                                                            </div>\
+                                                            <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
+                                                                <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
+                                                            </div>\
+                                                            <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
+                                                            </div>\
+                                                        </div>\
+                                                    </div>";                            
+                                    } 
+                                    $("#dist_chart").append(plot_html);
+                                    var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
+                                    for (chartN in chart_cont_li){
+                                        var chart_cont=chart_cont_li[chartN][0];
+                                        var data=chart_cont_li[chartN][1];
+                                        var options=chart_cont_li[chartN][2];
+                                        var chart_div = document.getElementById(chart_cont);
+                                        var chart = new google.visualization.LineChart(chart_div);                                
+                                        google.visualization.events.addListener(chart, 'ready', function () {
+                                            var img_source =  chart.getImageURI(); 
+                                            $("#"+chart_cont).attr("data-url",img_source);
+                                        });                                
+                                        chart.draw(data, options);                                    
+                                    }
+                                    $("#"+newgraph_sel+"f").css("display","none");  
+                                    var img_source_t=$("#"+newgraph_sel+"t").data("url");
+                                    $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
+                                    
+                                    if (small_error){
+                                        var di_Serror='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><p>'+small_error+'</p></div>';
+                                        $("#all_"+newgraph_sel).find(".settings").after(di_Serror);
+                                    }
+                                    d_id+=1;
+                                    
+                                };
+                                google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
+                            } else {
+                                var msg=data_dist_wt.msg;
+                                add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
+                                $("#dist_alert").html(add_error);                
+                            }
+                            if ($.active<=1){
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            }
+                            var t1=performance.now();
+                            //console.log("DIST: "+((t1 - t0)/1000));
+                        },
+                        error: function() {
+                            $("#gotoDistPg").removeClass("disabled");
+                            $("#wait_dist").remove();
+                            if ($.active<=1){
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            }
+                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#dist_alert").html(add_error);                
                         }
-                        if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                        }
-                        var t1=performance.now();
-                        //console.log("DIST: "+((t1 - t0)/1000));
-                    },
-                    error: function() {
-                        if (d_id==1){
-                            $("#gotoDistPg").removeClass("disabled");
-                        }
-                        $("#wait_dist").remove();
-                        if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                        }
-                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
-                        $("#dist_alert").html(add_error);                
-                    }
-                });
-                $("#dist_alert").html("");
+                    });
+                    $("#dist_alert").html("");
+                } else {
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                    $("#dist_alert").html(add_error_d);
+                }
             } else {
-                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
-                $("#dist_alert").html(add_error_d);
+                if (res_ids){
+                    $("#dist_alert").html("");
+                    $.ajax({
+                        type: "POST",
+                        url: "/view/"+dyn_id+"/",  
+                        dataType: "json",
+                        data: { 
+                          "distStr": struc,
+                          "dist_resids": res_ids,
+                        },
+                        success: function(data_dist) {
+                            var success=data_dist.success;
+                            if (success){
+                                dist_result=data_dist.result
+                            }else{ 
+                                var msg=data_dist.msg;
+                                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
+                                $("#dist_alert").html(add_error_d);       
+                            }
+                        },
+                        error: function() {
+                            
+                            $("#dist_alert").html(add_error_d);             
+                        }
+                    });
+                } else {
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+                    $("#dist_alert").html(add_error_d);
+                }
             }
         } else {
-            if (res_ids){
-                $("#dist_alert").html("");
-                $.ajax({
-                    type: "POST",
-                    url: "/view/"+dyn_id+"/",  
-                    dataType: "json",
-                    data: { 
-                      "distStr": struc,
-                      "dist_resids": res_ids,
-                    },
-                    success: function(data_dist) {
-                        var success=data_dist.success;
-                        if (success){
-                            dist_result=data_dist.result
-                        }else{ 
-                            var msg=data_dist.msg;
-                            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
-                            $("#dist_alert").html(add_error_d);       
-                        }
-                    },
-                    error: function() {
-                        
-                        $("#dist_alert").html(add_error_d);             
-                    }
-                });
-            } else {
-                add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
-                $("#dist_alert").html(add_error_d);
-            }
+            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Please, remove some distance results to obtain new ones.'
+            $("#dist_alert").html(add_error_d);
         }
     });
 
@@ -1221,6 +1410,8 @@ $(document).ready(function(){
     })
 
     $('body').on('click','.delete_dist_plot', function(){
+        var plot_id= $(this).data("dist_id");
+        removed_dis_plots.push(plot_id);
         var plotToRv=$(this).parents(".dist_plot").attr("id");
         $('#'+plotToRv).remove();
     });
@@ -1395,27 +1586,29 @@ $(document).ready(function(){
                 p ++;
             }
             pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
-            var act_val=$(".sel_input").val();
+            var sel_input_cont=$(".text_input:last-child").find(".sel_input");
+            var act_val=sel_input_cont.val();
             var or="";
             if (act_val){
                 or = " or ";
             }
             var fin_val = act_val + or + "protein and ("+ pos_str +")";
-            $(".sel_input").val(fin_val);
+            sel_input_cont.val(fin_val);
         }
     });    
 
-    $("#rmds_my_sel_id").click(function(){
+    /*$("#rmds_my_sel_id").click(function(){
         if ($("#rmsd_my_sel_sel").val() == ""){
             rmsdMySel=$(".sel_input").val();
             if (rmsdMySel){
                 $("#rmsd_my_sel_sel").val(rmsdMySel);
             }
         }
-    });
+    });*/
 
 //-------- RMSD computation --------
 
+    var removed_rmsd_plots=[];
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
@@ -1439,223 +1632,236 @@ $(document).ready(function(){
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");
         $("#rmsd_ref_frames_error").html("");
-        rmsdTraj=$("#rmsd_traj").val();
-        rmsdFrames=$("#rmsd_sel_frames_id input[name=rmsd_sel_frames]:checked").val();
-        if (rmsdFrames=="rmsd_frames_mine"){
-            frameFrom=$("#rmsd_frame_1").val();
-            frameTo=$("#rmsd_frame_2").val();
-            if (frameFrom && frameTo) {
-                if (/^[\d]+$/.test(frameFrom + frameTo)){
-                 //   if (Number(frameFrom) >= 1){
-                    if (Number(frameFrom) < Number(frameTo)){
-                        rmsdFrames=frameFrom + "-" + frameTo;
+        
+        numComputedR = $("#rmsd_chart").children().length;
+        if (numComputedR < 15){
+            rmsdTraj=$("#rmsd_traj").val();
+            rmsdFrames=$("#rmsd_sel_frames_id input[name=rmsd_sel_frames]:checked").val();
+            if (rmsdFrames=="rmsd_frames_mine"){
+                frameFrom=$("#rmsd_frame_1").val();
+                frameTo=$("#rmsd_frame_2").val();
+                if (frameFrom && frameTo) {
+                    if (/^[\d]+$/.test(frameFrom + frameTo)){
+                     //   if (Number(frameFrom) >= 1){
+                        if (Number(frameFrom) < Number(frameTo)){
+                            rmsdFrames=frameFrom + "-" + frameTo;
+                        } else {
+                            showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
+                            rmsdFrames=false;
+                        }
+                        //} else {
+                        //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                        //    rmsdFrames=false;
+                        //}
                     } else {
-                        showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
+                        showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
                         rmsdFrames=false;
                     }
-                    //} else {
-                    //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
-                    //    rmsdFrames=false;
-                    //}
                 } else {
-                    showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
                     rmsdFrames=false;
                 }
+            }
+            rmsdRefFr=$("#rmsd_ref_frame").val();
+            if (rmsdRefFr == ""){
+                rmsdRefFr="0";
+            } else if (! /^[\d]+$/.test(rmsdRefFr)){
+                showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
+                rmsdRefFr=false;
+            }/* else if (Number(rmsdRefFr)<1){
+                showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
+                rmsdRefFr=false;
+            }*/
+            rmsdRefTraj=$("#rmsd_ref_traj_id").val();
+            rmsdSel=$("#rmsd_sel_id input[name=rmsd_sel]:checked").val();
+            if (rmsdSel == "rmds_my_sel"){
+                rmsdSel=$("#rmsd_my_sel_sel").val(); //Curate this so that mdtraj understands it            
+            }
+            if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
+                add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                $("#rmsd_alert").html(add_error);
             } else {
-                rmsdFrames=false;
-            }
-        }
-        rmsdRefFr=$("#rmsd_ref_frame").val();
-        if (rmsdRefFr == ""){
-            rmsdRefFr="0";
-        } else if (! /^[\d]+$/.test(rmsdRefFr)){
-            showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
-            rmsdRefFr=false;
-        }/* else if (Number(rmsdRefFr)<1){
-            showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
-            rmsdRefFr=false;
-        }*/
-        rmsdRefTraj=$("#rmsd_ref_traj_id").val();
-        rmsdSel=$("#rmsd_sel_id input[name=rmsd_sel]:checked").val();
-        if (rmsdSel == "rmds_my_sel"){
-            rmsdSel=$("#rmsd_my_sel_sel").val(); //Curate this so that mdtraj understands it            
-        }
-        if (! rmsdTraj || ! rmsdFrames || ! rmsdRefFr || ! rmsdRefTraj || ! rmsdSel){
-            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
-            $("#rmsd_alert").html(add_error);
-        } else {
-            $("#rmsd_chart").after("<p style='margin-left:13px;margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
-            $("#rmsd_alert").html("");
-            if (r_id==1){
+                $("#rmsd_chart").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
+                $("#rmsd_alert").html("");
                 $("#gotoRMSDPg").addClass("disabled");
-            }
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").addClass("disabled"); 
-            var t0=performance.now();
-            $.ajax({
-                type: "POST",
-                url: "/view/"+dyn_id+"/",  
-                dataType: "json",
-                data: { 
-                  "rmsdStr": struc,
-                  "rmsdTraj": rmsdTraj,
-                  "rmsdFrames": rmsdFrames,
-                  "rmsdRefFr": rmsdRefFr,
-                  "rmsdRefTraj": rmsdRefTraj,
-                  "rmsdSel": rmsdSel,
-                },
-                success: function(data_rmsd) {
-                    $("#wait_rmsd").remove();
-                    if (r_id==1){
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+                var t0=performance.now();
+                $.ajax({
+                    type: "POST",
+                    url: "/view/"+dyn_id+"/",  
+                    dataType: "json",
+                    data: { 
+                      "rmsdStr": struc,
+                      "rmsdTraj": rmsdTraj,
+                      "rmsdFrames": rmsdFrames,
+                      "rmsdRefFr": rmsdRefFr,
+                      "rmsdRefTraj": rmsdRefTraj,
+                      "rmsdSel": rmsdSel,
+                      "to_rv" :removed_rmsd_plots.join(),
+                    },
+                    success: function(data_rmsd) {
+                        $("#wait_rmsd").remove();
                         $("#gotoRMSDPg").removeClass("disabled");
-                    }
-                    var success=data_rmsd.success;
-                    if (success){
-/////////////////////                    
-                        var rmsd_array_t=data_rmsd.result_t;
-                        var rmsd_array_f=data_rmsd.result_f;
-                        var rmsd_id=data_rmsd.rmsd_id;                               
-                        function drawChart2(){
-                            var patt = /[^/]*$/g;
-                            var trajFile = patt.exec(rmsdTraj);
-                            var patt = /[^/]*$/g;
-                            var refTrajFile = patt.exec(rmsdRefTraj);
-                            var rmsdSelOk=SelectionName(rmsdSel);
-                            var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
-                            var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
-                            var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
-                                "height":350, "width":640, "legend":{"position":"none"}, 
-                                "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
-                            var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
-                                "height":350, "width":640, "legend":{"position":"none"}, 
-                                "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
-                            newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
-                            var RMSDplot_html;
-                            if ($.active<=1){
-                                RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
-                                                <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
-                                                <div class='rmsd_settings' id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
-                                                    <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                      Plot RMSD by\
-                                                        <span >\
-                                                            <select class='plot_rmsd_by_sel' name='frame_time'>\
-                                                                <option class='plot_rmsd_by' selected value='time'>time</option>\
-                                                                <option class='plot_rmsd_by' value='frame'>frame</option>\
-                                                            </select>\
-                                                        </span>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                        <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                            <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                        </a>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;'>\
-                                                        <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                            <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
-                                                        </a>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
-                                                        <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
-                                                    </div>\
-                                                </div>\
-                                            </div>";//color:#239023
-                            }else{
-                                RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
-                                                <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
-                                                <div id='opt_"+newRMSDgraph_sel+"' class='rmsd_settings' style='margin:5px'>\
-                                                    <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                      Plot RMSD by\
-                                                        <span >\
-                                                            <select class='plot_rmsd_by_sel' name='frame_time'>\
-                                                                <option class='plot_rmsd_by' selected value='time'>time</option>\
-                                                                <option class='plot_rmsd_by' value='frame'>frame</option>\
-                                                            </select>\
-                                                        </span>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                        <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                            <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                        </a>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;'>\
-                                                        <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                            <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
-                                                        </a>\
-                                                    </div>\
-                                                    <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
-                                                        <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot'></span>\
-                                                    </div>\
-                                                </div>\
-                                            </div>"  ;                          
-                            } 
-                            $("#rmsd_chart").append(RMSDplot_html);
-                            var chart_cont_li =[[newRMSDgraph_sel+"t",data_t,options_t],[newRMSDgraph_sel+"f",data_f,options_f]];
-                            for (chartN in chart_cont_li){
-                                var chart_cont=chart_cont_li[chartN][0];
-                                var data=chart_cont_li[chartN][1];
-                                var options=chart_cont_li[chartN][2];
-                                var rmsd_chart_div = document.getElementById(chart_cont);
-                                var chart = new google.visualization.LineChart(rmsd_chart_div);    
-                                google.visualization.events.addListener(chart, 'ready', function () {
-                                    var rmsd_img_source =  chart.getImageURI(); 
-                                    $("#"+chart_cont).attr("data-url",rmsd_img_source);
-                                });
-                                chart.draw(data, options);   
+                        var success=data_rmsd.success;
+                        var rmsd_to_rv = data_rmsd.to_rv.split(",");
+                        for (r_idN in rmsd_to_rv){
+                            var rvr_id = rmsd_to_rv[r_idN];
+                            var Rind = removed_rmsd_plots.indexOf(rvr_id);
+                            if (Rind > -1) {
+                                removed_rmsd_plots.splice(Rind, 1);
                             }
-                            $("#"+newRMSDgraph_sel+"f").css("display","none");  
-                            var rmsd_img_source_t=$("#"+newRMSDgraph_sel+"t").data("url");
-                            $("#"+newRMSDgraph_sel+"t").siblings(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",rmsd_img_source_t);
-                            r_id+=1;
-                            
-                            
-                            if (small_errors.length >= 1){
-                                errors_html="";
-                                for (error_msg in small_errors){
-                                    errors_html+="<p>"+small_errors[error_msg]+"</p>";
+                        }
+                        if (success){
+    /////////////////////                    
+                            var rmsd_array_t=data_rmsd.result_t;
+                            var rmsd_array_f=data_rmsd.result_f;
+                            var rmsd_id=data_rmsd.rmsd_id;                               
+                            function drawChart2(){
+                                var patt = /[^/]*$/g;
+                                var trajFile = patt.exec(rmsdTraj);
+                                var patt = /[^/]*$/g;
+                                var refTrajFile = patt.exec(rmsdRefTraj);
+                                var rmsdSelOk=SelectionName(rmsdSel);
+                                var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
+                                var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
+                                var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                    "height":350, "width":640, "legend":{"position":"none"}, 
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
+                                var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                    "height":350, "width":640, "legend":{"position":"none"}, 
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
+                                newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
+                                var RMSDplot_html;
+                                if ($.active<=1){
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                    <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
+                                                    <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
+                                                    <div class='rmsd_settings' id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
+                                                        <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                          Plot RMSD by\
+                                                            <span >\
+                                                                <select class='plot_rmsd_by_sel' name='frame_time'>\
+                                                                    <option class='plot_rmsd_by' selected value='time'>time</option>\
+                                                                    <option class='plot_rmsd_by' value='frame'>frame</option>\
+                                                                </select>\
+                                                            </span>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                            <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                            </a>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                            </a>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                            <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot' data-rmsd_id='"+rmsd_id+"'></span>\
+                                                        </div>\
+                                                    </div>\
+                                                </div>";//color:#239023
+                                }else{
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                    <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
+                                                    <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
+                                                    <div id='opt_"+newRMSDgraph_sel+"' class='rmsd_settings' style='margin:5px'>\
+                                                        <div class='plot_rmsd_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                          Plot RMSD by\
+                                                            <span >\
+                                                                <select class='plot_rmsd_by_sel' name='frame_time'>\
+                                                                    <option class='plot_rmsd_by' selected value='time'>time</option>\
+                                                                    <option class='plot_rmsd_by' value='frame'>frame</option>\
+                                                                </select>\
+                                                            </span>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                            <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                            </a>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                            </a>\
+                                                        </div>\
+                                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
+                                                            <span title='Delete' class='glyphicon glyphicon-trash delete_rmsd_plot' data-rmsd_id='"+rmsd_id+"' ></span>\
+                                                        </div>\
+                                                    </div>\
+                                                </div>"  ;                          
+                                } 
+                                $("#rmsd_chart").append(RMSDplot_html);
+                                var chart_cont_li =[[newRMSDgraph_sel+"t",data_t,options_t],[newRMSDgraph_sel+"f",data_f,options_f]];
+                                for (chartN in chart_cont_li){
+                                    var chart_cont=chart_cont_li[chartN][0];
+                                    var data=chart_cont_li[chartN][1];
+                                    var options=chart_cont_li[chartN][2];
+                                    var rmsd_chart_div = document.getElementById(chart_cont);
+                                    var chart = new google.visualization.LineChart(rmsd_chart_div);    
+                                    google.visualization.events.addListener(chart, 'ready', function () {
+                                        var rmsd_img_source =  chart.getImageURI(); 
+                                        $("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                    });
+                                    chart.draw(data, options);   
                                 }
-                                errors_html_div='<div style="margin-bottom:5px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
-                                //$("#all_"+newRMSDgraph_sel).after(errors_html_div);
-                                errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
-                                $("#opt_"+newRMSDgraph_sel).after(errors_html_div);
-                                                            
-                            }
-                            
-                        };
-                        google.load("visualization", "1", {packages:["corechart"],'callback': drawChart2});
-                        small_errors=data_rmsd.msg;
-////////////////////
-                    } else {
-                        var e_msg=data_rmsd.msg;
-                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ e_msg;
-                        $("#rmsd_alert").html(add_error);                              
-                    }
-                    if ($.active<=1){
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                    }
-                var t1= performance.now();
-                //console.log("RMSD : "+((t1 - t0)/1000));
-                },
-                error: function() {
-                    if (r_id==1){
+                                $("#"+newRMSDgraph_sel+"f").css("display","none");  
+                                var rmsd_img_source_t=$("#"+newRMSDgraph_sel+"t").data("url");
+                                $("#"+newRMSDgraph_sel+"t").siblings(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",rmsd_img_source_t);
+                                r_id+=1;
+                                
+                                
+                                if (small_errors.length >= 1){
+                                    errors_html="";
+                                    for (error_msg in small_errors){
+                                        errors_html+="<p>"+small_errors[error_msg]+"</p>";
+                                    }
+                                    errors_html_div='<div style="margin-bottom:5px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
+                                    //$("#all_"+newRMSDgraph_sel).after(errors_html_div);
+                                    errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
+                                    $("#opt_"+newRMSDgraph_sel).after(errors_html_div);
+                                                                
+                                }
+                                
+                            };
+                            google.load("visualization", "1", {packages:["corechart"],'callback': drawChart2});
+                            small_errors=data_rmsd.msg;
+    ////////////////////
+                        } else {
+                            var e_msg=data_rmsd.msg;
+                            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ e_msg;
+                            $("#rmsd_alert").html(add_error);                              
+                        }
+                        if ($.active<=1){
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                        }
+                    var t1= performance.now();
+                    //console.log("RMSD : "+((t1 - t0)/1000));
+                    },
+                    error: function() {
                         $("#gotoRMSDPg").removeClass("disabled");
+                        $("#wait_rmsd").remove();
+                        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
+                        $("#rmsd_alert").html(add_error);  
+                        if ($.active<=1){
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                        }
                     }
-                    $("#wait_rmsd").remove();
-                    add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
-                    $("#rmsd_alert").html(add_error);  
-                    if ($.active<=1){
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot").removeClass("disabled");
-                    }
-                }
-            });
+                });
 
+            }
+        } else {
+            add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Please, remove some RMSD results to obtain new ones.';
+            $("#rmsd_alert").html(add_error);  
         }
     });
 
     $('body').on('click','.delete_rmsd_plot', function(){
+        var plot_id= $(this).data("rmsd_id");
+        removed_rmsd_plots.push(plot_id);
         var plotToRv=$(this).parents(".rmsd_plot").attr("id");
         $('#'+plotToRv).remove();
     });
+    
 
     $("#rmsd_chart").on("change",".plot_rmsd_by_sel", function(){
         xAxis=$(this).val();
@@ -1682,35 +1888,68 @@ $(document).ready(function(){
     click_unclick(".high_pdF");
     click_unclick(".rep_elements");
     click_unclick("#col_btn");
-    seeReceptor=click_unclick_specialRec("#receptor");
+    click_unclick("#receptor");
     $("#btn_all").click(function(){
         $(".rep_elements").addClass("active");
+        $("#receptor").addClass("active");
     });
-    $("#btn_clear").click(function(){
+    
+    function removeCompBtns(){
         $(".rep_elements").removeClass("active");
+        $("#receptor").removeClass("active");
+    }
+    
+    $("#btn_clear").click(function(){
+        removeCompBtns();
     });
 
-    
     
 //-------- Pass data to MDsrv --------
 
+    function gpcr_selection(){
+        var receptorsel="";
+        if ($("#receptor").hasClass("active")){
+            if (chains_str == ""){
+                receptorsel="protein";
+            } else {
+                var chains_s=/:(.*)$/.exec(chains_str)[1];
+                var chains_l = chains_s.match(/\w+/g);
+                receptorsel="protein and (";
+                for (cN in chains_l){
+                    receptorsel+=":"+chains_l[cN]+ " , ";
+                }
+                receptorsel=receptorsel.slice(0,-3) +")";
+            }
+        }
+        return (receptorsel)
+    }
+
+
     function obtainURLinfo(gpcr_pdb_dict){
+        var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists()
         var int_res_li=displayIntResids();
         cp = obtainCompounds();
-        nonGPCR=obtainNonGPCRchains(".nonGPCR:not(.active)");
-        var pre_sel = $(".sel_input").val();
-        sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
+        nonGPCR=obtainNonGPCRchains(".nonGPCR.active");// list of strings, each string contains the chains of a non-GPCR prot selected.
         if (gpcr_pdb_dict=="no"){
             high_pre = [];
         } else {
             high_pre = obtainPredefPositions();
         }
-        rad_option=$(".sel_high:checked").attr("value");
         var traj=obtainCheckedTrajs();
-        return [cp, high_pre,sel_enc,rad_option,traj,nonGPCR,int_res_li,dist_groups_li]; 
+        var receptorsel=gpcr_selection();
+        return ({"cp":cp ,
+                "layers_li":layers_li,
+                "dist_groups_li":dist_groups_li,
+                "int_res_li":int_res_li,
+                "nonGPCR":nonGPCR,
+                "high_pre":high_pre,
+                "traj":traj,
+                "receptorsel":receptorsel
+        })
     }
     
+
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         window.results=results;
@@ -1723,31 +1962,24 @@ $(document).ready(function(){
             }
         }
         window.pd=pd;
-        var dist_result=obtainDistSel();  
-        var dist_of=dist_result[0]
-        var consider_comp=dist_result[1]
+        var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
-        window.consider_comp=consider_comp;
-        var onlyChains="";
-        if (seeReceptor=="n" && nonGPCR == ""){
-            onlyChains=obtainNonGPCRchains(".nonGPCR");
-        }
-        window.seeReceptor=seeReceptor;
         obtainLegend(legend_el);
-    };
-    
+    };    
     window.passInfoToIframe=passInfoToIframe;
+
     
     $("#to_mdsrv").click(function(){
          var results = obtainURLinfo(gpcr_pdb_dict);
-         cp = results[0];
-         high_pre=results[1];
-         sel_enc=results[2];
-         var rad_option =results[3];
-         var traj =results[4];
-         var nonGPCR =results[5];
-         var int_res_lil =results[6];
-         var dist_groups_li = results[7].join();
+         var cp = results["cp"];
+         var high_pre=results["high_pre"];
+         var layers_lil = results["layers_li"];
+         var traj =results["traj"];
+         var nonGPCR =results["nonGPCR"];
+         var nonGPCR = nonGPCR.join("-");
+         var int_res_lil =results["int_res_li"];
+         var dist_groups_li=results["dist_groups_li"];
+         var receptorsel = results["receptorsel"]; 
          var int_res_li=[];
          for (e in int_res_lil){
              var res_s = int_res_lil[e].join("-");
@@ -1761,15 +1993,29 @@ $(document).ready(function(){
                  break;
              }
         }
-        var onlyChains="";
-        if (seeReceptor=="n" && nonGPCR == ""){
-            onlyChains=obtainNonGPCRchains(".nonGPCR");
+        var layers_li=[];
+        for (layN in layers_lil){
+            layer_l =layers_lil[layN];
+            layer_l=layer_l.join("-,,-");
+            layers_li.push(layer_l);
         }
-        var dist_result=obtainDistSel(); // For the dist selection
-        var dist_of=dist_result[0]
-        var consider_comp=dist_result[1]
-        var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc)+ "&rc=" + seeReceptor + "&sh=" + rad_option  + "&pd=" + pd;
-        var add_url_var = {"traj":encode(traj),"sel":encode(sel_enc),"cp":encode(cp),"la":encode(high_pre["A"]),"lb":encode(high_pre["B"]),"lc":encode(high_pre["C"]),"lf":encode(high_pre["F"]),"wth":encode(dist_of),"cc":encode(consider_comp),"in":encode(int_res_s),"ng":nonGPCR,"och":onlyChains , "dc":encode(dist_groups_li)};
+        layers_li=layers_li.join("-;;-");
+        var dist_of=obtainDistSel(); 
+        var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
+        var add_url_var ={"traj":encode(traj) , 
+                            "ly":encode(layers_li) , 
+                            "cp":encode(cp),
+                            "la":encode(high_pre["A"]),
+                            "lb":encode(high_pre["B"]),
+                            "lc":encode(high_pre["C"]),
+                            "lf":encode(high_pre["F"]), 
+                            "wth":encode(dist_of) , 
+                            "in":encode(int_res_s),
+                            "ng":encode(nonGPCR) , 
+                            "dc":encode(dist_groups_li),
+                            "rs":encode(receptorsel)
+                            }        
+  
         for (varn in add_url_var){
             var myvar =add_url_var[varn];
             if (myvar.length > 0){
@@ -1777,7 +2023,49 @@ $(document).ready(function(){
             }
         }
         $(this).attr("href", url_mdsrv);
-    });    
+    });   
+    
+    
+    $("#clearAll").click(function(){
+        removeCompBtns();
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr").val("");
+        $(".sel_within").find(".inputdist").val("");
+        $(".sel_within").find(".user_sel_input").val("");
+        $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){
+            $(this).remove();
+            $(".sel_within").find(".add_btn:last").css("visibility","visible");            
+        });
+        $(".sel_within").find(".dist_sel").each(function(){
+            inactivate_row(this);
+        });
+        $(".seq_sel.sel").each(function(){
+            $(this).css("background-color","#f2f2f2");
+            $(this).attr("class", "seq_sel");
+        });
+        $(".high_pd.active").each(function(){
+            $(this).removeClass("active");
+        });
+        $(".traj_element").each(function(){
+            $(this).attr("checked",false);
+        });
+        $(".dist_btw").find(".dist_pair:not(:first-child)").each(function(){
+            $(this).remove();
+            $(".dist_btw").find(".add_btn2:last , .imp_btn2:last").css("visibility","visible");
+        });
+        $(".dist_btw").find(".dist_pair").each(function(){
+            $(this).find(".tick2").html("");
+            $(this).find(".always2").attr("style","margin-left:14px");
+            $(this).removeClass("d_ok"); 
+        });
+        $("#dist_chart").find(".display_this_dist").each(function(){
+            $(this).attr("checked",false);
+        });
+        $("#int_info").find(".display_int").each(function(){
+            $(this).attr("checked",false);
+        });
+        $("#text_input_all").find(".input_dd_color").val("");
+    }); 
 
 });
+
 

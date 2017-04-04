@@ -53,8 +53,8 @@
                 </div>
                 <div class="col-md-8" style="float:left;width:65%;padding:0px">
                     <div class="row" style="height:30px;width:100%;margin:0px">
-                        <div class="col-md-6" style="float:left;width:50%">
-                            <input style="" id="id_{{file_type}}" name="{{file_type}}" type="file" accept="{{accept_ext}}" {% if file_type == "traj" %} multiple{%endif%}/>
+                        <div class="col-md-6" style="float:left;width:100%">
+                            <input style="max-width:100%;width:100%;" class="file" id="id_{{file_type}}" name="{{file_type}}" type="file"  accept="{{accept_ext}}" {% if file_type == "traj" %} multiple{%endif%}/>
                         </div>
                     </div>
                     <div class="row" style="width:100%;margin:0px">

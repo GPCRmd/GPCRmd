@@ -1,7 +1,7 @@
 import os
 from django.core.files.uploadhandler import TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 from rdkit.Chem import MolFromMolBlock, ForwardSDMolSupplier
-from .customized_errors import MultipleMoleculesinSDF,InvalidMoleculeFileExtension
+from .customized_errors import MultipleMoleculesinSDF,InvalidMoleculeFileExtension, RequestBodyTooLarge, FileTooLarge, TooManyFiles
 from django.conf import settings
 from .molecule_properties_tools import MOLECULE_EXTENSION_TYPES
 
@@ -10,12 +10,13 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
     def __init__(self,request,max_size,max_files=1,*args,**kwargs):
         self.max_size = max_size
         self.max_files = max_files
+        self.exception = None
         self.__acum_size = 0
         self.__acum_file_num = 0
         self.max_post_size = max_size + 2621440
-        if hasattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE'):
-            if settings.DATA_UPLOAD_MAX_MEMORY_SIZE is not None:
-                self.max_post_size = max_size + settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+        if hasattr(settings, 'NO_FILE_MAX_POST_SIZE'):
+            if settings.NO_FILE_MAX_POST_SIZE is not None:
+                self.max_post_size = max_size + settings.NO_FILE_MAX_POST_SIZE
         super(TemporaryFileUploadHandlerMaxSize, self).__init__(request,*args, **kwargs)
     
     
@@ -27,20 +28,30 @@ class TemporaryFileUploadHandlerMaxSize(TemporaryFileUploadHandler):
         # Check the content-length header to see if we should
         # If the post is too large, reset connection.
         if content_length > self.max_post_size:
-            raise StopUpload(connection_reset=True)
+            try:
+                raise RequestBodyTooLarge(self.max_post_size)
+            except Exception as e:
+                self.exception = e
+                raise StopUpload(connection_reset=True)
         
     def new_file(self, *args, **kwargs):
         if self.__acum_file_num >= self.max_files:
-            raise StopUpload(connection_reset=True)
+            try:
+                raise TooManyFiles(self.max_files)
+            except Exception as e:
+                self.exception = e
+                raise StopUpload(connection_reset=True)
         return super(TemporaryFileUploadHandlerMaxSize, self).new_file(*args, **kwargs)    
     
     
     def receive_data_chunk(self,raw_data, start):
         self.__acum_size += len(raw_data)
         if self.__acum_size > self.max_size:
-            #close tempfile. It gets automatically deleted.
-            #self.file.close()
-            raise StopUpload(connection_reset=True)
+            try:
+                raise FileTooLarge(self.max_size)
+            except Exception as e:
+                self.exception = e
+                raise StopUpload(connection_reset=False)
         return super(TemporaryFileUploadHandlerMaxSize, self).receive_data_chunk(raw_data, start)
         
     def file_complete(self, *args, **kwargs):
@@ -51,7 +62,6 @@ class TemporaryMoleculeFileUploadHandlerMaxSize(TemporaryFileUploadHandlerMaxSiz
     def __init__(self,request,max_size,*args,**kwargs):
         self.chunk_size=64*2**10
         self.filetype = None
-        self.exception = None
         self.charset = None
         self.__previous_last_line = ''
         self.__end_mol_found = False
