@@ -2801,13 +2801,43 @@ def protein_get_data_upkb(request, uniprotkbac=None):
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
       print("POST\n",request.POST)
       uniprotkbac = request.POST['uniprotkbac']
+      
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
         if uniprotkbac.find('-') < 0:
           uniprotkbac_noiso = uniprotkbac
           isoform = None
+          qPROT=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac,is_mutated=False,id=F('dyndbproteincannonicalprotein__id_cannonical_proteins'))
+          print(qPROT.values," L  LLLLL")
         else:
           uniprotkbac_noiso,isoform = uniprotkbac.split('-')
+          qPROT=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac,isoform=isoform,is_mutated=False)
+        if qPROT.exists():
+          lqPROT=list(qPROT.values_list('uniprotkbac','isoform','name','dyndbproteinsequence__sequence','id_uniprot_species__scientific_name','id_uniprot_species','id_uniprot_species__code'))[0]
+          data={}
+          data['GPCRmd']=True
+          if qPROT.values('dyndbotherproteinnames__other_names').exists():
+            data['Aliases']=(";").join(list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True)));
+          else:
+            data['Aliases']=""
+          data['Entry'],data['Isoform'],data['Name'],data['Sequence'],data['Org'],data['speciesid'],data['code']=lqPROT  
+          data['Organism']=('').join([data['Org'],data['code']])
+          response = JsonResponse(data) 
+          return response
+         #uniprotkbac.val(data.Entry);
+         #isoform.val(data.Isoform);
+         #name.val(data.Name);
+         #console.log(data);
+         #aliases.val(data.Aliases);
+         #sequence.val(data.Sequence);
+         #species.val(data.Organism);
+         #id_species.val(data.speciesid);
+         #self.prop("disabled", true);
+         #uniprotkbac.prop("readonly", true);
+         #isoform.prop("readonly", true);
+         #uniprotkbac.set_readonly_color();
+         #isoform.set_readonly_color();
+
         data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
         if errdata == dict():
           if data == dict():
@@ -2859,6 +2889,7 @@ def protein_get_data_upkb(request, uniprotkbac=None):
         else:
           datakeys = set([i.lower() for i in data.keys()])
           if datakeys == KEYS:
+            data['GPCRmd']=False
             response = JsonResponse(data) 
             #response={'dict':data,'json':JsonResponse(data)}
             #print (response) ###JUANMA
@@ -5165,6 +5196,7 @@ def MODELview(request, submission_id):
                     iii1=fdbMF.errors.as_text() 
                     print("Errores en el form dyndb_Models\n", iii1)
                     response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain')
+                    return response
             else:
                 Update_MODEL=True
         else:
@@ -5986,7 +6018,15 @@ def _generate_molecule_properties(request,submission_id):
             print('Finished with molecule.',file=logfile)
             logfile.close()
             del mol
-            
+            #####################
+            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
+#            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'])
+            if qMOL.exists():
+                data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
+                print("\n QMOL",qMOL.values())
+                data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
+                data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+                print("OTHER NAMES",data['other_names'])
             return JsonResponse(data,safe=False)
         else:
             data['msg'] = 'Unknown molecule file reference.'
@@ -7262,6 +7302,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
         onames="Pepito; Juanito; Herculito" #to be modified... scripted
         qM=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
         model_id=qM.values_list('model_id',flat=True)[0]
+        initDyn['id_model']=model_id
         ### RETRIEVING FILE_TYPES from the DyndbFileTypes table. dict_ext_id is a dyctionary containing the key:value extension:id
         ft=DyndbFileTypes.objects.all()
         dict_ext_id={}

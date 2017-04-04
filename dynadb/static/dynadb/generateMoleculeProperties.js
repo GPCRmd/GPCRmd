@@ -1,5 +1,6 @@
 var uploadmol1_global_html = '';
 var uploadmol2_global_html = '';
+var stdform_global_html = '';
 
 $(document).ready(function() {
     $.fn.exists = function () {
@@ -8,6 +9,7 @@ $(document).ready(function() {
     
     uploadmol1_global_html = $("[id='id_upload_mol-1'],[id|=id_form][id$='-upload_mol-1']").first().clone();
     uploadmol2_global_html = $("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']").first().clone();
+    stdform_global_html = $("[id='id_stdform'],[id|=id_form][id$='-stdform']").first().clone();
     $(document).on('click',"[id='id_upload_button'],[id|=id_form][id$='-upload_button']",function(){
         var max_size = 52428800;
         var pngsize = 300;
@@ -36,6 +38,9 @@ $(document).ready(function() {
         uploadmol1_html.attr('id',uploadmol1.attr('id'));
         uploadmol1_html.attr('name',uploadmol1.attr('name'));
         var uploadmol2 = $(molform).find("[id='id_upload_mol-2'],[id|=id_form][id$='-upload_mol-2']");
+        var uploadstd = $(molform).find("[id='id_stdform'],[id|=id_form][id$='-stdform']");
+        var uploadstd_html = $(stdform_global_html).clone();
+        console.log($(uploadstd).attr("id")+" OOOOOOOOOOLLLL")
         var uploadmol2_html = $(uploadmol2_global_html).clone();
         uploadmol2_html.attr('id',uploadmol2.attr('id'));
         uploadmol2_html.attr('name',uploadmol2.attr('name'));
@@ -49,6 +54,15 @@ $(document).ready(function() {
         var sinchikey = $(molform).find("[id='id_sinchikey'],[id|=id_form][id$='-sinchikey']");
         var net_charge = $(molform).find("[id='id_net_charge'],[id|=id_form][id$='-net_charge']");
         var smiles = $(molform).find("[id='id_smiles'],[id|=id_form][id$='-smiles']");
+        var name = $(molform).find("[id='id_name'],[id|=id_form][id$='-name']");
+        var iupac_name = $(molform).find("[id='id_iupac_name'],[id|=id_form][id$='-iupac_name']");
+        var chemblid = $(molform).find("[id='id_chemblid'],[id|=id_form][id$='-chemblid']");
+        var pubchem_cid = $(molform).find("[id='id_pubchem_cid'],[id|=id_form][id$='-pubchem_cid']");
+        var alias = $(molform).find("[id='id_other_names'],[id|=id_form][id$='-other_names']");
+        var papa=$(uploadstd).parent();
+
+                   console.log($(uploadstd).prop("tagName")+"   PPP ");
+                   console.log($(uploadstd).parent().prop("tagName")+"   PPP ");
         
         var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
         console.log("boton pulsado");
@@ -89,7 +103,6 @@ $(document).ready(function() {
         smiles.val('');
         console.log("vamos a ver el self.resetCompoundInfo");
         self.resetCompoundInfo();
-        
         var molsdfname = $(molsdf).attr('name');
         console.log("despues self.resetCompoundInfo "+molsdfname);
         $(currentform).ajaxSubmit({
@@ -105,6 +118,17 @@ $(document).ready(function() {
                 sinchikey.val(data.sinchikey);
                 net_charge.val(data.charge);
                 smiles.val(data.smiles);
+                console.log("INCHI "+data.inchi.inchi +"PIPOL  "+data.name+" "+data.iupac_name+" "+data.other_names)
+                if (typeof data.name !== 'undefined'){
+                    console.log("PIPOL")
+                    name.val(data.name);
+                    iupac_name.val(data.iupac_name);
+                    chemblid.val(data.chemblid);
+                    pubchem_cid.val(data.pubchem_cid);
+                    alias.val(data.other_names);
+                }
+
+                    
                 var ret_pubchem =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='retrieve_type_pubchem']");
                 var neu_pubchem =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='neutralize_pubchem']");
                 var ret_chembl =  $(net_charge).parents("[id|=molform]").find("[id|=id_form][id$='retrieve_type_chembl']");
@@ -123,8 +147,11 @@ $(document).ready(function() {
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(uploadmol1).attr("id"))
                 .attr("name",$(uploadmol1).attr("name"))
-                .attr("height",pngsize)
-                .attr("width",pngsize);
+                .attr("height",200)
+                .attr("width",200);
+               // .attr("height",pngsize)
+               // .attr("width",pngsize);
+                imagentable.show(); //to show the table in which the image is contained 
                 $(uploadmol1).replaceWith($(newuploadmol));
                 logfile.attr("href",data.download_url_log);
                 logfile.show();
@@ -133,14 +160,54 @@ $(document).ready(function() {
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(uploadmol2).attr("id"))
                 .attr("name",$(uploadmol2).attr("name"))
-                .attr("height",pngsize)
-                .attr("width",pngsize);
+                .attr("height",200)
+                .attr("width",200);
+               // .attr("height",pngsize)
+               // .attr("width",pngsize);
+                imagentable2.show(); //to show the table in which the image is contained 
                 $(uploadmol2).replaceWith($(newuploadmol));
                 logfile.attr("href",data.download_url_log);
                 logfile.show();
                 uploadmol2 = $(newuploadmol);
-                imagentable.show(); //to show the table in which the image is contained 
-                imagentable2.show(); //to show the table in which the image is contained 
+
+                var uploadstd = $(molform).find("[id='id_stdform'],[id|=id_form][id$='-stdform']");
+                var form_num_html=Number($(uploadstd).attr('id').split("-")[1])+1;
+                if (typeof data.name !== 'undefined'){
+                   console.log($(uploadstd).prop("tagName")+"   PPP ");
+                   console.log($(papa).prop("tagName"));
+                   var newuploadstd = $("<img>")
+                   .attr("src",data.urlstdmol+'?'+(new Date()).getTime())
+                   .attr("id",$(uploadstd).attr("id"))
+                   .attr("name",$(uploadstd).attr("name"))
+                   .attr("height", 200)
+                   .attr("width", 200);
+                   console.log($(newuploadstd).prop("tagName")+"   PPP ");
+                   $(uploadstd).replaceWith($(newuploadstd));
+                   //$(uploadstd).remove();
+                   $(papa).append($(newuploadstd));
+                   console.log("EEEEEEEEE"+$(newuploadstd).attr('id')+" "+$(newuploadstd).attr('name')+" "+ $(newuploadstd).attr('src'));
+                   uploadstd = $(newuploadstd);
+                   alert("Small Molecule #"+form_num_html +" information has been found in the GPCRmd database!!!\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, proceed with the following molecule in your simulation or submit the information in the form.");
+                } else{
+                   alert("Small Molecule #"+form_num_html +" information on Chemoinformatics has been generated.\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, click the \"Retrieve data\" button in the section D of this form item. ");
+                }
+                   //
+                   //$(papa).append("<h1>PIPOL</h1>");
+//Vy                   $(uploadstd).replaceWith($(newuploadstd));
+                  // .attr("height",pngsize)
+                  // .attr("width",pngsize);
+                   //logfile.attr("href",data.download_url_log);
+                   //logfile.show();
+
+
+
+
+
+
+
+
+
+
                 console.log("success");
             },
             error: function(xhr,status,msg){
