@@ -80,6 +80,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'protwis.custom_middlewares.WsgiLogErrors',
     
 ]
 
@@ -154,6 +155,7 @@ TEMPLATES = [
 
 MAX_UPLOAD_SIZE=2147483648
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20971520
+NO_FILE_MAX_POST_SIZE = 52428800
 FILE_UPLOAD_TEMP_DIR = "/tmp"
 
 if DEBUG:
@@ -227,9 +229,8 @@ CACHES = {
 
 QUERY_CHECK_PUBLISHED = False
 
-MDSRV_PORT=8000
+
 MDSRV_UPSTREAM='http://localhost:8081'
-MDSRV_REVERSE_PROXY = 'ALL'
 
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'

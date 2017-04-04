@@ -62,38 +62,16 @@
     {% if answer.components%} 
         <b>Molecules used in this complex structure</b>:   <button id='showall' type="button" class="btn btn-primary">Show all</button> <br><br>
         <div id='carouselhide'>
-        <div class="col-lg-12 text-center"></div>
-        <div class="col-lg-12">
+
         <div id="myCarousel" class="carousel slide" data-ride="carousel">
-
-          <!-- Wrapper for slides -->
-          <div class="carousel-inner" role="listbox">
-        {% for url in answer.components %}
-            {% if forloop.counter == 1  %}
-            <div class="item active"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
-            {%else%}
-            <div class="item"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
-            {%endif%}
-
-        {% endfor %}
-          </div></div>
-
-          <!-- Left and right controls -->
-          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-            <span class="sr-only">Previous</span>
-          </a>
-          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-            <span class="sr-only">Next</span>
-          </a>
-          <br>    
+            <div style=" overflow: hidden; margin: 15px auto; max-width: 90%; max-height: 600px;">
+                <iframe style="border: 0px none; margin-left: -10px; height: 1000px; margin-top: -40px; width: 1000px;" src="/dynadb/model/carousel/{{answer.my_id}}" scrolling="no"></iframe>
+            </div>
         </div></div>
-        
         <div id='hideall'>
-        {% for url in answer.components %}
-            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
-        {% endfor %}
+            {% for url in answer.components %}
+                <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
+            {% endfor %}
         </div>
     {% endif %} 
     <br><br>
@@ -120,7 +98,5 @@
 
 {%endblock content %}
 {% block addon_js %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
 {% endblock%}

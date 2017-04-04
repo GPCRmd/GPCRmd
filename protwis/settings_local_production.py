@@ -1,4 +1,4 @@
-﻿# local settings
+# local settings
 # override these settings by copying and editing this file to protwis/settings_local.py
 
 # Site specific constants
@@ -38,3 +38,6 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 CACHE_PATH = "/tmp/django_cache"
+
+MDSRV_REVERSE_PROXY = 'POST'
+MDSRV_PORT=80

@@ -1,12 +1,19 @@
-from functools import wraps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.shortcuts import resolve_url
+from django.db.models import F
+from django.http import Http404
+from django.core.exceptions import ObjectDoesNotExist
 #from django.utils import six
 from django.utils.decorators import available_attrs
 from django.utils.six.moves.urllib.parse import urlparse
+
+
 from dynadb.models import DyndbSubmission, DyndbProtein, DyndbCompound ,DyndbMolecule, DyndbComplexExp, DyndbComplexMolecule, DyndbModel, DyndbDynamics 
-from django.db.models import F
+
+
+from functools import wraps
+
 
 def user_passes_test_args(test_func, login_url=None, access_denied_response=None, redirect_field_name=REDIRECT_FIELD_NAME):
     """
@@ -18,7 +25,9 @@ def user_passes_test_args(test_func, login_url=None, access_denied_response=None
     def decorator(view_func):
         @wraps(view_func, assigned=available_attrs(view_func))
         def _wrapped_view(request, *args, **kwargs):
-            if test_func(request.user,*args, **kwargs):
+            if test_func(request.user,*args, **kwargs) is None:
+                raise Http404
+            elif test_func(request.user,*args, **kwargs):
                 return view_func(request, *args, **kwargs)
             path = request.build_absolute_uri()
             resolved_login_url = resolve_url(login_url or settings.LOGIN_URL)
@@ -79,13 +88,14 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
         else:
             raise TypeError('Missing object_type argument or a valid [object_type]_id keyword argument.')
         
-    
+    # check if argument keys are correct
     if object_type not in object_type_dict:
         raise ValueError('Unknown object type: "'+str(object_type)+'".')
     id_argument = object_type+'_id'
     if id_argument not in kwargs:
         raise TypeError('Missing keyword argument: "'+id_argument+'".')
     
+    # get object_id and objectdb model object
     object_id = kwargs[id_argument]
     if isinstance(object_id, str):
         object_id = int(object_id)
@@ -93,14 +103,21 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
     dbobject = dbobject_dict['dbobject']
     path_to_submission_id = dbobject_dict['path_to_submission_id']
     
+    # check if object_id is a number or a list of numbers
     if isinstance(object_id, int):
         object_id_is_list_like = False
         # check if it is published
-        if dbobject.objects.values_list('is_published',flat=True).get(pk=object_id):
-            return True
+        try:
+            if dbobject.objects.values_list('is_published',flat=True).get(pk=object_id):
+                return True
+        except ObjectDoesNotExist:
+            return None
+        except:
+            raise
     else:
         object_id_is_list_like = True
         object_id = set(object_id)
+        # check if it is published
         published_ids = set(dbobject.objects.values_list('id',flat=True).filter(pk__in=object_id))
         
     if user.is_authenticated():

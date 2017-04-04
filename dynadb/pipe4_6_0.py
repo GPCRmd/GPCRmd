@@ -51,7 +51,6 @@ def checkpdb_ngl(name_of_file,segid,start,stop,chain):
 					hexflag=1
 				if (fields[4]==chain or chain == '') and cpos2 >= start and cpos2 <= stop and (segid in line[72:77] or segid==''):
 					if cpos2>=ppos2+1:
-						print(fields[3])
 						try:
 							seqplain.append([d[fields[3]],cpos,cpos2])
 						except: #Modified aminoacid
