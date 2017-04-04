@@ -49,6 +49,7 @@ from common.models import  WebResource
 from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel,  DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,  DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
+from dynadb import psf_parser as psf
 
 #from django.views.generic.edit import FormView
 from .forms import dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
@@ -2351,11 +2352,20 @@ def do_analysis(request):
     if request.method == 'POST':
         full_results=dict()
         arrays=request.POST.getlist('frames[]')
+        is_mean=arrays[4]=='mean' #it is not mean, is percentage.
+        percentage_cutoff=int(arrays[3])
         #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
-        trajectory = md.load('./b2ar.dcd', top='./build.pdb')
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
         trajectory=trajectory[int(arrays[0]):int(arrays[1])]
         atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
+        t=trajectory
         trajectory=trajectory.atom_slice(atom_indices, inplace=False)
+        atoms=psf.parser('dynadb/b2ar_isoprot/b2ar.psf')
+        b=psf.compute_interaction(t,1326,4807,atoms,contact_threshold=3,fpt=0.1) #4786,2756
+        frametime=(t.time).reshape(len(t.time),1)
+        tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
+        full_results['charges']=tograph
+
         sasa=md.shrake_rupley(trajectory)
         time=trajectory.time
         total_sasa = sasa.sum(axis=1)
@@ -2365,22 +2375,50 @@ def do_analysis(request):
         result=[list(i) for i in result]
         full_results['sasa']=result
         #calculate H-bonds
-        user_resid=601
-        user_resname='5FW'
-        label = lambda hbond : '%s -- %s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
-        hbonds = md.baker_hubbard(trajectory, periodic=False)
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        hbonds = md.baker_hubbard(t, periodic=False)
         hbonds_user=[]
-        print(hbonds)
+        hbonds_residue=dict()
+        discard_neighbours=True
         for hbond in hbonds:
-            print(label(hbond))
-            #if (t.topology.atom(hbond[0]).residue.resSeq==user_resid and t.topology.atom(hbond[0]).residue.name==user_resname) or (t.topology.atom(hbond[1]).residue.resSeq==user_resid and t.topology.atom(hbond[1]).residue.name==user_resname):
-            if t.topology.atom(hbond[0]).residue.name==user_resname or t.topology.atom(hbond[1]).residue.name==user_resname:
-                hbonds_user.append(label(hbond))
+            labelbond=label(hbond)
+            labelbond=labelbond.replace(' ','')
+            labelbond=labelbond.split('--')
+            donor=labelbond[0]
+            acceptor=labelbond[1]
+            acceptor_res=acceptor[:acceptor.rfind('-')]
+            donor_res=donor[:donor.rfind('-')]
+            if discard_neighbours:
+                try:
+                    resid_donor=int(re.search('^[A-Za-z]{3,4}([0-9]+)',donor_res).group(1))
+                    resid_acceptor=int(re.search('^[A-Za-z]{3,4}([0-9]+)',acceptor_res).group(1))
+                except:
+                    try:
+                        resid_donor=int(donor_res[3:])
+                    except:
+                        resid_donor=int(donor_res[4:])
+                    try:
+                        resid_acceptor=int(acceptor_res[3:])
+                    except:
+                        resid_acceptor=int(acceptor_res[3:])
 
-        full_results['hbonds']=hbonds_user
-        print(full_results)
+                if abs(resid_donor-resid_acceptor)<5:
+                    continue
+
+            if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                try:
+                    if acceptor_res not in hbonds_residue[donor_res]:
+                        hbonds_residue[donor_res].append(acceptor_res)
+                except KeyError:
+                    hbonds_residue[donor_res]=[acceptor_res]
+
+        full_results['hbonds'] = hbonds_residue
+        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
+        full_results['salt_bridges'] = [ label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges'] ] # -1 to return to zero indexing.
+        print('HERE',full_results['salt_bridges'])
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
+
     else:
         return render(request, 'dynadb/analysis_results.html',{'answer':{}})
 

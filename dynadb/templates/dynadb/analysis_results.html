@@ -15,13 +15,31 @@
     <div class="panel-heading"><b>Results</b> </div>
     <div class="panel-body">
     <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
+	<h4>SASA (Solvend Accesible Surface Area)</h4>
+	<label for="from_frame">From frame:</label>
         <input id=from_frame> </input>
+	<label for="to_frame">To frame:</label>
         <input id=to_frame> </input>
+	<label for="atom_name">Atom name:</label>
         <input id=atom_name> </input>
+	<br><br>
+	<h4>Saline Bridges</h4>
+	<label for="cutoff">Percentage cutoff:</label>
+        <input id=cutoff> </input>
+	<input id='percentage' type="radio" name="saltymethod" value="percentage"> Percentage of frames under cutoff 
+	<input id='mean' type="radio" name="saltymethod" value="mean"> Mean distance across simulation<br><br>
+
+
         <button id='doanalysis' type='button'>Analyse</button> 
     </form> 
+    <div id="charges_chart_div"></div>
+
     <div id="chart_div"></div>
+    <h4>Hydrogen Bonds</h4>
     <div id="hbonds"></div>
+    <h4>Salt bridges</h4>
+    <div id="saltbridges"></div>
+    <br><br><br>
     </div>
     </div>
     </div>

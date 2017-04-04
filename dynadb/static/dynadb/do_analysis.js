@@ -1,19 +1,19 @@
 google.charts.load('current', {packages: ['corechart', 'line']});
 google.charts.setOnLoadCallback(drawBasic);
 
-function drawBasic(rows) {
+function drawBasic(rows,xlabel,ylabel) {
 
       var data = new google.visualization.DataTable();
-      data.addColumn('number', 'Time');
-      data.addColumn('number', 'SAS');
+      data.addColumn('number', xlabel);
+      data.addColumn('number', ylabel);
 
       data.addRows(rows);
       var options = {
         hAxis: {
-          title: 'Time'
+          title: xlabel
         },
         vAxis: {
-          title: 'SAS'
+          title: ylabel
         }
       };
       
@@ -26,20 +26,51 @@ $('#doanalysis').click(function() {
     var ff=$('#from_frame').val();
     var tf=$('#to_frame').val();
     var an=$('#atom_name').val();
+    var cut=$('#cutoff').val();
+    var mean_per=$("input[name=saltymethod]:checked").val();
+    console.log(cut,mean_per);
     $.ajax({
         type: "POST",
-        data: { "frames[]": [ff,tf,an]},
+        data: { "frames[]": [ff,tf,an,cut,mean_per]},
         url:"./", 
         dataType: "json",
         success: function(data) {
             console.log(data);
             hbonds=data.hbonds;
-            results=drawBasic(data.sasa);
+            salty=data.salt_bridges;
+
+	        //now the charges graph
+            results_charges=drawBasic(data.charges,'Time','Interaction force');
+            data_charges=results_charges[0];
+            options_charges=results_charges[1];
+            var chart_charges = new google.visualization.LineChart(document.getElementById('charges_chart_div'));
+            chart_charges.draw(data_charges, options_charges);
+
+            //draw the sasa graph
+            results=drawBasic(data.sasa,'Time','SASA');
             data=results[0];
             options=results[1];
-            $('#hbonds').html(hbonds);
+            var table='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Donor<th>Acceptors<tbody>';
+            for (var property in hbonds) {
+                if (hbonds.hasOwnProperty(property)) {
+                    table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td>'+hbonds[property][0];
+                    for (index = 1; index < hbonds[property].length; ++index) {
+                        table=table+'<tr><td>'+hbonds[property][index];
+                    }
+                }
+            }
+            table=table+'</table></center>';
+            $('#hbonds').html(table);
+            saltable='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Residue 1<th> Residue 2<tbody>';
+            for (bridge in salty) {
+                saltable=saltable+'<tr><td>'+salty[bridge].split('--')[0]+'</td><td>'+salty[bridge].split('--')[1]+'</td></tr>';           
+            }
+            saltable=saltable+'</table></center>';
+            $('#saltbridges').html(saltable);
             var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
             chart.draw(data, options);
+
+
         },
         error: function(XMLHttpRequest, textStatus, errorThrown) {
             if (XMLHttpRequest.readyState == 4) {
@@ -55,20 +86,6 @@ $('#doanalysis').click(function() {
             }
         },
     });
-    //~ rows=[
-        //~ [0, 0],   [1, 10],  [2, 23],  [3, 17],  [4, 18],  [5, 9],
-        //~ [6, 11],  [7, 27],  [8, 33],  [9, 40],  [10, 32], [11, 35],
-        //~ [12, 30], [13, 40], [14, 42], [15, 47], [16, 44], [17, 48],
-        //~ [18, 52], [19, 54], [20, 42], [21, 55], [22, 56], [23, 57],
-        //~ [24, 60], [25, 50], [26, 52], [27, 51], [28, 49], [29, 53],
-        //~ [30, 55], [31, 60], [32, 61], [33, 59], [34, 62], [35, 65],
-        //~ [36, 62], [37, 58], [38, 55], [39, 61], [40, 64], [41, 65],
-        //~ [42, 63], [43, 66], [44, 67], [45, 69], [46, 69], [47, 70],
-        //~ [48, 72], [49, 68], [50, 66], [51, 65], [52, 67], [53, 70],
-        //~ [54, 71], [55, 72], [56, 73], [57, 75], [58, 70], [59, 68],
-        //~ [60, 64], [61, 60], [62, 65], [63, 67], [64, 68], [65, 69],
-        //~ [66, 70], [67, 72], [68, 75], [69, 80]
-      //~ ];
 
   }
 )

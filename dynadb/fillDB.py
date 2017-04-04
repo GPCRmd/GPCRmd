@@ -364,14 +364,20 @@ def to_bindingdb_format(records):
         print('processing record:',record)
         kd=''
         ec50=''
+        ic50=''
+        ki=''
         #complex=[ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]
         protlist=record['uniprot']
         if record['experiment_type']=='Kd':
             kd=record['median_value']
         elif record['experiment_type']=='EC50':
             ec50=record['median_value']
+        elif record['experiment_type']=='IC50':
+            ic50=record['median_value']
+        elif record['experiment_type']=='ki':
+            ki=record['median_value']
         else:
-            continue #we have no interest in ki or ic50
+            continue 
             
         seqlist=[]
         gpcr_flag=0
@@ -406,7 +412,7 @@ def to_bindingdb_format(records):
             print(errdata)
             time.sleep(1)
             continue
-        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,'','',{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar',None])
+        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,ki,ic50,{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar',None])
         print('\n\n\nONE RECORD READY',record)
 
     with open('iuphar_useful_complexes_pickle', 'wb') as fp:
@@ -570,6 +576,8 @@ def record_complex_in_DB(comple,fromiuphar=False):
 
     kd=comple[5]
     ec_fifty=comple[6]
+    ki=comple[7]
+    ic50=comple[8]
 
     if len(kd)>0 and len(ec_fifty)>0:
         complextype=3
