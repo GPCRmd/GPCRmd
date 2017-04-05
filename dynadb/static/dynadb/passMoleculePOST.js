@@ -41,6 +41,7 @@ $(document).ready(function(){
         console.log(data);
        
         var urllist=window.location.href.split("/");
+        console.log(window.location.href);
         if (urllist.length ==8){ //explanation: http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
             var submission_id=urllist[urllist.length-3];
             var model_id=urllist[urllist.length-2];
