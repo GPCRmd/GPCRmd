@@ -699,28 +699,51 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
 
             return failnum, pdbmol
 
-def mdtraj_get_frames_num(trajfile,init=0,step=1000):
+def mdtraj_get_frames_num(trajfile,init=0,step=100000):
+    ''' Recursive function to get the number of frames out of a mdtraj trajectory object (trajfile).
+    Returns the number of frames in trajfile by parsing them starting by position "init" using the defined initial "step" '''
+    # safe current position 
     tell = trajfile.tell()
-    trajfile.seek(init)
-    res = trajfile.read(1)
-    xyz = res[0]
-    pos = init
-    while xyz.shape[0] > 0:
-        trajfile.seek(pos)
+    # start on init+step-1 for reading the [init+step]th frame
+    pos0 = init+step-1
+    # initialize current position
+    pos = pos0
+    trajfile.seek(0)
+    
+    # if a possition bigger than the file is sought an OSError is raised
+    try:
+        trajfile.seek(pos0)
+    except (OSError,IndexError):
+        pass
+    except:
+        raise
+    else:
+        # store first coordinates
         res = trajfile.read(1)
         xyz = res[0]
-        pos += step
+        
+        while xyz.shape[0] > 0:
+            pos += step
+            try:
+                trajfile.seek(pos)
+            except (OSError,IndexError):
+                break
+            except:
+                raise
+            else:
+                res = trajfile.read(1)
+                xyz = res[0]
+        
+    # restore the previous position
     trajfile.seek(tell)    
     if step == 1:
-        return pos - 1
-    elif pos == init:
-        return 0
+        return pos
     else:
         if step > 10:
             next_step = int(step/10)
         else:
             next_step = 1
-        return mdtraj_get_frames_num(trajfile, init = pos - 2 * step, step=next_step)
+        return mdtraj_get_frames_num(trajfile, init = pos - step + 1, step=next_step)
 
 def get_frames_num(filepath,file_type,ext=None):
     if file_type == 'coor':
@@ -733,8 +756,19 @@ def get_frames_num(filepath,file_type,ext=None):
             else:
                 raise ValueError('Extension "'+ext2+'" not implemented.')
         numframes = traj.n_frames
+    
     elif file_type == 'traj':
-        trajfile = mdtraj_open(filepath)
+        
+        if ext is None:
+            trajfile = mdtraj_open(filepath)
+        else:
+            ext2 = ext.lower()
+            if ext2 == 'dcd':
+                trajfile = DCDTrajectoryFile(filepath)
+            elif ext2 == 'xtc':
+                trajfile = XTCTrajectoryFile(filepath)
+            else:
+                raise ValueError('Extension "'+ext+'" not implemented.')
         numframes = mdtraj_get_frames_num(trajfile)
         trajfile.close()
     return numframes
