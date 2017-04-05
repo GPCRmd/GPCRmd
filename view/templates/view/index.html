@@ -151,22 +151,33 @@
                    </div>
      	        </div>
              </div>
+             
+        <h4 class="row" style="text-align:center;padding:5px;margin:0">Selection</h4>
 <!-- ============= Comp buttonss =========== -->
-            <div class="row"><center>
-                <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active"  id="receptor">Receptor</button>
-                {% if other_prots%}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
-                {% endif %}
-                {% for long_n, short_n in compounds %}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
-                {% endfor %}
-                {% if compounds|length > 1%}
-                <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
-                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
-                {% endif %}
-            </center></div>
+        <div id="quicksel_all" style="margin-bottom:5px">
+            <div class="row" style="margin-top:10px;">
+                <div class="quicksel_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#quicksel"><span>Quick selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
+            </div>
+            <div id="quicksel" class="collapse" style="padding-right:15px;">
+
+
+                <div class="row" style="margin-top:10px"><center>
+                    <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active"  id="receptor">Receptor</button>
+                    {% if other_prots%}
+                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                    {% endif %}
+                    {% for long_n, short_n in compounds %}
+                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                    {% endfor %}
+                    {% if compounds|length > 1%}
+                    <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
+                    <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
+                    {% endif %}
+                </center></div>
+            </div>
+        </div>
 <!-- ============= Input selection =========== -->
-            <div id="selection_all" style="margin-bottom:5px">
+            <div id="selection_all" style="margin-bottom:5px;margin-top:5px">
             <div class="row">
                 <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
             </div>
@@ -504,17 +515,16 @@
           </div>
           {% endif %}
 <!-- ============= Analysis =========== --> 
-           {% if traj_list %}          
-           <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
-           <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
-            </div>
-            <div id="analysis" class="row collapse">
-
+           {% if traj_list %}  
+           <h4 class="row" style="text-align:center;padding:5px;margin:0">Analysis</h4>      
+           
 <!-- ============= Compute distances =========== --> 
 
-              <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Distance</div>
-               <div id="analysis_dist" class="collapse">
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Distance </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+            </div>
+             <div id="analysis_dist" class="collapse">
+             <div class=row" style="margin-top:10px">
                
                 <div class="dist_btw" style="margin-right:5px;margin-left:0;">
                   <div class="dist_pair" id="row2_0">
@@ -559,10 +569,15 @@
                 <div id="dist_chart" style="margin-bottom:15px"></div>
               <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
+               </div>
 <!-- ============= RMSD Analysis =========== --> 
-            <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>
-              <div class="collapse" id="analysis_rmsd">
-                <div style="margin-bottom:15px">
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>RMSD </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+           </div>
+             <div id="analysis_rmsd" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
                             <select id="rmsd_traj" name="rmsd_traj">
@@ -688,8 +703,8 @@
             {% endif %}
             </div>
 <!-- ======================================== -->
-            </div>
-            </div>
+           <!-- </div>
+            </div>-->
             {% endif %}
           </div>
 
