@@ -79,7 +79,7 @@
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
         <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
-             <p style="text-align: justify;margin-bottom:4px">Mouse controls:</p>
+             <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 		<span><p class="falselist">Left button hold and move: rotate camera around center.</p>
 		<p class="falselist">Left button click: pick atom or distance.</p>
 		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
@@ -117,7 +117,7 @@
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                 </div>  
                 <div >
-                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;">
+                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;border: 1px solid #F5F5F5">
                         <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="590px"></iframe>
                     </div>
 
@@ -131,7 +131,6 @@
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                       <button  class="btn btn-danger" id="clearAll" >Clear</button>
-                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
                       <div class="pull-right">
                           <!--
                           <button id="center" class="btn btn-default" type="button" style="padding-right:7px;padding-left:7px;height:35px" >Center</button>
@@ -144,7 +143,9 @@
                           
                           <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
                           <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
-                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>
+                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>                                    
+                        <!--  <a id="to_mdsrv" class="settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>-->
+                        <a id="to_mdsrv" class="btn btn-link settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>
    
                       </div>
                    </div>
@@ -167,7 +168,7 @@
 <!-- ============= Input selection =========== -->
             <div id="selection_all" style="margin-bottom:5px">
             <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
             </div>
             <div id="selection" class="collapse" style="padding-right:15px;">
 
@@ -299,7 +300,7 @@
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
             <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>               
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>               
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
             </div>
             <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
@@ -490,7 +491,7 @@
           {% if traj_list %}
            <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
               <div class="row">
-                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
               </div>
               <div id="emb_trajectories" class="collapse" >
                   <div class="checkbox" >
@@ -506,7 +507,7 @@
            {% if traj_list %}          
            <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
             </div>
             <div id="analysis" class="row collapse">
 

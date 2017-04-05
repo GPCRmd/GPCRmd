@@ -192,6 +192,22 @@ def obtain_prot_chains(pdb_name):
     return list(chain_name_s)
 
 
+def obtain_all_chains(pdb_name):
+    chain_name_l=[]
+    fpdb=open(pdb_name,'r')
+    first=True
+    for line in fpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            chain_name=line[21]
+            if first:
+                first=False
+                chain_name_pre=chain_name
+                chain_name_l.append(line[21])
+            elif (chain_name != chain_name_pre):
+                chain_name_pre=chain_name
+                chain_name_l.append(line[21])
+    return list(chain_name_l)
+
 def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
     """Creates a list of all the important info of prot sequence positions"""
     chain_nm_seq_pos=""
@@ -633,7 +649,8 @@ def index(request, dyn_id):
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
-                chain_names=session_data["chain_name_li"]
+                #chain_names=session_data["chain_name_li"]
+                chain_names=obtain_all_chains("/protwis/sites/files/"+int_struc_p)
                 num_prots=session_data["prot_num"]
                 serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]

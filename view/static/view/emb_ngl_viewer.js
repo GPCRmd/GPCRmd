@@ -387,8 +387,8 @@ $(document).ready(function(){
             if (subst_pos_all){
                 if (num_gpcrs >1){
                     subst_pos_all=subst_pos_all.slice(0,-4);
-                    subst_pos_all="("+subst_pos_all+")";
                 } 
+                subst_pos_all="protein and ("+subst_pos_all+")";
                 sel = sel.replace(my_gpcr ,subst_pos_all );
             } else {
                 sel="";
@@ -439,7 +439,7 @@ $(document).ready(function(){
                 }
                 if (chain_pair){
                     if (chain_pair[0]==chain_pair[1]){
-                        pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
+                        pos_range=" ("+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0]+")";
                     } else {
                         start=all_chains.indexOf(chain_pair[0]);
                         end=all_chains.indexOf(chain_pair[1]);
@@ -456,8 +456,10 @@ $(document).ready(function(){
         if (pos_range_all){
             if (num_gpcrs >1){
                 pos_range_all=pos_range_all.slice(0,-4);
-                pos_range_all="("+pos_range_all+")";
-            }  
+                pos_range_all="protein and ("+pos_range_all+")";
+            }  else {
+                pos_range_all="protein and "+pos_range_all;
+            }
             pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
         } else {
             pre_sel="";
@@ -2063,6 +2065,10 @@ $(document).ready(function(){
         $("#int_info").find(".display_int").each(function(){
             $(this).attr("checked",false);
         });
+        $("#text_input_all").find(".text_input:not(:first-child)").each(function(){
+            $(this).remove();            
+        });
+        $("#text_input_all").find(".ti_add_btn:last").css("visibility","visible");
         $("#text_input_all").find(".input_dd_color").val("");
     }); 
 

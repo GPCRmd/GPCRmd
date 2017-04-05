@@ -43,7 +43,7 @@
             stage = new NGL.Stage();
             NGL.StageWidget( stage );
         stage.setParameters( { backgroundColor: "white" } );
-        stage.parameters.cameraType="orthographic";
+        //stage.parameters.cameraType="orthographic";
 //////////////
 
         function selWithinComponent(o,dist_comp){
@@ -181,7 +181,7 @@
                                 
                                 if (receptorsel){
                                     var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));
-                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: receptorsel_d} );
+                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d} );
   
                                 }
                                 
@@ -192,7 +192,7 @@
                                     for (ng = 0; ng < nonGPCR_l.length; ng++){
                                         chains_s = nonGPCR_l[ng];
                                         nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
-                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: nonGPCR_sel } );
+                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: nonGPCR_sel } );
                                     }
                                 }             
                                 

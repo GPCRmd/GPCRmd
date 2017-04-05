@@ -49,7 +49,7 @@
 ////////////////// Functions
         $(document).ready(function(){
         document.domain=document.domain;
-        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+        stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
             var radius=Number(dist_comp[1]);
@@ -320,14 +320,14 @@
             o.setSelection( "*" );
             
             if (receptorsel.length > 0){
-                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: receptorsel } );
+                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel } );
             } 
             
             if (nonGPCR.length > 0){
                 for (ng in nonGPCR){
                     chains_s = nonGPCR[ng];
                     nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
-                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: nonGPCR_sel } );
+                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: nonGPCR_sel } );
                 }
             }
             if (cp.length > 0){
@@ -460,7 +460,7 @@
             var traj_li=[];
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein" } );
+                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
                         for (t in traj_li_all) {
