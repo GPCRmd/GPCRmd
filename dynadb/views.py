@@ -2737,10 +2737,58 @@ def query_model(request,model_id,incall=False):
         return model_dic
 
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
+
+
+def obtain_domain_url(request):
+    current_host = request.get_host()
+    domain=current_host.rsplit(':',1)[0]
+    if request.is_secure():
+        protocol = 'https'
+    else:
+        protocol = 'http'
+        
+    if hasattr(settings, 'MDSRV_PORT'):
+        port = settings.MDSRV_PORT
+    else:
+        port = 80
+        
+    if hasattr(settings, 'MDSRV_URL'):
+        mdsrv_url = settings.MDSRV_URL.strip()
+        if mdsrv_url.find('/') == len(mdsrv_url) - 1:
+           mdsrv_url = mdsrv_url[:-1]
+    else:
+        mdsrv_url = protocol+'://'+domain+':'+str(port)
+    return(mdsrv_url)
+
+
+def obtain_dyn_files(paths_dict):
+    """Given a list of files related to a dynamic, separates them in structure files and trajectory files."""
+    structure_file=""
+    structure_name=""
+    traj_list=[]
+    p=re.compile("(/protwis/sites/files/)(.*)")
+    p2=re.compile("[\.\w]*$")
+    for f_id , path in paths_dict.items():
+        myfile=p.search(path).group(2)
+        myfile_name=p2.search(path).group()
+        if myfile_name.endswith(".pdb"): #, ".ent", ".mmcif", ".cif", ".mcif", ".gro", ".sdf", ".mol2"))
+            structure_file=myfile
+            structure_file_id=f_id
+            structure_name=myfile_name
+        elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
+            traj_list.append((myfile, myfile_name, f_id))
+    return (structure_file,structure_file_id,structure_name, traj_list)
+
     
 @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
+    mdsrv_url=obtain_domain_url(request)
+    dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dynamics_id)
+    paths_dict={}
+    for e in dynfiles:
+        paths_dict[e.id_files.id]=e.id_files.filepath
+    (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
     dyna_dic=dict()
     dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
     dyna_dic['nglviewer_id']=dynamics_id
@@ -2761,6 +2809,8 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['ortoligands']=list()
     dyna_dic['aloligands']=list()
     dyna_dic['link2protein']=list()
+    dyna_dic['mdsrv_url'] = mdsrv_url
+    dyna_dic['structure_file'] = structure_file
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
         dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
 

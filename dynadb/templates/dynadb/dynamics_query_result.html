@@ -1,3 +1,6 @@
+<script>
+    document.domain=document.domain;
+</script>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% block addon_css %}
@@ -90,7 +93,8 @@
     <center><a class='btn btn-lg btn-info' role='button' href=/view/{{answer.nglviewer_id}}>Analysis tools</a><br><br><br><br></center>
 
     <div style=" overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
-        <iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>
+        <iframe class="str_file" style="border: 0px none; ;width: 800px;margin-top:-35px;" id="embed_mdsrv" src="{{answer.mdsrv_url}}/html/embed.html" scrolling="no" height="400px" width="590px" data-struc_file={{answer.structure_file}} ></iframe>
+        <!--iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>-->
     </div>
     {%if answer.link2protein%}
         {%for link in answer.link2protein%}
@@ -136,5 +140,6 @@
 
 {% block addon_js %}
 <script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+<script src="{% static 'dynadb/mdsrv.js' %}"></script>
 {% endblock%}
 
