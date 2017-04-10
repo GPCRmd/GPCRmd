@@ -47,7 +47,7 @@ function CreateTable(){
     else {
         table = $('#ajaxresults22').DataTable( {
             "sPaginationType" : "full_numbers",
-            "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+            "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "All"]],
             "oLanguage": {
                 "oPaginate": {
                     "sPrevious": "<",
@@ -65,15 +65,14 @@ function CreateTable(){
 $("#Searcher").click(function(e) {
     //gets the options the user has chosen and performs an ajax call with the user input
     $('#ajaxresults22').DataTable().clear().draw();
-    e.preventDefault(); //not helping, still GET error sometimes...
+    e.preventDefault();
     var p=$("#protein22").val();
     var return_type=$("#simpletype").find(":selected").val();
+    $('#badge_legend').hide();
     $('#hiddenbar').show();
     $('#hiddenbarin').width("10%");
     var idsearch=$("#idsearch").prop('checked');
-
     if (idsearch==true){
-        p=parseInt(p);
         if (isNaN(p)) {
             alert('ID search demands a number');
             $('#hiddenbar').hide();
@@ -115,7 +114,6 @@ $("#Searcher").click(function(e) {
                         return (a[0][0] < b[0][0]) ? -1 : 1;
                     }
                 }
-
                 //sort the results among each category
                 data.compound=data.compound.sort(sortFunction);
                 data.molecule=data.molecule.sort(sortFunction);
@@ -124,32 +122,46 @@ $("#Searcher").click(function(e) {
                 data.names=data.names.sort(sortNamesFunction);
                 //create the table rows with the results
                 for(i=0; i<data.compound.length; i++){
-                    linkresult=linkresult+'<tr><td> <a class="btn btn-info" role="button" href=/dynadb/compound/id/'+data.compound[i][0]+'> Compound ID: '+data.compound[i][0] +' '+data.compound[i][1]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.compound[i][data.compound[i].length-1]+'</span><br> <br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></td><td align="left"> <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+'%'+data.compound[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                    linkresult=linkresult+'<tr><td> <a class="btn btn-info" title="Standard Forms include all the different states which that molecule can have: tautomers, enantiomers, etc." role="button" href=/dynadb/compound/id/'+data.compound[i][0]+'> Standard Form. CID: '+data.compound[i][2] +'<br> '+data.compound[i][1]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;">'+data.compound[i][data.compound[i].length-1]+'</span> <span title="Net Charge" class="badge" style="background-color:blue;"> '+data.compound[i][data.compound[i].length-2]+'</span><br> <br><img src="'+data.compound[i][3]+'"  height="170" width="170"/></td><td align="left"> <button class="compound" value="ligand" type="button" name='+data.compound[i][0]+'%'+data.compound[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                    if (idsearch==false){
+                        if(data.comoldic[data.compound[i][0]].length>1){
+                            for(j=0; j<data.molecule.length; j++){
+                                if (data.molecule[j][0]==data.comoldic[data.compound[i][0]]){
+                                    linkresult=linkresult+'<tr><td><center>  <a class="btn btn-warning" title="Specific State molecules is one of the multiple states a molecule can be in: netcharge:+1 in N5, or the L-isomer, or the cis-isomer, etc." role="button" href=/dynadb/molecule/id/'+data.molecule[j][0]+'> Specific State <br> '+data.molecule[j][3]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;"> '+data.molecule[j][data.molecule[j].length-1]+'</span> <span title="Net Charge" class="badge" style="background-color:blue;"> '+ data.molecule[j][data.molecule[j].length-2]+'</span><br> <br><img src="'+data.molecule[j][2]+'"  height="170" width="170"/> </center></td><td  align="left">  <button class="molecule" type="button" value="ligand" name='+data.molecule[j][0]+'%'+data.molecule[j][3].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                                }//endif
+                            } //for j molecule
+                        }//if len(molecules)
+                    }//idsearch
                 }
-
-                for(i=0; i<data.molecule.length; i++){
-                    linkresult=linkresult+'<tr><td>  <a class="btn btn-info" role="button" href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Molecule ID: '+data.molecule[i][0]+' '+data.molecule[i][3]+'</a> <span title="Number of dynamics in which this element is present" class="badge"> '+data.molecule[i][data.molecule[i].length-1]+'</span> <span title="Net Charge" class="badge"> '+data.molecule[i][data.molecule[i].length-2]+'</span><br> <br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/> </td><td  align="left">  <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+'%'+data.molecule[i][3].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                if (idsearch==true){
+                    for(i=0; i<data.molecule.length; i++){
+                        linkresult=linkresult+'<tr><td>  <a class="btn btn-warning"  role="button" href=/dynadb/molecule/id/'+data.molecule[i][0]+'> Specific State<br>'+data.molecule[i][3]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;"> '+data.molecule[i][data.molecule[i].length-1]+'</span> <span title="Net Charge" class="badge" style="background-color:blue;"> '+ data.molecule[i][data.molecule[i].length-2]+'</span><br> <br><img src="'+data.molecule[i][2]+'"  height="170" width="170"/> </td><td  align="left">  <button class="molecule" type="button" value="ligand" name='+data.molecule[i][0]+'%'+data.molecule[i][3].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span>Add to search</button><br></td></tr>';
+                    }
                 }
 
                 for(i=0; i<data.protein.length; i++){
-                    linkresult=linkresult+'<tr><td>   <a class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.protein[i][data.protein[i].length-1]+'</span> '+data.protein[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                    linkresult=linkresult+'<tr><td><a class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;">'+data.protein[i][data.protein[i].length-1]+'</span> '+data.protein[i][1]+'<br><a class="btn btn-info" style="opacity:0;" role="button" href=/dynadb/protein/id/'+data.protein[i][0]+'> Protein ID: '+ data.protein[i][0]+'</a> <span style="opacity:0;" class="badge" style="background-color:red;">'+data.protein[i][data.protein[i].length-1]+'</span></td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.protein[i][0]+'%'+data.protein[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
                 }
 
+                /*for(i=0; i<data.gpcr.length; i++){
+                    linkresult=linkresult+'<tr><td>   <a class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][1]+'<center><br>'+data.gpcr[i][3]+' '+data.gpcr[i][2]+'</center> </td> <td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.gpcr[i][0]+'%'+data.gpcr[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                }*/ //original
+
                 for(i=0; i<data.gpcr.length; i++){
-                    linkresult=linkresult+'<tr><td>   <a class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][1]+'</td><td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.gpcr[i][0]+'%'+data.gpcr[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
+                    linkresult=linkresult+'<tr><td><a class="btn btn-info" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span title="Number of dynamics in which this element is present" class="badge" style="background-color:red;">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][1]+'<br><a class="btn btn-info" style="opacity:0;" role="button" href=/dynadb/protein/id/'+data.gpcr[i][0]+'> Protein ID: '+ data.gpcr[i][0]+'</a> <span class="badge" style="opacity:0;" style="background-color:red;">'+data.gpcr[i][data.gpcr[i].length-1]+'</span> '+data.gpcr[i][3]+' '+data.gpcr[i][2]+'</td> <td  align="left">   <button class="protein" type="button" value="GPCR" name='+data.gpcr[i][0]+'%'+data.gpcr[i][1].replace(' ','!')+' ><span class="glyphicon glyphicon-plus"></span> Add to search</button><br></td></tr>';
                 }
 
                 for(i=0; i<data.names.length; i++){
                     if (data.names[i][0].length>2){
                         if (data.names[i][1]=='complex'){
-                            linkresult1=linkresult1+"<tr><td> <a class='btn btn-info' role='button' href=/dynadb/complex/id/"+data.names[i][0][0]+"> Complex with ID "+data.names[i][0][0]+"</a> </td><td  align='left'> Receptor: <kbd>"+data.names[i][0][1]+"</kbd><br> Ligand: <kbd>"+ data.names[i][0][2]+"</kbd>. </td></tr>";
+                            linkresult1=linkresult1+"<tr><td> <a class='btn btn-info' role='button' href=/dynadb/complex/id/"+data.names[i][0][0]+"> Complex with ID "+data.names[i][0][0]+"</a> </td><td  align='left'> Receptor: <kbd>"+data.names[i][0][1]+"</kbd><br> Ligand:     <kbd>"+ data.names[i][0][2]+"</kbd>. </td></tr>";
                         }
                         else if (data.names[i][1]=='model'){
-                            linkresult2=linkresult2+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+data.names[i][0][0]+"> Complex Structure ID:"+data.names[i][0][0] +"</a> </td><td  align='left'> Receptor: <kbd>"+data.names[i][0][1]+"</kbd><br> Ligand: <kbd>"+data.names[i][0][2]+"</kbd> </td></tr>";
+                            linkresult2=linkresult2+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+data.names[i][0][0]+"> Complex Structure ID:"+data.names[i][0][0] +"</a> </td><td  align='left'> Receptor: <kbd>"+data.names[i][0][1]+"</kbd><br> Ligand:     <kbd>"+data.names[i][0][2]+"</kbd> </td></tr>";
                         }
 
                         else{ 
-                            linkresult3=linkresult3+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+data.names[i][0][0]+"> Dynamics ID:"+data.names[i][0][0]+" </a></td><td align='left'> Receptor: <kbd>"+data.names[i][0][1]+ "</kbd><br> Ligand:<kbd>"+ data.names[i][0][2]+"</kbd></td></tr>";
+                            linkresult3=linkresult3+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+data.names[i][0][0]+"> Dynamics ID:"+data.names[i][0][0]+" </a></td><td align='left'> Receptor: <kbd>"+data.names[i][0][1]+ "</kbd><br> Ligand:     <kbd>"+ data.names[i][0][2]+"</kbd></td></tr>";
                         }
 
                     }else{
@@ -166,14 +178,14 @@ $("#Searcher").click(function(e) {
                 $('#ajaxresults22').DataTable().destroy()
                 $('#ajaxresults22 tbody').append(linkresult);
                 $('#hiddenbar').hide();$('#hiddenbarin').width("10%");
-
+		$('#badge_legend').show();
                 if ( $.fn.dataTable.isDataTable( '#ajaxresults22' ) ) {
                     table = $('#ajaxresults22').DataTable();
                 }
                 else {
                     table = $('#ajaxresults22').DataTable( {
                         "sPaginationType" : "full_numbers",
-                        "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+                        "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "All"]],
                         "oLanguage": {
                             "oPaginate": {
                                 "sPrevious": "<",
