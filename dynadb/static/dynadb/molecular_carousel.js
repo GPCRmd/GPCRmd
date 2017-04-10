@@ -1,15 +1,21 @@
 //code to hide or show the bootstrap carousel code 
-var counter=0;
-$('#hideall').hide();
-$("#showall").click(function(){
-    counter+=1;
-    if (counter%2==0){
-        $('#hideall').hide();
-        $('#carouselhide').show();
-        $('#showall').text('Show all');
-    }else{
+$( document ).ready(function() {
+    $("#showall").click(function(){
         $('#carouselhide').hide();
+        $('#hide3d').hide();
         $('#hideall').show();
-        $('#showall').text('Show carousel');
-    }
-})
+    });
+
+    $("#2d").click(function(){
+       $('#hideall').hide();
+       $('#hide3d').hide();
+       $('#carouselhide').show();
+
+    });
+
+    $("#3d").click(function(){
+       $('#carouselhide').hide();
+       $('#hideall').hide();
+       $('#hide3d').show();
+    });
+});
