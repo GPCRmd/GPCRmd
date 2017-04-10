@@ -16,6 +16,7 @@ $(document).ready(function(){
         var notuniprot = protform.find("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var notuniprotall = $("[id='id_is_not_uniprot'],[id|=id_form][id$='-is_not_uniprot']");
         var isoformval = isoform.val();
+        var form_num_html=Number($(this).attr('id').split("-")[1])+1;
         console.log("after variables");
         if (isoformval == '') {
           uniprotkbac_isoform = uniprotkbacval;
@@ -84,10 +85,17 @@ $(document).ready(function(){
           species.val(data.Organism);
           id_species.val(data.speciesid);
           self.prop("disabled", true);
-          uniprotkbac.prop("readonly", true);
+          uniprotkbac.prop("readonly", false);
           isoform.prop("readonly", true);
           uniprotkbac.set_readonly_color();
           isoform.set_readonly_color();
+          console.log("PPPPP "+data.GPCRmd);
+          if (data.GPCRmd===true) {
+              alert("Protein #"+form_num_html +" information has been found in the gpcrmd database!!!\n\nIf appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
+          }else{
+              alert("If appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
+          }
+
         }, 'json')
 
         .fail(function(xhr,status,msg) {

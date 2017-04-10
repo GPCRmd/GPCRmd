@@ -312,7 +312,7 @@ font-weight:normal
                    
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-3"><input id="id_form-{{int0}}-pubchem_cid" {% if model_id %} readonly {%endif%}name="form-{{int0}}-pubchem_cid"  style="width:142px;margin-right:0%" type="number" value={{com.pubchem_cid}} /></div> <!--placeholder=" 2818" -->
+		            <div class="col-md-3"><input id="id_form-{{int0}}-pubchem_cid" {% if model_id %} readonly {%endif%}name="form-{{int0}}-pubchem_cid"  style="width:142px;margin-right:0%" type="number" value="{{com.pubchem_cid}}" /></div> <!--placeholder=" 2818" -->
                        {%endif%} {%endfor%}
                     {% if not model_id %}
 	 		<div class="col-md-3"><button id="id_form-{{int0}}-update_from_pubchem" name="form-{{int0}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div>
@@ -324,7 +324,7 @@ font-weight:normal
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-chemblid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-3"><input id="id_form-{{int0}}-chemblid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chemblid" type="number" style="width:142px;margin-right:0%" value={{com.chemblid}} /></div> <!--  placeholder=" 42"-->
+		            <div class="col-md-3"><input id="id_form-{{int0}}-chemblid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chemblid" type="number" style="width:142px;margin-right:0%" value="{{com.chemblid}}" /></div> <!--  placeholder=" 42"-->
                        {%endif%} {%endfor%}
                     {% if not model_id %}
 			<div class="col-md-3"><button id="id_form-{{int0}}-update_from_chembl" name="form-{{int0}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div>

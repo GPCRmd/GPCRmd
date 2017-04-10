@@ -49,7 +49,7 @@ from protein.models import Protein
 from common.models import  WebResource
 from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel,  DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,  DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num, get_frames_num
 
 #from django.views.generic.edit import FormView
 from .forms import dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
@@ -2942,13 +2942,43 @@ def protein_get_data_upkb(request, uniprotkbac=None):
     if request.method == 'POST' and 'uniprotkbac' in request.POST.keys():
       print("POST\n",request.POST)
       uniprotkbac = request.POST['uniprotkbac']
+      
     if uniprotkbac is not None:
       if valid_uniprotkbac(uniprotkbac):
         if uniprotkbac.find('-') < 0:
           uniprotkbac_noiso = uniprotkbac
           isoform = None
+          qPROT=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac,is_mutated=False,id=F('dyndbproteincannonicalprotein__id_cannonical_proteins'))
+          print(qPROT.values," L  LLLLL")
         else:
           uniprotkbac_noiso,isoform = uniprotkbac.split('-')
+          qPROT=DyndbProtein.objects.filter(uniprotkbac=uniprotkbac,isoform=isoform,is_mutated=False)
+        if qPROT.exists():
+          lqPROT=list(qPROT.values_list('uniprotkbac','isoform','name','dyndbproteinsequence__sequence','id_uniprot_species__scientific_name','id_uniprot_species','id_uniprot_species__code'))[0]
+          data={}
+          data['GPCRmd']=True
+          if qPROT.values('dyndbotherproteinnames__other_names').exists():
+            data['Aliases']=(";").join(list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True)));
+          else:
+            data['Aliases']=""
+          data['Entry'],data['Isoform'],data['Name'],data['Sequence'],data['Org'],data['speciesid'],data['code']=lqPROT  
+          data['Organism']=('').join([data['Org'],data['code']])
+          response = JsonResponse(data) 
+          return response
+         #uniprotkbac.val(data.Entry);
+         #isoform.val(data.Isoform);
+         #name.val(data.Name);
+         #console.log(data);
+         #aliases.val(data.Aliases);
+         #sequence.val(data.Sequence);
+         #species.val(data.Organism);
+         #id_species.val(data.speciesid);
+         #self.prop("disabled", true);
+         #uniprotkbac.prop("readonly", true);
+         #isoform.prop("readonly", true);
+         #uniprotkbac.set_readonly_color();
+         #isoform.set_readonly_color();
+
         data,errdata = retreive_data_uniprot(uniprotkbac_noiso,isoform=isoform,columns='id,entry name,organism,length,')
         if errdata == dict():
           if data == dict():
@@ -3000,6 +3030,7 @@ def protein_get_data_upkb(request, uniprotkbac=None):
         else:
           datakeys = set([i.lower() for i in data.keys()])
           if datakeys == KEYS:
+            data['GPCRmd']=False
             response = JsonResponse(data) 
             #response={'dict':data,'json':JsonResponse(data)}
             #print (response) ###JUANMA
@@ -5311,6 +5342,7 @@ def MODELview(request, submission_id):
                     iii1=fdbMF.errors.as_text() 
                     print("Errores en el form dyndb_Models\n", iii1)
                     response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                    return response
             else:
                 Update_MODEL=True
         else:
@@ -5996,6 +6028,7 @@ def _generate_molecule_properties(request,submission_id):
     
                 
     if request.method == 'POST':
+        print("HOLA")
         submission_path = get_file_paths("molecule",url=False,submission_id=submission_id)
         submission_url = get_file_paths("molecule",url=True,submission_id=submission_id)
         data = dict()
@@ -6020,7 +6053,7 @@ def _generate_molecule_properties(request,submission_id):
                 pngname = get_file_name_submission("molecule",submission_id,molid,ref=False,ext="png",forceext=False,subtype="image",imgsize=pngsize)
                 sdfnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="sdf",forceext=False,subtype="molecule")
                 pngnameref = get_file_name_submission("molecule",submission_id,molid,ref=True,ext="png",forceext=False,subtype="image",imgsize=pngsize)
-                
+                print("PIPOL")
                 try:
                     os.remove(os.path.join(submission_path,sdfname))
                 except:
@@ -6141,9 +6174,19 @@ def _generate_molecule_properties(request,submission_id):
                 print('Finished with molecule.',file=logfile)
                 logfile.close()
                 del mol
-                
+            #####################
+                qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
+#            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'])
+                print("YOGURT")
+                if qMOL.exists():
+                    data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
+                    print("\n QMOL",qMOL.values())
+                    data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
+                    data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+                    print("OTHER NAMES",data['other_names'])
                 return JsonResponse(data,safe=False)
             else:
+                print("YOGURT2")
                 data['msg'] = 'Unknown molecule file reference.'
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
         else:
@@ -7210,6 +7253,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             
             filenum = 0
             for uploadedfile in uploadedfiles:
+                n_frames = None
                 rootname,fileext = os.path.splitext(uploadedfile.name)
                 if fileext == '.gz':
                     rootname2,fileext2 = os.path.splitext(rootname)
@@ -7245,6 +7289,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     
                     try:
                         numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
+                        n_frames = get_frames_num(deleteme_filepath,file_type,ext=ext)
                     except:
                         response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
@@ -7257,7 +7302,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         return response
                     
                 if file_type == 'traj':
-
+                    
                     if filenum == 0:
                         if ref_numatoms is not None and ref_numatoms != numatoms:
                             response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
@@ -7277,10 +7322,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         return response
                     prev_name = uploadedfile.name
                     prev_numatoms = numatoms
-
+                    
                     
                 
-                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url})
+                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url,'framenum':n_frames})
                 
                 data['download_url_file'].append(download_url)
 
@@ -10934,7 +10979,7 @@ def SMALL_MOLECULEview(request, submission_id):
                     entry['protein_id']=int(entry['protein_id'])
                     entry['int_id']=int(entry['int_id'])
                     print(entry)
-                   # SProtreuse=dyndb_Submission_Protein(entry)
+                    SProtreuse=dyndb_Submission_Protein(entry)
 
                     if qSprot_empty_rows.exists():
                         for rows in qSprot_empty_rows:
