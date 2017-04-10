@@ -19,8 +19,8 @@ $(document).on({
         alfa=-1*(alfa*180/3.1415);
         var alfadeg='rotate('+alfa.toString()+'deg)';
         $('#arrowdiv').css('transform',alfadeg);
-        $('#arrowdiv').css('left', x + 100); //$('#arrowdiv').css('left', '750px'); 
-        $('#arrowdiv').css('top', y - Math.abs(alfa)*2 ); //0.8 fine
+        $('#arrowdiv').css('left', x + 10); //$('#arrowdiv').css('left', '750px'); 
+        $('#arrowdiv').css('top', y - Math.abs(alfa)*4 ); //2 fine
         $('#arrowdiv').show();
 
     },

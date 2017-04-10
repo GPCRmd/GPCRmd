@@ -1,3 +1,6 @@
+<script>
+    document.domain=document.domain;
+</script>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% block addon_css %}
@@ -143,7 +146,7 @@
     <div id='bottom' class="col-sm-12">
     <hr><hr>
     <center><h3>Dynamics Components</h3></center>
-    <!--
+    
     {%if answer.link2protein%}
          <center><b>Proteins: </b>
         {%for link in answer.link2protein%}
@@ -152,7 +155,7 @@
         <div style="overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
             <iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>
         </div>
-    {%endif%} -->
+    {%endif%}
     <br>
     {% if answer.link_2_molecules %}
         <center><b>Molecules:</b>
@@ -199,7 +202,6 @@
     {% endif %}
     <br>
     <br>
-     <!--end right col div-->
     <br>
     <br>
     {% if answer.references %} 
@@ -234,5 +236,6 @@ $("#bottoninfoleft .ortoligand").click(function(){
 });
 </script>
 
+<script src="{% static 'dynadb/mdsrv.js' %}"></script>
 {% endblock%}
 
