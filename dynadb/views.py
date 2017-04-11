@@ -2877,6 +2877,9 @@ def query_dynamics(request,dynamics_id):
     for e in dynfiles:
         paths_dict[e.id_files.id]=e.id_files.filepath
     (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
+    traj_displayed=""
+    if len(traj_list)>0:
+        traj_displayed=traj_list[0][0]
     dyna_dic=dict()
     try:
         dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
@@ -2909,6 +2912,7 @@ def query_dynamics(request,dynamics_id):
         dyna_dic['link_2_complex']=''
     dyna_dic['mdsrv_url'] = mdsrv_url
     dyna_dic['structure_file'] = structure_file
+    dyna_dic['traj_file'] = traj_displayed
 
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
         dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])
