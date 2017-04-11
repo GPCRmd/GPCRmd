@@ -42,6 +42,26 @@ $(document).ready(function(){
         $(this).css("color","#585858");
     });
     
+ /*   $("#addToSel").hover(function(){
+        $(this).children().css("color","#449C44");
+    },
+    function(){
+        $(this).children().css("color","#5CB85C");
+    });*/
+    
+    
+    $(".traj_element").hover(function(){
+        $(this).css("background-color","#f2f2f2");
+    },
+    function(){
+        var selected=$(this).hasClass("tsel");
+        if (selected){
+            $(this).css("background-color","#FFF7F7");
+        } else {
+            $(this).css("background-color","#FFFFFF");
+        }
+    });
+    
     /*$(".settingsB").click(function(){
         $(this).css("color","green");
         setTimeout(function(){ $(this).css("color","#585858"); }, 1000);
@@ -54,13 +74,22 @@ $(document).ready(function(){
     var sel = "";
     var sel_enc = sel;
     
-    function obtainCheckedTrajs(){
+    
+    $(".traj_element").click(function(){
+        var traj_p=$(this).data("tpath");
+        var traj_n=$(this).text();
+        $("#selectedTraj").data("tpath",traj_p).html(traj_n+' <span class="caret">');
+        $(this).css("background-color","#FFF7F7").addClass("tsel");
+        $(this).siblings().css("background-color","#FFFFFF").removeClass("tsel");
+    })
+    
+    /*function obtainCheckedTrajs(){
         var traj = [];
-        $(".traj_element:checked").each(function(){
-            traj[traj.length]=$(this).attr("value");
+        $(".traj_element").each(function(){
+            traj[traj.length]=$(this).data("tpath");
         }); 
         return traj;
-    }
+    }*/
     
     function obtainDicts(gpcr_pdb_dict){
         all_gpcr_dicts={};
@@ -81,7 +110,7 @@ $(document).ready(function(){
         return [all_gpcr_dicts , num_gpcrs];
     }
     
-    var traj=obtainCheckedTrajs();
+    //var traj=obtainCheckedTrajs();
     $("#receptor").addClass("active");
     //$(".nonGPCR").addClass("active");
 
@@ -100,57 +129,64 @@ $(document).ready(function(){
 
 //-------- Text Input --------
 
-    $("#text_input_all").on("click",".dropbtn",function(){
-        if ($(this).hasClass("opened")){
-            $(this).siblings(".dropdown-content").css("display","none");
-            $(this).removeClass("opened");
-        }else {
-            $(this).siblings(".dropdown-content").css("display","block");
-            $(this).addClass("opened");
-        }
-    });
-    
-    $("#text_input_all").on("click",".dropcolor",function(){
-        var dCont=$(this).parent();
-        var dBtn=dCont.siblings(".dropbtn");
-        var dDwn=dBtn.parent();
-        dCont.css("display","none");
-        dBtn.removeClass("opened");
-        if ($(this).hasClass("morecolors")){
-        
-
-            var clicked_color= $(this).css("background-color");
-            var old_color=dBtn.css("background-color");
-
-            $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors");
-            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors");
-
-            dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">');
-
-            
-        } else {     
-            if (dBtn.hasClass("morecolors")){
-                var clicked_color= $(this).css("background-color");
-                var old_color=dBtn.css("background-color");
-                dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors");
-                $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").appendTo(dCont);
-                dDwn.siblings(".span_morecolors").html('');
-
-            } else {
-                var clicked_color= $(this).css("background-color");
-                var old_color=dBtn.css("background-color");
-                $(this).css("background-color",old_color);
-                dBtn.css("background-color",clicked_color);
+    function displayDropBtn(input_select){
+        $(input_select).on("click",".dropbtn",function(){
+            if ($(this).hasClass("opened")){
+                $(this).siblings(".dropdown-content").css("display","none");
+                $(this).removeClass("opened");
+            }else {
+                $(this).siblings(".dropdown-content").css("display","block");
+                $(this).addClass("opened");
             }
-        }
-    });
+        });
+    }
+    displayDropBtn("#text_input_all");
+    displayDropBtn("#seq_input_all");
+    
+    function colorSel(input_select){
+        $(input_select).on("click",".dropcolor",function(){
+            var dCont=$(this).parent();
+            var dBtn=dCont.siblings(".dropbtn");
+            var dDwn=dBtn.parent();
+            dCont.css("display","none");
+            dBtn.removeClass("opened");
+            if ($(this).hasClass("morecolors")){
+            
+                var clicked_color= $(this).data("color");
+                var old_color=dBtn.data("color");
+
+                $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").addClass("nglCallClickTI").data("color",old_color);
+                dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",clicked_color);
+
+                dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">');
+
+                
+            } else {     
+                if (dBtn.hasClass("morecolors")){
+                    var clicked_color= $(this).data("color");
+                    var old_color=dBtn.data("color");
+                    dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors").data("color",clicked_color);
+                    $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign nglCallChangeTI"></span>').addClass("morecolors").removeClass("nglCallClickTI").data("color",old_color).appendTo(dCont);
+                    dDwn.siblings(".span_morecolors").html('');
+
+                } else {
+                    var clicked_color= $(this).data("color");
+                    var old_color=dBtn.data("color");
+                    $(this).css("background-color",old_color).data("color",old_color);
+                    dBtn.css("background-color",clicked_color).data("color",clicked_color);
+                }
+            }
+        });
+    }
+    colorSel("#text_input_all");
+    colorSel("#seq_input_all");
     
     function obtainTextInput(){
         var layer=[];
         $("#text_input_all").find(".text_input").each(function(){
             $(this).find(".span_morecolors").removeClass("has-error");
             var pre_sel = $(this).find(".sel_input").val();
-            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main");
+            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main",".ti_alert");
             if (sel_enc.length > 0){
                 var ltype = $(this).find(".high_type").val();
                 var lscheme = $(this).find(".high_scheme").val();
@@ -164,7 +200,30 @@ $(document).ready(function(){
                         $(this).find(".span_morecolors").addClass("has-error");
                     }
                 } else {
-                    var lcolor = dBtn.css("background-color");
+                    var lcolor = dBtn.data("color");
+                }
+                layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
+            }
+        })
+        
+        $("#seq_input_all").find(".seq_input_row").each(function(){
+            $(this).find(".span_morecolors").removeClass("has-error");
+            var pre_sel = $(this).find(".seq_input").val();
+            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main",".si_alert");
+            if (sel_enc.length > 0){
+                var ltype = $(this).find(".high_type").val();
+                var lscheme = $(this).find(".high_scheme").val();
+                var dBtn = $(this).find(".dropbtn");
+                if (dBtn.hasClass("morecolors")){
+                    lcolor=$(this).find(".input_dd_color").val();
+                    if (lcolor == ""){
+                        lcolor = "#FFFFFF";
+                    } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+                        lcolor = "#FFFFFF";
+                        $(this).find(".span_morecolors").addClass("has-error");
+                    }
+                } else {
+                    var lcolor = dBtn.data("color");
                 }
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
             }
@@ -215,6 +274,7 @@ $(document).ready(function(){
 
     maxInputLength('.inputdist',"",6);
     maxInputLength('input.sel_input',"",100);
+    maxInputLength('input.seq_input',"",100);
     maxInputLength('#rmsd_frame_1',"",8);
     maxInputLength('#rmsd_frame_2',"",8);
     maxInputLength('#rmsd_my_sel_sel',"",50);
@@ -243,10 +303,10 @@ $(document).ready(function(){
         var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
                        <div  class="row">\
                           <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
-	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
 	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
 	                             <div style="float:left;height:27px" >\
-                                    <select class="high_type" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
+                                    <select class="high_type nglCallChangeTI" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
                                        <option value="licorice">Licorice</option>\
                                        <option value="ball+stick">Ball+stick</option>\
                                        <option value="hyperball">Hyperball</option>\
@@ -257,7 +317,7 @@ $(document).ready(function(){
                                        <option value="rope">Rope</option>\
                                        <option value="tube">Tube</option>\
                                     </select>\
-                                    <select class="high_scheme" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                    <select class="high_scheme nglCallChangeTI" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
                                        <option value="element">Element</option>\
                                        <option value="uniform">Uniform</option>\
                                        <option value="chainid">Chain</option>\
@@ -268,13 +328,13 @@ $(document).ready(function(){
                                     </select>\
                                   </div>\
                                   <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" ></button> \
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> \
                                     <div class="dropdown-content" style="margin-left:3px">\
-                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;"></div>\
-                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;"></div>\
-      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;"></div>\
-      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;"></div>\
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
                                     </div>\
                                   </div>\
                                   <span class="span_morecolors displaydrop" style="float:left" ></span>\
@@ -317,14 +377,108 @@ $(document).ready(function(){
         }  
     })
 
+
+
+///////////////
+
+    var si_i=1;
+    $("#seq_input_all").on("click",".si_add_btn",function(){ 
+        $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
+        var row='<div  class="seq_input_row" id="si_row'+si_i+'" style="margin-bottom:5px">\
+                       <div  class="row">\
+                          <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> \
+	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
+	                             <div style="float:left;height:27px" >\
+                                    <select class="high_type nglCallChangeTI" name="high_type'+si_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
+                                       <option value="licorice">Licorice</option>\
+                                       <option value="ball+stick">Ball+stick</option>\
+                                       <option value="hyperball">Hyperball</option>\
+                                       <option value="line">Line</option>\
+                                       <option value="spacefill">Spacefill</option>\
+                                       <option value="cartoon">Cartoon</option>\
+                                       <option value="ribbon">Ribbon</option>\
+                                       <option value="rope">Rope</option>\
+                                       <option value="tube">Tube</option>\
+                                    </select>\
+                                    <select class="high_scheme nglCallChangeTI" name="high_scheme'+si_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                       <option value="element">Element</option>\
+                                       <option value="uniform">Uniform</option>\
+                                       <option value="chainid">Chain</option>\
+                                       <option value="moleculetype">Molecule type</option>\
+                                       <option value="sstruc">Structure</option>\
+                                       <option value="resname">Residue name</option>\
+                                       <option value="residueindex">Residue index</option>\
+                                       <option value="hydrophobicity">Hydrophobicity</option>\
+                                    </select>\
+                                  </div>\
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> \
+                                    <div class="dropdown-content" style="margin-left:3px">\
+                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
+                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
+      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                    </div>\
+                                  </div>\
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span>\
+	                       </div>\
+                          </div>\
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
+                                <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                                <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0;visibility:hidden"><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                          </div>\
+                      </div>\
+                      <div class="si_alert"> </div>\
+                  </div>';
+
+        $("#seq_input_all").append(row);
+        si_i+=1;
+    });
+    
+    $("#seq_input_all").on("click", ".si_rm_btn" , function(){
+        var numSiRows = $("#seq_input_all").children().length;
+        if(numSiRows==1){
+            $("#seq_input_all").css("display","none");
+            $("#seq_input_all").find(".seq_input").val("");
+        }else{
+            var wBlock =$(this).closest(".seq_input_row");
+            if (wBlock.is(':last-child')){
+                wBlock.remove();
+                $("#seq_input_all").find(".si_add_btn:last").css("visibility","visible");
+            } else {
+                wBlock.remove();
+            }
+        }
+    });
+
+
+    $("#seq_input_all").on("change",".high_scheme",function(){
+        var repSch = $(this).val();
+        if (repSch == "uniform" || repSch == "element"){
+            $(this).closest(".seq_input_row").find(".displaydrop").css("display","inline");
+        } else {
+            $(this).closest(".seq_input_row").find(".displaydrop").css("display","none");
+        }  
+    })
+
+
+
+
+
 //-------- Collapse Arrow
     $(".section_pan").click(function(){
         var target=$(this).attr("data-target");
         var upOrDown=$(target).attr("class");
         if(upOrDown.indexOf("in") > -1){
-            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-down");
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-up");
+            arrow.addClass("glyphicon-chevron-down");
         } else {
-            $(this).children("#arrow").attr("class","glyphicon glyphicon-chevron-up");
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-down");
+            arrow.addClass("glyphicon-chevron-up");
         }
     });
 
@@ -348,7 +502,7 @@ $(document).ready(function(){
         return(res);
     }
     
-    function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource){
+    function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -373,7 +527,7 @@ $(document).ready(function(){
                     res_chain=undefined;
                     if (inpSource=="main"){
                         to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $(".ti_alert").append(to_add);
+                        $(alertSel).append(to_add);
                     } else {
                         to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                         $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -387,8 +541,8 @@ $(document).ready(function(){
             if (subst_pos_all){
                 if (num_gpcrs >1){
                     subst_pos_all=subst_pos_all.slice(0,-4);
-                    subst_pos_all="("+subst_pos_all+")";
                 } 
+                subst_pos_all="protein and ("+subst_pos_all+")";
                 sel = sel.replace(my_gpcr ,subst_pos_all );
             } else {
                 sel="";
@@ -397,7 +551,7 @@ $(document).ready(function(){
         return (sel)
     }
     
-    function parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource){
+    function parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource,alertSel){
         var add_or ="";
         if (num_gpcrs >1){
             add_or=" or ";
@@ -427,7 +581,7 @@ $(document).ready(function(){
                         chain_pair=false;
                         if (inpSource=="main"){
                             to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                            $(".ti_alert").append(to_add);
+                            $(alertSel).append(to_add);
                         } else {
                             to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
                             $("#"+rownum).find(".alert_sel_wth").html(to_add);
@@ -439,7 +593,7 @@ $(document).ready(function(){
                 }
                 if (chain_pair){
                     if (chain_pair[0]==chain_pair[1]){
-                        pos_range=" "+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0];
+                        pos_range=" ("+res_pair[0] + "-" +res_pair[1]+":"+chain_pair[0]+")";
                     } else {
                         start=all_chains.indexOf(chain_pair[0]);
                         end=all_chains.indexOf(chain_pair[1]);
@@ -456,8 +610,10 @@ $(document).ready(function(){
         if (pos_range_all){
             if (num_gpcrs >1){
                 pos_range_all=pos_range_all.slice(0,-4);
-                pos_range_all="("+pos_range_all+")";
-            }  
+                pos_range_all="protein and ("+pos_range_all+")";
+            }  else {
+                pos_range_all="protein and "+pos_range_all;
+            }
             pre_sel = pre_sel.replace(gpcr_pair_str, pos_range_all);
         } else {
             pre_sel="";
@@ -468,7 +624,7 @@ $(document).ready(function(){
     }    
     
 
-    function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource){
+    function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource,alertSel){
         var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
@@ -476,13 +632,13 @@ $(document).ready(function(){
             sel = "";
             if (inpSource=="main"){
                 to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                $(".ti_alert").attr("class","alert alert-danger row").append(to_add);
+                $(alertSel).attr("class","alert alert-danger row").append(to_add);
             } else {
                 to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                 $("#"+rownum).find(".alert_sel_wth").html(to_add);
             }
         } else {
-            sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource);
+            sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource,alertSel);
         }
         var lonely_gpcrs=obtainInputedGPCRnum(sel);
         if (lonely_gpcrs != null){
@@ -490,13 +646,13 @@ $(document).ready(function(){
                 sel = "";
                 if (inpSource=="main"){
                     to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
-                    $(".ti_alert").attr("class","alert alert-danger row").append(to_add);
+                    $(alertSel).attr("class","alert alert-danger row").append(to_add);
                 } else {
                     to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
                     $("#"+rownum).find(".alert_sel_wth").html(to_add);
                 }
             } else {
-                sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource);
+                sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel);
             }
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
@@ -540,6 +696,15 @@ $(document).ready(function(){
         return comp;
     }
     
+    function obtainBS(){
+        var bs_info="";
+        if ($("#bindingSite").hasClass("active")){
+            var receptorsel=gpcr_selection();
+            var ligli=$("#bindingSite").data("ligli");
+            bs_info=receptorsel+"-"+ligli;
+        } 
+        return (bs_info);
+    }
 //-------- Protein chains
 
     function obtainNonGPCRchains(selector){
@@ -676,12 +841,12 @@ $(document).ready(function(){
                   <span class="tick" ></span>\
                   <span class="always" style="margin-left:14px">\
                     Show \
-                    <select class="resWthComp" name="rescomp">\
+                    <select class="resWthComp nglCallChangeWth" name="rescomp">\
                         <option  selected value="protein">residues</option>' + select + '</select>\
                      within \
-                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px">\
+                    <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px">\
                       &#8491; of\
-                        <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
+                        <select class="wthComp nglCallChangeWth" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
                         <span class="user_sel_input_p"></span>\
                         <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                         <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
@@ -720,7 +885,7 @@ $(document).ready(function(){
                 if (comp=="user_sel"){
                     pre_sel=$(this).find(".user_sel_input").val();
                     var rownum = $(this).attr("id");
-                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth");
+                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth",false);
                     if (def_sel ==""){
                         comp="none";
                         $(this).find(".user_sel_input").val("");
@@ -782,7 +947,7 @@ $(document).ready(function(){
 
     $(".sel_within").on('change', ".wthComp" ,function(){
         if ($(this).val()=="user_sel"){
-            var sw_input='<input class="form-control input-sm user_sel_input" type="text" style="width:95px;padding-left:7px">';
+            var sw_input='<input class="form-control input-sm user_sel_input nglCallChangeWth" type="text" style="width:95px;padding-left:7px">';
             $(this).siblings(".user_sel_input_p").html(sw_input);
         } else {
             $(this).siblings(".user_sel_input_p").html("");
@@ -883,6 +1048,7 @@ $(document).ready(function(){
                                 var int_id=int_data.int_id;
                                 var int_data=int_data.result;
                                 if (! isEmptyDict(int_data)){
+                                //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
                                       <table class="table table-condensed" style="font-size:12px;">\
                                         <thead>\
@@ -919,8 +1085,11 @@ $(document).ready(function(){
                                     }
                                     var patt = /[^/]*$/g;
                                     var trajFile = patt.exec(traj_path);
-                                    table_html+="</tbody></table>\
-                                     <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
+                                    table_html+="</tbody></table>";
+                                                                        
+                                    var chart_div="int_chart_"+i_id.toString();
+                                    var infoAndOpts= "<div id='"+chart_div+"'></div>\
+                                    <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
                                         <div class='checkbox' style='font-size:12px;'>\
 		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                         </div>\
@@ -933,7 +1102,45 @@ $(document).ready(function(){
                                             <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl' data-int_id='"+int_id+"' ></span>\
                                         </div>\
                                     </div>";
-                                    $("#int_info").append(table_html);
+                                    $("#int_info").append(table_html+infoAndOpts);
+                                    if ($.active>1){
+                                        $("#int_info").find(".href_save_data_int").addClass("disabled")
+                                    }
+                                    
+                                    
+                                    
+                                    
+                                    //Plot
+                                    for (lig in int_data){
+                                        res_int=int_data[lig];
+                                        var res_int_ok=[["Position","Freq"]]
+                                        for (posN in res_int){
+                                            var pos=res_int[posN]
+                                            var gnum=gnumFromPosChain(pos[0].toString(), pos[1])
+                                            if (gnum == "-"){
+                                                var gnum = pos[2]+pos[0].toString()+":"+pos[1]
+                                            }
+                                            res_int_ok.push([gnum,Number(pos[3])])
+                                        }
+                                        function drawChart3(){
+                                            var data = google.visualization.arrayToDataTable(res_int_ok,false);
+                                            var options = {"height":350,"legend":{"position":"none"}, 
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},vAxis: {title: 'Frequency (%)', viewWindow: {min: 0,  max: 100}}};
+                                            var int_chart_div = document.getElementById(chart_div);
+
+                                            var chart = new google.visualization.ColumnChart(int_chart_div);    
+                                            google.visualization.events.addListener(chart, 'ready', function () {
+                                                var int_img_source =  chart.getImageURI(); 
+                                                //$("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                            });
+                                            chart.draw(data, options);   
+                                        }
+                                        google.load("visualization", "1", {packages:["corechart"],'callback': drawChart3});
+                                    }
+                                           
+                                    
+                                    
+                                    
                                 } else {
                                     var patt = /[^/]*$/g;
                                     var trajFile = patt.exec(traj_path);
@@ -1029,7 +1236,7 @@ $(document).ready(function(){
                      <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
-                     <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>\
+                     <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
                    </span>\
                   </div>';
             $(".dist_btw").append(row_d);
@@ -1053,7 +1260,7 @@ $(document).ready(function(){
                              <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair1+'">\
                              <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                              <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
-                             <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>\
+                             <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
                           </span>\
                           </div>';
                     $(".dist_btw").append(row_d);
@@ -1429,11 +1636,13 @@ $(document).ready(function(){
     
     
 //-------- Select protein segment to highligh/select from the sequence --------
+
     function selectFromSeq(){
         var click_n=1;
         var seq_pos_1;
         var seq_pos_fin;
         var pos_li=[];
+        var firstsel=true;
         $(".seq_sel").click(function(){    
             if (click_n==1){
                 var range=$(this).attr("class"); 
@@ -1451,6 +1660,10 @@ $(document).ready(function(){
                         $(mid_id).attr("class", "seq_sel");
                         i++;
                     }
+                    if ($(".seq_sel.sel").length== 0){
+                        $("#addToSel").css("display","none");
+                        firstsel=true;
+                    }
                 }
             } else  {
                 // Finish a selection
@@ -1463,6 +1676,10 @@ $(document).ready(function(){
                     $(mid_id).children().css("background-color","");
                     $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
                     i++
+                }
+                if (firstsel){
+                    $("#addToSel").css("display","inline");
+                    firstsel=false;
                 }
 
             }
@@ -1477,6 +1694,10 @@ $(document).ready(function(){
                     $(mid_id).children().css("background-color","#337ab7");
                     i++;
                 }
+            } else {
+                if (! $(this).hasClass("sel")){
+                    $(this).children().css("background-color","#D3D3D3");
+                }
             }
         }, function(){
             if (click_n==2) {
@@ -1486,6 +1707,10 @@ $(document).ready(function(){
                     var mid_id="#" + String(i);
                     $(mid_id).children().css("background-color","");
                     i++;
+                }
+            } else {
+                if (! $(this).hasClass("sel")){
+                    $(this).children().css("background-color","");
                 }
             }
         });
@@ -1576,6 +1801,8 @@ $(document).ready(function(){
 
 
     $("#addToSel").click(function(){ 
+        $("#seq_input_all").css("display","inline");
+        $("#seq_input_all").find(".si_add_btn:last").css("visibility","visible");
         sel_ranges=obtainSelectedAtSeq();
         if (sel_ranges.length > 0){
             sel_ranges_ok=joinContiguousRanges(sel_ranges);
@@ -1586,7 +1813,7 @@ $(document).ready(function(){
                 p ++;
             }
             pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
-            var sel_input_cont=$(".text_input:last-child").find(".sel_input");
+            var sel_input_cont=$(".seq_input_row:last-child").find(".seq_input");
             var act_val=sel_input_cont.val();
             var or="";
             if (act_val){
@@ -1618,13 +1845,17 @@ $(document).ready(function(){
     function SelectionName(traj_sel){
         var set_sel;
         if (traj_sel == "bck"){
-            set_sel="backbone";
+            set_sel="protein CA";
         } else if (traj_sel == "noh"){
-            set_sel="noh";
+            set_sel="non-hydrogen protein atoms";
         } else if (traj_sel == "min"){
-            set_sel="minimal";
-        } else if (traj_sel == "all_atoms"){
-            set_sel="all atoms";
+            set_sel="protein CA, CB, C, N, O";
+        /*} else if (traj_sel == "all_atoms"){
+            set_sel="all atoms";*/
+        } else if (traj_sel == "all_prot" ){
+            set_sel="all protein atoms";
+        } else {
+            set_sel=traj_sel;
         }
         return (set_sel);
     }
@@ -1907,19 +2138,25 @@ $(document).ready(function(){
 //-------- Pass data to MDsrv --------
 
     function gpcr_selection(){
-        var receptorsel="";
-        if ($("#receptor").hasClass("active")){
-            if (chains_str == ""){
-                receptorsel="protein";
-            } else {
-                var chains_s=/:(.*)$/.exec(chains_str)[1];
-                var chains_l = chains_s.match(/\w+/g);
-                receptorsel="protein and (";
-                for (cN in chains_l){
-                    receptorsel+=":"+chains_l[cN]+ " , ";
-                }
-                receptorsel=receptorsel.slice(0,-3) +")";
+        if (chains_str == ""){
+            receptorsel="protein";
+        } else {
+            var chains_s=/:(.*)$/.exec(chains_str)[1];
+            var chains_l = chains_s.match(/\w+/g);
+            receptorsel="protein and (";
+            for (cN in chains_l){
+                receptorsel+=":"+chains_l[cN]+ " , ";
             }
+            receptorsel=receptorsel.slice(0,-3) +")";
+        }
+        return (receptorsel);
+    }
+
+    function gpcr_selection_active(){
+        if ($("#receptor").hasClass("active")){
+            var receptorsel=gpcr_selection();
+        } else {
+            var receptorsel="";
         }
         return (receptorsel)
     }
@@ -1936,8 +2173,9 @@ $(document).ready(function(){
         } else {
             high_pre = obtainPredefPositions();
         }
-        var traj=obtainCheckedTrajs();
-        var receptorsel=gpcr_selection();
+        var traj = $("#selectedTraj").data("tpath");
+        var receptorsel=gpcr_selection_active();
+        bs_info=obtainBS();
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -1945,7 +2183,8 @@ $(document).ready(function(){
                 "nonGPCR":nonGPCR,
                 "high_pre":high_pre,
                 "traj":traj,
-                "receptorsel":receptorsel
+                "receptorsel":receptorsel,
+                "bs_info" :bs_info
         })
     }
     
@@ -1980,6 +2219,7 @@ $(document).ready(function(){
          var int_res_lil =results["int_res_li"];
          var dist_groups_li=results["dist_groups_li"];
          var receptorsel = results["receptorsel"]; 
+         var bs_info = results["bs_info"];
          var int_res_li=[];
          for (e in int_res_lil){
              var res_s = int_res_lil[e].join("-");
@@ -2013,7 +2253,8 @@ $(document).ready(function(){
                             "in":encode(int_res_s),
                             "ng":encode(nonGPCR) , 
                             "dc":encode(dist_groups_li),
-                            "rs":encode(receptorsel)
+                            "rs":encode(receptorsel),
+                            "bs":encode(bs_info),
                             }        
   
         for (varn in add_url_var){
@@ -2028,7 +2269,7 @@ $(document).ready(function(){
     
     $("#clearAll").click(function(){
         removeCompBtns();
-        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr").val("");
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
         $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){
@@ -2063,7 +2304,19 @@ $(document).ready(function(){
         $("#int_info").find(".display_int").each(function(){
             $(this).attr("checked",false);
         });
+        $("#text_input_all").find(".text_input:not(:first-child)").each(function(){
+            $(this).remove();            
+        });
+        $("#text_input_all").find(".ti_add_btn:last").css("visibility","visible");
         $("#text_input_all").find(".input_dd_color").val("");
+        $("#seq_input_all").find(".seq_input_row:not(:first-child)").each(function(){
+            $(this).remove();            
+        });
+        $("#seq_input_all").css("display","none");
+        $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
+        $("#seq_input_all").find(".seq_input").val("");
+        $("#seq_input_all").find(".input_dd_color").val("");
+        $("#addToSel").css("display","none");
     }); 
 
 });
