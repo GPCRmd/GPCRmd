@@ -4,9 +4,9 @@ from django.db.models import Count
 from django.db import connection
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.generic import TemplateView
-from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError
+from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden, HttpResponseServerError, Http404
 from django.core.urlresolvers import reverse
-from django.core.exceptions import ValidationError, PermissionDenied
+from django.core.exceptions import ValidationError, PermissionDenied, ObjectDoesNotExist
 from django.utils import timezone
 from django.template import loader
 from django.forms import formset_factory, ModelForm, modelformset_factory
@@ -27,6 +27,7 @@ import requests
 import math
 import itertools
 import numpy as np
+import mdtraj as md
 import tarfile
 from operator import itemgetter
 from os import listdir
@@ -48,7 +49,7 @@ from protein.models import Protein
 from common.models import  WebResource
 from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel,  DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,  DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences
-from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num
+from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num, get_frames_num
 
 #from django.views.generic.edit import FormView
 from .forms import dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
@@ -1424,6 +1425,7 @@ def autocomplete(request):
     suggestions = [result.other_names for result in other_names]
     suggestions2= [result.name for result in main_names]
     suggestions+=suggestions2
+    suggestions = list(set(suggestions))
     data = json.dumps({
         'results': suggestions
     })
@@ -1507,6 +1509,7 @@ def get_imagepath(id, type):
 def ajaxsearcher(request):
     '''Searches user input among indexed data. If "search by id" option is allowed, a simple database query is used using that ID.'''
     if request.method == 'POST':
+        comoldic=dict()
         moleculelist=list()
         proteinlist=list()
         gpcrlist=list()
@@ -1521,13 +1524,16 @@ def ajaxsearcher(request):
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
-        if request.POST.get("id_search",False)=='true': #uses user_input as an ID to search the database.
+        if request.POST.get("id_search",False)=='true': #uses user_input as an ID to search the database. get("id_search",False) the false is used as a default value in case it cant get any other
             if return_type=='gpcr' or return_type=='All':
                 try:
                     protein=DyndbProtein.objects.filter(is_published=True).get(pk=user_input)
                     isrec=protein.receptor_id_protein
+                    spname=protein.id_uniprot_species.scientific_name
+                    mut=str(protein.is_mutated).replace('True',', mutant')
+                    mut=mut.replace('False',', wild type')
                     if isrec is not None:
-                        gpcrlist.append([str(protein.id),str(protein.name)])
+                        gpcrlist.append([str(protein.id),str(protein.name).capitalize(),mut,spname])
                 except:
                     gpcrlist=[]
 
@@ -1535,12 +1541,15 @@ def ajaxsearcher(request):
                 try:
                     protein=DyndbProtein.objects.filter(is_published=True).get(pk=user_input)
                     isrec=protein.receptor_id_protein
+                    spname=protein.id_uniprot_species.scientific_name
+                    mut=str(protein.is_mutated).replace('True',', mutant')
+                    mut=mut.replace('False',', wild type')
                     if isrec is None:
-                        proteinlist.append([str(protein.id),str(protein.name)])
+                        proteinlist.append([str(protein.id),str(protein.name).capitalize(),mut,spname])
                 except:
                     proteinlist=[]
-            if return_type=='molecule' or return_type=='All':
 
+            if return_type=='molecule' or return_type=='All':
                 try:
                     molecule=DyndbMolecule.objects.select_related('id_compound').filter(is_published=True).get(pk=user_input)
                     netcharge=molecule.net_charge
@@ -1549,7 +1558,7 @@ def ajaxsearcher(request):
                     comp=molecule.id_compound.id
                     compname=molecule.id_compound.name
                     imagepath=get_imagepath(user_input, 'molecule')
-                    moleculelist.append([str(molecule.id),str(molecule.inchikey),imagepath,compname,netcharge])
+                    moleculelist.append([str(molecule.id),str(molecule.inchikey),imagepath,compname.capitalize(),netcharge])
                 except:
                     moleculelist=[]
 
@@ -1558,7 +1567,13 @@ def ajaxsearcher(request):
                 try:
                     compound=DyndbCompound.objects.select_related('std_id_molecule').filter(is_published=True).get(pk=user_input)
                     imagepath=get_imagepath(user_input, 'compound')
-                    compoundlist.append([ str(compound.id),str(compound.name),'',imagepath ])
+                    try:
+                        netcharge=compound.std_id_molecule.net_charge
+                        if netcharge>0:
+                            netcharge='+'+str(netcharge)
+                    except:
+                        netcharge='?'
+                    compoundlist.append([ str(compound.id),str(compound.name).capitalize(),compound.pubchem_cid,imagepath,netcharge ])
                 except:
                     compoundlist=[]
 
@@ -1600,37 +1615,54 @@ def ajaxsearcher(request):
                     published=len(DyndbCompound.objects.filter(id=res.id_compound,is_published=True))>0
                     if ('compound' in str(res.id)) and (str(res.id_compound) not in [i[0] for i in compoundlist]) and published:
                         for mol in DyndbMolecule.objects.select_related('id_compound').filter(id_compound=res.id_compound, is_published=True):
+                            print(res.id_compound,mol,mol.id,'there you have it')
                             if str(mol.id) not in [i[0] for i in moleculelist]: #molecule
                                 mol_id=mol.id
                                 netcharge=mol.net_charge
                                 if netcharge>0:
                                     netcharge='+'+str(netcharge)
-                                comp=res.id_compound #DyndbMolecule.objects.get(pk=mol_id).id_compound.id
-                                compname=mol.id_compound.name # DyndbMolecule.objects.get(pk=mol_id).id_compound.name
+                                comp=res.id_compound 
+                                compname=mol.id_compound.name.capitalize()
                                 imagepath=get_imagepath(mol.id, 'molecule')
                                 moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname,netcharge]) 
+                                try:
+                                    comoldic[str(res.id_compound)].add(str(mol_id))
+                                except:
+                                    comoldic[str(res.id_compound)]={str(mol_id)}
 
                             imagepath=get_imagepath(res.id_compound, 'compound')
-                        compoundlist.append([ str(res.id_compound),str(res.name),str(res.iupac_name),imagepath ])
+                        try:
+                            compound=DyndbCompound.objects.get(id=res.id_compound)
+                            netcharge=compound.std_id_molecule.net_charge
+                            pubchem=compound.pubchem_cid   
+                            if netcharge>0:
+                                netcharge='+'+str(netcharge)
+                        except:
+                            netcharge='?'
+                            pubchem='?'
+                        compoundlist.append([ str(res.id_compound),str(res.name).capitalize(),pubchem,imagepath,netcharge ])
 
                     elif 'protein' in str(res.id):
                         published=len(DyndbProtein.objects.filter(id=res.id_protein,is_published=True))>0
-                        if ([str(res.id_protein),str(res.name)] not in gpcrlist) and ([str(res.id_protein),str(res.name)] not in proteinlist) and published:
+                        if (str(res.id_protein) not in [i[0] for i in gpcrlist]) and (str(res.id_protein) not in [i[0] for i in proteinlist]) and published:
                             protein=DyndbProtein.objects.get(pk=res.id_protein)
                             isrec=protein.receptor_id_protein
+                            spname=protein.id_uniprot_species.scientific_name
+                            mut=str(protein.is_mutated).replace('True',', mutant').replace('False',', wild type')
                             if isrec is None:
-                                proteinlist.append([str(protein.id),str(protein.name)])
+                                proteinlist.append([str(protein.id),str(protein.name).capitalize(),mut,spname])
                             else:
-                                gpcrlist.append([str(protein.id),str(protein.name)])
+                                gpcrlist.append([str(protein.id),str(protein.name).capitalize(),mut,spname])
                                 
                             #include all mutants of the found protein:    
                             for mutants in DyndbProtein.objects.filter(uniprotkbac=protein.uniprotkbac):
                                 isrecm=mutants.receptor_id_protein
-                                if isrecm is None and [str(mutants.id),str(mutants.name)] not in proteinlist:
-                                    proteinlist.append([str(mutants.id),str(mutants.name)])
-                                if isrecm is not None and [str(mutants.id),str(mutants.name)] not in gpcrlist:
-                                    gpcrlist.append([str(mutants.id),str(mutants.name)])
-
+                                spname=mutants.id_uniprot_species.scientific_name
+                                mut=str(mutants.is_mutated).replace('True',', mutant').replace('False',', wild type')
+                                if isrecm is None and (str(mutants.id) not in [i[0] for i in proteinlist]):
+                                    proteinlist.append([str(mutants.id),str(mutants.name),mut,spname])
+                                if isrecm is not None and (str(mutants.id) not in [i[0] for i in gpcrlist]):
+                                    gpcrlist.append([str(mutants.id),str(mutants.name),mut,spname])
 
                     elif 'molecule' in str(res.id):
                         mol_id=res.id.split('.')[2]
@@ -1641,10 +1673,19 @@ def ajaxsearcher(request):
                             if netcharge>0:
                                 netcharge='+'+str(netcharge)
                             comp=molobj.id_compound.id
-                            compname=molobj.id_compound.name
+                            compname=molobj.id_compound.name.capitalize()
                             imagepath=get_imagepath(mol_id,'molecule')
                             moleculelist.append([str(mol_id),str(res.inchikey),imagepath,compname,netcharge]) #define inchikey in searchindex
-
+                            try:                              
+                                comoldic[str(comp)].add(str(mol_id))
+                            except:
+                                comoldic[str(comp)]={str(mol_id)}
+        proteinlist=list(set(tuple([tuple(prot) for prot in proteinlist])))
+        proteinlist=[list(prot) for prot in proteinlist]
+        gpcrlist=list(set(tuple([tuple(gpcr) for gpcr in gpcrlist])))
+        gpcrlist=[list(gpcr) for gpcr in gpcrlist]
+        for keys in comoldic:
+            comoldic[keys]=list(comoldic[keys])
         #add number of simulations in which every result appears.
         for mol in moleculelist:
             mol.append(len(count_dynamics(int(mol[0]),'molecule')[1]))
@@ -1659,32 +1700,32 @@ def ajaxsearcher(request):
             comp.append(len(count_dynamics(int(comp[0]),'compound')[1]))
 
         if return_type=='protein':
-            tojson={'compound':[], 'protein':proteinlist,'gpcr':[],'molecule':[],'names':[], 'message':''}
+            tojson={'compound':[], 'protein':proteinlist,'gpcr':[],'molecule':[], 'comoldic':{},'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         if return_type=='gpcr':
-            tojson={'compound':[], 'protein':[],'gpcr':gpcrlist,'molecule':[],'names':[], 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':gpcrlist,'molecule':[],'comoldic':{},'names':[], 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='molecule':
-            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':moleculelist,'names':[], 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':moleculelist,'names':[], 'comoldic':comoldic, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='compound':
-            tojson={'compound':compoundlist, 'protein':[],'gpcr':[],'molecule':[],'names':[], 'message':''}
+            tojson={'compound':compoundlist, 'protein':[],'gpcr':[],'molecule':[],'names':[],'comoldic':comoldic, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='complex' or return_type=='model' or return_type=='dynamics':
-            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':[], 'names':names, 'message':''}
+            tojson={'compound':[], 'protein':[],'gpcr':[],'molecule':[], 'names':names,'comoldic':{}, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
         elif return_type=='All': #no filter
-            tojson={'compound':compoundlist, 'protein':proteinlist,'gpcr':gpcrlist,'molecule':moleculelist,'names':names, 'message':''}
+            tojson={'compound':compoundlist, 'protein':proteinlist,'gpcr':gpcrlist,'molecule':moleculelist,'comoldic':comoldic,'names':names, 'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
 
@@ -1743,8 +1784,17 @@ def emptysearcher(request):
                 dynlist=dynlist.intersection(ffset)
 
             if request.POST.get('tstep')!='':
-                for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
-                    tstepset.add(dyn.id)
+                if request.POST.get('gle')=='smaller':
+                    for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
+                        tstepset.add(dyn.id)
+                if request.POST.get('gle')=='greater':
+                    for dyn in DyndbDynamics.objects.filter(timestep__gte=request.POST.get('tstep') ):
+                        tstepset.add(dyn.id)
+                if request.POST.get('gle')=='equal':
+                    for dyn in DyndbDynamics.objects.filter(timestep=request.POST.get('tstep') ):
+                        tstepset.add(dyn.id)
+
+
                 dynlist=dynlist.intersection(tstepset)
 
             if request.POST.get('sol')!='':
@@ -2182,7 +2232,11 @@ def NiceSearcher(request):
         return_type=request.POST.get('restype')
         model_protein=list() #save here the PROTEINS the user has used to search and its boolean. 
         for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
+            
             array=array.split(',') # example [OR, protein, 1,true] [boolean operator, type, id, is receptor/is ligand]
+            print('LISTEN BITCHES',array)
+            array[2]=array[2].replace('StandardF','compound').replace('SpecificS','molecule');
+            print(array)
             if array[4]=='false':
                 array[4]=False
             arrays_def.append(array)
@@ -2191,7 +2245,7 @@ def NiceSearcher(request):
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
 
         resultlist=mainsearcher(arrays_def,return_type)
-        print(resultlist,'these are the resullts')
+
         if len(resultlist)==0:
             tojson={'result':[],'model':[],'dynlist':[],'message':''}
             data = json.dumps(tojson)
@@ -2216,9 +2270,9 @@ def NiceSearcher(request):
             resultlist=list(filter(lambda x: len(DyndbComplexExp.objects.filter(id=x,is_published=True))>0,resultlist))
             complex_list_names=list()
             corresponding_cexp=[]
-            print(resultlist,'RESULTS')
+
             complex_list_names=getligrec(resultlist,'complex')
-            print(complex_list_names)
+
             tojson={'result': complex_list_names,'model':model_list,'dynlist':dynlist,'message':''}
             data = json.dumps(tojson)
             return HttpResponse(data, content_type='application/json')
@@ -2292,8 +2346,15 @@ def NiceSearcher(request):
             dynlist=dynlist.intersection(ffset)
 
         if request.POST.get('tstep')!='':
-            for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
-                tstepset.add(dyn.id)
+            if request.POST.get('gle')=='smaller':
+                for dyn in DyndbDynamics.objects.filter(timestep__lte=request.POST.get('tstep') ):
+                    tstepset.add(dyn.id)
+            if request.POST.get('gle')=='greater':
+                for dyn in DyndbDynamics.objects.filter(timestep__gte=request.POST.get('tstep') ):
+                    tstepset.add(dyn.id)
+            if request.POST.get('gle')=='equal':
+                for dyn in DyndbDynamics.objects.filter(timestep=request.POST.get('tstep') ):
+                    tstepset.add(dyn.id)
             dynlist=dynlist.intersection(tstepset)
 
         if request.POST.get('sol')!='':
@@ -2400,7 +2461,12 @@ def query_protein(request, protein_id,incall=False):
     fiva['other_names']=list()
     fiva['activity']=list()
     fiva['references']=list()
-    protein_record = DyndbProtein.objects.select_related(None).get(pk=protein_id)
+    try:
+        protein_record = DyndbProtein.objects.select_related(None).get(pk=protein_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That protein does not exist.')
+    except:
+        raise
     fiva['Uniprot_id']=protein_record.uniprotkbac    
     fiva['Protein_name']=protein_record.name
     fiva['is_mutated']=protein_record.is_mutated
@@ -2499,9 +2565,15 @@ def query_protein_fasta(request,protein_id):
 def query_molecule(request, molecule_id,incall=False):
     '''Returns information about the given molecule_id. If incall is True, it returns a simple dictionary, otherwise, an http response is returned. '''
     molec_dic=dict()
+    molec_dic['myid']=molecule_id
     molec_dic['inmodels']=list()
     molec_dic['references']=list()
-    molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
+    try:
+        molobj=DyndbMolecule.objects.select_related('id_compound').get(pk=molecule_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That molecule does not exist.')
+    except:
+        raise
     molec_dic['link_2_compound']=molobj.id_compound.id
     molec_dic['name']=molobj.id_compound.name
     molec_dic['sdf']=''
@@ -2536,11 +2608,13 @@ def query_molecule(request, molecule_id,incall=False):
 @user_passes_test_args(is_published_or_submission_owner)
 def query_molecule_sdf(request, molecule_id):
     '''Gets the sdf file of the given molecule_id '''
+    print('helooeeeewwww\n\n\n\n\nsdfhsftgjsdfrjsd')
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
     with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','w') as fh:
         fh.write(string)
+    print('hi there helooeeeewwww\n\n\n\n\nsdfhsftgjsdfrjsd')
     with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','r') as f:
         data=f.read()
         response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')[0])
@@ -2558,7 +2632,12 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['othernames']=list()
     for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
         comp_dic['othernames'].append(oname.other_names)
-    comp_obj=DyndbCompound.objects.select_related('std_id_molecule').get(pk=compound_id)
+    try:
+        comp_obj=DyndbCompound.objects.select_related('std_id_molecule').get(pk=compound_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops! That compound does not exist.')
+    except:
+        raise
     comp_dic['name']=comp_obj.name
     comp_dic['iupac_name']=comp_obj.iupac_name
     comp_dic['pubchem_cid']=comp_obj.pubchem_cid
@@ -2567,7 +2646,7 @@ def query_compound(request,compound_id,incall=False):
     comp_dic['sinchikey']=comp_obj.sinchikey
     comp_dic['imagelink']=get_imagepath(compound_id,'compound')
     comp_dic['related_mol_images']=[]
-
+    comp_dic['myid']=comp_obj.std_id_molecule.id
     for molecule in DyndbMolecule.objects.filter(id_compound=compound_id):
         comp_dic['link_2_molecule'].append(molecule.id)
         comp_dic['related_mol_images'].append([molecule.id,get_imagepath(molecule.id,'molecule')])
@@ -2684,7 +2763,13 @@ def query_model(request,model_id,incall=False):
     model_dic=dict()
     numbertostring={0:'Apomorfic (no ligands)',1:'Complex Structure (proteins and ligands)'}
     #model_dic['description']=DyndbModel.objects.get(pk=model_id).description #NOT WORKING BECAUSE OF MISSING INFOMRATION
-    modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
+    try:
+        modelobj=DyndbModel.objects.select_related('id_protein','id_complex_molecule').get(pk=model_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops.This model does not exist')
+    except:
+        raise
+
     model_dic['pdbid']=modelobj.pdbid
     model_dic['type']=numbertostring[modelobj.type]
     model_dic['link2protein']=list()
@@ -2712,7 +2797,7 @@ def query_model(request,model_id,incall=False):
                 model_dic['link2protein'].append([row['protein_id'],query_protein(request,row['protein_id'],True)['Protein_name'] ])
 
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=model_id):
-        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink']])
+        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name ])
 
     for match in DyndbDynamics.objects.filter(id_model=model_id):
         model_dic['dynamics'].append(match.id)
@@ -2736,13 +2821,69 @@ def query_model(request,model_id,incall=False):
     if incall==True:
         return model_dic
 
+    model_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in model_dic['components']])
+    model_dic['molecules_names']='%$!'.join([str(i[2]) for i in model_dic['components']])
+
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
+
+
+def obtain_domain_url(request):
+    current_host = request.get_host()
+    domain=current_host.rsplit(':',1)[0]
+    if request.is_secure():
+        protocol = 'https'
+    else:
+        protocol = 'http'
+        
+    if hasattr(settings, 'MDSRV_PORT'):
+        port = settings.MDSRV_PORT
+    else:
+        port = 80
+        
+    if hasattr(settings, 'MDSRV_URL'):
+        mdsrv_url = settings.MDSRV_URL.strip()
+        if mdsrv_url.find('/') == len(mdsrv_url) - 1:
+           mdsrv_url = mdsrv_url[:-1]
+    else:
+        mdsrv_url = protocol+'://'+domain+':'+str(port)
+    return(mdsrv_url)
+
+
+def obtain_dyn_files(paths_dict):
+    """Given a list of files related to a dynamic, separates them in structure files and trajectory files."""
+    structure_file=""
+    structure_name=""
+    traj_list=[]
+    p=re.compile("(/protwis/sites/files/)(.*)")
+    p2=re.compile("[\.\w]*$")
+    for f_id , path in paths_dict.items():
+        myfile=p.search(path).group(2)
+        myfile_name=p2.search(path).group()
+        if myfile_name.endswith(".pdb"): #, ".ent", ".mmcif", ".cif", ".mcif", ".gro", ".sdf", ".mol2"))
+            structure_file=myfile
+            structure_file_id=f_id
+            structure_name=myfile_name
+        elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
+            traj_list.append((myfile, myfile_name, f_id))
+    return (structure_file,structure_file_id,structure_name, traj_list)
+
     
 @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
     '''Returns information about the given dynamics_id.Returns an Http Response '''
+    mdsrv_url=obtain_domain_url(request)
+    dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dynamics_id)
+    paths_dict={}
+    for e in dynfiles:
+        paths_dict[e.id_files.id]=e.id_files.filepath
+    (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
     dyna_dic=dict()
-    dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    try:
+        dynaobj=DyndbDynamics.objects.select_related('id_dynamics_solvent_types__type_name','id_dynamics_membrane_types__type_name').get(pk=dynamics_id)
+    except ObjectDoesNotExist:
+        raise Http404('Oops. That dynamics does not exist')
+    except:
+        raise
     dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']=list()
@@ -2761,13 +2902,20 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['ortoligands']=list()
     dyna_dic['aloligands']=list()
     dyna_dic['link2protein']=list()
+
+    try:
+        dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
+    except:
+        dyna_dic['link_2_complex']=''
+    dyna_dic['mdsrv_url'] = mdsrv_url
+    dyna_dic['structure_file'] = structure_file
+
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
+        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])
 
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']]
+        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name]
         if candidatecomp not in dyna_dic['link_2_molecules'] : 
-            #dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
             dyna_dic['link_2_molecules'].append(candidatecomp)
     cmolid=dynaobj.id_model.id_complex_molecule
     if cmolid is not None:
@@ -2802,10 +2950,12 @@ def query_dynamics(request,dynamics_id):
                 ref[counter]=''
             counter+=1            
         dyna_dic['references'].append(ref)
-
+    filestraj=dict()
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
         dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
-    
+
+    dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules']])
+    dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules']])
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
     
@@ -2819,12 +2969,10 @@ def carousel_model_components(request,model_id):
     
     
 def carousel_dynamics_components(request,dynamics_id):
-    print('here')
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=[]
     image_name=[]
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        print('heereeeeee2')
         dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])
         image_name.append([match.id_molecule.id_compound.name , query_molecule(request,match.id_molecule.id,True)['imagelink']])
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
@@ -7157,6 +7305,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
             
             filenum = 0
             for uploadedfile in uploadedfiles:
+                n_frames = None
                 rootname,fileext = os.path.splitext(uploadedfile.name)
                 if fileext == '.gz':
                     rootname2,fileext2 = os.path.splitext(rootname)
@@ -7192,6 +7341,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     
                     try:
                         numatoms = get_atoms_num(deleteme_filepath,file_type,ext=ext)
+                        n_frames = get_frames_num(deleteme_filepath,file_type,ext=ext)
                     except:
                         response = HttpResponse('Cannot parse "'+uploadedfile.name+'" as '+ext.upper()+' file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
@@ -7204,7 +7354,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         return response
                     
                 if file_type == 'traj':
-
+                    
                     if filenum == 0:
                         if ref_numatoms is not None and ref_numatoms != numatoms:
                             response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
@@ -7224,10 +7374,10 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         return response
                     prev_name = uploadedfile.name
                     prev_numatoms = numatoms
-
+                    
                     
                 
-                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url})
+                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url,'framenum':n_frames})
                 
                 data['download_url_file'].append(download_url)
 

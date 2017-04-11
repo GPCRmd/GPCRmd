@@ -227,7 +227,7 @@ CACHES = {
     }
 }
 
-QUERY_CHECK_PUBLISHED = True
+QUERY_CHECK_PUBLISHED = False
 
 
 MDSRV_UPSTREAM='http://localhost:8081'

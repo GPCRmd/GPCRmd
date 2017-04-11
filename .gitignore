@@ -10,4 +10,4 @@ iuphar_useful_complexes_pickle
 .gitignore.orig
 dynadb/templates/dynadb/dynamics_query_result.html.orig
 dynadb/templates/search/search.html.orig
-
+dynadb/b2ar_isoprot/

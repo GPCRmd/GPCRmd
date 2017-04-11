@@ -36,6 +36,10 @@
     .bs-example{
 	    margin: 20px;
     }
+
+    .carousel-control.left, .carousel-control.right {
+        background-image: none
+    }
     </style>
   </head>
   <body>
@@ -71,7 +75,7 @@
         <div id='carouselhide'>
         <div class="col-lg-12 text-center"></div>
         <div class="col-lg-12">
-        <div id="myCarousel" class="carousel slide" data-ride="carousel">
+        <div id="myCarousel"  data-interval="1500" class="carousel slide" data-ride="carousel">
 
           <!-- Wrapper for slides -->
           <div class="carousel-inner" role="listbox">
@@ -87,11 +91,11 @@
 
           <!-- Left and right controls -->
           <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-chevron-left" style="color:black;" aria-hidden="true"></span>
             <span class="sr-only">Previous</span>
           </a>
           <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-chevron-right" style="color:black;" aria-hidden="true"></span>
             <span class="sr-only">Next</span>
           </a>
         </div></div>
