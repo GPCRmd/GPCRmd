@@ -328,7 +328,7 @@ def reset_complete(request):
 @login_required
 def user_submissions(request):
     submission_table = []
-    submissionq = DyndbSubmission.objects.filter(user_id=request.user.pk)
+    submissionq = DyndbSubmission.objects.filter(user_id=request.user.pk).order_by('-pk',)
     submissionq = submissionq.annotate(dynamics_id=F('dyndbdynamics__pk'))
     submissionq = submissionq.values('pk','dynamics_id','is_closed','is_ready_for_publication','is_published')
     for subinfo in submissionq:

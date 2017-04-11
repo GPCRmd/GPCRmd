@@ -68,7 +68,7 @@
        {% csrf_token %}
        <table class="table">
        <tr><th>Submission ID</th><th>Dynamics ID</th><th>State</th><th></th><th></th></tr>
-       {% for sub in submission_table|dictsort:"submission_id" %}
+       {% for sub in submission_table %}
        <tr>
             <td>{{sub.submission_id}}</td>
             <td>{% if sub.state != "Open" %}<a href="{% url 'dynadb:query_dynamics' dynamics_id=sub.dynamics_id %}">{{sub.dynamics_id}}</a>{% else %}{{sub.dynamics_id}}{% endif %}</td>
