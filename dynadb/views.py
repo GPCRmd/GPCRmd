@@ -55,6 +55,8 @@ from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_un
 from .forms import dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
 from .forms import  dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model, dyndb_Protein_Cannonical_Protein, dyndb_Complex_Compound, dyndb_References_Protein, dyndb_References_Model, dyndb_References_Molecule, dyndb_References_Dynamics, dyndb_References_Compound 
 #from .forms import NameForm, TableForm
+
+from .view_decorators import test_if_closed
 from .pipe4_6_0 import *
 from time import sleep
 from random import randint
@@ -243,6 +245,7 @@ def REFERENCEview(request, submission_id=None):
         fdbREFF = dyndb_ReferenceForm()
         return render(request,'dynadb/REFERENCES.html', {'fdbREFF':fdbREFF, 'submission_id':submission_id})
 
+@login_required
 def show_alig(request, alignment_key):
     '''Performs an aligment between two strings and returns the result to a view. '''
     if request.method=='POST':
@@ -263,8 +266,6 @@ def show_alig(request, alignment_key):
         alignment=request.session[alignment_key]
         return render(request,'dynadb/show_alignment.html', {'alig':alignment})
 
-@login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)
 def delProtByUpdateProtein(protein_id,ii,submission_id,is_mutated_val):
     
 
@@ -527,9 +528,9 @@ def deleteModelbyUpdateMolecule(molecule_id,ii,submission_id):
                 deleteComplexByUpdateMolecule(molecule_id,ii,submission_id,model_del_molec=False)#Borrar Complex si es posible
             else:
                 DyndbSubmissionMolecule.objects.filter(submission_id=submission_id,int_id=ii).update(molecule_id=None,not_in_model=None)
-                
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed                
 def PROTEINview(request, submission_id):
     
     p= submission_id
@@ -1406,6 +1407,7 @@ def PROTEINview(request, submission_id):
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 @textonly_500_handler
 def delete_protein(request,submission_id):
     if request.method == "POST":
@@ -2958,7 +2960,7 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules']])
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
-    
+@user_passes_test_args(is_published_or_submission_owner)    
 def carousel_model_components(request,model_id):
     model_dic=dict()
     model_dic['components']=[]
@@ -2967,7 +2969,7 @@ def carousel_model_components(request,model_id):
     return render(request, 'dynadb/model_carousel.html',{'answer':model_dic})
     
     
-    
+@user_passes_test_args(is_published_or_submission_owner)    
 def carousel_dynamics_components(request,dynamics_id):
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=[]
@@ -3200,6 +3202,7 @@ def get_specieslist(request):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def submitpost_view(request,submission_id,model_id=1):
     if request.method == 'POST':
         print(request.POST.items())
@@ -3272,21 +3275,6 @@ def get_mutations_view(request):
       return response
     except:
       raise
-
-@textonly_500_handler
-@login_required
-def upload_pdb(request): #warning , i think this view can be deleted
-    if request.method == 'POST':
-        form = FileUploadForm(data=request.POST, files=request.FILES) #"upload_pdb"
-        myfile = request.FILES["file_source"]
-        fs = FileSystemStorage()
-        filename = fs.save(myfile.name, myfile)
-        uploaded_file_url = fs.url(filename)
-        request.session['newfilename']=uploaded_file_url
-        pdbname='/protwis/sites'+request.session['newfilename']
-        tojson={'chain': 'A','message':''}
-        data = json.dumps(tojson)
-        return HttpResponse(data, content_type='application/json')
         
 
 def obtain_res_coords(pdb_path,res1,res2,pair, pair2): 
@@ -3338,9 +3326,11 @@ def bonds_between_segments2(pdb_path,res1,res2,chain_pair=None,seg_pair=None):
             bond=True
             break
     return(bond)
+
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def search_top(request,submission_id):
     '''Given a PDB interval, a sequence alignment is performed between the PDB interval sequence and the full sequence of that protein. The position of the two ends of the aligned PDB interval sequence are returned. '''
     if request.method=='POST':
@@ -3429,6 +3419,7 @@ def search_top(request,submission_id):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def pdbcheck(request,submission_id):
     '''Performs an alignment between the sequence in a PDB interval and an interval in the full protein sequence. Returns a table where the original resids of the PDB are displayed with the resids it should use according to the position of that aminoacid in the alignment. Also creates a new PDB file with the correct resids.'''
     if request.method=='POST': #See pdbcheck.js
@@ -3581,18 +3572,8 @@ def pdbcheck(request,submission_id):
 
 @textonly_500_handler
 @login_required
-def servecorrectedpdb(request,pdbname):
-    ''' Allows the download of a PDB file with the correct resids, according to the aligment performed by pdbcheck function. '''
-    with open('/'+pdbname,'r') as f:
-        data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type(pdbname)[0])
-        response['Content-Disposition']="attachment;filename=%s" % (pdbname[pdbname.rfind('/')+1:])
-        response['Content-Length']=os.path.getsize('/'+pdbname)
-    return response
-
-@textonly_500_handler
-@login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def get_submission_molecule_info(request,form_type,submission_id):
     if request.method == 'POST':
         mol_int = request.POST['molecule'].strip()
@@ -3633,6 +3614,7 @@ def get_submission_molecule_info(request,form_type,submission_id):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def upload_model_pdb(request,submission_id):
 
     request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
@@ -3756,6 +3738,7 @@ def get_model_pdb_from_db_by_submission(submission_id):
     
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def pdbcheck_molecule(request,submission_id,form_type):
     if form_type=="dynamicsreuse":
         form_type="dynamics"
@@ -4070,6 +4053,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def check_trajectories(request,submission_id):
     if request.method == 'POST':
         submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
@@ -4171,21 +4155,22 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
     else:
 
         return render(request,'dynadb/MODELreuseREQUEST.html', {})
-@login_required
-def MODELrowview(request):
-    form=[1,2,3]
-    qMODEL=DyndbModeledResidues.objects.filter(id_model=1)
-    rows=qMODEL.values('chain','segid','resid_from','resid_to','seq_resid_from','seq_resid_to','bonded_to_id_modeled_residues_id','source_type','pdbid')
-    qMODCOMP=DyndbModelComponents.objects.filter(id_model=1)
-    qMODCOMP=qMODCOMP.order_by('id_molecule')
-    rowsMC=qMODCOMP.values('resname','id_molecule','numberofmol','type')
-    for i in list(range(0,len(rows))):
-        if rows[i]['segid']=='':
-            rows[i]['segid']="-"
-    return render(request,'dynadb/MODELreuseCOMMON.html', {'rows':rows})
+#@login_required
+#def MODELrowview(request):
+    #form=[1,2,3]
+    #qMODEL=DyndbModeledResidues.objects.filter(id_model=1)
+    #rows=qMODEL.values('chain','segid','resid_from','resid_to','seq_resid_from','seq_resid_to','bonded_to_id_modeled_residues_id','source_type','pdbid')
+    #qMODCOMP=DyndbModelComponents.objects.filter(id_model=1)
+    #qMODCOMP=qMODCOMP.order_by('id_molecule')
+    #rowsMC=qMODCOMP.values('resname','id_molecule','numberofmol','type')
+    #for i in list(range(0,len(rows))):
+        #if rows[i]['segid']=='':
+            #rows[i]['segid']="-"
+    #return render(request,'dynadb/MODELreuseCOMMON.html', {'rows':rows})
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def MODELreuseview(request, submission_id, model_id  ):
     enabled=False
     model_id=int(model_id)
@@ -4265,6 +4250,7 @@ def MODELreuseview(request, submission_id, model_id  ):
         return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled, 'modelr_form':True})
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def PROTEINreuseview(request, submission_id, model_id ):
     enabled=False
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id')
@@ -4337,6 +4323,7 @@ def PROTEINreuseview(request, submission_id, model_id ):
     return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled })
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
 #    qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).exclude(int_id=None).exclude(not_in_model=True).order_by('int_id')
     enabled=False
@@ -4472,6 +4459,7 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
  
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def DYNAMICSreuseview(request, submission_id, model_id ):
     if request.method == 'POST':
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
@@ -4784,7 +4772,8 @@ def get_components_info_from_submission(submission_id,component_type=None):
     return result
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)    
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed    
 def MODELview(request, submission_id):
     
     def model_file_table (dname, MFpk): #d_fmolec_t, dictext_id 
@@ -6005,6 +5994,7 @@ def MODELview(request, submission_id):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def SMALL_MOLECULEview2(request,submission_id):
     print("REQUEST SESSIONS",request.session.items())
     print("REQUEST SESSIONS",request.path)
@@ -6060,6 +6050,7 @@ def SMALL_MOLECULEview2(request,submission_id):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def generate_molecule_properties(request,submission_id):
 
     request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
@@ -6257,6 +6248,7 @@ def _generate_molecule_properties(request,submission_id):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def get_compound_info_pubchem(request,submission_id):
     pngsize=300
     search_by='inchi'
@@ -6435,7 +6427,8 @@ def get_compound_info_pubchem(request,submission_id):
             raise
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)        
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed        
 def get_compound_info_chembl(request,submission_id):
     pngsize=300
     search_by='inchi'
@@ -6614,7 +6607,8 @@ def get_compound_info_chembl(request,submission_id):
             raise  
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)           
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed           
 def open_pubchem(request,submission_id):
     if request.method == 'POST':
         if 'cids' in request.POST.keys():
@@ -6626,7 +6620,8 @@ def open_pubchem(request,submission_id):
             return render(request,'dynadb/open_pubchem.html',{'query':query,'action':'https://www.ncbi.nlm.nih.gov/pccompound/'})
 
 @login_required
-@user_passes_test_args(is_submission_owner,redirect_field_name=None)            
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed            
 def open_chembl(request,submission_id):
     chembl_root_url = 'https://www.ebi.ac.uk/chembl'
     chembl_index_php = chembl_root_url+'/index.php'
@@ -7050,6 +7045,7 @@ def open_chembl(request,submission_id):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def delete_molecule(request,submission_id,model_id=1):
     if request.method == "POST":
         molecule_num = request.POST["molecule_num"]
@@ -7136,6 +7132,7 @@ def test_accepted_file_extension(ext,file_type):
 @textonly_500_handler
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def upload_dynamics_files(request,submission_id,trajectory=None):
     trajectory_max_files = 200
     if trajectory is None:
@@ -7437,6 +7434,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def DYNAMICSview(request, submission_id, model_id=None):
     def_user_dbengine=settings.DATABASES['default']['USER']
     def_user=request.user.id
@@ -8240,93 +8238,11 @@ def DYNAMICSview(request, submission_id, model_id=None):
 #      # ddTL=dyndb_Dynamics_Tags_List()
 
 #       return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
-@login_required
-def DYNAMICSviewOLD(request):
-    if request.method == 'POST':
-        author="jmr"   #to be modified with author information. To initPF dict
-        action="/dynadb/DYNAMICSfilled/"
-        now=timezone.now()
-        onames="Pepito; Juanito; Herculito" #to be modified... scripted
-        initDD={'id_model':'1','id_compound':'1','update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'created_by_dbengine':author, 'last_update_by_dbengine':author,'submission_id':None }
-        dd=dyndb_Dynamics(request.POST)
-                
 
-
-
-        for key,value in initDD.items():
-            dd.data[key]=value
-
-        print("\npath", os.getcwd())
-        ##for key,value in data.items():
-        ##    f.write(str(key,value))
-#        ff.write(data)
-        print("created by dbengine antes de validar", dd.data['created_by_dbengine'])
-
-        if dd.is_valid():
-            # process the data in form.cleaned_data as required
-            ddi=dd.save(commit=False)
-
-            dd.save()
-            dynafk=ddi.pk 
-            print(dynafk)
-            dicpost=request.POST
-            postspl={}
-            postsplmod={}
-            dmodinst={}
-            indexl=[]
-            dinst={}
-            for key,val in dicpost.items():
-                if re.search('formc',key):
-                    index=int(key.split("-")[1])
-                    if index not in indexl:
-                        indexl.append(index)
-                        postspl[index]={}
-                        postsplmod[index]={}
-                        
-                    postspl[index][key]=val
-                    postsplmod[index][key.split("-")[2]]=val
-
-            if len(indexl)==0:
-                indexl=[1]
-                postsplmod[1]={}    
-                for key,val in dicpost.items():
-                    if key not in ddi.__dict__.keys():
-                        postsplmod[1][key]=val
-                         
-
-            print("longitud postspl[1]",len(postsplmod[1]), postsplmod)
-            print("lista de indices", indexl) 
-            for val in indexl:
-                print("componente ", val, " ", postsplmod[val])
-                postsplmod[val]['id_dynamics']=dynafk
-                postsplmod[val]['id_molecule']=int(val+1) #este valor debe modificarse se le suma 1 porque si no no lo acepta el html (pide opciones entre uno y 7)
-                dinst[val]=dyndb_Dynamics_Components(postsplmod[val])
-                if dinst[val].is_valid():
-                    dmodinst[val]=dinst[val].save(commit=False)
-                    dmodinst[val]=dinst[val].save()
-                    print("diccionario ", val, "  ", dmodinst[val].__dict__) 
-                else:
-                    print("Errores de la instancia del form nº",val," ",  dinst[val].errors.as_data())
-
-          #  ttt=ddi.created_by_dbengine
-          #  print("created by dbengine despues de grabar", ttt)
-
-            # redirect to a new URL:
-            return HttpResponseRedirect('/dynadb/DYNAMICSfilled/')
-        else:
-            iii2=dd.errors.as_data()
-            print("Errores en dynamics: ",iii2)
-
-    # if a GET (or any other method) we'll create a blank form
-    else:
-        dd=dyndb_Dynamics()
-       # ddT= dyndb_Dynamics_tags()
-       # ddTL=dyndb_Dynamics_Tags_List()
-
-        return render(request,'dynadb/DYNAMICS.html', {'dd':dd})
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def SUBMITTEDview(request,submission_id): 
         return render(request,'dynadb/SUBMITTED.html',{'submission_id':submission_id})
         
@@ -10919,6 +10835,7 @@ def generate_molecule_properties2(submission_id,molid):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
+@test_if_closed
 def SMALL_MOLECULEview(request, submission_id):
 
   # def handle_uploaded_file(f,p,name):
