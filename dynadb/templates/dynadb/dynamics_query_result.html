@@ -174,7 +174,7 @@
             
             {% for url in answer.link_2_molecules %}
                 <div class="col-sm-6"><center><b>{{url.2}}</b><br>
-                <a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Molecule ID: {{url.0}}</a></center><br>
+                <a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a></center><br>
                 <center><img src="{{url.1}}" height="200" width="200"/></center><br></div>
             {% endfor %}
 
@@ -182,7 +182,7 @@
 
         <div id='hide3d'>
             <div id='lb' class="col-sm-1">
-                <p style="color:white;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                <p style="color:white;visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
                 <span id="movel" class="glyphicon glyphicon-chevron-left" style="font-size: 40px;"></span>
             </div>
 
@@ -193,7 +193,7 @@
                 <br>
             </div>
             <div id='rb' class="col-sm-1">
-                <p style="color:white;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                <p style="color:white; display; visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
                 <span id="mover" class="glyphicon glyphicon-chevron-right" style="font-size: 40px;"></span>
 
             </div>
@@ -204,16 +204,17 @@
     <br>
     <br>
     <br>
-    {% if answer.references %} 
-        <br><b>References in which this dynamic is mentioned</b>:<br>
-        <ul>
-        {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
-        {%endfor%}
-        </ul>
-    {% endif %} 
-    <br><br>
-    <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualazation & analysis</a><br><br><br><br></center>
+    <div id='references' class="col-sm-12">
+        {% if answer.references %} 
+            <br><h4>References in which this dynamic is mentioned</h4><br>
+            {%for reference in answer.references%}
+                <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+            {%endfor%}
+
+        {% endif %} 
+        <br><br>
+        <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualazation & analysis</a><br><br><br><br></center>
+    </div> <!-- end of references div-->
     </div> <!-- end of bottom div-->
 
     </div></div></div>

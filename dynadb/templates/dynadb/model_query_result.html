@@ -150,11 +150,11 @@
 
     {% if answer.references %} 
         <br><b>References in which this complex structure is mentioned</b>:<br>
-        <ul>
+
         {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+              <p> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </p>
         {%endfor%}
-        </ul>
+
     {% endif %} 
 
 

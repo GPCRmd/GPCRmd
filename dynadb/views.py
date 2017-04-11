@@ -2231,12 +2231,10 @@ def NiceSearcher(request):
         dynlist=list()
         return_type=request.POST.get('restype')
         model_protein=list() #save here the PROTEINS the user has used to search and its boolean. 
+        print(arrays)
         for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
-            
             array=array.split(',') # example [OR, protein, 1,true] [boolean operator, type, id, is receptor/is ligand]
-            print('LISTEN BITCHES',array)
             array[2]=array[2].replace('StandardF','compound').replace('SpecificS','molecule');
-            print(array)
             if array[4]=='false':
                 array[4]=False
             arrays_def.append(array)
@@ -2245,7 +2243,6 @@ def NiceSearcher(request):
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
 
         resultlist=mainsearcher(arrays_def,return_type)
-
         if len(resultlist)==0:
             tojson={'result':[],'model':[],'dynlist':[],'message':''}
             data = json.dumps(tojson)
@@ -2943,7 +2940,7 @@ def query_dynamics(request,dynamics_id):
                 dyna_dic['link2protein'].append([row['protein_id'],query_protein(request,row['protein_id'],True)['Protein_name'] ])
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
+        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:

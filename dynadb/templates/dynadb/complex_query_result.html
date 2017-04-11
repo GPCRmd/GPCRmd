@@ -58,9 +58,9 @@
     {% for modid in answer.models %}
        <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
         {%if modid.1%}
-            using molecule(s):
+            using Specific State(s):
             {%for mol in modid.1%}
-                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
+                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Specific State ID: {{mol}}</a>
             {%endfor%}
         {%endif%}
         <br><hr><hr>
