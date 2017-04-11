@@ -148,7 +148,7 @@
             return nonGPCR_mod
         }
 ///////////////
-            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s=dist_groups_s= receptorsel ="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s=dist_groups_s= receptorsel = bs_info  ="";
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";
             var t_path = "file://_DB/";
@@ -166,6 +166,7 @@
             var  nonGPCR= NGL.getQuery("ng");
             var int_res_s=NGL.getQuery("in");
             var dist_groups_s=NGL.getQuery("dc");
+            var bs_info = NGL.getQuery("bs");
 
              /*var va = "test";             
              for (v in va){ 
@@ -248,6 +249,25 @@
                                         o.addTrajectory( t_path + traj_li[t] );
                                     }
                                 }
+                                
+                                if (bs_info){
+                                    var bs_info_li=bs_info.split("-");
+                                    var recept =bs_info_li[0];
+                                    var ligli=bs_info_li[1].split(",");
+                                    var bsnum =0;
+                                    for (liN=0; liN < ligli.length ; liN++){
+                                        var lig = ligli[liN];
+                                        var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                                        var sele = result[0];
+                                        var sele2 = result[1];
+                                        BSRepName="BS"+bsnum.toString();
+                                        o.addRepresentation( "licorice", { colorValue:"#6fffc9", radius: "0.210", sele: recept+" and "+ sele.toSeleString(), name:BSRepName } );
+                                        o.addRepresentation( "licorice", { colorValue:"#6fffc9",opacity:0.5 , radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
+                                        bsnum+=1;
+                                    }
+                                    
+                                }
+                                
                                 if (dist_within){
                                     var dist_within_li = decodeURIComponent(dist_within.replace(/\+/g, " ")).split(",");
                                     for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
@@ -255,44 +275,18 @@
                                         var ligSele=dist_comp[2];
                                         var show =dist_comp[0];
                                         var WthRepName="sel"+ligSele;
-///////////////
                                         var restriction="";
                                         var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
                                         if (show_sup != "NONE"){
                                             o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:WthRepName+"0" } );
                                             restriction="not ("+ligSele+") and ";
                                         }               
-///////////////
                                         var result=selWithinComponent(o,dist_comp);
                                         var sele = result[0];
                                         var sele2 = result[1];
                                         o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
                                         o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
                                     }
-                                    var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
-                                    for (trajN = 0; trajN < trajCompT.length; trajN++) {
-                                        trajCompT[trajN].signals.frameChanged.add(function(){
-                                            for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
-                                                var dist_comp=  dist_within_li[wth_n].split("-");
-                                                var show =dist_comp[0];
-                                                var ligSele=dist_comp[2];
-                                                var WthRepName="sel"+ligSele;
-///////////////
-                                                var restriction="";
-                                                var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
-                                                if (show_sup != "NONE"){
-                                                    restriction="not ("+ligSele+") and ";
-                                                }               
-///////////////
-                                                var result=selWithinComponent(o,dist_comp);
-                                                var sele = result[0];
-                                                var sele2 = result[1];
-                                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
-                                                stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
-                                            }
-                                        });
-                                    }
-
                                 }
                                 if (dist_groups_s){
                                     dist_groups_s_deco=decodeURIComponent(dist_groups_s.replace(/\+/g, " "));
@@ -342,6 +336,46 @@
                                 }
                                 clickDists(o);
                                 o.centerView("protein");
+                                var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
+                                for (trajN = 0; trajN < trajCompT.length; trajN++) {
+                                    trajCompT[trajN].signals.frameChanged.add(function(){
+                                        if (bs_info){
+                                            var bs_info_li=bs_info.split("-");
+                                            var recept =bs_info_li[0];
+                                            var ligli=bs_info_li[1].split(",");
+                                            var bsnum =0;
+                                            for (liN=0; liN < ligli.length ; liN++){
+                                                var lig = ligli[liN];
+                                                var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                                                var sele = result[0];
+                                                var sele2 = result[1];
+                                                BSRepName="BS"+bsnum.toString();
+                                                stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
+                                                stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
+                                                bsnum+=1;
+                                            }
+                                            
+                                        }
+                                        if (dist_within_li){
+                                            for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
+                                                var dist_comp=  dist_within_li[wth_n].split("-");
+                                                var show =dist_comp[0];
+                                                var ligSele=dist_comp[2];
+                                                var WthRepName="sel"+ligSele;
+                                                var restriction="";
+                                                var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                                                if (show_sup != "NONE"){
+                                                    restriction="not ("+ligSele+") and ";
+                                                }               
+                                                var result=selWithinComponent(o,dist_comp);
+                                                var sele = result[0];
+                                                var sele2 = result[1];
+                                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
+                                                stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
+                                            }
+                                        }
+                                    });
+                                }
                           } );
                     }
 

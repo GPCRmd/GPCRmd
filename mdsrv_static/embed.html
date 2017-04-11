@@ -50,6 +50,45 @@
         $(document).ready(function(){
         document.domain=document.domain;
         stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
+        
+        /*function selChange(){
+            
+            $("body", window.parent.document).click(".nglCall" , function(){
+                createReps();
+            })                    
+            
+            $("body", window.parent.document).change(".nglCallChange" , function(){
+                createReps();
+            })
+            
+            
+            //FIX!!!!
+            $("body", window.parent.document).change(".nglCallChangeTI" , function(){
+                var input = $(this).closest(".text_input",window.parent.document).find("sel_input",window.parent.document).val();
+
+                if (input){
+
+                    createReps();
+                }
+            })
+            
+            $("body", window.parent.document).change(".nglCallClickTI" , function(){
+                var input = $(this).closest(".text_input",window.parent.document).find("sel_input",window.parent.document).val();
+
+                if (input){
+
+                    createReps();
+                }
+            })
+            
+            $("body", window.parent.document).change(".nglCallChangeWth" , function(){
+                var act_sign= $(this).closest(".dist_sel").find(".inputdist").hasClass("sw_ok");
+                var mol=  $(this).closest(".dist_sel").find(".wthComp").val();
+
+            })
+        }*/
+        
+        
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
             var radius=Number(dist_comp[1]);
@@ -60,20 +99,23 @@
             return([sele, sele2])
         }
         
-        function trajButtons(o,dist_within_li){
+        function trajButtons(o,dist_within_li,bs_info){
+            $(".ui-slider").css({"margin-left":"25px"});
             $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
             $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"6px"});
+            $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
             var some_clicked=false;
             $(".traj_btn").click( function(){
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
-                var pos_class=$(this).attr("class");
-                if(pos_class.indexOf("active") > -1){
+                var isact = $(this).hasClass("active");
+                //var pos_class=$(this).attr("class");
+                if(isact){
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                    $(this).attr("class","btn btn-info btn-xs traj_btn");
+                    $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
                     player.play();
                     player.pause();
@@ -82,19 +124,37 @@
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     $("#trajRange").attr("max",trajComp.trajectory.numframes);
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                    $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
+                    //$("#toiframe").find("#trajRangeDiv").css("visibility","visible");
                     player.play();
-                    $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
-                    $(this).siblings().attr("class","btn btn-success btn-xs traj_btn"); 
+                    $(this).addClass("active");
+                    $(this).siblings().removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-pause");
+                    var patt = new RegExp("/(.*)$");
+                    var res = patt.exec(traj_li_all[btn_traj_id]);
+                    var mytraj_nm=res[1]
+                    $("#last_played").text(mytraj_nm);
                     some_clicked=true;
                     trajComp.signals.frameChanged.add(function(){
                         var fnum=trajComp.trajectory.currentFrame;
                         $("#trajRange").val(fnum);
                         $("#trajRange").slider("refresh");
-                    })
-                    if (dist_within_li.length > 0){
-                        trajComp.signals.frameChanged.add(function(){
+                        if (bs_info.length > 0){
+                            var bs_info_li=bs_info.split("-");
+                            var recept =bs_info_li[0];
+                            var ligli=bs_info_li[1].split(",");
+                            var bsnum =0;
+                            for (liN in ligli){
+                                var lig = ligli[liN];
+                                var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                                var sele = result[0];
+                                var sele2 = result[1];
+                                BSRepName="BS"+bsnum.toString();
+                                stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
+                                stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
+                                bsnum+=1;
+                            }
+                        }
+                        if (dist_within_li.length > 0){
                             for (wth_n in dist_within_li){
                                 var dist_comp=  dist_within_li[wth_n].split("-");
                                 var show=dist_comp[0];
@@ -111,10 +171,8 @@
                                 stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
                                 stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
                             }
-
-                        })
-                    }
-
+                        }
+                    })
                 }
             });
         }
@@ -288,11 +346,12 @@
             var cp = results["cp"];
             var high_pre=results["high_pre"];
             var layers_li = results["layers_li"];
-            var traj =results["traj"];
+            //var traj =results["traj"];
             var nonGPCR =results["nonGPCR"];
             var int_res_li =results["int_res_li"];
             var dist_groups_li=results["dist_groups_li"];
             var receptorsel = results["receptorsel"];
+            var bs_info= results["bs_info"]; 
             var cons_pos = parent.pd;
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
@@ -363,6 +422,24 @@
                     o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
                 }
             }
+            
+            if (bs_info.length > 0){
+                var bs_info_li=bs_info.split("-");
+                var recept =bs_info_li[0];
+                var ligli=bs_info_li[1].split(",");
+                var bsnum =0;
+                for (liN in ligli){
+                    var lig = ligli[liN];
+                    var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                    var sele = result[0];
+                    var sele2 = result[1];
+                    BSRepName="BS"+bsnum.toString();
+                    o.addRepresentation( "licorice", { colorValue:"#6fffc9", radius: "0.210", sele: recept+" and "+ sele.toSeleString(), name:BSRepName } );
+                    o.addRepresentation( "licorice", { colorValue:"#6fffc9",opacity:0.5 , radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
+                    bsnum+=1;
+                }
+                
+            }
 
             if (dist_within_li.length > 0){
                 for (wth_n in dist_within_li){
@@ -384,7 +461,13 @@
                 }
 
             }
-            if( traj.length > 0) {
+            if (mytraj){
+                trajButtons(o,dist_within_li,bs_info);
+            } else {
+                $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
+            }
+            
+            /*if( traj.length > 0) {
                 traj_li=traj;
                 //var playing = false;
                 var traj_html="<div style='width:586px;height:30px;overflow: auto;'>";
@@ -399,7 +482,7 @@
                 trajButtons(o,dist_within_li);
             } else {
                 $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
-            }
+            }*/
             if (dist_groups_li.length>0){
                 var cd_id=0;
                 var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
@@ -449,15 +532,14 @@
             var  path= "/mdsrv/file/_DB/";
             var  traj_path= "_DB/";
             $(".traj_element",window.parent.document).each(function(){
-                traj_li_all[traj_li_all.length]=$(this).attr("value");
+                traj_li_all[traj_li_all.length]=$(this).data("tpath");
             });
-
             var trajComp, player;
             var clickedRep={};
             var clickedRepLi=[];
             //var compDistsLi=[];
             var clickedDist={};
-            var traj_li=[];
+            var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
@@ -466,11 +548,16 @@
                         for (t in traj_li_all) {
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
-                        mytraj=traj_li_all[0];
-                        traj_li=[mytraj];
-                        $("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
-                        //trajButtons(o,[]);
+                        //traj_li=[mytraj];
+                        //$("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
                     }
+                    $(".traj_element" , window.parent.document).click(function(){
+                        mytraj=$(this).data("tpath");
+                        traj_id=traj_li_all.indexOf(mytraj);
+                        $(".traj_btn").attr("id","playerButton"+traj_id.toString())
+                        
+                    })
+                    
                     createReps();
                     stage.centerView("protein");
                     $("#submit", window.parent.document).click(function(){
@@ -479,6 +566,9 @@
                     $("#clearAll", window.parent.document).click(function(){
                         createReps();
                     });
+                    
+
+                    //selChange();      
 
                     clickDists();
                 });
@@ -545,10 +635,13 @@
         <div style="height:80px">
             <div id="buttons" style="width:586px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
             </div>
-            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:1px">
+            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:65px">
             </div>
         </div>
-        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
+        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:215px;margin-left:2px;visibility:hidden">
+            <p style="margin-right:18px;font-size:12px;color:#B8B8B8" class="pull-right" id="last_played"></p>
+            <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
+
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
         <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">

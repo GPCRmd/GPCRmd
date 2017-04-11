@@ -58,7 +58,7 @@ def create_conserved_pos_list_otherclass(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li
             pos_range=find_range_from_cons_pos(my_pos, gpcr_pdb)
             if pos_range:
                 cons_pos_li[i][2]=pos_range + add_chain_name
-                cons_pos_li[i][1]=cons_pos_bw_ourclass +  current_class.lower()
+                cons_pos_li[i][1]="Correspods to "+cons_pos_bw_ourclass +  current_class.lower()
         i+=1
 
 def create_conserved_motif_list(gpcr_pdb,gpcr_aa,j,my_pos,motifs,multiple_chains,chain_name):
@@ -323,6 +323,7 @@ def obtain_compounds(dyn_id):
     comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
     comp_dict={}
     lig_li=[]
+    lig_li_s=[]
     for c in comp:
         if c.type == 2:
             dc = c.resname
@@ -331,6 +332,7 @@ def obtain_compounds(dyn_id):
         comp_dict[dc] = c.resname
         if c.type ==1:
             lig_li.append([dc,c.resname])
+            lig_li_s.append(c.resname)
     ddc=DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id) # Lipids and ions
     for c in ddc:
         if c.type == 2:
@@ -346,7 +348,7 @@ def obtain_compounds(dyn_id):
                 comp_dict[dc]= new_resn 
     comp_li=list(map(list, comp_dict.items()))
     comp_li=sorted(comp_li, key=lambda x: x[0])
-    return(comp_li,lig_li)
+    return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
     """Uses the numbering scheme name to determine the GPCR family (A, B, C or F). Also sets the values of a dict that will determine the class shown at the template."""
@@ -689,7 +691,7 @@ def index(request, dyn_id):
         error="Structure file not found."
         return render(request, 'view/index_error.html', {"error":error} )
     else:
-        (comp_li,lig_li)=obtain_compounds(dyn_id)
+        (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         paths_dict={}
         for e in dynfiles:
             paths_dict[e.id_files.id]=e.id_files.filepath
@@ -815,6 +817,7 @@ def index(request, dyn_id):
                         #"traj_list": [("Dynamics/f500.dcd","f500.dcd",1),("Dynamics/f1000.dcd","f1000.dcd",2),("Dynamics/f2500.dcd","f2500.dcd",3),("Dynamics/f5000.dcd","f5000.dcd",4)],#[!] TEST
                         "compounds" : comp_li,
                         "ligands": lig_li,
+                        "ligands_short": ",".join(lig_li_s),
                         "all_gpcrs_info" : all_gpcrs_info,
                         "cons_pos_all_info" : cons_pos_all_info,
                         "motifs_all_info" :motifs_all_info,
@@ -836,6 +839,7 @@ def index(request, dyn_id):
                         "traj_list":traj_list, 
                         "compounds" : comp_li,
                         "ligands": lig_li,
+                        "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
                         "chains" : chain_str,
                         "prot_seq_pos": list(prot_seq_pos.values()),
@@ -852,6 +856,7 @@ def index(request, dyn_id):
                         "traj_list":traj_list, 
                         "compounds" : comp_li,
                         "ligands": lig_li,
+                        "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
                         "chains" : chain_str,            
                         "gpcr_pdb": "no"}
@@ -867,6 +872,7 @@ def index(request, dyn_id):
                     "compounds" : comp_li,
                     "ligands": lig_li,
                     "other_prots":[],
+                    "ligands_short": ",".join(lig_li_s),                  
                     "chains" : "",            
                     "gpcr_pdb": "no"}
             return render(request, 'view/index.html', context)
@@ -882,14 +888,15 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
     traj_path = "/protwis/sites/files/" + rmsdTraj
     ref_traj_path = "/protwis/sites/files/" + rmsdRefTraj
     small_errors=[]
+    set_sel=None
     if traj_sel == "bck":
         set_sel="alpha"
     elif traj_sel == "noh":
         set_sel="heavy"
     elif traj_sel == "min":
         set_sel="minimal"
-    elif traj_sel == "all_atoms":
-        set_sel="all"
+    #elif traj_sel == "all_atoms":
+    #    set_sel="all"
     if traj_frame_rg == "all_frames":
         fr_from=0
         fr_to="num_frames"
@@ -917,7 +924,20 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
             fr_max=max_n_frames-(fr_count - itraj.n_frames)
         else:
             fr_max=itraj.n_frames
-        selection=itraj.topology.select_atom_indices(set_sel)
+        if traj_sel =="all_prot":
+            selection=itraj.topology.select("protein")
+        elif (traj_sel not in ["bck","noh","min"]):
+            lig_sel="resname "+traj_sel
+            try:
+                selection=itraj.topology.select(lig_sel)
+            except Exception:
+                error_msg="Ligand not found."
+                return (False,None, error_msg)
+            if (len(selection)==0):
+                error_msg="Ligand not found."
+                return (False,None, error_msg)
+        else:
+            selection=itraj.topology.select_atom_indices(set_sel)
         try:
             rmsd = md.rmsd(itraj[:fr_max], ref_traj_fr, 0,atom_indices=selection)
             rmsd_all=np.append(rmsd_all,rmsd,axis=0)
@@ -1007,16 +1027,20 @@ def download_int(request, int_id):
         writer.writerow([" "])
     return response
     
+
+
     
 def proper_name(traj_sel):
     if traj_sel == "bck":
-        set_sel="backbone"
+        set_sel="protein CA"
     elif traj_sel == "noh":
-        set_sel="noh"
+        set_sel="non-hydrogen protein atoms"
     elif traj_sel == "min":
-        set_sel="minimal"
-    elif traj_sel == "all_atoms":
-        set_sel="all atoms"      
+        set_sel="protein CA, CB, C, N, O"
+    elif traj_sel == "all_prot":
+        set_sel="all protein atoms"
+    else:
+        set_sel = traj_sel
     return set_sel  
     
 
