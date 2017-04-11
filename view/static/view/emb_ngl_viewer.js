@@ -1048,8 +1048,11 @@ $(document).ready(function(){
                                 var int_id=int_data.int_id;
                                 var int_data=int_data.result;
                                 if (! isEmptyDict(int_data)){
+                                var patt = /[^/]*$/g;
+                                var trajFile = patt.exec(traj_path);
                                 //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
+                                    <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+'</div>\
                                       <table class="table table-condensed" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
@@ -1083,23 +1086,27 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    var patt = /[^/]*$/g;
-                                    var trajFile = patt.exec(traj_path);
                                     table_html+="</tbody></table>";
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
-                                    <div style='font-size:12px;' ><b>Threshold:</b> "+thr_ok+" &#8491; ("+dist_scheme_name+"), <b>Trajectory:</b> "+trajFile+"</div>\
-                                        <div class='checkbox' style='font-size:12px;'>\
+                                        <div class='checkbox' style='font-size:12px;margin-bottom:0'>\
 		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                         </div>\
-                                        <div style='display:inline-block;margin:5px 5px 5px 0'>\
-                                            <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
-                                            </a>\
-                                        </div>\
-                                        <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
-                                            <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl' data-int_id='"+int_id+"' ></span>\
+                                        <div class='int_settings'>\
+                                            <div style='display:inline-block;margin:5px 5px 5px 0;cursor:pointer;'>\
+                                                <a role='button' class='btn btn-link save_img_int_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                    <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                </a>\
+                                            </div>\
+                                            <div style='display:inline-block;margin:5px'>\
+                                                <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
+                                                </a>\
+                                            </div>\
+                                            <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
+                                                <span title='Delete' class='glyphicon glyphicon-trash delete_int_tbl' data-int_id='"+int_id+"' ></span>\
+                                            </div>\
                                         </div>\
                                     </div>";
                                     $("#int_info").append(table_html+infoAndOpts);
@@ -1125,17 +1132,20 @@ $(document).ready(function(){
                                         function drawChart3(){
                                             var data = google.visualization.arrayToDataTable(res_int_ok,false);
                                             var options = {"height":350,"legend":{"position":"none"}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},vAxis: {title: 'Frequency (%)', viewWindow: {min: 0,  max: 100}}};
+                                    "chartArea":{"right":"5","left":"60","top":"50","bottom":"60"},vAxis: {title: 'Frequency (%)', viewWindow: {min: 0,  max: 100}}};
                                             var int_chart_div = document.getElementById(chart_div);
 
                                             var chart = new google.visualization.ColumnChart(int_chart_div);    
                                             google.visualization.events.addListener(chart, 'ready', function () {
                                                 var int_img_source =  chart.getImageURI(); 
-                                                //$("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                                $("#"+chart_div).attr("data-url",int_img_source);
                                             });
                                             chart.draw(data, options);   
+                                            var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
+                                            $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source)
                                         }
                                         google.load("visualization", "1", {packages:["corechart"],'callback': drawChart3});
+
                                     }
                                            
                                     

@@ -665,7 +665,8 @@ def index(request, dyn_id):
                     if (to_rv):
                         to_rv_l=to_rv.split(",")
                         for i_id in to_rv_l:
-                            del int_info[i_id]      
+                            print("rv ",i_id)
+                            del int_info[i_id] 
                 else:
                     new_int_id=1
                     int_info={}
