@@ -60,11 +60,11 @@
     <br>
     {% if answer.references %} 
         <br><b>References in which this protein is mentioned</b>:<br>
-        <ul>
+
         {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+              <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p>
         {%endfor%}
-        </ul>
+
     {% endif %} 
 
     </div>

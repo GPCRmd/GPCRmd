@@ -44,20 +44,14 @@
     <b>InChI</b>:<br>{{answer.sinchi}} <br>
     {%endif%}
     <br>
-    {%if answer.link_2_molecule%}
-        <b>Corresponding Specific State(s)</b>:<br>
-        <table class="table table-bordered"><tr>
-        {% for url in answer.related_mol_images %}
-            <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a></td>
-        {% endfor %}
-
-        </tr><tr>
-        {% for url in answer.related_mol_images %}
-            <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
-        {% endfor %}
-
-        </tr></table>
-    {%endif%}
+    <b>Image of the Standard Form:</b> <br>
+    <div id='leftdiv' class="col-sm-6">
+        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
+        <center><img src="{{answer.imagelink}}" /></center>
+    </div>
+    <div id='rightdiv' class="col-sm-6">
+        <div id="container-01" class="mol-container"></div>
+    </div>
     <br>
     {% if answer.references %} 
         <br><b>References in which this Standard Form is mentioned</b>:<br>
@@ -76,15 +70,21 @@
 
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Image of the Standard Form</b></div>
+    <div class="panel-heading"><b>Corresponding Specific State(s):</b></div>
     <div class="panel-body">
-    <div id='leftdiv' class="col-sm-6">
-        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
-        <center><img src="{{answer.imagelink}}" /></center>
-    </div>
-    <div id='rightdiv' class="col-sm-6">
-        <div id="container-01" class="mol-container"></div>
-    </div>
+    {%if answer.link_2_molecule%}
+        <table class="table table-bordered"><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a></td>
+        {% endfor %}
+
+        </tr><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
+        {% endfor %}
+
+        </tr></table>
+    {%endif%}
 
     </div>
     </div>

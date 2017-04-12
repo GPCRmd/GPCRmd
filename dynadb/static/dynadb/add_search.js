@@ -5,7 +5,8 @@ $('#badge_legend').hide();
 $('#arrowdiv').hide();
 //$('#myTable th:first').html(''); //warning2
 var counter=0;
-
+var arrowlen=$('#arrow').css('width');
+arrowlen=parseInt(arrowlen.substring(0, arrowlen.length-2));
 $(document).on({
     mouseenter: function (event) {
         var oftop=$(this).offset().top;
@@ -20,9 +21,15 @@ $(document).on({
         var alfa=Math.asin(sinus);
         alfa=-1*(alfa*180/3.1415);
         var alfadeg='rotate('+alfa.toString()+'deg)';
-        $('#arrowdiv').css('transform',alfadeg);
-        $('#arrowdiv').css('left', x + 10); //$('#arrowdiv').css('left', '750px'); 
-        $('#arrowdiv').css('top', y - Math.abs(alfa)*3 );
+        if (alfa>0){
+            var extra=5*alfa;
+        }else{
+            var extra=0;
+        }
+        var alch= -100 + alfa*1 + extra; 
+        $('#arrowdiv').css('transform',alfadeg); //we may need to add support for other browsers
+        $('#arrowdiv').css('left', x + 10);
+        $('#arrowdiv').css('top', oftop + alch);
         $('#arrowdiv').show();
 
     },
@@ -67,6 +74,7 @@ $(document).on('click', '.protein, .molecule, .compound', function(){
         var truename=nameandid[1].replace('!','-');
         text=id;
         var myclass= $(this).attr("class");
+        myclass= myclass.replace('compound','StandardF').replace('molecule','SpecificS');
         var ligrec= $(this).attr("value");
         $('#myTable').find('thead').html('<tr><th>Boolean</th><th>  </th><th>Type</th><th>ID</th> <th></th> <th></th> <th>Name</th> </tr>');
         if (myclass=='protein'){
@@ -107,7 +115,7 @@ $('#gotoadvsearch').on('click', function(){
             recycletable(counter,bigarray);
         }
         $('#gotoadvsearch').html('Go to Simple Search'); //from simple to adv
-        $('#crazycolor').css("background-color", "#e6e6ff");
+        $('#crazycolor').css("background-color", "#c2f0f0");
     }
 });
 
