@@ -26,7 +26,7 @@ function ShowResults(data, restype,is_apoform){
         var rl=data.model
         for(i=0; i<rl.length; i++){ //rl[i].length>2
             if (rl[i].length>2 && (is_apoform=='com'||is_apoform=='both') ){
-                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd> Ligand: <kbd>"+rl[i][2]+"</kbd> </td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Complex Structure ID:"+rl[i][0] +"</a> </td><td> Receptor: <kbd>"+rl[i][1]+"</kbd><br> Ligand:      <kbd>"+rl[i][2]+"</kbd> </td></tr>";
             }if (rl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
                 tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/model/id/"+rl[i][0]+"> Apoform Complex Structure ID:"+rl[i][0]+"</a> </td><td> Protein: <kbd>"+rl[i][1]+"</kbd> </td></tr>";
             }
@@ -38,7 +38,7 @@ function ShowResults(data, restype,is_apoform){
         var dl=data.dynlist;
         for(i=0; i<dl.length; i++){
             if (dl[i].length>2 && (is_apoform=='com'||is_apoform=='both')){ //dl[i].length>2
-                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd> Ligand:<kbd>"+ dl[i][2]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd><br> Ligand:     <kbd>"+ dl[i][2]+"</kbd></td></tr>";
             }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
                 tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
             }
@@ -55,7 +55,7 @@ function CreateTable(){
     else {
         table = $('#ajaxresults22').DataTable( {
             "sPaginationType" : "full_numbers",
-            "lengthMenu": [[5, 25, 50, -1], [5, 25, 50, "All"]],
+            "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "All"]],
             "oLanguage": {
                 "oPaginate": {
                     "sPrevious": "<",
@@ -76,6 +76,7 @@ function isNumber(n) {
 
 
 $("#tablesearch").click(function() {
+    $('#badge_legend').hide();
     $('#ajaxresults22').DataTable().clear().draw();
     var exactboo=$('#exactmatch').prop('checked');
     var bigarray=[];
@@ -204,6 +205,8 @@ $("#tablesearch").click(function() {
     var restype=$('#result_type').val();
     var ff=$('#fftype').val();
     var tstep=$('#tstep').val();
+    var gle=$('#gle').val();
+    console.log(gle);
     if (! isNumber(tstep) && tstep.length>0){
         alert('Time step has to be a number');
         $("#tablesearch").prop("disabled",false);
@@ -235,7 +238,7 @@ $("#tablesearch").click(function() {
         }
         $.ajax({
             type: "POST",
-            data: {'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform},
+            data: {'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform, 'gle':gle},
             headers: {
             'X-CSRFToken': getCookie('csrftoken'),
             },
@@ -294,7 +297,7 @@ $("#tablesearch").click(function() {
                 console.log('after',bigarray);
                 $.ajax({
                     type: "POST",
-                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch, 'gle':gle},
                     headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
                     },
@@ -352,7 +355,7 @@ $("#tablesearch").click(function() {
             if (flag==0){
                 $.ajax({
                     type: "POST",
-                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch},
+                    data: {  "bigarray[]": bigarray, 'exactmatch':exactboo,'restype':restype,'ff':ff,'tstep':tstep,'sol':sol,'mem':mem,'method':method,'sof':sof,'is_apo':is_apoform,'typeofsearch':typeofsearch, 'gle':gle},
                     headers: {
                     'X-CSRFToken': getCookie('csrftoken'),
                     },

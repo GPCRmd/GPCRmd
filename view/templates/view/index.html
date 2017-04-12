@@ -79,7 +79,7 @@
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
         <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
-             <p style="text-align: justify;margin-bottom:4px">Mouse controls:</p>
+             <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 		<span><p class="falselist">Left button hold and move: rotate camera around center.</p>
 		<p class="falselist">Left button click: pick atom or distance.</p>
 		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
@@ -110,6 +110,15 @@
 
         <div class="container-fluid">
             
+<!-- ============= Test trajs =========== -->
+
+<!-- <div class="btn-group btn-group-xs">
+  <button type="button" class="btn btn-info">14_trj_1_1</span></button>
+  <button type="button" class="btn btn-success"><span class="glyphicon glyphicon-play"></span></button>
+</div>-->
+
+
+
 <!-- ============= IFRAME =========== -->
             <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}">
                 <div class="row" style=max-width:590px;margin:auto>
@@ -117,7 +126,20 @@
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                 </div>  
                 <div >
-                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;">
+                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;border: 1px solid #F5F5F5;margin-bottom:5px">
+                    
+                         {% if traj_list %}
+                          <div class="dropdown" style="position:absolute;z-index:10">
+                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" data-tpath={{traj_list.0.0}}>{{ traj_list.0.1 }}
+                            <span class="caret"></span></button>
+                            <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
+                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} >{{traj_list.0.1}}</li>
+                            {% for traj in traj_list|slice:"1:" %}
+                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} >{{traj.1}}</li>
+                            {% endfor %}
+                            </ul>
+                          </div>
+                         {% endif %}
                         <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="590px"></iframe>
                     </div>
 
@@ -127,11 +149,10 @@
 
 <!-- ============= Apply buttonss =========== -->
             <div style="margin-bottom:5px">
-                <div class="row" style="margin-top:5px;margin-bottom:10px;border-bottom:1px solid #D8D8D8;padding-bottom:10px" >
+                <div class="row" style="margin-top:5px;margin-bottom:10px;" >
                    <div style="padding-right:3px;padding-left:3px"> 
                       <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
                       <button  class="btn btn-danger" id="clearAll" >Clear</button>
-                      <a  class="btn btn-default"  id="to_mdsrv" role="button"  href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank">MDsrv</a>
                       <div class="pull-right">
                           <!--
                           <button id="center" class="btn btn-default" type="button" style="padding-right:7px;padding-left:7px;height:35px" >Center</button>
@@ -144,134 +165,69 @@
                           
                           <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
                           <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
-                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>
+                          <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>                                    
+                        <!--  <a id="to_mdsrv" class="settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>-->
+                        <a id="to_mdsrv" class="btn btn-link settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>
    
                       </div>
                    </div>
      	        </div>
              </div>
-<!-- ============= Comp buttonss =========== -->
-            <div class="row"><center>
-                <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active"  id="receptor">Receptor</button>
-                {% if other_prots%}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
-                {% endif %}
-                {% for long_n, short_n in compounds %}
-                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
-                {% endfor %}
-                {% if compounds|length > 1%}
-                <button  class="btn btn-default" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
-                <button  class="btn btn-default" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
-                {% endif %}
-            </center></div>
-<!-- ============= Input selection =========== -->
-            <div id="selection_all" style="margin-bottom:5px">
-            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div> 
+             
+             
+        <div style="text-align:center;margin:0;">
+            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+                <h4 style="padding:0;margin:0;">Selection
+                </h4>
             </div>
-            <div id="selection" class="collapse" style="padding-right:15px;">
+        </div>
+        <div id ="allSelTools" style="margin-bottom:30px">
+<!-- ============= Comp buttonss =========== -->
+        <div id="quicksel_all" style="margin-bottom:5px">
+            <div class="row" style="margin-top:10px;">
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#quicksel"><span>Quick selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+            </div>
+            <div id="quicksel" class="collapse" style="padding-right:15px;">
 
 
-             <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
-               <div id="text_input_all"  style="margin-top:10px;">
-                    <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
-                       <div  class="row">
-                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
-	                        <input type="text" value="" class="form-control sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
-	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-	                             <div style="float:left;height:27px" >
-                                    <select class="high_type" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
-                                       <option value="licorice">Licorice</option>
-                                       <option value="ball+stick">Ball+stick</option>
-                                       <option value="hyperball">Hyperball</option>
-                                       <option value="line">Line</option>
-                                       <option value="spacefill">Spacefill</option>
-                                       <option value="cartoon">Cartoon</option>
-                                       <option value="ribbon">Ribbon</option>
-                                       <option value="rope">Rope</option>
-                                       <option value="tube">Tube</option>
-                                       <!--<option value="axes">Axes</option>-->
-                                    </select>
-                                    <select class="high_scheme" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
-                                       <option value="element">Element</option>
-                                       <option value="uniform">Uniform</option>
-                                       <option value="chainid">Chain</option>
-                                       <option value="moleculetype">Molecule type</option>
-                                       <option value="sstruc">Structure</option>
-                                       <option value="resname">Residue name</option>
-                                       <option value="residueindex">Residue index</option>
-                                       <option value="hydrophobicity">Hydrophobicity</option>
-                                    </select>
-                                  </div>
-                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" ></button> 
-                                    <div class="dropdown-content" style="margin-left:3px">
-                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;"></div>
-                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;"></div>
-      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;"></div>
-      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;"></div>
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
-                                    </div>
-                                  </div>
-                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
- -->
-	                       </div>
-                          </div>
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
-                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
-                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
-                          </div>
-                      </div>
-                      <div class="ti_alert"> </div>      
-                  </div>
-              </div>
-<!-- ============= Sequence selection =========== -->
-              {% if prot_seq_pos %}
-              <div style="margin-bottom:20px">
-              <div class="row" style="">
-                <button style="padding:5px;margin-left:3px;" id="col_btn" type="button" class="btn btn-default" data-toggle="collapse" data-target="#seq_sel_div">Select from the sequence</button>
-              </div>
-              <div class="row collapse" id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                <button  class="btn btn-link" id="addToSel" type="button"><span class="glyphicon glyphicon-plus-sign"> Add to your selection</button>
-                <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
-                  {% for prot_name, seq_pos in prot_seq_pos %}
-                    <div style="clear: left;padding-bottom:20px">
-                      {% if prot_seq_pos|length > 1 %}
-                         <div>{{prot_name}}</div>
-                      {% endif %}
-                      {% for seq,pos,gnum,chain,index in seq_pos %}
-                      <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
-                        <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
-                        <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
-                      </div>            
-                      {% endfor %}
-                    </div>
-                  {% endfor %}
-                </div> 
-              </div>
-              </div>
-              {% endif %}
-             </div>
-
-<!-- ============= Residues within x A of y =========== --> 
-              {% if compounds|length > 0%}
-               <div class="row">
+                <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
+                    <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn"  id="receptor">Receptor</button>
+                    {% if other_prots%}
+                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                    {% endif %}
+                    {% for long_n, short_n in compounds %}
+                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                    {% endfor %}
+                    {% if ligands_short %}
+                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
+                    {% endif %}
+                    {% if compounds|length > 1%}
+                    <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
+                    <button  class="btn btn-default nglCallBtn" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
+                    {% endif %}
+                </center></div>
+                
+              	<center>
+                  <div style="height:1px;background-color:lightgrey;width:90%"></div>
+                </center>
+                
+               <div class="row" style="margin-top:15px">
                
                 <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
                   <div class="dist_sel" id="row0" style="margin-bottom:5px">
                     <span class="tick" ></span>
                     <span class="always" style="margin-left:14px">
                      Show 
-                        <select class="resWthComp" name="rescomp">
+                        <select class="resWthComp nglCallChangeWth" name="rescomp">
                             <option  selected value="protein">residues</option> <!-- This can be improved by considering the case of multiple proteins: add option for each prot at this sel.-->
                            {% for long_n, short_n in compounds %}
                                 <option   value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}
                         </select>                     
                       within 
-                    <input class="form-control input-sm inputdist" type="text" style="width:40px;padding-left:7px;">
+                    <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
                       &#8491; of
-                        <select class="wthComp" name="comp">
+                        <select class="wthComp nglCallChangeWth" name="comp">
                            {% for long_n, short_n in compounds %}
                            <option   value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}
@@ -290,16 +246,174 @@
                 </div>
                 
                </div>
-               {% endif %}
+               
+            </div>
+        </div>
+<!-- ============= Input selection =========== -->
+            <div id="selection_all" style="margin-bottom:5px;margin-top:5px">
+            <div class="row">
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+            </div>
+            <div id="selection" class="collapse" style="padding-right:15px;">
 
+
+             <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
+               <div id="text_input_all"  style="margin-top:10px;">
+                    <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
+                       <div  class="row">
+                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
+	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+	                             <div style="float:left;height:27px" >
+                                    <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                       <option value="licorice">Licorice</option>
+                                       <option value="ball+stick">Ball+stick</option>
+                                       <option value="hyperball">Hyperball</option>
+                                       <option value="line">Line</option>
+                                       <option value="spacefill">Spacefill</option>
+                                       <option value="cartoon">Cartoon</option>
+                                       <option value="ribbon">Ribbon</option>
+                                       <option value="rope">Rope</option>
+                                       <option value="tube">Tube</option>
+                                       <!--<option value="axes">Axes</option>-->
+                                    </select>
+                                    <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                       <option value="element">Element</option>
+                                       <option value="uniform">Uniform</option>
+                                       <option value="chainid">Chain</option>
+                                       <option value="moleculetype">Molecule type</option>
+                                       <option value="sstruc">Structure</option>
+                                       <option value="resname">Residue name</option>
+                                       <option value="residueindex">Residue index</option>
+                                       <option value="hydrophobicity">Hydrophobicity</option>
+                                    </select>
+                                  </div>
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> 
+                                    <div class="dropdown-content" style="margin-left:3px">
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                    </div>
+                                  </div>
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+ -->
+	                       </div>
+                          </div>
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                          </div>
+                      </div>
+                      <div class="ti_alert"> </div>      
+                  </div>
+              </div>
+
+             </div>
+            </div>
+            </div>
+<!-- ============= Sequence selection =========== -->
+{% if prot_seq_pos %}
+            <div id="seqselection_all" style="margin-bottom:5px;margin-top:5px">
+            <div class="row">
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#seqselection"><span>Sequence selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+            </div>
+            <div id="seqselection" class="collapse" style="padding-right:15px;">
+
+
+             <div  style="padding-left:15px;margin-top:10px;" >
+             
+               <div id="seq_input_all"  style="display:none">
+                    <div  class="seq_input_row" id="si_row0" style="margin-bottom:5px">
+                       <div  class="row">
+                          <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> 
+	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+	                             <div style="float:left;height:27px" >
+                                    <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                       <option value="licorice">Licorice</option>
+                                       <option value="ball+stick">Ball+stick</option>
+                                       <option value="hyperball">Hyperball</option>
+                                       <option value="line">Line</option>
+                                       <option value="spacefill">Spacefill</option>
+                                       <option value="cartoon">Cartoon</option>
+                                       <option value="ribbon">Ribbon</option>
+                                       <option value="rope">Rope</option>
+                                       <option value="tube">Tube</option>
+                                       <!--<option value="axes">Axes</option>-->
+                                    </select>
+                                    <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                       <option value="element">Element</option>
+                                       <option value="uniform">Uniform</option>
+                                       <option value="chainid">Chain</option>
+                                       <option value="moleculetype">Molecule type</option>
+                                       <option value="sstruc">Structure</option>
+                                       <option value="resname">Residue name</option>
+                                       <option value="residueindex">Residue index</option>
+                                       <option value="hydrophobicity">Hydrophobicity</option>
+                                    </select>
+                                  </div>
+                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> 
+                                    <div class="dropdown-content" style="margin-left:3px">
+                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                    </div>
+                                  </div>
+                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+ -->
+	                       </div>
+                          </div>
+                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                          </div>
+                      </div>
+                      <div class="si_alert"> </div>      
+                  </div>
+              </div>
+
+              
+              <div style="margin-bottom:20px" class="row">
+
+              <div id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                <!--<button  class="btn btn-link" id="addToSel" type="button" style="padding:0 0 0 10px;display:none"><span id="addToSelHov" class="glyphicon glyphicon-ok" style="color:#5CB85C"> Confirm selection</button>-->
+                <button style="display:none" type="button" id="addToSel" class="btn btn-success btn-xs"><span style="font-size: 10px;" class="glyphicon glyphicon-ok" ></span> Confirm selection</button>
+              
+                <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                  {% for prot_name, seq_pos in prot_seq_pos %}
+                    <div style="clear: left;padding-bottom:20px">
+                      {% if prot_seq_pos|length > 1 %}
+                         <div>{{prot_name}}</div>
+                      {% endif %}
+                      {% for seq,pos,gnum,chain,index in seq_pos %}
+                      <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                        <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
+                        <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                      </div>            
+                      {% endfor %}
+                    </div>
+                  {% endfor %}
+                </div> 
+              </div>
+              </div>
+              
+              
+             </div>
             </div>
             </div>
 
+       {% endif %}
 <!-- ============= Predefined views of cons pos =========== -->
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
             <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>               
+                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
             </div>
             <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
@@ -324,7 +438,7 @@
                             <div style="margin:0;" id="classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
                                 {% if cons_pos_all_info.1.A %}
                                     {% if cons_pos_all_info.0.A.1 %}
-                                        <p>Molecular switches</p>
+                                        <p>Highly conserved motifs</p>
 	                                        {% for pos in cons_pos_all_info.0.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -333,7 +447,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_pos_all_info.0.A.0 %}
-                                        <p>Most conserved</p>
+                                        <p>Most conserved motifs</p>
 	                                        {% for pos in cons_pos_all_info.0.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -342,7 +456,7 @@
                             </div>
                             <div id="classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
                                   {% if cons_pos_all_info.0.B.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_pos_all_info.0.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -350,7 +464,7 @@
                             </div>  
                             <div id="classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
                                   {% if cons_pos_all_info.0.C.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_pos_all_info.0.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -358,7 +472,7 @@
                             </div>  
                             <div id="classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
                                   {% if cons_pos_all_info.0.F.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_pos_all_info.0.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -380,7 +494,7 @@
                             <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Molecular switches</p>
+                                        <p>Higly conserved motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -389,7 +503,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
-                                        <p>Most conserved</p>
+                                        <p>Most conserved motifs</p>
 	                                        {% for pos in cons_class.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -398,7 +512,7 @@
                             </div>
                             <div id="classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
                                   {% if cons_class.B.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -406,7 +520,7 @@
                             </div>  
                             <div id="classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
                                   {% if cons_class.C.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -414,7 +528,7 @@
                             </div>  
                             <div id="classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
                                   {% if cons_class.F.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -437,7 +551,7 @@
                             <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Molecular switches</p>
+                                        <p>Higly conserved motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -446,7 +560,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
-                                        <p>Most conserved</p>
+                                        <p>Most conserved motifs</p>
 	                                        {% for pos in cons_class.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -455,7 +569,7 @@
                             </div>
                             <div id="classB" class="tab-pane {{active_class.B.1}}">
                                   {% if cons_class.B.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -463,7 +577,7 @@
                             </div>  
                             <div id="classC" class="tab-pane {{active_class.C.1}}">
                                   {% if cons_class.C.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -471,7 +585,7 @@
                             </div>  
                             <div id="classF" class="tab-pane {{active_class.F.1}}">
                                   {% if cons_class.F.0 %}
-                                    <p>Most conserved</p>
+                                    <p>Most conserved motifs</p>
                                     {% for pos in cons_class.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -487,10 +601,10 @@
             {% endif %}
 
 <!-- ============= Trajectories =========== --> 
-          {% if traj_list %}
+ <!--         {% if traj_list %}
            <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
               <div class="row">
-                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
               </div>
               <div id="emb_trajectories" class="collapse" >
                   <div class="checkbox" >
@@ -501,20 +615,28 @@
 		  </div>
               </div>
           </div>
-          {% endif %}
+          {% endif %}-->
+        </div><!-- End allSelTools -->
 <!-- ============= Analysis =========== --> 
-           {% if traj_list %}          
-           <div id="analysis_all" style="margin-top:5px;margin-bottom:10px">
-           <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:2px solid blue;border-radius:0;margin-bottom:5px" data-toggle="collapse" data-target="#analysis"><span>Analysis </span><span style="float:right;margin-right:5px;" id="arrow" class="glyphicon glyphicon-chevron-down"></span></div>
+           {% if traj_list %}  
+        <div style="text-align:center;margin:0;">
+            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+                <h4 style="padding:0;margin:0;">Analysis
+                </h4>
             </div>
-            <div id="analysis" class="row collapse">
-
+        </div>
+           <div id="all_analysis" style="margin-bottom:20px">   
+           
 <!-- ============= Compute distances =========== --> 
 
-              <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Distance</div>
-               <div id="analysis_dist" class="collapse">
-               
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Distance </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+            </div>
+             <div id="analysis_dist" class="collapse row">
+             <div style="margin-top:10px;margin-left:5px">
+                <div style="margin-right:5px;margin-left:14px;margin-bottom:15px;color:#808080">
+                    Select distances from the viewer by clicking on the atoms. Afterwards, import your selections by clicking at the import button. You can also manually introduce the atom indices.
+                </div>
                 <div class="dist_btw" style="margin-right:5px;margin-left:0;">
                   <div class="dist_pair" id="row2_0">
                     <span class="tick2" ></span>
@@ -525,7 +647,7 @@
                      <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>  
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-                     <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-up"></span></button>
+                     <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>
                      <!--<button id="rm_btn2"  class="btn btn-link" style="color:#DC143C;font-size:20px;margin:0;padding:0;visibility:hidden" ><span class="glyphicon glyphicon-minus-sign"></span></button> -->
 
                     </span>
@@ -537,7 +659,7 @@
                 {% if traj_list %}
                 <div style="margin-left:18px;">
                     <div>
-                     At trajectory: 
+                     In trajectory: 
                        <span style="margin-left:5px">
                             <select id="" name="dist_traj">
                                <option disabled selected value> </option>
@@ -548,20 +670,25 @@
                        </span>
                     </div>
                     <div class=row>
-                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Obtain result</button>
+                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
                 </div>
                 {% else %}
-                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:15px" >Obtain result</button>
+                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:15px" >Compute</button>
                 {% endif %}
                 <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" style="margin-bottom:15px"></div>
               <!-- <center><div style="margin-right:40px;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;" >{{ chart.as_html }}</div></center>-->
                </div>
+               </div>
 <!-- ============= RMSD Analysis =========== --> 
-            <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">RMSD</div>
-              <div class="collapse" id="analysis_rmsd">
-                <div style="margin-bottom:15px">
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>RMSD </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_rmsd" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
                             <select id="rmsd_traj" name="rmsd_traj">
@@ -609,23 +736,31 @@
                            <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
                            </div>
                            <div class="col-md-10" >
-                              <div title="Protein alpha carbons." class="row">
-                                 <input type="radio" name="rmsd_sel" value="bck" checked> Backbone
+                              <div  class="row">
+                                 <input type="radio" name="rmsd_sel" value="bck" checked> Protein alpha carbons
                               </div>
-                              <div title="All non-hydrogen protein atoms." class="row">
-                                 <input type="radio" name="rmsd_sel" value="noh"> noh
-                              </div>
-                              <div title="Protein CA, CB, C, N, O." class="row">
-                                 <input type="radio" name="rmsd_sel" value="min"> Minimal
+                              <div  class="row">
+                                 <input type="radio" name="rmsd_sel" value="min"> Protein CA, CB, C, N, O
                               </div>
                               <div class="row">
-                                 <input type="radio" name="rmsd_sel" value="all_atoms"> All atoms
+                                 <input type="radio" name="rmsd_sel" value="noh"> Non-hydrogen protein atoms
                               </div>
+                              <div class="row">
+                                 <input type="radio" name="rmsd_sel" value="all_prot"> All protein atoms
+                              </div>
+                              {% for long_n, short_n in ligands %}
+                                  <div class="row">
+                                     <input type="radio" name="rmsd_sel" value="{{short_n}}"> {{long_n}}
+                                  </div>
+                              {% endfor %}
+                              <!--<div class="row">
+                                 <input type="radio" name="rmsd_sel" value="all_atoms"> All atoms
+                              </div>-->
                            </div>
                         </div>
                    </div>
                     <div class=row>
-                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Obtain result</button>
+                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
                     <div class="row" style="margin-left:14px;margin-top:5px;padding-right:15px;clear:left;" id="rmsd_alert"> </div>
                   <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
@@ -636,13 +771,17 @@
 
 <!-- ============= Interaction Analysis =========== --> 
             {% if ligands|length >= 1 %}
-            <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:0px 10px 5px 10px;border-bottom:1px solid #D8D8D8;color:#A8A8A8;margin-top:5px;margin-bottom:5px">Interaction</div>
-              <div class="collapse" id="analysis_Int">
+            
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_Int" class="collapse">
+             <div class="row" style="margin-top:10px;">
               
                     <div class="int_btw" style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                          Compute interaction between GPCR and 
                             <select id="comp_int" name="comp_int">
-                               <option class="ligInt"  value="allLig">All ligands</option>
+                               <!--<option class="ligInt"  value="allLig">All ligands</option>-->
                                {% for long_n, short_n in ligands %}
                                <option class="ligInt unitInt"  value="{{short_n}}">{{long_n}}</option>
                                {% endfor %}
@@ -652,7 +791,7 @@
                             </select>  
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
-                         At trajectory: 
+                         In trajectory: 
                            <span style="margin-left:5px">
                                 <select id="" name="int_traj">
                                    <option disabled selected value> </option>
@@ -676,23 +815,23 @@
                             </select>  
                     </div>
                     <div class="row">
-                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Obtain result</button>
+                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Compute</button>
                     </div>
                     <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px" id="int_alert"> </div>
-                    <div style="margin-top:5px;padding-right:25px;"  id="int_info" ></div>
+                    <div style="margin-top:5px;"  id="int_info" ></div>
                     <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
 		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
                    </div>-->
               </div>
+              </div>
             {% endif %}
             </div>
 <!-- ======================================== -->
-            </div>
+           <!-- </div>-->
             </div>
             {% endif %}
           </div>
-
-
+          <!--<input type="checkbox" name="nglCall" value="nglCallSign">-->
         </div>
     </div>
 
