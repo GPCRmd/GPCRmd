@@ -80,6 +80,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'protwis.custom_middlewares.WsgiLogErrors',
     
 ]
 
@@ -226,7 +227,7 @@ CACHES = {
     }
 }
 
-QUERY_CHECK_PUBLISHED = True
+QUERY_CHECK_PUBLISHED = False
 
 
 MDSRV_UPSTREAM='http://localhost:8081'

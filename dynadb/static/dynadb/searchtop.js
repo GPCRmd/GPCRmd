@@ -97,6 +97,7 @@ $.ajaxSetup({
 });
 
 $("#pdbchecker1").click(function() {
+    $('#showerroralig').hide();
     searchtop();
 });
 

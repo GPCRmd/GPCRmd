@@ -7,7 +7,11 @@
   .panel-body {
     word-break:break-all
 }
-  
+   .mol-container {
+        width: 80%;
+        height: 400px;
+        position: relative;
+    }
   </style>
 {% endblock %}
 {% block content %}
@@ -36,7 +40,7 @@
     {%endif%}
 <br>
     {% if answer.link_2_compound %}
-        <b>Corresponding compound</b>:<br> 
+        <b>+info (from its Standard Form)</b>:<br> 
            <a class='btn btn-info' role='button' href= /dynadb/compound/id/{{answer.link_2_compound}}>{{answer.name}}</a>
     {%endif%}
 <br>
@@ -49,25 +53,38 @@
 <br>
     {% if answer.references %} 
         <br><b>References in which this molecule is mentioned</b>:<br>
-        <ul>
         {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
-        </ul>
+              <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p>
         {%endfor%}
     {% endif %} 
 
-    <br><center><a href=sdf><button class="btn btn-primary" type="button">Download the SDF file</button></a></center>
-    </div>
-    </div>
-    </div>   
+    <br><center><a href=/dynadb/files/Molecule/{{answer.sdfile}}> <button class="btn btn-primary" type="button">Download the SDF file</button></a></center>
 
-<div class="container">
+    </div>
+    </div>
+    </div>
+
+    <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Image of the Molecule:</b></div>
-    <div class="panel-body">  
-    <center><img src="{{answer.imagelink}}" /></center>
+    <div class="panel-heading"><b>Image of the Specific State:</b></div>
+    <div class="panel-body">
+    <div id='leftdiv' class="col-sm-6">
+        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
+        <center><img src="{{answer.imagelink}}" /></center>
+    </div>
+    <div id='rightdiv' class="col-sm-6">
+        <div id="container-01" class="mol-container"></div>
+    </div>
+
     </div>
     </div>
-    </div>   
+    </div>
+
 {% endblock content %}
+
+
+{% block addon_js %}
+<script src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script src="http://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+{% endblock%}
 

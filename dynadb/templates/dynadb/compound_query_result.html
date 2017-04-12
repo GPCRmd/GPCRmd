@@ -3,15 +3,19 @@
 {% block addon_css %}
   <style>
   .panel-body {
-    word-break:break-all
+        word-break:break-all
 }
-    
+   .mol-container {
+        width: 80%;
+        height: 400px;
+        position: relative;
+    }
   </style>
 {% endblock %}
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Compound Name:</b> {{answer.name}} </div>
+    <div class="panel-heading"><b>Standard Form Name:</b> {{answer.name}} </div>
     <div class="panel-body"> 
     {%if answer.othernames%}
         <b>Other Names</b>:<br> 
@@ -40,28 +44,22 @@
     <b>InChI</b>:<br>{{answer.sinchi}} <br>
     {%endif%}
     <br>
-    {%if answer.link_2_molecule%}
-        <b>Related Molecule(s)</b>:<br>
-        <table class="table table-bordered"><tr>
-        {% for url in answer.related_mol_images %}
-            <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Molecule ID: {{url.0}}</a></td>
-        {% endfor %}
-
-        </tr><tr>
-        {% for url in answer.related_mol_images %}
-            <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
-        {% endfor %}
-
-        </tr></table>
-    {%endif%}
+    <b>Image of the Standard Form:</b> <br>
+    <div id='leftdiv' class="col-sm-6">
+        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
+        <center><img src="{{answer.imagelink}}" /></center>
+    </div>
+    <div id='rightdiv' class="col-sm-6">
+        <div id="container-01" class="mol-container"></div>
+    </div>
     <br>
     {% if answer.references %} 
-        <br><b>References in which this compound is mentioned</b>:<br>
-        <ul>
+        <br><b>References in which this Standard Form is mentioned</b>:<br>
+
         {%for reference in answer.references%}
-              <li>{{reference.2}} {{reference.1}} doi: {{reference.0}} Available in: {{reference.3}} </li>
+            {% autoescape off %}{{reference}}{% endautoescape %}
         {%endfor%}
-        </ul>
+
     {% endif %} 
 
     </div>
@@ -72,11 +70,21 @@
 
     <div class="container">
     <div class="panel panel-info">
-    <div class="panel-heading"><b>Image of the compound</b></div>
+    <div class="panel-heading"><b>Corresponding Specific State(s):</b></div>
     <div class="panel-body">
-    <center><img src="{{answer.imagelink}}" /></center>
+    {%if answer.link_2_molecule%}
+        <table class="table table-bordered"><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a></td>
+        {% endfor %}
 
+        </tr><tr>
+        {% for url in answer.related_mol_images %}
+            <td align="center"><a href= /dynadb/molecule/id/{{url.0}}> <img src={{url.1}}> </a></td>
+        {% endfor %}
 
+        </tr></table>
+    {%endif%}
 
     </div>
     </div>
@@ -84,3 +92,7 @@
 
 {% endblock content %}
 
+{% block addon_js %}
+<script src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script src="http://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+{% endblock%}

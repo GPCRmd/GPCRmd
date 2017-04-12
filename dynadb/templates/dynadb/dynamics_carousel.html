@@ -1,0 +1,109 @@
+{% load mainmenu %}
+{% load site_title %}
+{% load staticfiles %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% site_title %}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+    <!-- Bootstrap -->
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles -->
+    <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
+
+    <!-- Additional CSS -->
+
+    {% if google_analytics %}
+      {% include "home/ga.html" %}
+    {% endif %}
+    
+    <style>
+    .panel-body {
+        word-break:break-all
+    }    
+
+    .carousel .item img{
+        margin: 0 auto; /* Align slide image horizontally center */
+    }
+
+    .bs-example{
+	    margin: 20px;
+    }
+
+    .carousel-control.left, .carousel-control.right {
+        background-image: none
+    }
+    </style>
+  </head>
+  <body>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- jQueryUI -->
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.min.css' %}" type="text/css" media="all" />
+    <link rel="stylesheet" href="{% static 'home/css/jquery-ui.theme.min.css' %}" type="text/css" media="all" />
+    <script src="{% static 'home/js/jquery-ui.min.js' %}"></script>
+    <!-- Change JQueryUI plugin names to fix name collision with Bootstrap.-->
+    <script>
+    $.widget.bridge('uitooltip', $.ui.tooltip);
+    $.widget.bridge('uibutton', $.ui.button);
+    </script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script>                
+        $(document).ready(function() {
+            var currentimg=$('div.item.active').children('img').attr('alt');
+            $('#molecule_name').html(currentimg);           
+            $('#myCarousel').on('slid.bs.carousel', function(e) {
+                var currentimg2=$('div.item.active').children('img').attr('alt');
+                $('#molecule_name').html(currentimg2);
+            });
+        });
+    </script>
+    <!-- Include custom ajax functions -->
+
+    <div class="container">
+
+    {% if answer.link_2_molecules %}
+        <div id='carouselhide'>
+        <div class="col-lg-12 text-center"></div>
+        <div class="col-lg-12">
+        <div id="myCarousel"  data-interval="1500" class="carousel slide" data-ride="carousel">
+
+          <!-- Wrapper for slides -->
+          <div class="carousel-inner" role="listbox">
+        {% for url in answer.link_2_molecules %}
+            {% if forloop.counter == 1  %}
+            <div class="item active"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/> </div>
+            {%else%}
+            <div class="item"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/></div>
+            {%endif%}
+
+        {% endfor %}
+          </div></div>
+
+          <!-- Left and right controls -->
+          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" style="color:black;" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" style="color:black;" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div></div>
+    {% endif %}
+    <br>
+    <center> <b><p id='molecule_name'></p></b> </center>
+    <br>
+    </div>
+
+  </body>
+</html>
