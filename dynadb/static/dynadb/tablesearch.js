@@ -17,7 +17,7 @@ function ShowResults(data, restype,is_apoform){
     if (restype=='complex' &&  data.result.length>0 ){
         var cl=data.result;
         for(i=0; i<cl.length; i++){
-            tablestr=tablestr+"<tr><td> <a class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
+            tablestr=tablestr+"<tr><td><a class='btn btn-info' role='button' href=/dynadb/complex/id/"+cl[i][0]+"> Complex with ID "+cl[i][0]+"</a> </td><td>  Receptor: <kbd>"+cl[i][1]+"</kbd> Ligand: <kbd>"+ cl[i][2]+"</kbd>. </td></tr>";
         }
     }//endif
 

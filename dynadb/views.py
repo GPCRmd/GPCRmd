@@ -2250,12 +2250,10 @@ def NiceSearcher(request):
         dynlist=list()
         return_type=request.POST.get('restype')
         model_protein=list() #save here the PROTEINS the user has used to search and its boolean. 
+        print(arrays)
         for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
-            
             array=array.split(',') # example [OR, protein, 1,true] [boolean operator, type, id, is receptor/is ligand]
-            print('LISTEN BITCHES',array)
             array[2]=array[2].replace('StandardF','compound').replace('SpecificS','molecule');
-            print(array)
             if array[4]=='false':
                 array[4]=False
             arrays_def.append(array)
@@ -2264,7 +2262,6 @@ def NiceSearcher(request):
     #{(0, ' '): ['molecule', '1', 'orto'], (1, 'AND'): [['protein', '1', 'true'], ['OR', 'protein', '2', 'true']]}
 
         resultlist=mainsearcher(arrays_def,return_type)
-
         if len(resultlist)==0:
             tojson={'result':[],'model':[],'dynlist':[],'message':''}
             data = json.dumps(tojson)
@@ -2541,7 +2538,7 @@ def query_protein(request, protein_id,incall=False):
     fiva['Protein_sequence']=beautyseq
 
     for match in DyndbReferencesProtein.objects.filter(id_protein=protein_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
+        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
@@ -2603,6 +2600,7 @@ def query_molecule(request, molecule_id,incall=False):
     molec_dic['inchikey']=molobj.inchikey
     molec_dic['inchicol']=molobj.inchicol
     molec_dic['imagelink']=get_imagepath(molecule_id, 'molecule')
+    molec_dic['sdfile']=DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0)[0].id_files.filename
     #print('path to image',molec_dic['imagelink'])
     for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
         molec_dic['inmodels'].append(match.id_model.id)
@@ -2613,7 +2611,7 @@ def query_molecule(request, molecule_id,incall=False):
         molec_dic['sdf']=string
 
     for match in DyndbReferencesMolecule.objects.select_related('id_references').filter(id_molecule=molecule_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
+        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
@@ -2627,13 +2625,11 @@ def query_molecule(request, molecule_id,incall=False):
 @user_passes_test_args(is_published_or_submission_owner)
 def query_molecule_sdf(request, molecule_id):
     '''Gets the sdf file of the given molecule_id '''
-    print('helooeeeewwww\n\n\n\n\nsdfhsftgjsdfrjsd')
     for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
         intext=open(molfile.id_files.filepath,'r')
         string=intext.read()
     with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','w') as fh:
         fh.write(string)
-    print('hi there helooeeeewwww\n\n\n\n\nsdfhsftgjsdfrjsd')
     with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','r') as f:
         data=f.read()
         response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')[0])
@@ -2646,7 +2642,6 @@ def query_compound(request,compound_id,incall=False):
     '''Returns information about the given compound_id. If incall is True, it will return a dictionary, otherwise, it returns an Http REsponse '''
     comp_dic=dict()
     comp_dic['link_2_molecule']=list()
-    #comp_dic['imagelink']=list()
     comp_dic['references']=list()
     comp_dic['othernames']=list()
     for oname in DyndbOtherCompoundNames.objects.filter(id_compound=compound_id):
@@ -2691,7 +2686,7 @@ def query_compound(request,compound_id,incall=False):
             full_ref+='DOI: '+match.id_references.doi+'. '
         if len(url_pubchem)>0:
             full_ref+='Available in: <a href='+url_pubchem+'>'+url_pubchem+'</a>. '
-        print('FULL REF',full_ref)
+
         comp_dic['references'].append(full_ref)  
     if incall==True:
         return comp_dic
@@ -2830,7 +2825,8 @@ def query_model(request,model_id,incall=False):
                 model_dic['aloligands'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink']])
 
     for match in DyndbReferencesModel.objects.select_related('id_references').filter(id_model=model_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
+        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
+
         counter=0
         for element in ref:
             if element is None:
@@ -2966,7 +2962,7 @@ def query_dynamics(request,dynamics_id):
                 dyna_dic['link2protein'].append([row['protein_id'],query_protein(request,row['protein_id'],True)['Protein_name'] ])
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
-        ref=[match.id_references.doi,match.id_references.title,match.id_references.authors,match.id_references.url]
+        ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
         counter=0
         for element in ref:
             if element is None:
@@ -3509,35 +3505,25 @@ def pdbcheck(request,submission_id):
                 request.session[combination_id] = results
                 return HttpResponse(data, content_type='application/json')
             results['segments']=get_number_segments(pdbname)        
-            #~ number_segments,breaklines=get_number_segments(pdbname)
-            #~ request.session[combination_id]['segments'] = number_segments,breaklines
-            #~ if number_segments>len(arrays):
-                #~ results={'type':'string_error','title':'Number of defined segments does not match number of segments found in the PDB. These are the lines that initiate a new segment:', 'errmess':breaklines}
-                #~ request.session[combination_id] = results
-                #~ tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
-                #~ data = json.dumps(tojson)
-                #~ request.session[combination_id]['segments'] = results
-                #~ return HttpResponse(data, content_type='application/json')  
-
             uniquetest=unique(pdbname, chain!='',segid!='')
             if uniquetest is True:
                 checkresult=checkpdb(pdbname,segid,start,stop,chain)
                 if isinstance(checkresult,tuple):
-                    print('hell55')
                     tablepdb,simplified_sequence,hexflag=checkresult
                     guide=matchpdbfa(sequence,simplified_sequence,tablepdb,hexflag,seqstart)
                     if isinstance(guide, list):
                         path_to_repaired=repairpdb(pdbname,guide,segid,start,stop,chain,counter)
+                        path_to_repaired=path_to_repaired[path_to_repaired.rfind('/files/'):]
+                        path_to_repaired='/dynadb'+path_to_repaired
+                        print('path to repaired',path_to_repaired)
                         full_run_dict[(segment_def,path_to_repaired)]=guide
                     elif isinstance(guide, tuple):
-                        print('heello5')
                         tuple_error_dict[segment_def]=guide
                         if guide[0].startswith('Error'):
                             errorflag=1
                         elif guide[0].startswith('Warning'):
                             errorflag=0
                     else: #PDB has insertions error
-                        print('ERROR PDB INSERTION')
                         guide='Error in segment definition: Start:'+ str(start) +' Stop:'+ str(stop) +' Chain:'+ chain +' Segid:'+ segid+'\n'+guide
                         results={'type':'string_error', 'title':'Alignment error in segment definition' ,'errmess':guide,'message':''}
                         request.session[combination_id] = results
@@ -3545,7 +3531,6 @@ def pdbcheck(request,submission_id):
                         tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                         data = json.dumps(tojson)
                         return HttpResponse(data, content_type='application/json')
-                        print('hre3')
                 else: #checkpdb has an error
                     results={'type':'string_error','title':'Corrupted resid numbering or missing field in PDB', 'errmess':checkresult} #prints the error resid.
                     request.session[combination_id] = results
@@ -3553,7 +3538,6 @@ def pdbcheck(request,submission_id):
                     tojson={'chain': chain, 'segid': segid, 'start': start, 'stop': stop,'message':''}
                     data = json.dumps(tojson)
                     return HttpResponse(data, content_type='application/json')
-                    print('here2')
             else: #unique test failed
                 results={'type':'string_error','title':'Lack of uniqueness','errmess':uniquetest} #says which combination causes the problem
                 request.session[combination_id] = results
@@ -3565,7 +3549,6 @@ def pdbcheck(request,submission_id):
             counter+=1
 
         if len(full_run_dict)>0 or len(tuple_error_dict)>0:
-            print('full RUN')
             results['type']='fullrun'
             results['table']=full_run_dict #finalguide
             results['tuple_errors']=tuple_error_dict #tuple_error_list

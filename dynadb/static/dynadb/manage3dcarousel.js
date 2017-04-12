@@ -11,7 +11,13 @@ function show3dmol(counter){
   jQuery.ajax(pdbUri, { 
     success: function(data) {
       let v = viewer;
-      v.addAsOneMolecule( data, "sdf" );                       //load data
+      console.log(data.split('\n').length);
+      v.addAsOneMolecule( data, "sdf" );
+      
+      if (data.split('\n').length<15){
+        myname=myname+' (This molecule may not have 3D image, probably because it is a monoatomic ion. Sorry!)'
+        $('#namediv').html(myname);
+      }
       v.zoomTo();                                      //set camera
       v.render();                                      //render scene 
       v.zoom(1.2, 1000);                               //slight zoom 

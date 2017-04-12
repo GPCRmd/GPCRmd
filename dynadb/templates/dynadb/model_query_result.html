@@ -119,7 +119,7 @@
             <div id='hide3d'>
                 <br><br>
                 <div id='lb' class="col-sm-1">
-                    <p style="color:white;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                    <p style="color:white;  display; visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
                     <span id="movel" class="glyphicon glyphicon-chevron-left" style="font-size: 40px;"></span>
                 </div>
 
@@ -130,7 +130,7 @@
                     <br>
                 </div>
                 <div id='rb' class="col-sm-1">
-                    <p style="color:white;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                    <p style="color:white;  display; visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
                     <span id="mover" class="glyphicon glyphicon-chevron-right" style="font-size: 40px;"></span>
 
                 </div>
@@ -150,11 +150,11 @@
 
     {% if answer.references %} 
         <br><b>References in which this complex structure is mentioned</b>:<br>
-        <ul>
+
         {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p>
         {%endfor%}
-        </ul>
+
     {% endif %} 
 
 

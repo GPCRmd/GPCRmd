@@ -14,6 +14,7 @@ $(document).ready(function(){
             } else {
                 $(this).addClass("active");
             }
+            $("#selectionDiv").trigger("click");
         });
     }
   
@@ -127,6 +128,53 @@ $(document).ready(function(){
         num_gpcrs =dicts_results[1];
     }
 
+//-------- AJAX --------
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+
+
+
+//-------- Collapse Arrow
+    $(".section_pan").click(function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        if(upOrDown.indexOf("in") > -1){
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-up");
+            arrow.addClass("glyphicon-chevron-down");
+        } else {
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-down");
+            arrow.addClass("glyphicon-chevron-up");
+        }
+    });
 //-------- Text Input --------
 
     function displayDropBtn(input_select){
@@ -155,10 +203,10 @@ $(document).ready(function(){
                 var clicked_color= $(this).data("color");
                 var old_color=dBtn.data("color");
 
-                $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").addClass("nglCallClickTI").data("color",old_color);
+                $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").data("color",old_color);
                 dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",clicked_color);
 
-                dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">');
+                dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color nglCallChangeTI">');
 
                 
             } else {     
@@ -166,7 +214,7 @@ $(document).ready(function(){
                     var clicked_color= $(this).data("color");
                     var old_color=dBtn.data("color");
                     dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors").data("color",clicked_color);
-                    $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign nglCallChangeTI"></span>').addClass("morecolors").removeClass("nglCallClickTI").data("color",old_color).appendTo(dCont);
+                    $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",old_color).appendTo(dCont);
                     dDwn.siblings(".span_morecolors").html('');
 
                 } else {
@@ -231,35 +279,7 @@ $(document).ready(function(){
         return(layer);
     }
     
-//-------- AJAX --------
 
-    function csrfSafeMethod(method) {
-        // these HTTP methods do not require CSRF protection
-        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-    }
-    $.ajaxSetup({
-        beforeSend: function(xhr, settings) {
-            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-            }
-        }
-    });
-
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = jQuery.trim(cookies[i]);
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-    var csrftoken = getCookie('csrftoken');
 
 //-------- Control text inputs --------
 
@@ -334,7 +354,7 @@ $(document).ready(function(){
                                           <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
       									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
       									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
                                     </div>\
                                   </div>\
                                   <span class="span_morecolors displaydrop" style="float:left" ></span>\
@@ -354,6 +374,7 @@ $(document).ready(function(){
     
     $("#text_input_all").on("click", ".ti_rm_btn" , function(){
         var numTiRows = $("#text_input_all").children().length;
+        var inpval= $(this).closest(".text_input").find(".sel_input").val();
         if(numTiRows==1){
             $("#text_input_all").find(".sel_input").val("");
         }else{
@@ -364,6 +385,9 @@ $(document).ready(function(){
             } else {
                 wBlock.remove();
             }
+        }
+        if (inpval != ""){
+            $("#selectionDiv").trigger("click");
         }
     });
 
@@ -415,11 +439,11 @@ $(document).ready(function(){
                                   <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
                                     <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> \
                                     <div class="dropdown-content" style="margin-left:3px">\
-                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
-                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
-      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
-      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
                                     </div>\
                                   </div>\
                                   <span class="span_morecolors displaydrop" style="float:left" ></span>\
@@ -438,6 +462,7 @@ $(document).ready(function(){
     });
     
     $("#seq_input_all").on("click", ".si_rm_btn" , function(){
+        var inpval= $(this).closest(".seq_input_row").find(".seq_input").val();
         var numSiRows = $("#seq_input_all").children().length;
         if(numSiRows==1){
             $("#seq_input_all").css("display","none");
@@ -450,6 +475,9 @@ $(document).ready(function(){
             } else {
                 wBlock.remove();
             }
+        }
+        if (inpval != ""){
+            $("#selectionDiv").trigger("click");
         }
     });
 
@@ -466,21 +494,6 @@ $(document).ready(function(){
 
 
 
-
-//-------- Collapse Arrow
-    $(".section_pan").click(function(){
-        var target=$(this).attr("data-target");
-        var upOrDown=$(target).attr("class");
-        if(upOrDown.indexOf("in") > -1){
-            var arrow=$(this).children(".arrow");
-            arrow.removeClass("glyphicon-chevron-up");
-            arrow.addClass("glyphicon-chevron-down");
-        } else {
-            var arrow=$(this).children(".arrow");
-            arrow.removeClass("glyphicon-chevron-down");
-            arrow.addClass("glyphicon-chevron-up");
-        }
-    });
 
 //-------- Parse input selection --------
 
@@ -665,6 +678,40 @@ $(document).ready(function(){
         return sel;
     };
 
+//-------- Text input modified signal --------
+
+    $("#text_input_all").on("change" , ".sel_input", function(){
+        $("#selectionDiv").trigger("click");
+    })
+
+    $("#text_input_all").on("change" , ".nglCallChangeTI", function(){
+        if ($(this).closest(".ti_left").children(".sel_input").val() !=""){
+            $("#selectionDiv").trigger("click");
+        }
+    })
+    
+    $("#text_input_all").on("click" , ".nglCallClickTI", function(){
+        if ($(this).closest(".ti_left").children(".sel_input").val() !=""){
+            $("#selectionDiv").trigger("click");
+        }
+    })
+    
+
+    $("#seq_input_all").on("change" , ".seq_input", function(){
+        $("#selectionDiv").trigger("click");
+    })
+
+    $("#seq_input_all").on("change" , ".nglCallChangeTI", function(){
+        if ($(this).closest(".si_left").children(".seq_input").val() != ""){
+            $("#selectionDiv").trigger("click");
+        }
+    })
+    
+    $("#seq_input_all").on("click" , ".nglCallClickTI", function(){
+        if ($(this).closest(".si_left").children(".seq_input").val() !=""){
+            $("#selectionDiv").trigger("click");
+        }
+    })
 //-------- Selected molecules to display --------
     function clickRep (id, newRep, clicked) {
         if ( clicked == 1 ) {
@@ -846,7 +893,7 @@ $(document).ready(function(){
                      within \
                     <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px">\
                       &#8491; of\
-                        <select class="wthComp nglCallChangeWth" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
+                        <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
                         <span class="user_sel_input_p"></span>\
                         <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                         <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
@@ -858,11 +905,14 @@ $(document).ready(function(){
     });
     
     $(".sel_within").on("click", ".rm_btn" , function(){
+        var row = $(this).closest(".dist_sel");
+        var isactive= row.hasClass("sw_ok")
         var numWthRows = $(".sel_within").children().length;
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
             $(".sel_within").find(".user_sel_input").val("");
             $(".sel_within").find(".alert_sel_wth").html("");
+            inactivate_row(row);
         }else{
             var wBlock =$(this).closest(".dist_sel");
             if (wBlock.is(':last-child')){
@@ -871,6 +921,9 @@ $(document).ready(function(){
             } else {
                 wBlock.remove();
             }
+        }
+        if (isactive){
+            $("#selectionDiv").trigger("click");
         }
     });
 
@@ -906,51 +959,62 @@ $(document).ready(function(){
         return (dist_of);
     }
 
-    function activate_row(selector){
-        $(selector).find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
-        $(selector).find(".always").attr("style","");
-        $(selector).addClass("sw_ok");
+    function activate_row(row){
+        row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+        row.find(".always").attr("style","");
+        row.addClass("sw_ok");
+        $("#selectionDiv").trigger("click");
     }
-    function inactivate_row(selector){
-        $(selector).find(".tick").html("");
-        $(selector).find(".always").attr("style","margin-left:14px");
-        $(selector).removeClass("sw_ok");
-    }
-
-    function activate_or_inactivate_row(selector){
-        var inp=$(selector).find(".inputdist").val().replace(/\s+/g, '');
-        $(selector).find(".inputdist").val(inp);
-        if (inp && /^[\d.]+$/.test(inp)) {
-            if ($(selector).find(".wthComp").val()=="user_sel"){
-                if ($(selector).find(".user_sel_input").val() == ""){
-                    inactivate_row(selector);
-                }else {
-                    activate_row(selector);
-                }            
-            } else {
-                activate_row(selector);
-            }
-        } else {
-            if ($(selector).attr("class").indexOf("sw_ok") > -1){
-                inactivate_row(selector);
-            }
+    function inactivate_row(row){
+        var active_before= row.hasClass("sw_ok");
+        if (active_before){
+            row.find(".tick").html("");
+            row.find(".always").attr("style","margin-left:14px");
+            row.removeClass("sw_ok");
+            $("#selectionDiv").trigger("click");
         }
     }
 
-    $(".sel_within").on("blur", ".dist_sel" ,function(){
-        activate_or_inactivate_row(this);
-    });   
+    function activate_or_inactivate_row(selector){
+        var row = $(selector).closest(".dist_sel");
+        var inp=row.find(".inputdist").val().replace(/\s+/g, '');
+        row.find(".inputdist").val(inp);
+        if (inp && /^[\d.]+$/.test(inp)) {
+            if (row.find(".wthComp").val()=="user_sel"){
+                if (row.find(".user_sel_input").val() == ""){
+                    inactivate_row(row);
+                }else {
+                    activate_row(row);
+                }            
+            } else {
+                activate_row(row);
+            }
+        } else {
+            if (row.attr("class").indexOf("sw_ok") > -1){
+                inactivate_row(row);
+            }
+        }
+    }
+  
     
-    $(".sel_within").on("click", ".dist_sel" ,function(){
+    $(".sel_within").on("change", ".nglCallChangeWth" ,function(){
         activate_or_inactivate_row(this);
     });    
+
+  /*  $(".sel_within").on("change", ".inputdist" ,function(){
+        activate_or_inactivate_row(this);
+    });    */
+
 
     $(".sel_within").on('change', ".wthComp" ,function(){
         if ($(this).val()=="user_sel"){
             var sw_input='<input class="form-control input-sm user_sel_input nglCallChangeWth" type="text" style="width:95px;padding-left:7px">';
             $(this).siblings(".user_sel_input_p").html(sw_input);
+            var row = $(this).closest(".dist_sel");
+            inactivate_row(row);
         } else {
             $(this).siblings(".user_sel_input_p").html("");
+            activate_or_inactivate_row(this);
         }
     });
 
@@ -1091,7 +1155,7 @@ $(document).ready(function(){
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
                                         <div class='checkbox' style='font-size:12px;margin-bottom:0'>\
-		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
+		                                    <label><input type='checkbox' name='view_int' class='display_int'>Display interacting residues</label>\
                                         </div>\
                                         <div class='int_settings'>\
                                             <div style='display:inline-block;margin:5px 5px 5px 0;cursor:pointer;'>\
@@ -1148,7 +1212,8 @@ $(document).ready(function(){
 
                                     }
                                            
-                                    
+                                    $("#int_tbl"+i_id).find(".display_int").attr("checked","true");
+                                    $("#selectionDiv").trigger("click");
                                     
                                     
                                 } else {
@@ -1199,10 +1264,14 @@ $(document).ready(function(){
     });
     
     $('body').on('click','.delete_int_tbl', function(){
+        var isChecked=$(this).closest(".int_tbl").find(".display_int").is(":checked");
         var tbl_id= $(this).data("int_id");
         removed_int_tbls.push(tbl_id);
         var IntToRv=$(this).parents(".int_tbl").attr("id");
         $('#'+IntToRv).remove();
+        if (isChecked){
+            $("#selectionDiv").trigger("click");
+        }
     });
     
     function displayIntResids(){
@@ -1229,6 +1298,9 @@ $(document).ready(function(){
         return (int_res_li);
     }
     
+    $("#int_info").on("change" ,".display_int" , function(){
+        $("#selectionDiv").trigger("click");
+    })
     
     
 //-------- Dist between residues --------
@@ -1514,7 +1586,7 @@ $(document).ready(function(){
                                                                 <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
                                                             </div>\
                                                             <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
+		                                                        <label><input type='checkbox' name='view_this_dist' class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
                                                             </div>\
                                                         </div>\
                                                     </div>";                            
@@ -1541,6 +1613,10 @@ $(document).ready(function(){
                                         var di_Serror='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><p>'+small_error+'</p></div>';
                                         $("#all_"+newgraph_sel).find(".settings").after(di_Serror);
                                     }
+                                    
+                                    $("#all_"+newgraph_sel).find(".display_this_dist").attr("checked","true");
+                                    $("#selectionDiv").trigger("click");
+                                    
                                     d_id+=1;
                                     
                                 };
@@ -1627,10 +1703,14 @@ $(document).ready(function(){
     })
 
     $('body').on('click','.delete_dist_plot', function(){
+        var isChecked=$(this).closest(".dist_plot").find(".display_this_dist").is(":checked");
         var plot_id= $(this).data("dist_id");
         removed_dis_plots.push(plot_id);
         var plotToRv=$(this).parents(".dist_plot").attr("id");
         $('#'+plotToRv).remove();
+        if (isChecked){
+            $("#selectionDiv").trigger("click");
+        }
     });
    
 
@@ -1644,7 +1724,9 @@ $(document).ready(function(){
         return uniq(dist_li)
     };
     
-    
+    $("#dist_chart").on("change" ,".display_this_dist" , function(){
+        $("#selectionDiv").trigger("click");
+    })
 //-------- Select protein segment to highligh/select from the sequence --------
 
     function selectFromSeq(){
@@ -1831,6 +1913,7 @@ $(document).ready(function(){
             }
             var fin_val = act_val + or + "protein and ("+ pos_str +")";
             sel_input_cont.val(fin_val);
+            $("#selectionDiv").trigger("click");
         }
     });    
 
@@ -2133,6 +2216,7 @@ $(document).ready(function(){
     $("#btn_all").click(function(){
         $(".rep_elements").addClass("active");
         $("#receptor").addClass("active");
+        $("#selectionDiv").trigger("click");
     });
     
     function removeCompBtns(){
@@ -2142,6 +2226,7 @@ $(document).ready(function(){
     
     $("#btn_clear").click(function(){
         removeCompBtns();
+        $("#selectionDiv").trigger("click");
     });
 
     
@@ -2216,6 +2301,14 @@ $(document).ready(function(){
         obtainLegend(legend_el);
     };    
     window.passInfoToIframe=passInfoToIframe;
+    
+    var passinfoToPlayTraj= function(){
+        var bs_info=obtainBS();
+        window.bs_info=bs_info;
+        var dist_of=obtainDistSel();  
+        window.dist_of=dist_of;
+    }
+    window.passinfoToPlayTraj=passinfoToPlayTraj;
 
     
     $("#to_mdsrv").click(function(){
@@ -2286,9 +2379,8 @@ $(document).ready(function(){
             $(this).remove();
             $(".sel_within").find(".add_btn:last").css("visibility","visible");            
         });
-        $(".sel_within").find(".dist_sel").each(function(){
-            inactivate_row(this);
-        });
+        var last_selWth_row=$(".sel_within").find(".dist_sel");
+        inactivate_row(last_selWth_row);
         $(".seq_sel.sel").each(function(){
             $(this).css("background-color","#f2f2f2");
             $(this).attr("class", "seq_sel");
@@ -2328,7 +2420,6 @@ $(document).ready(function(){
         $("#seq_input_all").find(".input_dd_color").val("");
         $("#addToSel").css("display","none");
     }); 
-
 });
 
 
