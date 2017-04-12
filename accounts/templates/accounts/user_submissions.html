@@ -21,15 +21,13 @@
 
 
 {% block content %} 
-<form action="{% url 'accounts:register' %}" method="post">
-{% csrf_token %}
 
  <!-- description column -->
  <div class="col-md-4">
 
      <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
          <div class="panel-body">
-        	<h3 >Simulation Submission</h3>
+        	<h3 >Previous submissions</h3>
          </div> 
      </div>
 
@@ -40,7 +38,7 @@
             <div style="text-align:center"> 
              <h4 >WELCOME <span style="text-transform: uppercase;">{{ username }}</span></h4>
 	    </div>
-             <p style="text-align: justify;">With the GPCRmd Simulation Submission tool you can create, store and manage your simulations.</p>
+             <p style="text-align: justify;">Here, you can open or delete (not yet) your submissions or check their publication state.</p>
 
          </div>
      </div>
@@ -55,21 +53,37 @@
   </div>
  <!--   <body> -->
 
-<div id="pprotform"class="col-md-7 "> 
-  <div id="protform" class="col-md-12 panel panel-primary"> 
+<div id="pform" class="col-md-7 "> 
+  <div id="form" class="col-md-12 panel panel-primary"> 
     <div class="panel-body">
+    <div class="container-fluid" style="padding-top:15px">
        <p>
           <a href="/accounts/change_data">Change user information</a> -
           <a href="/accounts/change_passw">Change password</a> -
           <a href="/accounts/logout">Log out</a></li> 
        </p>
 
-        <div class="container-fluid" style="padding-top:15px">
-            <div class="row">
-               <div class="col-md-6  col-md-offset-2 deco" style="text-align:center;width:400px;padding-bottom:10px" >  
-                  <a href="{% url 'accounts:user_submissions' %}" class="btn btn-block" >Previous Submissions</a>
-               </div>
-            </div>
+
+       <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">
+       {% csrf_token %}
+       <table class="table table-responsive">
+       <tr><th>Submission ID</th><th>Dynamics ID</th><th>State</th><th></th><th></th></tr>
+       {% for sub in submission_table %}
+       <tr>
+            <td>{{sub.submission_id}}</td>
+            <td>{% if sub.state != "Open" %}<a href="{% url 'dynadb:query_dynamics' dynamics_id=sub.dynamics_id %}">{{sub.dynamics_id}}</a>{% else %}{{sub.dynamics_id}}{% endif %}</td>
+            <td>{{sub.state}}</td>
+            <td>{% if sub.state == "Open" %}
+                <a href="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}">Open</a></td>
+            <td><button name="delete_submission_id_{{sub.submission_id}}" disabled type="submit">Delete</button></td>
+            {% else %}
+            <td></td><td></td>
+            {% endif %}
+       </tr>
+       {% endfor %}
+       </table>
+       </form>
+        
             <div class="row">
                <div class="col-md-6 col-md-offset-2 deco" style="text-align:center;width:400px;padding-bottom:10px">  
                   <a href="/dynadb/db_inputform/" class="btn btn-block" >New Submission</a>

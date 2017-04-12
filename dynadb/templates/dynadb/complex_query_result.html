@@ -44,7 +44,6 @@
     <b>EC50 according to BindingDB:</b><br>
     {{answer.efficacy.value}} {{answer.efficacy.units}}
     <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.efficacy.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a><br>
-
 {% endif %} 
 <br>
 {% if answer.binding %}
@@ -58,9 +57,9 @@
     {% for modid in answer.models %}
        <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
         {%if modid.1%}
-            using molecule(s):
+            using Specific State(s):
             {%for mol in modid.1%}
-                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
+                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Specific State ID: {{mol}}</a>
             {%endfor%}
         {%endif%}
         <br><hr><hr>
