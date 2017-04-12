@@ -6611,8 +6611,7 @@ def get_compound_info_chembl(request,submission_id):
             raise  
 
 @login_required       
-def open_pubchem(request):
-@test_if_closed           
+def open_pubchem(request):           
     if request.method == 'POST':
         if 'cids' in request.POST.keys():
             cids = request.POST['cids'].split(',')
@@ -6623,8 +6622,7 @@ def open_pubchem(request):
             return render(request,'dynadb/open_pubchem.html',{'query':query,'action':'https://www.ncbi.nlm.nih.gov/pccompound/'})
 
 @login_required           
-def open_chembl(request):
-@test_if_closed            
+def open_chembl(request):           
     chembl_root_url = 'https://www.ebi.ac.uk/chembl'
     chembl_index_php = chembl_root_url+'/index.php'
     chembl_submission_url = chembl_root_url + '/compound/ids'
