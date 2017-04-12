@@ -538,7 +538,23 @@ def PROTEINview(request, submission_id):
     print("HOLA  ", def_user)
     
     if request.method == 'POST':
-        
+        print(request.POST.keys())
+        lrp=[]
+        l_checkinpost=[]
+
+        for o in request.POST.keys():
+            if o.split("-")[0] == 'form':
+                lrp.append(("-").join(o.split("-")[:2]))
+        lrp=list(set(lrp))
+        print("lista lrp ", lrp)
+        for ll in ['name','sequence']:
+            for o in lrp:
+                l_checkinpost.append(("-").join([o,ll]))
+        for l in  l_checkinpost:     
+            if request.POST[l] == '':
+                error=("").join(["\nPlease, before submission fill every field manually (unlocked fields) or by retrieving data from UniProtKB (locked fields) in the different sections of the Step 1.\n\nPay attention to the SMOL #",str(int(l.split('-')[1])+1)," object"])
+                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
         def_user_dbengine=settings.DATABASES['default']['USER']
         def_user=request.user.id
         print("HOLA  ", def_user)
@@ -1348,11 +1364,12 @@ def PROTEINview(request, submission_id):
             fdbPM = dyndb_Protein_MutationsForm()
             fdbOPN= dyndb_Other_Protein_NamesForm()
          
-            return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
+            return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'saved':False})
 
         else:
             print(len(qSub),"len")
             print("SEGUROi")
+            saved=True
             int_id=[]
             int_id0=[]
             alias=[]
@@ -1400,7 +1417,7 @@ def PROTEINview(request, submission_id):
                 print("mutations",MUTations)
   
 
-        return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id})
+        return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id, 'saved':saved})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 @login_required
@@ -3959,15 +3976,15 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
         fdbsubobj=fdbsub.save()
         print("submission_id",fdbsubobj.pk)
         if request.POST['Choose_reused_model']== '':
-            print("NO MODEL", request.POST.dict()['Choose_reused_model'])
+            print("NO MODEL", request.POST['Choose_reused_model'])
             if request.POST['Choose_submission_id']== '':
-                print("NO Submission_id ", request.POST.dict()['Choose_submission_id'])
+                print("NO Submission_id ", request.POST['Choose_submission_id'])
                 request.POST['Choose_submission_id']='0'
                 request.POST['Choose_reused_model']='0'
-                print("NO Submission_id ", request.POST.dict()['Choose_submission_id'])
+                print("NO Submission_id ", request.POST['Choose_submission_id'])
             else:
-                request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
-            print(request.POST['Choose_reused_model'])
+                request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST['Choose_submission_id']).values_list('model_id',flat=True)[0]
+            print("LLL",request.POST['Choose_reused_model'])
         else:
             if request.POST['Choose_submission_id']== '':
                 print("reuse model != '' ")
@@ -3978,17 +3995,6 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
                 print("\n MIRA LA SUBMISSION ID:",submission_id)
       #          submission_id=str(request.POST['Choose_submission_id'])
                 model_id=str(request.POST['Choose_reused_model'])
-                submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':submission_id})
-                print("submission model",submission_model.__dict__['data'])
-                if submission_model.is_valid():
-                    submission_model.save()
-                else:
-                    print("ERROR",submission_model.errors.as_text())
-                    response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
-                    return response   
-
-                return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),str(model_id),""]), {'submission_id':str(submission_id),'model_id':str(model_id)} )
-           
             else:
                 a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
                 print(a, type(a))
@@ -3997,8 +4003,17 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
                     request.POST['Choose_reused_model']=a
                 submission_id = fdbsubobj.pk
                 model_id=str(request.POST['Choose_reused_model'])
-                #return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
-                return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':"The Complex ID you provided does not match the actual complex contained in the Submission ID. The correct Complex ID is shown here "} )
+
+            submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':submission_id})
+            print("submission model",submission_model.__dict__['data'])
+            if submission_model.is_valid():
+                submission_model.save()
+            else:
+                print("ERROR",submission_model.errors.as_text())
+                response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
+                return response   
+            return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),str(model_id),""]), {'submission_id':str(submission_id),'model_id':str(model_id)} )
+
         if request.POST['Choose_submission_id']=='0' and request.POST['Choose_reused_model']=='0':
             message="Please provide either a Complex ID or a Submission ID corresponding to the system to be reused"
             Context={'value':0,'CHoose_submission_id':message,'CHoose_reused_model':message}
@@ -4008,14 +4023,16 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
             request.POST['Choose_submission_id']=DyndbSubmissionModel.objects.filter(model_id=request.POST.dict()['Choose_reused_model']).values_list('submission_id',flat=True)[0]
             print("NO Submission_id")
         print(request.POST.dict())
+        submission_id=fdbsubobj.pk
+        print("Check",type(submission_id), submission_id, type(model_id), model_id)
         submission_id =str( fdbsubobj.pk)
 #        submission_id=str(request.POST['Choose_submission_id'])
         model_id=str(request.POST['Choose_reused_model'])
-        submission_model=dyndb_Submission_Model({'model_id':model_id, 'submmission_id':submission_id})
+        submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':str(submission_id)})
         print("submission model",submission_model.__dict__['data'])
         if submission_model.is_valid():
             submission_model.save()
-            print("submission modeli is valid")
+            print("submission modeli is valid oooo")
         else:
             response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
             return response   
@@ -4038,14 +4055,16 @@ def MODELrowview(request):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-def MODELreuseview(request, submission_id, model_id  ):
+def MODELreuseview(request, submission_id ):
+#def MODELreuseview(request, submission_id, model_id  ):
+    
     enabled=False
-    model_id=int(model_id)
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    model_id=int(qSubModNew.values_list('model_id',flat=True)[0])
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).order_by('id').values_list('submission_id',flat=True)[0]).order_by('int_id')
     print(qSub,"  ", model_id, submission_id)
     qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
     qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
-    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
 #    if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
     if qSubPNew.exists() and qSubMolNew.exists(): #el submit Model is submitted when clicking the " Continue to step 4: Dynamics Information " button 
         enabled=True
@@ -4057,7 +4076,7 @@ def MODELreuseview(request, submission_id, model_id  ):
     Type=p.model.MODEL_TYPE[Typeval][1]
     STypeval=p.values()[0]['source_type']
     SType=p.model.SOURCE_TYPE[STypeval][1]
-    print("QMODEL ",p)
+    print("QMODEL ",p," ",INITsubmission_id)
     qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 #    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
@@ -4117,13 +4136,15 @@ def MODELreuseview(request, submission_id, model_id  ):
         return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled, 'modelr_form':True})
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-def PROTEINreuseview(request, submission_id, model_id ):
+def PROTEINreuseview(request, submission_id ):
+#def PROTEINreuseview(request, submission_id, model_id ):
     enabled=False
+    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    model_id=qSubModNew.values_list('model_id',flat=True)[0]
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id')
     qSub=DyndbSubmissionProtein.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).order_by('id').values_list('submission_id',flat=True)[0]).exclude(int_id=None).order_by('int_id')
     qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
     qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
-    qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
     if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
         enabled=True
 
@@ -4195,6 +4216,7 @@ def SMALL_MOLECULEreuseview(request, submission_id, model_id ):
     qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None)
     qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(int_id=None)
     qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+    model_id=qSubModNew.values_list('model_id',flat=True)[0]
     if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
     #if qSubPNew.exists() and qSubMolNew.exists():
         enabled=True
@@ -4704,6 +4726,13 @@ def MODELview(request, submission_id):
     initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
     # Dealing with POST data
     if request.method == 'POST':
+        for l in ['name', 'segid', 'resname', 'numberofmol','pdbid','prot', 'resid_to', 'pdbidps','seq_resid_from', 'resid_from', 'seq_resid_to', 'chain']:
+            if request.POST[l] == '':
+                error="Please, before submission fill every field in the different sections of the Step 3."
+                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
+
+       
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
         action="/".join(["/dynadb/MODELfilled",submission_id,""])
      #   response = HttpResponse('PRUEBA MODEL',content_type='text/plain; charset=UTF-8')
@@ -5725,7 +5754,7 @@ def MODELview(request, submission_id):
                             response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')                         
                             return response                                                                                                         
 
-        response = HttpResponse("The model has been successfully registered" ,content_type='text/plain; charset=UTF-8')
+        response = HttpResponse("The model has been successfully submitted" ,content_type='text/plain; charset=UTF-8')
         return response
 
     # if a GET (or any other method) we'll create a blank form
@@ -10943,6 +10972,29 @@ def SMALL_MOLECULEview(request, submission_id):
         nl=0 #counter of pairs in dicpost.items()
         dfieldtype={'0':fieldsmol,'1':fieldsON,'2':fieldscomp,'3':fieldsPMod}
         dfielddict={'0':dictmol,'1':dictON,'2':dictcomp,'3':dictPMod}
+
+        print(request.POST.keys())
+        lrp=[]
+        l_checkinpost=[]
+        for o in request.POST.keys():
+            if o.split("-")[0] == 'form':
+                lrp.append(("-").join(o.split("-")[:2]))
+        lrp=list(set(lrp))
+        print("lista lrp ", lrp)
+        for ll in ['name', "net_charge","inchi","inchikey","smiles","sinchikey","type" ]:
+            for o in lrp:
+                l_checkinpost.append(("-").join([o,ll]))
+        print("\n\nlista lcheckinpost ", l_checkinpost)
+        for l in  l_checkinpost:     
+            if request.POST[l] == '':
+                if l==("").join(["form-",l.split('-')[1],"-type"]):
+                    print("ERROR PIPOL", l)
+                    error=("").join(["\nPlease, pay attention to the section B in the SMOL #",str(int(l.split('-')[1])+1)," object.\n\nChoose the radio button option that indicates wether the molecule belongs to the crystal or not. Then specify the role of the molecule by selecting the corresponding type in the active dropdown menu placed to the right of the selected radio button"])
+                    response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                    return response
+                error=("").join(["\nPlease, before submission fill every field manually (unlocked fields) or by retrieving data from the sdf/mol files, PubChem and CheMBL(locked fields) in the different sections of the Step 2.\n\nPay attention to the SMOL #",str(int(l.split('-')[1])+1)," object"])
+                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                return response
         
         for key,val in dicpost.items():
             print("key",key," ",val)
@@ -11878,7 +11930,7 @@ def submission_summaryiew(request,submission_id):
             fh.write("".join(["\n\t\tSMALL MOLECULE #",str(int_ids[i-1])])) 
             fh.write("".join(["\n\t\tName:  ", mol.id_compound.name])) 
             fh.write("".join(["\n\t\tNet charge:  ", str(mol.net_charge), "\tPubChem cid:  ", str(mol.id_compound.pubchem_cid)])) 
-            if qSub.filter(molecule_id=mol.id).values("not_in_model"): 
+            if qSub.filter(molecule_id=mol.id).values_list("not_in_model",flat=True)[0]: 
                fh.write("".join(["\n\t\tBulk Molecule:  ",str(DyndbSubmissionMolecule.COMPOUND_TYPE[qSub.filter(molecule_id=mol).values_list('type',flat=True)[0]][1])]))
             else:
                fh.write("".join(["\n\t\tCrystalized Molecule:  ",str(DyndbSubmissionMolecule.COMPOUND_TYPE[qSub.filter(molecule_id=mol).values_list('type',flat=True)[0]][1])]))

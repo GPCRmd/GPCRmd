@@ -78,16 +78,20 @@ font-weight:normal
                     {% if model_id and o.inchikey|length > 1 %}
                     {% else %}
 	 	<div class="row"  style="height:30px">
-        		 <div class="col-md-1" style="height:30px"> </div><div class="col-md-4"><tr><th><label for="id_form-{{int0}}-molsdf"><a title="Upload .mol, .sdf: Upload either a .mol or a .sdf file describing geometry of the small molecule"> Upload .mol/.sdf </a> </label></th></div>
+        		 <div class="col-md-1" style="height:30px"> </div><div class="col-md-5"><tr><th><label for="id_form-{{int0}}-molsdf"><a title="Upload .mol, .sdf: Upload either a .mol or a .sdf file describing geometry of the small molecule"> Upload .mol/.sdf </a> </label></th></div>
 			<div class="col-md-6"><td><input id="id_form-{{int0}}-molsdf" name="form-{{int0}}-molsdf" style="height:30px;text-align:center;" type="file" placeholder="   "/></td></tr></div>
       		</div>
-                  
+
+
 		<div class="row" style="height:30px">
-        		 <div class="col-md-1" style="height:20px"></div><div class="col-md-4"></div>
+        		 <div class="col-md-1" style="height:20px"></div><div class="col-md-5"><p>Find .mol/.sdf files in <a href="https://pubchem.ncbi.nlm.nih.gov/" noreferrer noopener  target="_blank">Pubchem</a></p></div>
 			<div class="col-md-6"><button id="id_form-{{int0}}-upload_button" name="form-{{int0}}-upload_button" style="width:34%;height:20px;text-align:center;vertical-align:text-middle;font-size:13px" type="button" >Upload</button>
 			<a id="id_form-{{int0}}-logfile"  name="form-{{int0}}-logfile" href="" hidden noreferrer noopener target="_blank">Download log file.</a></div>
       		</div>
                 <br>
+	 	<div class="row" id="id_form-{{int0}}-checkupload" hidden style="height:30px">
+                     <div class="col-md-10 col-md-offset-1"><p style="font-size:11px">Please, verify the structure in the "Uploaded Molecule" figure corresponds to the molecule in your simulation!!!</p></div>
+      		</div>
                    {% endif %}
                   
                 <div class="row " {% if not model_id and not saved %} hidden {% endif %} id="id_form-{{int0}}-imagentable" >
@@ -117,9 +121,9 @@ font-weight:normal
                 </div><br>
 
 	        <div class="row"{% if model_id  %} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}>
-	               <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_present"> <a title="Check this field if the molecule has been co-crystalized with the GPCR. In addition, choose an option about function in the drop-down menu."> Co-crystalized molecule:</a></label></div><div class="col-md-1 collapse in" style="height:30px"><input type="radio" style="float:left"id="id_form-{{int0}}-co-is_present" name="form-{{int0}}-is_present" value="True" {% if model_id or saved%} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %} checked {% endif %}{% endif %}{%endfor%} {%else%}checked {% endif %} /> </div>
+	               <div class="col-md-1" style="height:30px"></div><div class="col-md-{%if model_id%}4{%else%}5{%endif%}"><label for="id_form-{{int0}}-is_present"> <a title="Check this field if the molecule has been co-crystalized with the GPCR. In addition, choose an option about function in the drop-down menu."> Co-crystalized molecule:</a></label></div><div class="col-md-1 collapse in" style="height:30px"><input type="radio" style="float:left"id="id_form-{{int0}}-co-is_present" name="form-{{int0}}-is_present" value="True" {% if model_id or saved%} {% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 < 6 %} checked {% endif %}{% endif %}{%endfor%} {%else%}checked {% endif %} /> </div>
 
-		       <div class="col-md-4"><select id="id_form-{{int0}}-co_type" {% if saved %}{% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}  name="form-{{int0}}-type" rows="2" style="width:180px"  >
+		       <div class="col-md-5"><select id="id_form-{{int0}}-co_type" {% if saved %}{% for t in labtypel %} {% if forloop.counter == forloop.parentloop.counter %} {% if t.0 > 5 %} hidden {% endif %}{% endif %}{%endfor%} {% endif %}  name="form-{{int0}}-type" rows="2" style="width:180px"  >
                           {% if model_id %} 
                               {% for t in labtypel %} {% if t.0 < 6 %} 
                                   {% if forloop.counter == forloop.parentloop.counter %}<option value="{{t.0}}" selected> {{t.1}} </option>{%endif%} 
@@ -132,12 +136,15 @@ font-weight:normal
                               {%endif%}
                           {%endif%}
                           {% if not model_id %} 
+                                {% if not saved %}
+                                 <option value="" selected ></option>
+                          {%endif%}
                	              {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
-                                 {% if forloop.counter0 < 6 %} <option value="{{i.0}}" {% if forloop.counter = 0 and not saved%} selected {% endif %}> {{i.1}}</option>{%endif%}
+                                 {% if forloop.counter0 < 6 %} <option value="{{i.0}}" > {{i.1}}</option>{%endif%}
                	            {% endfor %}
                           {%endif%}
                              
-                               </select> </div>
+                               </select> </div> {%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
                                                                           
 	      </div><br> 
 
@@ -158,9 +165,12 @@ font-weight:normal
                              {%endif%}
   
                           {% if not model_id %} 
+                                {% if not saved %}
+                  			<option value=""  selected  ></option>
+                                     {%endif%}
                			 {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
                                      {% if forloop.counter0 > 5 %}
-                  			<option value={{i.0}} {% if forloop.counter == 5 and not saved %} selected {% endif %} > {{i.1}}</option>
+                  			<option value={{i.0}} > {{i.1}}</option>
                                      {%endif%}
                			 {% endfor %}
                           {%endif%}           
@@ -184,27 +194,31 @@ font-weight:normal
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
                                                                           
                      {% if model_id or saved %}                                    
-                		<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_form-{{int0}}-inchi" name="form-{{int0}}-inchi" readonly rows="2" >InChI={{o.inchi}}</textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"--><br></div>
+                		<div class="col-md-7"><textarea style="width:300px" cols="40" id="id_form-{{int0}}-inchi" name="form-{{int0}}-inchi" readonly rows="2" >InChI={{o.inchi}}</textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->
+                        <a id="id_form-{{int0}}-lock" href="#"   ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a> 
                      {% else %}                                           
-                		<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_form-{{int0}}-inchi" name="form-{{int0}}-inchi"  value="{{TTT.inchi.name}}" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"--><br></div>
+                		<div class="col-md-7"><textarea style="width:300px" cols="40" id="id_form-{{int0}}-inchi" name="form-{{int0}}-inchi"  value="{{TTT.inchi.name}}" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"-->
+                        <a id="id_form-{{int0}}-lock" href="#"  {% if model_id or saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a> 
                      {% endif %}                                          
-                                                                          
+                        <br></div>
  	        <div class="row">                                        
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-sinchikey"><a title="SInChIKey: Molecule Standard InChI's hash">SInChIKey:</a></label></div>
                      {% if model_id or saved%}                                    
                          {% for com in qCOMP %}{% if forloop.counter == forloop.parentloop.counter %}
-                             <div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly value="{{com.sinchikey}}" type="text" /></div> <!--placeholder=" ZUXABONWMNSFBN-UHFFFAOYSA-N" --></div>
+                             <div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly value="{{com.sinchikey}}" type="text" /></div> <a id="id_form-{{int0}}-lock" href="#"  ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a> </div>
                          {%endif%} {%endfor%}                             
                      {% else %}                                           
-                            <div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly type="text" /></div> </div> 
+                            <div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-sinchikey" maxlength="27" name="form-{{int0}}-sinchikey" readonly type="text" /></div>
+                            <a id="id_form-{{int0}}-lock" href="#"  {% if saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a> 
+                            </div> 
                     {% endif %}
 
 	        <div class="row">
                         <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-net_charge"><a title="Net charge: Net charge of the molecule structure.">Net charge:</a></label></div>
                     {% if model_id or saved %}
-			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div> 
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" type="number" value="{{o.net_charge}}" readonly /></div> <a id="id_form-{{int0}}-lock" href="#"  ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>  
                     {% else %}
-			<div class="col-md-6"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" readonly type="text" /></div> <!-- placeholder=" 0" -->
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-net_charge" name="form-{{int0}}-net_charge" readonly type="text" /></div> <!-- placeholder=" 0" --><a id="id_form-{{int0}}-lock" href="#"  {% if saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
 		<br></div>
 	
@@ -212,20 +226,20 @@ font-weight:normal
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-inchikey"><a title="InChIKey: Molecule InChI's hash">InChIKey:</a></label></div>
                     {% if model_id or saved %}
-			<div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-inchikey" maxlength="27" name="form-{{int0}}-inchikey"  value="{{o.inchikey}}" type="text" readonly  /></div> 
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-inchikey" maxlength="27" name="form-{{int0}}-inchikey"  value="{{o.inchikey}}" type="text" readonly  /></div>  <a id="id_form-{{int0}}-lock" href="#"  {% if saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% else %}
-			<div class="col-md-3"><input style="width:300px" id="id_form-{{int0}}-inchikey" maxlength="27" name="form-{{int0}}-inchikey" readonly type="text"  /></div> 
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{int0}}-inchikey" maxlength="27" name="form-{{int0}}-inchikey" readonly type="text"  /></div> <a id="id_form-{{int0}}-lock" href="#"  {% if saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
 		<br></div>
 	        
 	        <div class="row" style="height:65px">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-smiles"><a title="Open SMILES: Canonical SMILES representation of the molecule.">Open SMILES:</a></label></div>
                     {% if model_id or saved %}
-			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-smiles" name="form-{{int0}}-smiles" rows="2" readonly >{{o.smiles}}</textarea> 
+			<div class="col-md-7"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-smiles" name="form-{{int0}}-smiles" rows="2" readonly >{{o.smiles}}</textarea> </div><a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% else %}
-			<div class="col-md-6"><textarea cols="70" style="width:300px" id="id_form-{{int0}}-smiles" name="form-{{int0}}-smiles" readonly rows="2" ></textarea> 
+			<div class="col-md-7"><textarea cols="70" style="width:300px" id="id_form-{{int0}}-smiles" name="form-{{int0}}-smiles" readonly rows="2" ></textarea> </div><a id="id_form-{{int0}}-lock" href="#"  {% if saved %} {%else%}title="This field will be automatically filled."{% endif %} ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
-		</div><br></div>
+		<br></div>
                     {% if model_id %}
                     {% else %}
 		<div class=row id='PRUEBA'>
@@ -235,9 +249,10 @@ font-weight:normal
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-description"><a title="Description: Description about which specific protonation, resonance state or confomation is represented in this “molecule”.">Description:</a></label></div>
                     {% if model_id or saved %}
-			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" {%if model_id%}readonly {%else%} placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated." {%endif%}>{{o.description}}</textarea></div>
+			<div class="col-md-7"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" {%if model_id%}readonly {%else%} placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated." {%endif%}>{{o.description}}</textarea></div>
+                        <a id="id_form-{{int0}}-lock" href="#"   ><span class="glyphicon glyphicon-lock" style="color:silver"></span></a> 
                     {% else %}
-			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" placeholder="Neutral form. Closest Nitrogen to the piperizine ring protonated."></textarea></div>
+			<div class="col-md-6"><textarea cols="40" style="width:300px" id="id_form-{{int0}}-description" name="form-{{int0}}-description" rows="2" placeholder="Optional field"></textarea></div>
                     {% endif %}
 		</div>
                 <br>
@@ -287,10 +302,11 @@ font-weight:normal
                     {% if model_id or saved %}
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-  	                    <div class="col-md-6"><input readonly  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" name="form-{{int0}}-name" type="text" value={{com.name}} /></div> <!-- placeholder=" Clozapine"--> 	</div>
+  	                    <div class="col-md-7"><input readonly  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" name="form-{{int0}}-name" type="text" value={{com.name}} /></div> <!-- placeholder=" Clozapine"--> 	<a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a></div>
                        {%endif%} {%endfor%}
                     {% else %}
-			<div class="col-md-6"><input  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" readonly name="form-{{int0}}-name" type="text" /></div> <!-- placeholder=" Clozapine"--> 	</div>
+			<div class="col-md-7"><input  style="width:300px" id="id_form-{{int0}}-name" maxlength="60" readonly name="form-{{int0}}-name" type="text" /></div> <!-- placeholder=" Clozapine"--> 	<a id="id_form-{{int0}}-lock2"{% if saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a></div>
+
                     {% endif %}
 			
 
@@ -299,10 +315,10 @@ font-weight:normal
                     {% if model_id or saved %}
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-6"><input id="id_form-{{int0}}-iupac_name" readonly style="width:300px" maxlength="500" name="form-{{int0}}-iupac_name" type="text" value={{com.iupac_name}} /></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->
+		            <div class="col-md-7"><input id="id_form-{{int0}}-iupac_name" readonly style="width:300px" maxlength="500" name="form-{{int0}}-iupac_name" type="text" value={{com.iupac_name}} /></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" --><a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                        {%endif%} {%endfor%}
                     {% else %}
-			<div class="col-md-6"><input id="id_form-{{int0}}-iupac_name" style="width:300px" maxlength="500" readonly name="form-{{int0}}-iupac_name" type="text"/></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->
+			<div class="col-md-7"><input id="id_form-{{int0}}-iupac_name" style="width:300px" maxlength="500" readonly name="form-{{int0}}-iupac_name" type="text"/></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" --><a {% if  saved %} {%else%}title="This field will be automatically filled."{% endif %}id="id_form-{{int0}}-lock2" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
 		</div>
 			
@@ -312,10 +328,10 @@ font-weight:normal
                    
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-3"><input id="id_form-{{int0}}-pubchem_cid" {% if model_id %} readonly {%endif%}name="form-{{int0}}-pubchem_cid"  style="width:142px;margin-right:0%" type="number" value="{{com.pubchem_cid}}" /></div> <!--placeholder=" 2818" -->
+		            <div class="col-md-{%if model_id%}7{%else%}3{%endif%}"><input id="id_form-{{int0}}-pubchem_cid" {% if model_id %} readonly {%endif%}name="form-{{int0}}-pubchem_cid" {% if model_id %} style="width:300px;margin-right:0%" {%else%} style="width:142px;margin-right:0%"{% endif %} type="number" value="{{com.pubchem_cid}}" /></div>{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
                        {%endif%} {%endfor%}
                     {% if not model_id %}
-	 		<div class="col-md-3"><button id="id_form-{{int0}}-update_from_pubchem" name="form-{{int0}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div>
+	 		<div class="col-md-4"><button id="id_form-{{int0}}-update_from_pubchem" name="form-{{int0}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div><a hidden id="id_form-{{int0}}-lock3"{% if saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
 		</div>
 			
@@ -324,19 +340,19 @@ font-weight:normal
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-chemblid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
                        {% for com in qCOMP %}
                          {% if forloop.counter == forloop.parentloop.counter %}
-		            <div class="col-md-3"><input id="id_form-{{int0}}-chemblid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chemblid" type="number" style="width:142px;margin-right:0%" value="{{com.chemblid}}" /></div> <!--  placeholder=" 42"-->
+		            <div class="col-md-{%if model_id%}7{%else%}3{%endif%}"><input id="id_form-{{int0}}-chemblid" {% if model_id %} readonly{%endif%} name="form-{{int0}}-chemblid" type="number" {% if model_id %} style="width:300px;margin-right:0%" {%else%} style="width:142px;margin-right:0%"{% endif %} value="{{com.chemblid}}" /></div> <!--  placeholder=" 42"-->{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
                        {%endif%} {%endfor%}
                     {% if not model_id %}
-			<div class="col-md-3"><button id="id_form-{{int0}}-update_from_chembl" name="form-{{int0}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div>
+			<div class="col-md-4"><button id="id_form-{{int0}}-update_from_chembl" name="form-{{int0}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button>  </div><a hidden id="id_form-{{int0}}-lock3"{% if saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
 		</div>
 	
 	        <div class="row">
-<div class="col-md-1" style="height:70px"></div><div class="col-md-3"><label for="id_form-{{int0}}-other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-6">
+<div class="col-md-1" style="height:70px"></div><div class="col-md-3"><label for="id_form-{{int0}}-other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-7">
                     {% if model_id or saved %}
-		        <textarea cols="40" id="id_form-{{int0}}-other_names" readonly name="form-{{int0}}-other_names" rows="2" style="width:300px" >{% for llo in alias %}{% if forloop.counter == forloop.parentloop.counter %}{{llo}}{%endif%}{%endfor%}</textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"-->
+		        <textarea cols="40" id="id_form-{{int0}}-other_names" readonly name="form-{{int0}}-other_names" rows="2" style="width:300px" >{% for llo in alias %}{% if forloop.counter == forloop.parentloop.counter %}{{llo}}{%endif%}{%endfor%}</textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"--><a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% else %}
-		        <textarea cols="40" id="id_form-{{int0}}-other_names" name="form-{{int0}}-other_names" readonly rows="2" style="width:300px" ></textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"-->
+		        <textarea cols="40" id="id_form-{{int0}}-other_names" name="form-{{int0}}-other_names" readonly rows="2" style="width:300px" ></textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"--><a id="id_form-{{int0}}-lock2"{% if model_id or saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                     {% endif %}
                 </div>
 		</div>
@@ -357,10 +373,10 @@ font-weight:normal
                <div style="height:290px" id="id_form-{{int0}}-z-nodb" {%if not saved%} hidden {%endif%} >
                         <table align='center'>
                                 <tr><th style="width:80px;text-align:center"><label for="id_form-{{int0}}-upload_mol-2"><a title="Graphical representation of the uploaded molecule if provided">Uploaded molecule</a></label></th>
-                                        <th style="width:80px;text-align:center"><label for="id_form-{{int0}}-stdform"><a title="Graphical representation of the standard form of the molecule">Standard molecule</a></label></th>
+                                        <th style="width:80px;text-align:center"><label for="id_form-{{int0}}-stdform"><a title="Graphical representation of the standard form of the molecule">PubChem (or ChEMBL) molecule</a></label></th>
 
-                                <tr><td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:200px;height:200px" id="id_form-{{int0}}-upload_mol-2"  name="form-{{int0}}-upload_mol-2"/>{%if saved%}<img  src="{%for mol in url%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" >{%endif%}</div></td>
-                                        <td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:200px;height:200px" id="id_form-{{int0}}-stdform" name="form-{{int0}}-stdform"/>{%if saved%}<img  src="{%for mol in urlstd%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="200px" width="200px" >{%endif%}</td>
+                                <tr><td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:250px;height:250px" id="id_form-{{int0}}-upload_mol-2"  name="form-{{int0}}-upload_mol-2"/>{%if saved%}<img  src="{%for mol in url%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="250px" width="250px" >{%endif%}</div></td>
+                                        <td style="padding:5px 5px 5px 5px"><div style="border-radius:5px;width:250px;height:250px" id="id_form-{{int0}}-stdform" name="form-{{int0}}-stdform"/>{%if saved%}<img  src="{%for mol in urlstd%}{% if forloop.counter == forloop.parentloop.counter %}{{mol}}{%endif%}{%endfor%}" height="250px" width="250px" >{%endif%}</td>
                                 </tr>
                         </table>
 </div>

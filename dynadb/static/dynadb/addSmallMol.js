@@ -35,7 +35,7 @@ $(document).ready(function(){
                 if ( !$(this).is("div") || id1.startsWith('id_form') && id1.endsWith('-collapse_id') ){
                    var name = name1.replace(/^form-[0-9]+-/,'');
                    var namelab="form-"+new_form_num+"-"+name;
-                   $(this).attr({'placeholder':namelab,  'name':namelab});
+                   $(this).attr({ 'name':namelab});
                 } 
                 if ( id1.startsWith('id_form') && id1.endsWith('-imagentable') ){
                    //console.log("TTTTppp");
@@ -123,7 +123,12 @@ $(document).ready(function(){
         $("#id_form-"+next_form_num+"-del_molecule").prop("disabled",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
-        $(newitem).smol_init_config()
+        $(newitem).find("[id='id_reset'],[id|=id_form][id$='-reset']").resetMoleculeByButton();
+        $(newitem).smol_init_config();
+        var checkupload = $(newitem).find("[id='id_checkupload'],[id|=id_form][id$='-checkupload']");
+        $(checkupload).hide()
+        var molsdf = $(newitem).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
+        $(molsdf).val('');
     });
     
        

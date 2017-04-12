@@ -62,7 +62,7 @@ $(document).ready(function(){
                     if (multi===true){
                         window.location.replace(url_success);
                     }else{
-                        alert("Please, submit other molecules in your system or continue to step 3.");
+                        alert("Please, submit other molecules in your system.\n\nIf you submitted all the molecules in it, continue to step 3.");
                     }
                 },  
                 "text" )

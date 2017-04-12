@@ -59,6 +59,8 @@ $(document).ready(function() {
         var chemblid = $(molform).find("[id='id_chemblid'],[id|=id_form][id$='-chemblid']");
         var pubchem_cid = $(molform).find("[id='id_pubchem_cid'],[id|=id_form][id$='-pubchem_cid']");
         var alias = $(molform).find("[id='id_other_names'],[id|=id_form][id$='-other_names']");
+        var checkupload = $(molform).find("[id='id_checkupload'],[id|=id_form][id$='-checkupload']");  
+
         var papa=$(uploadstd).parent();
 
                    console.log($(uploadstd).prop("tagName")+"   PPP ");
@@ -147,8 +149,8 @@ $(document).ready(function() {
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(uploadmol1).attr("id"))
                 .attr("name",$(uploadmol1).attr("name"))
-                .attr("height",200)
-                .attr("width",200);
+                .attr("height",250)
+                .attr("width",250);
                // .attr("height",pngsize)
                // .attr("width",pngsize);
                 imagentable.show(); //to show the table in which the image is contained 
@@ -160,8 +162,8 @@ $(document).ready(function() {
                 .attr("src",data.download_url_png+'?'+(new Date()).getTime())
                 .attr("id",$(uploadmol2).attr("id"))
                 .attr("name",$(uploadmol2).attr("name"))
-                .attr("height",200)
-                .attr("width",200);
+                .attr("height",250)
+                .attr("width",250);
                // .attr("height",pngsize)
                // .attr("width",pngsize);
                 imagentable2.show(); //to show the table in which the image is contained 
@@ -179,14 +181,15 @@ $(document).ready(function() {
                    .attr("src",data.urlstdmol+'?'+(new Date()).getTime())
                    .attr("id",$(uploadstd).attr("id"))
                    .attr("name",$(uploadstd).attr("name"))
-                   .attr("height", 200)
-                   .attr("width", 200);
+                   .attr("height", 250)
+                   .attr("width", 250);
                    console.log($(newuploadstd).prop("tagName")+"   PPP ");
                    $(uploadstd).replaceWith($(newuploadstd));
                    //$(uploadstd).remove();
                    $(papa).append($(newuploadstd));
                    console.log("EEEEEEEEE"+$(newuploadstd).attr('id')+" "+$(newuploadstd).attr('name')+" "+ $(newuploadstd).attr('src'));
                    uploadstd = $(newuploadstd);
+                   $(checkupload).show()
                    alert("Small Molecule #"+form_num_html +" information has been found in the GPCRmd database!!!\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule (not elegible when reusing crystal-derived assembly) or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, proceed with the following molecule in your simulation or submit the information in the form.");
                 } else{
                    alert("Small Molecule #"+form_num_html +" information on Chemoinformatics has been generated.\n\nPlease, choose the options indicating if the current item is either a co-crystalized molecule (not elegible when reusing crystal-derived assembly) or a bulk component, and its type in the corresponding dropdown menu in the section B of the form #"+form_num_html+".\n\nThen, click the \"Retrieve data\" button in the section D of this form item. ");
