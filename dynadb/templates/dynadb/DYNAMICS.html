@@ -125,7 +125,8 @@ font-weight:normal
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{{mc.type}}">
                                         <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{mc.type_int}}"></td>
                                                 
-                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox" {% if mc.cryst%} checked {%endif%} disabled placeholder=""/></td></tr>
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox" {% if mc.cryst%} checked {%endif%} disabled placeholder=""/></td>{%if mc.cryst %} {%else%}</tr> {%endif%}
+               {%if mc.cryst%} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%} 
                               {% endfor %}
                           {% else %}
                               {% for i in compl%} 
@@ -140,7 +141,8 @@ font-weight:normal
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{% for t in ddctypel%}{% if forloop.counter == forloop.parentloop.counter %}{{t}}{% endif %}{% endfor %}"></td>
                                         <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{i.type}}"></td>  
                                                 
-                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{i.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox"  {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} checked {%endif%}     disabled placeholder=""/></td></tr>  <!--i.type < 6 for modifications in -->
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{i.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox"  {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} checked {%endif%}     disabled placeholder=""/></td>{%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} {%else%}</tr>{%endif%}  <!--i.type < 6 for modifications in -->
+               {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%}
                               {% endfor %}
                               {% endif %}
 
@@ -195,6 +197,8 @@ font-weight:normal
 			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
                                       {%if saved%}
 		        	      <option value="{{ddown.id_dynamics_methods.0}}">{{ddown.id_dynamics_methods.1}}</option>{{qDS.values.0.id_dynamics_methods}}
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qDMeth.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -228,6 +232,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
                                       {%if saved%}
 		        	       <option value="{{ddown.id_assay_types.0}}">{{ddown.id_assay_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qAT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -249,6 +255,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
                                       {%if saved%}
 		        	      <option value="{{ddown.id_dynamics_membrane_types.0}}">{{ddown.id_dynamics_membrane_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qDMT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -264,6 +272,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
                                       {%if saved%}
                                        <option value="{{ddown.id_dynamics_solvent_types.0}}">{{ddown.id_dynamics_solvent_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                      {% for i in qDST.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -283,8 +293,15 @@ font-weight:normal
                          <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
                         <div class="col-md-2"><td><input id="id_solvent_num" name="solvent_num" type="number" min="0" style="width:75px" readonly {%if saved%}value="{{qDS.values.0.solvent_num}}" {%endif%} placeholder="" /></td></tr></div> 
                         <div class="col-md-2"style="margin-left:8px;padding-right:0px" ><tr><th><label for="id_atom_num"><a title="Num. Atoms: Number of atoms in the simulation.">Num. Atoms:</a></label></th></div>
-                        <div class="col-md-2" style="margin-left:6px;align:right"><td><input id="id_atom_num" name="atom_num" type="number" readonly style="width:75px" placeholder=""{%if saved%}value="{{qDS.values.0.atom_num}}" {%endif%} /></td></tr></div>
+                        <div class="col-md-3" style="margin-left:6px;align:right"><td><input id="id_atom_num" name="atom_num" type="number" readonly style="width:75px" placeholder=""{%if saved%}value="{{qDS.values.0.atom_num}}" {%endif%} /></td></tr></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
                 <br></div>
+
+<!--                <div class="row">
+                        <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_framenum"><a title="Number of frames: Number of frames in the trajectory file.">Number of frames:</a> </label></th></div>
+                        <div class="col-md-2"><input id="id_framenum" name="framenum" value="{{nf}}" type="number" style="width:100%" min="0" placeholder=""{%if saved%}value=" {{qDS.values.0.framenum}}" {%endif%} /></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
+                <br></div> -->
 
                 <div class="row">
                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_timestep"><a title="Time step: Simulation integration step (fs).">Time step:</a> </label></th></div>
@@ -316,11 +333,19 @@ font-weight:normal
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Crystalized Components Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
         	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2: Small Molecule Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
         	<a id='selection-button' href="/dynadb/protein/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Protein Information </a>
       	  </div>
       </div>

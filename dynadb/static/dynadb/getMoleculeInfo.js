@@ -166,6 +166,8 @@ $(document).ready(function(){
         
         if (data.chembl_id.length > 1) {  
             alert('Several PubChem CompoundIDs match this molecule.\nA pop-up will open in order to show them.');
+            var urllist=window.location.href.split("/");
+            console.log(urllist+" urlist");
             $.post('../open_chembl/', {cids:data.chembl_id.join()}, function (data) {
                 var win=window.open('about:blank');
                 win.document.open();

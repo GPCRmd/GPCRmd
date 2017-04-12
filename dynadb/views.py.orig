@@ -3785,7 +3785,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
             pdbname = get_file_name_submission(form_type,submission_id,0,ext="pdb",forceext=False,subtype="pdb")
             pdbfilepath =  os.path.join(submission_path,pdbname)
             if not os.path.isfile(pdbfilepath):
-                return JsonResponse({'msg':'Cannot find uploaded PDB coordinate file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
+                return JsonResponse({'msg':'Cannot find uploaded PDB file. Try to upload the file again.'},status=422,reason='Unprocessable Entity')
 
             data = dict()
             data['download_url_log'] = None
@@ -4191,10 +4191,14 @@ def MODELreuseREQUESTview(request,model_id,submission_id=None):
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-@test_if_closed
+<<<<<<< HEAD
 def MODELreuseview(request, submission_id ):
 #def MODELreuseview(request, submission_id, model_id  ):
     
+=======
+@test_if_closed
+def MODELreuseview(request, submission_id, model_id  ):
+>>>>>>> 687ddee9cf754b044bfb2358ef41fa4ac2ff5379
     enabled=False
     qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
     model_id=int(qSubModNew.values_list('model_id',flat=True)[0])
@@ -4273,9 +4277,13 @@ def MODELreuseview(request, submission_id ):
         return render(request,'dynadb/MODEL.html', {'rowsMR':rowsMR,'lcompname':lcompname,'lformps':lformps,'lformmc':lformmc,'SType':SType,'Type':Type,'lmtype':lmtype,'lmrstype':lmrstype,'rowsMC':rowsMC, 'p':p ,'l_ord_mol':l_ord_mol,'fdbPS':fdbPS,'fdbMC':fdbMC,'submission_id':submission_id,'model_id':model_id, 'enabled':enabled, 'modelr_form':True})
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
-@test_if_closed
+<<<<<<< HEAD
 def PROTEINreuseview(request, submission_id ):
 #def PROTEINreuseview(request, submission_id, model_id ):
+=======
+@test_if_closed
+def PROTEINreuseview(request, submission_id, model_id ):
+>>>>>>> 687ddee9cf754b044bfb2358ef41fa4ac2ff5379
     enabled=False
     qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
     model_id=qSubModNew.values_list('model_id',flat=True)[0]
@@ -4867,69 +4875,11 @@ def MODELview(request, submission_id):
     initFiles={'update_timestamp':timezone.now(),'creation_timestamp':timezone.now() ,'submission_id':None ,'created_by_dbengine':def_user_dbengine, 'last_update_by_dbengine':def_user_dbengine,'created_by':def_user, 'last_update_by':def_user  }
     # Dealing with POST data
     if request.method == 'POST':
-
-
-        print(request.POST.keys())
-        lrps=[]
-        l_checkinpostps=[]
-        for o in request.POST.keys():
-            if o.split("-")[0] == 'formps':
-                lrps.append(("-").join(o.split("-")[:2]))
-        lrps=list(set(lrps))
-        print("lista lrps ", lrps)
-        for ll in ['name', 'pdbid','prot', 'resid_to', 'seq_resid_from', 'resid_from', 'seq_resid_to', 'chain']:
-            if ll in ["name","pdbid"]:
-                if request.POST[ll] == "":
-                    print("ERROR PIPOL", ll)
-                    error="\n\nPlease, fill any missing fields in the section A after submitting the form."
-                    response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                    return response
-                else:
-                    continue
-            for o in lrps:
-                l_checkinpostps.append(("-").join([o,ll]))
-        print("\n\nlista lcheckinpost ", l_checkinpostps)
-
-        for l in  l_checkinpostps:     
+        for l in ['name', 'segid', 'resname', 'numberofmol','pdbid','prot', 'resid_to', 'pdbidps','seq_resid_from', 'resid_from', 'seq_resid_to', 'chain']:
             if request.POST[l] == '':
-                print("ERROR PIPOL", l)
-                error="\n\nPlease, fill any missing fields in the section B cells and click validate after submitting the form."
+                error="Please, before submission fill every field in the different sections of the Step 3."
                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                 return response
-
-        lrmc=[]
-        l_checkinpostmc=[]
-        for o in request.POST.keys():
-            if o.split("-")[0] == 'formmc':
-                lrmc.append(("-").join(o.split("-")[:2]))
-        lrmc=list(set(lrmc))
-        print("lista lrmc ", lrmc)
-        for ll in ['namemc', 'resname', 'numberofmol']:
-            for o in lrmc:
-                l_checkinpostmc.append(("-").join([o,ll]))
-        print("\n\nlista lcheckinpost ", l_checkinpostmc)
-
-        for l in  l_checkinpostmc:     
-            if request.POST[l] == '':
-                print("ERROR PIPOL", l)
-                error="\n\nPlease, fill in the missing 'Resname' cells and click validate after submitting the form."
-                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                return response
-
-
-
-#       for l in ['name', 'pdbid','prot', 'resid_to', 'pdbidps','seq_resid_from', 'resid_from', 'seq_resid_to', 'chain']:
-#           if l=='resname':
-#               list_resname=[val for key in request.POST.keys() if key.split("-")[2] == 'resname']
-#               if any(s=="" for s in list_resname):
-#                   error="\n\nPlease, fill in the missing 'Resname' cells and click validate after submitting the form."
-#                   response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-#                   return response
-
-#           if request.POST[l] == '':
-#               error="\n\nPlease, before submission fill every field in the different sections of the Step 3."
-#               response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-#               return response
 
        
         #Defining variables and dictionaries with information not available in the html form. This is needed for form instances.
@@ -7561,7 +7511,6 @@ def DYNAMICSview(request, submission_id, model_id=None):
     
              fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
              dicfdyn={}
-             dicfdyn['framenum']=val['framenum']
              dicfdyn['type']=val['type']
              fdbFM={}
              if fdbF[key].is_valid():
@@ -7583,7 +7532,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                  fdbFM[key].save()
              else:
                  prev_entryFileM=DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files__id_file_types=initFiles['id_file_types'])
-                 prev_entryFileM.update(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],framenum=dicfdyn['framenum'])
+                 prev_entryFileM.update(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'])
 
           #  else:
           #      error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
@@ -7619,30 +7568,6 @@ def DYNAMICSview(request, submission_id, model_id=None):
 #        with open('/protwis/sites/protwis/dynadb/dict_ext_id.txt', 'wb') as handle:
  #           pickle.dump(dict_ext_id, handle)
           
-        for l in ['id_dynamics_methods', 'id_assay_types', 'id_dynamics_membrane_types','id_dynamics_solvent_types', 'software', 'solvent_num', 'timestep', 'delta', 'ff', 'ffversion', 'atom_num']:
-            if request.POST[l] == '':
-                error="\n\nPlease, before submission fill in all fields in the section C of the Step 4."
-                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                return response
-        lrmc=[]
-        l_checkinpostmc=[]
-        print("\n",request.POST,"\n")
-        for o in request.POST.keys():
-            if o.split("-")[0] == 'formc':
-                lrmc.append(("-").join(o.split("-")[:2]))
-        lrmc=list(set(lrmc))
-        print("lista lrmc ", lrmc)
-        for ll in ['name', 'resname', 'numberofmol']:
-            for o in lrmc:
-                l_checkinpostmc.append(("-").join([o,ll]))
-        print("\n\nlista lcheckinpost ", l_checkinpostmc)
-
-        for l in  l_checkinpostmc:     
-            if request.POST[l] == '':
-                print("ERROR PIPOL", l)
-                error="\n\nPlease, fill in the missing 'Resname' cells and click validate after submitting the form."
-                response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                return response
         print("JJJJJJJJ")
         # Defining a dictionary "d_fdyn_t" containing choices in the table dyndb_files_dynamics (field 'type')
 
@@ -8125,13 +8050,13 @@ def DYNAMICSview(request, submission_id, model_id=None):
                 os.makedirs(direct)
             
             qSDF=DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id)
-            lfiles=list(qSDF.values('filepath','url','type','framenum'))
+            lfiles=list(qSDF.values('filepath','url','type'))
             for f in lfiles:
                 if not isfile(f['filepath']):
                     response = HttpResponse((" ").join(["There is a simulation file which has not been succesfully saved (",f[filename],") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 else:
-                    dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type'],'framenum':f['framenum']}}
+                    dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type']}}
                     ooofile= dynamics_file_table(dname,DFpk) 
                     if type(ooofile)==HttpResponse:
                         return ooofile 
@@ -8145,9 +8070,9 @@ def DYNAMICSview(request, submission_id, model_id=None):
     else:
         qDYNs=DyndbDynamics.objects.filter(submission_id=submission_id)
         qMOD=DyndbSubmissionModel.objects.filter(submission_id=submission_id).order_by('id').values('model_id')
-        qMOD_first=DyndbSubmissionModel.objects.filter(submission_id=submission_id,model_id__model_creation_submission_id=submission_id)        
+        qSubMOD=DyndbSubmissionModel.objects.filter(model_id=qMOD)
         ModelReuse=False
-        if qMOD.exists() and not qMOD_first.exists(): #the model has been saved but is not the first one using the model 
+        if len(qSubMOD) > 1:
             ModelReuse=True
 
         protlist=list(DyndbSubmissionProtein.objects.filter(submission_id=submission_id).exclude(int_id=None).order_by('int_id').select_related('protein_id').values_list('int_id','protein_id__uniprotkbac','protein_id__name')) 
@@ -8210,6 +8135,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             response = HttpResponse((" ").join(["There are more than one dynamics objects for the same submission (",submission_id,") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
             return response
         else:
+            
             file_types_items = file_types.items()
             dd=dyndb_Dynamics()
             ddC =dyndb_Dynamics_Components()
