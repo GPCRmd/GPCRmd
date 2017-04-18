@@ -2414,7 +2414,27 @@ def do_analysis(request):
 
         full_results['hbonds'] = hbonds_residue
         full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
-        full_results['salt_bridges'] = [ label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges'] ] # -1 to return to zero indexing.
+        full_results['salt_bridges'] = [label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
+
+        trajprot=traj.atom_slice(trajectory.topology.select('protein'),inplace=False)
+        trajprot=trajprot.superpose(trajprot,0)
+        mintop=[0,0,0]
+        for frame in range(len(trajprot)):
+            for atom in trajprot.xyz[frame]:
+                if atom[0]<mintop[0]:
+                    mintop[0]=atom[0]
+                if atom[1]<mintop[1]:
+                    mintop[1]=atom[1]
+                if atom[2]<mintop[2]:
+                    mintop[2]=atom[2]
+
+        for frame in range(len(trajprot)):
+            for atomindex in len(trajprot.xyz[frame]):
+                atom=atom+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
+                
+
+
+        trajprot.xyz[0][1] #coordinates of atom index 1 in frame 0
         print('HERE',full_results['salt_bridges'])
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
