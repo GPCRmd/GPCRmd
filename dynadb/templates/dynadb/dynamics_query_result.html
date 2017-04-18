@@ -47,7 +47,7 @@
     <div class="panel panel-info">
     <div class="panel-heading"><b>Dynamics Info:</b> {{answer.description}} </div>
     <div class="panel-body">
-    <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualazation & analysis</a><br><br><br><br></center>
+    <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualization & analysis</a><br><br><br><br></center>
 
    <div id='up' class="col-sm-12"> 
         <div id='leftcol' class="col-sm-6">
@@ -214,7 +214,7 @@
 
         {% endif %} 
         <br><br>
-        <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualazation & analysis</a><br><br><br><br></center>
+        <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualization & analysis</a><br><br><br><br></center>
     </div> <!-- end of references div-->
     </div> <!-- end of bottom div-->
 
@@ -227,9 +227,9 @@
 
 {% block addon_js %}
 <script type="text/javascript" src="{% static 'dynadb/molecular_carousel.js' %}"></script>
-<script type="text/javascript"  src="http://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
-<script type="text/javascript"  src="{% static 'dynadb/mol3dv.js' %}"></script>
-<script type="text/javascript"  src="{% static 'dynadb/manage3dcarousel.js' %}"></script>
+<script type="text/javascript" src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript" src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script type="text/javascript" src="{% static 'dynadb/manage3dcarousel.js' %}"></script>
 
 <script type="text/javascript" >
 $("#bottoninfoleft .ortoligand").click(function(){
