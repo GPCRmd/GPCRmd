@@ -5,6 +5,8 @@
             var not_is_present=$(this).find("[id|=id_form][id$='not-is_present']")
             var cotype= $(this).find("[id|=id_form][id$='co_type']");
             var nottype= $(this).find("[id|=id_form][id$='bulk_type']");
+
+
             if ($(co_is_present).is(":checked")){
                  var str = cotype.attr('name'); 
                  var form_num = str.split("-")[1];

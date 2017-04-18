@@ -28,11 +28,19 @@ $(document).ready(function() {
         var retrieve_type = $(molform).find("[id^='id_retrieve_type'],[id|=id_form][id*='-retrieve_type']");
         var search_by = $(molform).find("[id^='id_search_by'],[id|=id_form][id*='-search_by']");
         var similarity = $(molform).find("[id^='id_search_by'],[id|=id_form][id*='-search_by']");
-        
-        if($(this).prop('checked')) {
+        var lock2=  $(molform).find("[id^='id_lock2'],[id|=id_form][id*='-lock2']");
+        var lock3=  $(molform).find("[id^='id_lock3'],[id|=id_form][id*='-lock3']");
+       
+        //if($(this).prop('checked')) {
+        if($(this).is(':checked')) {
             name.set_restore_color();
             iupac_name.set_restore_color();
             aliases.set_restore_color();
+            $(lock2).hide();
+            $(lock3).show();
+        }else{
+            $(lock2).show();
+            $(lock3).hide();
         }
         
         name.prop("readonly",!$(this).prop('checked'));

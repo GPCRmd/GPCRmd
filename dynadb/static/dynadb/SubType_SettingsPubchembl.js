@@ -34,10 +34,10 @@ $(document).ready(function(){
 
            if ($(self).is("[id|=id_form][id$='-co-is_present']")) {
               var type=  $(this).parents("[id|=molform]").find("[id|=id_form][id$='-co_type']");
-              type.val(0);
+              //type.val(0);
            }else if ($(self).is("[id|=id_form][id$='-not-is_present']")) {
               var type=  $(this).parents("[id|=molform]").find("[id|=id_form][id$='-bulk_type']");
-              type.val(6);
+              //type.val(6);
  
            }else if ((($(self).is(':disabled'))&&($(self).is("[id|=id_form][id$='-bulk_type']"))) || (($(self).is(':enabled'))&&($(self).is("[id|=id_form][id$='-co_type']"))))   {
               var type=  $(this).parents("[id|=molform]").find("[id|=id_form][id$='-co_type']");

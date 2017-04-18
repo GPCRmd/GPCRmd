@@ -151,8 +151,8 @@
             <div style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;margin-bottom:10px;" >
                    <div style="padding-right:3px;padding-left:3px"> 
-                      <button  class="btn btn-success" id="submit" >Apply</button> <!--background-color:#ccffb3;border-color:#bbff99-->
-                      <button  class="btn btn-danger" id="clearAll" >Clear</button>
+                      <!--<button  class="btn btn-success" id="submit" >Apply</button> -->
+                      <button  class="btn btn-danger btn-xs" id="clearAll" style="margin-top:5px">Clear All</button>
                       <div class="pull-right">
                           <!--
                           <button id="center" class="btn btn-default" type="button" style="padding-right:7px;padding-left:7px;height:35px" >Center</button>
@@ -176,7 +176,7 @@
              
              
         <div style="text-align:center;margin:0;">
-            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+            <div class="row" id="selectionDiv" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
                 <h4 style="padding:0;margin:0;">Selection
                 </h4>
             </div>
@@ -227,7 +227,7 @@
                       within 
                     <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
                       &#8491; of
-                        <select class="wthComp nglCallChangeWth" name="comp">
+                        <select class="wthComp" name="comp">
                            {% for long_n, short_n in compounds %}
                            <option   value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}
@@ -295,7 +295,7 @@
                                           <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
       									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
       									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
                                     </div>
                                   </div>
                                   <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
@@ -358,11 +358,11 @@
                                   <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
                                     <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> 
                                     <div class="dropdown-content" style="margin-left:3px">
-                                          <div class="dropcolor" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
-                                          <div class="dropcolor" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
-      									  <div class="dropcolor" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
-      									  <div class="dropcolor" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
                                     </div>
                                   </div>
                                   <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
@@ -621,7 +621,7 @@
            {% if traj_list %}  
         <div style="text-align:center;margin:0;">
             <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
-                <h4 style="padding:0;margin:0;">Analysis
+                <h4 id="analysisDiv" style="padding:0;margin:0;">Analysis
                 </h4>
             </div>
         </div>
@@ -831,6 +831,7 @@
             </div>
             {% endif %}
           </div>
+          
           <!--<input type="checkbox" name="nglCall" value="nglCallSign">-->
         </div>
     </div>

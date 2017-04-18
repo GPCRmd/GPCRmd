@@ -2,25 +2,25 @@ $(document).ready(function() {
      $("#id_add_element2").click( function () {
         //var modelform = $(this).parents("#myform");
         var itemparent = $("#pElement2");
-        var item = itemparent.find("#Element2-0");
+        var item = $(itemparent).find("[id|='Element2']")[0];
         
-        var itemlast = itemparent.children("[id|='Element2']:last-child");
+        var itemlast = $(itemparent).find("[id|='Element2']:last-child");
         var itemlastnum = Number(itemlast.attr("id").split("-")[1]);
         var itemlastnum_1 = itemlastnum+1;
 
-        var newitem = item.clone();
+        var newitem = $(item).clone();
         var idlabnod = "Element2-" + itemlastnum_1;
-        newitem.attr("id",idlabnod);
-        var resname = newitem.find("[id$='-resname']:input");
-        var molecule = newitem.find("[id$='-molecule']:input");
-        var numberofmol = newitem.find("[id$='-numberofmol']:input");
+        $(newitem).attr("id",idlabnod);
+        var resname = $(newitem).find("[id$='-resname']:input");
+        var molecule = $(newitem).find("[id$='-molecule']:input");
+        var numberofmol = $(newitem).find("[id$='-numberofmol']:input");
         numberofmol.val("");
-        resname.prop("readonly",false);
-        resname.set_restore_color();
-        molecule.prop("readonly",false);
-        molecule.set_restore_color();
-        molecule.attr("type","number");
-        molecule.attr("min",1);
+        $(resname).prop("readonly",false);
+        $(resname).set_restore_color();
+        $(molecule).prop("readonly",false);
+        $(molecule).set_restore_color();
+        $(molecule).attr("type","number");
+        $(molecule).attr("min",1);
 
         $(newitem).find(':input').each(function() {
                 var name1 = $(this).attr('name');
@@ -29,7 +29,8 @@ $(document).ready(function() {
                 var idlab ="id_formmc-"+itemlastnum_1+"-"+name;
                 $(this).attr({'id':idlab, 'name':namelab});
         });
-        itemparent.append(newitem);
+        console.log("PIPOL")
+        $(itemparent).append($(newitem));
 
     });
 

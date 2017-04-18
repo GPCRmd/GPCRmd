@@ -5,6 +5,9 @@
             var is_mutated= $(protform).find("[id='id_is_mutated'],[id|=id_form][id$='is_mutated']");
             var mutations = $(protform).find("[id='id_mutations_id'],[id|=id_form][id$='mutations_id']");
             var use_isoform= $(protform).find("[id='id_use_isoform'],[id|=id_form][id$='use_isoform']");
+            var lock= protform.find("[id='lock'],[id|=id_form][id$='lock']");
+            var mnemonics= protform.find("[id='mnemonics'],[id|=id_form][id$='mnemonics']");
+            $(mnemonics).hide();
             if ($(is_mutated).is(":checked")){
                 $(mutations).show();
                 console.log("f1");
@@ -29,7 +32,13 @@
             }else{
                 $(protform).find("[id|=id_form][id$='-isoform']").hide().prop('readonly',true);
             };
-          
+
+            if ($(this).is(":checked")){
+                 $(lock).hide();
+            }else{
+                 $(lock).show();
+            };
+           
         });
     };
 

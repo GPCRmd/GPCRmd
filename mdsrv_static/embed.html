@@ -51,43 +51,6 @@
         document.domain=document.domain;
         stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
         
-        /*function selChange(){
-            
-            $("body", window.parent.document).click(".nglCall" , function(){
-                createReps();
-            })                    
-            
-            $("body", window.parent.document).change(".nglCallChange" , function(){
-                createReps();
-            })
-            
-            
-            //FIX!!!!
-            $("body", window.parent.document).change(".nglCallChangeTI" , function(){
-                var input = $(this).closest(".text_input",window.parent.document).find("sel_input",window.parent.document).val();
-
-                if (input){
-
-                    createReps();
-                }
-            })
-            
-            $("body", window.parent.document).change(".nglCallClickTI" , function(){
-                var input = $(this).closest(".text_input",window.parent.document).find("sel_input",window.parent.document).val();
-
-                if (input){
-
-                    createReps();
-                }
-            })
-            
-            $("body", window.parent.document).change(".nglCallChangeWth" , function(){
-                var act_sign= $(this).closest(".dist_sel").find(".inputdist").hasClass("sw_ok");
-                var mol=  $(this).closest(".dist_sel").find(".wthComp").val();
-
-            })
-        }*/
-        
         
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
@@ -99,7 +62,7 @@
             return([sele, sele2])
         }
         
-        function trajButtons(o,dist_within_li,bs_info){
+        function trajButtons(o){
             $(".ui-slider").css({"margin-left":"25px"});
             $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
@@ -107,6 +70,10 @@
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
             var some_clicked=false;
             $(".traj_btn").click( function(){
+                parent.passinfoToPlayTraj();
+                var bs_info = parent.bs_info;
+                var dist_within_li=parent.dist_of;  
+            
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
@@ -204,6 +171,8 @@
             $("#clear_dists_btn").html("");
             clickedRep={};
             clickedRepLi=[];
+            clickedDistData={};
+            clickedLabData={};
             clickedDist={};
             clicktrue = true;
             return(clicktrue);
@@ -211,11 +180,9 @@
         
         function clickDists(){
             var clicktrue = true;
-            $("#submit", window.parent.document).click(function(){
+            $("#selectionDiv", window.parent.document).click(function(){
                 if (! clicktrue && lbl_name1){
                     clicktrue = true;
-                    stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                    stage.getRepresentationsByName(lbl_name1).setVisibility(false)
                 }
             });
             //$("#clear_dist_reps", window.parent.document).click(function(){
@@ -238,7 +205,7 @@
             var atom1 , atom2 , res2 , res2, myrepr;
             var lbl_id=0;
             var dist_id=0;
-            var lbl_name1, lbl_name2, dist_name;
+            var lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 , labsele1;
             stage.signals.clicked.add( function( d ){
                 if (clicktrue){
                     if (d.atom){
@@ -246,8 +213,9 @@
                         $("#atomClicked").text(info)
                         lbl_name1="label_"+lbl_id.toString();
                         lbl_id+=1;
+                        labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
                         myrepr = o.addRepresentation( "label", {
-                            sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                            sele: labsele1,
                             color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
                         atom1 = d.atom.index.toString();
                         clicktrue = false;
@@ -285,11 +253,15 @@
                             for (an in add2){
                                 clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                             }
+                            labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
                             o.addRepresentation( "label", {
-                                sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
+                                sele: labsele2,
                                 color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
                             var atomPair = [[ Number(atom1), Number(atom2) ]];
                             o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
+                            clickedDistData[dist_name]=atomPair;
+                            clickedLabData[lbl_name1]=labsele1;
+                            clickedLabData[lbl_name2]=labsele2; 
 
                         } else {
                             if (atom1 in clickedRep){
@@ -302,6 +274,13 @@
                                         if (repName in clickedDist){
                                             delete clickedDist[repName];
                                         }
+                                        if (repName in clickedDistData){
+                                            delete clickedDistData[repName];
+                                        }
+                                    } else {
+                                        if (repName in clickedLabData){
+                                            delete clickedLabData[repName];
+                                        }
                                     }
                                     var rvIndex = clickedRepLi.indexOf(repName);
                                     if (rvIndex > -1){
@@ -311,6 +290,7 @@
                                 if (clickedRepLi.length ==0){
                                     $("#clear_dists_btn").html("");
                                 }
+                                
                                 stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
                                 stage.getRepresentationsByName(lbl_name1).setVisibility(false);
                                 delete clickedRep[atom1];
@@ -322,6 +302,7 @@
                                 if (!(lbl_name1 in clickedRepLi)){
                                     clickedRepLi.push(lbl_name1);
                                 }
+                                clickedLabData[lbl_name1]=labsele1;
                             }
                         }
                         if (clickedRepLi.length > 0){
@@ -358,11 +339,32 @@
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
-            if (trajComp && player){
+            /*if (trajComp && player){
                 player.pause();
-            }
+            }*/
             
             var o=stage.getComponentsByName("my_comp").list[0];
+            var saveRepLi=[]
+            o.eachRepresentation(function(rep, comp){
+                if (clickedRepLi.indexOf(rep.name) > -1){
+                    saveRepLi.push(rep)
+                }
+            })
+            
+            o.clearRepresentations()
+            for (lname in clickedLabData){
+                var lsele=clickedLabData[lname];
+                o.addRepresentation( "label", {
+                    sele: lsele,
+                    color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lname } );
+            }
+            for (dname in clickedDistData){
+                var apair=clickedDistData[dname]
+                o.addRepresentation( "distance", { atomPair: apair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dname} );
+            }
+
+            /*//o.clearRepresentations()
+            
             o.eachRepresentation(function(rep, comp){
                 if (clickedRepLi.indexOf(rep.name) == -1){
                     //rep.clearRepresentations();
@@ -372,7 +374,7 @@
                     rep.setVisibility(false);
 
                 }
-            }); 
+            }); */
             //o.updateRepresentations();
             //console.log(o);
             $("#buttons").html("");
@@ -461,9 +463,7 @@
                 }
 
             }
-            if (mytraj){
-                trajButtons(o,dist_within_li,bs_info);
-            } else {
+            if ( ! mytraj){
                 $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
             }
             
@@ -524,6 +524,7 @@
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
 
             }
+
             //o.centerView();
         }
 /////////// Set variables:
@@ -537,6 +538,8 @@
             var trajComp, player;
             var clickedRep={};
             var clickedRepLi=[];
+            var clickedDistData={};
+            var clickedLabData={};
             //var compDistsLi=[];
             var clickedDist={};
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
@@ -557,16 +560,20 @@
                         $(".traj_btn").attr("id","playerButton"+traj_id.toString())
                         
                     })
-                    
+                    trajButtons(o)
                     createReps();
                     stage.centerView("protein");
-                    $("#submit", window.parent.document).click(function(){
+                    /*$("#submit", window.parent.document).click(function(){
                         createReps();
-                    });
+                    });*/
                     $("#clearAll", window.parent.document).click(function(){
                         createReps();
                     });
                     
+                    
+                    $("#selectionDiv", window.parent.document).on("click" , function(){
+                        createReps();
+                    });
 
                     //selChange();      
 
@@ -644,7 +651,7 @@
 
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
-        <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">
+        <div style="width:586px;height:30px;margin-top:260px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>
