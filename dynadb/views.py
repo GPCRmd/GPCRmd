@@ -4069,96 +4069,201 @@ def check_trajectories(request,submission_id):
 
         return HttpResponse("Success!",content_type='text/plain; charset=UTF-8')
         
-
 @login_required
 def MODELreuseREQUESTview(request,model_id,submission_id=None):
-    print ("MODELreuseREQUESTview")
-    try:
-        print(submission_id)
-    except NameError:
-        submission_id==None
-    if not submission_id==None:
-        qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
-        qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
-        qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
-        if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
-            enabled=True
-    if model_id == 0: #model_id is 0 when the view is accesed from the memberpage view!!! then the model_id selected by the user is passed to other reuse views
-        return render(request,'dynadb/MODELreuseREQUEST.html', {})
-    print ("\n\nooo ", print (model_id) )
+    if request.method == 'GET':
+        return render(request,'dynadb/MODELreuseREQUEST.html', {'action':'#'})
     # Dealing with POST data
-    if request.method == 'POST':
+    elif request.method == 'POST':
         dictsubid={}#dictionary for instatiating dyndbSubmission and obtaining a new submission_id for our new submission
         dictsubid['user_id']=str(request.user.pk)
         dictsubid['is_reuse_model']=str(1)
         fdbsub=dyndb_Submission(dictsubid)
         fdbsubobj=fdbsub.save()
+        chosen_model_id_state = None
+        chosen_submission_id_state = None
+        submission_id = fdbsubobj.pk
         print("submission_id",fdbsubobj.pk)
-        if request.POST['Choose_reused_model']== '':
-            print("NO MODEL", request.POST['Choose_reused_model'])
-            if request.POST['Choose_submission_id']== '':
-                print("NO Submission_id ", request.POST['Choose_submission_id'])
-                request.POST['Choose_submission_id']='0'
-                request.POST['Choose_reused_model']='0'
-                print("NO Submission_id ", request.POST['Choose_submission_id'])
+        
+        #Parsing POST keys        
+        if 'Choose_reused_model' in request.POST:
+            chosen_model_id = request.POST['Choose_reused_model'].strip()
+            if chosen_model_id.isdigit():
+                chosen_model_id = int(chosen_model_id)
+                chosen_model_id_state = 'valid'
+            elif chosen_model_id == "":
+                chosen_model_id_state = 'empty'
             else:
-                request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST['Choose_submission_id']).values_list('model_id',flat=True)[0]
-            print("LLL",request.POST['Choose_reused_model'])
+                chosen_model_id_state = 'invalid'
         else:
-            if request.POST['Choose_submission_id']== '':
-                print("reuse model != '' ")
-                qS=DyndbSubmissionModel.objects.filter(model_id=request.POST['Choose_reused_model']).values_list('submission_id',flat=True)[0]
-                request.POST['Choose_submission_id']=qS
-                # choose_submission_id is not passed as a parameter to the other views. The Submission_id parameter stands for the ID of the current submission, not the submission made the first time model was submitted
-                submission_id = str(fdbsubobj.pk)
-                print("\n MIRA LA SUBMISSION ID:",submission_id)
-      #          submission_id=str(request.POST['Choose_submission_id'])
-                model_id=str(request.POST['Choose_reused_model'])
+            chosen_model_id = None
+            chosen_model_id_state = None
+            
+        if 'Choose_submission_id' in request.POST:
+            chosen_submission_id = request.POST['Choose_submission_id'].strip()
+            if chosen_submission_id.isdigit():
+                chosen_submission_id = int(chosen_submission_id)
+                chosen_submission_id_state = 'valid'
+            elif chosen_submission_id == "":
+                chosen_submission_id_state = 'empty'
             else:
-                a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
-                print(a, type(a))
-                if request.POST['Choose_reused_model'] != a:
-                    print("MIRA",a, request.POST['Choose_reused_model'])
-                    request.POST['Choose_reused_model']=a
-                submission_id = fdbsubobj.pk
-                model_id=str(request.POST['Choose_reused_model'])
+                chosen_submission_id_state = 'invalid'
+        else:
+            chosen_submission_id = None
+            chosen_submission_id_state = None
+            
+        if chosen_model_id_state in {'valid','invalid'} and chosen_submission_id_state in {'valid','invalid'}:
+            return render(request,'dynadb/MODELreuseREQUEST.html', \
+            {'message':'Please, provide either complex structure ID or submission ID, but not both.', 'error':'both','action':'#'})
 
-            submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':submission_id})
-            print("submission model",submission_model.__dict__['data'])
-            if submission_model.is_valid():
-                submission_model.save()
+        elif chosen_model_id_state in {'empty',None} and chosen_submission_id_state in {'empty',None} :
+            return render(request,'dynadb/MODELreuseREQUEST.html', \
+            {'message':'Please, provide either complex structure ID or submission ID.', 'error':'both','action':'#'})
+
+        elif chosen_model_id_state == 'invalid':
+            return render(request,'dynadb/MODELreuseREQUEST.html', {'message':'Invalid complex structure ID.', 'error':'model','action':'#'})
+            
+        elif chosen_submission_id_state == 'invalid':    
+            return render(request,'dynadb/MODELreuseREQUEST.html', {'message':'Invalid submission ID.','error':'submission','action':"#"})
+       
+        # By model
+        elif chosen_model_id_state == 'valid':
+            is_owner_or_pub = is_published_or_submission_owner(request.user,object_type='model',model_id=chosen_model_id)
+            
+            # check if the submission for this model is closed
+            
+            # do if chosen_model_id corresponds to a model
+            if is_owner_or_pub is not None:
+                is_published = DyndbModel.objects.filter(pk=chosen_model_id,is_published=True).exists()
+                if not is_published:
+                    # do if the submission for this model is not closed 
+                    if not DyndbSubmissionModel.objects.filter(model_id=chosen_model_id,submission_id__is_closed=True).exists():
+                        return render(request,'dynadb/MODELreuseREQUEST.html', \
+                        {'message':"Complex structure with ID: %d not found or available." % (chosen_model_id), 'error':'model','action':'#'})
+            if is_owner_or_pub:
+                model_id = chosen_model_id
             else:
-                print("ERROR",submission_model.errors.as_text())
-                response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
-                return response   
-            return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),str(model_id),""]), {'submission_id':str(submission_id),'model_id':str(model_id)} )
+                return render(request,'dynadb/MODELreuseREQUEST.html', \
+                {'message':"Complex structure with ID: %d not found or available." % (chosen_model_id),'error':'model','action':'#'})
+        
+        # By submission
+        elif chosen_submission_id_state == 'valid':
+            is_owner = is_submission_owner(request.user,submission_id=chosen_submission_id)
+            # do if chosen_submission_id corresponds to a submission
+            is_published = False
+            if is_owner is not None:
+                subq = DyndbSubmission.objects.filter(pk=chosen_submission_id).values('is_published','is_closed')
+                sub_data = subq[0]
+                is_published = sub_data['is_published']
+                if not is_published and not sub_data['is_closed']:
+                    return render(request,'dynadb/MODELreuseREQUEST.html', \
+                    {'message':"Submission with ID: %d not found or available." % (chosen_submission_id), 'error':'submission','action':'#'})
+            if is_owner or is_published:
+                model_id = DyndbSubmissionModel.objects.filter(submission_id=chosen_submission_id).values_list('model_id',flat=True)[0]
+            else:
+                return render(request,'dynadb/MODELreuseREQUEST.html', \
+                {'message':"Submission with ID: %d not found or available." % (chosen_submission_id), 'error':'submission','action':'#'})
 
-        if request.POST['Choose_submission_id']=='0' and request.POST['Choose_reused_model']=='0':
-            message="Please provide either a Complex ID or a Submission ID corresponding to the system to be reused"
-            Context={'value':0,'CHoose_submission_id':message,'CHoose_reused_model':message}
-            print(Context)
-            return render(request,'dynadb/MODELreuseREQUEST.html', Context)
-        if request.POST['Choose_submission_id']=='':
-            request.POST['Choose_submission_id']=DyndbSubmissionModel.objects.filter(model_id=request.POST.dict()['Choose_reused_model']).values_list('submission_id',flat=True)[0]
-            print("NO Submission_id")
-        print(request.POST.dict())
-        submission_id=fdbsubobj.pk
-        print("Check",type(submission_id), submission_id, type(model_id), model_id)
-        submission_id =str( fdbsubobj.pk)
-#        submission_id=str(request.POST['Choose_submission_id'])
-        model_id=str(request.POST['Choose_reused_model'])
-        submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':str(submission_id)})
-        print("submission model",submission_model.__dict__['data'])
+        submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':fdbsubobj.pk})
         if submission_model.is_valid():
             submission_model.save()
-            print("submission modeli is valid oooo")
+            return HttpResponseRedirect(reverse('dynadb:modelreuse',kwargs={'submission_id':submission_id}))
         else:
-            response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
-            return response   
-        return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':""} )
-    else:
+            print("ERROR",submission_model.errors.as_text())
+            return render(request,'dynadb/MODELreuseREQUEST.html', \
+                {'message':"Error while creating the new submission:\n%s" % (submission_model.errors.as_text()), 'error':'both','action':'#'}) 
 
-        return render(request,'dynadb/MODELreuseREQUEST.html', {})
+
+
+#@login_required
+#def MODELreuseREQUESTview(request,model_id,submission_id=None):
+    #print ("MODELreuseREQUESTview")
+    #try:
+        #print(submission_id)
+    #except NameError:
+        #submission_id==None
+    #if not submission_id==None:
+        #qSubPNew=DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+        #qSubMolNew=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+        #qSubModNew=DyndbSubmissionModel.objects.filter(submission_id=submission_id)
+        #if qSubPNew.exists() and qSubMolNew.exists() and qSubModNew.exists():
+            #enabled=True
+    #if model_id == 0: #model_id is 0 when the view is accesed from the memberpage view!!! then the model_id selected by the user is passed to other reuse views
+        #return render(request,'dynadb/MODELreuseREQUEST.html', {})
+    #print ("\n\nooo ", print (model_id) )
+    ## Dealing with POST data
+    #if request.method == 'POST':
+        #dictsubid={}#dictionary for instatiating dyndbSubmission and obtaining a new submission_id for our new submission
+        #dictsubid['user_id']=str(request.user.pk)
+        #dictsubid['is_reuse_model']=str(1)
+        #fdbsub=dyndb_Submission(dictsubid)
+        #fdbsubobj=fdbsub.save()
+        #print("submission_id",fdbsubobj.pk)
+        #if request.POST['Choose_reused_model']== '':
+            #print("NO MODEL", request.POST['Choose_reused_model'])
+            #if request.POST['Choose_submission_id']== '':
+                #print("NO Submission_id ", request.POST['Choose_submission_id'])
+                #request.POST['Choose_submission_id']='0'
+                #request.POST['Choose_reused_model']='0'
+                #print("NO Submission_id ", request.POST['Choose_submission_id'])
+            #else:
+                #request.POST['Choose_reused_model']=DyndbSubmissionModel.objects.filter(submission_id=request.POST['Choose_submission_id']).values_list('model_id',flat=True)[0]
+            #print("LLL",request.POST['Choose_reused_model'])
+        #else:
+            #if request.POST['Choose_submission_id']== '':
+                #print("reuse model != '' ")
+                #qS=DyndbSubmissionModel.objects.filter(model_id=request.POST['Choose_reused_model']).values_list('submission_id',flat=True)[0]
+                #request.POST['Choose_submission_id']=qS
+                ## choose_submission_id is not passed as a parameter to the other views. The Submission_id parameter stands for the ID of the current submission, not the submission made the first time model was submitted
+                #submission_id = str(fdbsubobj.pk)
+                #print("\n MIRA LA SUBMISSION ID:",submission_id)
+      ##          submission_id=str(request.POST['Choose_submission_id'])
+                #model_id=str(request.POST['Choose_reused_model'])
+            #else:
+                #a=DyndbSubmissionModel.objects.filter(submission_id=request.POST.dict()['Choose_submission_id']).values_list('model_id',flat=True)[0]
+                #print(a, type(a))
+                #if request.POST['Choose_reused_model'] != a:
+                    #print("MIRA",a, request.POST['Choose_reused_model'])
+                    #request.POST['Choose_reused_model']=a
+                #submission_id = fdbsubobj.pk
+                #model_id=str(request.POST['Choose_reused_model'])
+
+            #submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':submission_id})
+            #print("submission model",submission_model.__dict__['data'])
+            #if submission_model.is_valid():
+                #submission_model.save()
+            #else:
+                #print("ERROR",submission_model.errors.as_text())
+                #response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
+                #return response   
+            #return HttpResponseRedirect("/".join(["/dynadb/modelreuse",str(submission_id),str(model_id),""]), {'submission_id':str(submission_id),'model_id':str(model_id)} )
+
+        #if request.POST['Choose_submission_id']=='0' and request.POST['Choose_reused_model']=='0':
+            #message="Please provide either a Complex ID or a Submission ID corresponding to the system to be reused"
+            #Context={'error':"both",'message':message}
+            #print(Context)
+            #return render(request,'dynadb/MODELreuseREQUEST.html', Context)
+        #if request.POST['Choose_submission_id']=='':
+            #request.POST['Choose_submission_id']=DyndbSubmissionModel.objects.filter(model_id=request.POST.dict()['Choose_reused_model']).values_list('submission_id',flat=True)[0]
+            #print("NO Submission_id")
+        #print(request.POST.dict())
+        #submission_id=fdbsubobj.pk
+        #print("Check",type(submission_id), submission_id, type(model_id), model_id)
+        #submission_id =str( fdbsubobj.pk)
+##        submission_id=str(request.POST['Choose_submission_id'])
+        #model_id=str(request.POST['Choose_reused_model'])
+        #submission_model=dyndb_Submission_Model({'model_id':model_id, 'submission_id':str(submission_id)})
+        #print("submission model",submission_model.__dict__['data'])
+        #if submission_model.is_valid():
+            #submission_model.save()
+            #print("submission modeli is valid oooo")
+        #else:
+            #response = HttpResponse("Submission Model has not been registered",content_type='text/plain; charset=UTF-8')
+            #return response   
+        #return HttpResponseRedirect("/".join(["/dynadb/modelreuse",submission_id,model_id,""]), {'submission_id':submission_id,'model_id':model_id,'message':""} )
+    #else:
+
+        #return render(request,'dynadb/MODELreuseREQUEST.html', {})
 #@login_required
 #def MODELrowview(request):
     #form=[1,2,3]
