@@ -18,7 +18,7 @@
 {% if answer.proteins %}
     <b>Proteins used in this complex</b>:<br>
     {%for proid in answer.proteins%}
-       <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}}</a> 
+       <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}} ({{proid.2}})</a> 
     {%endfor%}
     <br>
 {% endif %} 

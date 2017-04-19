@@ -2701,8 +2701,8 @@ def query_complex(request, complex_id,incall=False):
     model_list=list()
     comdic=dict()
 
-    for cprotein in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=complex_id).values('id_protein__id','id_protein__name'): 
-        plist.append([cprotein['id_protein__id'], cprotein['id_protein__name']])
+    for cprotein in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=complex_id).values('id_protein__id','id_protein__name','id_protein__id_uniprot_species__scientific_name'): 
+        plist.append([cprotein['id_protein__id'], cprotein['id_protein__name'],cprotein['id_protein__id_uniprot_species__scientific_name']])
 
     q = DyndbComplexExp.objects.filter(pk=complex_id)
     q = q.annotate(model_id=F('dyndbcomplexmolecule__dyndbmodel__id'))
@@ -2736,7 +2736,6 @@ def query_complex(request, complex_id,incall=False):
     reference_list=[]
     references=dict()
     for row in q:
-        print (row['ec_fifty_val'],row['binding_val'],row['references'])
         if row['ec_fifty_val'] is not None:
             efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
             efficacy['value']=efficacyrow.rvalue
@@ -2766,7 +2765,6 @@ def query_complex(request, complex_id,incall=False):
                     references[keys]=''
             reference_list.append(references)
     comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy}
-    print(comdic)
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -2811,7 +2809,7 @@ def query_model(request,model_id,incall=False):
                 model_dic['link2protein'].append([row['protein_id'],query_protein(request,row['protein_id'],True)['Protein_name'] ])
 
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=model_id):
-        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name ])
+        model_dic['components'].append([match.id_molecule.id, query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name, match.type ])
 
     for match in DyndbDynamics.objects.filter(id_model=model_id):
         model_dic['dynamics'].append(match.id)
@@ -2836,8 +2834,8 @@ def query_model(request,model_id,incall=False):
     if incall==True:
         return model_dic
 
-    model_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in model_dic['components']])
-    model_dic['molecules_names']='%$!'.join([str(i[2]) for i in model_dic['components']])
+    model_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in model_dic['components'] if i[3]!=0])
+    model_dic['molecules_names']='%$!'.join([str(i[2]) for i in model_dic['components'] if i[3]!=0])
 
     return render(request, 'dynadb/model_query_result.html',{'answer':model_dic})
 
@@ -2920,9 +2918,16 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['ortoligands']=list()
     dyna_dic['aloligands']=list()
     dyna_dic['link2protein']=list()
-
+    dyna_dic['expdatabind']=''
+    dyna_dic['expdataeff']=''
     try:
         dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
+        expdata=query_complex(request, dyna_dic['link_2_complex'],incall=True)
+        print('expDATA',expdata)
+        if expdata['binding']!=dict():
+            dyna_dic['expdatabind']=expdata['binding']['value']
+        if expdata['efficacy']!=dict():
+            dyna_dic['expdataeff']=expdata['efficacy']['value']
     except:
         dyna_dic['link_2_complex']=''
     dyna_dic['mdsrv_url'] = mdsrv_url
@@ -2930,10 +2935,10 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['traj_file'] = traj_displayed
 
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name])
+        dyna_dic['link_2_molecules'].append([match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name,match.type])
 
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name]
+        candidatecomp=[match.id_molecule.id,query_molecule(request,match.id_molecule.id,True)['imagelink'],match.id_molecule.id_compound.name,match.type]
         if candidatecomp not in dyna_dic['link_2_molecules'] : 
             dyna_dic['link_2_molecules'].append(candidatecomp)
     cmolid=dynaobj.id_model.id_complex_molecule
@@ -2973,8 +2978,11 @@ def query_dynamics(request,dynamics_id):
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
         dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
 
-    dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules']])
-    dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules']])
+    dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
+    dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
+
+
+
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
 @user_passes_test_args(is_published_or_submission_owner)    

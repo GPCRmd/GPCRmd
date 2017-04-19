@@ -15,9 +15,10 @@
 
     .miniscroll{
         overflow-y:auto;
+        overflow:auto;
         max-height:140px;
         height:130px;
-        width: 40%;
+        <!--width: 40%;-->
     }
 
     .bs-example{
@@ -76,8 +77,16 @@
             {%endif%}
             <br>
 
-            {%if answer.link_2_complex%}
-                <b>Experimental Data</b>: <a class='btn btn-info' role='button' href= /dynadb/complex/id/{{answer.link_2_complex}}> Complex ID: {{answer.link_2_complex}}</a> <br><br>
+            {%if answer.expdatabind or answer.expdataeff%}
+                <b>Experimental Data</b>:<br>
+                {%if answer.expdatabind%}
+                    <b>Kd:</b> {{answer.expdatabind}} <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                {%endif%}
+
+                {%if answer.expdataeff%}
+                    <b>EC50:</b> {{answer.expdataeff}} <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                {%endif%}
+
             {%endif%}
 
         </div> <!--lef div end-->
@@ -114,10 +123,10 @@
         <div id='bottoninfoleft' class="col-sm-6">
             <div id='leftleftcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
             {% if answer.ortoligands %}
-                <b>Orthosteric ligand(s)</b>:<br><br>
+                <b style="margin:10px;padding:7px;">Orthosteric ligand(s)</b><br><br>
                 {% for url in answer.ortoligands %}
                     <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
-                   <center> <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a><br></center>
+                    <a style="margin:10px;padding:7px;" href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a><br>
                 {% endfor %}
             {% endif %}
             <br>
@@ -125,7 +134,7 @@
 
             <div id='leftrightcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
             {% if answer.aloligands %}
-                <b>Allosteric ligand(s)</b>:<br><br>
+                <b>Allosteric ligand(s)</b><br><br>
                 {% for url in answer.aloligands %}
                     <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
                     <center><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a></center>
@@ -232,6 +241,10 @@
 <script type="text/javascript" src="{% static 'dynadb/manage3dcarousel.js' %}"></script>
 
 <script type="text/javascript" >
+$( document ).ready(function() {
+    $('.ortoligand:first').click();
+});
+
 $("#bottoninfoleft .ortoligand").click(function(){
         $("#bottoninfoleft .ortoligand").css("background-color","#337ab7");
         $(this).css("background-color","blue"); 
