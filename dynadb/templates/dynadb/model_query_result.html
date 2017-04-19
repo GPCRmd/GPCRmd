@@ -152,7 +152,14 @@
         <br><b>References in which this complex structure is mentioned</b>:<br>
 
         {%for reference in answer.references%}
-            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p>
+
+
+            {%if reference.pmid%}
+                <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+            {%else%}
+                <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+            {%endif%}
+
         {%endfor%}
 
     {% endif %} 

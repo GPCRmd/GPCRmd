@@ -676,7 +676,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         else:
                             return result
 
-                    if ic_fifty:
+                    if ic_fifty: #we should write the ec50 of this experiment as the reference for this ic_fifty
                         completmp=comple.copy()
                         completmp[6]=''
                         completmp[7]=''
@@ -690,31 +690,29 @@ def record_complex_in_DB(comple,fromiuphar=False):
                             return result
 
                 else:
-                    intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype)
+                    intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype) #one cexp can have data for kd from iuphar and bindingDB
                     if len(intdata)>0:
                         for expintdata in intdata:		
                             if complextype==1: #kd
-                                if len(DyndbBinding.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: #.filter(description=comple[12])
+                                if len(DyndbBinding.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
                         
                             elif complextype==2: #ec50
-                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: #.filter(description=comple[12])
+                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
-
 
                             elif complextype==3: #ic50
-                                if len(DyndbInhibitionEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: #.filter(description=comple[12])
+                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]).filter(type=3)>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
 
-
                             elif complextype==4: #ki
-                                if len(DyndbInhibition.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: #.filter(description=comple[12])
+                                if len(DyndbInhibition.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
@@ -820,16 +818,15 @@ def record_complex_in_DB(comple,fromiuphar=False):
             recorded_ids['ec50'].append(complex_interaction_id)
 
     if complextype==3: #ic_50, inhibition efficacy
-        if len(DyndbInhibitionEfficacy.objects.filter(id=complex_interaction_id).filter(description=comple[12]))==0:
+        if len(DyndbEfficacy.objects.filter(id=complex_interaction_id).filter(description=comple[12]).filter(type=3))==0:
             print('new ic50, recording it...')
-            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
+            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ic_fifty,'units':'nM','description':comple[12],'type':3})
             recorded_ids['ic50'].append(complex_interaction_id)
-
 
     if complextype==4: #ki, inhibition
         if len(DyndbInhibition.objects.filter(id=complex_interaction_id).filter(description=comple[12]))==0:
             print('new ki, recording it...')
-            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
+            newrecord(['dyndb_inhibition',DyndbInhibition],{'id':complex_interaction_id,'rvalue':ki,'units':'nM','description':comple[12]})
             recorded_ids['ki'].append(complex_interaction_id)
 
     #kinetics recorded

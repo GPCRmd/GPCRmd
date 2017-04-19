@@ -80,11 +80,15 @@
             {%if answer.expdatabind or answer.expdataeff%}
                 <b>Experimental Data</b>:<br>
                 {%if answer.expdatabind%}
-                    <b>Kd:</b> {{answer.expdatabind}} <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%for datab in answer.expdatabind%}
+                        <b>Kd:</b> {{datab.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
                 {%endif%}
 
                 {%if answer.expdataeff%}
-                    <b>EC50:</b> {{answer.expdataeff}} <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%for datae in answer.expdataeff%}
+                        <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
                 {%endif%}
 
             {%endif%}
@@ -218,7 +222,11 @@
         {% if answer.references %} 
             <br><h4>References in which this dynamic is mentioned</h4><br>
             {%for reference in answer.references%}
-                <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%if reference.pmid%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%else%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+                {%endif%}
             {%endfor%}
 
         {% endif %} 

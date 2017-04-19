@@ -32,6 +32,16 @@ class DyndbBinding(models.Model):
         managed = True
         db_table = 'dyndb_binding'
 
+class DyndbInhibition(models.Model):
+    id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
+    rvalue = models.FloatField()
+    units = models.CharField(max_length=10)
+    description = models.CharField(max_length=900, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'dyndb_inhibition'
+
 
 class DyndbCannonicalProteins(models.Model):
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', primary_key=True)

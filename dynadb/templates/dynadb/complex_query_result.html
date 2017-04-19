@@ -70,7 +70,11 @@
 {% if answer.reference %}
     <b>References for this complex:</b><br>
     {% for reference in answer.reference%}
-        {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+        {%if reference.pmid%}
+            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+        {%else%}
+            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+        {%endif%}
         <hr><hr>
     {%endfor%}
 {% endif %} 

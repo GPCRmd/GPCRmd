@@ -2731,22 +2731,26 @@ def query_complex(request, complex_id,incall=False):
     q = q.annotate(binding_val=F('dyndbexpinteractiondata__dyndbbinding__id'))
     q = q.annotate(references=F('dyndbexpinteractiondata__dyndbreferencesexpinteractiondata__id_references__id'))  
     q = q.values('ec_fifty_val','binding_val','references')
+    efflist=[]
+    bindlist=[]
     efficacy=dict()
     binding=dict()
     reference_list=[]
     references=dict()
-    for row in q:
+    for row in q: #warning: one cexp can have more than one binding affinity value (one from bindingdb and other from iuphar)
         if row['ec_fifty_val'] is not None:
             efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
             efficacy['value']=efficacyrow.rvalue
             efficacy['units']=efficacyrow.units
             efficacy['description']=efficacyrow.description
+            efflist.append([efficacyrow.rvalue,efficacyrow.units,efficacyrow.description])
    
         if row['binding_val'] is not None:
             bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
             binding['value']=bindrow.rvalue
             binding['units']=bindrow.units
             binding['description']=bindrow.description
+            bindlist.append([bindrow.rvalue,bindrow.units,bindrow.description])
 
         if row['references'] is not None:
             references=dict()
@@ -2764,7 +2768,7 @@ def query_complex(request, complex_id,incall=False):
                 if references[keys] is None:
                     references[keys]=''
             reference_list.append(references)
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy}
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy,'efflist':efflist,'bindlist':bindlist}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -2923,11 +2927,8 @@ def query_dynamics(request,dynamics_id):
     try:
         dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
         expdata=query_complex(request, dyna_dic['link_2_complex'],incall=True)
-        print('expDATA',expdata)
-        if expdata['binding']!=dict():
-            dyna_dic['expdatabind']=expdata['binding']['value']
-        if expdata['efficacy']!=dict():
-            dyna_dic['expdataeff']=expdata['efficacy']['value']
+        dyna_dic['expdatabind']=expdata['bindlist']
+        dyna_dic['expdataeff']=expdata['efflist']
     except:
         dyna_dic['link_2_complex']=''
     dyna_dic['mdsrv_url'] = mdsrv_url
