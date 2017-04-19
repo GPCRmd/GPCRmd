@@ -2428,10 +2428,11 @@ def do_analysis(request):
                 if atom[2]<mintop[2]:
                     mintop[2]=atom[2]
 
+        atomsxyz=trajprot.xyz
         for frame in range(len(trajprot)):
             for atomindex in len(trajprot.xyz[frame]):
-                atom=atom+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
-                
+                atomxyz[frame][atomindex]=atomsxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
+                s
 
 
         trajprot.xyz[0][1] #coordinates of atom index 1 in frame 0
