@@ -27,7 +27,12 @@ $(document).on({
             var extra=0;
         }
         var alch= -100 + alfa*1 + extra; 
-        $('#arrowdiv').css('transform',alfadeg); //we may need to add support for other browsers
+        $('#arrowdiv').css('-moz-transform',alfadeg);
+        $('#arrowdiv').css('-o-transform',alfadeg);
+        $('#arrowdiv').css('-webkit-transform',alfadeg);
+        $('#arrowdiv').css('-ms-transform',alfadeg);
+        $('#arrowdiv').css('-webkit-transform',alfadeg);
+        $('#arrowdiv').css('transform',alfadeg); //original one, check if it works in other browsers.
         $('#arrowdiv').css('left', x + 10);
         $('#arrowdiv').css('top', oftop + alch);
         $('#arrowdiv').show();
