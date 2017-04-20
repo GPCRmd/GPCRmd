@@ -2355,6 +2355,9 @@ def do_analysis(request):
         is_mean=arrays[4]=='mean' #it is not mean, is percentage.
         percentage_cutoff=int(arrays[3])
         #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
+        trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
+        #for atomi in range(len(trajectory.xyz[0])):
+        #    print('PDB',trajectory.xyz[0][atomi], trajectory.topology.atom(atomi))
         trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
         trajectory=trajectory[int(arrays[0]):int(arrays[1])]
         atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
@@ -2365,7 +2368,6 @@ def do_analysis(request):
         frametime=(t.time).reshape(len(t.time),1)
         tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
         full_results['charges']=tograph
-
         sasa=md.shrake_rupley(trajectory)
         time=trajectory.time
         total_sasa = sasa.sum(axis=1)
@@ -2416,9 +2418,9 @@ def do_analysis(request):
         full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
         full_results['salt_bridges'] = [label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
 
-        trajprot=traj.atom_slice(trajectory.topology.select('protein'),inplace=False)
+        trajprot=trajectory.atom_slice(trajectory.topology.select('protein'),inplace=False)
         trajprot=trajprot.superpose(trajprot,0)
-        mintop=[0,0,0]
+        mintop=np.array([0,0,0])
         for frame in range(len(trajprot)):
             for atom in trajprot.xyz[frame]:
                 if atom[0]<mintop[0]:
@@ -2427,16 +2429,31 @@ def do_analysis(request):
                     mintop[1]=atom[1]
                 if atom[2]<mintop[2]:
                     mintop[2]=atom[2]
-
-        atomsxyz=trajprot.xyz
+        mintop-=1
+        max_xyz=[0,0,0]
+        atomxyz=trajprot.xyz
         for frame in range(len(trajprot)):
-            for atomindex in len(trajprot.xyz[frame]):
-                atomxyz[frame][atomindex]=atomsxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
-                s
+            for atomindex in range(len(trajprot.xyz[frame])):
+                atomxyz[frame][atomindex]=atomxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
+                if atomxyz[frame][atomindex][0]>max_xyz[0]:
+                    max_xyz[0]=atomxyz[frame][atomindex][0]
+                if atomxyz[frame][atomindex][1]>max_xyz[1]:
+                    max_xyz[1]=atomxyz[frame][atomindex][1]
+                if atomxyz[frame][atomindex][2]>max_xyz[2]:
+                    max_xyz[2]=atomxyz[frame][atomindex][2]
 
+        #now create a grid with appropiate dimensions to hold all the atoms
+        max_xyz=[int(round((i*10)+2)) for i in max_xyz] #nanometers to angstroms.
+        grid=np.zeros(max_xyz)
+        for frame in range(len(trajprot)):
+            for atomindex in range(len(trajprot.xyz[frame])):
+                xc=int(round(atomxyz[frame][atomindex][0]*10))
+                yc=int(round(atomxyz[frame][atomindex][1]*10))
+                zc=int(round(atomxyz[frame][atomindex][2]*10))
+                grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
 
-        trajprot.xyz[0][1] #coordinates of atom index 1 in frame 0
-        print('HERE',full_results['salt_bridges'])
+        print('Analysis done')
+        print(grid.tolist())
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
