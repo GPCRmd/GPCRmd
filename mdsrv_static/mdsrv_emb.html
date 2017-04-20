@@ -53,7 +53,7 @@
             var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
             //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
-            return([sele, sele2])
+            return([sele, sele2]);
         }
 
         function clickDists(o){
@@ -100,10 +100,10 @@
                                 clickedRep[atom2]=[];
                             }
                             for (an = 0; an < add1.length;an++) {
-                                clickedRep[atom1][clickedRep[atom1].length]=add1[an]
+                                clickedRep[atom1][clickedRep[atom1].length]=add1[an];
                             }
                             for (an = 0; an < add2.length;an++) {
-                                clickedRep[atom2][clickedRep[atom2].length]=add2[an]
+                                clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                             }
                             o.addRepresentation( "label", {
                                 sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
@@ -145,7 +145,7 @@
                 nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
             }
             nonGPCR_mod=nonGPCR_mod.slice(0,-3);
-            return nonGPCR_mod
+            return nonGPCR_mod;
         }
 ///////////////
             var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s=dist_groups_s= receptorsel = bs_info  ="";
@@ -204,7 +204,7 @@
                                         all_cp += (cp_li[comp] + " or ");
                                     }
                                     all_cp = all_cp.slice(0, -3);
-                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )   
+                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );   
                                 }
                                 if (cons_pos == "y"){
                                     var pre_pd_all=[pdA,pdB,pdC,pdF];
@@ -212,14 +212,14 @@
                                     for (elN = 0; elN < pre_pd_all.length; elN++) {
                                         var class_poss=pre_pd_all[elN];
                                         if (class_poss){
-                                            pd_all[pd_all.length]=class_poss
+                                            pd_all[pd_all.length]=class_poss;
                                         }
                                     }
-                                    var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
+                                    var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
                                     for (ind = 0; ind < pd_all.length; ind++) {
                                          class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
                                          if (class_li){
-                                             var cons_pos_ok = class_li.replace(/,/g," OR ")
+                                             var cons_pos_ok = class_li.replace(/,/g," OR ");
                                              o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:"protein and ("+ cons_pos_ok +")"  } ); 
                                          }
                                      } 
@@ -244,7 +244,7 @@
 /////////////////!
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
-                                    var traj_li=traj_str.split(",")
+                                    var traj_li=traj_str.split(",");
                                     for (t = 0; t < traj_li.length; t++) {
                                         o.addTrajectory( t_path + traj_li[t] );
                                     }
@@ -327,7 +327,7 @@
                                             if (a.atomname == "CA"){
                                                 label_pos=a.index;
                                             }
-                                        },res_sele)
+                                        },res_sele);
                                         //o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
                                     }
                                     final_sele=final_sele.join(" , ");

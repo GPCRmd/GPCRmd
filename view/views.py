@@ -715,7 +715,9 @@ def index(request, dyn_id):
             prot_seq_pos={}
             seq_pos_n=1
             all_chains=[]
+            all_prot_names=[]
             for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
+                all_prot_names.append(prot_name)
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
@@ -828,7 +830,9 @@ def index(request, dyn_id):
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "other_prots":other_prots,#["protein and (:A or :B or :C)" , "Chains A, B, C" , "A, B,C"]
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
-                        "all_chains": ",".join(all_chains) }
+                        "all_chains": ",".join(all_chains),
+                        "all_prot_names" : ", ".join(all_prot_names)
+                         }
                     return render(request, 'view/index.html', context)
                 else:
                     context={
@@ -845,7 +849,9 @@ def index(request, dyn_id):
                         "chains" : chain_str,
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "gpcr_pdb": "no",
-                        "all_chains": ",".join(all_chains)}
+                        "all_chains": ",".join(all_chains),
+                        "all_prot_names" : ", ".join(all_prot_names)
+                        }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
                 context={
@@ -860,7 +866,9 @@ def index(request, dyn_id):
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
                         "chains" : chain_str,            
-                        "gpcr_pdb": "no"}
+                        "gpcr_pdb": "no",
+                        "all_prot_names" : ", ".join(all_prot_names)
+                        }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
             context={
@@ -997,8 +1005,6 @@ def download_int(request, int_id):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
         writer = csv.writer(response)
-        writer.writerow(["#Structure: "+struc_fileint])
-        writer.writerow(["#Trajectory: "+traj_fileint])
         if (dist_scheme=="closest"):
             dist_scheme_name="All atoms";
         else:

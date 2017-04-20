@@ -109,14 +109,13 @@
             		</div><br>   -->
 
         <div class="container-fluid">
-            
-<!-- ============= Test trajs =========== -->
-
-<!-- <div class="btn-group btn-group-xs">
-  <button type="button" class="btn btn-info">14_trj_1_1</span></button>
-  <button type="button" class="btn btn-success"><span class="glyphicon glyphicon-play"></span></button>
-</div>-->
-
+        {% if all_prot_names %}
+        <div style="margin:5px 0 5px 0;">
+            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:2px;">
+                <p style="margin:0;padding: 2px 5px 2px 5px">{{all_prot_names}}</p>
+            </div>
+        </div>
+        {% endif %}
 
 
 <!-- ============= IFRAME =========== -->
