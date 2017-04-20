@@ -32,7 +32,7 @@ from molecule_download_fillDB import retreive_compound_data_pubchem_post_json, r
 from UniprotCodes import gpcr_uniprot_codes
 from django.db.models import Q
 from dynadb.models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from dynadb.models import DyndbProteinMutations,DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames
+from dynadb.models import DyndbProteinMutations,DyndbProteinCannonicalProtein, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames,DyndbInhibition
 from dynadb.pipe4_6_0 import *
 from Bio import Entrez
 from Bio.Entrez import efetch
@@ -441,7 +441,7 @@ def get_complexes(chunk):
     while i<len(lines_list):#make sure the last line is parsed.
 
         if '$$$$' in lines_list[i]:
-            if ( len( kd.replace('0','').replace('.','') )>0 or len( ec50.replace('0','').replace('.','') )>0 ) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(gpcr_uniprot_codes)))>0 and pubchem_id!='':
+            if ( len( kd.replace('0','').replace('.','') )>0 or len( ec50.replace('0','').replace('.','') )>0  or len( ic50.replace('0','').replace('.','') )>0  or len(ki.replace('0','').replace('.','') )>0 ) and emptyprot==False and errflag==0 and len(set(protlist).intersection(set(gpcr_uniprot_codes)))>0 and pubchem_id!='':
                 complexes.append([ligkey,liginchi, pubchem_id, chembl_id,protlist,kd,ec50,ki,ic50,reference,seqlist,SDF,binding_id]) 
             protlist=[]
             reference={} 
@@ -554,7 +554,7 @@ def get_complexes(chunk):
     
     return complexes
     
-def record_complex_in_DB(comple,fromiuphar=False):
+def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
     ''' It uses a variation of the NiceSearcher to check if a new entry in the Binding DB sdf already exists as a complex, if it is not, a new comoplex is created. '''
     #all records in memory, now record them in the DB.
     isoformid=1
@@ -572,7 +572,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
     ki=comple[7]
     ic_fifty=comple[8]
 
-    if sum(len(kd),len(ec_fifty),len(ic_fifty),len(ki))>1:
+    if sum([len(kd)>0,len(ec_fifty)>0,len(ic_fifty)>0,len(ki)>0])>1:
         complextype=5
 
     elif len(kd)>0:
@@ -636,8 +636,8 @@ def record_complex_in_DB(comple,fromiuphar=False):
             if exactmatchtest_complex_exp(query_array,'complex',i)=='pass':
                 exactest=1 #this complex already exists
                 complex_id=i
-
                 if complextype==5: #Call again this function, this time with only one rvalue at a time.
+                    print('dous de cada ves.')
                     if kd:
                         completmp=comple.copy()
                         completmp[6]=''
@@ -656,12 +656,12 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         completmp[7]=''
                         completmp[8]=''
                         try:
-                            record_complex_in_DB(completmp,fromiuphar)  
+                            result=record_complex_in_DB(completmp,fromiuphar)  
                         except:
                             if type(result)!=dict:
                                 pass
-                        else:
-                            return result
+                            else:
+                                return result
 
                     if ki:
                         completmp=comple.copy()
@@ -669,12 +669,12 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         completmp[5]=''
                         completmp[8]=''
                         try:
-                            record_complex_in_DB(completmp,fromiuphar)  
+                            result=record_complex_in_DB(completmp,fromiuphar)  
                         except:
                             if type(result)!=dict:
                                 pass
-                        else:
-                            return result
+                            else:
+                                return result
 
                     if ic_fifty: #we should write the ec50 of this experiment as the reference for this ic_fifty
                         completmp=comple.copy()
@@ -682,12 +682,15 @@ def record_complex_in_DB(comple,fromiuphar=False):
                         completmp[7]=''
                         completmp[5]=''
                         try:
-                            record_complex_in_DB(completmp,fromiuphar)  
+                            if ec_fifty:
+                                result=record_complex_in_DB(completmp,fromiuphar,ec50_id=ec_fifty)
+                            else:
+                                result=record_complex_in_DB(completmp,fromiuphar)
                         except:
                             if type(result)!=dict:
                                 pass
-                        else:
-                            return result
+                            else:
+                                return result
 
                 else:
                     intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype) #one cexp can have data for kd from iuphar and bindingDB
@@ -706,7 +709,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                                     return 'This complex was already recorded'
 
                             elif complextype==3: #ic50
-                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]).filter(type=3)>0: 
+                                if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]).filter(type=3))>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
@@ -820,7 +823,11 @@ def record_complex_in_DB(comple,fromiuphar=False):
     if complextype==3: #ic_50, inhibition efficacy
         if len(DyndbEfficacy.objects.filter(id=complex_interaction_id).filter(description=comple[12]).filter(type=3))==0:
             print('new ic50, recording it...')
-            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ic_fifty,'units':'nM','description':comple[12],'type':3})
+            if ec50_id is not None:
+                newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ic_fifty,'units':'nM','description':comple[12],'type':3, 'reference_id_efficacy':ec50_id})
+            else:
+                newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ic_fifty,'units':'nM','description':comple[12],'type':3})
+
             recorded_ids['ic50'].append(complex_interaction_id)
 
     if complextype==4: #ki, inhibition
@@ -920,7 +927,7 @@ def record_complex_in_DB(comple,fromiuphar=False):
                     isoflag=0
                     #check the isoform of the this new unicode
                     while ij<20 and isoflag==0:
-                        time.sleep(round(jj*0.05,2))
+                        time.sleep(round(ij*0.05,2))
                         response = requests.get("http://www.uniprot.org/uniprot/"+uniprot+"-"+str(ij)+".fasta")
                         seqlist=response.text.split('\n')[1:] #skip header
                         seq=''.join(seqlist)
@@ -1172,7 +1179,7 @@ def fill_db(chunks):
                 pos+=1
             except:
                 log.write(str(comple))
-                #raise
+                raise
                 log.write('THIS IS WHAT THE FUNCTION RETURNS',error_dict)
                 
                 if type(error_dict)!=dict:
@@ -1292,4 +1299,5 @@ def fill_db_iuphar(filename):
 
 mypath='/protwis/sites/protwis/dynadb/chunks/chunksBindingDB'
 chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
-fill_db_iuphar('./dynadb/interactions.csv')
+fill_db(chunks)
+#fill_db_iuphar('./dynadb/interactions.csv')
