@@ -55,7 +55,7 @@ input[type=submit]:hover{
 {% endblock %}
 {% block content %}
 
-<form method="post" id="myform" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
+<form method="post" id="form" action="{{ action }}" enctype="multipart/form-data">{% csrf_token %}
 
 
  <!-- description column -->
@@ -116,18 +116,18 @@ input[type=submit]:hover{
                             <div class="col-md-1 col-md-offset-1"> <input checked type="radio" style="float:left"id="id_form-1-is_present" name="form-is_present" value="is_present" /> </div>
 				<div class="col-md-4" style="text-align:left;height:30px;margin: 0px 0px 5px 0px;"><a title="Choose a previous set of crystalized compounds from the GPCRmd database by providing a specific model identifier Model ID.">Model ID:</a> </div>
 			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input style="width:130px" id="Choose_reused_model" name="Choose_reused_model" rows="1" > </input></div> 
-                            {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
+                            {% if error == "model" or error == "both" %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 			    </div>
                            <div class="row">
                             <div class="col-md-1 col-md-offset-1"> <input type="radio" style="float:left"id="id_form-2-is_present" name="form-is_present" value="is_present" /> </div>
 				<div class="col-md-4" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p><a title="Choose a previous set of crystalized compounds from the GPCRmd database by providing a specific model identifier Model ID." >Submission ID:</a> </p></div>
 			        <div class="col-md-4" style="margin:0px 0px 0px 0px"><input style="width:130px" id="Choose_submission_id" name="Choose_submission_id"  hidden rows="1" > </input></div> 
-                            {% if value == 0 %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
+                            {% if error == "submission" or error == "both" %} <div class="col-md-1" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><p style="color:red;">*</p></div>{% endif %}
 		            </div><br>
                             </div>
-                            {% if value == 0 %}
+                            {% if message %}
                             <div class="row">
-                                 <div class="col-md-12" style="text-align:left;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{CHoose_submission_id}}</p></h4></div>
+                                 <div class="col-md-12" style="text-align:center;height:30px;margin: 5px 0px px 0px;"><h4> <p style="color:red;font-size:12px;text-align:justify;margin-left:8%;margin-right:8%">{{message}}</p></h4></div>
                             </div>{%endif%}
                 </div>
                 </div>
