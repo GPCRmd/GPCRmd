@@ -15,9 +15,10 @@
 
     .miniscroll{
         overflow-y:auto;
+        overflow:auto;
         max-height:140px;
         height:130px;
-        width: 40%;
+        <!--width: 40%;-->
     }
 
     .bs-example{
@@ -76,8 +77,20 @@
             {%endif%}
             <br>
 
-            {%if answer.link_2_complex%}
-                <b>Experimental Data</b>: <a class='btn btn-info' role='button' href= /dynadb/complex/id/{{answer.link_2_complex}}> Complex ID: {{answer.link_2_complex}}</a> <br><br>
+            {%if answer.expdatabind or answer.expdataeff%}
+                <b>Experimental Data</b>:<br>
+                {%if answer.expdatabind%}
+                    {%for datab in answer.expdatabind%}
+                        <b>Kd:</b> {{datab.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
+                {%if answer.expdataeff%}
+                    {%for datae in answer.expdataeff%}
+                        <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
             {%endif%}
 
         </div> <!--lef div end-->
@@ -114,10 +127,10 @@
         <div id='bottoninfoleft' class="col-sm-6">
             <div id='leftleftcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
             {% if answer.ortoligands %}
-                <b>Orthosteric ligand(s)</b>:<br><br>
+                <b style="margin:10px;padding:7px;">Orthosteric ligand(s)</b><br><br>
                 {% for url in answer.ortoligands %}
                     <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
-                   <center> <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a><br></center>
+                    <a style="margin:10px;padding:7px;" href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a><br>
                 {% endfor %}
             {% endif %}
             <br>
@@ -125,7 +138,7 @@
 
             <div id='leftrightcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
             {% if answer.aloligands %}
-                <b>Allosteric ligand(s)</b>:<br><br>
+                <b>Allosteric ligand(s)</b><br><br>
                 {% for url in answer.aloligands %}
                     <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
                     <center><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a></center>
@@ -209,7 +222,11 @@
         {% if answer.references %} 
             <br><h4>References in which this dynamic is mentioned</h4><br>
             {%for reference in answer.references%}
-                <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%if reference.pmid%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%else%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+                {%endif%}
             {%endfor%}
 
         {% endif %} 
@@ -232,6 +249,10 @@
 <script type="text/javascript" src="{% static 'dynadb/manage3dcarousel.js' %}"></script>
 
 <script type="text/javascript" >
+$( document ).ready(function() {
+    $('.ortoligand:first').click();
+});
+
 $("#bottoninfoleft .ortoligand").click(function(){
         $("#bottoninfoleft .ortoligand").css("background-color","#337ab7");
         $(this).css("background-color","blue"); 

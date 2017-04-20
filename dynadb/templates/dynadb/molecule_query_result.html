@@ -54,7 +54,11 @@
     {% if answer.references %} 
         <br><b>References in which this molecule is mentioned</b>:<br>
         {%for reference in answer.references%}
-              <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p>
+                {%if reference.pmid%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%else%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+                {%endif%}
         {%endfor%}
     {% endif %} 
 
@@ -69,7 +73,7 @@
     <div class="panel-heading"><b>Image of the Specific State:</b></div>
     <div class="panel-body">
     <div id='leftdiv' class="col-sm-6">
-        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
+        <center><button  style="display:none;" type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
         <center><img src="{{answer.imagelink}}" /></center>
     </div>
     <div id='rightdiv' class="col-sm-6">
@@ -86,5 +90,10 @@
 {% block addon_js %}
 <script src="{% static 'dynadb/mol3dv.js' %}"></script>
 <script src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript" >
+    $( document ).ready(function() {
+        $('.ortoligand:first').click();
+    });
+</script>
 {% endblock%}
 

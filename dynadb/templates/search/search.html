@@ -147,7 +147,7 @@
 #floatdiv {
     width:48%;
     overflow-y:auto;
-    max-height:416px;
+    max-height:440px;
     overflow:auto;
     position: fixed;
 
@@ -186,7 +186,7 @@ kbd{
   <div class="col-sm-12">
     <div id="headerbrowser" style="word-break: normal" class="jumbotron">
     <h2>Simulation browser</h2>
-    <p style="font-size:18px">Use the panel in the left (A) to search for specific elements: GPCR's, other proteins, molecules in standard form or in specific states (protonated states, enantiomers, tautomers, etc), then click "Add to Search". Use the right panel (B) to search dynamics including the desired elements you have added. For more advanced search options and further help click "Show Help" button.</p>
+    <p style="font-size:18px">Use the panel in the left (A) to search for specific elements: GPCR's, other proteins, molecules in standard form or in specific states (protonated states, enantiomers, tautomers, etc), then click "Add to Search". Use the right panel (B) to search dynamics with the desired elements you have added. For more advanced search options and further help click "Show Help" button.</p>
     <center><button  id="helpbutton" type="button" value="Help" class="btn btn-primary btn-xs">Show Help</button></center>
 
       <div id="help" style="word-break: normal">
@@ -362,9 +362,11 @@ kbd{
         </div>
 
         <hr>
-        <div id="tablefilter" class="col-sm-12">
+        <center><button type="button" class="btn btn-info" data-toggle="collapse" data-target="#tablefilter">See simulation filters</button></center>
+        <div id="tablefilter" class="col-sm-12 collapse">
+            <br>
             <div id="tablefilterl" align="left" class="col-sm-6">
-                <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br>
+                <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br><br>
                 Time step  <select style="display:none;" id="gle"><option value="smaller"> <= </option> <option value="equal" selected="selected"> = </option> <option value="greater"> >= </option> </select> <input id='tstep' type="text" name="tstep"><br><br>
                 Force Field  <select id="fftype"><option selected="selected" value=""> </option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option></select><br><br>
                 Software used  <select id="soft"><option selected="selected" value=""> </option><option value="ACEMD">ACEMD</option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option><option value="DESMOND">DESMOND</option><option value="GROMACS">GROMACS</option><option value="GROMAS">GROMAS</option><option value="NAMD">NAMD</option><option value="YASARA">YASARA</option><option value="OTHER">OTHER</option></select><br><br>
@@ -377,13 +379,14 @@ kbd{
                       <label><input type="radio" name="radiosearch1" value="com"> Only complexes </label>
                       <label><input type="radio" name="radiosearch1" value="both" checked="checked"> Both </label>
                     </div>
-                </div>
+                </div><br>
                 Membrane type  <select id="memtype"><option selected="selected" value=""> </option><option value="1">Implicit</option><option value="2">Homogeneous</option><option value="3">Heterogeneous</option></select><br><br>
                Method  <select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics (MM)</option><option value="4">MM Monte Carlo</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option><option value="2">QM/MM</option><option value="3">NMR</option></select><br><br>
                Solvent type  <select id="soltype"><option selected="selected" value=""> </option> <option value="1">Implicit</option><option value="2">TIP3P</option><option value="3">TIP4P</option><option value="4">TIPS</option><option value="5">SPC</option><option value="6">SPC/E</option><option value="7">Other</option></select><br><br>
             </div>
         </div>
         <br><br><br><button id="tablesearch" type="button" value="search" class="btn btn-info btn-md "> <span class="glyphicon glyphicon-search"> </span></button>
+        <br><br><br><br><br>
         </center>
 
     </div> <!--panel body-->
