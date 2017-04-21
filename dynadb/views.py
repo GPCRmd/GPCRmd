@@ -68,6 +68,7 @@ from django.views.defaults import server_error
 from revproxy.views import ProxyView
 
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
+color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pink"]
 
 # Custom view function wrappers
 from functools import wraps
@@ -892,18 +893,19 @@ def PROTEINview(request, submission_id):
 
                 ##### Let's search for form fields ending in a number which stand for fields belonging to the dyndbProteinMutations models
                 ##### the fields corresponding to a mutation [nummunt] in a protein [ii] will be stored in the dictionary dictPM[ii][nummut]
-               
+                #print("lll",dictprot[ii].items())
                 for k,v in dictprot[ii].items():
                     try:
                         nummut=int(k.split("-")[-1])
                         key=("").join(k.split("-")[:-1])
+                        print("lll",k,key)
                     except:
                         continue
                     if nummut not in nummutl[ii]:
                         nummutl[ii].append(nummut)
                         dictPM[ii][nummut]={}
                     dictPM[ii][nummut][key]=v
-                print ("nummutl ", nummutl)
+                print ("OOOOOOOOOOOOOOOOOOOOOOOOOOO\n\nnummutl ", nummutl,"dictionary mutations", dictPM)
                 if len(nummutl[ii])==0:
                     response = HttpResponse('Protein mutations have not been obtained. Please follow these steps: 1) After having obtained the retrieved data about the current protein from the UniprotKB DB ("Wild-type" sequence can be manually entered if no data about the protein exist in UniprotKB) and having provided the "Mutant sequence" in the corresponding field in the form, remember to align the "Mutant sequence" to the Wild type one by clicking the "Align to the wild type" button. Then, click the "Get mutations" button and the check if the mutations in the "Protein Mutations" table are correct. If no results are obtained, please make the database administrator know.' ,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
@@ -969,6 +971,7 @@ def PROTEINview(request, submission_id):
                             if el_to_up not in mut_used:
                                 el=(int(dictPM[ii][nm]['resid']),dictPM[ii][nm]['resletter_from'],dictPM[ii][nm]['resletter_to'],int(dictPM[ii][nm]['id_protein']))
                                 DyndbProteinMutations.objects.filter(id=el_to_up[4]).update(resid=el[0],resletter_from=el[1],resletter_to=el[2],protein_id=el[3])  
+                                print("update")
                                 nummut_indb.append(nm)
                                 mut_used.append(el_to_up)
                                 break
@@ -1366,7 +1369,7 @@ def PROTEINview(request, submission_id):
             fdbPM = dyndb_Protein_MutationsForm()
             fdbOPN= dyndb_Other_Protein_NamesForm()
          
-            return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'saved':False})
+            return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id,'saved':False, 'colorlist':color_label_forms})
 
         else:
             print(len(qSub),"len")
@@ -1419,7 +1422,7 @@ def PROTEINview(request, submission_id):
                 print("mutations",MUTations)
   
 
-        return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id, 'saved':saved})
+        return render(request,'dynadb/PROTEIN.html', {'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id':submission_id, 'saved':saved, 'colorlist':color_label_forms})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS,'fdbPM':fdbPM,'fdbOPN':fdbOPN,'submission_id':submission_id})
 #       return render(request,'dynadb/PROTEIN.html', {'fdbPF':fdbPF,'fdbPS':fdbPS, 'fdbOPN':fdbOPN})
 @login_required
@@ -8800,7 +8803,7 @@ def check_compound_entry_exist(pubchem_cid, chemblid, sinchikey, inchikey):
         qPS=DyndbProteinSequence.objects.filter(pk__in=lpkm)
         print("query PS len",len(qPS.values()))
         if len(qPS.values())<len(lpkm):
-            browse_protein_response={'Message':"ERROR: There is one or more entries of mutant proteins in DyndbProtein matching the UniProtKB AC and the isoform number of the one is being processed but there is not any sequence for them in DyndbProteinSequence...  This should be checked and fixed. The pk of these proteins in DyndbProtein is "+str(lpkm),'id_protein':[]}
+            browse_protein_response={'Message':"ERROR: There is one or more entries of mutant proteins in DyndbProtein matching the UniProtKB AC and the isoform number of the one is being processed but there is not any sequence for at least one of them in DyndbProteinSequence...  This should be checked and fixed. The pk of these proteins in DyndbProtein is "+str(lpkm),'id_protein':[]}
             return browse_protein_response 
 
         for elm in qPS.values():
@@ -11776,7 +11779,7 @@ def SMALL_MOLECULEview(request, submission_id):
 ###  #          print("AQUI", tt,alias)
   
 ###  #       return render(request,'dynadb/SMALL_MOLECULEreuse.html', {'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':model_id})
-            return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'urlstd':urlstd,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'list':listExtraMolColapse, 'saved':True})
+            return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'urlstd':urlstd,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'list':listExtraMolColapse, 'saved':True,'colorlist':color_label_forms})
             #return render(request,'dynadb/SMALL_MOLECULE.html', {'url':url,'fdbSub':fdbSub,'qMOL':qMOL,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'list':listExtraMolColapse, 'saved':True})
         else:    
 #        qSub=DyndbSubmissionMolecule.objects.filter(submission_id=DyndbSubmissionModel.objects.filter(model_id=model_id).values_list('submission_id',flat=True)[0]).order_by('int_id')
@@ -11813,7 +11816,7 @@ def SMALL_MOLECULEview(request, submission_id):
             fdbSub = dyndb_Submission_Molecule()
          
          
-    return render(request,'dynadb/SMALL_MOLECULE.html', {'qMOL':qMOL,'fdbSub':fdbSub,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':False})
+    return render(request,'dynadb/SMALL_MOLECULE.html', {'qMOL':qMOL,'fdbSub':fdbSub,'labtypel':labtypel,'Type':Type,'imp':imp,'qCOMP':qCOMP,'int_id':int_id,'int_id0':int_id0,'alias':alias,'submission_id':submission_id,'model_id':False,'colorlist':color_label_forms})
        
 #       fdbMF = dyndb_Molecule()
 #       fdbSub = dyndb_Submission_Molecule()

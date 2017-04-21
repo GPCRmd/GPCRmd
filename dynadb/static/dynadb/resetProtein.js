@@ -46,7 +46,7 @@ $(document).ready(function(){
         $(protform).find(":input[type='checkbox'][id!='id_receptor'][id!='id_form-0-receptor'],:input[type='radio']").each(function(){
             $(this).prop("checked",false);
         });
-        useisoform.prop("checked",true);
+//        useisoform.prop("checked",true);
         mutations.attr("class",'col-md-12 panel panel-primary '); 
         alignment.prop("disabled",true);
         msequence.prop("disabled",true);
