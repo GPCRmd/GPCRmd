@@ -62,6 +62,7 @@ $(document).ready(function(){
               var name1 = $(this).attr('name');
               var id1 = $(this).attr('id');
               var namelab1 = name1.replace(/-[0-9]+$/,"-0");
+              //var namelab1 = name1.replace(/-[0-9]+$/,"-0");
               var idlab1 = id1.replace(/-[0-9]$/,"-0");
               $(this).attr({'placeholder':namelab1,'id':idlab1, 'name':namelab1});
               $(this).prop("readonly",false);

@@ -50,9 +50,10 @@
 	        <div class="row" >
         	       <div class="col-md-1" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{last|add:1}}-is_present"> <a title="Bulk (not co-crystalized): Check this field if the molecule belongs to the simulation environment, i.e. bulk solvent and lipid membrane molecules, ions and other molecules whose coordinates are randomly generated or not specified when building the system."> Bulk (not co-crystalized):</a></label></div><div class="col-md-1" style="height:30px"><input type="radio"id="id_form-{{last|add:1}}-not-is_present"  name="form-{{last|add:1}}-is_present" checked /> </div>
 		      		<div class="col-md-4" ><select  id="id_form-{{last|add:1}}-bulk_type" name="form-{{last|add:1}}-bulk_type" rows="2" style="width:180px"  >
+                                 <option value="" selected ></option>
                			 {% for i in fdbSub.Meta.model.COMPOUND_TYPE %}
                                      {% if forloop.counter0 > 5 %}
-                  			<option value="{{i.0}}" {% if forloop.counter = 5 %} selected {% endif %} > {{i.1}}</option>
+                  			<option value="{{i.0}}" > {{i.1}}</option>
                                      {%endif%}
                			 {% endfor %}
                                         </select> </div>
@@ -71,26 +72,26 @@
  	        <div class="row">                                        
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-inchi"><a title="InChI: IUPAC International Chemical Identifier (InChI) of the molecule.">InChI:</a></label></div>
                                                                           
-                		<div class="col-md-6"><textarea style="width:300px" cols="40" id="id_form-{{last|add:1}}-inchi" name="form-{{last|add:1}}-inchi"  value="{{TTT.inchi.name}}" readonly rows="2"></textarea></div><!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"--><br></div>
+                		<div class="col-md-7"><textarea style="width:300px" cols="40" id="id_form-{{last|add:1}}-inchi" name="form-{{last|add:1}}-inchi"  value="{{TTT.inchi.name}}" readonly rows="2"></textarea></div>{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}<!-- placeholder=" 1S/C18H19ClN4/c1-22-8-10-23(11-9-22)18-14-4-2-3-5-15(14)20-16-7-6-13(19)12-17(16)21-18/h2-7,12,20H,8-11H2,1H3"--><br></div>
                                                                           
  	        <div class="row">                                        
  			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-sinchikey"><a title="SInChIKey: Molecule Standard InChI's hash">SInChIKey:</a></label></div>
-                            <div class="col-md-3"><input style="width:300px" id="id_form-{{last|add:1}}-sinchikey" maxlength="27" name="form-{{last|add:1}}-sinchikey" readonly type="text" /></div> </div> 
+                            <div class="col-md-7"><input style="width:300px" id="id_form-{{last|add:1}}-sinchikey" maxlength="27" name="form-{{last|add:1}}-sinchikey" readonly type="text" /></div>{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%} </div> 
 
 	        <div class="row">
                         <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-net_charge"><a title="Net charge: Net charge of the molecule structure.">Net charge:</a></label></div>
-			<div class="col-md-6"><input style="width:300px" id="id_form-{{last|add:1}}-net_charge" name="form-{{last|add:1}}-net_charge" readonly type="number" /></div> <!-- placeholder=" 0" -->
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{last|add:1}}-net_charge" name="form-{{last|add:1}}-net_charge" readonly type="number" /></div> <!-- placeholder=" 0" -->{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
 		<br></div>
 	
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-inchikey"><a title="InChIKey: Molecule InChI's hash">InChIKey:</a></label></div>
-			<div class="col-md-3"><input style="width:300px" id="id_form-{{last|add:1}}-inchikey" maxlength="27" name="form-{{last|add:1}}-inchikey" readonly type="text"  /></div> 
+			<div class="col-md-7"><input style="width:300px" id="id_form-{{last|add:1}}-inchikey" maxlength="27" name="form-{{last|add:1}}-inchikey" readonly type="text"  /></div> {%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
 		<br></div>
 	        
 	        <div class="row" style="height:65px">
-			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-smiles"><a title="Open SMILES: Canonical SMILES representation of the molecule.">Open SMILES:</a></label></div>
-			<div class="col-md-6"><textarea cols="70" style="width:300px" id="id_form-{{last|add:1}}-smiles" name="form-{{last|add:1}}-smiles" readonly rows="2" ></textarea> 
+			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-smiles"><a title="Open SMILES: Canonical SMILES representation of the molecule.">Open SMILES:</a></label></div>{%if model_id %} <a id="id_form-{{int0}}-lock" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
+			<div class="col-md-7"><textarea cols="70" style="width:300px" id="id_form-{{last|add:1}}-smiles" name="form-{{last|add:1}}-smiles" readonly rows="2" ></textarea> 
 		</div><br></div>
 
 		<div class=row id='PRUEBA'>
@@ -128,29 +129,29 @@
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-name"><a title="Name: First name in the list of names in PubChem or 'compound name' in ChEMBL if there is no entry in PubChem.">Name:</a></label></div>
-			<div class="col-md-6"><input  style="width:300px" id="id_form-{{last|add:1}}-name" maxlength="60" readonly name="form-{{last|add:1}}-name" type="text" /></div> <!-- placeholder=" Clozapine"--> 	</div>
+			<div class="col-md-7"><input  style="width:300px" id="id_form-{{last|add:1}}-name" maxlength="60" readonly name="form-{{last|add:1}}-name" type="text" /></div> <!-- placeholder=" Clozapine"-->{%if model_id %} <a id="id_form-{{int0}}-lock2" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%} 	</div>
 
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-iupac_name"><a title="IUPAC name: IUPAC name downloaded from PubChem.">IUPAC name:</a></label></div>
-			<div class="col-md-6"><input id="id_form-{{last|add:1}}-iupac_name" style="width:300px" maxlength="500" readonly name="form-{{last|add:1}}-iupac_name" type="text"/></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->
+			<div class="col-md-7"><input id="id_form-{{last|add:1}}-iupac_name" style="width:300px" maxlength="500" readonly name="form-{{last|add:1}}-iupac_name" type="text"/></div> <!-- placeholder=" 3-chloro-6-(4-methylpiperazin-1-yl)-5H-benzo[b][1,4]benzodia" -->{%if model_id %} <a id="id_form-{{int0}}-lock2" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>{%endif%}
 		</div>
 			
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-pubchem_cid"><a title="PubChem cid: PubChem chemical identifier">PubChem cid:</a></label></div>
 			<div class="col-md-3"><input id="id_form-{{last|add:1}}-pubchem_cid"  name="form-{{last|add:1}}-pubchem_cid"  style="width:142px;margin-right:0%" type="number" /></div> <!--placeholder=" 2818" -->
-	 		<div class="col-md-3"><button id="id_form-{{last|add:1}}-update_from_pubchem" name="form-{{last|add:1}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div>
+	 		<div class="col-md-4"><button id="id_form-{{last|add:1}}-update_from_pubchem" name="form-{{last|add:1}}-update_from_pubchem" style="width:142px;text-align:center;margin-left:0%;" type="button" >Update</button></div><a hidden id="id_form-{{int0}}-lock3"{% if saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
 		</div>
 			
 
 	        <div class="row">
 			<div class="col-md-1"style="height:30px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-chemblid"><a title="ChEMBL ID: id in ChEMBL.">ChEMBL ID:</a></label></div>
 			<div class="col-md-3"><input id="id_form-{{last|add:1}}-chemblid" name="form-{{last|add:1}}-chemblid" type="number" style="width:142px;margin-right:0%"/></div> <!--  placeholder=" 42"-->
-			<div class="col-md-3"><button id="id_form-{{last|add:1}}-update_from_chembl" name="form-{{last|add:1}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div>
+			<div class="col-md-4"><button id="id_form-{{last|add:1}}-update_from_chembl" name="form-{{last|add:1}}-update_from_chembl" style="width:142px;text-align:center;margin-left:0%" type="button" >Update</button></div><a hidden id="id_form-{{int0}}-lock3"{% if saved %} {%else%}title="This field will be automatically filled."{% endif %} href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
 		</div>
 	
 	        <div class="row">
-<div class="col-md-1" style="height:70px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-6">
-		        <textarea cols="40" id="id_form-{{last|add:1}}-other_names" name="form-{{last|add:1}}-other_names" readonly rows="2" style="width:300px" ></textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"-->
+<div class="col-md-1" style="height:70px"></div><div class="col-md-3"><label for="id_form-{{last|add:1}}-other_names"><a title="Aliases: Other names that are obtained from PubChem or otherwise from ChEMBL.">Aliases:</a></label></div><div class="col-md-7">
+		        <textarea cols="40" id="id_form-{{last|add:1}}-other_names" name="form-{{last|add:1}}-other_names" readonly rows="2" style="width:300px" ></textarea></div> <!--placeholder=" Clozaril; Fazaclo; Fazaclo Odt; HF-1854"--> <a id="id_form-{{int0}}-lock2" href="#"><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
                 </div>
 		</div>
 
