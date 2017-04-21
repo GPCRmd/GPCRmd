@@ -20,7 +20,6 @@
 
     <!-- UI -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script><!-- test -->
     <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
     <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
     <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
@@ -59,7 +58,7 @@
             var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
             //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
-            return([sele, sele2])
+            return([sele, sele2]);
         }
         
         function trajButtons(o){
@@ -98,7 +97,7 @@
                     $(this).children().attr("class","glyphicon glyphicon-pause");
                     var patt = new RegExp("/(.*)$");
                     var res = patt.exec(traj_li_all[btn_traj_id]);
-                    var mytraj_nm=res[1]
+                    var mytraj_nm=res[1];
                     $("#last_played").text(mytraj_nm);
                     some_clicked=true;
                     trajComp.signals.frameChanged.add(function(){
@@ -110,7 +109,7 @@
                             var recept =bs_info_li[0];
                             var ligli=bs_info_li[1].split(",");
                             var bsnum =0;
-                            for (liN in ligli){
+                            for (liN = 0; liN < ligli.length; liN++){
                                 var lig = ligli[liN];
                                 var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
                                 var sele = result[0];
@@ -139,7 +138,7 @@
                                 stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
                             }
                         }
-                    })
+                    });
                 }
             });
         }
@@ -151,7 +150,7 @@
                 nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
             }
             nonGPCR_mod=nonGPCR_mod.slice(0,-3);
-            return nonGPCR_mod
+            return nonGPCR_mod;
         }
         
         function clearDists(clicktrue,lbl_name1){
@@ -201,7 +200,7 @@
                     $("#atomInfo").text(info);
                 } 
                 $("#viewport").mousemove(function(){$("#atomInfo").text("")});
-            })
+            });
             var atom1 , atom2 , res2 , res2, myrepr;
             var lbl_id=0;
             var dist_id=0;
@@ -210,7 +209,7 @@
                 if (clicktrue){
                     if (d.atom){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
-                        $("#atomClicked").text(info)
+                        $("#atomClicked").text(info);
                         lbl_name1="label_"+lbl_id.toString();
                         lbl_id+=1;
                         labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
@@ -220,12 +219,12 @@
                         atom1 = d.atom.index.toString();
                         clicktrue = false;
                     }else {
-                        $("#atomClicked").text("")
+                        $("#atomClicked").text("");
                     }
                 }else{
                     if (d.atom){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
-                        $("#atomClicked").text(info)                                            
+                        $("#atomClicked").text(info);                                            
                         atom2 = d.atom.index.toString();
                         //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
                         clicktrue = true;
@@ -312,7 +311,7 @@
                         $("#atomClicked").text("");
                         clicktrue = true;
                         stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                        stage.getRepresentationsByName(lbl_name1).setVisibility(false)
+                        stage.getRepresentationsByName(lbl_name1).setVisibility(false);
                     }
                  }
             } );
@@ -330,28 +329,32 @@
             //var traj =results["traj"];
             var nonGPCR =results["nonGPCR"];
             var int_res_li =results["int_res_li"];
+            var int_res_li_ch =results["int_res_li_ch"];
             var dist_groups_li=results["dist_groups_li"];
-            var receptorsel = results["receptorsel"];
-            var bs_info= results["bs_info"]; 
-            var cons_pos = parent.pd;
+            var receptorsel = results["receptorsel"]; //[!!!]
+            var bs_info= results["bs_info"]; //[!!!]
+            var cons_pos = parent.pd; //[!!!]
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
-            /*if (trajComp && player){
-                player.pause();
-            }*/
+
+            /*for (e in receptorsel){
+                console.log(receptorsel[e]);
+            };*/
+            //for (e in cons_pos){console.log(cons_pos[e])};
+
             
             var o=stage.getComponentsByName("my_comp").list[0];
-            var saveRepLi=[]
+            var saveRepLi=[];
             o.eachRepresentation(function(rep, comp){
                 if (clickedRepLi.indexOf(rep.name) > -1){
-                    saveRepLi.push(rep)
+                    saveRepLi.push(rep);
                 }
-            })
+            });
             
-            o.clearRepresentations()
+            o.clearRepresentations();
             for (lname in clickedLabData){
                 var lsele=clickedLabData[lname];
                 o.addRepresentation( "label", {
@@ -359,11 +362,11 @@
                     color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lname } );
             }
             for (dname in clickedDistData){
-                var apair=clickedDistData[dname]
+                var apair=clickedDistData[dname];
                 o.addRepresentation( "distance", { atomPair: apair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dname} );
             }
 
-            /*//o.clearRepresentations()
+            /*//o.clearRepresentations();
             
             o.eachRepresentation(function(rep, comp){
                 if (clickedRepLi.indexOf(rep.name) == -1){
@@ -397,11 +400,11 @@
                     all_cp += (cp[comp] + " or ");
                 }
                 all_cp = all_cp.slice(0, -3);
-                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } )            
+                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );            
             }
             if (cons_pos == "y"){
                 var pd_all = [pdA,pdB,pdC,pdF];
-                var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"] // A, B, C, F
+                var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
                 for (ind in pd_all) {
                     class_li=pd_all[ind];
                     if (typeof class_li == "object"){
@@ -430,7 +433,7 @@
                 var recept =bs_info_li[0];
                 var ligli=bs_info_li[1].split(",");
                 var bsnum =0;
-                for (liN in ligli){
+                for (liN = 0; liN < ligli.length; liN++){
                     var lig = ligli[liN];
                     var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
                     var sele = result[0];
@@ -517,11 +520,32 @@
                         if (a.atomname == "CA"){
                             label_pos=a.index;
                         }
-                    },res_sele)
+                    },res_sele);
                     o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
                 }
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
+
+            }
+            
+            if (int_res_li_ch.length > 0){
+                var final_sele=[];
+                for (pos_info_n in int_res_li_ch){
+                    var pos_info = int_res_li_ch[pos_info_n];
+                    var pos = pos_info[0]+":"+pos_info[1];
+                    final_sele.push(pos);
+                    var label = pos_info[2];
+                    var res_sele =  new NGL.Selection( pos );
+                    var label_pos="";
+                    o.structure.eachAtom(function(a){
+                        if (a.atomname == "CA"){
+                            label_pos=a.index;
+                        }
+                    },res_sele);
+                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                }
+                final_sele=final_sele.join(" , ");
+                o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#461bff" } );// colorValue: "#00d215"
 
             }
 
@@ -548,7 +572,7 @@
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
-                        for (t in traj_li_all) {
+                        for (t=0 ; t < traj_li_all.length ; t++){
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
                         //traj_li=[mytraj];
@@ -557,10 +581,10 @@
                     $(".traj_element" , window.parent.document).click(function(){
                         mytraj=$(this).data("tpath");
                         traj_id=traj_li_all.indexOf(mytraj);
-                        $(".traj_btn").attr("id","playerButton"+traj_id.toString())
+                        $(".traj_btn").attr("id","playerButton"+traj_id.toString());
                         
-                    })
-                    trajButtons(o)
+                    });
+                    trajButtons(o);
                     createReps();
                     stage.centerView("protein");
                     /*$("#submit", window.parent.document).click(function(){
@@ -603,7 +627,7 @@
                         allClickedDists.push(clickedDist[k]);
                     }
                     parent.clickedDistToAnalysis(allClickedDists);
-                })
+                });
                 
                 $("#background", window.parent.document).click(function(){
                     if ($(this).hasClass("light")){

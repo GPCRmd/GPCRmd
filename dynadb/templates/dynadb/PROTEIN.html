@@ -111,7 +111,7 @@ font-weight:normal
                 <br>
 			
 	        <div class="row" style="height:30px">
-			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" disabled data-toggle="collapse" value="1" data-target="#id_form-{{int0}}-isoform" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div><div class="col-md-2"><input readonly id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" style="width:140px" value="{{o.isoform}}"  class="collapse in" /></div>
+			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" disabled data-toggle="collapse" value="1" data-target="#id_form-{{int0}}-isoform" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. If several isoforms entries exist in UniProtKB for the protein to be submitted, choose the adequate Isoform value." >Isoform:</a></label></div><div class="col-md-2"><input readonly id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" style="width:140px" value="{{o.isoform}}"  class="collapse in" /></div>
 		<br></div>
 
 	        <div class="row" style="height:30px">
@@ -147,7 +147,7 @@ font-weight:normal
 		<div class="row">
 		<div class="col-md-4" style="height:90px"></div>
 		<div class="col-md-7">
-		<p style='margin-top: 10px;' align="justify">You can search for scientific names and UniprotKB mnemonics <a href="http://www.uniprot.org/taxonomy/" target="_blank">here</a>. Also, you can download <a href="http://www.uniprot.org/docs/speclist" target="_blank">UniprotKB species list</a> and species <a href="download_specieslist/" target="_blank">not included there</a>.</p>
+		<p style='margin-top: 10px;' align="justify">You can search for scientific names of species and UniprotKB mnemonics <a href="http://www.uniprot.org/taxonomy/" target="_blank">here</a>. Also, you can download <a href="http://www.uniprot.org/docs/speclist" target="_blank">UniprotKB species list</a> and species <a href="download_specieslist/" target="_blank">not included there</a>.</p>
 		</div>
 		</div>
                 <br>
@@ -290,7 +290,7 @@ font-weight:normal
   <div class="col-md-12 panel panel-primary"> 
 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>A</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>UniProtKB Accesion Code (AC)</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"> <h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black;background-color:{%for c in colorlist%}{% if forloop.counter == forloop.parentloop.counter %}{{c}}{%endif%}{%endfor%}" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
                 </div><br>
 
 	        <div class="row">
@@ -307,7 +307,7 @@ font-weight:normal
                 </div>
                 {%endif%}
 	        <div class="row" style="height:35px;margin-top:20px">
-			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" value="1" name="form-{{int0}}-use_isoform" type="checkbox" checked/></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. Cannonical sequences have the value '1'.">Isoform:</a></label></div><div class="col-md-2"><input id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" min="1" style="width:140px" value="{{o.isoform}}" /></div>
+			<div class="col-md-1 col-md-offset-3" style="height:30px"><input id="id_form-{{int0}}-use_isoform" value="1" name="form-{{int0}}-use_isoform" type="checkbox" /></div><div class="col-md-2 "><label for="id_isoform"><a title="Isoform: Isoform number for a UniProtKB Accession Number. If several isoforms entries exist in UniProtKB for the protein to be submitted, choose the adequate Isoform value.">Isoform:</a></label></div><div class="col-md-2"><input hidden id="id_form-{{int0}}-isoform" name="form-{{int0}}-isoform" type="number" min="1" style="width:140px" value="{{o.isoform}}" /></div>
 		<br></div>
 
 	        <div class="row" style="height:40px">
@@ -316,9 +316,12 @@ font-weight:normal
 	        </div>
 
 
-			<div class="col-md-3 col-md-offset-4" style="height:60px"><!-- jQuery static/retrieve_data.js --><button style="width:140px;"   type=button id="id_form-{{int0}}-get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
-
+	        <div class="row" style="height:40px">
+                   	<div class="col-md-4 col-md-offset-2" style="height:60px"><button type="button" id="id_reset" name="reset"  style="width:140px;">Clean Protein</button> </div>
+			<div class="col-md-5 col-md-offset-1" style="height:60px"><button style="width:140px;"   type=button id="id_form-{{int0}}-get_data_upkb" name="form-{{int0}}-get_data_upkb">Retrieve data</button></div>
+                </div>
                       
+
                 </div>
 
                 <br>
@@ -327,33 +330,36 @@ font-weight:normal
 
   <div class="col-md-12 panel panel-primary  "> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Protein details</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
+                <div class="col-md-1"><h4>(<b>B</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Protein details</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black;background-color:{%for c in colorlist%}{% if forloop.counter == forloop.parentloop.counter %}{{c}}{%endif%}{%endfor%}" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div> 
                 </div><br>
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-name"><a title="Name: Recommended name from UniProtKB. ">Name:</a></label></div>
-			<div class="col-md-6"><input id="id_form-{{int0}}-name" maxlength="60" readonly  name="form-{{int0}}-name" type="text" style="width:300px" value="{{o.name}}" /></div>
-		<br></div>
+			<div class="col-md-7"><input id="id_form-{{int0}}-name" maxlength="60" readonly  name="form-{{int0}}-name" type="text" style="width:300px" value="{{o.name}}" /></div>
+                        <a id="id_form-{{int0}}-lock" href="#" title="This field will be automatically filled."><span class="glyphicon glyphicon-lock" style="color:silver"></span></a>
+		<br></div> 
 
 
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-id_species"><a title="Species: Protein sequence species. Type scientific name or UniprotKB mnemonic inside brackets and select the appropiate entry. Use &quot;synthetic&quot; for artficial sequences or &quot;unidentified&quot for unknown sources.">Species:</a></label></div>
 			<div class="col-md-7" style="height:30px;display:inline-block;">
-                         <input id="id_form-{{int0}}-id_species_autocomplete" maxlength="200" name="form-{{int0}}-id_species_autocomplete" type="text" style="width:300px" readonly placeholder="Homo Sapiens (HUMAN)"   {% for ll in sci_namel %}  {% if forloop.counter == forloop.parentloop.counter %} value="{{ll}}"     {%endif%}  {%endfor%}/> 
+                         <input id="id_form-{{int0}}-id_species_autocomplete" maxlength="200" name="form-{{int0}}-id_species_autocomplete" type="text" style="width:300px" readonly placeholder=""   {% for ll in sci_namel %}  {% if forloop.counter == forloop.parentloop.counter %} value="{{ll}}"     {%endif%}  {%endfor%}/> 
                                         
-                        </div>
+                        </div><a id="id_form-{{int0}}-lock" title="This field will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
 		</div>
-		<div class="row">
+		<div class="row"  id="id_form-{{int0}}-mnemonics" hidden>
 		<div class="col-md-4" style="height:90px"></div>
 		<div class="col-md-7">
 		<p style='margin-top: 10px;' align="justify">You can search for scientific names and UniprotKB mnemonics <a href="http://www.uniprot.org/taxonomy/" target="_blank">here</a>. Also, you can download <a href="http://www.uniprot.org/docs/speclist" target="_blank">UniprotKB species list</a> and species <a href="download_specieslist/" target="_blank">not included there</a>.</p>
 		</div>
-		</div>
                 <br>
+		</div>
                                         
                                          
 	        <div class="row">
-                <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-other_names"><a title="Aliases: Other names that are obtained from UniProtKB/Swiss-Prot.">Aliases:</a></label></div><div class="col-md-6">
+                <div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-other_names"><a title="Aliases: Other names that are obtained from UniProtKB/Swiss-Prot.">Aliases:</a></label></div>
+                <div class="col-md-7">
 		<textarea cols="40" id="id_form-{{int0}}-other_names" name="form-{{int0}}-other_names" readonly rows="2" style="width:300px">{% for llo in alias %}{% if forloop.counter == forloop.parentloop.counter   %}{{llo}}{%endif%}{%endfor%} </textarea></div>
+                <a id="id_form-{{int0}}-lock" title="This field will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
 		</div>            
                      <!--placeholder=" 5-hydroxytryptamine receptor 1B; Serotonin receptor 1B"-->
 
@@ -364,13 +370,14 @@ font-weight:normal
 	        <div class="row">
 			<div class="col-md-1" style="height:30px"></div><div class="col-md-3"><label for="id_form-{{int0}}-sequence"><a title="Wild type sequence: Wild-type sequence of the protein in IUPAC one letter code.">Wild type sequence:</a></label></div>
 			<div class="col-md-7"><textarea cols="40" id="id_form-{{int0}}-sequence" name="form-{{int0}}-sequence" readonly rows="2" style="width:300px"  >{%if wseq and wseq.0|length > 0%}{% for llsw in wseq %}{% if forloop.counter == forloop.parentloop.counter   %}{{llsw}}{%endif%}{%endfor%}{%endif%}</textarea></div>
+                <a id="id_form-{{int0}}-lock" title="This field will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
 		</div><br>
 
 
                 <div class="col-md-8 col-md-offset-2 " > 
                 <div class="col-md-12 panel panel-primary" > 
 	        <div class="row" style="padding:0px 0px 10px 0px"><br>
-			<div class="col-md-3" style="height:30px"></div><div class="col-md-5"><label for="id_form-{{int0}}-is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is it a mutant?</a></label></div>
+			<div class="col-md-2" style="height:30px"></div><div class="col-md-7"><label for="id_form-{{int0}}-is_mutated"><a title="Mutant: This value must be checked if the protein sequence differs from the one identified at UniProtKB by “UniProtKB AC” and “isoform”.">Is the protein a mutant?</a></label></div>
                         <div class="col-md-1"><input id="id_form-{{int0}}-is_mutated"  name="form-{{int0}}-is_mutated" type="checkbox" value='0' {%if mseq%} {%for ms in mseq%}{% if forloop.counter == forloop.parentloop.counter   %}{%if ms|length > 0%} checked  {%endif%}{%endif%}{%endfor%}{%endif%}/></div>
                      <!--   <div class="col-md-1"><input id="id_form-{{int0}}-is_mutated" data-toggle="collapse" data-target="#id_form-{{int0}}-mutations_id,#id_mutations_id,#mutations_id" name="form-{{int0}}-is_mutated" type="checkbox" value='0' /></div> -->
 		</div>
@@ -382,7 +389,7 @@ font-weight:normal
 
   <div class="col-md-12 panel panel-primary " hidden id="id_form-{{int0}}-mutations_id" name="form-{{int0}}-mutations_id"> 
 	        <div class="row"><br>
-                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
+                <div class="col-md-1"><h4>(<b>C</b>)</h4></div> <div class="col-md-6 col-md-offset-2" style="text-align:center"><h4>Mutations</h4></div><div class="col-md-2 col-md-offset-1" style="text-align:center"><h4 style="font-size:15px;text-align:center;color:white;text-shadow:2px 2px black;background-color:{%for c in colorlist%}{% if forloop.counter == forloop.parentloop.counter %}{{c}}{%endif%}{%endfor%}" id="plabnum">PROT #{%for int in int_id%}{% if forloop.counter == forloop.parentloop.counter %}{{int}}{%endif%}{%endfor%}</h4></div>
 
                 </div><br>
 
@@ -432,9 +439,9 @@ font-weight:normal
 
 {%if MUTations%}{%for mut in MUTations%}{% if forloop.counter == forloop.parentloop.counter %}{%if mut|length > 0 %} {%for m in mut%} 
 
-				<tr> 	<td><input style="width:140px;" id="id_form-{{int0}}-resid" name="form-{{int0}}-resid-{{forloop.counter}}" type="number" {%if  mut%} readonly {%else%} disabled {%endif%} value="{{m.resid}}"/></td> <!--placeholder=" 95"-->
-					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%}    name="form-{{int0}}-resletter_from-{{forloop.counter}}" value="{{m.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->{{mut.resletter_from}}
-					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%} name="form-{{int0}}-resletter_to-{{forloop.counter}}" type="text" value="{{m.resletter_to}}" /></td>	<!--placeholder=" A"-->	
+				<tr> 	<td><input style="width:140px;" id="id_form-{{int0}}-resid-{{forloop.counter}}" name="form-{{int0}}-resid-{{forloop.counter}}" type="number" {%if  mut%} readonly {%else%} disabled {%endif%} value="{{m.resid}}"/></td> <!--placeholder=" 95"-->
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_from-{{forloop.counter}}" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%}    name="form-{{int0}}-resletter_from-{{forloop.counter}}" value="{{m.resletter_from}}" type="text"  /></td> <!--placeholder=" D" -->{{mut.resletter_from}}
+					<td><input style="width:140px;" id="id_form-{{int0}}-resletter_to-{{forloop.counter}}" maxlength="1" {%if  mut%} readonly {%else%} disabled {%endif%} name="form-{{int0}}-resletter_to-{{forloop.counter}}" type="text" value="{{m.resletter_to}}" /></td>	<!--placeholder=" A"-->	
 				</tr>
                                {%endfor%}{%else%}
 				<tr> 	<td><input style="width:140px;" id="id_form-{{int0}}-resid" name="form-{{int0}}-resid" type="number"  disabled value=""/></td> <!--placeholder=" 95"-->
@@ -513,7 +520,7 @@ font-weight:normal
                           <input id="id_submit" name="submit" type="submit" value="Submit" class="btn btn-success btn-lg btn-block has-spinner"  />
       	  </div>
   	  <div class="panel-body" id="selection-">
-        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/" {%if not saved %} disabled {%endif%} class="btn btn-success btn-lg btn-block has-spinner">
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Continue to step 2: Small Molecule Information </a>
       	  </div>
   	  <div class="panel-body" id="selection-">
@@ -544,7 +551,7 @@ font-weight:normal
     <script src="{% static 'dynadb/getDataUPKB.js' %}"></script>
     <script src="{% static 'dynadb/getMutations.js' %}"></script>
     <script src="{% static 'dynadb/changeMutant.js' %}"></script>
-    <script src="{% static 'dynadb/PROTEINpost.js' %}"></script>  
+<!--    <script src="{% static 'dynadb/PROTEINpost.js' %}"></script> --> 
     <script src="{% static 'dynadb/jquery.form.min.js' %}"></script>
     <script src="{% static 'dynadb/Proteinf_init_config.js' %}"></script>
     <script>

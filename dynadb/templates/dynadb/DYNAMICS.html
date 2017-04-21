@@ -89,9 +89,9 @@ font-weight:normal
                                 </thead>
                                 <tbody style="height:60px"><tr  {% if forloop.counter == lformps|length %} style="height:50px;vertical-align:top;padding:0px 5px 20px 0px" {%endif%}>
                                  {%for prot in protlist%}      
-                                <td style="width:10%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="  1" /></td>
-				<td style="width:50%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
-				<td style="width:20%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=" E"/></td>
+                                <td style="width:10%;text-align:center;padding:5px 5px 5px 0px"><input readonly id="prtnum" name="prtnum" value="{{prot.0|add:"1"}}" type="number" style="text-align:center;width:100%" placeholder="" /></td>
+				<td style="width:50%;padding:5px 5px 5px 5px;text-align:center;"><input readonly id="prtnam" value="{{prot.2}}"  maxlength="1" name="prtnam" type="text" style="width:100%;text-align:center" placeholder=""/></td>
+				<td style="width:20%;margin-right:5%;padding:5px 5px 5px 2px;text-align:center;"><input readonly id="uniprot" value="{{prot.1}}"  maxlength="1" name="uniprot" type="text" style="width:100%;text-align:center" placeholder=""/></td>
                                </tbody>
                                  {%endfor%}</table> 
                              </div>
@@ -117,30 +117,32 @@ font-weight:normal
                               {% for mc in data %}
                                 <tr id="Element1-{{forloop.counter0}}">
                                       
-                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ" {% if mc.readonly %} readonly {%endif%} value="{{mc.resname}}"/></td>
-                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder=" 1 " readonly value="{{mc.int_id}}"/></td>
-                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{{mc.id_molecule}}"></td>
-                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder=" Clozapine" value="{{mc.name}}"/></td>
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder="" {% if mc.readonly %} readonly {%endif%} value="{{mc.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder="" readonly value="{{mc.int_id}}"/></td>
+                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="" value="{{mc.id_molecule}}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder="" value="{{mc.name}}"/></td>
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{{mc.numberofmol}}"/></td>
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{{mc.type}}">
                                         <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{mc.type_int}}"></td>
                                                 
-                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox" {% if mc.cryst%} checked {%endif%} disabled placeholder=" "/></td></tr>
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{mc.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox" {% if mc.cryst%} checked {%endif%} disabled placeholder=""/></td>{%if mc.cryst %} {%else%}</tr> {%endif%}
+               {%if mc.cryst%} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%} 
                               {% endfor %}
                           {% else %}
                               {% for i in compl%} 
                                 <tr id="Element1-{{forloop.counter0}}">
                                  <!-- %if i.id_molecule % -> values from dynamicsComponents i.molecule_id % -> SubmissionMolecule -->
                                       
-                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=" CLOZ"{%if i.id_molecule__dyndbsubmissionmolecule__type < 6%} readonly {%endif%} value="{{i.resname}}"/></td>
-                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder=" 1 " readonly value="{%if i.id_molecule %} {{i.id_molecule__dyndbsubmissionmolecule__int_id|add:"1"}} {%elif i.molecule_id %} {{i.int_id|add:"1"}}{%endif%}"/></td>
-                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="   " value="{%if i.id_molecule %}{{i.id_molecule}}{%else%}{{i.molecule_id}}{%endif%}"></td>
-                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder=" Clozapine" value="{%if i.id_molecule %}{{i.id_molecule__dyndbcompound__name}}{%else%}{{i.molecule_id__dyndbcompound__name}}{%endif%} "/></td>
+                                      <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-resname" maxlength="4" name="formc-{{forloop.counter0}}-resname" type="text" placeholder=""{%if i.id_molecule__dyndbsubmissionmolecule__type < 6%} readonly {%endif%} value="{{i.resname}}"/></td>
+                                        <td style="padding:5px 5px 5px 5px"><input style="width:70px" id="id_formc-{{forloop.counter0}}-molecule" maxlength="4" name="formc-{{forloop.counter0}}-molecule" type="text" placeholder="" readonly value="{%if i.id_molecule %} {{i.id_molecule__dyndbsubmissionmolecule__int_id|add:"1"}} {%elif i.molecule_id %} {{i.int_id|add:"1"}}{%endif%}"/></td>
+                                       <td style="padding:5px 5px 5px 5px;display:none"><input style="width:70px" id="id_formc-{{forloop.counter0}}-id_molecule" name="formc-{{forloop.counter0}}-id_molecule" type="hidden" readonly placeholder="" value="{%if i.id_molecule %}{{i.id_molecule}}{%else%}{{i.molecule_id}}{%endif%}"></td>
+                                        <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-name" maxlength="60" name="formc-{{forloop.counter0}}-name" type="text" style="width:100px" readonly placeholder="" value="{%if i.id_molecule %}{{i.id_molecule__dyndbcompound__name}}{%else%}{{i.molecule_id__dyndbcompound__name}}{%endif%} "/></td>
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-numberofmol" min="0" name="formc-{{forloop.counter0}}-numberofmol" type="number" style="width:70px" readonly placeholder="" value="{%if i.id_molecule %}{{i.numberofmol}}{%endif%}"/></td>
                                         <td style="padding:5px 5px 5px 5px"><input id="id_formc-{{forloop.counter0}}-typemc" type="text" readonly name="formc-{{forloop.counter0}}-typemc" style="width:60px" value="{% for t in ddctypel%}{% if forloop.counter == forloop.parentloop.counter %}{{t}}{% endif %}{% endfor %}"></td>
                                         <input id="id_formc-{{forloop.counter0}}-type_int" type="hidden" name="formc-{{forloop.counter0}}-type_int" value="{{i.type}}"></td>  
                                                 
-                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{i.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox"  {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} checked {%endif%}     disabled placeholder=" "/></td></tr>  <!--i.type < 6 for modifications in -->
+                                        <td style="padding:5px 5px 5px 5px;text-align:center"><input value="{{i.type_int.cryst}}"  id="id_form-{{intps0}}-cryst" name="form-{{intps0}}-cryst" style="aligned:center" type="checkbox"  {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} checked {%endif%}     disabled placeholder=""/></td>{%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} {%else%}</tr>{%endif%}  <!--i.type < 6 for modifications in -->
+               {%if i.id_molecule__dyndbsubmissionmolecule__type < 6 %} <td style="padding:5px 5px 5px 5px;text-align:center"><a id="id_form-{{forloop.counter0}}-lock" title="The fields in this row have been automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a></td></tr> {% endif%}
                               {% endfor %}
                               {% endif %}
 
@@ -195,6 +197,8 @@ font-weight:normal
 			<div class="col-md-6"><select id="id_id_dynamics_methods" name="id_dynamics_methods" style="width:300px;height:26px">
                                       {%if saved%}
 		        	      <option value="{{ddown.id_dynamics_methods.0}}">{{ddown.id_dynamics_methods.1}}</option>{{qDS.values.0.id_dynamics_methods}}
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qDMeth.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -204,22 +208,22 @@ font-weight:normal
 
                 <div class="row">
         		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_software"> <a title="Software: Name of the software used to compute the simulations (without version)."> Software: </a> </label></th></div>
-                        <div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder=" NAMD" {%if saved%}value=" {{qDS.values.0.software}}" {%endif%} /></td></tr></div>
+                        <div class="col-md-6"><td><input id="id_software" maxlength="30" name="software" type="text" style="width:300px" placeholder="" {%if saved%}value=" {{qDS.values.0.software}}" {%endif%} /></td></tr></div>
                 <br></div>      
 
                 <div class="row">
 	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3" ><tr><th><label for="id_sversion" style="margin-right:-30px"><a style="margin-right:-20px;width:130px" title="Software version: Version of the software used to compute the simulations.">Software version:</a></label></th></div>
-			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300px"  placeholder=" 2.11" {%if saved%} value=" {{qDS.values.0.sversion}}" {%endif%} /></td></tr></div>
+			<div class="col-md-6"><td><input id="id_sversion" maxlength="15" name="sversion" type="text" style="width:300px"  placeholder="" {%if saved%} value=" {{qDS.values.0.sversion}}" {%endif%} /></td></tr></div>
                 <br></div>
 
                 <div class="row">
         		 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ff"> <a title="Force Field: Name of the force-field used to compute the simulations (without version)."> Force Field: </a> </label></th></div>
-                        <div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder=" CHARMM " {%if saved%} value=" {{qDS.values.0.ff}}" {%endif%}  /></td></tr></div>
+                        <div class="col-md-6"><td><input id="id_ff" maxlength="20" name="ff" type="text" style="width:300px" placeholder="" {%if saved%} value=" {{qDS.values.0.ff}}" {%endif%}  /></td></tr></div>
                 <br></div>
 
                 <div class="row">
 	        	 <div class="col-md-1"style="height:30px"></div><div class="col-md-3"><tr><th><label for="id_ffversion"> <a title="FF version: Version of the force field used to compute the simulations."> FF version: </a> </label></th> </div>
-                        <div class="col-md-6"><td><input id="id_ffversion" maxlength="15"{%if saved%}value=" {{qDS.values.0.ffversion}}" {%endif%} name="ffversion" type="text" style="width:300px"  placeholder=" 36  "/></td></tr></div>
+                        <div class="col-md-6"><td><input id="id_ffversion" maxlength="15"{%if saved%}value=" {{qDS.values.0.ffversion}}" {%endif%} name="ffversion" type="text" style="width:300px"  placeholder=""/></td></tr></div>
                 <br></div>
 
 
@@ -228,6 +232,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_assay_types" name="id_assay_types" style="width:300px;height:26px"  placeholder="  " > 
                                       {%if saved%}
 		        	       <option value="{{ddown.id_assay_types.0}}">{{ddown.id_assay_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qAT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -249,6 +255,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_dynamics_membrane_types" name="id_dynamics_membrane_types" style="width:300px;height:26px"  placeholder="  " ><br>
                                       {%if saved%}
 		        	      <option value="{{ddown.id_dynamics_membrane_types.0}}">{{ddown.id_dynamics_membrane_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                       {% for i in qDMT.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -264,6 +272,8 @@ font-weight:normal
 			<div class="col-md-6"><td><select id="id_id_dynamics_solvent_types" name="id_dynamics_solvent_types" style="width:300px;height:26px"  placeholder="  " >
                                       {%if saved%}
                                        <option value="{{ddown.id_dynamics_solvent_types.0}}">{{ddown.id_dynamics_solvent_types.1}}</option>
+                                      {%else%}
+                                        <option value="" selected></option>
                                       {% endif %}
                                      {% for i in qDST.values %}
                                         <option value="{{i.id}}"> {{i.type_name}}</option>
@@ -281,21 +291,28 @@ font-weight:normal
 
                 <div class="row">
                          <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_solvent_num"><a title="Solvent num: Number of solvent molecules">Solvent num:</a> </label></th></div>
-                        <div class="col-md-2"><td><input id="id_solvent_num" name="solvent_num" type="number" min="0" style="width:75px" readonly {%if saved%}value="{{qDS.values.0.solvent_num}}" {%endif%} placeholder=" 10000 " /></td></tr></div> 
+                        <div class="col-md-2"><td><input id="id_solvent_num" name="solvent_num" type="number" min="0" style="width:75px" readonly {%if saved%}value="{{qDS.values.0.solvent_num}}" {%endif%} placeholder="" /></td></tr></div> 
                         <div class="col-md-2"style="margin-left:8px;padding-right:0px" ><tr><th><label for="id_atom_num"><a title="Num. Atoms: Number of atoms in the simulation.">Num. Atoms:</a></label></th></div>
-                        <div class="col-md-2" style="margin-left:6px;align:right"><td><input id="id_atom_num" name="atom_num" type="number" readonly style="width:75px" placeholder="4"{%if saved%}value="{{qDS.values.0.atom_num}}" {%endif%} /></td></tr></div>
+                        <div class="col-md-3" style="margin-left:6px;align:right"><td><input id="id_atom_num" name="atom_num" type="number" readonly style="width:75px" placeholder=""{%if saved%}value="{{qDS.values.0.atom_num}}" {%endif%} /></td></tr></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
                 <br></div>
+
+<!--                <div class="row">
+                        <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_framenum"><a title="Number of frames: Number of frames in the trajectory file.">Number of frames:</a> </label></th></div>
+                        <div class="col-md-2"><input id="id_framenum" name="framenum" value="{{nf}}" type="number" style="width:100%" min="0" placeholder=""{%if saved%}value=" {{qDS.values.0.framenum}}" {%endif%} /></div>
+                <a id="id_form-{{int0}}-lock" title="These two fields will be automatically filled."href="#"><span style="color:silver" class="glyphicon glyphicon-lock"></span></a>
+                <br></div> -->
 
                 <div class="row">
                         <div class="col-md-1"style="height:30px"> </div><div class="col-md-3"><tr><th><label for="id_timestep"><a title="Time step: Simulation integration step (fs).">Time step:</a> </label></th></div>
-                        <div class="col-md-2"><input id="id_timestep" name="timestep" type="text" style="width:100%" min="0" placeholder="4"{%if saved%}value=" {{qDS.values.0.timestep}}" {%endif%} /></div>
+                        <div class="col-md-2"><input id="id_timestep" name="timestep" type="text" style="width:100%" min="0" placeholder=""{%if saved%}value=" {{qDS.values.0.timestep}}" {%endif%} /></div>
                         <div class="col-md-2" style="margin-left:8px;padding-right:0px" ><label for="id_delta"><a style="padding-right:0px" title="Delta: Time lapse between frames in a trajectory file (ns).">Delta:</a> </label></div>
-                        <div class="col-md-2" style="margin-left:6px;align:right"><input id="id_delta" name="delta" type="text" style="width:100%" placeholder="0.1" {%if saved%}value=" {{qDS.values.0.delta}}" {%endif%} /></div>
+                        <div class="col-md-2" style="margin-left:6px;align:right"><input id="id_delta" name="delta" type="text" style="width:100%" placeholder="" {%if saved%}value=" {{qDS.values.0.delta}}" {%endif%} /></div>
                 <br></div>
 
                 <div class="row">
 	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
-                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=" MSM binding kinectic study."  >{%if saved%} {{qDS.values.0.description}} {%endif%}</textarea></div>
+                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=""  >{%if saved%} {{qDS.values.0.description}} {%endif%}</textarea></div>
 		</div>
 </div>
 
@@ -314,6 +331,22 @@ font-weight:normal
         	<a id='selection-button' href="/dynadb/modelreuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
                  {%endif%}
             <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 3: Crystalized Components Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
+        	<a id='selection-button' href="/dynadb/molecule/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/moleculereuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 2: Small Molecule Information </a>
+      	  </div>
+  	  <div class="panel-body" id="selection-">
+                 {%if not ModelReuse %}
+        	<a id='selection-button' href="/dynadb/protein/{{submission_id}}/"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%else%}
+        	<a id='selection-button' href="/dynadb/proteinreuse/{{submission_id}}/{{qMOD.0.model_id}}"  class="btn btn-success btn-lg btn-block has-spinner">
+                 {%endif%}
+            <span class="spinner"><i class="fa fa-spinner fa-spin"></i></span> Back to step 1: Protein Information </a>
       	  </div>
       </div>
   </div>

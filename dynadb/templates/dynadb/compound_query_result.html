@@ -46,7 +46,7 @@
     <br>
     <b>Image of the Standard Form:</b> <br>
     <div id='leftdiv' class="col-sm-6">
-        <center><button type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
+        <center><button style="display:none;" type="button" class="btn btn-primary ortoligand" id={{answer.myid}}> See 3D </button></center><br>
         <center><img src="{{answer.imagelink}}" /></center>
     </div>
     <div id='rightdiv' class="col-sm-6">
@@ -94,5 +94,10 @@
 
 {% block addon_js %}
 <script src="{% static 'dynadb/mol3dv.js' %}"></script>
-<script src="http://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript" >
+$( document ).ready(function() {
+    $('.ortoligand:first').click();
+});
+</script>
 {% endblock%}

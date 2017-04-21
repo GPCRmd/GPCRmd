@@ -31,11 +31,11 @@ $(document).ready(function(){
         var retrieve_type_chembl = $(molform).find("[id='id_retrieve_type_chembl'],[id|=id_form][id$='-retrieve_type_chembl']");
         var search_by_chembl = $(molform).find("[id='id_search_by_chembl'],[id|=id_form][id$='-search_by_chembl']");
         var similarity_chembl = $(molform).find("[id='id_similarity_chembl'],[id|=id_form][id$='-similarity_chembl']");
-
+        var checkupload = $(molform).find("[id='id_checkupload'],[id|=id_form][id$='-checkupload']");  
+                   $(checkupload).hide()
         
         
         
-
         name.val('');
         iupac_name.val('');
         aliases.val('');
@@ -46,10 +46,13 @@ $(document).ready(function(){
         notindbs.prop("disabled",false);
         notindbs.prop("checked",false);
         notindbs.OnChangeIsNotInDatabases();
-        var newstdform = $(stdform_html).clone()
-        $(stdform).replaceWith($(newstdform));
-        stdform = $(newstdform);
-        
+        //var newstdform = $(stdform_html).clone()
+       // $(stdform).replaceWith($(newstdform));
+       // stdform = $(newstdform);
+        $(stdform).css('opacity',0);
+        $(stdform).css('filter',"alpha(opacity=0)");
+
+
         neutralize_pubchem.prop("checked",true);
         retrieve_type_pubchem.val(retrieve_type_pubchem_default);
         search_by_pubchem.val(search_by_pubchem_default);
@@ -83,6 +86,8 @@ $(document).ready(function(){
         var smiles = $(molform).find("[id='id_smiles'],[id|=id_form][id$='-smiles']");
         var mol_type = $(molform).find("[id='id_type'],[id|=id_form][id$='-type']");
         var is_present = $(molform).find("[id='id_is_present'],[id|=id_form][id$='-is_present']");
+        var imagentable=$(this).parents("[id|=molform]").find("[id|=id_form][id$='imagentable']");
+        var imagentable2=$(this).parents("[id|=molform]").find("[id|=id_form][id$='z-nodb']");
         
         inchi.val('');
         inchikey.val('');
@@ -90,21 +95,27 @@ $(document).ready(function(){
         net_charge.val('');
         smiles.val('');
         
-        var newuploadmol = $(uploadmol1_html).clone()
-        $(uploadmol1).replaceWith($(newuploadmol));
-        uploadmol1 = $(newuploadmol);
-        var newuploadmol = $(uploadmol2_html).clone()
-        $(uploadmol2).replaceWith($(newuploadmol));
-        uploadmol2 = $(newuploadmol);
+        //var newuploadmol = $(uploadmol1_html).clone()
+        //$(uploadmol1).replaceWith($(newuploadmol));
+        //uploadmol1 = $(newuploadmol);
+        //var newuploadmol = $(uploadmol2_html).clone()
+        //$(uploadmol2).replaceWith($(newuploadmol));
+        //uploadmol2 = $(newuploadmol);
+        $(imagentable).hide();
+        $(imagentable2).hide();
+
         
-        mol_type.val(type_default);
-        is_present.prop('checked',is_present_default);
+        $(mol_type).val(type_default);
+        $(is_present).prop('checked',is_present_default);
         
         $(this).resetCompoundInfo(clean_ids);
     }
     $(document).on('click',"[id='id_reset'],[id|=id_form][id$='-reset']",function(){
         $(this).resetMoleculeByButton();
 
+        var molform = $(this).parents("[id|=molform]");
+        var molsdf = $(molform).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
+        $(molsdf).val('');
         
         
     });

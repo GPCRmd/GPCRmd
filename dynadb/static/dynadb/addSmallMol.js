@@ -35,7 +35,7 @@ $(document).ready(function(){
                 if ( !$(this).is("div") || id1.startsWith('id_form') && id1.endsWith('-collapse_id') ){
                    var name = name1.replace(/^form-[0-9]+-/,'');
                    var namelab="form-"+new_form_num+"-"+name;
-                   $(this).attr({'placeholder':namelab,  'name':namelab});
+                   $(this).attr({ 'name':namelab});
                 } 
                 if ( id1.startsWith('id_form') && id1.endsWith('-imagentable') ){
                    //console.log("TTTTppp");
@@ -106,6 +106,10 @@ $(document).ready(function(){
         var neu_pubchem = $(newitem).find("[id|=id_form][id$='neutralize_pubchem']");
         var ret_chembl =  $(newitem).find("[id|=id_form][id$='retrieve_type_chembl']");
         var neu_chembl =  $(newitem).find("[id|=id_form][id$='neutralize_chembl']");
+        var cotype= $(newitem).find("[id|=id_form][id$='co_type']");
+        var nottype= $(newitem).find("[id|=id_form][id$='bulk_type']");
+           nottype.val('')   
+           cotype.val('')   
         $(newitem).formrenum(next_form_num);
         console.log("VALOR bulk-type "+$(newitem).find("[id|=id_form][id$='bulk_type']").val());
         console.log($(ret_pubchem)+"  "+$(ret_pubchem).val());
@@ -123,7 +127,12 @@ $(document).ready(function(){
         $("#id_form-"+next_form_num+"-del_molecule").prop("disabled",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
-        $(newitem).smol_init_config()
+        $(newitem).find("[id='id_reset'],[id|=id_form][id$='-reset']").resetMoleculeByButton();
+        $(newitem).smol_init_config();
+        var checkupload = $(newitem).find("[id='id_checkupload'],[id|=id_form][id$='-checkupload']");
+        $(checkupload).hide()
+        var molsdf = $(newitem).find("[id='id_molsdf'],[id|=id_form][id$='-molsdf']");
+        $(molsdf).val('');
     });
     
        

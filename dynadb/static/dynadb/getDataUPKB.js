@@ -68,6 +68,7 @@ $(document).ready(function(){
         
         name.val('Retrieving...');
         aliases.val('Retrieving...');
+        species.val('Retrieving...');
         sequence.val('Retrieving...');
         console.log("before post");
         console.log("HERE"+window.location.href);
@@ -85,15 +86,15 @@ $(document).ready(function(){
           species.val(data.Organism);
           id_species.val(data.speciesid);
           self.prop("disabled", true);
-          uniprotkbac.prop("readonly", false);
+          uniprotkbac.prop("readonly", true);
           isoform.prop("readonly", true);
           uniprotkbac.set_readonly_color();
           isoform.set_readonly_color();
           console.log("PPPPP "+data.GPCRmd);
           if (data.GPCRmd===true) {
-              alert("Protein #"+form_num_html +" information has been found in the gpcrmd database!!!\n\nIf appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
+              alert("Success!!!\nProtein #"+form_num_html +" information has been found in the gpcrmd database!!!\n\nIf appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
           }else{
-              alert("If appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
+              alert("\nSuccess!!!\n Protein #"+form_num_html +" information has been retrieved!!!\n\nIf appropriate, check the \"Is it a Mutant?\" checkbox and proceed with the Protein #"+form_num_html+" section C.\nOtherwise, either proceed with the data submission of the following protein item in your simulation (click \"+ Add Protein\" button) or submit the information in the form.");
           }
 
         }, 'json')

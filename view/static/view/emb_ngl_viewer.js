@@ -82,7 +82,7 @@ $(document).ready(function(){
         $("#selectedTraj").data("tpath",traj_p).html(traj_n+' <span class="caret">');
         $(this).css("background-color","#FFF7F7").addClass("tsel");
         $(this).siblings().css("background-color","#FFFFFF").removeClass("tsel");
-    })
+    });
     
     /*function obtainCheckedTrajs(){
         var traj = [];
@@ -252,7 +252,7 @@ $(document).ready(function(){
                 }
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
             }
-        })
+        });
         
         $("#seq_input_all").find(".seq_input_row").each(function(){
             $(this).find(".span_morecolors").removeClass("has-error");
@@ -275,7 +275,7 @@ $(document).ready(function(){
                 }
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
             }
-        })
+        });
         return(layer);
     }
     
@@ -319,57 +319,59 @@ $(document).ready(function(){
 
     var ti_i=1;
     $("#text_input_all").on("click",".ti_add_btn",function(){ 
-        $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
-        var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
-                       <div  class="row">\
-                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
-	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
-	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
-	                             <div style="float:left;height:27px" >\
-                                    <select class="high_type nglCallChangeTI" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
-                                       <option value="licorice">Licorice</option>\
-                                       <option value="ball+stick">Ball+stick</option>\
-                                       <option value="hyperball">Hyperball</option>\
-                                       <option value="line">Line</option>\
-                                       <option value="spacefill">Spacefill</option>\
-                                       <option value="cartoon">Cartoon</option>\
-                                       <option value="ribbon">Ribbon</option>\
-                                       <option value="rope">Rope</option>\
-                                       <option value="tube">Tube</option>\
-                                    </select>\
-                                    <select class="high_scheme nglCallChangeTI" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
-                                       <option value="element">Element</option>\
-                                       <option value="uniform">Uniform</option>\
-                                       <option value="chainid">Chain</option>\
-                                       <option value="moleculetype">Molecule type</option>\
-                                       <option value="sstruc">Structure</option>\
-                                       <option value="resname">Residue name</option>\
-                                       <option value="residueindex">Residue index</option>\
-                                    </select>\
-                                  </div>\
-                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> \
-                                    <div class="dropdown-content" style="margin-left:3px">\
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
-                                    </div>\
-                                  </div>\
-                                  <span class="span_morecolors displaydrop" style="float:left" ></span>\
-	                       </div>\
+        if ($("#text_input_all").children().length < 20){
+            $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
+            var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
+                           <div  class="row">\
+                              <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
+	                            <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+	                            <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
+	                                 <div style="float:left;height:27px" >\
+                                        <select class="high_type nglCallChangeTI" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
+                                           <option value="licorice">Licorice</option>\
+                                           <option value="ball+stick">Ball+stick</option>\
+                                           <option value="hyperball">Hyperball</option>\
+                                           <option value="line">Line</option>\
+                                           <option value="spacefill">Spacefill</option>\
+                                           <option value="cartoon">Cartoon</option>\
+                                           <option value="ribbon">Ribbon</option>\
+                                           <option value="rope">Rope</option>\
+                                           <option value="tube">Tube</option>\
+                                        </select>\
+                                        <select class="high_scheme nglCallChangeTI" name="high_scheme'+ti_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                           <option value="element">Element</option>\
+                                           <option value="uniform">Uniform</option>\
+                                           <option value="chainid">Chain</option>\
+                                           <option value="moleculetype">Molecule type</option>\
+                                           <option value="sstruc">Structure</option>\
+                                           <option value="resname">Residue name</option>\
+                                           <option value="residueindex">Residue index</option>\
+                                        </select>\
+                                      </div>\
+                                      <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
+                                        <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> \
+                                        <div class="dropdown-content" style="margin-left:3px">\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
+          									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+          									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+          									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                        </div>\
+                                      </div>\
+                                      <span class="span_morecolors displaydrop" style="float:left" ></span>\
+	                           </div>\
+                              </div>\
+                              <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
+                                    <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                                    <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                              </div>\
                           </div>\
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
-                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
-                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
-                          </div>\
-                      </div>\
-                      <div class="ti_alert"> </div>      \
-                  </div>';
+                          <div class="ti_alert"> </div>      \
+                      </div>';
 
-        $("#text_input_all").append(row);
-        ti_i+=1;
+            $("#text_input_all").append(row);
+            ti_i+=1;
+        }
     });
     
     $("#text_input_all").on("click", ".ti_rm_btn" , function(){
@@ -399,7 +401,7 @@ $(document).ready(function(){
         } else {
             $(this).closest(".text_input").find(".displaydrop").css("display","none");
         }  
-    })
+    });
 
 
 
@@ -407,58 +409,60 @@ $(document).ready(function(){
 
     var si_i=1;
     $("#seq_input_all").on("click",".si_add_btn",function(){ 
-        $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
-        var row='<div  class="seq_input_row" id="si_row'+si_i+'" style="margin-bottom:5px">\
-                       <div  class="row">\
-                          <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> \
-	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
-	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
-	                             <div style="float:left;height:27px" >\
-                                    <select class="high_type nglCallChangeTI" name="high_type'+si_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
-                                       <option value="licorice">Licorice</option>\
-                                       <option value="ball+stick">Ball+stick</option>\
-                                       <option value="hyperball">Hyperball</option>\
-                                       <option value="line">Line</option>\
-                                       <option value="spacefill">Spacefill</option>\
-                                       <option value="cartoon">Cartoon</option>\
-                                       <option value="ribbon">Ribbon</option>\
-                                       <option value="rope">Rope</option>\
-                                       <option value="tube">Tube</option>\
-                                    </select>\
-                                    <select class="high_scheme nglCallChangeTI" name="high_scheme'+si_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
-                                       <option value="element">Element</option>\
-                                       <option value="uniform">Uniform</option>\
-                                       <option value="chainid">Chain</option>\
-                                       <option value="moleculetype">Molecule type</option>\
-                                       <option value="sstruc">Structure</option>\
-                                       <option value="resname">Residue name</option>\
-                                       <option value="residueindex">Residue index</option>\
-                                       <option value="hydrophobicity">Hydrophobicity</option>\
-                                    </select>\
-                                  </div>\
-                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> \
-                                    <div class="dropdown-content" style="margin-left:3px">\
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
-                                    </div>\
-                                  </div>\
-                                  <span class="span_morecolors displaydrop" style="float:left" ></span>\
-	                       </div>\
+        if ($("#seq_input_all").children().length < 20){
+            $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
+            var row='<div  class="seq_input_row" id="si_row'+si_i+'" style="margin-bottom:5px">\
+                           <div  class="row">\
+                              <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> \
+	                            <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+	                            <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
+	                                 <div style="float:left;height:27px" >\
+                                        <select class="high_type nglCallChangeTI" name="high_type'+si_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
+                                           <option value="licorice">Licorice</option>\
+                                           <option value="ball+stick">Ball+stick</option>\
+                                           <option value="hyperball">Hyperball</option>\
+                                           <option value="line">Line</option>\
+                                           <option value="spacefill">Spacefill</option>\
+                                           <option value="cartoon">Cartoon</option>\
+                                           <option value="ribbon">Ribbon</option>\
+                                           <option value="rope">Rope</option>\
+                                           <option value="tube">Tube</option>\
+                                        </select>\
+                                        <select class="high_scheme nglCallChangeTI" name="high_scheme'+si_i+'" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">\
+                                           <option value="element">Element</option>\
+                                           <option value="uniform">Uniform</option>\
+                                           <option value="chainid">Chain</option>\
+                                           <option value="moleculetype">Molecule type</option>\
+                                           <option value="sstruc">Structure</option>\
+                                           <option value="resname">Residue name</option>\
+                                           <option value="residueindex">Residue index</option>\
+                                           <option value="hydrophobicity">Hydrophobicity</option>\
+                                        </select>\
+                                      </div>\
+                                      <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
+                                        <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> \
+                                        <div class="dropdown-content" style="margin-left:3px">\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
+          									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+          									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+          									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                        </div>\
+                                      </div>\
+                                      <span class="span_morecolors displaydrop" style="float:left" ></span>\
+	                           </div>\
+                              </div>\
+                              <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
+                                    <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                                    <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0;visibility:hidden"><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                              </div>\
                           </div>\
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
-                                <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
-                                <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0;visibility:hidden"><span class="glyphicon glyphicon-plus-sign"></span></button>\
-                          </div>\
-                      </div>\
-                      <div class="si_alert"> </div>\
-                  </div>';
+                          <div class="si_alert"> </div>\
+                      </div>';
 
-        $("#seq_input_all").append(row);
-        si_i+=1;
+            $("#seq_input_all").append(row);
+            si_i+=1;
+        }
     });
     
     $("#seq_input_all").on("click", ".si_rm_btn" , function(){
@@ -489,7 +493,7 @@ $(document).ready(function(){
         } else {
             $(this).closest(".seq_input_row").find(".displaydrop").css("display","none");
         }  
-    })
+    });
 
 
 
@@ -561,7 +565,7 @@ $(document).ready(function(){
                 sel="";
             }
         }
-        return (sel)
+        return (sel);
     }
     
     function parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource,alertSel){
@@ -633,7 +637,7 @@ $(document).ready(function(){
         }
         sel=pre_sel;
         }//END FOR GPCR RANGES
-    return(sel)
+    return(sel);
     }    
     
 
@@ -658,7 +662,7 @@ $(document).ready(function(){
             if (gpcr_pdb_dict=="no"){
                 sel = "";
                 if (inpSource=="main"){
-                    to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.'
+                    to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
                     $(alertSel).attr("class","alert alert-danger row").append(to_add);
                 } else {
                     to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
@@ -676,42 +680,42 @@ $(document).ready(function(){
             }
         }
         return sel;
-    };
+    }
 
 //-------- Text input modified signal --------
 
     $("#text_input_all").on("change" , ".sel_input", function(){
         $("#selectionDiv").trigger("click");
-    })
+    });
 
     $("#text_input_all").on("change" , ".nglCallChangeTI", function(){
         if ($(this).closest(".ti_left").children(".sel_input").val() !=""){
             $("#selectionDiv").trigger("click");
         }
-    })
+    });
     
     $("#text_input_all").on("click" , ".nglCallClickTI", function(){
         if ($(this).closest(".ti_left").children(".sel_input").val() !=""){
             $("#selectionDiv").trigger("click");
         }
-    })
+    });
     
 
     $("#seq_input_all").on("change" , ".seq_input", function(){
         $("#selectionDiv").trigger("click");
-    })
+    });
 
     $("#seq_input_all").on("change" , ".nglCallChangeTI", function(){
         if ($(this).closest(".si_left").children(".seq_input").val() != ""){
             $("#selectionDiv").trigger("click");
         }
-    })
+    });
     
     $("#seq_input_all").on("click" , ".nglCallClickTI", function(){
         if ($(this).closest(".si_left").children(".seq_input").val() !=""){
             $("#selectionDiv").trigger("click");
         }
-    })
+    });
 //-------- Selected molecules to display --------
     function clickRep (id, newRep, clicked) {
         if ( clicked == 1 ) {
@@ -766,7 +770,7 @@ $(document).ready(function(){
                 nonGPCR_str = nonGPCR_li.join();
                 nonGPCR_chains_all.push(nonGPCR_str);
             }
-        })
+        });
         return (nonGPCR_chains_all);
     }
 
@@ -777,13 +781,13 @@ $(document).ready(function(){
         var chosen_id = "#gpcr_id_"+gpcr_id;
         $(chosen_id).css("display","inline");
         $(".gpcr_prot_show_cons:not("+chosen_id+")").css("display","none");
-    })
+    });
 
     $(".high_pd").each(function(){
         if ($(this).data("pdbpos").toString() == "None"){
             $(this).attr("disabled", true);
         }
-    })
+    });
     function getSelectedPosLists(selector){
         var selPosList=[];
         $(selector).each(function(){
@@ -798,7 +802,7 @@ $(document).ready(function(){
                     selPosList[selPosList.length]=" " + range;
                 }
             }
-        })
+        });
 
         selPosList.sort(function(x,y){
             var patt = /\d+/;
@@ -830,12 +834,12 @@ $(document).ready(function(){
             if ($(this).data("TF") == "False"){
                 $(this).addClass("disabled");
             }
-        })
+        });
         $("a.cons_nav").each(function(){ 
             if ($(this).data("TF") == "False"){
                 $(this).removeAttr("data-toggle").removeAttr("href").attr("title","Class not avaliable");
             }
-        })         
+        });         
     }
     disableMissingClasses();
 
@@ -866,14 +870,14 @@ $(document).ready(function(){
         var comp_s=$(this).attr("id");
         comp_lg[comp_lg.length]=comp_l;
         comp_sh[comp_sh.length]=comp_s;
-    })
+    });
     
     $(".nonGPCR").each(function(){
         var comp_l=$(this).text();
         var comp_s=$(this).attr("id");
         comp_lg[comp_lg.length]=comp_l;
         comp_sh[comp_sh.length]=comp_s;
-    })
+    });
 
     var select="";
     for (comp_n in comp_lg){
@@ -883,30 +887,32 @@ $(document).ready(function(){
     
     var wth_i=1;
     $(".sel_within").on("click",".add_btn",function(){ 
-        $(".sel_within").find(".add_btn").css("visibility","hidden");
-        var row='<div class="dist_sel" id=row'+wth_i.toString()+' style="margin-bottom:5px;">\
-                  <span class="tick" ></span>\
-                  <span class="always" style="margin-left:14px">\
-                    Show \
-                    <select class="resWthComp nglCallChangeWth" name="rescomp">\
-                        <option  selected value="protein">residues</option>' + select + '</select>\
-                     within \
-                    <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px">\
-                      &#8491; of\
-                        <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
-                        <span class="user_sel_input_p"></span>\
-                        <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
-                        <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
-                    </span>\
-                    <div class="alert_sel_wth"></div>\
-                  </div>';
-        $(".sel_within").append(row);
-        wth_i+=1;
+        if ($(".sel_within").children().length < 15){
+            $(".sel_within").find(".add_btn").css("visibility","hidden");
+            var row='<div class="dist_sel" id=row'+wth_i.toString()+' style="margin-bottom:5px;">\
+                      <span class="tick" ></span>\
+                      <span class="always" style="margin-left:14px">\
+                        Show \
+                        <select class="resWthComp nglCallChangeWth" name="rescomp">\
+                            <option  selected value="protein">residues</option>' + select + '</select>\
+                         within \
+                        <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px">\
+                          &#8491; of\
+                            <select class="wthComp" name="comp">' + select + '<option   value="user_sel">Selection</option></select>\
+                            <span class="user_sel_input_p"></span>\
+                            <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
+                            <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
+                        </span>\
+                        <div class="alert_sel_wth"></div>\
+                      </div>';
+            $(".sel_within").append(row);
+            wth_i+=1;
+        }
     });
     
     $(".sel_within").on("click", ".rm_btn" , function(){
         var row = $(this).closest(".dist_sel");
-        var isactive= row.hasClass("sw_ok")
+        var isactive= row.hasClass("sw_ok");
         var numWthRows = $(".sel_within").children().length;
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
@@ -930,7 +936,7 @@ $(document).ready(function(){
 
     function obtainDistSel(){
         var dist_of=[];
-        //var consider_comp=[]
+        //var consider_comp=[];
         $(".sel_within").find(".dist_sel").each(function(){ 
             var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
@@ -1033,7 +1039,6 @@ $(document).ready(function(){
         return result;
     }
     
-    var removed_int_tbls=[];
 
     var i_id=1;
     var lig_sel_str;
@@ -1080,6 +1085,10 @@ $(document).ready(function(){
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                     $("#gotoInt").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    act_int_tbls=[];
+                    $("#int_info").children(".int_tbl").each(function(){
+                        act_int_tbls.push($(this).data("int_id"));
+                    });
                     var t0= performance.now();
                     $.ajax({
                         type: "POST",
@@ -1091,7 +1100,7 @@ $(document).ready(function(){
                           "traj_p": traj_path,
                           "struc_p": struc,
                           "dist_scheme": dist_scheme,
-                          "to_rv" : removed_int_tbls.join(),
+                          "no_rv" : act_int_tbls.join(),
                         },
                         success: function(int_data) {
                             if ($.active<=1){
@@ -1100,14 +1109,6 @@ $(document).ready(function(){
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
                             var success=int_data.success;
-                            var to_rvI = int_data.to_rv.split(",");
-                            for (i_idN in to_rvI){
-                                var irv_id = to_rvI[i_idN];
-                                var ind = removed_int_tbls.indexOf(irv_id);
-                                if (ind > -1) {
-                                    removed_int_tbls.splice(ind, 1);
-                                }
-                            }
                             if (success){  // [!]WHAT IF THERE ARE 0 INT!??
                                 var int_id=int_data.int_id;
                                 var int_data=int_data.result;
@@ -1115,9 +1116,9 @@ $(document).ready(function(){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 //Table
-                                    var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
+                                    var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
                                     <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+'</div>\
-                                      <table class="table table-condensed" style="font-size:12px;">\
+                                      <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
                                           	<th>Ligand</th>\
@@ -1175,7 +1176,7 @@ $(document).ready(function(){
                                     </div>";
                                     $("#int_info").append(table_html+infoAndOpts);
                                     if ($.active>1){
-                                        $("#int_info").find(".href_save_data_int").addClass("disabled")
+                                        $("#int_info").find(".href_save_data_int").addClass("disabled");
                                     }
                                     
                                     
@@ -1184,19 +1185,19 @@ $(document).ready(function(){
                                     //Plot
                                     for (lig in int_data){
                                         res_int=int_data[lig];
-                                        var res_int_ok=[["Position","Freq"]]
+                                        var res_int_ok=[["Position","Freq"]];
                                         for (posN in res_int){
-                                            var pos=res_int[posN]
-                                            var gnum=gnumFromPosChain(pos[0].toString(), pos[1])
+                                            var pos=res_int[posN];
+                                            var gnum=gnumFromPosChain(pos[0].toString(), pos[1]);
                                             if (gnum == "-"){
-                                                var gnum = pos[2]+pos[0].toString()+":"+pos[1]
+                                                var gnum = pos[2]+pos[0].toString()+":"+pos[1];
                                             }
-                                            res_int_ok.push([gnum,Number(pos[3])])
+                                            res_int_ok.push([gnum,Number(pos[3])]);
                                         }
                                         function drawChart3(){
                                             var data = google.visualization.arrayToDataTable(res_int_ok,false);
                                             var options = {"height":350,"legend":{"position":"none"}, 
-                                    "chartArea":{"right":"5","left":"60","top":"50","bottom":"60"},vAxis: {title: 'Frequency (%)', viewWindow: {min: 0,  max: 100}}};
+                                    "chartArea":{"right":"5","left":"60","top":"50","bottom":"70"},vAxis: {title: 'Frequency (%)', viewWindow: {min: 0,  max: 100}} , hAxis: {slantedText: true, slantedTextAngle: 90  }};
                                             var int_chart_div = document.getElementById(chart_div);
 
                                             var chart = new google.visualization.ColumnChart(int_chart_div);    
@@ -1206,7 +1207,23 @@ $(document).ready(function(){
                                             });
                                             chart.draw(data, options);   
                                             var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
-                                            $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source)
+                                            $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source);
+                                            
+                                            /*var this_tbl_td=$('#int_tbl'+i_id.toString()).find("td");
+                                            $("#int_info").on("click", this_tbl_td , function(){
+                                                var this_row=$(this).parent().index();
+                                            })*/
+                                            
+                                            /*google.visualization.events.addListener(chart, 'select', selectHandler);
+
+                                            function selectHandler(e) {
+                                                var rc= chart.getSelection();
+                                                var row =rc[0]["row"];
+                                                var col =rc[0]["column"];
+                                                if (row != undefined && col != undefined ){
+                                                    var mytr=$("#int_tbl1").find("tr:nth-child("+row+")");
+                                                }
+                                            }*/
                                         }
                                         google.load("visualization", "1", {packages:["corechart"],'callback': drawChart3});
 
@@ -1265,8 +1282,6 @@ $(document).ready(function(){
     
     $('body').on('click','.delete_int_tbl', function(){
         var isChecked=$(this).closest(".int_tbl").find(".display_int").is(":checked");
-        var tbl_id= $(this).data("int_id");
-        removed_int_tbls.push(tbl_id);
         var IntToRv=$(this).parents(".int_tbl").attr("id");
         $('#'+IntToRv).remove();
         if (isChecked){
@@ -1274,34 +1289,101 @@ $(document).ready(function(){
         }
     });
     
+
+    
+    function displayCheckedIntResids(){
+        var int_res_li=[];
+        $(".int_tbl").each(function(){
+            if ($(this).find(".display_int").is(":checked")){
+                $(this).find(".int_results_tbl > tbody > tr").each(function(){
+                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
+                    var td_list= $(this).children();
+                    var isChecked=td_list.last().hasClass("showInP");
+                    if (isChecked){
+                        if(td_list.length > 4){
+                            var pos = $(this).find("td:nth-child(2)").html();
+                            var chain =$(this).find("td:nth-child(3)").html();
+                            var freq =$(this).find("td:nth-child(5)").html();
+                        } else{
+                            var pos =$(this).find("td:first-child").html();
+                            var chain =$(this).find("td:nth-child(2)").html();
+                            var freq =$(this).find("td:nth-child(4)").html();
+                        }
+                        var pos_aa = /\d*$/.exec(pos)[0];
+                        int_res_li.push([pos_aa, chain,freq]);
+                    }
+                });
+            }  
+        });
+        int_res_li=uniq(int_res_li);
+        return (int_res_li);
+    }
+    
+    
+    
     function displayIntResids(){
         var int_res_li=[];
         $(".int_tbl").each(function(){
             if ($(this).find(".display_int").is(":checked")){
-                $(this).find("tbody > tr").each(function(){
+                $(this).find(".int_results_tbl > tbody > tr").each(function(){
+                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
                     var td_list= $(this).children();
-                    if(td_list.length > 4){
-                        var pos = $(this).find("td:nth-child(2)").html();
-                        var chain =$(this).find("td:nth-child(3)").html();
-                        var freq =$(this).find("td:nth-child(5)").html();
-                    } else{
-                        var pos =$(this).find("td:first-child").html();
-                        var chain =$(this).find("td:nth-child(2)").html();
-                        var freq =$(this).find("td:nth-child(4)").html();
+                    var isChecked=td_list.last().hasClass("showInP");
+                    if (! isChecked){
+                        if(td_list.length > 4){
+                            var pos = $(this).find("td:nth-child(2)").html();
+                            var chain =$(this).find("td:nth-child(3)").html();
+                            var freq =$(this).find("td:nth-child(5)").html();
+                        } else{
+                            var pos =$(this).find("td:first-child").html();
+                            var chain =$(this).find("td:nth-child(2)").html();
+                            var freq =$(this).find("td:nth-child(4)").html();
+                        }
+                        var pos_aa = /\d*$/.exec(pos)[0];
+                        int_res_li.push([pos_aa, chain,freq]);
                     }
-                    var pos_aa = /\d*$/.exec(pos)[0];
-                    int_res_li.push([pos_aa, chain,freq])
                 });
             }  
-        })
+        });
         int_res_li=uniq(int_res_li);
         return (int_res_li);
     }
     
     $("#int_info").on("change" ,".display_int" , function(){
         $("#selectionDiv").trigger("click");
-    })
+    });
     
+    $("#int_info").on("click","td",function(){
+        var isclicked = $(this).hasClass("showInP");
+        if (isclicked) {
+            var sibl = $(this).siblings().length;
+            if (sibl == 4) {
+                var hasrowspan= $(this).attr("rowspan");
+                if (! hasrowspan){
+                    $(this).siblings(":not([rowspan])").css("background-color","transparent").removeClass("showInP");
+                    $(this).css("background-color","transparent").removeClass("showInP");
+                } 
+            } else {
+                $(this).siblings().css("background-color","transparent").removeClass("showInP");
+                $(this).css("background-color","transparent").removeClass("showInP");
+            }
+        } else {
+            var sibl = $(this).siblings().length;
+            if (sibl == 4) {
+                var hasrowspan= $(this).attr("rowspan");
+                if (! hasrowspan){
+                    $(this).siblings(":not([rowspan])").css("background-color","#ecf6f9").addClass("showInP");
+                    $(this).css("background-color","#ecf6f9").addClass("showInP");
+                } 
+            } else {
+                $(this).siblings().css("background-color","#ecf6f9").addClass("showInP");
+                $(this).css("background-color","#ecf6f9").addClass("showInP");
+            }
+        }
+        if ($(this).closest(".int_tbl").find(".display_int").is(":checked")){
+            $("#selectionDiv").trigger("click");
+        }
+    });
     
 //-------- Dist between residues --------
 
@@ -1464,9 +1546,7 @@ $(document).ready(function(){
         return (false);
     }
 
-    var removed_dis_plots=[];
 
-    //var distResultDict={};
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
@@ -1481,6 +1561,10 @@ $(document).ready(function(){
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    act_dis_plots=[];
+                    $("#dist_chart").children(".dist_plot").each(function(){
+                        act_dis_plots.push($(this).data("dist_id"));
+                    });
                     var t0= performance.now();
                     $.ajax({
                         type: "POST",
@@ -1490,17 +1574,9 @@ $(document).ready(function(){
                           "distStrWT": struc,
                           "distTraj": traj_p,
                           "dist_residsWT": res_ids,
-                          "to_rv" :removed_dis_plots.join(),
+                          "no_rv" :act_dis_plots.join(),
                         },
                         success: function(data_dist_wt) {
-                            var to_rv = data_dist_wt.to_rv.split(",");
-                            for (d_idN in to_rv){
-                                var rv_id = to_rv[d_idN];
-                                var ind = removed_dis_plots.indexOf(rv_id);
-                                if (ind > -1) {
-                                    removed_dis_plots.splice(ind, 1);
-                                }
-                            }
                             $("#wait_dist").remove();
                             $("#gotoDistPg").removeClass("disabled");
                             var success=data_dist_wt.success;
@@ -1523,7 +1599,7 @@ $(document).ready(function(){
                                     newgraph_sel="dist_chart_"+d_id.toString();
                                     var plot_html;
                                     if ($.active<=1){
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                         <div class='dist_time' id='"+newgraph_sel+"t'></div>\
                                                         <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
                                                         <div class='settings' style='margin:5px'>\
@@ -1555,7 +1631,7 @@ $(document).ready(function(){
                                                         </div>\
                                                     </div>";
                                     }else{
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                         <div class='dist_time' id='"+newgraph_sel+"t'></div>\
                                                         <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
                                                         <div class='settings' style='margin:5px'>\
@@ -1619,7 +1695,7 @@ $(document).ready(function(){
                                     
                                     d_id+=1;
                                     
-                                };
+                                }
                                 google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
                             } else {
                                 var msg=data_dist_wt.msg;
@@ -1661,7 +1737,7 @@ $(document).ready(function(){
                         success: function(data_dist) {
                             var success=data_dist.success;
                             if (success){
-                                dist_result=data_dist.result
+                                dist_result=data_dist.result;
                             }else{ 
                                 var msg=data_dist.msg;
                                 add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
@@ -1674,12 +1750,12 @@ $(document).ready(function(){
                         }
                     });
                 } else {
-                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.'
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
                     $("#dist_alert").html(add_error_d);
                 }
             }
         } else {
-            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Please, remove some distance results to obtain new ones.'
+            add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Please, remove some distance results to obtain new ones.';
             $("#dist_alert").html(add_error_d);
         }
     });
@@ -1700,12 +1776,10 @@ $(document).ready(function(){
             var img_source=dist_frame_cont.data("url");
             $(this).closest(".settings").find(".save_img_dist_plot").attr("href",img_source);
         }
-    })
+    });
 
     $('body').on('click','.delete_dist_plot', function(){
         var isChecked=$(this).closest(".dist_plot").find(".display_this_dist").is(":checked");
-        var plot_id= $(this).data("dist_id");
-        removed_dis_plots.push(plot_id);
         var plotToRv=$(this).parents(".dist_plot").attr("id");
         $('#'+plotToRv).remove();
         if (isChecked){
@@ -1721,12 +1795,12 @@ $(document).ready(function(){
             var tr_id_act=$(this).data("traj_id");
             $("#traj_id_"+tr_id_act)[0].checked=true;
         });
-        return uniq(dist_li)
-    };
+        return uniq(dist_li);
+    }
     
     $("#dist_chart").on("change" ,".display_this_dist" , function(){
         $("#selectionDiv").trigger("click");
-    })
+    });
 //-------- Select protein segment to highligh/select from the sequence --------
 
     function selectFromSeq(){
@@ -1767,7 +1841,7 @@ $(document).ready(function(){
                     $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
                     $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
-                    i++
+                    i++;
                 }
                 if (firstsel){
                     $("#addToSel").css("display","inline");
@@ -1775,7 +1849,7 @@ $(document).ready(function(){
                 }
 
             }
-        })
+        });
    
         $(".seq_sel").hover(function(){
             if (click_n==2) {
@@ -1928,7 +2002,6 @@ $(document).ready(function(){
 
 //-------- RMSD computation --------
 
-    var removed_rmsd_plots=[];
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
@@ -2008,6 +2081,10 @@ $(document).ready(function(){
                 $("#rmsd_alert").html("");
                 $("#gotoRMSDPg").addClass("disabled");
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+                act_rmsd_plots=[];
+                $("#rmsd_chart").children(".rmsd_plot").each(function(){
+                    act_rmsd_plots.push($(this).data("rmsd_id"));
+                });
                 var t0=performance.now();
                 $.ajax({
                     type: "POST",
@@ -2020,20 +2097,12 @@ $(document).ready(function(){
                       "rmsdRefFr": rmsdRefFr,
                       "rmsdRefTraj": rmsdRefTraj,
                       "rmsdSel": rmsdSel,
-                      "to_rv" :removed_rmsd_plots.join(),
+                      "no_rv" :act_rmsd_plots.join(),
                     },
                     success: function(data_rmsd) {
                         $("#wait_rmsd").remove();
                         $("#gotoRMSDPg").removeClass("disabled");
                         var success=data_rmsd.success;
-                        var rmsd_to_rv = data_rmsd.to_rv.split(",");
-                        for (r_idN in rmsd_to_rv){
-                            var rvr_id = rmsd_to_rv[r_idN];
-                            var Rind = removed_rmsd_plots.indexOf(rvr_id);
-                            if (Rind > -1) {
-                                removed_rmsd_plots.splice(Rind, 1);
-                            }
-                        }
                         if (success){
     /////////////////////                    
                             var rmsd_array_t=data_rmsd.result_t;
@@ -2056,7 +2125,7 @@ $(document).ready(function(){
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
                                 if ($.active<=1){
-                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
                                                     <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
                                                     <div class='rmsd_settings' id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
@@ -2085,7 +2154,7 @@ $(document).ready(function(){
                                                     </div>\
                                                 </div>";//color:#239023
                                 }else{
-                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
                                                     <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
                                                     <div id='opt_"+newRMSDgraph_sel+"' class='rmsd_settings' style='margin:5px'>\
@@ -2146,7 +2215,7 @@ $(document).ready(function(){
                                                                 
                                 }
                                 
-                            };
+                            }
                             google.load("visualization", "1", {packages:["corechart"],'callback': drawChart2});
                             small_errors=data_rmsd.msg;
     ////////////////////
@@ -2180,8 +2249,6 @@ $(document).ready(function(){
     });
 
     $('body').on('click','.delete_rmsd_plot', function(){
-        var plot_id= $(this).data("rmsd_id");
-        removed_rmsd_plots.push(plot_id);
         var plotToRv=$(this).parents(".rmsd_plot").attr("id");
         $('#'+plotToRv).remove();
     });
@@ -2203,7 +2270,7 @@ $(document).ready(function(){
             var img_source=rmsd_frame_cont.data("url");
             $(this).closest(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",img_source);
         }
-    })
+    });
 //-------- Buttons --------
 
     click_unclick(".high_pdA");
@@ -2253,14 +2320,15 @@ $(document).ready(function(){
         } else {
             var receptorsel="";
         }
-        return (receptorsel)
+        return (receptorsel);
     }
 
 
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
-        var dist_groups_li=displayCheckedDists()
+        var dist_groups_li=displayCheckedDists();
         var int_res_li=displayIntResids();
+        var int_res_li_ch = displayCheckedIntResids();
         cp = obtainCompounds();
         nonGPCR=obtainNonGPCRchains(".nonGPCR.active");// list of strings, each string contains the chains of a non-GPCR prot selected.
         if (gpcr_pdb_dict=="no"){
@@ -2275,12 +2343,13 @@ $(document).ready(function(){
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
                 "int_res_li":int_res_li,
+                "int_res_li_ch":int_res_li_ch,
                 "nonGPCR":nonGPCR,
                 "high_pre":high_pre,
                 "traj":traj,
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info
-        })
+        });
     }
     
 
@@ -2299,7 +2368,7 @@ $(document).ready(function(){
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
         obtainLegend(legend_el);
-    };    
+    }    
     window.passInfoToIframe=passInfoToIframe;
     
     var passinfoToPlayTraj= function(){
@@ -2309,7 +2378,16 @@ $(document).ready(function(){
         window.dist_of=dist_of;
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
-
+    
+    function join_lil(myLil){
+         var myLi=[];
+         for (e in myLil){
+             var res_s = myLil[e].join("-");
+             myLi[myLi.length]=res_s.slice(0, -1);
+         }
+         var my_str = myLi.join();
+         return (my_str);
+    }
     
     $("#to_mdsrv").click(function(){
          var results = obtainURLinfo(gpcr_pdb_dict);
@@ -2320,15 +2398,12 @@ $(document).ready(function(){
          var nonGPCR =results["nonGPCR"];
          var nonGPCR = nonGPCR.join("-");
          var int_res_lil =results["int_res_li"];
+         var int_res_lil_ch =results["int_res_li_ch"];
          var dist_groups_li=results["dist_groups_li"];
          var receptorsel = results["receptorsel"]; 
          var bs_info = results["bs_info"];
-         var int_res_li=[];
-         for (e in int_res_lil){
-             var res_s = int_res_lil[e].join("-");
-             int_res_li[int_res_li.length]=res_s.slice(0, -1);
-         }
-         var int_res_s = int_res_li.join();
+         int_res_s=join_lil(int_res_lil);
+         int_res_s_ch=join_lil(int_res_lil_ch);
          var pd = "n";
          for (key in high_pre){
              if (high_pre[key].length > 0){
@@ -2354,6 +2429,7 @@ $(document).ready(function(){
                             "lf":encode(high_pre["F"]), 
                             "wth":encode(dist_of) , 
                             "in":encode(int_res_s),
+                            "ih":encode(int_res_s_ch),
                             "ng":encode(nonGPCR) , 
                             "dc":encode(dist_groups_li),
                             "rs":encode(receptorsel),

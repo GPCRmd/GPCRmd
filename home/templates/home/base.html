@@ -15,7 +15,12 @@
 
     <!-- Custom styles -->
     <link href="{% static 'home/css/style.css' %}" rel="stylesheet">
-
+    <style>
+        input[type='file'] {
+            width:100%;
+            max-width:100%;
+        }
+    </style>
     <!-- Additional CSS -->
     {% block addon_css %}{% endblock %}
 

@@ -32,6 +32,16 @@ class DyndbBinding(models.Model):
         managed = True
         db_table = 'dyndb_binding'
 
+class DyndbInhibition(models.Model):
+    id = models.ForeignKey('DyndbExpInteractionData', models.DO_NOTHING, db_column='id', primary_key=True)
+    rvalue = models.FloatField()
+    units = models.CharField(max_length=10)
+    description = models.CharField(max_length=900, blank=True, null=True)
+
+    class Meta:
+        managed = True
+        db_table = 'dyndb_inhibition'
+
 
 class DyndbCannonicalProteins(models.Model):
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING, db_column='id_protein', primary_key=True)
@@ -332,7 +342,8 @@ class DyndbEfficacy(models.Model):
     units = models.CharField(max_length=10)
     description = models.CharField(max_length=900,blank=True, null=True)
     type = models.SmallIntegerField( choices=EFFICACY_TYPE, default=0)
-    reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound',null=True)   
+    reference_id_compound = models.ForeignKey(DyndbCompound, models.DO_NOTHING, db_column='reference_id_compound',null=True)
+    reference_id_efficacy = models.ForeignKey('self', models.DO_NOTHING, db_column='reference_id_efficacy',null=True)
     id_functional = models.ForeignKey('DyndbFunctional', models.DO_NOTHING, blank=True, db_column='id_functional', null=True) 
 
     class Meta:
