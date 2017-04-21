@@ -1039,7 +1039,6 @@ $(document).ready(function(){
         return result;
     }
     
-    var removed_int_tbls=[];
 
     var i_id=1;
     var lig_sel_str;
@@ -1086,6 +1085,10 @@ $(document).ready(function(){
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                     $("#gotoInt").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    act_int_tbls=[];
+                    $("#int_info").children(".int_tbl").each(function(){
+                        act_int_tbls.push($(this).data("int_id"));
+                    });
                     var t0= performance.now();
                     $.ajax({
                         type: "POST",
@@ -1097,7 +1100,7 @@ $(document).ready(function(){
                           "traj_p": traj_path,
                           "struc_p": struc,
                           "dist_scheme": dist_scheme,
-                          "to_rv" : removed_int_tbls.join(),
+                          "no_rv" : act_int_tbls.join(),
                         },
                         success: function(int_data) {
                             if ($.active<=1){
@@ -1106,14 +1109,6 @@ $(document).ready(function(){
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
                             var success=int_data.success;
-                            var to_rvI = int_data.to_rv.split(",");
-                            for (i_idN in to_rvI){
-                                var irv_id = to_rvI[i_idN];
-                                var ind = removed_int_tbls.indexOf(irv_id);
-                                if (ind > -1) {
-                                    removed_int_tbls.splice(ind, 1);
-                                }
-                            }
                             if (success){  // [!]WHAT IF THERE ARE 0 INT!??
                                 var int_id=int_data.int_id;
                                 var int_data=int_data.result;
@@ -1121,9 +1116,9 @@ $(document).ready(function(){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 //Table
-                                    var table_html='<div class="int_tbl" id=int_tbl'+i_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
+                                    var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
                                     <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+'</div>\
-                                      <table class="table table-condensed" style="font-size:12px;">\
+                                      <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
                                           	<th>Ligand</th>\
@@ -1213,18 +1208,20 @@ $(document).ready(function(){
                                             chart.draw(data, options);   
                                             var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
                                             $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source);
+                                            
+                                            /*var this_tbl_td=$('#int_tbl'+i_id.toString()).find("td");
+                                            $("#int_info").on("click", this_tbl_td , function(){
+                                                var this_row=$(this).parent().index();
+                                            })*/
+                                            
                                             /*google.visualization.events.addListener(chart, 'select', selectHandler);
 
                                             function selectHandler(e) {
                                                 var rc= chart.getSelection();
                                                 var row =rc[0]["row"];
                                                 var col =rc[0]["column"];
-                                                console.log(row);
-                                                console.log(col);
                                                 if (row != undefined && col != undefined ){
                                                     var mytr=$("#int_tbl1").find("tr:nth-child("+row+")");
-                                                    console.log($("#int_tbl1"));
-                                                    console.log(mytr);
                                                 }
                                             }*/
                                         }
@@ -1285,8 +1282,6 @@ $(document).ready(function(){
     
     $('body').on('click','.delete_int_tbl', function(){
         var isChecked=$(this).closest(".int_tbl").find(".display_int").is(":checked");
-        var tbl_id= $(this).data("int_id");
-        removed_int_tbls.push(tbl_id);
         var IntToRv=$(this).parents(".int_tbl").attr("id");
         $('#'+IntToRv).remove();
         if (isChecked){
@@ -1294,23 +1289,59 @@ $(document).ready(function(){
         }
     });
     
+
+    
+    function displayCheckedIntResids(){
+        var int_res_li=[];
+        $(".int_tbl").each(function(){
+            if ($(this).find(".display_int").is(":checked")){
+                $(this).find(".int_results_tbl > tbody > tr").each(function(){
+                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
+                    var td_list= $(this).children();
+                    var isChecked=td_list.last().hasClass("showInP");
+                    if (isChecked){
+                        if(td_list.length > 4){
+                            var pos = $(this).find("td:nth-child(2)").html();
+                            var chain =$(this).find("td:nth-child(3)").html();
+                            var freq =$(this).find("td:nth-child(5)").html();
+                        } else{
+                            var pos =$(this).find("td:first-child").html();
+                            var chain =$(this).find("td:nth-child(2)").html();
+                            var freq =$(this).find("td:nth-child(4)").html();
+                        }
+                        var pos_aa = /\d*$/.exec(pos)[0];
+                        int_res_li.push([pos_aa, chain,freq]);
+                    }
+                });
+            }  
+        });
+        int_res_li=uniq(int_res_li);
+        return (int_res_li);
+    }
+    
+    
+    
     function displayIntResids(){
         var int_res_li=[];
         $(".int_tbl").each(function(){
             if ($(this).find(".display_int").is(":checked")){
-                $(this).find("tbody > tr").each(function(){
+                $(this).find(".int_results_tbl > tbody > tr").each(function(){
+                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
                     var td_list= $(this).children();
-                    if(td_list.length > 4){
-                        var pos = $(this).find("td:nth-child(2)").html();
-                        var chain =$(this).find("td:nth-child(3)").html();
-                        var freq =$(this).find("td:nth-child(5)").html();
-                    } else{
-                        var pos =$(this).find("td:first-child").html();
-                        var chain =$(this).find("td:nth-child(2)").html();
-                        var freq =$(this).find("td:nth-child(4)").html();
+                    var isChecked=td_list.last().hasClass("showInP");
+                    if (! isChecked){
+                        if(td_list.length > 4){
+                            var pos = $(this).find("td:nth-child(2)").html();
+                            var chain =$(this).find("td:nth-child(3)").html();
+                            var freq =$(this).find("td:nth-child(5)").html();
+                        } else{
+                            var pos =$(this).find("td:first-child").html();
+                            var chain =$(this).find("td:nth-child(2)").html();
+                            var freq =$(this).find("td:nth-child(4)").html();
+                        }
+                        var pos_aa = /\d*$/.exec(pos)[0];
+                        int_res_li.push([pos_aa, chain,freq]);
                     }
-                    var pos_aa = /\d*$/.exec(pos)[0];
-                    int_res_li.push([pos_aa, chain,freq]);
                 });
             }  
         });
@@ -1322,7 +1353,7 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
     
-/*    $("#int_info").on("click","td",function(){
+    $("#int_info").on("click","td",function(){
         var isclicked = $(this).hasClass("showInP");
         if (isclicked) {
             var sibl = $(this).siblings().length;
@@ -1341,15 +1372,18 @@ $(document).ready(function(){
             if (sibl == 4) {
                 var hasrowspan= $(this).attr("rowspan");
                 if (! hasrowspan){
-                    $(this).siblings(":not([rowspan])").css("background-color","green").addClass("showInP");
-                    $(this).css("background-color","green").addClass("showInP");
+                    $(this).siblings(":not([rowspan])").css("background-color","#ecf6f9").addClass("showInP");
+                    $(this).css("background-color","#ecf6f9").addClass("showInP");
                 } 
             } else {
-                $(this).siblings().css("background-color","green").addClass("showInP");
-                $(this).css("background-color","green").addClass("showInP");
+                $(this).siblings().css("background-color","#ecf6f9").addClass("showInP");
+                $(this).css("background-color","#ecf6f9").addClass("showInP");
             }
         }
-    });*/
+        if ($(this).closest(".int_tbl").find(".display_int").is(":checked")){
+            $("#selectionDiv").trigger("click");
+        }
+    });
     
 //-------- Dist between residues --------
 
@@ -1512,9 +1546,7 @@ $(document).ready(function(){
         return (false);
     }
 
-    var removed_dis_plots=[];
 
-    //var distResultDict={};
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
@@ -1529,6 +1561,10 @@ $(document).ready(function(){
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    act_dis_plots=[];
+                    $("#dist_chart").children(".dist_plot").each(function(){
+                        act_dis_plots.push($(this).data("dist_id"));
+                    });
                     var t0= performance.now();
                     $.ajax({
                         type: "POST",
@@ -1538,17 +1574,9 @@ $(document).ready(function(){
                           "distStrWT": struc,
                           "distTraj": traj_p,
                           "dist_residsWT": res_ids,
-                          "to_rv" :removed_dis_plots.join(),
+                          "no_rv" :act_dis_plots.join(),
                         },
                         success: function(data_dist_wt) {
-                            var to_rv = data_dist_wt.to_rv.split(",");
-                            for (d_idN in to_rv){
-                                var rv_id = to_rv[d_idN];
-                                var ind = removed_dis_plots.indexOf(rv_id);
-                                if (ind > -1) {
-                                    removed_dis_plots.splice(ind, 1);
-                                }
-                            }
                             $("#wait_dist").remove();
                             $("#gotoDistPg").removeClass("disabled");
                             var success=data_dist_wt.success;
@@ -1571,7 +1599,7 @@ $(document).ready(function(){
                                     newgraph_sel="dist_chart_"+d_id.toString();
                                     var plot_html;
                                     if ($.active<=1){
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                         <div class='dist_time' id='"+newgraph_sel+"t'></div>\
                                                         <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
                                                         <div class='settings' style='margin:5px'>\
@@ -1603,7 +1631,7 @@ $(document).ready(function(){
                                                         </div>\
                                                     </div>";
                                     }else{
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                         <div class='dist_time' id='"+newgraph_sel+"t'></div>\
                                                         <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
                                                         <div class='settings' style='margin:5px'>\
@@ -1752,8 +1780,6 @@ $(document).ready(function(){
 
     $('body').on('click','.delete_dist_plot', function(){
         var isChecked=$(this).closest(".dist_plot").find(".display_this_dist").is(":checked");
-        var plot_id= $(this).data("dist_id");
-        removed_dis_plots.push(plot_id);
         var plotToRv=$(this).parents(".dist_plot").attr("id");
         $('#'+plotToRv).remove();
         if (isChecked){
@@ -1976,7 +2002,6 @@ $(document).ready(function(){
 
 //-------- RMSD computation --------
 
-    var removed_rmsd_plots=[];
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
@@ -2056,6 +2081,10 @@ $(document).ready(function(){
                 $("#rmsd_alert").html("");
                 $("#gotoRMSDPg").addClass("disabled");
                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+                act_rmsd_plots=[];
+                $("#rmsd_chart").children(".rmsd_plot").each(function(){
+                    act_rmsd_plots.push($(this).data("rmsd_id"));
+                });
                 var t0=performance.now();
                 $.ajax({
                     type: "POST",
@@ -2068,20 +2097,12 @@ $(document).ready(function(){
                       "rmsdRefFr": rmsdRefFr,
                       "rmsdRefTraj": rmsdRefTraj,
                       "rmsdSel": rmsdSel,
-                      "to_rv" :removed_rmsd_plots.join(),
+                      "no_rv" :act_rmsd_plots.join(),
                     },
                     success: function(data_rmsd) {
                         $("#wait_rmsd").remove();
                         $("#gotoRMSDPg").removeClass("disabled");
                         var success=data_rmsd.success;
-                        var rmsd_to_rv = data_rmsd.to_rv.split(",");
-                        for (r_idN in rmsd_to_rv){
-                            var rvr_id = rmsd_to_rv[r_idN];
-                            var Rind = removed_rmsd_plots.indexOf(rvr_id);
-                            if (Rind > -1) {
-                                removed_rmsd_plots.splice(Rind, 1);
-                            }
-                        }
                         if (success){
     /////////////////////                    
                             var rmsd_array_t=data_rmsd.result_t;
@@ -2104,7 +2125,7 @@ $(document).ready(function(){
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
                                 if ($.active<=1){
-                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
                                                     <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
                                                     <div class='rmsd_settings' id='opt_"+newRMSDgraph_sel+"' style='margin:5px'>\
@@ -2133,7 +2154,7 @@ $(document).ready(function(){
                                                     </div>\
                                                 </div>";//color:#239023
                                 }else{
-                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                    RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
                                                     <div class='rmsd_frame' id='"+newRMSDgraph_sel+"f'></div>\
                                                     <div id='opt_"+newRMSDgraph_sel+"' class='rmsd_settings' style='margin:5px'>\
@@ -2228,8 +2249,6 @@ $(document).ready(function(){
     });
 
     $('body').on('click','.delete_rmsd_plot', function(){
-        var plot_id= $(this).data("rmsd_id");
-        removed_rmsd_plots.push(plot_id);
         var plotToRv=$(this).parents(".rmsd_plot").attr("id");
         $('#'+plotToRv).remove();
     });
@@ -2309,6 +2328,7 @@ $(document).ready(function(){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
         var int_res_li=displayIntResids();
+        var int_res_li_ch = displayCheckedIntResids();
         cp = obtainCompounds();
         nonGPCR=obtainNonGPCRchains(".nonGPCR.active");// list of strings, each string contains the chains of a non-GPCR prot selected.
         if (gpcr_pdb_dict=="no"){
@@ -2323,6 +2343,7 @@ $(document).ready(function(){
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
                 "int_res_li":int_res_li,
+                "int_res_li_ch":int_res_li_ch,
                 "nonGPCR":nonGPCR,
                 "high_pre":high_pre,
                 "traj":traj,
@@ -2357,7 +2378,16 @@ $(document).ready(function(){
         window.dist_of=dist_of;
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
-
+    
+    function join_lil(myLil){
+         var myLi=[];
+         for (e in myLil){
+             var res_s = myLil[e].join("-");
+             myLi[myLi.length]=res_s.slice(0, -1);
+         }
+         var my_str = myLi.join();
+         return (my_str);
+    }
     
     $("#to_mdsrv").click(function(){
          var results = obtainURLinfo(gpcr_pdb_dict);
@@ -2368,15 +2398,12 @@ $(document).ready(function(){
          var nonGPCR =results["nonGPCR"];
          var nonGPCR = nonGPCR.join("-");
          var int_res_lil =results["int_res_li"];
+         var int_res_lil_ch =results["int_res_li_ch"];
          var dist_groups_li=results["dist_groups_li"];
          var receptorsel = results["receptorsel"]; 
          var bs_info = results["bs_info"];
-         var int_res_li=[];
-         for (e in int_res_lil){
-             var res_s = int_res_lil[e].join("-");
-             int_res_li[int_res_li.length]=res_s.slice(0, -1);
-         }
-         var int_res_s = int_res_li.join();
+         int_res_s=join_lil(int_res_lil);
+         int_res_s_ch=join_lil(int_res_lil_ch);
          var pd = "n";
          for (key in high_pre){
              if (high_pre[key].length > 0){
@@ -2402,6 +2429,7 @@ $(document).ready(function(){
                             "lf":encode(high_pre["F"]), 
                             "wth":encode(dist_of) , 
                             "in":encode(int_res_s),
+                            "ih":encode(int_res_s_ch),
                             "ng":encode(nonGPCR) , 
                             "dc":encode(dist_groups_li),
                             "rs":encode(receptorsel),

@@ -329,6 +329,7 @@
             //var traj =results["traj"];
             var nonGPCR =results["nonGPCR"];
             var int_res_li =results["int_res_li"];
+            var int_res_li_ch =results["int_res_li_ch"];
             var dist_groups_li=results["dist_groups_li"];
             var receptorsel = results["receptorsel"]; //[!!!]
             var bs_info= results["bs_info"]; //[!!!]
@@ -524,6 +525,27 @@
                 }
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
+
+            }
+            
+            if (int_res_li_ch.length > 0){
+                var final_sele=[];
+                for (pos_info_n in int_res_li_ch){
+                    var pos_info = int_res_li_ch[pos_info_n];
+                    var pos = pos_info[0]+":"+pos_info[1];
+                    final_sele.push(pos);
+                    var label = pos_info[2];
+                    var res_sele =  new NGL.Selection( pos );
+                    var label_pos="";
+                    o.structure.eachAtom(function(a){
+                        if (a.atomname == "CA"){
+                            label_pos=a.index;
+                        }
+                    },res_sele);
+                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                }
+                final_sele=final_sele.join(" , ");
+                o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#461bff" } );// colorValue: "#00d215"
 
             }
 

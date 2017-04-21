@@ -148,7 +148,7 @@
             return nonGPCR_mod;
         }
 ///////////////
-            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s=dist_groups_s= receptorsel = bs_info  ="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info  ="";
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";
             var t_path = "file://_DB/";
@@ -165,6 +165,7 @@
             var  cons_comp=NGL.getQuery("cc");
             var  nonGPCR= NGL.getQuery("ng");
             var int_res_s=NGL.getQuery("in");
+            var int_res_s_ch=NGL.getQuery("ih");
             var dist_groups_s=NGL.getQuery("dc");
             var bs_info = NGL.getQuery("bs");
 
@@ -334,6 +335,31 @@
                                     o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );
 
                                 }
+                                
+                                if (int_res_s_ch){
+                                    var int_res_s_d_ch =decodeURIComponent(int_res_s_ch.replace(/\+/g, " "));
+                                    var int_res_li_ch = int_res_s_d_ch.split(",");
+                                    var final_sele=[];
+                                    for (pos_info_n = 0; pos_info_n < int_res_li_ch.length; pos_info_n++) {
+                                        var pos_info_s = int_res_li_ch[pos_info_n];
+                                        var pos_info = pos_info_s.split("-");
+                                        var pos = pos_info[0]+":"+pos_info[1];
+                                        final_sele.push(pos);
+                                        var label = pos_info[2];
+                                        var res_sele =  new NGL.Selection( pos );
+                                        var label_pos="";
+                                        o.structure.eachAtom(function(a){
+                                            if (a.atomname == "CA"){
+                                                label_pos=a.index;
+                                            }
+                                        },res_sele);
+                                        //o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                                    }
+                                    final_sele=final_sele.join(" , ");
+                                    o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#461bff" } );
+
+                                }
+                                
                                 clickDists(o);
                                 o.centerView("protein");
                                 var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
