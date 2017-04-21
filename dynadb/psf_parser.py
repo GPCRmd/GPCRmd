@@ -86,6 +86,7 @@ def true_saline_bridgescp(traj,atoms,distance_threshold=0.4, percentage_threshol
     return salt_bridges_residues
 
 def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=0.1, mean_option=False, percentage_option=True):
+    print('%%%',percentage_threshold)
     salt_bridges_atoms=[]
     salt_bridges_residues=[]
     cdis=[]

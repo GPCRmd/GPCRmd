@@ -2353,11 +2353,10 @@ def do_analysis(request):
         full_results=dict()
         arrays=request.POST.getlist('frames[]')
         is_mean=arrays[4]=='mean' #it is not mean, is percentage.
+        print('ISMEAN',is_mean)
         percentage_cutoff=int(arrays[3])
         #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
         trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
-        #for atomi in range(len(trajectory.xyz[0])):
-        #    print('PDB',trajectory.xyz[0][atomi], trajectory.topology.atom(atomi))
         trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
         trajectory=trajectory[int(arrays[0]):int(arrays[1])]
         atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
@@ -2369,6 +2368,30 @@ def do_analysis(request):
         tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
         full_results['charges']=tograph
         sasa=md.shrake_rupley(trajectory)
+        hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
+        histhbond=dict()
+        for frameres in hbonds_ks:
+            for hbond in frameres:
+                try:
+                    histhbond[tuple(hbond)]+=1
+                except KeyError:
+                    histhbond[tuple(hbond)]=1
+
+        for keys in histhbond:
+            histhbond[keys]= histhbond[keys]/len(t)
+            if abs(keys[0]-keys[2])>5 and histhbond[keys]>0.1:
+                print(keys[0],keys[1], histhbond[keys])   
+
+        #print(sasa.shape) #(19, 292)
+        for frames in range(len(sasa)):
+            for atom in range(len(sasa[frames])):
+                print('frame:',frames,trajectory.topology.atom(atom),sasa[frames][atom])
+
+        sasa4allatoms=sasa.sum(axis=0)
+        #print('\n\n\n\n NOW THE SUMVALUES len of sasasum',len(sasa))
+        for atomindex in range(len(sasa4allatoms)):
+            print(trajectory.topology.atom(atomindex),sasa4allatoms[atomindex])
+
         time=trajectory.time
         total_sasa = sasa.sum(axis=1)
         time=time.tolist()
@@ -2415,7 +2438,8 @@ def do_analysis(request):
                     hbonds_residue[donor_res]=[acceptor_res]
 
         full_results['hbonds'] = hbonds_residue
-        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
+        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=1, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
+        print(full_results['salt_bridges'] )
         full_results['salt_bridges'] = [label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
 
         trajprot=trajectory.atom_slice(trajectory.topology.select('protein'),inplace=False)
@@ -2453,7 +2477,7 @@ def do_analysis(request):
                 grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
 
         print('Analysis done')
-        print(grid.tolist())
+        #print(grid.tolist())
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
