@@ -50,6 +50,13 @@
     <b>Kd according to BindingDB:</b><br>
     {{answer.binding.value}} {{answer.binding.units}} <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.binding.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a>
 {% endif %} 
+
+<br>
+{% if answer.inhibition %}
+    <b>Ki according to IUPHAR:</b><br>
+    {{answer.inhibition.value}} {{answer.inhibition.units}} <a href=http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=317>See it in IUPHAR</a>
+{% endif %} 
+
 <br>
 
 {% if answer.models %} 

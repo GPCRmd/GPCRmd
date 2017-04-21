@@ -48,7 +48,7 @@ from structure.models import StructureType, StructureModelLoopTemplates
 from protein.models import Protein
 from common.models import  WebResource
 from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel,  DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,  DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
-from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences
+from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences, DyndbInhibition
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num, get_frames_num
 
 #from django.views.generic.edit import FormView
@@ -2732,10 +2732,13 @@ def query_complex(request, complex_id,incall=False):
     q = DyndbComplexExp.objects.filter(pk=complex_id)
     q = q.annotate(ec_fifty_val=F('dyndbexpinteractiondata__dyndbefficacy__id'))
     q = q.annotate(binding_val=F('dyndbexpinteractiondata__dyndbbinding__id'))
-    q = q.annotate(references=F('dyndbexpinteractiondata__dyndbreferencesexpinteractiondata__id_references__id'))  
-    q = q.values('ec_fifty_val','binding_val','references')
+    q = q.annotate(references=F('dyndbexpinteractiondata__dyndbreferencesexpinteractiondata__id_references__id'))
+    q = q.annotate(inhi_val=F('dyndbexpinteractiondata__dyndbinhibition__id'))
+    q = q.values('ec_fifty_val','binding_val','inhi_val','references')
     efflist=[]
     bindlist=[]
+    inhilist=[]
+    inhibition=dict()
     efficacy=dict()
     binding=dict()
     reference_list=[]
@@ -2755,6 +2758,13 @@ def query_complex(request, complex_id,incall=False):
             binding['description']=bindrow.description
             bindlist.append([bindrow.rvalue,bindrow.units,bindrow.description])
 
+        if row['inhi_val'] is not None:
+            inhirow=DyndbInhibition.objects.get(pk=row['inhi_val'])
+            inhibition['value']=inhirow.rvalue
+            inhibition['units']=inhirow.units
+            inhibition['description']=inhirow.description
+            inhilist.append([inhirow.rvalue,inhirow.units,inhirow.description])
+
         if row['references'] is not None:
             references=dict()
             refrow=DyndbReferences.objects.get(pk=row['references'])
@@ -2771,7 +2781,7 @@ def query_complex(request, complex_id,incall=False):
                 if references[keys] is None:
                     references[keys]=''
             reference_list.append(references)
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy,'efflist':efflist,'bindlist':bindlist}
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy,'efflist':efflist,'bindlist':bindlist,'inhilist':inhilist,'inhibition':inhibition}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -2927,11 +2937,13 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['link2protein']=list()
     dyna_dic['expdatabind']=''
     dyna_dic['expdataeff']=''
+    dyna_dic['expdatainhi']=''
     try:
         dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
         expdata=query_complex(request, dyna_dic['link_2_complex'],incall=True)
         dyna_dic['expdatabind']=expdata['bindlist']
         dyna_dic['expdataeff']=expdata['efflist']
+        dyna_dic['expdatainhi']=expdata['inhilist']
     except:
         dyna_dic['link_2_complex']=''
     dyna_dic['mdsrv_url'] = mdsrv_url
