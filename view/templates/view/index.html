@@ -661,7 +661,7 @@
                      In trajectory: 
                        <span style="margin-left:5px">
                             <select id="" name="dist_traj">
-                               <option disabled selected value> </option>
+                               <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
                                {% endfor %}
@@ -691,7 +691,7 @@
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
                             <select id="rmsd_traj" name="rmsd_traj">
-                               <option disabled selected value> </option>
+                               <!--option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
@@ -722,7 +722,7 @@
                             <input placeholder=0 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
                             from trajectory 
                             <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
-                               <option disabled selected value> </option>
+                               <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
@@ -793,7 +793,7 @@
                          In trajectory: 
                            <span style="margin-left:5px">
                                 <select id="" name="int_traj">
-                                   <option disabled selected value> </option>
+                                   <!--<option disabled selected value> </option>-->
                                    {% for traj in traj_list %}
                                    <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
                                    {% endfor %}
