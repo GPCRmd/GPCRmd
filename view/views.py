@@ -552,17 +552,20 @@ def index(request, dyn_id):
             ref_frame= request.POST.get("rmsdRefFr")
             ref_traj_p= request.POST.get("rmsdRefTraj")
             traj_sel= request.POST.get("rmsdSel")
-            to_rv=request.POST.get("to_rv")
+            no_rv=request.POST.get("no_rv")
             
             
             if request.session.get('rmsd_data', False):
                 rmsd_data=request.session['rmsd_data']
                 rmsd_dict=rmsd_data["rmsd_dict"]
                 new_rmsd_id=rmsd_data["new_rmsd_id"]
-                if (to_rv):
-                    to_rv_l=to_rv.split(",")
-                    for r_id in to_rv_l:
-                        del rmsd_dict[r_id]
+                no_rv_l=no_rv.split(",")
+                to_rv=[];
+                for r_id in rmsd_dict.keys():
+                    if (r_id not in no_rv_l):
+                        to_rv.append(r_id)
+                for r_id in to_rv:
+                    del rmsd_dict[r_id]   
             else:
                 new_rmsd_id=1
                 rmsd_dict={}
@@ -586,11 +589,11 @@ def index(request, dyn_id):
                     rtraj_filename=p.search(ref_traj_p).group(0)
                     rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)
                     request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "to_rv" :to_rv}
+                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors}
                 else: 
-                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors, "to_rv" :to_rv}
+                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors}
             else:
-                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones.", "to_rv" :to_rv}
+                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones."}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
@@ -602,16 +605,18 @@ def index(request, dyn_id):
             dist_struc_p=request.POST.get("distStrWT")
             dist_ids=request.POST.get("dist_residsWT")
             dist_traj_p=request.POST.get("distTraj")
-            to_rv=request.POST.get("to_rv")
-
+            no_rv=request.POST.get("no_rv")
             if request.session.get('dist_data', False):
                 dist_data=request.session['dist_data']
                 dist_dict=dist_data["dist_dict"]
                 new_id=dist_data["new_id"]
-                if (to_rv):
-                    to_rv_l=to_rv.split(",")
-                    for d_id in to_rv_l:
-                        del dist_dict[d_id]            
+                no_rv_l=no_rv.split(",")
+                to_rv=[];
+                for d_id in dist_dict.keys():
+                    if (d_id not in no_rv_l):
+                        to_rv.append(d_id)
+                for d_id in to_rv:
+                    del dist_dict[d_id]   
             else:
                 new_id=1
                 dist_dict={}
@@ -635,11 +640,11 @@ def index(request, dyn_id):
                     dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename)
                     request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                          "traj_filename":traj_filename, "struc_filename":struc_filename}
-                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg, "to_rv":to_rv}
+                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
                 else: 
-                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "to_rv" : to_rv}
+                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg }
             else:
-                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones." , "to_rv" :to_rv}
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones."}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")
@@ -647,7 +652,7 @@ def index(request, dyn_id):
             int_traj_p=request.POST.get("traj_p")
             int_struc_p=request.POST.get("struc_p")
             dist_scheme = request.POST.get("dist_scheme")
-            to_rv=request.POST.get("to_rv")
+            no_rv=request.POST.get("no_rv")
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
@@ -662,11 +667,13 @@ def index(request, dyn_id):
                     int_data=request.session['int_data']
                     int_info=int_data["int_info"]
                     new_int_id=int_data["new_int_id"]
-                    if (to_rv):
-                        to_rv_l=to_rv.split(",")
-                        for i_id in to_rv_l:
-                            print("rv ",i_id)
-                            del int_info[i_id] 
+                    no_rv_l=no_rv.split(",")
+                    to_rv=[];
+                    for i_id in int_info.keys():
+                        if (i_id not in no_rv_l):
+                            to_rv.append(i_id)
+                    for i_id in to_rv:
+                        del int_info[i_id]   
                 else:
                     new_int_id=1
                     int_info={}
@@ -681,11 +688,11 @@ def index(request, dyn_id):
                         int_id="int_"+str(new_int_id)
                         int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)
                         request.session['int_data']={"int_info":int_info, "new_int_id":new_int_id+1 }
-                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id , "to_rv" : to_rv}
+                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id}
                 else:
-                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None , "to_rv" : to_rv}
+                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None }
             else:
-                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None , "to_rv" : to_rv}
+                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None }
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -715,7 +722,9 @@ def index(request, dyn_id):
             prot_seq_pos={}
             seq_pos_n=1
             all_chains=[]
+            all_prot_names=[]
             for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
+                all_prot_names.append(prot_name)
                 seq_pos=[]
                 dprot_chains[prot_id]=[[],[]]  
                 for chain_name in chain_name_li:
@@ -828,7 +837,9 @@ def index(request, dyn_id):
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "other_prots":other_prots,#["protein and (:A or :B or :C)" , "Chains A, B, C" , "A, B,C"]
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
-                        "all_chains": ",".join(all_chains) }
+                        "all_chains": ",".join(all_chains),
+                        "all_prot_names" : ", ".join(all_prot_names)
+                         }
                     return render(request, 'view/index.html', context)
                 else:
                     context={
@@ -845,7 +856,9 @@ def index(request, dyn_id):
                         "chains" : chain_str,
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "gpcr_pdb": "no",
-                        "all_chains": ",".join(all_chains)}
+                        "all_chains": ",".join(all_chains),
+                        "all_prot_names" : ", ".join(all_prot_names)
+                        }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
                 context={
@@ -860,7 +873,9 @@ def index(request, dyn_id):
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
                         "chains" : chain_str,            
-                        "gpcr_pdb": "no"}
+                        "gpcr_pdb": "no",
+                        "all_prot_names" : ", ".join(all_prot_names)
+                        }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
             context={
@@ -997,8 +1012,6 @@ def download_int(request, int_id):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
         writer = csv.writer(response)
-        writer.writerow(["#Structure: "+struc_fileint])
-        writer.writerow(["#Trajectory: "+traj_fileint])
         if (dist_scheme=="closest"):
             dist_scheme_name="All atoms";
         else:
