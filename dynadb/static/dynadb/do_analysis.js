@@ -50,12 +50,14 @@ $('#doanalysis').click(function() {
             results=drawBasic(data.sasa,'Time','SASA');
             data=results[0];
             options=results[1];
-            var table='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Donor<th>Acceptors<tbody>';
+            var table='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
             for (var property in hbonds) {
                 if (hbonds.hasOwnProperty(property)) {
-                    table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td>'+hbonds[property][0];
+                    //table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td>'+hbonds[property][0];
+                    table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td> '+hbonds[property][0][0]+' ('+hbonds[property][0][1]+'%)' ;
                     for (index = 1; index < hbonds[property].length; ++index) {
-                        table=table+'<tr><td>'+hbonds[property][index];
+                        //table=table+'<tr><td>'+hbonds[property][index];
+                        table=table+'<tr><td>'+hbonds[property][index][0]+' ('+hbonds[property][index][1]+'%)';
                     }
                 }
             }

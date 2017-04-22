@@ -2353,10 +2353,9 @@ def do_analysis(request):
         full_results=dict()
         arrays=request.POST.getlist('frames[]')
         is_mean=arrays[4]=='mean' #it is not mean, is percentage.
-        print('ISMEAN',is_mean)
         percentage_cutoff=int(arrays[3])
         #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
-        trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
+        #trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
         trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
         trajectory=trajectory[int(arrays[0]):int(arrays[1])]
         atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
@@ -2368,8 +2367,11 @@ def do_analysis(request):
         tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
         full_results['charges']=tograph
         sasa=md.shrake_rupley(trajectory)
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
         histhbond=dict()
+        hbonds_residue=dict()
+        #print('HBONDS RESULTS RAW',len(hbonds_ks),hbonds_ks)
         for frameres in hbonds_ks:
             for hbond in frameres:
                 try:
@@ -2378,19 +2380,32 @@ def do_analysis(request):
                     histhbond[tuple(hbond)]=1
 
         for keys in histhbond:
-            histhbond[keys]= histhbond[keys]/len(t)
-            if abs(keys[0]-keys[2])>5 and histhbond[keys]>0.1:
-                print(keys[0],keys[1], histhbond[keys])   
+            histhbond[keys]= round(histhbond[keys]/len(t),2)*100
+            if abs(keys[0]-keys[2])>60 and histhbond[keys]>10: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
+                labelbond=label([keys[0],histhbond[keys],keys[2]])
+                labelbond=labelbond.replace(' ','')
+                labelbond=labelbond.split('--')
+                donor=labelbond[0]
+                acceptor=labelbond[1]
+                acceptor_res=acceptor[:acceptor.rfind('-')]
+                donor_res=donor[:donor.rfind('-')]
+
+                if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                    try:
+                        if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                            hbonds_residue[donor_res].append([acceptor_res,histhbond[keys]])
+                    except KeyError:
+                        hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys]]]
 
         #print(sasa.shape) #(19, 292)
-        for frames in range(len(sasa)):
-            for atom in range(len(sasa[frames])):
-                print('frame:',frames,trajectory.topology.atom(atom),sasa[frames][atom])
+        #for frames in range(len(sasa)):
+        #    for atom in range(len(sasa[frames])):
+        #        print('frame:',frames,trajectory.topology.atom(atom),sasa[frames][atom])
 
         sasa4allatoms=sasa.sum(axis=0)
         #print('\n\n\n\n NOW THE SUMVALUES len of sasasum',len(sasa))
-        for atomindex in range(len(sasa4allatoms)):
-            print(trajectory.topology.atom(atomindex),sasa4allatoms[atomindex])
+        #for atomindex in range(len(sasa4allatoms)):
+        #    print(trajectory.topology.atom(atomindex),sasa4allatoms[atomindex])
 
         time=trajectory.time
         total_sasa = sasa.sum(axis=1)
@@ -2400,12 +2415,14 @@ def do_analysis(request):
         result=[list(i) for i in result]
         full_results['sasa']=result
         #calculate H-bonds
+        '''
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         hbonds = md.baker_hubbard(t, periodic=False)
         hbonds_user=[]
         hbonds_residue=dict()
         discard_neighbours=True
         for hbond in hbonds:
+            #print('herehbond',hbond) #herehbond [4565 4566 4501]
             labelbond=label(hbond)
             labelbond=labelbond.replace(' ','')
             labelbond=labelbond.split('--')
@@ -2436,10 +2453,13 @@ def do_analysis(request):
                         hbonds_residue[donor_res].append(acceptor_res)
                 except KeyError:
                     hbonds_residue[donor_res]=[acceptor_res]
-
+        '''
         full_results['hbonds'] = hbonds_residue
+        print('HBONDS')
+        for keys in full_results['hbonds']:
+            print(full_results['hbonds'][keys])
         full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=1, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
-        print(full_results['salt_bridges'] )
+        print('SALT BRIDEGES\n',full_results['salt_bridges'] )
         full_results['salt_bridges'] = [label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
 
         trajprot=trajectory.atom_slice(trajectory.topology.select('protein'),inplace=False)

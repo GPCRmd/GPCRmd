@@ -85,8 +85,8 @@ def true_saline_bridgescp(traj,atoms,distance_threshold=0.4, percentage_threshol
 
     return salt_bridges_residues
 
-def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=0.1, mean_option=False, percentage_option=True):
-    print('%%%',percentage_threshold)
+def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=0.1, mean_option=False, percentage_option=True):    
+    percentage_threshold=percentage_threshold/100
     salt_bridges_atoms=[]
     salt_bridges_residues=[]
     cdis=[]
@@ -120,10 +120,6 @@ def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=
                 combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
 
     distances=md.compute_distances(traj, np.array(combinations))
-    print('RAW DISTAQNCES')
-    print(distances)
-    print('MEANS NOW')
-    print(np.sum(distances,axis=0)/len(traj))
     mean_distance=np.sum(distances,axis=0)/len(traj) < distance_threshold
     distances=np.sum(distances < distance_threshold,axis=0)/len(traj) > percentage_threshold
     if percentage_option:
