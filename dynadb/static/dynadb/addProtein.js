@@ -85,7 +85,8 @@ $(document).ready(function(){
         receptor.prop("checked",false);
         //Button enabled only in the last form
         $(this).prop("disabled",true);
- 
+        var use_isoform= $(newitem).find("[id='id_use_isoform'],[id|=id_form][id$='use_isoform']"); 
+        $(use_isoform).prop("checked",false);
         $(document).protein_init_config();
     });
     

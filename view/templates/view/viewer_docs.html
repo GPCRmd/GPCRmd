@@ -1,0 +1,137 @@
+<head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>document.domain=document.domain;</script>
+<style>
+.myheader {
+    margin-top: 20px;
+    font-weight:bold;
+    border-bottom:2px solid blue;
+    padding-bottom:5px;
+}
+
+.subsect{
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color:#4646b9;
+    font-weight:bold;
+
+}
+.ptext{
+    margin-bottom:20px;
+    margin-left:10px;
+    margin-right:10px;
+}
+.prelist{
+    margin-bottom:5px;
+    margin-left:10px;
+    margin-right:10px;
+}
+
+.highlight{
+    color:#5992C4;
+}
+
+.input_ex{
+    background-color: #fff4e6;
+}
+
+
+
+</style>
+</head>
+<body>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} 
+{% csrf_token %}
+ <div class="col-md-10 col-md-offset-1  panel panel-primary" style="background-color:blue;text-align:center;color:white;">
+  <div class="panel-body">
+	<h3 >GPCR viewer</h3>
+ </div> 
+ </div>
+ <div class="col-md-10 col-md-offset-1  panel panel-primary">
+    <div class="panel-body">
+        <!--<div style="text-align:center"> 
+            <h4>DOCUMENTATION</h4>
+	    </div>-->
+<div style="margin:40px;text-align:justify">
+<!--<p>The GPCR viewer provides online visualization and analysis of the dynamics stored at GPCRmd.</p>-->
+<div>
+        <h4 class=myheader>General features</h4>
+
+        <p class=prelist>Mouse controls:</p>
+        <ul>
+        <li><span class=highlight>Left button hold and move:</span> rotate camera around center.</li>
+        <li><span class=highlight>Middle button hold and move:</span> zoom camera in and out.</li>
+        <li><span class=highlight>Middle button click:</span> center camera on atom.</li>
+        <li><span class=highlight>Right button hold and move:</span> translate camera in screen plane.</li>
+        <li><span class=highlight>Left button click:</span> pick atom or distance. 
+            <ul>
+                <li>When an atom is clicked, a label with information about it appears. Click at the background to deselect it, the label will disappear. To maintain a label, double-click on an atom. Double-click on a label to remove it. </li>
+                <li>To draw a distance line between two atoms just single-click one atom after the other. Distances can be removed by double-clicking on one of the atoms at the edges.</li> 
+                <li>It is also possible to remove all the atom labels and distances at once, with the <span class=highlight>Clear dists. button</span>.</li>
+            </ul>
+        </li>
+        </ul>
+        
+        <p class=ptext>If you wish to use more complex visualization options, you can open the structure and trajectories in <a href="http://arose.github.io/mdsrv/"  target="_blank" style="text-decoration: underline;">MDsrv</a> just by clicking at the <span class="glyphicon glyphicon-cog" style="color: rgb(88, 88, 88)"></span> button.</p>
+
+        <h4 class=myheader>Selection tools</h4>
+        <!--<p class=ptext>The viewer offers a set of tools to ease the selection of the atoms or molecules of interest.</p>-->
+        
+        <h5 class=subsect>Quick selection</h5>
+        <p class=ptext>Quick-selection buttons allow to rapidly display the molecules present at the dynamics. Hover the buttons with your mouse to see the abbreviated name of these molecules, which can be used to create your own selections.</p>
+        
+        <p class=prelist>It is also possible to select the residues or molecules that are found <span class=highlight>within a certain distance of a ligand</span>. It is only necessary to:</p>
+        <ol style="margin-bottom:20px;">
+            <li>Indicate what you want to visualize (residues or molecules found at the simulation).</li>
+            <li>Input the wanted threshold distance (in angstroms).</li>
+            <li>Indicate the molecule type around which the selection is made. Apart from predefined molecules, it is also possible to show the residues/molecules that are close to a personalized selection which, again, can include generic GPCR residue numbering.</li>
+        </ol>
+        <p class=ptext>If the selection is correct, a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will appear at the left. More than one distance selection can be displayed at the same time. Selections made with this tool will appear in coral red, with atoms that are within the threshold distance shown opaque and the rest of atoms of the residue/ligand shown with transparency. The  distance selection will be updated for each trajectory frame, as the disposition of the atoms may change.</p> 
+        
+
+        <h5 class=subsect>Atom selection</h5>
+        <p class=ptext>Use the text input field to specify your personalized representations. You can choose a representation type (licorice, cartoon, etc.) and a coloring scheme (color by element, by chain, etc.).</p>
+        <p class=ptext>Selections must be expressed using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank" style="text-decoration: underline;">NGL selection language</a>. Moreover, to indicate protein residues it is also possible to use <span class=highlight>generic GPCR residue numbering</span>: Ballesteros-Weinstein (ex. <span style="font-style:italic">1.50</span>), GPCRdb structure-based numbering (ex. <span style="font-style:italic">1x50</span>) or a combination of both (ex. <span style="font-style:italic">1.50x50</span>).</p>
+        
+        <p class=ptext>For example, if you input <span class="input_ex">40-70:P or CLZ</span>, residues numbered from 40 to 70 at the PDB belonging to chain P and Clozapine will be displayed. Another example, this time using a combination of different generic GPCR numbering styles, could be <span class="input_ex">1.50 - 2x48 or 3.35x35  or SOD</span>.</p>
+
+        <h5 class=subsect>Sequence selection</h5>
+        <p class=ptext>The GPCR viewer also provides the option to select a protein segment from its sequence. Set your selection by clicking at the desired range or ranges of residues, selected segments will appear at the sequence in green. To deselect a residue range from the sequence, just click on it. Finally, click at <span class=highlight>Confirm selection</span>: the residue range(s) will be added to a text input field, which you can modify to adjust the selection to what you want to display. If you want to add new sequence selections, click at the <span style="color: rgb(87, 200, 87)" class="glyphicon glyphicon-plus-sign"></span> button.</p>
+
+        <h5 class=subsect>GPCR conserved positions</h5>
+        <p class=ptext>The <span class=highlight>GPCR conserved positions</span> selection provides the possibility to rapidly select positions or domains conserved in the different GPCR family classes. In this section, the GPCR class of the protein being represented will appear in bold. It is also possible to visualize in your protein the positions that correspond to conserved positions from other GPCR classes. For example, if your protein belongs to class A, you can represent the residue that corresponds to class B <span style="font-style:italic">2.50</span> (<span style="font-style:italic">2.50b</span>). Hover the buttons with your mouse for more information about the conserved positions and motifs, if available. Class A positions are shown in blue, B in orange, C in yellow and F in pink.</p>
+
+
+        <h4 class=myheader>Analysis tools</h4>
+        <h5 class=subsect>Distance within 2 atoms</h5>
+        <p class=ptext>This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. To calculate a distance, you can manually input pairs of atom indices at the text input fields. You can also select them at the viewer screen by clicking on the atoms and, afterwards, <span class=highlight>importing the created distances</span> with the blue arrow button <span style="color:#1e90ff" class="glyphicon glyphicon-circle-arrow-down"></span>. It is necessary to select the trajectory that will be used for the calculation. Finally, just click at <span class=highlight>Compute</span>. Only atom pairs which are marked with a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will be considered, since the absence of a checkmark indicates an error in the input (only numbers are allowed).
+        The result will appear as a plot of distance by time or by frame, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. It is also possible to download the data obtained as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>). Moreover, the distances calculated can be displayed at the viewer screen, in the colors indicated at the plot legend. Such distance representations can be deactivated by deselecting the "Display distance" checkbox.</p>
+
+        <h5 class=subsect>RMSD</h5>
+        <p class=ptext>This tool computes the RMSD of all the conformations in a target trajectory to a reference conformation. It is necessary to indicate the trajectory to be used and the frames to be considered. Also, a reference frame of a given trajectory. It is possible to chose which atoms are going to be considered in the calculation: only alpha carbons, non-hydrogen protein atoms, protein C-alpha, etc.
+        As in the case of distance analysis, the result will be shown in a plot (RMSD by time or by frame). It is possible to download the plot as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image"></span>) or all the obtained data as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
+
+        <h5 class=subsect>Ligand-residue interaction frequency</h5>
+        <p class=ptext>This analysis tool calculates the frequency of interaction between the protein residues and a given ligand across a trajectory. When the distance between any of their atoms and the ligand is smaller than the threshold, it is considered to be an interaction. It is possible to chose which residue atoms will be considered (heavy atoms only or all atoms).
+        The result is presented as table and a plot, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. The residues that are found to interact can be displayed at the viewer screen (shown in purple), which can be deactivated using the "Display interacting residues" checkbox. It is also possible to download the interaction data obtained (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
+
+<!--    <h4 class=myheader>Trajectory display</h4>
+        Select the trajectory you want to display using the blue dropdown at the upper-left corner of the screen. 
+        <!--<p class=ptext>In this section you can find a checklist of the trajectories that are available. A play button will appear in the viewer screen for each of the selected trajectories. When a trajectory is played (or have been played and paused), a range bar appears, which allows you to easily navigate through all the different frames. You can move through the range bar or enter a desired frame in the small input field at its left.</p>-->
+    </div>
+    </div>
+ </div>
+ </div>
+
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+{% endblock %}
+
+</body>

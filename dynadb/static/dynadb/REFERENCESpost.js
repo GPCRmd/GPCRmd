@@ -27,7 +27,7 @@ $(document).ready(function(){
                 console.log(data);
                 //var urllist=window.location.href.split("/");
                 alert("Congratulations!! "+data);
-                window.location.replace("../reference/");
+                window.location.replace("../references/");
             },
             error: function(xhr,status,msg){
                 if (xhr.readyState == 4) {

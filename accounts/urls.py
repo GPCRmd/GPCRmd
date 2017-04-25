@@ -25,5 +25,8 @@ urlpatterns = [
    url(r'^newmail/$', views.mail_reset, name='mail_reset'),
    url(r'^newmail/done/$', views.mail_done, name='mail_done'),
    url(r'^email/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.mail_confirm, name='mail_confirm'),
+   url(r'^submissions/$', views.user_submissions, name='user_submissions'),
+   
+   
 ]
 

@@ -18,7 +18,7 @@
 {% if answer.proteins %}
     <b>Proteins used in this complex</b>:<br>
     {%for proid in answer.proteins%}
-       <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}}</a> 
+       <a class='btn btn-info' role='button' href= /dynadb/protein/id/{{proid.0}}>{{proid.1}} ({{proid.2}})</a> 
     {%endfor%}
     <br>
 {% endif %} 
@@ -44,13 +44,19 @@
     <b>EC50 according to BindingDB:</b><br>
     {{answer.efficacy.value}} {{answer.efficacy.units}}
     <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.efficacy.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a><br>
-
 {% endif %} 
 <br>
 {% if answer.binding %}
     <b>Kd according to BindingDB:</b><br>
     {{answer.binding.value}} {{answer.binding.units}} <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.binding.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a>
 {% endif %} 
+
+<br>
+{% if answer.inhibition %}
+    <b>Ki according to IUPHAR:</b><br>
+    {{answer.inhibition.value}} {{answer.inhibition.units}} <a href=http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=317>See it in IUPHAR</a>
+{% endif %} 
+
 <br>
 
 {% if answer.models %} 
@@ -58,9 +64,9 @@
     {% for modid in answer.models %}
        <a class='btn btn-info' role='button' href= /dynadb/model/id/{{modid.0}}>Complex Structure ID: {{modid.0}}</a>
         {%if modid.1%}
-            using molecule(s):
+            using Specific State(s):
             {%for mol in modid.1%}
-                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Molecule ID: {{mol}}</a>
+                <a class='btn btn-info' role='button' href= /dynadb/molecule/id/{{mol}}/>Specific State ID: {{mol}}</a>
             {%endfor%}
         {%endif%}
         <br><hr><hr>
@@ -71,7 +77,11 @@
 {% if answer.reference %}
     <b>References for this complex:</b><br>
     {% for reference in answer.reference%}
-        {{reference.authors}}.{{reference.pub_year}}.{{reference.title}} {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi:{{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a><br>
+        {%if reference.pmid%}
+            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+        {%else%}
+            <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+        {%endif%}
         <hr><hr>
     {%endfor%}
 {% endif %} 

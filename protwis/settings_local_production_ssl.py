@@ -37,8 +37,12 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-CACHE_PATH = "/tmp/django_cache_dev"
+CACHE_PATH = "/tmp/django_cache"
+
+MDSRV_REVERSE_PROXY = 'POST'
+MDSRV_PORT=443
 
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 os.environ['wsgi.url_scheme'] = 'https'
+

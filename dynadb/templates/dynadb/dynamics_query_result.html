@@ -1,3 +1,6 @@
+<script>
+    document.domain=document.domain;
+</script>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% block addon_css %}
@@ -10,151 +13,258 @@
         margin: 0 auto; /* Align slide image horizontally center */
     }
 
+    .miniscroll{
+        overflow-y:auto;
+        overflow:auto;
+        max-height:140px;
+        height:130px;
+        <!--width: 40%;-->
+    }
+
     .bs-example{
 	    margin: 20px;
     }
+
+    .mol-container {
+      width: 80%;
+      height: 400px;
+      position: relative;
+    }
+
+    .ortoligand{
+
+    }
+
+    .glyphicon glyphicon-chevron-left:hover{
+        opacity:0.7;
+    }
+
     </style>
 {% endblock %}
+
+
 {% block content %}
     <div class="container">
     <div class="panel panel-info">
     <div class="panel-heading"><b>Dynamics Info:</b> {{answer.description}} </div>
     <div class="panel-body">
-    {%if answer.soft%}
-        <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br><br>
-    {%endif%}
+    <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualization & analysis</a><br><br><br><br></center>
 
-    {%if answer.forcefield%}
-        <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> <br>
-    {%endif%}
-
-    {%if answer.link_2_model%}
-        <b>Complex Structure</b>:<br> <a class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a> <br><br>
-    {%endif%}
-
-    {%if answer.solventtype%}
-        <b>Solvent type</b>: {{answer.solventtype}} <br><br>
-    {%endif%}
-
-    {%if answer.membranetype%}
-        <b>Membrane type</b>: {{answer.membranetype}} <br><br>
-    {%endif%}
-
-    {%if answer.timestep%}
-        <b>Time step</b>: {{answer.timestep}} <br><br>
-    {%endif%}
-
-    {%if answer.delta%}
-        <b>Delta</b>: {{answer.delta}} <br><br>
-    {%endif%}
-    <br>
-
-    {%if answer.link2protein%}
-        <b>Protein(s)</b>:<br>
-        {%for link in answer.link2protein%}
-            <a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}<br></a>
-        {%endfor%}
-    {%endif%}
-    <br><br>
-    {% if answer.ortoligands %}
-        <b>Orthosteric ligand(s)</b>:<br>
-        {% for url in answer.ortoligands %}
-            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
-        {% endfor %}
-    {% endif %}
-    <br><br>
-    {% if answer.aloligands %}
-        <b>Allosteric ligand(s)</b>:<br>
-        {% for url in answer.aloligands %}
-            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
-        {% endfor %}
-    {% endif %}
-    <br><br>
-    {% if answer.link_2_molecules %}
-        
-        <b>Dynamics Components</b>:  <button id='showall' type="button" class="btn btn-primary">Show all</button> <br>
-        <div id='carouselhide'>
-        <div class="col-lg-12 text-center"></div>
-        <div class="col-lg-12">
-        <div id="myCarousel" class="carousel slide" data-ride="carousel">
-
-          <!-- Wrapper for slides -->
-          <div class="carousel-inner" role="listbox">
-        {% for url in answer.link_2_molecules %}
-            {% if forloop.counter == 1  %}
-            <div class="item active"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
-            {%else%}
-            <div class="item"><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="400" width="400"/> </a></div>
+   <div id='up' class="col-sm-12"> 
+        <div id='leftcol' class="col-sm-6">
+            {%if answer.soft%}
+                <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br><br>
             {%endif%}
 
-        {% endfor %}
-          </div></div>
+            {%if answer.forcefield%}
+                <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> <br>
+            {%endif%}
 
-          <!-- Left and right controls -->
-          <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-            <span class="sr-only">Previous</span>
-          </a>
-          <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-            <span class="sr-only">Next</span>
-          </a>
-        </div></div>
-        
-        <div id='hideall'>
-        {% for url in answer.link_2_molecules %}
-            <a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a>
-        {% endfor %}
-        </div>
-    {% endif %}
-    <br>
-    <br>
-    <center><a class='btn btn-lg btn-info' role='button' href=/view/{{answer.nglviewer_id}}>Analysis tools</a><br><br><br><br></center>
+            {%if answer.solventtype%}
+                <b>Solvent type</b>: {{answer.solventtype}} <br><br>
+            {%endif%}
 
-    <div style=" overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
-        <iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>
-    </div>
+            {%if answer.membranetype%}
+                <b>Membrane type</b>: {{answer.membranetype}} <br><br>
+            {%endif%}
 
-    <br>
-    <br>
-    {% if answer.references %} 
-        <br><b>References in which this dynamic is mentioned</b>:<br>
-        <ul>
-        {%for reference in answer.references%}
-              <li> {{reference.1}} <br> {{reference.2}} <br>  {{reference.0}}  {{reference.3}} </li>
+            {%if answer.timestep%}
+                <b>Time step</b>: {{answer.timestep}} fs (Time interval between new positions computation) <br><br>
+            {%endif%}
+
+            {%if answer.delta%}
+                <b>Delta</b>: {{answer.delta}} ns (Time gap between frames)<br><br>
+            {%endif%}
+            <br>
+
+            {%if answer.expdatabind or answer.expdataeff or answer.expdatainhi%}
+                <b>Experimental Data</b>:<br>
+                {%if answer.expdatabind%}
+                    {%for datab in answer.expdatabind%}
+                        <b>Kd:</b> {{datab.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
+                {%if answer.expdataeff%}
+                    {%for datae in answer.expdataeff%}
+                        <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
+
+                {%if answer.expdatainhi%}
+                    {%for datae in answer.expdatainhi%}
+                        <b>Ki:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
+
+            {%endif%}
+
+        </div> <!--lef div end-->
+
+
+        <div id='rightcol' class="col-sm-6">
+            <b>Files in this simulation:</b><br>
+            <div id='allfiles' class="miniscroll">
+                {% for dyn in answer.files %}
+                    <a href=/dynadb/files/Dynamics/{{dyn.1}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>
+                {% endfor %}
+            </div> <!--allfiles-->
+            <br>
+            <!--{%if answer.link_2_model%}
+                <b>Complex Structure</b>: <a class='btn btn-info' role='button' href= /dynadb/model/id/{{answer.link_2_model}}> Complex Structure ID: {{answer.link_2_model}}</a><br><br>
+            {%endif%}-->
+
+            <div id='reldyn' class="miniscroll">
+            {% if answer.related %}
+                <b>Related Dynamics</b>:<br>
+                {% for dyn in answer.related %}
+                    <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
+                {% endfor %}
+            {% endif %}
+            </div><!--related dynamics-->
+
+            <br><br>
+
+        </div> <!--end right col div-->
+
+    </div> <!--up-->
+
+    <div id='down'>
+        <div id='bottoninfoleft' class="col-sm-6">
+            <div id='leftleftcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
+            {% if answer.ortoligands %}
+                <b style="margin:10px;padding:7px;">Orthosteric ligand(s)</b><br><br>
+                {% for url in answer.ortoligands %}
+                    <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
+                    <a style="margin:10px;padding:7px;" href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a><br>
+                {% endfor %}
+            {% endif %}
+            <br>
+            </div> <!--end leftleft-->
+
+            <div id='leftrightcol' class="col-sm-6" style="padding: 0; margin: 0 0;">
+            {% if answer.aloligands %}
+                <b>Allosteric ligand(s)</b><br><br>
+                {% for url in answer.aloligands %}
+                    <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>
+                    <center><a href= /dynadb/molecule/id/{{url.0}}> <img src="{{url.1}}" height="200" width="200"/> </a></center>
+                {% endfor %}
+            {% endif %}
+            </div><!--lef right div end-->
+        </div>  <!--bottoninfoleft-->
+
+
+        <div id='bottoninforight' class="col-sm-6">
+            <div id="container-01" class="mol-container" style="border: 1px solid black; width:85%;"></div>
+        </div> <!--bottoninforight-->
+    </div> <!--down-->
+
+
+
+
+    <div id='bottom' class="col-sm-12">
+    <hr><hr>
+    <center><h3>Dynamics Components</h3></center>
+    
+    {%if answer.link2protein%}
+         <center><b>Proteins: </b>
+        {%for link in answer.link2protein%}
+            <a class='btn btn-info' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}</a></center>
         {%endfor%}
-        </ul>
-    {% endif %} 
+        <div style="overflow: hidden; margin: 15px auto; max-width: 545px; max-height: 400px;">
+            <!--<iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>-->
+            <iframe class="str_file traj_file" style="border: 0px none; ;width: 800px;margin-top:-35px;" id="embed_mdsrv" src="{{answer.mdsrv_url}}/html/embed_show.html" scrolling="no" height="400px" width="590px" data-struc_file="{{answer.structure_file}}" data-traj_file="{{answer.traj_file}}" ></iframe>
+        </div>
+    {%endif%}
     <br>
-    {% if answer.related %}
-    <b>Related Dynamics</b>:<br>
-        {% for dyn in answer.related %}
-            <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
-        {% endfor %}
+    {% if answer.link_2_molecules %}
+        <center><b>Molecules:</b>
+        <button id='showall' type="button" class="btn btn-primary">Show all</button>
+        <button id='2d' type="button" class="btn btn-primary">Show 2D carousel</button>
+        <button id='3d' type="button" class="btn btn-primary">Show 3D carousel</button>
+        <br></center>
+
+        <div id='carouselhide' style="display:none;">
+            <div style="overflow: hidden; margin: 15px auto; max-width: 90%; max-height: 600px;">
+                <iframe style="border: 0px none; margin-left: -10px; height: 1000px; margin-top: -40px; width: 1000px;" src="/dynadb/dynamics/carousel/{{answer.nglviewer_id}}" scrolling="no"></iframe>
+            </div>
+        </div>
+        
+        <div id='hideall' class="col-sm-12" style="display:none;"><br>
+            
+            {% for url in answer.link_2_molecules %}
+                <div class="col-sm-6"><center><b>{{url.2}}</b><br>
+                <a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a></center><br>
+                <center><img src="{{url.1}}" height="200" width="200"/></center><br></div>
+            {% endfor %}
+
+        </div>
+
+        <div id='hide3d'>
+            <div id='lb' class="col-sm-1">
+                <p style="color:white;visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                <span id="movel" class="glyphicon glyphicon-chevron-left" style="font-size: 40px;"></span>
+            </div>
+
+            <div id='threeb' class="col-sm-10" style="padding: 0; margin: 0 0;">
+                <center><div id="container-02" class="mol-container"></div></center>
+                <br>
+                <b><center><div id="namediv"></div></center></b>
+                <br>
+            </div>
+            <div id='rb' class="col-sm-1">
+                <p style="color:white; display; visibility:hidden;">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                <span id="mover" class="glyphicon glyphicon-chevron-right" style="font-size: 40px;"></span>
+
+            </div>
+        </div> <!--hide3d-->
+
     {% endif %}
     <br>
+    <br>
+    <br>
+    <br>
+    <div id='references' class="col-sm-12">
+        {% if answer.references %} 
+            <br><h4>References in which this dynamic is mentioned</h4><br>
+            {%for reference in answer.references%}
+                {%if reference.pmid%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
+                {%else%}
+                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
+                {%endif%}
+            {%endfor%}
+
+        {% endif %} 
+        <br><br>
+        <center><a class='btn btn-lg btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Data visualization & analysis</a><br><br><br><br></center>
+    </div> <!-- end of references div-->
+    </div> <!-- end of bottom div-->
+
     </div></div></div>
     
-
-
-
-    <div class="container">
-    <div class="panel panel-info">
-    <div class="panel-heading"><b>Files in this simulation:</b></div>
-    <div class="panel-body">
-    {% for dyn in answer.files %}
-        <a href={{dyn.0}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a>
-    {% endfor %}
-    <br>
-    </div>
-    </div>
-    </div>
+    <div id='moleculesids' style="display:none;">{{answer.molecules_string}}</div>
+    <div id='moleculesnames' style="display:none;">{{answer.molecules_names}}</div>
 
 {% endblock content %}
 
 {% block addon_js %}
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+<script type="text/javascript" src="{% static 'dynadb/molecular_carousel.js' %}"></script>
+<script type="text/javascript" src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
+<script type="text/javascript" src="{% static 'dynadb/mol3dv.js' %}"></script>
+<script type="text/javascript" src="{% static 'dynadb/manage3dcarousel.js' %}"></script>
+
+<script type="text/javascript" >
+$( document ).ready(function() {
+    $('.ortoligand:first').click();
+});
+
+$("#bottoninfoleft .ortoligand").click(function(){
+        $("#bottoninfoleft .ortoligand").css("background-color","#337ab7");
+        $(this).css("background-color","blue"); 
+});
+</script>
 {% endblock%}
 

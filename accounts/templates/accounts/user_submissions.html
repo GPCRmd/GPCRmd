@@ -1,0 +1,108 @@
+<head><style>
+.long input {
+ width:100%;
+}
+
+.deco a:link, .deco a:visited {
+    background-color: #F0F0F0;
+    color: #337ac1;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid #337ac1;
+    border-radius: 12px;
+}
+.deco a:hover, .deco a:active {
+    background-color: #337ac1;
+    color:white;
+}
+</style></head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+
+
+{% block content %} 
+
+ <!-- description column -->
+ <div class="col-md-4">
+
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+         <div class="panel-body">
+        	<h3 >Previous submissions</h3>
+         </div> 
+     </div>
+
+     <!-- main description -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+
+            <div style="text-align:center"> 
+             <h4 >WELCOME <span style="text-transform: uppercase;">{{ username }}</span></h4>
+	    </div>
+             <p style="text-align: justify;">Here, you can open or delete (not yet) your submissions or check their publication state.</p>
+
+         </div>
+     </div>
+
+     <!-- link to docs -->
+     <div class="col-md-12 panel panel-primary">
+         <div class="panel-body">
+             <p>For more information on this form, see the <a href="http://docs.gpcrdb.org/receptors.html">docs</a>.
+             </p>
+         </div>
+     </div>
+  </div>
+ <!--   <body> -->
+
+<div id="pform" class="col-md-7 "> 
+  <div id="form" class="col-md-12 panel panel-primary"> 
+    <div class="panel-body">
+    <div class="container-fluid" style="padding-top:15px">
+       <p>
+          <a href="/accounts/change_data">Change user information</a> -
+          <a href="/accounts/change_passw">Change password</a> -
+          <a href="/accounts/logout">Log out</a></li> 
+       </p>
+
+
+       <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">
+       {% csrf_token %}
+       <table class="table table-responsive">
+       <tr><th>Submission ID</th><th>Dynamics ID</th><th>State</th><th></th><th></th></tr>
+       {% for sub in submission_table %}
+       <tr>
+            <td>{{sub.submission_id}}</td>
+            <td>{% if sub.state != "Open" %}<a href="{% url 'dynadb:query_dynamics' dynamics_id=sub.dynamics_id %}">{{sub.dynamics_id}}</a>{% else %}{{sub.dynamics_id}}{% endif %}</td>
+            <td>{{sub.state}}</td>
+            <td>{% if sub.state == "Open" %}
+                <a href="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}">Open</a></td>
+            <td><button name="delete_submission_id_{{sub.submission_id}}" disabled type="submit">Delete</button></td>
+            {% else %}
+            <td></td><td></td>
+            {% endif %}
+       </tr>
+       {% endfor %}
+       </table>
+       </form>
+        
+            <div class="row">
+               <div class="col-md-6 col-md-offset-2 deco" style="text-align:center;width:400px;padding-bottom:10px">  
+                  <a href="/dynadb/db_inputform/" class="btn btn-block" >New Submission</a>
+               </div>
+            </div>
+            <div class="row">
+               <div class="col-md-6 col-md-offset-2 deco" style="text-align:center;width:400px;padding-bottom:25px">  
+                  <a href="/dynadb/modelreuserequest/0/" class="btn btn-block" style"margin: 0px 500px 0px 20px" >New Submission based on a previous model</a>
+               </div>
+ 
+            </div>
+       </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 
+         
+
+{% block addon_js %} 
+
+
+{% endblock %}

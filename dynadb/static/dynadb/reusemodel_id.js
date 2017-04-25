@@ -13,9 +13,12 @@ $(document).ready(function() {
         var type2= $(item).find("#Choose_submission_id");
         if (self.attr('id').startsWith('id_form-1')){
            type2.hide();
+           type2.val("")
            type1.show();
+           
         } else {
            type1.hide();
+           type1.val("")
            type2.show();
         }; 
     });

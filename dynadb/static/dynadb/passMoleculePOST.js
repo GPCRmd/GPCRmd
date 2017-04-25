@@ -41,6 +41,7 @@ $(document).ready(function(){
         console.log(data);
        
         var urllist=window.location.href.split("/");
+        console.log(window.location.href);
         if (urllist.length ==8){ //explanation: http://localhost:8000/dynadb/moleculereuse/100/68/  --> ["http:", "", "localhost:8000", "dynadb", "moleculereuse", "100", "68", ""] 8 elements
             var submission_id=urllist[urllist.length-3];
             var model_id=urllist[urllist.length-2];
@@ -61,7 +62,7 @@ $(document).ready(function(){
                     if (multi===true){
                         window.location.replace(url_success);
                     }else{
-                        alert("Please, submit other molecules in your system or continue to step 3.");
+                        alert("Please, submit other molecules in your system.\n\nIf you submitted all the molecules in it, continue to step 3.");
                     }
                 },  
                 "text" )

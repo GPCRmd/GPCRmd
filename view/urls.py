@@ -10,6 +10,8 @@ urlpatterns = [
   #  url(r'^rmsd/$', views.rmsd, name='rmsd'),
     url(r'^dwl/(?P<dist_id>dist_[0-9]+)/$', views.download_dist, name="download_dist"),
     url(r'^dwl/(?P<rmsd_id>rmsd_[0-9]+)/$', views.download_rmsd, name="download_rmsd"),
+    url(r'^dwl/(?P<int_id>int_[0-9]+)/$', views.download_int, name="download_int"),
+    url(r'^docs/$', views.viewer_docs, name='viewer_docs'),
 ]
 
 if settings.DEBUG:
