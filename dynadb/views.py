@@ -2371,7 +2371,7 @@ def do_analysis(request):
         hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
         histhbond=dict()
         hbonds_residue=dict()
-        #print('HBONDS RESULTS RAW',len(hbonds_ks),hbonds_ks)
+        hbonds_residue_notprotein=dict()
         for frameres in hbonds_ks:
             for hbond in frameres:
                 try:
@@ -2380,7 +2380,7 @@ def do_analysis(request):
                     histhbond[tuple(hbond)]=1
 
         for keys in histhbond:
-            histhbond[keys]= round(histhbond[keys]/len(t),2)*100
+            histhbond[keys]= round(histhbond[keys]/len(t),3)*100
             if abs(keys[0]-keys[2])>60 and histhbond[keys]>10: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
                 labelbond=label([keys[0],histhbond[keys],keys[2]])
                 labelbond=labelbond.replace(' ','')
@@ -2389,13 +2389,21 @@ def do_analysis(request):
                 acceptor=labelbond[1]
                 acceptor_res=acceptor[:acceptor.rfind('-')]
                 donor_res=donor[:donor.rfind('-')]
-
                 if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
-                    try:
-                        if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                            hbonds_residue[donor_res].append([acceptor_res,histhbond[keys]])
-                    except KeyError:
-                        hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys]]]
+                    histhbond[keys]=str(histhbond[keys])[:4]
+                    if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+                        except KeyError:
+                            hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+                    else: #intraprotein hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])])
+                        except KeyError:
+                            hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+
 
         #print(sasa.shape) #(19, 292)
         #for frames in range(len(sasa)):
@@ -2414,54 +2422,35 @@ def do_analysis(request):
         result=list(zip(time,total_sasa))
         result=[list(i) for i in result]
         full_results['sasa']=result
-        #calculate H-bonds
-        '''
-        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
-        hbonds = md.baker_hubbard(t, periodic=False)
-        hbonds_user=[]
-        hbonds_residue=dict()
-        discard_neighbours=True
-        for hbond in hbonds:
-            #print('herehbond',hbond) #herehbond [4565 4566 4501]
-            labelbond=label(hbond)
+        full_results['hbonds'] = hbonds_residue
+        full_results['hbonds_notprotein'] = hbonds_residue_notprotein
+        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=1, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
+
+        full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
+
+        bridge_dic=dict()
+        for bond in full_results['salt_bridges']:
+            labelbond=bond[0]
             labelbond=labelbond.replace(' ','')
             labelbond=labelbond.split('--')
             donor=labelbond[0]
             acceptor=labelbond[1]
             acceptor_res=acceptor[:acceptor.rfind('-')]
             donor_res=donor[:donor.rfind('-')]
-            if discard_neighbours:
-                try:
-                    resid_donor=int(re.search('^[A-Za-z]{3,4}([0-9]+)',donor_res).group(1))
-                    resid_acceptor=int(re.search('^[A-Za-z]{3,4}([0-9]+)',acceptor_res).group(1))
-                except:
-                    try:
-                        resid_donor=int(donor_res[3:])
-                    except:
-                        resid_donor=int(donor_res[4:])
-                    try:
-                        resid_acceptor=int(acceptor_res[3:])
-                    except:
-                        resid_acceptor=int(acceptor_res[3:])
+            if donor_res in bridge_dic:
+                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3])])
+            elif acceptor_res in bridge_dic:
+                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
+            else:
+               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
 
-                if abs(resid_donor-resid_acceptor)<5:
-                    continue
+        for keys in bridge_dic:
+            print(keys,bridge_dic[keys],'\n')
 
-            if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
-                try:
-                    if acceptor_res not in hbonds_residue[donor_res]:
-                        hbonds_residue[donor_res].append(acceptor_res)
-                except KeyError:
-                    hbonds_residue[donor_res]=[acceptor_res]
+        full_results['salt_bridges']=bridge_dic
+
+
         '''
-        full_results['hbonds'] = hbonds_residue
-        print('HBONDS')
-        for keys in full_results['hbonds']:
-            print(full_results['hbonds'][keys])
-        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=1, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
-        print('SALT BRIDEGES\n',full_results['salt_bridges'] )
-        full_results['salt_bridges'] = [label([int(saltb[0])-1,'-',int(saltb[1])-1]) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
-
         trajprot=trajectory.atom_slice(trajectory.topology.select('protein'),inplace=False)
         trajprot=trajprot.superpose(trajprot,0)
         mintop=np.array([0,0,0])
@@ -2495,14 +2484,15 @@ def do_analysis(request):
                 yc=int(round(atomxyz[frame][atomindex][1]*10))
                 zc=int(round(atomxyz[frame][atomindex][2]*10))
                 grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
-
+        '''
         print('Analysis done')
         #print(grid.tolist())
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
     else:
-        return render(request, 'dynadb/analysis_results.html',{'answer':{}})
+        answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/b2ar_isoprot/b2ar.dcd','structure_file':'Dynamics/b2ar_isoprot/build.pdb'}
+        return render(request, 'dynadb/analysis_results.html',{'answer':answer})
 
 
 @user_passes_test_args(is_published_or_submission_owner)

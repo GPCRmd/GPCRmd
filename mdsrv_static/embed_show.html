@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MDsrv/NGL - embedded</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
+    <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/light.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
+</head>
+<body >
+    <!-- NGL -->
+    <script src="mdsrv/webapp/js/ngl.js"></script>
+
+    <!-- UI -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
+    <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.extra.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
+    <script src="mdsrv/webapp/js/gui.js"></script>
+
+    <!-- MDSRV -->
+    <script src="mdsrv/webapp/js/mdsrv.js"></script>
+    <script>
+        NGL.cssDirectory = "mdsrv/webapp/css/";
+        NGL.documentationUrl = "http://arose.github.io/ngl/api/";
+
+        // Datasources
+        NGL.DatasourceRegistry.add(
+            "file", new MdsrvDatasource( window.location.origin + "/mdsrv/" )
+        );
+        NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
+        NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
+        document.addEventListener( "DOMContentLoaded", function(){
+            stage = new NGL.Stage( "viewport" );
+
+////////////////// Functions
+        function trajButtons(o){
+            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+            $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"6px"});
+            var some_clicked=false;
+            $(".traj_btn").click( function(){
+                var btn_traj_Bid=$(this).attr("id");
+                var tPatt = /\d*$/g;
+                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var pos_class=$(this).attr("class");
+                if(pos_class.indexOf("active") > -1){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $(this).attr("class","btn btn-success btn-xs traj_btn");
+                    $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.play();
+                    player.pause();
+                    some_clicked=false;
+                } else if (! some_clicked){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
+                    player.play();
+                    $(this).attr("class","btn btn-danger btn-xs traj_btn active"); 
+                    $(this).siblings().attr("class","btn btn-success btn-xs traj_btn"); 
+                    $(this).children().attr("class","glyphicon glyphicon-pause");
+                    some_clicked=true;
+                    trajComp.signals.frameChanged.add(function(){
+                        var fnum=trajComp.trajectory.currentFrame;
+                        $("#trajRange").val(fnum);
+                        $("#trajRange").slider("refresh");
+                    });
+                }
+            });
+        }
+//////////////////
+
+
+        $(document).ready(function(){
+        document.domain=document.domain;
+        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+
+            var struc=$(".str_file", window.parent.document).data("struc_file");
+            var traj=$(".str_file", window.parent.document).data("traj_file");
+            console.log(struc);
+            console.log(traj);
+            var  traj_path= "_DB/";
+            var  path= "/mdsrv/file/_DB/";
+
+            if (struc) {
+                stage.loadFile( path + struc , {visible: true}).then( function( o ){
+                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein" } );
+                    o.setName("my_comp");
+                    if (traj){
+                        o.addTrajectory( traj_path + traj );
+                        $("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+traj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
+                        trajButtons(o);
+                    } 
+                    $("#trajRange").change(function(){
+                        if (trajComp){
+                            var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                            trajComp.setFrame(toframe);
+                        }
+                    });
+                });
+            }
+
+
+        });
+        });
+
+    </script>
+    <div id="toiframe" style="width:590px">
+        <div id="viewport" style="width:590px; height:370px;"></div>
+        <div style="height:80px">
+            <div id="buttons" style="width:586px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+            </div>
+            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:1px">
+            </div>
+        </div>
+        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
+          <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
+        </div>
+        <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">
+            <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
+            <div id="atomInfo" style="color:green;"></div>
+        </div>
+    </div>
+</body>
+</html>
+

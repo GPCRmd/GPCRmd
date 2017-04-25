@@ -37,6 +37,7 @@ $('#doanalysis').click(function() {
         success: function(data) {
             console.log(data);
             hbonds=data.hbonds;
+            hbonds_np=data.hbonds_notprotein;
             salty=data.salt_bridges;
 
 	        //now the charges graph
@@ -47,28 +48,47 @@ $('#doanalysis').click(function() {
             chart_charges.draw(data_charges, options_charges);
 
             //draw the sasa graph
-            results=drawBasic(data.sasa,'Time','SASA');
+            results=drawBasic(data.sasa,'Time (ns)','SASA (nm2)');
             data=results[0];
             options=results[1];
-            var table='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+            var table='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
             for (var property in hbonds) {
                 if (hbonds.hasOwnProperty(property)) {
-                    //table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td>'+hbonds[property][0];
-                    table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td> '+hbonds[property][0][0]+' ('+hbonds[property][0][1]+'%)' ;
+                    table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td> '+hbonds[property][0][0]+' ('+hbonds[property][0][1]+'%) <button class="showhb" data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
                     for (index = 1; index < hbonds[property].length; ++index) {
-                        //table=table+'<tr><td>'+hbonds[property][index];
-                        table=table+'<tr><td>'+hbonds[property][index][0]+' ('+hbonds[property][index][1]+'%)';
+                        table=table+'<tr><td>'+hbonds[property][index][0]+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
                     }
                 }
             }
             table=table+'</table></center>';
             $('#hbonds').html(table);
-            saltable='<center><table class="table table-condesed" style="width:40%;"><thead><tr><th>Residue 1<th> Residue 2<tbody>';
-            for (bridge in salty) {
-                saltable=saltable+'<tr><td>'+salty[bridge].split('--')[0]+'</td><td>'+salty[bridge].split('--')[1]+'</td></tr>';           
+
+
+            var tablenp='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+            for (var property in hbonds_np) {
+                if (hbonds_np.hasOwnProperty(property)) {
+                    tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+'<td> '+hbonds_np[property][0][0]+' ('+hbonds_np[property][0][1]+'%) <button class="showhb" data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                    for (index = 1; index < hbonds_np[property].length; ++index) {
+                        tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' ('+hbonds_np[property][index][1]+'%) <button class="showhb" data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                    }
+                }
             }
-            saltable=saltable+'</table></center>';
-            $('#saltbridges').html(saltable);
+            tablenp=tablenp+'</table></center>';
+            $('#hbondsnp').html(tablenp);
+
+
+            var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+            for (var property in salty) {
+                if (salty.hasOwnProperty(property)) {
+                    salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showhb" data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                    for (index = 1; index < salty[property].length; ++index) {
+                        salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showhb" data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                    }
+                }
+            }
+            salt=salt+'</table></center>';
+            $('#saltbridges').html(salt);
+
             var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
             chart.draw(data, options);
 
@@ -107,6 +127,18 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+$( document ).ready(function() {
+    $(document).on('click', '.showhb', function(){
+        atomshb=$(this).data('atomindexes').split('$%$');
+        atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];
+        console.log(atomshb);
+        /*o.addRepresentation( "distance", {
+            atomPair: atomshb , colorValue: "#8bb0ff",
+            colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" ,
+            name : dist_name} );*/
+        });
+});
 
 var csrftoken = getCookie('csrftoken');
 
