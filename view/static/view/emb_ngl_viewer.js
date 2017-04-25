@@ -1109,7 +1109,7 @@ $(document).ready(function(){
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
                             var success=int_data.success;
-                            if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                            if (success){ 
                                 var int_id=int_data.int_id;
                                 var int_data=int_data.result;
                                 if (! isEmptyDict(int_data)){
@@ -1129,12 +1129,20 @@ $(document).ready(function(){
                                           </tr>\
                                         </thead>\
                                       <tbody>';
+                                    var mylist=[];
                                     for (lig in int_data){
                                         res_int=int_data[lig];
                                         var num_res_int=res_int.length;
                                         table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                         var res_int_1st=res_int[0];
                                         var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
+                                        //
+                                        gnum_mylist=gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1])
+                                        if (gnum_mylist == "-"){
+                                            gnum_mylist=res_int_1st[2]+res_int_1st[0].toString()+":"+res_int_1st[1];
+                                        }
+                                        mylist.push([res_int_1st[0],gnum_mylist ,res_int_1st[3] ]);
+                                        //
                                         for (info in res_int_1st_ok){
                                             table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                         }
@@ -1143,6 +1151,13 @@ $(document).ready(function(){
                                         for (res_infoN in res_int_rest){
                                             var res_info=res_int_rest[res_infoN];
                                             var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
+                                            //
+                                            gnum_mylist=gnumFromPosChain(res_info[0].toString(), res_info[1])
+                                            if (gnum_mylist == "-"){
+                                                gnum_mylist=res_info[2]+res_info[0].toString()+":"+res_info[1];
+                                            }
+                                            mylist.push([res_info[0],gnum_mylist ,res_info[3] ]);
+                                            //
                                             table_html+='<tr>';
                                             for (infoN in res_info_ok){
                                                 var info=res_info_ok[infoN];
@@ -1151,7 +1166,8 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    table_html+="</tbody></table>";
+                                    console.log(mylist)
+                                    table_html+="</tbody></table>";;
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
