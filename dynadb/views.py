@@ -2478,7 +2478,6 @@ def do_analysis(request):
     if request.method == 'POST':
         full_results=dict()
         arrays=request.POST.getlist('frames[]')
-        is_mean=arrays[4]=='mean' #it is not mean, is percentage.
         percentage_cutoff=int(arrays[3])
         #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
         #trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
@@ -2488,10 +2487,10 @@ def do_analysis(request):
         t=trajectory
         trajectory=trajectory.atom_slice(atom_indices, inplace=False)
         atoms=psf.parser('dynadb/b2ar_isoprot/b2ar.psf')
-        b=psf.compute_interaction(t,1326,4807,atoms,contact_threshold=3,fpt=0.1) #4786,2756
+        #b=psf.compute_interaction(t,1326,4807,atoms,contact_threshold=3,fpt=0.1) #4786,2756
         frametime=(t.time).reshape(len(t.time),1)
-        tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
-        full_results['charges']=tograph
+        #tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
+        #full_results['charges']=tograph
         sasa=md.shrake_rupley(trajectory)
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
@@ -2550,10 +2549,15 @@ def do_analysis(request):
         full_results['sasa']=result
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
-        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=1, percentage_threshold=percentage_cutoff, mean_option=is_mean, percentage_option=not is_mean)
-
+        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff)
         full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
-
+        seqbadr1='MGDGWLPPDCGPHNRSGGGGATAAPTGSRQVSAELLSQQWEAGMSLLMALVVLLIVAGNVLVIAAIGRTQRLQTLTNLFITSLACADLVMGLLVVPFGATLVVRGTWLWGSFLCECWTSLDVLCVTASIETLCVIAIDRYLAITSPFRYQSLMTRARAKVIICTVWAISALVSFLPIMMHWWRDEDPQALKCYQDPGCCDFVTNRAYAIASSIISFYIPLLIMIFVYLRVYREAKEQIRKIDRCEGRFYGSQEQPQPPPLPQHQPILGNGRASKRKTSRVMAMREHKALKTLGIIMGVFTLCWLPFFLVNIVNVFNRDLVPDWLFVFFNWLGYANSAFNPIIYCRSPDFRKAFKRLLCFPRKADRRLHAGGQPAPLPGGFISTLGSPEHSPGGTWSDCNGGTRGGSESSLEERHSKTSRSESKMEREKNILATTRFYCTFLGNGDKAVFCTVLRIVKLFEDATCTCPHTHKLKMKWRFKQHQA'
+        ourseq=''
+        for res in trajectory.topology.residues:
+            if res.is_protein:
+                ourseq+=d[res.name]
+        alig=align_wt_mut(ourseq,seqbadr1)
+        print(alig[0],'\n\n',alig[1])
         bridge_dic=dict()
         for bond in full_results['salt_bridges']:
             labelbond=bond[0]
@@ -2569,9 +2573,6 @@ def do_analysis(request):
                 bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
             else:
                bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
-
-        for keys in bridge_dic:
-            print(keys,bridge_dic[keys],'\n')
 
         full_results['salt_bridges']=bridge_dic
 
@@ -2613,11 +2614,13 @@ def do_analysis(request):
         '''
         print('Analysis done')
         #print(grid.tolist())
+        print(full_results)
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
     else:
-        answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/b2ar_isoprot/b2ar.dcd','structure_file':'Dynamics/b2ar_isoprot/build.pdb'}
+        answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/15_trj_1_2.xtc','structure_file':'Dynamics/12_dyn_1.pdb'}
+        #answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/b2ar_isoprot/b2ar.dcd','structure_file':'Dynamics/b2ar_isoprot/build.pdb'}
         return render(request, 'dynadb/analysis_results.html',{'answer':answer})
 
 

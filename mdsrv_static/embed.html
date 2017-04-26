@@ -333,12 +333,14 @@
             var dist_groups_li=results["dist_groups_li"];
             var receptorsel = results["receptorsel"]; //[!!!]
             var bs_info= results["bs_info"]; //[!!!]
+            var hbonds= results["hbondarray"];
             var cons_pos = parent.pd; //[!!!]
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
+            
 
             /*for (e in receptorsel){
                 console.log(receptorsel[e]);
@@ -507,6 +509,13 @@
                     }
                 }
             }
+
+
+            if (hbonds.length > 0){
+                o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+            }
+
+
             if (int_res_li.length > 0){
                 var final_sele=[];
                 for (pos_info_n in int_res_li){

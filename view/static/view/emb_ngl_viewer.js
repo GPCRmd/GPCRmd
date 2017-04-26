@@ -2026,6 +2026,162 @@ $(document).ready(function(){
         return (set_sel);
     }
     var r_id=1;
+
+    $("#ComputeHbonds").click(function(){
+        var struc = $(".str_file").data("struc_file");
+        var dyn_id=$(".str_file").data("dyn_id");
+        rmsdTraj=$("#hbonds_traj").val();
+        rmsdFrames=$("#bonds_sel_frames_id input[name=bonds_sel_frames]:checked").val();
+        cutoff=$("#hbonds_cutoff").val();
+        if (rmsdFrames=="bonds_frames_mine"){
+            frameFrom=$("#bonds_frame_1").val();
+            frameTo=$("#bonds_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=frameFrom + "-" + frameTo;
+                    } else {
+                        showErrorInblock("#hbonds_sel_frames_error", "Initial frame must be lower than final frame.");
+                        rmsdFrames=false;
+                    }
+                } else {
+                    showErrorInblock("#hbonds_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }else{
+            frameFrom=0;
+            frameTo=-1;
+        }
+
+        $.ajax({
+                type: "POST",
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id] },
+                url:"/view/hbonds/", 
+                dataType: "json",
+                success: function(data) {
+                    hbonds=data.hbonds;
+                    hbonds_np=data.hbonds_notprotein;
+                    var table='<h4>Intramolecular Hydrogen Bonds</h4><br><center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                    for (var property in hbonds) {
+                        if (hbonds.hasOwnProperty(property)) {
+                            table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+'<td> '+hbonds[property][0][0]+' ('+hbonds[property][0][1]+'%) <button class="showhb" data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                            for (index = 1; index < hbonds[property].length; ++index) {
+                                table=table+'<tr><td>'+hbonds[property][index][0]+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                            }
+                        }
+                    }
+                    table=table+'</table></center>';
+                    $('#hbonds').html(table);
+
+
+                    var tablenp='<h4>Intermolecular Hydrogen Bonds</h4><br><center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                    for (var property in hbonds_np) {
+                        if (hbonds_np.hasOwnProperty(property)) {
+                            tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+'<td> '+hbonds_np[property][0][0]+' ('+hbonds_np[property][0][1]+'%) <button class="showhb" data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                            for (index = 1; index < hbonds_np[property].length; ++index) {
+                                tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' ('+hbonds_np[property][index][1]+'%) <button class="showhb" data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                            }
+                        }
+                    }
+                    tablenp=tablenp+'</table></center>';
+                    $('#hbondsnp').html(tablenp);
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.readyState == 4) {
+                        var responsetext = XMLHttpRequest.responseText;
+
+                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                    }
+                    else if (XMLHttpRequest.readyState == 0) {
+                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+        }); 
+    });
+
+
+
+    $("#ComputeSaltBridges").click(function(){
+        var struc = $(".str_file").data("struc_file");
+        var dyn_id=$(".str_file").data("dyn_id");
+        rmsdTraj=$("#salt_traj").val();
+        rmsdFrames=$("#salt_sel_frames_id input[name=salt_sel_frames]:checked").val();
+        cutoff=$("#salt_cutoff").val();
+        if (rmsdFrames=="salt_frames_mine"){
+            frameFrom=$("#salt_frame_1").val();
+            frameTo=$("#salt_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=frameFrom + "-" + frameTo;
+                    } else {
+                        showErrorInblock("#salt_sel_frames_error", "Initial frame must be lower than final frame.");
+                        rmsdFrames=false;
+                    }
+                    //} else {
+                    //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                    //    rmsdFrames=false;
+                    //}
+                } else {
+                    showErrorInblock("#salt_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }else{
+            frameFrom=0;
+            frameTo=-1;
+        }
+
+        $.ajax({
+                type: "POST",
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
+                url:"/view/saltbridges/", 
+                dataType: "json",
+                success: function(data) {
+                    salty=data.salt_bridges;
+                    var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+                    for (var property in salty) {
+                        if (salty.hasOwnProperty(property)) {
+                            salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showhb" data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                            for (index = 1; index < salty[property].length; ++index) {
+                                salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showhb" data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                            }
+                        }
+                    }
+                    salt=salt+'</table></center>';
+                    $('#saltbridges').html(salt);
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.readyState == 4) {
+                        var responsetext = XMLHttpRequest.responseText;
+
+                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                    }
+                    else if (XMLHttpRequest.readyState == 0) {
+                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+        }); 
+    });
+    $(document).on('click', '.showhb', function(){
+        atomshb=$(this).data('atomindexes').split('$%$');
+        atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];
+        $("#selectionDiv").trigger("click");
+    });
+
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");
         $("#rmsd_ref_frames_error").html("");
@@ -2323,7 +2479,7 @@ $(document).ready(function(){
         return (receptorsel);
     }
 
-
+    var atomshb=[];
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
@@ -2348,7 +2504,8 @@ $(document).ready(function(){
                 "high_pre":high_pre,
                 "traj":traj,
                 "receptorsel":receptorsel,
-                "bs_info" :bs_info
+                "bs_info" :bs_info,
+                "hbondarray":atomshb
         });
     }
     

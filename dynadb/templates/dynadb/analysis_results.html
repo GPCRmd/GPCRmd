@@ -8,7 +8,13 @@
 {% block addon_css %}
   <style>
   .panel-body {
-    word-break:break-all
+        word-break:break-all
+}
+
+   .scrolldowndiv{
+        overflow-y:auto;
+        max-height:300px;
+        overflow:auto;
 }
   
   </style>
@@ -43,10 +49,10 @@
     <div class="col-sm-12">
         <div class="col-sm-6">
             <h4>Intramolecular HBonds</h4><br>
-            <div id="hbonds"></div>
+            <div class='scrolldowndiv' id="hbonds"> </div>
             <br><br>
             <h4>Intermolecular HBonds</h4><br>
-            <div id="hbondsnp"></div>
+            <div class='scrolldowndiv' id="hbondsnp"> </div>
             <br><br>
         </div>
 
@@ -63,7 +69,7 @@
     </div> <!--12-->
 
     <h4>Salt bridges</h4>
-    <div id="saltbridges"></div>
+    <div id="saltbridges" class='scrolldowndiv'></div>
     <br><br><br>
     </div>
     </div>

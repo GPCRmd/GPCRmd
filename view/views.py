@@ -1179,3 +1179,158 @@ def download_rmsd(request, rmsd_id):
     
 def viewer_docs(request):
     return render(request, 'view/viewer_docs.html', {} )
+
+
+def parser(filename):
+    #'dynadb/b2ar_isoprot/b2ar.psf'
+    chargesfh=open(filename,'r')
+    atom_flag=0
+    atoms=dict()
+    for line in chargesfh:
+        if '!NBOND' in line:
+            atom_flag=0
+        if atom_flag==1 and line.strip(): #line.strip() prevents using empty lines bc empty string evaluates to False
+            fields=line.split()
+            charge=fields[6]
+            if 'E' in charge:
+                charge= float(charge[:charge.rfind('E')]) * 10**float(charge[charge.rfind('E')+1:])
+            atoms[fields[0]]=[float(charge),fields[5],fields[3],fields[2]] # charge, atom type, resname, resid
+        if '!NATOM' in line:
+            atom_flag=1
+
+    return atoms
+
+def true_saline_bridges(traj,distance_threshold=0.4, percentage_threshold=0.1):    
+    '''uses only combinations between asp, glu, arg and lys'''
+    percentage_threshold=percentage_threshold/100
+    salt_bridges_atoms=[]
+    salt_bridges_residues=[]
+    cdis=[]
+    for residue in traj.topology.residues:
+        if residue.name in ['ASP','GLU','ARG','LYS']:
+            caindex= [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
+            for atom in residue.atoms:
+                cdis.append([caindex,atom.index])
+
+    distance=md.compute_distances(traj[0], np.array(cdis),periodic=False)
+    distancedic=dict()
+    for i in range(len(cdis)): #iterate for each ca-atom.index pair
+        try:
+            if distance[0][i]>distancedic[cdis[i][0]][0]: #if distance from another atom is bigger, pick that atom index and distance
+                distancedic[cdis[i][0]]=[distance[0][i],cdis[i][1]]
+        except KeyError:
+            distancedic[cdis[i][0]]=[distance[0][i],cdis[i][1]] # distance['ca']=[maxdis,atom_index]
+
+    for keys in distancedic:
+        salt_bridges_atoms.append(int(distancedic[keys][1])+1) #pick the most distal atom and add one to go to 1-based indexing.
+
+    combinations=[]
+    for atom_index in range(len(salt_bridges_atoms)):
+        for atom_index2 in range(atom_index+1,len(salt_bridges_atoms)):
+            resname1=traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.name
+            resname2=traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.name
+            chained=abs(traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.index-traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.index)<4
+            if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'}] and not chained: #is this a correct combination?
+                combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
+
+    combinations=np.array(combinations)
+    distances=md.compute_distances(traj,combinations)
+    frequency= np.sum(distances < distance_threshold,axis=0)/len(traj)
+    distances= frequency > percentage_threshold
+    salt_bridges_residues=combinations[distances] #logical mask to the combinations
+    combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
+    salt_bridges_residues=combfreq[distances]
+
+    return salt_bridges_residues
+
+def hbonds(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        full_results=dict()
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        t = md.load(traj_path,top=struc_path)
+        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        t=t[int(arrays[0]):int(arrays[1])]
+        percentage_cutoff=int(arrays[2])
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
+        histhbond=dict()
+        hbonds_residue=dict()
+        hbonds_residue_notprotein=dict()
+        for frameres in hbonds_ks:
+            for hbond in frameres:
+                try:
+                    histhbond[tuple(hbond)]+=1
+                except KeyError:
+                    histhbond[tuple(hbond)]=1
+
+        for keys in histhbond:
+            histhbond[keys]= round(histhbond[keys]/len(t),3)*100
+            if abs(keys[0]-keys[2])>60 and histhbond[keys]>percentage_cutoff: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
+                labelbond=label([keys[0],histhbond[keys],keys[2]])
+                labelbond=labelbond.replace(' ','')
+                labelbond=labelbond.split('--')
+                donor=labelbond[0]
+                acceptor=labelbond[1]
+                acceptor_res=acceptor[:acceptor.rfind('-')]
+                donor_res=donor[:donor.rfind('-')]
+                if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                    histhbond[keys]=str(histhbond[keys])[:4]
+                    if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+                        except KeyError:
+                            hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+                    else: #intraprotein hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])])
+                        except KeyError:
+                            hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+
+
+
+        full_results['hbonds'] = hbonds_residue
+        full_results['hbonds_notprotein'] = hbonds_residue_notprotein
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+def saltbridges(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        percentage_cutoff=int(arrays[2])
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        t = md.load(traj_path,top=struc_path)
+        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        t=t[int(arrays[0]):int(arrays[1])]
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        full_results=dict()
+        full_results['salt_bridges'] = true_saline_bridges(t,distance_threshold=0.5, percentage_threshold=percentage_cutoff)
+        full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
+        #-1 to return to zero indexing.
+        bridge_dic=dict()
+        for bond in full_results['salt_bridges']:
+            labelbond=bond[0]
+            labelbond=labelbond.replace(' ','')
+            labelbond=labelbond.split('--')
+            donor=labelbond[0]
+            acceptor=labelbond[1]
+            acceptor_res=acceptor[:acceptor.rfind('-')]
+            donor_res=donor[:donor.rfind('-')]
+            if donor_res in bridge_dic:
+                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3])])
+            elif acceptor_res in bridge_dic:
+                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
+            else:
+               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
+
+        full_results['salt_bridges']=bridge_dic
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+
+
+

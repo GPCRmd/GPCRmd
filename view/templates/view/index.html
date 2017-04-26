@@ -43,6 +43,12 @@
     z-index: 1;
 }
 
+.scrolldowndiv{
+    overflow-y:auto;
+    max-height:300px;
+    overflow:auto;
+}
+
 /*.dropdown:hover .dropdown-content {
     display: block;
 }*/
@@ -825,7 +831,131 @@
               </div>
             {% endif %}
             </div>
+<!-- ============= BONDS Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hbonds</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_bonds" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="hbonds_traj" name="hbonds_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+
+                    </div>
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="bonds_sel_frames_id" class="col-md-10" >
+                          <div class="row">
+                             <input type="radio" name="bonds_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
+                                 From 
+                                 <input class="form-control input-sm" id="bonds_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 to 
+                                 <input class="form-control input-sm" id="bonds_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+
+                          </div>
+                          <div id="hbonds_sel_frames_error" class="row" ></div>
+                        </div>
+                    </div>
+             </div>
+
+            <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm" id="hbonds_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+            </div>
+
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div id="bondsresult" style="margin-left:18px;margin-bottom:20px"> 
+                       <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+
+                           <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> <br><br>
+
+                           <div class='scrolldowndiv' id="hbondsnp" style="margin-bottom:10px;padding:0"  class="col-md-6"></div>
+                  
+                       </div>
+                    </div>
+                    <div class=row>
+                      <button id="ComputeHbonds" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                    </div>
+
+                </div>
+              </div>
+
+<!-- ============= SaltBridges Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt Bridges</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_salt" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="salt_traj" name="salt_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+
+                    </div>
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="salt_sel_frames_id" class="col-md-10" >
+                          <div class="row">
+                             <input type="radio" name="salt_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
+                                 From 
+                                 <input class="form-control input-sm" id="salt_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 to 
+                                 <input class="form-control input-sm" id="salt_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+
+                          </div>
+                          <div id="salt_sel_frames_error" class="row" ></div>
+                        </div>
+                    </div>
+             </div>
+
+            <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm" id="salt_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+            </div>
+
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div id="saltresult" style="margin-left:18px;margin-bottom:20px"> 
+                       <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+
+                       <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
+
+
+                  
+                       </div>
+                    </div>
+                    <div class=row>
+                      <button id="ComputeSaltBridges" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                    </div>
+
+                </div>
+              </div>
 <!-- ======================================== -->
+
+
+
            <!-- </div>-->
             </div>
             {% endif %}

@@ -28,7 +28,6 @@ $('#doanalysis').click(function() {
     var an=$('#atom_name').val();
     var cut=$('#cutoff').val();
     var mean_per=$("input[name=saltymethod]:checked").val();
-    console.log(cut,mean_per);
     $.ajax({
         type: "POST",
         data: { "frames[]": [ff,tf,an,cut,mean_per]},
@@ -133,11 +132,7 @@ $( document ).ready(function() {
         atomshb=$(this).data('atomindexes').split('$%$');
         atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];
         console.log(atomshb);
-        /*o.addRepresentation( "distance", {
-            atomPair: atomshb , colorValue: "#8bb0ff",
-            colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" ,
-            name : dist_name} );*/
-        });
+    });
 });
 
 var csrftoken = getCookie('csrftoken');

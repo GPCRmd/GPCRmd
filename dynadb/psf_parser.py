@@ -56,7 +56,7 @@ def saline_bridges(traj,atoms,distance_threshold=0.5, percentage_threshold=0.1):
     return salt_bridges_residues
 
 
-def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=0.1, mean_option=False, percentage_option=True):    
+def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=0.1):    
     '''uses only combinations between asp, glu, arg and lys'''
     percentage_threshold=percentage_threshold/100
     salt_bridges_atoms=[]
@@ -95,15 +95,12 @@ def true_saline_bridges(traj,atoms,distance_threshold=0.4, percentage_threshold=
     mean_distance=np.sum(distances,axis=0)/len(traj) < distance_threshold
     frequency= np.sum(distances < distance_threshold,axis=0)/len(traj)
     distances= frequency > percentage_threshold
-    if percentage_option:
-        salt_bridges_residues=combinations[distances] #logical mask to the combinations
-        combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
+    salt_bridges_residues=combinations[distances] #logical mask to the combinations
+    combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
 
     salt_bridges_residues=combfreq[distances]
-    if mean_option:
-        salt_bridges_residues=combinations[mean_distance]
-    #if [atoms[str(atom_index)][3], str(atom_index), '----', atoms[str(atom_index2)][3], str(atom_index2) ] not in salt_bridges_residues and [atoms[str(atom_index2)][3], str(atom_index2), '----', atoms[str(atom_index)][3], str(atom_index) ] not in salt_bridges_residues: #use atom index to allow repetition in resids, GLU321 may be used again in other chain.
-    #    salt_bridges_residues.append( [atoms[str(atom_index)][3], str(atom_index), '----', atoms[str(atom_index2)][3], str(atom_index2) ] )
+
+
 
     return salt_bridges_residues
 
