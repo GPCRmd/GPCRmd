@@ -1166,7 +1166,7 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    console.log(mylist)
+                                    //console.log(mylist)
                                     table_html+="</tbody></table>";;
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
@@ -1606,12 +1606,19 @@ $(document).ready(function(){
                                     var trajFile = patt.exec(traj_p);
                                     var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
                                     var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
+                                    /*var widthval = (dist_array_t.length -1)*1.18;
+                                    console.log(widthval);
+                                    if (widthval < 640){
+                                        widthval = 640;
+                                    }
+                                    console.log(widthval);
+                                    console.log("==========");*/
                                     var options_t = {'title':'Residue Distance ('+trajFile+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
                                     var options_f = {'title':'Residue Distance ('+trajFile+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
                                     newgraph_sel="dist_chart_"+d_id.toString();
                                     var plot_html;
                                     if ($.active<=1){
