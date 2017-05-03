@@ -77,7 +77,7 @@
             {%endif%}
             <br>
 
-            {%if answer.expdatabind or answer.expdataeff%}
+            {%if answer.expdatabind or answer.expdataeff or answer.expdatainhi%}
                 <b>Experimental Data</b>:<br>
                 {%if answer.expdatabind%}
                     {%for datab in answer.expdatabind%}
@@ -90,6 +90,14 @@
                         <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
                     {%endfor%}
                 {%endif%}
+
+
+                {%if answer.expdatainhi%}
+                    {%for datae in answer.expdatainhi%}
+                        <b>Ki:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                    {%endfor%}
+                {%endif%}
+
 
             {%endif%}
 

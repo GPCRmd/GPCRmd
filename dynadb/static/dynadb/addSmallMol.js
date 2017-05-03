@@ -106,6 +106,10 @@ $(document).ready(function(){
         var neu_pubchem = $(newitem).find("[id|=id_form][id$='neutralize_pubchem']");
         var ret_chembl =  $(newitem).find("[id|=id_form][id$='retrieve_type_chembl']");
         var neu_chembl =  $(newitem).find("[id|=id_form][id$='neutralize_chembl']");
+        var cotype= $(newitem).find("[id|=id_form][id$='co_type']");
+        var nottype= $(newitem).find("[id|=id_form][id$='bulk_type']");
+           nottype.val('')   
+           cotype.val('')   
         $(newitem).formrenum(next_form_num);
         console.log("VALOR bulk-type "+$(newitem).find("[id|=id_form][id$='bulk_type']").val());
         console.log($(ret_pubchem)+"  "+$(ret_pubchem).val());

@@ -163,6 +163,7 @@ def scorenames(names_list):
     '''Given a list of synomins, returns the most human friendly'''
     print('\n\n',names_list)
     maxscore=-99999
+    bestname=names_list[0]
     for name in names_list:
         oriname=name
         score=0
@@ -683,7 +684,13 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                         completmp[5]=''
                         try:
                             if ec_fifty:
-                                result=record_complex_in_DB(completmp,fromiuphar,ec50_id=ec_fifty)
+                                intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=2) #ecfifty type with that complex exp
+                                for intd in intdata:
+                                    effrec=DyndbEfficacy.objects.filter(description=comple[12]).filter(id=intd.id)
+                                    if len(effrec)>0:
+                                        ec_fifty_id=intd.id
+
+                                result=record_complex_in_DB(completmp,fromiuphar,ec50_id=ec_fifty_id)
                             else:
                                 result=record_complex_in_DB(completmp,fromiuphar)
                         except:
@@ -979,7 +986,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
 
         #Create the compound and complexcompound, if it does not exist
         DBcompound=DyndbCompound.objects.filter(pubchem_cid=comple[2])
-        compdbsinchi=DyndbCompound.objects.filter(sinchi=comple[1],sinchikey=comple[0])
+        compdbsinchi=DyndbCompound.objects.filter(sinchi=comple[1][6:],sinchikey=comple[0])
         if len(DBcompound)>0:
             compound_id=DBcompound[0].id
             #compound already existed, no need to record it
@@ -1076,6 +1083,8 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                 defname=scorenames(cnames)
                 if len(defname)<60:
                     defname=defname
+                else:
+                    defname='PubChemID:'+str(pubchem_id)
             except KeyError:
                 defname='PubChemID:'+str(pubchem_id)
             
@@ -1096,18 +1105,24 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3],'is_published':True},True)
                     recorded_ids['compound']=compound_id
                 except:
-                    no_name='PubChemID:'+str(pubchem_id)
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3],'is_published':True},True)
-                    recorded_ids['compound']=compound_id
+                    try:
+                        no_name='PubChemID:'+str(pubchem_id)
+                        compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'chemblid':comple[3],'is_published':True},True)
+                        recorded_ids['compound']=compound_id
+                    except: #maybe chemblid is duplicated. sometimes different pubchemids have the same chembleid...Sad! 115216 and 6917920 have chemblid: 297624 according to BindingDB
+                        return recorded_ids
             else:
                 try:
                     compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':names,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'is_published':True},True)
                     recorded_ids['compound']=compound_id
 
                 except:
-                    no_name='PubChemID:'+str(pubchem_id)
-                    compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'is_published':True},True)
-                    recorded_ids['compound']=compound_id
+                    try:
+                        no_name='PubChemID:'+str(pubchem_id)
+                        compound_id=newrecord(['dyndb_compound',DyndbCompound],{'name':no_name,'iupac_name':iupac,'pubchem_cid':pubchem_id,'sinchi':sinchi,'sinchikey':sinchikey,'is_published':True},True)
+                        recorded_ids['compound']=compound_id
+                    except:
+                        return recorded_ids
                     
             #recording alternative names
             for name in cnames[:50]:
