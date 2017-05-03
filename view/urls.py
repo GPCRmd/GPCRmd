@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^docs/$', views.viewer_docs, name='viewer_docs'),
     url(r'^hbonds/$', views.hbonds, name='hbonds'),
     url(r'^saltbridges/$', views.saltbridges, name='saltbridges'),
+    url(r'^grid/$', views.sasa, name='sasa')
 ]
 
 if settings.DEBUG:

@@ -1207,7 +1207,10 @@ def true_saline_bridges(traj,distance_threshold=0.4, percentage_threshold=0.1):
     salt_bridges_residues=[]
     cdis=[]
     for residue in traj.topology.residues:
-        if residue.name in ['ASP','GLU','ARG','LYS']:
+        if residue.name=='HIS':
+            number_hatoms= len([atom.index for atom in residue.atoms if atom.element.name=='hydrogen'])
+            print('this his has: '+str(number_hatoms))   
+        if residue.name in ['ASP','GLU','ARG','LYS'] or number_hatoms>7:
             caindex= [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
             for atom in residue.atoms:
                 cdis.append([caindex,atom.index])
@@ -1230,7 +1233,7 @@ def true_saline_bridges(traj,distance_threshold=0.4, percentage_threshold=0.1):
             resname1=traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.name
             resname2=traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.name
             chained=abs(traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.index-traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.index)<4
-            if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'}] and not chained: #is this a correct combination?
+            if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'},{'GLU','HIS'},{'ASP','HIS'}] and not chained: #is this a correct combination?
                 combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
 
     combinations=np.array(combinations)
@@ -1243,52 +1246,134 @@ def true_saline_bridges(traj,distance_threshold=0.4, percentage_threshold=0.1):
 
     return salt_bridges_residues
 
+
 def hbonds(request):
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
         full_results=dict()
         struc_path = "/protwis/sites/files/"+arrays[4]
+        all_chains=obtain_all_chains(struc_path)
         traj_path = "/protwis/sites/files/"+arrays[3]
-        t = md.load(traj_path,top=struc_path)
+        #t = md.load(traj_path,top=struc_path)
         #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        t=t[int(arrays[0]):int(arrays[1])]
+        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
+        start=int(arrays[0])
+        end=int(arrays[1])
+        backbone=arrays[6]=='true'
+        print('BACKBONE',backbone)
+        if end<0:
+            end=10**20
         percentage_cutoff=int(arrays[2])
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
-        hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
         histhbond=dict()
         hbonds_residue=dict()
         hbonds_residue_notprotein=dict()
-        for frameres in hbonds_ks:
-            for hbond in frameres:
-                try:
-                    histhbond[tuple(hbond)]+=1
-                except KeyError:
-                    histhbond[tuple(hbond)]=1
+        nframes=0
+        chunksize=50
+        neighbours=arrays[7]=='true'
+        for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+            rframes=end-nframes
+            if rframes==0:
+                break
+            if rframes<chunksize:
+                t=t[:rframes]
 
+            nframes+=len(t)
+
+            hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
+            for frameres in hbonds_ks:
+                for hbond in frameres:
+                    try:
+                        histhbond[tuple(hbond)]+=1
+                    except KeyError:
+                        histhbond[tuple(hbond)]=1
+
+        if neighbours:
+            resid_dist=60
+        else:
+            resid_dist=0
         for keys in histhbond:
-            histhbond[keys]= round(histhbond[keys]/len(t),3)*100
-            if abs(keys[0]-keys[2])>60 and histhbond[keys]>percentage_cutoff: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
-                labelbond=label([keys[0],histhbond[keys],keys[2]])
-                labelbond=labelbond.replace(' ','')
-                labelbond=labelbond.split('--')
-                donor=labelbond[0]
-                acceptor=labelbond[1]
-                acceptor_res=acceptor[:acceptor.rfind('-')]
-                donor_res=donor[:donor.rfind('-')]
-                if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
-                    histhbond[keys]=str(histhbond[keys])[:4]
-                    if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
-                        try:
-                            if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
-                                hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
-                        except KeyError:
-                            hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
-                    else: #intraprotein hbonds
-                        try:
-                            if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])])
-                        except KeyError:
-                            hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+            chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
+            chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
+            print('$'+chain0+'$')
+            print('$'+chain1+'$')
+            histhbond[keys]= round(histhbond[keys]/nframes,3)*100
+            is_not_neighbour=abs(keys[0]-keys[2])>resid_dist
+            if backbone:
+                if histhbond[keys]>percentage_cutoff and is_not_neighbour: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
+                    labelbond=label([keys[0],histhbond[keys],keys[2]])
+                    labelbond=labelbond.replace(' ','')
+                    labelbond=labelbond.split('--')
+                    donor=labelbond[0]
+                    acceptor=labelbond[1]
+                    acceptor_res=acceptor[:acceptor.rfind('-')]
+                    donor_res=donor[:donor.rfind('-')]
+                    if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                        histhbond[keys]=str(histhbond[keys])[:4]
+                        if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                            try:
+                                if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                    if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+
+                                else: #acceptor is protein
+                                    if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                            except KeyError:
+                                if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                    hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+                                else: #acceptor is protein
+                                    hbonds_residue_notprotein[acceptor_res]=[[donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0]]
+
+                        else: #intraprotein hbonds
+                            try:
+                                if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                            except KeyError:
+                                hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+            else:
+                if histhbond[keys]>percentage_cutoff: #not neighbours abs(keys[0]-keys[2])>60 ??
+                    if t.topology.atom(keys[0]).residue.is_protein:
+                        a1=t.topology.atom(keys[0]).is_sidechain
+                    else:
+                        a1=True
+
+                    if t.topology.atom(keys[2]).residue.is_protein:
+                        a2=t.topology.atom(keys[2]).is_sidechain
+                    else:
+                        a2=True    
+  
+                    if a1 and a2 and is_not_neighbour:
+                        labelbond=label([keys[0],histhbond[keys],keys[2]])
+                        labelbond=labelbond.replace(' ','')
+                        labelbond=labelbond.split('--')
+                        donor=labelbond[0]
+                        acceptor=labelbond[1]
+                        acceptor_res=acceptor[:acceptor.rfind('-')]
+                        donor_res=donor[:donor.rfind('-')]
+                        if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                            histhbond[keys]=str(histhbond[keys])[:4]
+                            if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                                try:
+                                    if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                        if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                            hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+
+                                    else: #acceptor is protein
+                                        if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                            hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                except KeyError:
+                                    if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                        hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+                                    else: #acceptor is protein
+                                        hbonds_residue_notprotein[acceptor_res]=[[donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0]]
+
+                            else: #intraprotein hbonds
+                                try:
+                                    if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                        hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                except KeyError:
+                                    hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
 
 
 
@@ -1297,18 +1382,99 @@ def hbonds(request):
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
+
 def saltbridges(request):
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
-        percentage_cutoff=int(arrays[2])
         struc_path = "/protwis/sites/files/"+arrays[4]
         traj_path = "/protwis/sites/files/"+arrays[3]
-        t = md.load(traj_path,top=struc_path)
+        #t = md.load(traj_path,top=struc_path)
         #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        t=t[int(arrays[0]):int(arrays[1])]
+        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/cara.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         full_results=dict()
-        full_results['salt_bridges'] = true_saline_bridges(t,distance_threshold=0.5, percentage_threshold=percentage_cutoff)
+        chunksize=50
+        start=int(arrays[0])
+        end=int(arrays[1])
+        if end<0:
+            end=10**20
+        nframes=0
+        counter=0
+        percentage_threshold=int(arrays[2])/100
+        distance_threshold=0.4 #4 angstroms/0.4nm
+        for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+            rframes=end-nframes 
+            if rframes==0:
+                break
+            if rframes<chunksize:
+                t=t[:rframes] #maybe the user does not want the full chunk.
+            nframes+=len(t)
+            salt_bridges_atoms=[]
+            salt_bridges_residues=[]
+            cdis=[]
+            if counter==0:
+                number_hatoms=0
+                for residue in t.topology.residues:
+                    if residue.name=='HIS':
+                        number_hatoms= len([atom.index for atom in residue.atoms if atom.element.name=='hydrogen'])
+                    if residue.name in ['ASP','GLU','ARG','LYS'] or number_hatoms>7:
+                        caindex= [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
+                        for atom in residue.atoms:
+                            cdis.append([caindex,atom.index])
+
+                        for atom in residue.atoms:
+                            if residue.name=='ARG' and atom.name=='NH1':
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='GLU' and atom.name=='OE2':
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='ASP' and atom.name=='OD2':
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='HIS' and (atom.name=='NE2' or atom.name=='ND1'):
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='LYS' and atom.name=='NZ':
+                                salt_bridges_atoms.append(atom.index+1)
+
+
+                if False:
+                    distance=md.compute_distances(t, np.array(cdis),periodic=False) #shape=(n_frames, num_pairs)
+                    distancedic=dict()
+                    for f in range(len(t)):
+                        for i in range(len(cdis)): #iterate for each ca-atom.index pair
+                            try:
+                                if distance[f][i]>distancedic[cdis[i][0]][0]: #if distance from another atom is bigger, pick that atom index and distance
+                                    distancedic[cdis[i][0]]=[distance[f][i],cdis[i][1]]
+                            except KeyError:
+                                distancedic[cdis[i][0]]=[distance[f][i],cdis[i][1]] # distance['ca']=[maxdis,atom_index]
+
+                    for keys in distancedic:
+                        salt_bridges_atoms.append(int(distancedic[keys][1])) #+1before
+
+                combinations=[]
+                for atom_index in range(len(salt_bridges_atoms)):
+                    for atom_index2 in range(atom_index+1,len(salt_bridges_atoms)):
+                        resname1=t.topology.atom(salt_bridges_atoms[atom_index]).residue.name #-1bef
+                        resname2=t.topology.atom(salt_bridges_atoms[atom_index2]).residue.name #-1bef
+                        chained=abs(t.topology.atom(salt_bridges_atoms[atom_index]).residue.index-t.topology.atom(salt_bridges_atoms[atom_index2]).residue.index)<4 #-1bef
+                        if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'},{'GLU','HIS'},{'ASP','HIS'}] and not chained: #is this a correct combination?
+                            combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
+
+                combinations=np.array(combinations)
+                distances=md.compute_distances(t,combinations) #shape=(n_frames, num_pairs)
+                frequency= np.sum(distances < distance_threshold,axis=0) #number of times the distance is lower than threshold in the current chunk
+
+            else:
+                distances=md.compute_distances(t,combinations)
+                frequency+=np.sum(distances < distance_threshold,axis=0)
+
+            counter+=1
+        print('TOTAL FRAMES',str(nframes))
+        frequency=frequency/nframes
+        distances= frequency> percentage_threshold #[True, False, True, True, ...]
+        combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
+        salt_bridges_residues=combfreq[distances] #logical mask to combinationcs [[10,34],[11,90],[42,666],[],...][True, False, True, True, ...]
+
+
+        full_results['salt_bridges'] = salt_bridges_residues
         full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
         #-1 to return to zero indexing.
         bridge_dic=dict()
@@ -1331,6 +1497,197 @@ def saltbridges(request):
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
+def sasa(request):
+    zatoms=[]
+    arrays=request.POST.getlist('frames[]')
+    struc_path = "/protwis/sites/files/"+arrays[4]
+    traj_path = "/protwis/sites/files/"+arrays[3]
+    sel=arrays[6]
+    #struc_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/build.pdb"
+    #traj_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/b2ar.dcd"
+    #struc_path = "/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb"
+    #traj_path = "/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd"
 
+    print(struc_path,traj_path)
+    traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+    sasa_path=traj_path[:traj_path.rfind('/')]+traj_name+'.npy'
+    try:
+        sasa=np.load(sasa_path)
+        precomputed=True
+    except:
+        precomputed=False
+    print('Is it precomputed?',precomputed)
+    chunksize=50
+    start=int(arrays[0])
+    end=int(arrays[1])
+    if end<0:
+        end=10**20
+    nframes=0
+    counter=0
+    zpos_dic=dict()
+    for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+        notwatatoms=t.topology.select("not water")
+        t=t.atom_slice(notwatatoms)
+        if counter==0:
+            tfind=t.atom_slice(t.topology.select("protein"))
+            cter=tfind.topology.residue(-1).atom(0).index
+            nter=tfind.topology.residue(0).atom(0).index
+            if tfind.xyz[0][nter][2]>tfind.xyz[0][cter][2]:
+                normal=True
+            else:
+                normal=False
+            tori=t
+            patoms=t.topology.select("symbol P and (not protein)")
+            tmod=t.atom_slice(patoms)
+            zetas_p=[]
+            for i in range(tmod.xyz[0].shape[0]): #this is the FIRST frame, not the original PDB! equal to put 1 in the VMD Main window.
+                zetas_p.append(tmod.xyz[0][i][2])
+            zetas_p=sorted(zetas_p)
+            zetahalf=np.mean(zetas_p)
+            maxjump=0
+            for i in range(len(zetas_p)-1):
+                if abs(zetas_p[i]-zetas_p[i+1])>maxjump:
+                    lastp=i
+                    maxjump=abs(zetas_p[i]-zetas_p[i+1])
+            zleaftop=np.mean(zetas_p[lastp:])
+            zleafbottom=np.mean(zetas_p[:lastp])
+
+            atoms_prot_bootom=[]
+            atoms_half=[]
+            atoms_receptor=[]
+            
+            for i in range(tori.xyz[0].shape[0]):
+                if normal:
+                    if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
+                        atoms_prot_bootom.append(i)
+                    if tori.xyz[0][i][2]<zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_half.append(i)
+                    if tori.topology.atom(i).residue.is_protein:
+                        atoms_receptor.append(i)
+                else:
+                    if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
+                        atoms_prot_bootom.append(i)
+                    if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_half.append(i)
+                    if tori.topology.atom(i).residue.is_protein:
+                        atoms_receptor.append(i)
+
+            if not precomputed:
+                sasa=md.shrake_rupley(tori)
+
+        elif counter>0 and not precomputed:
+            print(str(counter))
+            sasa=np.concatenate((sasa,md.shrake_rupley(t)))
+
+        else:
+            break
+
+        counter+=1
+
+    if not precomputed:
+        traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+        sasa_path=traj_path[:traj_path.rfind('/')]+traj_name
+        np.save(sasa_path,sasa)
+
+    selected_resids=[]
+    if sel=='half':
+        sasaours=sasa[:,atoms_half] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_half:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='bottom':
+        sasaours=sasa[:,atoms_prot_bootom] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_prot_bootom:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='receptor':
+        sasaours=sasa[:,atoms_receptor] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_receptor:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='all':
+        sasaours=sasa[:] #pick only the sasa columns of our atoms.
+        selected_resids=[]
+
+    sasaours_peratom=sasaours.sum(axis=0)
+    sasaours_perframe=sasaours.sum(axis=1)
+    final_resids=[]
+    for res in selected_resids:
+        final_resids.append(int(re.search(r'\d+', str(res)).group()))
+
+    final_resids=list(set(final_resids))
+    if sel=='all':
+        final_resids='all'
+    '''
+    print('SASA per atom')
+    for pos,atomindex in enumerate(atoms_prot_bootom):
+        print(t.topology.atom(atomindex),sasaours_peratom[pos])
+
+    print('SASA per frame')
+    for f in range(len(sasaours_perframe)):
+        print(f, sasaours_perframe[f])
+    '''
+    sasaours_perframe=sasaours_perframe.tolist()
+    time=sasa.shape[0] #number of frames
+    time=[i for i in range(time)]
+    result=zip(time,sasaours_perframe)
+    result=[list(i) for i in result]
+    sasares={'sasa':result,'selected_residues':final_resids}
+    data = json.dumps(sasares)
+    return HttpResponse(data, content_type='application/json')
+
+def grid(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        percentage_cutoff=int(arrays[2])
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        #t = md.load(traj_path,top=struc_path)
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        trajectory=trajectory[0:10]
+        atom_indices_prot = [a.index for a in trajectory.topology.atoms if a.residue.is_protein]
+        atom_indices_ligand = [a.index for a in trajectory.topology.atoms if a.residue.name=='5FW']
+        atom_indices= atom_indices_prot+atom_indices_ligand
+        print(atom_indices_ligand)
+        t=trajectory
+        trajectory=trajectory.atom_slice(atom_indices, inplace=False)
+        atomindexes_prot=[atom.index for atom in trajectory.topology.atoms if atom.residue.is_protein]
+        trajprot=trajectory.superpose(trajectory,0,atom_indices=atomindexes_prot) #works!
+        trajprot=trajprot
+        mintop=np.array([0,0,0])
+        print('ck1')
+        print(str(len(trajprot)))
+        for frame in range(len(trajprot)):
+            for atom in trajprot.xyz[frame]:
+                if atom[0]<mintop[0]:
+                    mintop[0]=atom[0]
+                if atom[1]<mintop[1]:
+                    mintop[1]=atom[1]
+                if atom[2]<mintop[2]:
+                    mintop[2]=atom[2]
+        mintop-=1
+        max_xyz=[0,0,0]
+        atomxyz=trajprot.xyz
+        for frame in range(len(trajprot)):
+            for atomindex in range(len(trajprot.xyz[frame])):
+                atomxyz[frame][atomindex]=atomxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
+                if atomxyz[frame][atomindex][0]>max_xyz[0]:
+                    max_xyz[0]=atomxyz[frame][atomindex][0]
+                if atomxyz[frame][atomindex][1]>max_xyz[1]:
+                    max_xyz[1]=atomxyz[frame][atomindex][1]
+                if atomxyz[frame][atomindex][2]>max_xyz[2]:
+                    max_xyz[2]=atomxyz[frame][atomindex][2]
+        #now create a grid with appropiate dimensions to hold all the atoms
+        max_xyz=[int(round((i*10)+2)) for i in max_xyz] #nanometers to angstroms.
+        grid=np.zeros(max_xyz)
+        for frame in range(len(trajprot)):
+            for atomindex in range(len(trajprot.xyz[frame])):
+                xc=int(round(atomxyz[frame][atomindex][0]*10))#nanometers to angstroms.
+                yc=int(round(atomxyz[frame][atomindex][1]*10))
+                zc=int(round(atomxyz[frame][atomindex][2]*10))
+                grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
+        shape=grid.shape
+        grid=grid.tolist()
+        full_results={'grid':grid,'shape':shape,'indexes':atom_indices}
+        print('Analysis done')
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
 
 

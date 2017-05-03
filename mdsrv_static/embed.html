@@ -334,6 +334,12 @@
             var receptorsel = results["receptorsel"]; //[!!!]
             var bs_info= results["bs_info"]; //[!!!]
             var hbonds= results["hbondarray"];
+            var sbonds_atoms= results["sbondarray"];
+            var all_resids=results["allresidshb"];
+            var all_resids_sb=results["allresidssb"];
+            var hbonds_inter=results["hb_inter"];
+            console.log('FINALLY!',results["all_resids_sasa"])
+            var sasa_resids=results["all_resids_sasa"];
             var cons_pos = parent.pd; //[!!!]
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
@@ -510,11 +516,36 @@
                 }
             }
 
-
-            if (hbonds.length > 0){
-                o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+            if (sasa_resids.length > 0) {
+                if (typeof(sasa_resids)=='string') {
+                    resids='not water';
+                }else{
+                    var resids= 'protein and';
+                    resids=resids+' ('+sasa_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                }
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
             }
 
+            if (hbonds.length > 0){
+                var resids= 'protein and';
+                resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
+            if (hbonds_inter.length > 0){
+                var resids='not water and';
+                resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
+            if (sbonds_atoms.length > 0){
+                var resids='protein and ';
+                resids=resids + '( '+ all_resids_sb.join(' or ') + ')';
+                o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
 
             if (int_res_li.length > 0){
                 var final_sele=[];

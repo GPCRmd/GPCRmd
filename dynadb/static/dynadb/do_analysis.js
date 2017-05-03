@@ -50,6 +50,9 @@ $('#doanalysis').click(function() {
             results=drawBasic(data.sasa,'Time (ns)','SASA (nm2)');
             data=results[0];
             options=results[1];
+            var chart_charges = new google.visualization.LineChart(document.getElementById('charges_chart_div'));
+            chart_charges.draw(data_charges, options_charges);
+
             var table='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
             for (var property in hbonds) {
                 if (hbonds.hasOwnProperty(property)) {
@@ -127,7 +130,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
-$( document ).ready(function() {
+$(document).ready(function() {
     $(document).on('click', '.showhb', function(){
         atomshb=$(this).data('atomindexes').split('$%$');
         atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];

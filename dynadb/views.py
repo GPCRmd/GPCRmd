@@ -2506,6 +2506,7 @@ def do_analysis(request):
 
         for keys in histhbond:
             histhbond[keys]= round(histhbond[keys]/len(t),3)*100
+            print(keys)
             if abs(keys[0]-keys[2])>60 and histhbond[keys]>10: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
                 labelbond=label([keys[0],histhbond[keys],keys[2]])
                 labelbond=labelbond.replace(' ','')
@@ -2576,44 +2577,12 @@ def do_analysis(request):
 
         full_results['salt_bridges']=bridge_dic
 
-
-        '''
-        trajprot=trajectory.atom_slice(trajectory.topology.select('protein'),inplace=False)
-        trajprot=trajprot.superpose(trajprot,0)
-        mintop=np.array([0,0,0])
-        for frame in range(len(trajprot)):
-            for atom in trajprot.xyz[frame]:
-                if atom[0]<mintop[0]:
-                    mintop[0]=atom[0]
-                if atom[1]<mintop[1]:
-                    mintop[1]=atom[1]
-                if atom[2]<mintop[2]:
-                    mintop[2]=atom[2]
-        mintop-=1
-        max_xyz=[0,0,0]
-        atomxyz=trajprot.xyz
-        for frame in range(len(trajprot)):
-            for atomindex in range(len(trajprot.xyz[frame])):
-                atomxyz[frame][atomindex]=atomxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
-                if atomxyz[frame][atomindex][0]>max_xyz[0]:
-                    max_xyz[0]=atomxyz[frame][atomindex][0]
-                if atomxyz[frame][atomindex][1]>max_xyz[1]:
-                    max_xyz[1]=atomxyz[frame][atomindex][1]
-                if atomxyz[frame][atomindex][2]>max_xyz[2]:
-                    max_xyz[2]=atomxyz[frame][atomindex][2]
-
-        #now create a grid with appropiate dimensions to hold all the atoms
-        max_xyz=[int(round((i*10)+2)) for i in max_xyz] #nanometers to angstroms.
-        grid=np.zeros(max_xyz)
-        for frame in range(len(trajprot)):
-            for atomindex in range(len(trajprot.xyz[frame])):
-                xc=int(round(atomxyz[frame][atomindex][0]*10))
-                yc=int(round(atomxyz[frame][atomindex][1]*10))
-                zc=int(round(atomxyz[frame][atomindex][2]*10))
-                grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
-        '''
-        print('Analysis done')
-        #print(grid.tolist())
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        atomindexes_prot=[atom.index for atom in trajectory.topology.atoms if atom.residue.is_protein]
+        trajprot=trajectory.superpose(trajectory,0,atom_indices=atomindexes_prot) #works!
+        print('ltes save') 
+        trajprot.save('./superposed.dcd')
+        print('saved')
         print(full_results)
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
