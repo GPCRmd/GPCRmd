@@ -637,7 +637,7 @@
                     Select distances from the viewer by clicking on the atoms. Afterwards, import your selections by clicking at the import button. You can also manually introduce the atom indices.
                 </div>
                 <div class="dist_btw" style="margin-right:5px;margin-left:0;">
-                  <div class="dist_pair" id="row2_0">
+                  <div class="dist_pair" id="row2_0" style="margin-bottom:5px">
                     <span class="tick2" ></span>
                     <span class="always2" style="margin-left:14px">
                      Compute distance between 
@@ -656,8 +656,8 @@
                 </div>
                 
                 {% if traj_list %}
-                <div style="margin-left:18px;">
-                    <div>
+                <div style="margin-left:17px;">
+                    <div style="margin-bottom:10px;">
                      In trajectory: 
                        <span style="margin-left:5px">
                             <select id="" name="dist_traj">
@@ -667,6 +667,9 @@
                                {% endfor %}
                             </select>
                        </span>
+                    </div>
+                    <div id="dist_stride_parent">
+                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
                         <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
@@ -706,13 +709,17 @@
                              <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
                                   All
                           </div>
-                          <div class="row" >
+                          <div class="row" style="margin-bottom:5px">
                              <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
                                  From 
-                                 <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
                                  to 
-                                 <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
                           </div>
+                          <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
+                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                          </div>
+
                           <div id="rmsd_sel_frames_error" class="row" >
                           </div>
                         </div>
@@ -801,9 +808,12 @@
                            </span>
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                    </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;" value=3 placeholder=3> &#8491; 
                           <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;">
