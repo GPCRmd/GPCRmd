@@ -17,7 +17,7 @@ import mdtraj as md
 import numpy as np
 import copy
 import csv
-
+import pickle
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
@@ -1200,53 +1200,6 @@ def parser(filename):
 
     return atoms
 
-def true_saline_bridges(traj,distance_threshold=0.4, percentage_threshold=0.1):    
-    '''uses only combinations between asp, glu, arg and lys'''
-    percentage_threshold=percentage_threshold/100
-    salt_bridges_atoms=[]
-    salt_bridges_residues=[]
-    cdis=[]
-    for residue in traj.topology.residues:
-        if residue.name=='HIS':
-            number_hatoms= len([atom.index for atom in residue.atoms if atom.element.name=='hydrogen'])
-            print('this his has: '+str(number_hatoms))   
-        if residue.name in ['ASP','GLU','ARG','LYS'] or number_hatoms>7:
-            caindex= [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
-            for atom in residue.atoms:
-                cdis.append([caindex,atom.index])
-
-    distance=md.compute_distances(traj[0], np.array(cdis),periodic=False)
-    distancedic=dict()
-    for i in range(len(cdis)): #iterate for each ca-atom.index pair
-        try:
-            if distance[0][i]>distancedic[cdis[i][0]][0]: #if distance from another atom is bigger, pick that atom index and distance
-                distancedic[cdis[i][0]]=[distance[0][i],cdis[i][1]]
-        except KeyError:
-            distancedic[cdis[i][0]]=[distance[0][i],cdis[i][1]] # distance['ca']=[maxdis,atom_index]
-
-    for keys in distancedic:
-        salt_bridges_atoms.append(int(distancedic[keys][1])+1) #pick the most distal atom and add one to go to 1-based indexing.
-
-    combinations=[]
-    for atom_index in range(len(salt_bridges_atoms)):
-        for atom_index2 in range(atom_index+1,len(salt_bridges_atoms)):
-            resname1=traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.name
-            resname2=traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.name
-            chained=abs(traj.topology.atom(salt_bridges_atoms[atom_index]-1).residue.index-traj.topology.atom(salt_bridges_atoms[atom_index2]-1).residue.index)<4
-            if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'},{'GLU','HIS'},{'ASP','HIS'}] and not chained: #is this a correct combination?
-                combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
-
-    combinations=np.array(combinations)
-    distances=md.compute_distances(traj,combinations)
-    frequency= np.sum(distances < distance_threshold,axis=0)/len(traj)
-    distances= frequency > percentage_threshold
-    salt_bridges_residues=combinations[distances] #logical mask to the combinations
-    combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
-    salt_bridges_residues=combfreq[distances]
-
-    return salt_bridges_residues
-
-
 def hbonds(request):
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
@@ -1260,7 +1213,6 @@ def hbonds(request):
         start=int(arrays[0])
         end=int(arrays[1])
         backbone=arrays[6]=='true'
-        print('BACKBONE',backbone)
         if end<0:
             end=10**20
         percentage_cutoff=int(arrays[2])
@@ -1268,19 +1220,45 @@ def hbonds(request):
         histhbond=dict()
         hbonds_residue=dict()
         hbonds_residue_notprotein=dict()
+        hbonds_ks=[]
         nframes=0
         chunksize=50
         neighbours=arrays[7]=='true'
-        for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
-            rframes=end-nframes
-            if rframes==0:
-                break
-            if rframes<chunksize:
-                t=t[:rframes]
+        traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+        bonds_path=traj_path[:traj_path.rfind('/')]+traj_name+'_bonds'
+        if neighbours:
+            resid_dist=60
+        else:
+            resid_dist=0
+        try:
+            with open (bonds_path, 'rb') as fp:
+                precomputed_bonds = pickle.load(fp)
+            precomputed=True
+        except:
+            precomputed=False
 
-            nframes+=len(t)
+        print('Is it precomputed?',precomputed)
 
-            hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
+        if not precomputed:
+            precomputed_bonds=[]
+            for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+                '''
+                rframes=end-nframes
+                if rframes==0:
+                    break
+                if rframes<chunksize:
+                    t=t[:rframes]
+
+                nframes+=len(t)
+                '''
+                hbonds_ks+=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False) # i could save this precomputed matrix
+
+
+            with open(bonds_path, 'wb') as fp:
+                pickle.dump(hbonds_ks, fp)
+
+            hbonds_ks=hbonds_ks[start:end]
+            nframes=len(hbonds_ks)
             for frameres in hbonds_ks:
                 for hbond in frameres:
                     try:
@@ -1288,15 +1266,21 @@ def hbonds(request):
                     except KeyError:
                         histhbond[tuple(hbond)]=1
 
-        if neighbours:
-            resid_dist=60
         else:
-            resid_dist=0
+            precomputed_bonds=precomputed_bonds[start:end]
+            nframes=len(precomputed_bonds)
+            for frameres in precomputed_bonds:
+                for hbond in frameres:
+                    try:
+                        histhbond[tuple(hbond)]+=1
+                    except KeyError:
+                        histhbond[tuple(hbond)]=1
+
+        t=md.load_frame(traj_path, index=0, top=struc_path)
+
         for keys in histhbond:
             chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
             chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
-            print('$'+chain0+'$')
-            print('$'+chain1+'$')
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
             is_not_neighbour=abs(keys[0]-keys[2])>resid_dist
             if backbone:
@@ -1525,7 +1509,7 @@ def sasa(request):
     nframes=0
     counter=0
     zpos_dic=dict()
-    for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+    for t in md.iterload(traj_path, top=struc_path,chunk=chunksize):
         notwatatoms=t.topology.select("not water")
         t=t.atom_slice(notwatatoms)
         if counter==0:
@@ -1589,6 +1573,7 @@ def sasa(request):
         sasa_path=traj_path[:traj_path.rfind('/')]+traj_name
         np.save(sasa_path,sasa)
 
+    sasa=sasa[start:end]
     selected_resids=[]
     if sel=='half':
         sasaours=sasa[:,atoms_half] #pick only the sasa columns of our atoms.

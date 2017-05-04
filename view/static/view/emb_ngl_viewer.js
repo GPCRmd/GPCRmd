@@ -1046,13 +1046,9 @@ $(document).ready(function(){
 //-------- Freq of Interaction --------
     function gnumFromPosChain(pos, chain){
         result="-";
-        console.log('wtf');
-        console.log(all_gpcr_dicts);
         for (gpcr in all_gpcr_dicts){ //[1]["combined_num"]
-            console.log('wt');
             var search_dict=all_gpcr_dicts[gpcr]["combined_num"];
             for (gnum in search_dict){
-                console.log('gooood one',search_dict[gnum][0],search_dict[gnum][1]);
                 if (search_dict[gnum][0] == pos && search_dict[gnum][1] ==chain){
                     result = gnum;
                 }
