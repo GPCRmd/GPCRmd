@@ -18,6 +18,8 @@ import numpy as np
 import copy
 import csv
 import pickle
+import math
+
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
@@ -481,7 +483,7 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
-def distances_Wtraj(dist_str,struc_path,traj_path):
+def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     struc_path = "/protwis/sites/files/"+struc_path
     traj_path = "/protwis/sites/files/"+traj_path
     dist_li=re.findall("\d+-\d+",dist_str)
@@ -501,7 +503,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
         from_to=np.array([[pos_from,pos_to]])        
         atom_pairs=np.append(atom_pairs,from_to, axis=0)
     try:
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
         return (False,None, "Error loading the file.")
     dist=np.array([]).reshape((0,len(atom_pairs))) 
@@ -513,7 +515,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
             error_msg="Atom indices must be between 0 and "+str(num_atoms)
             return (False, None, error_msg)
         dist=np.append(dist,d,axis=0)
-    frames=np.arange(0,len(dist),dtype=np.int32).reshape((len(dist),1))
+    frames=np.arange(0,len(dist)*strideVal, strideVal,dtype=np.int32).reshape((len(dist),1))
     data=np.append(frames,dist, axis=1).tolist()
     data_fin=axis_lab + data
     return (True,data_fin, small_error)
@@ -553,8 +555,8 @@ def index(request, dyn_id):
             ref_traj_p= request.POST.get("rmsdRefTraj")
             traj_sel= request.POST.get("rmsdSel")
             no_rv=request.POST.get("no_rv")
-            
-            
+            strideVal=request.POST.get("stride")
+                       
             if request.session.get('rmsd_data', False):
                 rmsd_data=request.session['rmsd_data']
                 rmsd_dict=rmsd_data["rmsd_dict"]
@@ -571,7 +573,7 @@ def index(request, dyn_id):
                 rmsd_dict={}
             
             if len(rmsd_dict) < 15:
-                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel)
+                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal))
                 if success:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
@@ -587,13 +589,13 @@ def index(request, dyn_id):
                     struc_filename=p.search(struc_p).group(0)
                     traj_filename=p.search(traj_p).group(0)
                     rtraj_filename=p.search(ref_traj_p).group(0)
-                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)
+                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
                     request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors}
+                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
                 else: 
-                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors}
+                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
             else:
-                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones."}
+                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
@@ -606,6 +608,7 @@ def index(request, dyn_id):
             dist_ids=request.POST.get("dist_residsWT")
             dist_traj_p=request.POST.get("distTraj")
             no_rv=request.POST.get("no_rv")
+            strideVal=request.POST.get("stride")
             if request.session.get('dist_data', False):
                 dist_data=request.session['dist_data']
                 dist_dict=dist_data["dist_dict"]
@@ -622,7 +625,7 @@ def index(request, dyn_id):
                 dist_dict={}
                 
             if len(dist_dict) < 15:
-                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p)
+                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
                 if success:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
@@ -637,14 +640,14 @@ def index(request, dyn_id):
                     p=re.compile("\w*\.\w*$")
                     struc_filename=p.search(dist_struc_p).group(0)
                     traj_filename=p.search(dist_traj_p).group(0)
-                    dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename)
+                    dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename,strideVal)
                     request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                          "traj_filename":traj_filename, "struc_filename":struc_filename}
-                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
+                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal}
                 else: 
-                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg }
+                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal}
             else:
-                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones."}
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")
@@ -653,6 +656,7 @@ def index(request, dyn_id):
             int_struc_p=request.POST.get("struc_p")
             dist_scheme = request.POST.get("dist_scheme")
             no_rv=request.POST.get("no_rv")
+            strideVal=request.POST.get("stride")
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
@@ -679,20 +683,20 @@ def index(request, dyn_id):
                     int_info={}
                 
                 if len(int_info) < 15:
-                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme)
+                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme, int(strideVal))
                     int_id = None
                     if success:
                         p=re.compile("\w*\.\w*$")
                         struc_fileint=p.search(int_traj_p).group(0)
                         traj_fileint=p.search(int_struc_p).group(0)
                         int_id="int_"+str(new_int_id)
-                        int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)
+                        int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme, strideVal)
                         request.session['int_data']={"int_info":int_info, "new_int_id":new_int_id+1 }
-                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id}
+                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id ,"strided":strideVal}
                 else:
-                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None }
+                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None ,"strided":strideVal}
             else:
-                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None }
+                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None ,"strided":strideVal}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -899,7 +903,8 @@ def index(request, dyn_id):
 
 #########################
 
-def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
+def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal):
+    i=0
     struc_path = "/protwis/sites/files/" + rmsdStr
     traj_path = "/protwis/sites/files/" + rmsdTraj
     ref_traj_path = "/protwis/sites/files/" + rmsdRefTraj
@@ -922,7 +927,7 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         fr_to=int(fr_li[1])+1
     try:
         ref_traj_fr=md.load_frame(ref_traj_path,int(ref_frame),top=struc_path)
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path, skip=fr_from)
+        itertraj=md.iterload(filename=traj_path,chunk=50/strideVal, skip =fr_from ,top=struc_path, stride =strideVal)
     except Exception:
         return (False,None, ["Error loading the file."])
     if len(ref_traj_fr)==0:
@@ -935,11 +940,15 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         max_n_frames=fr_to
     fr_count=fr_from
     for itraj in itertraj:
-        fr_count+=itraj.n_frames
+        fr_count+=(itraj.n_frames)*strideVal
         if max_n_frames and fr_count > max_n_frames:
-            fr_max=max_n_frames-(fr_count - itraj.n_frames)
+            if i == 0:
+                fr_max=math.ceil(( max_n_frames-(fr_count - (itraj.n_frames)*strideVal))/strideVal)
+            else:
+                fr_max=max_n_frames-(fr_count - (itraj.n_frames)*strideVal)
         else:
             fr_max=itraj.n_frames
+        i+=fr_max
         if traj_sel =="all_prot":
             selection=itraj.topology.select("protein")
         elif (traj_sel not in ["bck","noh","min"]):
@@ -960,19 +969,20 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         except Exception:
             error_msg="RMSD can't be calculated."
             return (False,None, error_msg)
-        if max_n_frames and fr_count > max_n_frames:
+        if max_n_frames and fr_from+ (i*strideVal) >= max_n_frames:
             break
-    if fr_from > fr_count-1:
+    if fr_from >= fr_count:
         error_msg ="The trajectory analysed has no frame " + str(fr_from) +"."
         return (False,None, error_msg)
     if max_n_frames and max_n_frames > fr_count:
         small_error ="The trajectory analysed has no frame " + str(max_n_frames-1) +". The final frame has been set to "+ str(fr_count - 1) +", the last frame of that trajectory."
         small_errors.append(small_error)            
     rmsd_all=np.reshape(rmsd_all,(len(rmsd_all),1))
-    frames=np.arange(fr_from,fr_from+len(rmsd_all),dtype=np.int32).reshape((len(rmsd_all),1))
+    frames=np.arange(fr_from,fr_from+(len(rmsd_all)*strideVal),strideVal,dtype=np.int32).reshape((len(rmsd_all),1))
     data=np.append(frames,rmsd_all, axis=1).tolist()
     data_fin=[["Frame","RMSD"]] + data
     return(True, data_fin, small_errors)
+
 
 
 
@@ -981,12 +991,14 @@ def download_dist(request, dist_id):
         dist_data_s=request.session['dist_data']
         dist_dict=dist_data_s["dist_dict"]
         dist_data_all=dist_dict[dist_id]
-        (dist_data,struc_filename,traj_filename)=dist_data_all
+        (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
         writer = csv.writer(response)
         writer.writerow(["#Structure: "+struc_filename])
         writer.writerow(["#Trajectory: "+traj_filename])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         header=[]
         for name in dist_data[0]:
             header.append("'"+name+"'")
@@ -1008,7 +1020,7 @@ def download_int(request, int_id):
         int_data_s=request.session['int_data']
         int_info=int_data_s["int_info"]
         int_data_all=int_info[int_id]
-        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)=int_data_all
+        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
         writer = csv.writer(response)
@@ -1019,6 +1031,8 @@ def download_int(request, int_id):
 
         writer.writerow(["#Structure: "+struc_fileint])
         writer.writerow(["#Trajectory: "+traj_fileint])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         if (dist_scheme=="closest"):
             dist_scheme_name="All atoms";
         else:
@@ -1072,7 +1086,7 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
 
 
 
-def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme):
+def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal):
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     try:
@@ -1098,7 +1112,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
             gpcr_sel=struc.topology.select("protein") 
         gpcr_res=[residue.index for residue in struc.atom_slice(gpcr_sel).topology.residues]
         pairs = list(itertools.product(gpcr_res, all_lig_res))
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
         first=True 
         try:
             for itraj in itertraj:
@@ -1152,13 +1166,15 @@ def download_rmsd(request, rmsd_id):
         rmsd_data_s=request.session['rmsd_data']
         rmsd_dict=rmsd_data_s["rmsd_dict"]
         rmsd_data_all=rmsd_dict[rmsd_id]
-        (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)=rmsd_data_all        
+        (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
         response = HttpResponse(content_type='text/csv')
         
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
         writer = csv.writer(response)
         writer.writerow(["#Structure: "+struc_filename])
         writer.writerow(["#Trajectory: "+traj_filename])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
         writer.writerow(["#Selection: "+proper_name(traj_sel)])
         header=[]

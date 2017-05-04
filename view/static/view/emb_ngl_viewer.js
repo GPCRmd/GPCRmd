@@ -318,6 +318,7 @@ $(document).ready(function(){
     maxInputLength('#rmsd_my_sel_sel',"",50);
     maxInputLength('#rmsd_ref_frame',"",8);
     maxInputLength("#int_thr", "",3);
+    maxInputLength(".inp_stride", "",4);
     maxInputLength(".sel_within", ".user_sel_input",40);
 
 
@@ -333,6 +334,7 @@ $(document).ready(function(){
     removeSpacesInInput("#rmsd_frame_2");
     removeSpacesInInput("#rmsd_ref_frame");
     removeSpacesInInput("#int_thr");
+    removeSpacesInInput(".inp_stride");
 
 
     var ti_i=1;
@@ -1061,6 +1063,7 @@ $(document).ready(function(){
     var i_id=1;
     var lig_sel_str;
     $("#gotoInt").click(function(){
+        $("#int_stride_parent").removeClass("has-warning");
         numComputedI = $("#int_info").children().length;
         if (numComputedI < 15){
             var inp_is_num=true;
@@ -1098,6 +1101,7 @@ $(document).ready(function(){
                     } else {
                         dist_scheme_name="Heavy atoms only";
                     }
+                    var stride = strideVal("#int_stride");
                     $("#int_alert , #int_thr_error").html("");
                     ///AJAX!!!
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
@@ -1119,6 +1123,7 @@ $(document).ready(function(){
                           "struc_p": struc,
                           "dist_scheme": dist_scheme,
                           "no_rv" : act_int_tbls.join(),
+                          "stride" : stride,
                         },
                         success: function(int_data) {
                             if ($.active<=1){
@@ -1127,15 +1132,20 @@ $(document).ready(function(){
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
                             var success=int_data.success;
-                            if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                            if (success){ 
                                 var int_id=int_data.int_id;
+                                var strided=int_data.strided;
                                 var int_data=int_data.result;
+                                var strideText="";
+                                if (Number(strided)> 1){
+                                    strideText = " (str: "+strided+")";
+                                }
                                 if (! isEmptyDict(int_data)){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
-                                    <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+'</div>\
+                                    <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+strideText+'</div>\
                                       <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
@@ -1147,12 +1157,20 @@ $(document).ready(function(){
                                           </tr>\
                                         </thead>\
                                       <tbody>';
+                                    var mylist=[];
                                     for (lig in int_data){
                                         res_int=int_data[lig];
                                         var num_res_int=res_int.length;
                                         table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                         var res_int_1st=res_int[0];
                                         var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
+                                        //
+                                        gnum_mylist=gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1])
+                                        if (gnum_mylist == "-"){
+                                            gnum_mylist=res_int_1st[2]+res_int_1st[0].toString()+":"+res_int_1st[1];
+                                        }
+                                        mylist.push([res_int_1st[0],gnum_mylist ,res_int_1st[3] ]);
+                                        //
                                         for (info in res_int_1st_ok){
                                             table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                         }
@@ -1161,6 +1179,13 @@ $(document).ready(function(){
                                         for (res_infoN in res_int_rest){
                                             var res_info=res_int_rest[res_infoN];
                                             var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
+                                            //
+                                            gnum_mylist=gnumFromPosChain(res_info[0].toString(), res_info[1])
+                                            if (gnum_mylist == "-"){
+                                                gnum_mylist=res_info[2]+res_info[0].toString()+":"+res_info[1];
+                                            }
+                                            mylist.push([res_info[0],gnum_mylist ,res_info[3] ]);
+                                            //
                                             table_html+='<tr>';
                                             for (infoN in res_info_ok){
                                                 var info=res_info_ok[infoN];
@@ -1169,7 +1194,8 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    table_html+="</tbody></table>";
+                                    //console.log(mylist)
+                                    table_html+="</tbody></table>";;
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
@@ -1564,11 +1590,31 @@ $(document).ready(function(){
         return (false);
     }
 
+    function strideVal(inp_div){
+        var stride = $(inp_div).val();
+        if (stride){
+            stride = Number(stride);
+            var pos = Math.abs(stride)
+            var rounded= Math.round(pos);
+            if (rounded <= 0){
+                var rounded = 1;
+            } 
+            if (stride != rounded){
+                stride = rounded;
+                $(inp_div).val(stride);
+                $(inp_div).parent().addClass("has-warning");
+            }
+        } else {
+            stride=1;
+        }
+        return (stride)
+    }
 
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
         numComputedD = $("#dist_chart").children().length;
+        $("#dist_stride_parent").removeClass("has-warning");
         if (numComputedD < 15){
             var res_ids = obtainDistToComp();
             if ($(this).attr("class").indexOf("withTrajs") > -1){
@@ -1576,6 +1622,8 @@ $(document).ready(function(){
                 if (traj_results){        
                     var traj_p=traj_results[0];
                     var traj_id=traj_results[1];
+                    
+                    var stride = strideVal("#dist_stride");
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
@@ -1593,6 +1641,7 @@ $(document).ready(function(){
                           "distTraj": traj_p,
                           "dist_residsWT": res_ids,
                           "no_rv" :act_dis_plots.join(),
+                          "stride" : stride,
                         },
                         success: function(data_dist_wt) {
                             $("#wait_dist").remove();
@@ -1603,17 +1652,29 @@ $(document).ready(function(){
                                 var dist_array_f=data_dist_wt.result_f;
                                 var dist_id=data_dist_wt.dist_id;
                                 var small_error=data_dist_wt.msg;
+                                var strided=data_dist_wt.strided;
+                                var strideText="";
+                                if (Number(strided)> 1){
+                                    strideText = ", str: "+strided;
+                                }
                                 function drawChart(){
                                     var patt = /[^/]*$/g;
                                     var trajFile = patt.exec(traj_p);
                                     var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
                                     var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
-                                    var options_t = {'title':'Residue Distance ('+trajFile+')',
+                                    /*var widthval = (dist_array_t.length -1)*1.18;
+                                    console.log(widthval);
+                                    if (widthval < 640){
+                                        widthval = 640;
+                                    }
+                                    console.log(widthval);
+                                    console.log("==========");*/
+                                    var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
-                                    var options_f = {'title':'Residue Distance ('+trajFile+')',
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                    var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
                                     newgraph_sel="dist_chart_"+d_id.toString();
                                     var plot_html;
                                     if ($.active<=1){
@@ -2389,7 +2450,7 @@ $(document).ready(function(){
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");
         $("#rmsd_ref_frames_error").html("");
-        
+        $("#rmsd_stride_parent").removeClass("has-warning");
         numComputedR = $("#rmsd_chart").children().length;
         if (numComputedR < 15){
             rmsdTraj=$("#rmsd_traj").val();
@@ -2411,7 +2472,7 @@ $(document).ready(function(){
                         //    rmsdFrames=false;
                         //}
                     } else {
-                        showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
+                        showErrorInblock("#rmsd_sel_frames_error", "Input must be an integer.");
                         rmsdFrames=false;
                     }
                 } else {
@@ -2422,7 +2483,7 @@ $(document).ready(function(){
             if (rmsdRefFr == ""){
                 rmsdRefFr="0";
             } else if (! /^[\d]+$/.test(rmsdRefFr)){
-                showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
+                showErrorInblock("#rmsd_ref_frames_error", "Input must be an integer.");
                 rmsdRefFr=false;
             }/* else if (Number(rmsdRefFr)<1){
                 showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
@@ -2445,6 +2506,7 @@ $(document).ready(function(){
                 $("#rmsd_chart").children(".rmsd_plot").each(function(){
                     act_rmsd_plots.push($(this).data("rmsd_id"));
                 });
+                var stride = strideVal("#rmsd_stride");
                 var t0=performance.now();
                 $.ajax({
                     type: "POST",
@@ -2458,16 +2520,21 @@ $(document).ready(function(){
                       "rmsdRefTraj": rmsdRefTraj,
                       "rmsdSel": rmsdSel,
                       "no_rv" :act_rmsd_plots.join(),
+                      "stride" :stride,
                     },
                     success: function(data_rmsd) {
                         $("#wait_rmsd").remove();
                         $("#gotoRMSDPg").removeClass("disabled");
                         var success=data_rmsd.success;
                         if (success){
-    /////////////////////                    
                             var rmsd_array_t=data_rmsd.result_t;
                             var rmsd_array_f=data_rmsd.result_f;
-                            var rmsd_id=data_rmsd.rmsd_id;                               
+                            var rmsd_id=data_rmsd.rmsd_id;          
+                            var strided=data_rmsd.strided;
+                            var strideText="";
+                            if (Number(strided)> 1){
+                                strideText = ", str: "+strided;
+                            }
                             function drawChart2(){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(rmsdTraj);
@@ -2476,10 +2543,10 @@ $(document).ready(function(){
                                 var rmsdSelOk=SelectionName(rmsdSel);
                                 var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
                                 var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
-                                var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
                                     "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
-                                var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
                                     "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
@@ -2841,7 +2908,7 @@ $(document).ready(function(){
         atomssb=[];
         all_resids_sb=[];
         removeCompBtns();
-        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input").val("");
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input", ".inp_stride").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
         $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){

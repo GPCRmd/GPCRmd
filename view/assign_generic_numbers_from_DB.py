@@ -95,7 +95,7 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
         error = "Error: GPCR generic numbering cannot be used."
         return (error , seq_db)
     # Now, from the prot id, obtain the generic numbering. In the case of mutated prots, this will be modified
-    rs = Residue.objects.prefetch_related('display_generic_number', 'protein_segment').filter(protein_conformation__protein=prot_id)
+    rs = Residue.objects.prefetch_related('display_generic_number').filter(protein_conformation__protein=prot_id)
     sorted_rs=sorted(rs, key=lambda r: r.sequence_number)
     (res_gpcr_li, num_scheme,  rgn_ids)=obtain_gpcr_num_of_cannonical(num_scheme,sorted_rs,gpcr_class) 
     if not res_gpcr_li:
