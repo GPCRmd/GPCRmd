@@ -2149,7 +2149,7 @@ $(document).ready(function(){
                     hbonds=data.hbonds;
                     hbonds_np=data.hbonds_notprotein;
                     var regex = /\d+/g;
-                    var table='<h4>Intramolecular Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                    var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
                     //gnumFromPosChain(pos, chain)
                     for (var property in hbonds) {
                         if (hbonds.hasOwnProperty(property)) {
@@ -2160,7 +2160,7 @@ $(document).ready(function(){
                             donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
                             acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
 
-                            table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+'| '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                            table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
                             for (index = 1; index < hbonds[property].length; ++index) {
                                 var string2 =hbonds[property][index][0];
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
@@ -2174,7 +2174,7 @@ $(document).ready(function(){
                     $('#hbonds').html(table);
 
 
-                    var tablenp='<h4>Intermolecular Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                    var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
                     for (var property in hbonds_np) {
                         if (hbonds_np.hasOwnProperty(property)) {
                             var string =property;
@@ -2184,7 +2184,7 @@ $(document).ready(function(){
                             donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
                             acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
 
-                            tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+'|'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                            tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
                             for (index = 1; index < hbonds_np[property].length; ++index) {
                                 var string2 =hbonds_np[property][index][0];
                                 var acceptor = string2.match(regex)[0];  // creates array from matches           
@@ -2330,18 +2330,42 @@ $(document).ready(function(){
                 url:"/view/grid/", 
                 dataType: "json",
                 success: function(data) {
-                atomshb=[];
-                all_resids=[];
-                atomshb_inter=[];
-                atomssb=[];
-                all_resids_sb=[];
-                all_resids_sasa=data.selected_residues
-                results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
-                data=results[0];
-                options=results[1];
-                var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));
-                chart_sasa.draw(data, options);
-                $("#selectionDiv").trigger("click");
+                    atomshb=[];
+                    all_resids=[];
+                    atomshb_inter=[];
+                    atomssb=[];
+                    all_resids_sb=[];
+                    all_resids_sasa=data.selected_residues
+                    results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
+                    data=results[0];
+                    options=results[1];
+                    /*
+
+                                            var chart_div = document.getElementById(chart_cont);
+                                            var chart = new google.visualization.LineChart(chart_div);                                
+                                            google.visualization.events.addListener(chart, 'ready', function () {
+                                                var img_source =  chart.getImageURI(); 
+                                                $("#"+chart_cont).attr("data-url",img_source);
+                                            });                                
+                                            chart.draw(data, options);                                    
+                                        }
+                                        $("#"+newgraph_sel+"f").css("display","none");  
+                                        var img_source_t=$("#"+newgraph_sel+"t").data("url");
+                                        $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
+
+
+
+                    */
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));
+                    google.visualization.events.addListener(chart_sasa, 'ready', function () {
+                        var img_source =  chart.getImageURI();
+                        console.log(img_source);
+                        $("#sasa_chart").attr("data-url",img_source);
+                    });       
+                    var img_source =$("#sasa_chart").data('url');
+                    chart_sasa.draw(data, options);
+                    $('#sasa_chart').append('<a href='+img_source+'>Download as image</a>');
+                    $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
                     if (XMLHttpRequest.readyState == 4) {

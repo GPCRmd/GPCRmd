@@ -5257,6 +5257,7 @@ def MODELview(request, submission_id):
         From=[] #FROM clause of the QUERY
         where=[]   #WHERE clause of the QUERY
         p=0
+        Find_Complex=False
         
         if len(lprot_in_model)==1 and len(lmol_in_model)==0:   
             resp = 'There is a single Protein entry involved in the Model!!! No molecules are included in it!!! This model may involve either a single Protein Aporform or a HOMOOLIGOMER!!'
@@ -5594,7 +5595,10 @@ def MODELview(request, submission_id):
         fdbMF = dyndb_Model(dictmodel)
         for key,value in initMOD.items():
             fdbMF.data[key]=value
-
+        if not Find_Complex:
+            apoform_id_prot=qSProt.values_list('protein_id',flat=True)[0]
+            fdbMF.data['id_protein']=apoform_id_prot
+#            fdbMF.data['id_complex_molecule']=None 
         Update_MODEL=False
         qMe=DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id=submission_id)
         qMecsid=DyndbModel.objects.filter(model_creation_submission_id=submission_id)
@@ -5626,7 +5630,7 @@ def MODELview(request, submission_id):
                 MFpk=qMecsid.values_list('id',flat=True)[0]
             if len(lprot_in_model)==1:
                 print("\nAAAAAAAAAAAAAAAAAAAAA\n")
-                qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =fdbMF.data['id_protein'] , id_complex_molecule=id_complex_molecule , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )
+                qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =fdbMF.data['id_protein'] , id_complex_molecule=None , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )
             else:
                 print("\n MAS de UNA PROT\n")
                 qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =None ,id_complex_molecule=id_complex_molecule , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )

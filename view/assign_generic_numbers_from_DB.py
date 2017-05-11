@@ -3,7 +3,7 @@ from dynadb.models import  DyndbModel, DyndbModeledResidues, DyndbProteinSequenc
 from protein.models import  Residue, Protein
 from residue.models import  ResidueGenericNumber
 import re 
-
+import pickle
 
 def gpcr_num_insertion(gpcr_n):
     """Adds the +1 to the GPCR generic num when there is an insertion. 
@@ -45,9 +45,11 @@ def obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids):
     """Creates a list where each element corresponds to an AA of the seq and the generic GPCR number of that position. Uses the numbering of the class specified at the argiments"""
     alt_scheme="gpcrdb"+ alt_class.lower()
     alt_rgn=ResidueGenericNumber.objects.filter(alternative__pk__in=rgn_ids, scheme_id__slug=alt_scheme)
+    print('heeeehem2',len(alt_rgn),type(alt_rgn)) #262 <class 'django.db.models.query.QuerySet'> warning!!!
     alt_res_gpcr_li=res_gpcr_li.copy()
     res_gpcr_n=0
     rgn_n=0
+    print('check this:::',alt_rgn)
     if alt_rgn:
         if len(alt_rgn)==len(rgn_ids):
             while res_gpcr_n<len(alt_res_gpcr_li):
@@ -103,8 +105,17 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
     all_num_schemes={}
     all_num_schemes[gpcr_class]=res_gpcr_li
     other_classes=list({"A","B","C","F"} - set(gpcr_class))
-    for alt_class in other_classes: 
-        all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
+    for alt_class in other_classes:
+        try:
+            file = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+"_"+alt_class,'rb')
+            all_num_schemes[alt_class]= pickle.load(file)
+            file.close()
+        except:
+            filehandler = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+'_'+alt_class,"wb") 
+            all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
+            pickle.dump(all_num_schemes[alt_class],filehandler)
+            filehandler.close()
+
     numbers_final = {"A":{},"B":{},"C":{},"F":{}}
     if DyndbProtein.objects.get(id=dprot_id).is_mutated:
         mutations=DyndbProteinMutations.objects.filter(id_protein=dprot_id)
