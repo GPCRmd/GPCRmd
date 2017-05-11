@@ -1194,6 +1194,7 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
+                                    //console.log(trajFile+' - Threshold: '+thr_ok+' ('+dist_scheme_name+')');
                                     //console.log(mylist)
                                     table_html+="</tbody></table>";;
                                                                         
@@ -1439,9 +1440,13 @@ $(document).ready(function(){
                   <span class="tick2" ></span>\
                   <span class="always2" style="margin-left:14px">\
                      Compute distance between \
-                     <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     <span class="dist_from_parent">\
+                         <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     </span>\
 			and\
-                     <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+			         <span class="dist_to_parent">\
+                         <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     </span>\
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                      <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
@@ -1545,15 +1550,48 @@ $(document).ready(function(){
     });
 
 
+    $(".dist_btw").on("blur", ".dist_from, .dist_to" ,function(){
+        var dpair = $(this).closest(".dist_pair");
+        if ($(this).attr("class").indexOf("dist_from") > -1){
+            var d_from=$(this).val().replace(/\s+/g, '');
+            var d_to = $(this).closest(".always2").find(".dist_to").val().replace(/\s+/g, '');
+            if (d_from=="" || /^[\d]+$/.test(d_from)){
+                $(this).parent().removeClass("has-error");            
+            }else {
+                $(this).parent().addClass("has-error");
+            }
+        } else {
+            var d_from = $(this).closest(".always2").find(".dist_from").val().replace(/\s+/g, '');
+            var d_to=$(this).val().replace(/\s+/g, '');
+            if (d_to=="" || /^[\d]+$/.test(d_to)){
+                $(this).parent().removeClass("has-error");            
+            }else {
+                $(this).parent().addClass("has-error");
+            }
+        }
+        dpair.find(".dist_from").val(d_from);
+        dpair.find(".dist_to").val(d_to);
+        if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
+            dpair.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+            dpair.find(".always2").attr("style","");
+            dpair.addClass("d_ok");
+        } else {
+            if (dpair.attr("class").indexOf("d_ok") > -1){
+                dpair.find(".tick2").html("");
+                dpair.find(".always2").attr("style","margin-left:14px");
+                dpair.removeClass("d_ok");
+            }
+        }
+        
+    });
 
-    $(".dist_btw").on("blur", ".dist_pair" ,function(){
+/*    $(".dist_btw").on("blur", ".dist_pair" ,function(){
         var d_from=$(this).find(".dist_from").val().replace(/\s+/g, '');
         var d_to=$(this).find(".dist_to").val().replace(/\s+/g, '');
         $(this).find(".dist_from").val(d_from);
         $(this).find(".dist_to").val(d_to);
         if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
             $(this).find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
-            //$(this).find(".tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
             $(this).find(".always2").attr("style","");
             $(this).addClass("d_ok");
         } else {
@@ -1563,7 +1601,7 @@ $(document).ready(function(){
                 $(this).removeClass("d_ok");
             }
         }
-    }); 
+    }); */
 
     function obtainDistToComp(){
         var distToComp="";
@@ -2104,6 +2142,16 @@ $(document).ready(function(){
         }
         return (set_sel);
     }
+    
+    $("#rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame").on("blur", function(){
+        var val_changed=$(this).val();
+        if (val_changed=="" || /^[\d]+$/.test(val_changed)){
+            $(this).parent().removeClass("has-error");            
+        }else {
+            $(this).parent().addClass("has-error");
+        }
+    });
+    
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
@@ -2484,19 +2532,15 @@ $(document).ready(function(){
                 frameTo=$("#rmsd_frame_2").val();
                 if (frameFrom && frameTo) {
                     if (/^[\d]+$/.test(frameFrom + frameTo)){
-                     //   if (Number(frameFrom) >= 1){
                         if (Number(frameFrom) < Number(frameTo)){
                             rmsdFrames=frameFrom + "-" + frameTo;
                         } else {
                             showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
                             rmsdFrames=false;
                         }
-                        //} else {
-                        //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
-                        //    rmsdFrames=false;
-                        //}
+
                     } else {
-                        showErrorInblock("#rmsd_sel_frames_error", "Input must be an integer.");
+                        showErrorInblock("#rmsd_sel_frames_error", "Input must be a positive integer.");
                         rmsdFrames=false;
                     }
                 } else {
@@ -2507,7 +2551,7 @@ $(document).ready(function(){
             if (rmsdRefFr == ""){
                 rmsdRefFr="0";
             } else if (! /^[\d]+$/.test(rmsdRefFr)){
-                showErrorInblock("#rmsd_ref_frames_error", "Input must be an integer.");
+                showErrorInblock("#rmsd_ref_frames_error", "Input must be a positive integer.");
                 rmsdRefFr=false;
             }/* else if (Number(rmsdRefFr)<1){
                 showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
@@ -2932,7 +2976,7 @@ $(document).ready(function(){
         atomssb=[];
         all_resids_sb=[];
         removeCompBtns();
-        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input", ".inp_stride").val("");
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
         $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){
