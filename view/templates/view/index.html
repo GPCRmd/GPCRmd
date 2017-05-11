@@ -641,9 +641,13 @@
                     <span class="tick2" ></span>
                     <span class="always2" style="margin-left:14px">
                      Compute distance between 
-                     <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <span class="dist_from_parent">
+                        <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                    </span>
 			and
-                     <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <span class="dist_to_parent">
+                         <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     </span>
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>  
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
                      <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>
@@ -712,9 +716,13 @@
                           <div class="row" style="margin-bottom:5px">
                              <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
                                  From 
-                                 <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
+                                 <span class="rmsd_from_parent">
+                                   <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
+                                 </span>
                                  to 
-                                 <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
+                                 <span class="rmsd_to_parent">
+                                   <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
+                                 </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
                             Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" placeholder=1 style="width:50px;padding-left:7px;">
