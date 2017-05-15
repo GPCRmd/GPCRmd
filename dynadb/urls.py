@@ -102,6 +102,7 @@ urlpatterns = [
     url(r'^dynamics/(?P<submission_id>[0-9]+)/(?:[0-9]+/)?upload_files/((?P<trajectory>traj)/)?$', views.upload_dynamics_files, name='dynamics_upload_files'),
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?:[0-9]+/)?upload_files/((?P<trajectory>traj)/)?$', views.upload_dynamics_files, name='dynamics_upload_files'),
     url(r'^dynamics/(?P<submission_id>[0-9]+)/check_trajectories/$', views.check_trajectories, name='dynamics_check_trajectories'),
+    url(r'^dynamics/do_analysis/$', views.do_analysis, name='do_analysis'),
 #    url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSreuseview, name='dynamicsreuse'),
     url(r'^dynamicsreuse/(?P<submission_id>[0-9]+)/(?P<model_id>[0-9]+)/$', views.DYNAMICSview, name='dynamicsreuse'),
     url(r'^DYNAMICSfilled/(?P<submission_id>[0-9]+)/$', views.DYNAMICSview, name='DYNAMICSfilled'),

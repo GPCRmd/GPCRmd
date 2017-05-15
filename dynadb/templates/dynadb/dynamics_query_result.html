@@ -87,7 +87,7 @@
 
                 {%if answer.expdataeff%}
                     {%for datae in answer.expdataeff%}
-                        <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                        <b>{{datae.4}}:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
                     {%endfor%}
                 {%endif%}
 
@@ -108,7 +108,8 @@
             <b>Files in this simulation:</b><br>
             <div id='allfiles' class="miniscroll">
                 {% for dyn in answer.files %}
-                    <a href=/dynadb/files/Dynamics/{{dyn.1}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>
+                    <!--<a href=/dynadb/files/Dynamics/dyn{{answer.nglviewer_id}}/{{dyn.1}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>-->
+                    <a href={{dyn.0}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>
                 {% endfor %}
             </div> <!--allfiles-->
             <br>
@@ -266,6 +267,5 @@ $("#bottoninfoleft .ortoligand").click(function(){
         $(this).css("background-color","blue"); 
 });
 </script>
-
 {% endblock%}
 

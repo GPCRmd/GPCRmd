@@ -17,6 +17,8 @@ import mdtraj as md
 import numpy as np
 import copy
 import csv
+import pickle
+import math
 
 
 
@@ -481,7 +483,7 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
-def distances_Wtraj(dist_str,struc_path,traj_path):
+def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     struc_path = "/protwis/sites/files/"+struc_path
     traj_path = "/protwis/sites/files/"+traj_path
     dist_li=re.findall("\d+-\d+",dist_str)
@@ -501,7 +503,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
         from_to=np.array([[pos_from,pos_to]])        
         atom_pairs=np.append(atom_pairs,from_to, axis=0)
     try:
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
         return (False,None, "Error loading the file.")
     dist=np.array([]).reshape((0,len(atom_pairs))) 
@@ -513,7 +515,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path):
             error_msg="Atom indices must be between 0 and "+str(num_atoms)
             return (False, None, error_msg)
         dist=np.append(dist,d,axis=0)
-    frames=np.arange(0,len(dist),dtype=np.int32).reshape((len(dist),1))
+    frames=np.arange(0,len(dist)*strideVal, strideVal,dtype=np.int32).reshape((len(dist),1))
     data=np.append(frames,dist, axis=1).tolist()
     data_fin=axis_lab + data
     return (True,data_fin, small_error)
@@ -553,8 +555,8 @@ def index(request, dyn_id):
             ref_traj_p= request.POST.get("rmsdRefTraj")
             traj_sel= request.POST.get("rmsdSel")
             no_rv=request.POST.get("no_rv")
-            
-            
+            strideVal=request.POST.get("stride")
+                       
             if request.session.get('rmsd_data', False):
                 rmsd_data=request.session['rmsd_data']
                 rmsd_dict=rmsd_data["rmsd_dict"]
@@ -571,7 +573,7 @@ def index(request, dyn_id):
                 rmsd_dict={}
             
             if len(rmsd_dict) < 15:
-                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel)
+                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal))
                 if success:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
@@ -587,13 +589,13 @@ def index(request, dyn_id):
                     struc_filename=p.search(struc_p).group(0)
                     traj_filename=p.search(traj_p).group(0)
                     rtraj_filename=p.search(ref_traj_p).group(0)
-                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)
+                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
                     request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors}
+                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
                 else: 
-                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors}
+                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
             else:
-                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones."}
+                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
@@ -606,6 +608,7 @@ def index(request, dyn_id):
             dist_ids=request.POST.get("dist_residsWT")
             dist_traj_p=request.POST.get("distTraj")
             no_rv=request.POST.get("no_rv")
+            strideVal=request.POST.get("stride")
             if request.session.get('dist_data', False):
                 dist_data=request.session['dist_data']
                 dist_dict=dist_data["dist_dict"]
@@ -622,7 +625,7 @@ def index(request, dyn_id):
                 dist_dict={}
                 
             if len(dist_dict) < 15:
-                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p)
+                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
                 if success:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
@@ -637,14 +640,14 @@ def index(request, dyn_id):
                     p=re.compile("\w*\.\w*$")
                     struc_filename=p.search(dist_struc_p).group(0)
                     traj_filename=p.search(dist_traj_p).group(0)
-                    dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename)
+                    dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename,strideVal)
                     request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                          "traj_filename":traj_filename, "struc_filename":struc_filename}
-                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg}
+                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal}
                 else: 
-                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg }
+                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal}
             else:
-                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones."}
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")
@@ -653,6 +656,7 @@ def index(request, dyn_id):
             int_struc_p=request.POST.get("struc_p")
             dist_scheme = request.POST.get("dist_scheme")
             no_rv=request.POST.get("no_rv")
+            strideVal=request.POST.get("stride")
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
@@ -679,20 +683,20 @@ def index(request, dyn_id):
                     int_info={}
                 
                 if len(int_info) < 15:
-                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme)
+                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme, int(strideVal))
                     int_id = None
                     if success:
                         p=re.compile("\w*\.\w*$")
                         struc_fileint=p.search(int_traj_p).group(0)
                         traj_fileint=p.search(int_struc_p).group(0)
                         int_id="int_"+str(new_int_id)
-                        int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)
+                        int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme, strideVal)
                         request.session['int_data']={"int_info":int_info, "new_int_id":new_int_id+1 }
-                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id}
+                    data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id ,"strided":strideVal}
                 else:
-                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None }
+                    data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None ,"strided":strideVal}
             else:
-                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None }
+                data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None ,"strided":strideVal}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
@@ -785,7 +789,7 @@ def index(request, dyn_id):
                     gpcr_Gprot=gpcr_DprotGprot[1]
                     dprot_id=gpcr_Dprot.id
                     dprot_name=gpcr_Dprot.name
-                    gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot) 
+                    gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot)  #warning!! the problem is here
                     if len(gen_num_res) > 2:
                         (numbers, num_scheme, db_seq, current_class) = gen_num_res
                         current_class=findGPCRclass(num_scheme)
@@ -813,7 +817,6 @@ def index(request, dyn_id):
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
 
-            
                 if all_gpcrs_info:
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
@@ -899,7 +902,8 @@ def index(request, dyn_id):
 
 #########################
 
-def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
+def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal):
+    i=0
     struc_path = "/protwis/sites/files/" + rmsdStr
     traj_path = "/protwis/sites/files/" + rmsdTraj
     ref_traj_path = "/protwis/sites/files/" + rmsdRefTraj
@@ -922,7 +926,7 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         fr_to=int(fr_li[1])+1
     try:
         ref_traj_fr=md.load_frame(ref_traj_path,int(ref_frame),top=struc_path)
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path, skip=fr_from)
+        itertraj=md.iterload(filename=traj_path,chunk=50/strideVal, skip =fr_from ,top=struc_path, stride =strideVal)
     except Exception:
         return (False,None, ["Error loading the file."])
     if len(ref_traj_fr)==0:
@@ -935,11 +939,15 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         max_n_frames=fr_to
     fr_count=fr_from
     for itraj in itertraj:
-        fr_count+=itraj.n_frames
+        fr_count+=(itraj.n_frames)*strideVal
         if max_n_frames and fr_count > max_n_frames:
-            fr_max=max_n_frames-(fr_count - itraj.n_frames)
+            if i == 0:
+                fr_max=math.ceil(( max_n_frames-(fr_count - (itraj.n_frames)*strideVal))/strideVal)
+            else:
+                fr_max=max_n_frames-(fr_count - (itraj.n_frames)*strideVal)
         else:
             fr_max=itraj.n_frames
+        i+=fr_max
         if traj_sel =="all_prot":
             selection=itraj.topology.select("protein")
         elif (traj_sel not in ["bck","noh","min"]):
@@ -960,19 +968,20 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel):
         except Exception:
             error_msg="RMSD can't be calculated."
             return (False,None, error_msg)
-        if max_n_frames and fr_count > max_n_frames:
+        if max_n_frames and fr_from+ (i*strideVal) >= max_n_frames:
             break
-    if fr_from > fr_count-1:
+    if fr_from >= fr_count:
         error_msg ="The trajectory analysed has no frame " + str(fr_from) +"."
         return (False,None, error_msg)
     if max_n_frames and max_n_frames > fr_count:
         small_error ="The trajectory analysed has no frame " + str(max_n_frames-1) +". The final frame has been set to "+ str(fr_count - 1) +", the last frame of that trajectory."
         small_errors.append(small_error)            
     rmsd_all=np.reshape(rmsd_all,(len(rmsd_all),1))
-    frames=np.arange(fr_from,fr_from+len(rmsd_all),dtype=np.int32).reshape((len(rmsd_all),1))
+    frames=np.arange(fr_from,fr_from+(len(rmsd_all)*strideVal),strideVal,dtype=np.int32).reshape((len(rmsd_all),1))
     data=np.append(frames,rmsd_all, axis=1).tolist()
     data_fin=[["Frame","RMSD"]] + data
     return(True, data_fin, small_errors)
+
 
 
 
@@ -981,12 +990,14 @@ def download_dist(request, dist_id):
         dist_data_s=request.session['dist_data']
         dist_dict=dist_data_s["dist_dict"]
         dist_data_all=dist_dict[dist_id]
-        (dist_data,struc_filename,traj_filename)=dist_data_all
+        (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
         writer = csv.writer(response)
         writer.writerow(["#Structure: "+struc_filename])
         writer.writerow(["#Trajectory: "+traj_filename])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         header=[]
         for name in dist_data[0]:
             header.append("'"+name+"'")
@@ -1008,7 +1019,7 @@ def download_int(request, int_id):
         int_data_s=request.session['int_data']
         int_info=int_data_s["int_info"]
         int_data_all=int_info[int_id]
-        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme)=int_data_all
+        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
         writer = csv.writer(response)
@@ -1019,6 +1030,8 @@ def download_int(request, int_id):
 
         writer.writerow(["#Structure: "+struc_fileint])
         writer.writerow(["#Trajectory: "+traj_fileint])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         if (dist_scheme=="closest"):
             dist_scheme_name="All atoms";
         else:
@@ -1072,7 +1085,7 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
 
 
 
-def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme):
+def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal):
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     try:
@@ -1098,7 +1111,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
             gpcr_sel=struc.topology.select("protein") 
         gpcr_res=[residue.index for residue in struc.atom_slice(gpcr_sel).topology.residues]
         pairs = list(itertools.product(gpcr_res, all_lig_res))
-        itertraj=md.iterload(filename=traj_path,chunk=50, top=struc_path)
+        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
         first=True 
         try:
             for itraj in itertraj:
@@ -1152,13 +1165,15 @@ def download_rmsd(request, rmsd_id):
         rmsd_data_s=request.session['rmsd_data']
         rmsd_dict=rmsd_data_s["rmsd_dict"]
         rmsd_data_all=rmsd_dict[rmsd_id]
-        (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel)=rmsd_data_all        
+        (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
         response = HttpResponse(content_type='text/csv')
         
         response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
         writer = csv.writer(response)
         writer.writerow(["#Structure: "+struc_filename])
         writer.writerow(["#Trajectory: "+traj_filename])
+        if (int(strideVal) > 1):
+            writer.writerow(["#Strided: "+strideVal])
         writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
         writer.writerow(["#Selection: "+proper_name(traj_sel)])
         header=[]
@@ -1179,3 +1194,550 @@ def download_rmsd(request, rmsd_id):
     
 def viewer_docs(request):
     return render(request, 'view/viewer_docs.html', {} )
+
+
+def parser(filename):
+    #'dynadb/b2ar_isoprot/b2ar.psf'
+    chargesfh=open(filename,'r')
+    atom_flag=0
+    atoms=dict()
+    for line in chargesfh:
+        if '!NBOND' in line:
+            atom_flag=0
+        if atom_flag==1 and line.strip(): #line.strip() prevents using empty lines bc empty string evaluates to False
+            fields=line.split()
+            charge=fields[6]
+            if 'E' in charge:
+                charge= float(charge[:charge.rfind('E')]) * 10**float(charge[charge.rfind('E')+1:])
+            atoms[fields[0]]=[float(charge),fields[5],fields[3],fields[2]] # charge, atom type, resname, resid
+        if '!NATOM' in line:
+            atom_flag=1
+
+    return atoms
+
+def hbonds(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        full_results=dict()
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        all_chains=obtain_all_chains(struc_path)
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        #t = md.load(traj_path,top=struc_path)
+        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
+        start=int(arrays[0])
+        end=int(arrays[1])
+        backbone=arrays[6]=='true'
+        if end<0:
+            end=10**20
+        percentage_cutoff=int(arrays[2])
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        histhbond=dict()
+        hbonds_residue=dict()
+        hbonds_residue_notprotein=dict()
+        hbonds_ks=[]
+        nframes=0
+        chunksize=50
+        neighbours=arrays[7]=='true'
+        traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+        bonds_path=traj_path[:traj_path.rfind('/')]+traj_name+'_bonds'
+        if neighbours:
+            resid_dist=60
+        else:
+            resid_dist=0
+        try:
+            with open (bonds_path, 'rb') as fp:
+                precomputed_bonds = pickle.load(fp)
+            precomputed=True
+        except:
+            precomputed=False
+
+        print('Is it precomputed?',precomputed)
+
+        if not precomputed:
+            precomputed_bonds=[]
+            for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+                '''
+                rframes=end-nframes
+                if rframes==0:
+                    break
+                if rframes<chunksize:
+                    t=t[:rframes]
+
+                nframes+=len(t)
+                '''
+                hbonds_ks+=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False) # i could save this precomputed matrix
+
+
+            with open(bonds_path, 'wb') as fp:
+                pickle.dump(hbonds_ks, fp)
+
+            hbonds_ks=hbonds_ks[start:end]
+            nframes=len(hbonds_ks)
+            for frameres in hbonds_ks:
+                for hbond in frameres:
+                    try:
+                        histhbond[tuple(hbond)]+=1
+                    except KeyError:
+                        histhbond[tuple(hbond)]=1
+
+        else:
+            precomputed_bonds=precomputed_bonds[start:end]
+            nframes=len(precomputed_bonds)
+            for frameres in precomputed_bonds:
+                for hbond in frameres:
+                    try:
+                        histhbond[tuple(hbond)]+=1
+                    except KeyError:
+                        histhbond[tuple(hbond)]=1
+
+        t=md.load_frame(traj_path, index=0, top=struc_path)
+
+        for keys in histhbond:
+            chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
+            chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
+            histhbond[keys]= round(histhbond[keys]/nframes,3)*100
+            is_not_neighbour=abs(keys[0]-keys[2])>resid_dist
+            if backbone:
+                if histhbond[keys]>percentage_cutoff and is_not_neighbour: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
+                    labelbond=label([keys[0],histhbond[keys],keys[2]])
+                    labelbond=labelbond.replace(' ','')
+                    labelbond=labelbond.split('--')
+                    donor=labelbond[0]
+                    acceptor=labelbond[1]
+                    acceptor_res=acceptor[:acceptor.rfind('-')]
+                    donor_res=donor[:donor.rfind('-')]
+                    if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                        histhbond[keys]=str(histhbond[keys])[:4]
+                        if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                            try:
+                                if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                    #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
+                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+
+                                else: #acceptor is protein
+                                    #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                            except KeyError:
+                                if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                    hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+                                else: #acceptor is protein
+                                    hbonds_residue_notprotein[acceptor_res]=[[donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0]]
+
+                        else: #intraprotein hbonds
+                            try:
+                                #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
+                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                            except KeyError:
+                                hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+            else:
+                if histhbond[keys]>percentage_cutoff: #not neighbours abs(keys[0]-keys[2])>60 ??
+                    if t.topology.atom(keys[0]).residue.is_protein:
+                        a1=t.topology.atom(keys[0]).is_sidechain
+                    else:
+                        a1=True
+
+                    if t.topology.atom(keys[2]).residue.is_protein:
+                        a2=t.topology.atom(keys[2]).is_sidechain
+                    else:
+                        a2=True    
+  
+                    if a1 and a2 and is_not_neighbour:
+                        labelbond=label([keys[0],histhbond[keys],keys[2]])
+                        labelbond=labelbond.replace(' ','')
+                        labelbond=labelbond.split('--')
+                        donor=labelbond[0]
+                        acceptor=labelbond[1]
+                        acceptor_res=acceptor[:acceptor.rfind('-')]
+                        donor_res=donor[:donor.rfind('-')]
+                        if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                            histhbond[keys]=str(histhbond[keys])[:4]
+                            if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                                try:
+                                    if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                        #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
+                                            hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+
+                                    else: #acceptor is protein
+                                        #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
+                                            hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                except KeyError:
+                                    if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
+                                        hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+                                    else: #acceptor is protein
+                                        hbonds_residue_notprotein[acceptor_res]=[[donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0]]
+
+                            else: #intraprotein hbonds
+                                try:
+                                    #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
+                                        hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                except KeyError:
+                                    hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
+
+
+
+
+        struc_path=struc_path[:-4]
+        csvfile= open(struc_path+'hbonds.csv','w',newline='')
+        writer = csv.writer(csvfile,delimiter=' ',
+                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+        header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
+        writer.writerow(header)
+        for keys in hbonds_residue:
+            for minilist in hbonds_residue[keys]:
+                rowlist=[keys]+minilist[:-2]
+                print(rowlist)
+                writer.writerow(rowlist)
+            writer.writerow(['','','','',''])
+
+        csvfile= open(struc_path+'hbonds_notprotein.csv','w',newline='')
+        writer = csv.writer(csvfile,delimiter=' ',
+                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+
+        header=['Residue1_(protein)', 'Residue2_(other)', 'Frequency', 'Atom_index', 'Atom_index_2']
+        writer.writerow(header)
+
+        for keys in hbonds_residue_notprotein:
+            for minilist in hbonds_residue_notprotein[keys]:
+                rowlist=[keys]+minilist[:-2]
+                print(rowlist)
+                writer.writerow(rowlist)
+            writer.writerow(['','','','',''])
+        
+        print('hereaaaa')
+
+        full_results['hbonds'] = hbonds_residue
+        full_results['hbonds_notprotein'] = hbonds_residue_notprotein
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+
+def saltbridges(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        #t = md.load(traj_path,top=struc_path)
+        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/cara.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        full_results=dict()
+        chunksize=50
+        start=int(arrays[0])
+        end=int(arrays[1])
+        if end<0:
+            end=10**20
+        nframes=0
+        counter=0
+        percentage_threshold=int(arrays[2])/100
+        distance_threshold=0.4 #4 angstroms/0.4nm
+        for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
+            rframes=end-nframes 
+            if rframes==0:
+                break
+            if rframes<chunksize:
+                t=t[:rframes] #maybe the user does not want the full chunk.
+            nframes+=len(t)
+            salt_bridges_atoms=[]
+            salt_bridges_residues=[]
+            cdis=[]
+            if counter==0:
+                number_hatoms=0
+                for residue in t.topology.residues:
+                    if residue.name=='HIS':
+                        number_hatoms= len([atom.index for atom in residue.atoms if atom.element.name=='hydrogen'])
+                    if residue.name in ['ASP','GLU','ARG','LYS'] or number_hatoms>7:
+                        caindex= [atom.index for atom in residue.atoms if atom.name == 'CA'][0]
+                        for atom in residue.atoms:
+                            cdis.append([caindex,atom.index])
+
+                        for atom in residue.atoms:
+                            if residue.name=='ARG' and (atom.name=='NH1' or atom.name=='NH2'):
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='GLU' and (atom.name=='OE2' or atom.name=='OE1' ):
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='ASP' and (atom.name=='OD2' or atom.name=='OD1'):
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='HIS' and (atom.name=='NE2' or atom.name=='ND1'):
+                                salt_bridges_atoms.append(atom.index+1)
+                            if residue.name=='LYS' and atom.name=='NZ':
+                                salt_bridges_atoms.append(atom.index+1)
+
+
+                if False:
+                    distance=md.compute_distances(t, np.array(cdis),periodic=False) #shape=(n_frames, num_pairs)
+                    distancedic=dict()
+                    for f in range(len(t)):
+                        for i in range(len(cdis)): #iterate for each ca-atom.index pair
+                            try:
+                                if distance[f][i]>distancedic[cdis[i][0]][0]: #if distance from another atom is bigger, pick that atom index and distance
+                                    distancedic[cdis[i][0]]=[distance[f][i],cdis[i][1]]
+                            except KeyError:
+                                distancedic[cdis[i][0]]=[distance[f][i],cdis[i][1]] # distance['ca']=[maxdis,atom_index]
+
+                    for keys in distancedic:
+                        salt_bridges_atoms.append(int(distancedic[keys][1])) #+1before
+
+                combinations=[]
+                for atom_index in range(len(salt_bridges_atoms)):
+                    for atom_index2 in range(atom_index+1,len(salt_bridges_atoms)):
+                        resname1=t.topology.atom(salt_bridges_atoms[atom_index]).residue.name #-1bef
+                        resname2=t.topology.atom(salt_bridges_atoms[atom_index2]).residue.name #-1bef
+                        chained=abs(t.topology.atom(salt_bridges_atoms[atom_index]).residue.index-t.topology.atom(salt_bridges_atoms[atom_index2]).residue.index)<4 #-1bef
+                        if {resname1,resname2} in [{'ASP','ARG'},{'ASP','LYS'},{'GLU','LYS'},{'GLU','ARG'},{'GLU','HIS'},{'ASP','HIS'}] and not chained: #is this a correct combination?
+                            combinations.append([salt_bridges_atoms[atom_index],salt_bridges_atoms[atom_index2]])
+
+                combinations=np.array(combinations)
+                distances=md.compute_distances(t,combinations) #shape=(n_frames, num_pairs)
+                frequency= np.sum(distances < distance_threshold,axis=0) #number of times the distance is lower than threshold in the current chunk
+
+            else:
+                distances=md.compute_distances(t,combinations)
+                frequency+=np.sum(distances < distance_threshold,axis=0)
+
+            counter+=1
+        print('Salt Bridge analysis DONE')
+        frequency=frequency/nframes
+        distances= frequency> percentage_threshold #[True, False, True, True, ...]
+        combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
+        salt_bridges_residues=combfreq[distances] #logical mask to combinationcs [[10,34],[11,90],[42,666],[],...][True, False, True, True, ...]
+
+
+        full_results['salt_bridges'] = salt_bridges_residues
+        full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
+        #-1 to return to zero indexing.
+        bridge_dic=dict()
+        for bond in full_results['salt_bridges']:
+            labelbond=bond[0]
+            labelbond=labelbond.replace(' ','')
+            labelbond=labelbond.split('--')
+            donor=labelbond[0]
+            acceptor=labelbond[1]
+            acceptor_res=acceptor[:acceptor.rfind('-')]
+            donor_res=donor[:donor.rfind('-')]
+            if donor_res in bridge_dic:
+                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3])])
+            elif acceptor_res in bridge_dic:
+                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
+            else:
+               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
+
+        struc_path=struc_path[:-4]
+        csvfile= open(struc_path+'saltbridges.csv','w',newline='')
+        writer = csv.writer(csvfile,delimiter=' ',
+                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+
+        header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
+        writer.writerow(header)
+
+        for keys in bridge_dic:
+            for minilist in bridge_dic[keys]:
+                rowlist=[keys]+minilist
+                print(rowlist)
+                writer.writerow(rowlist)
+            writer.writerow(['','','','',''])
+
+        full_results['salt_bridges']=bridge_dic
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+def sasa(request):
+    zatoms=[]
+    arrays=request.POST.getlist('frames[]')
+    struc_path = "/protwis/sites/files/"+arrays[4]
+    traj_path = "/protwis/sites/files/"+arrays[3]
+    sel=arrays[6]
+    #struc_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/build.pdb"
+    #traj_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/b2ar.dcd"
+    #struc_path = "/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb"
+    #traj_path = "/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd"
+
+    print(struc_path,traj_path)
+    traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+    sasa_path=traj_path[:traj_path.rfind('/')]+traj_name+'.npy'
+    try:
+        sasa=np.load(sasa_path)
+        precomputed=True
+    except:
+        precomputed=False
+    print('Is it precomputed?',precomputed)
+    chunksize=50
+    start=int(arrays[0])
+    end=int(arrays[1])
+    nframes=0
+    counter=0
+    zpos_dic=dict()
+    for t in md.iterload(traj_path, top=struc_path,chunk=chunksize):
+        notwatatoms=t.topology.select("not water")
+        t=t.atom_slice(notwatatoms)
+        if counter==0:
+            tfind=t.atom_slice(t.topology.select("protein"))
+            cter=tfind.topology.residue(-1).atom(0).index
+            nter=tfind.topology.residue(0).atom(0).index
+            if tfind.xyz[0][nter][2]>tfind.xyz[0][cter][2]:
+                normal=True
+            else:
+                normal=False
+            tori=t
+            patoms=t.topology.select("symbol P and (not protein)")
+            tmod=t.atom_slice(patoms)
+            zetas_p=[]
+            for i in range(tmod.xyz[0].shape[0]): #this is the FIRST frame, not the original PDB! equal to put 1 in the VMD Main window.
+                zetas_p.append(tmod.xyz[0][i][2])
+            zetas_p=sorted(zetas_p)
+            zetahalf=np.mean(zetas_p)
+            maxjump=0
+            for i in range(len(zetas_p)-1):
+                if abs(zetas_p[i]-zetas_p[i+1])>maxjump:
+                    lastp=i
+                    maxjump=abs(zetas_p[i]-zetas_p[i+1])
+            zleaftop=np.mean(zetas_p[lastp:])
+            zleafbottom=np.mean(zetas_p[:lastp])
+
+            atoms_prot_bootom=[]
+            atoms_half=[]
+            atoms_receptor=[]
+            
+            for i in range(tori.xyz[0].shape[0]):
+                if normal:
+                    if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
+                        atoms_prot_bootom.append(i)
+                    if tori.xyz[0][i][2]<zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_half.append(i)
+                    if tori.topology.atom(i).residue.is_protein:
+                        atoms_receptor.append(i)
+                else:
+                    if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
+                        atoms_prot_bootom.append(i)
+                    if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_half.append(i)
+                    if tori.topology.atom(i).residue.is_protein:
+                        atoms_receptor.append(i)
+
+            if not precomputed:
+                sasa=md.shrake_rupley(tori)
+
+        elif counter>0 and not precomputed:
+            print(str(counter))
+            sasa=np.concatenate((sasa,md.shrake_rupley(t)))
+
+        else:
+            break
+
+        counter+=1
+
+    if not precomputed:
+        traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
+        sasa_path=traj_path[:traj_path.rfind('/')]+traj_name
+        np.save(sasa_path,sasa)
+    print(sasa)
+    print(str(start),str(end))
+    sasa=sasa[start:end]
+    selected_resids=[]
+    if sel=='half':
+        sasaours=sasa[:,atoms_half] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_half:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='bottom':
+        sasaours=sasa[:,atoms_prot_bootom] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_prot_bootom:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='receptor':
+        sasaours=sasa[:,atoms_receptor] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_receptor:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+    elif sel=='all':
+        sasaours=sasa[:] #pick only the sasa columns of our atoms.
+        selected_resids=[]
+
+    sasaours_peratom=sasaours.sum(axis=0)
+    sasaours_perframe=sasaours.sum(axis=1)
+    final_resids=[]
+    for res in selected_resids:
+        final_resids.append(int(re.search(r'\d+', str(res)).group()))
+
+    final_resids=list(set(final_resids))
+    if sel=='all':
+        final_resids='all'
+    '''
+    print('SASA per atom')
+    for pos,atomindex in enumerate(atoms_prot_bootom):
+        print(t.topology.atom(atomindex),sasaours_peratom[pos])
+
+    print('SASA per frame')
+    for f in range(len(sasaours_perframe)):
+        print(f, sasaours_perframe[f])
+    '''
+    sasaours_perframe=sasaours_perframe.tolist()
+    time=sasa.shape[0] #number of frames
+    time=[i for i in range(time)]
+    result=zip(time,sasaours_perframe)
+    result=[list(i) for i in result]
+    sasares={'sasa':result,'selected_residues':final_resids}
+    data = json.dumps(sasares)
+    return HttpResponse(data, content_type='application/json')
+
+def grid(request):
+    if request.method == 'POST':
+        arrays=request.POST.getlist('frames[]')
+        percentage_cutoff=int(arrays[2])
+        struc_path = "/protwis/sites/files/"+arrays[4]
+        traj_path = "/protwis/sites/files/"+arrays[3]
+        #t = md.load(traj_path,top=struc_path)
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        trajectory=trajectory[0:10]
+        atom_indices_prot = [a.index for a in trajectory.topology.atoms if a.residue.is_protein]
+        atom_indices_ligand = [a.index for a in trajectory.topology.atoms if a.residue.name=='5FW']
+        atom_indices= atom_indices_prot+atom_indices_ligand
+        print(atom_indices_ligand)
+        t=trajectory
+        trajectory=trajectory.atom_slice(atom_indices, inplace=False)
+        atomindexes_prot=[atom.index for atom in trajectory.topology.atoms if atom.residue.is_protein]
+        trajprot=trajectory.superpose(trajectory,0,atom_indices=atomindexes_prot) #works!
+        trajprot=trajprot
+        mintop=np.array([0,0,0])
+        print('ck1')
+        print(str(len(trajprot)))
+        for frame in range(len(trajprot)):
+            for atom in trajprot.xyz[frame]:
+                if atom[0]<mintop[0]:
+                    mintop[0]=atom[0]
+                if atom[1]<mintop[1]:
+                    mintop[1]=atom[1]
+                if atom[2]<mintop[2]:
+                    mintop[2]=atom[2]
+        mintop-=1
+        max_xyz=[0,0,0]
+        atomxyz=trajprot.xyz
+        for frame in range(len(trajprot)):
+            for atomindex in range(len(trajprot.xyz[frame])):
+                atomxyz[frame][atomindex]=atomxyz[frame][atomindex]+(mintop*-1) #ensure that atom coordinates are in positive area with a translation
+                if atomxyz[frame][atomindex][0]>max_xyz[0]:
+                    max_xyz[0]=atomxyz[frame][atomindex][0]
+                if atomxyz[frame][atomindex][1]>max_xyz[1]:
+                    max_xyz[1]=atomxyz[frame][atomindex][1]
+                if atomxyz[frame][atomindex][2]>max_xyz[2]:
+                    max_xyz[2]=atomxyz[frame][atomindex][2]
+        #now create a grid with appropiate dimensions to hold all the atoms
+        max_xyz=[int(round((i*10)+2)) for i in max_xyz] #nanometers to angstroms.
+        grid=np.zeros(max_xyz)
+        for frame in range(len(trajprot)):
+            for atomindex in range(len(trajprot.xyz[frame])):
+                xc=int(round(atomxyz[frame][atomindex][0]*10))#nanometers to angstroms.
+                yc=int(round(atomxyz[frame][atomindex][1]*10))
+                zc=int(round(atomxyz[frame][atomindex][2]*10))
+                grid[xc,yc,zc]+=1 #add 0.5 to neighbours?
+        shape=grid.shape
+        grid=grid.tolist()
+        full_results={'grid':grid,'shape':shape,'indexes':atom_indices}
+        print('Analysis done')
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+

@@ -46,6 +46,22 @@
         //stage.parameters.cameraType="orthographic";
 //////////////
 
+        function listToMatrix(list, elementsPerSubArray) {
+            var matrix = [], i, k;
+
+            for (i = 0, k = -1; i < list.length; i++) {
+                if (i % elementsPerSubArray === 0) {
+                    k++;
+                    matrix[k] = [];
+                }
+
+                matrix[k].push(list[i]);
+            }
+
+            return matrix;
+        }
+
+
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
             var radius=Number(dist_comp[1]);
@@ -168,16 +184,24 @@
             var int_res_s_ch=NGL.getQuery("ih");
             var dist_groups_s=NGL.getQuery("dc");
             var bs_info = NGL.getQuery("bs");
+            var hbonds=NGL.getQuery("hb");
+            var cbonds=hbonds;
+            var atomssb=NGL.getQuery("sb");
+            var catomssb=atomssb;
+            var atomshb_inter=NGL.getQuery("ib");
+            var catomssb_inter=atomshb_inter;
+            var all_resids=NGL.getQuery("ar");
+            var call_resids=all_resids
+            var all_resids_sb=NGL.getQuery("as");
+            var call_resids_sb=all_resids_sb;
 
              /*var va = "test";             
              for (v in va){ 
                 console.log(v);
                 console.log(va[v]);
              };*/
-
-
-                  
                     if (struc) {
+
                         stage.loadFile( s_path + struc, {sele:"*", visible: true}  ).then( function( o ){  
                                 o.setName("my_comp");
                                 
@@ -186,7 +210,6 @@
                                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d} );
   
                                 }
-                                
 
                                 if (nonGPCR){
                                     var nonGPCR_d=decodeURIComponent(nonGPCR.replace(/\+/g, " "));
@@ -250,7 +273,66 @@
                                         o.addTrajectory( t_path + traj_li[t] );
                                     }
                                 }
-                                
+
+                                if (cbonds){
+                                    console.log('here');
+                                    var cbonds2=decodeURIComponent(cbonds.replace(/\+/g, " "));
+                                    var all_resids=decodeURIComponent(call_resids.replace(/\+/g, " ")).split(',');
+                                    cbonds2=cbonds2.split(',');
+                                    var resids= 'protein and';
+                                    for (i=0;i<cbonds2.length;i++){
+                                        cbonds2[i]=Number(cbonds2[i]);
+                                    }
+
+                                    for (i=0;i<all_resids.length;i++){
+                                        all_resids[i]=Number(all_resids[i]);
+                                    }
+                                    cbonds2=listToMatrix(cbonds2,2);
+                                    resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                                    //cbonds2=[[Number(cbonds2[0]),Number(cbonds2[1])]];
+                                    o.addRepresentation( "distance", { atomPair: cbonds2 , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                                    o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+                                }
+
+                                if (catomssb){
+                                    console.log('here1');
+                                    all_resids_sb=decodeURIComponent(call_resids_sb.replace(/\+/g, " ")).split(',');
+                                    var atomssb2=decodeURIComponent(catomssb.replace(/\+/g, " "));
+                                    atomssb2=atomssb2.split(',');
+                                    for (i=0;i<atomssb2.length;i++){
+                                        atomssb2[i]=Number(atomssb2[i]);
+                                    }
+
+                                    for (i=0;i<all_resids_sb.length;i++){
+                                        all_resids_sb[i]=Number(all_resids_sb[i]);
+                                    }
+                                    atomssb2=listToMatrix(atomssb2,2);
+                                    var resids= 'protein and';
+                                    resids=resids+' ('+all_resids_sb.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                                    //cbonds2=[[Number(cbonds2[0]),Number(cbonds2[1])]];
+                                    o.addRepresentation( "distance", { atomPair:  atomssb2 , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                                    o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+                                }
+                                if (catomssb_inter){
+                                    console.log('here2');
+                                    all_resids=decodeURIComponent(call_resids.replace(/\+/g, " ")).split(',');
+                                    var atomssb_inter2=decodeURIComponent(catomssb_inter.replace(/\+/g, " "));
+                                    atomssb_inter2=atomssb_inter2.split(',');
+                                    for (i=0;i<atomssb_inter2.length;i++){
+                                        atomssb_inter2[i]=Number(atomssb_inter2[i]);
+                                    }
+
+                                    for (i=0;i<all_resids.length;i++){
+                                        all_resids[i]=Number(all_resids[i]);
+                                    }
+                                    atomssb_inter2=listToMatrix( atomssb_inter2,2);
+                                    var resids= 'not water and';
+                                    resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                                    o.addRepresentation( "distance", { atomPair:  atomssb_inter2, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                                    o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+                                }
+
+
                                 if (bs_info){
                                     var bs_info_li=bs_info.split("-");
                                     var recept =bs_info_li[0];

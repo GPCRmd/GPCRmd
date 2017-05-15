@@ -48,8 +48,11 @@ from structure.models import StructureType, StructureModelLoopTemplates
 from protein.models import Protein
 from common.models import  WebResource
 from .models import DyndbBinding,DyndbEfficacy,DyndbReferencesExpInteractionData,DyndbExpInteractionData,DyndbReferences, DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel,  DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbCannonicalProteins,  DyndbSubmissionMolecule, DyndbSubmissionProtein,DyndbComplexProtein,DyndbReferencesProtein,DyndbComplexMoleculeMolecule,DyndbComplexMolecule,DyndbComplexCompound,DyndbReferencesMolecule,DyndbReferencesCompound,DyndbComplexExp
+
+from dynadb import psf_parser as psf
 from .models import DyndbSubmissionProtein, DyndbFilesDynamics, DyndbReferencesModel, DyndbModelComponents,DyndbProteinMutations,DyndbExpProteinData,DyndbModel,DyndbDynamics,DyndbDynamicsComponents,DyndbReferencesDynamics,DyndbRelatedDynamicsDynamics,DyndbModelComponents,DyndbProteinCannonicalProtein,DyndbModel, DyndbProtein, DyndbProteinSequence, DyndbUniprotSpecies, DyndbUniprotSpeciesAliases, DyndbOtherProteinNames, DyndbProteinActivity, DyndbFileTypes, DyndbCompound, DyndbMolecule, DyndbFilesMolecule,DyndbFiles,DyndbOtherCompoundNames, DyndbModeledResidues, DyndbDynamicsMembraneTypes, DyndbDynamicsSolventTypes, DyndbDynamicsMethods, DyndbAssayTypes, DyndbSubmissionModel, DyndbFilesModel,DyndbSubmissionDynamicsFiles,DyndbSubmission, DyndbReferences, DyndbInhibition
 from .pdbchecker import split_protein_pdb, split_resnames_pdb, molecule_atoms_unique_pdb, diff_mol_pdb, residue_atoms_dict_pdb, residue_dict_diff, get_atoms_num, get_frames_num
+
 
 #from django.views.generic.edit import FormView
 from .forms import dyndb_ProteinForm, dyndb_Model, dyndb_Files,  dyndb_Protein_SequenceForm, dyndb_Other_Protein_NamesForm, dyndb_Cannonical_ProteinsForm, dyndb_Protein_MutationsForm, dyndb_CompoundForm, dyndb_Other_Compound_Names, dyndb_Molecule, dyndb_Files, dyndb_File_Types, dyndb_Files_Molecule, dyndb_Complex_Exp, dyndb_Complex_Protein, dyndb_Complex_Molecule, dyndb_Complex_Molecule_Molecule,  dyndb_Files_Model, dyndb_Files_Model, dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List, dyndb_Files_Dynamics, dyndb_Related_Dynamics, dyndb_Related_Dynamics_Dynamics, dyndb_Model_Components, dyndb_Modeled_Residues,  dyndb_Dynamics, dyndb_Dynamics_tags, dyndb_Dynamics_Tags_List,  dyndb_ReferenceForm, dyndb_Dynamics_Membrane_Types, dyndb_Dynamics_Components, dyndb_File_Types, dyndb_Submission, dyndb_Submission_Protein, dyndb_Submission_Molecule, dyndb_Submission_Model
@@ -66,7 +69,7 @@ from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
 from django.conf import settings
 from django.views.defaults import server_error
 from revproxy.views import ProxyView
-
+import mdtraj as md
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pink"]
 
@@ -1686,6 +1689,7 @@ def ajaxsearcher(request):
                                 if isrecm is not None and (str(mutants.id) not in [i[0] for i in gpcrlist]):
                                     gpcrlist.append([str(mutants.id),str(mutants.name),mut,spname])
 
+
                     elif 'molecule' in str(res.id):
                         mol_id=res.id.split('.')[2]
                         published=len(DyndbMolecule.objects.filter(id=mol_id,is_published=True))>0
@@ -2469,6 +2473,125 @@ def generate_molecule_properties_BindingDB(SDFpath):
     
     return data
 
+@textonly_500_handler
+def do_analysis(request):
+    if request.method == 'POST':
+        full_results=dict()
+        arrays=request.POST.getlist('frames[]')
+        percentage_cutoff=int(arrays[3])
+        #trajectory = md.load_pdb('http://www.rcsb.org/pdb/files/2EQQ.pdb')
+        #trajectory = md.load_pdb('dynadb/b2ar_isoprot/build.pdb')
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        trajectory=trajectory[int(arrays[0]):int(arrays[1])]
+        atom_indices = [a.index for a in trajectory.topology.atoms if a.name == str(arrays[2])]
+        t=trajectory
+        trajectory=trajectory.atom_slice(atom_indices, inplace=False)
+        atoms=psf.parser('dynadb/b2ar_isoprot/b2ar.psf')
+        #b=psf.compute_interaction(t,1326,4807,atoms,contact_threshold=3,fpt=0.1) #4786,2756
+        frametime=(t.time).reshape(len(t.time),1)
+        #tograph=np.concatenate([frametime,b[0]],axis=1).tolist()
+        #full_results['charges']=tograph
+        sasa=md.shrake_rupley(trajectory)
+        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        hbonds_ks=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False)
+        histhbond=dict()
+        hbonds_residue=dict()
+        hbonds_residue_notprotein=dict()
+        for frameres in hbonds_ks:
+            for hbond in frameres:
+                try:
+                    histhbond[tuple(hbond)]+=1
+                except KeyError:
+                    histhbond[tuple(hbond)]=1
+
+        for keys in histhbond:
+            histhbond[keys]= round(histhbond[keys]/len(t),3)*100
+            print(keys)
+            if abs(keys[0]-keys[2])>60 and histhbond[keys]>10: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
+                labelbond=label([keys[0],histhbond[keys],keys[2]])
+                labelbond=labelbond.replace(' ','')
+                labelbond=labelbond.split('--')
+                donor=labelbond[0]
+                acceptor=labelbond[1]
+                acceptor_res=acceptor[:acceptor.rfind('-')]
+                donor_res=donor[:donor.rfind('-')]
+                if donor_res!=acceptor_res: #do not consider hbond inside the same residue.
+                    histhbond[keys]=str(histhbond[keys])[:4]
+                    if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
+                                hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
+                        except KeyError:
+                            hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+                    else: #intraprotein hbonds
+                        try:
+                            if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
+                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])])
+                        except KeyError:
+                            hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[0]),str(keys[2])]]
+
+
+        #print(sasa.shape) #(19, 292)
+        #for frames in range(len(sasa)):
+        #    for atom in range(len(sasa[frames])):
+        #        print('frame:',frames,trajectory.topology.atom(atom),sasa[frames][atom])
+
+        sasa4allatoms=sasa.sum(axis=0)
+        #print('\n\n\n\n NOW THE SUMVALUES len of sasasum',len(sasa))
+        #for atomindex in range(len(sasa4allatoms)):
+        #    print(trajectory.topology.atom(atomindex),sasa4allatoms[atomindex])
+
+        time=trajectory.time
+        total_sasa = sasa.sum(axis=1)
+        time=time.tolist()
+        total_sasa = total_sasa.tolist()
+        result=list(zip(time,total_sasa))
+        result=[list(i) for i in result]
+        full_results['sasa']=result
+        full_results['hbonds'] = hbonds_residue
+        full_results['hbonds_notprotein'] = hbonds_residue_notprotein
+        full_results['salt_bridges'] = psf.true_saline_bridges(t,atoms,distance_threshold=0.4, percentage_threshold=percentage_cutoff)
+        full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] # -1 to return to zero indexing.
+        seqbadr1='MGDGWLPPDCGPHNRSGGGGATAAPTGSRQVSAELLSQQWEAGMSLLMALVVLLIVAGNVLVIAAIGRTQRLQTLTNLFITSLACADLVMGLLVVPFGATLVVRGTWLWGSFLCECWTSLDVLCVTASIETLCVIAIDRYLAITSPFRYQSLMTRARAKVIICTVWAISALVSFLPIMMHWWRDEDPQALKCYQDPGCCDFVTNRAYAIASSIISFYIPLLIMIFVYLRVYREAKEQIRKIDRCEGRFYGSQEQPQPPPLPQHQPILGNGRASKRKTSRVMAMREHKALKTLGIIMGVFTLCWLPFFLVNIVNVFNRDLVPDWLFVFFNWLGYANSAFNPIIYCRSPDFRKAFKRLLCFPRKADRRLHAGGQPAPLPGGFISTLGSPEHSPGGTWSDCNGGTRGGSESSLEERHSKTSRSESKMEREKNILATTRFYCTFLGNGDKAVFCTVLRIVKLFEDATCTCPHTHKLKMKWRFKQHQA'
+        ourseq=''
+        for res in trajectory.topology.residues:
+            if res.is_protein:
+                ourseq+=d[res.name]
+        alig=align_wt_mut(ourseq,seqbadr1)
+        print(alig[0],'\n\n',alig[1])
+        bridge_dic=dict()
+        for bond in full_results['salt_bridges']:
+            labelbond=bond[0]
+            labelbond=labelbond.replace(' ','')
+            labelbond=labelbond.split('--')
+            donor=labelbond[0]
+            acceptor=labelbond[1]
+            acceptor_res=acceptor[:acceptor.rfind('-')]
+            donor_res=donor[:donor.rfind('-')]
+            if donor_res in bridge_dic:
+                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3])])
+            elif acceptor_res in bridge_dic:
+                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
+            else:
+               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
+
+        full_results['salt_bridges']=bridge_dic
+
+        trajectory = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
+        atomindexes_prot=[atom.index for atom in trajectory.topology.atoms if atom.residue.is_protein]
+        trajprot=trajectory.superpose(trajectory,0,atom_indices=atomindexes_prot) #works!
+        print('ltes save') 
+        trajprot.save('./superposed.dcd')
+        print('saved')
+        print(full_results)
+        data = json.dumps(full_results)
+        return HttpResponse(data, content_type='application/json')
+
+    else:
+        answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/15_trj_1_2.xtc','structure_file':'Dynamics/12_dyn_1.pdb'}
+        #answer={'mdsrv_url':obtain_domain_url(request),'traj_file':'Dynamics/b2ar_isoprot/b2ar.dcd','structure_file':'Dynamics/b2ar_isoprot/build.pdb'}
+        return render(request, 'dynadb/analysis_results.html',{'answer':answer})
+
 
 @user_passes_test_args(is_published_or_submission_owner)
 def query_protein(request, protein_id,incall=False):
@@ -2746,24 +2869,34 @@ def query_complex(request, complex_id,incall=False):
     for row in q: #warning: one cexp can have more than one binding affinity value (one from bindingdb and other from iuphar)
         if row['ec_fifty_val'] is not None:
             efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
-            efficacy['value']=efficacyrow.rvalue
-            efficacy['units']=efficacyrow.units
-            efficacy['description']=efficacyrow.description
-            efflist.append([efficacyrow.rvalue,efficacyrow.units,efficacyrow.description])
-   
+            assay_type=str(efficacyrow.type==3).replace('True','IC50').replace('False','EC50')
+            if 'iuphar' in efficacyrow.description:
+                description=str(efficacyrow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                efflist.append([efficacyrow.rvalue,efficacyrow.units,description,'IUPHAR',assay_type])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+efficacyrow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                efflist.append([efficacyrow.rvalue,efficacyrow.units,description,'BindingDB',assay_type])
+
         if row['binding_val'] is not None:
             bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
-            binding['value']=bindrow.rvalue
-            binding['units']=bindrow.units
-            binding['description']=bindrow.description
-            bindlist.append([bindrow.rvalue,bindrow.units,bindrow.description])
+            if 'iuphar' in bindrow.description: 
+                description=str(bindrow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                bindlist.append([bindrow.rvalue,bindrow.units,description,'IUPHAR'])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+bindrow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                bindlist.append([bindrow.rvalue,bindrow.units,description,'BindingDB'])
 
         if row['inhi_val'] is not None:
             inhirow=DyndbInhibition.objects.get(pk=row['inhi_val'])
-            inhibition['value']=inhirow.rvalue
-            inhibition['units']=inhirow.units
-            inhibition['description']=inhirow.description
-            inhilist.append([inhirow.rvalue,inhirow.units,inhirow.description])
+            if 'iuphar' in inhirow.description: 
+                description=str(inhirow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                inhilist.append([inhirow.rvalue,inhirow.units,description,'IUPHAR'])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+inhirow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                inhilist.append([inhirow.rvalue,inhirow.units,description,'BindingDB'])
 
         if row['references'] is not None:
             references=dict()
@@ -2781,7 +2914,7 @@ def query_complex(request, complex_id,incall=False):
                 if references[keys] is None:
                     references[keys]=''
             reference_list.append(references)
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy,'efflist':efflist,'bindlist':bindlist,'inhilist':inhilist,'inhibition':inhibition}
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'efflist':efflist,'bindlist':bindlist,'inhilist':inhilist}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -2972,7 +3105,7 @@ def query_dynamics(request,dynamics_id):
     
     try: #if it is apomorfic
         dyn_model_id=dynaobj.id_model.id
-        dyna_dic['link2protein'].append([DyndbModel.objects.get(pk=dyn_model_id).id_protein.id, query_protein(request,DyndbModel.objects.get(pk=dyn_model_id).id_protein.id,True)['Protein_name'] ]) #NOT WORKING BECAUSE OF MISSING INFORMATION
+        dyna_dic['link2protein'].append([DyndbModel.objects.get(pk=dyn_model_id).id_protein.id, query_protein(request,DyndbModel.objects.get(pk=dyn_model_id).id_protein.id,True)['Protein_name'] ])
 
     except:
         q = DyndbModel.objects.filter(pk=dyn_model_id)
@@ -5134,6 +5267,7 @@ def MODELview(request, submission_id):
         From=[] #FROM clause of the QUERY
         where=[]   #WHERE clause of the QUERY
         p=0
+        Find_Complex=False
         
         if len(lprot_in_model)==1 and len(lmol_in_model)==0:   
             resp = 'There is a single Protein entry involved in the Model!!! No molecules are included in it!!! This model may involve either a single Protein Aporform or a HOMOOLIGOMER!!'
@@ -5471,7 +5605,10 @@ def MODELview(request, submission_id):
         fdbMF = dyndb_Model(dictmodel)
         for key,value in initMOD.items():
             fdbMF.data[key]=value
-
+        if not Find_Complex:
+            apoform_id_prot=qSProt.values_list('protein_id',flat=True)[0]
+            fdbMF.data['id_protein']=apoform_id_prot
+#            fdbMF.data['id_complex_molecule']=None 
         Update_MODEL=False
         qMe=DyndbModel.objects.filter(dyndbsubmissionmodel__submission_id=submission_id)
         qMecsid=DyndbModel.objects.filter(model_creation_submission_id=submission_id)
@@ -5503,7 +5640,7 @@ def MODELview(request, submission_id):
                 MFpk=qMecsid.values_list('id',flat=True)[0]
             if len(lprot_in_model)==1:
                 print("\nAAAAAAAAAAAAAAAAAAAAA\n")
-                qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =fdbMF.data['id_protein'] , id_complex_molecule=id_complex_molecule , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )
+                qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =fdbMF.data['id_protein'] , id_complex_molecule=None , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )
             else:
                 print("\n MAS de UNA PROT\n")
                 qMe.update(update_timestamp=timezone.now(), description=fdbMF.data['description'].strip() ,name=fdbMF.data['name'] ,type =fdbMF.data['type'] ,id_protein =None ,id_complex_molecule=id_complex_molecule , source_type=fdbMF.data['source_type'] ,pdbid=fdbMF.data['pdbid'] ,template_id_model=fdbMF.data['template_id_model'] ,id_structure_model=fdbMF.data['id_structure_model']  )

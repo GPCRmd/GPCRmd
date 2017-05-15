@@ -355,7 +355,8 @@ class DyndbExpInteractionData(models.Model):
     INTERACTION_TYPE=(
         (0, 'Functional'),
         (1, 'Binding'),
-        (2, 'Efficacy')
+        (2, 'Efficacy'),
+        (3, 'Inhibition'),
     )
     id_complex_exp = models.ForeignKey(DyndbComplexExp, models.DO_NOTHING, db_column='id_complex_exp',null=True)
     type = models.SmallIntegerField( choices=INTERACTION_TYPE, default=0)

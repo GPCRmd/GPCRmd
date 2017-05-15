@@ -43,6 +43,12 @@
     z-index: 1;
 }
 
+.scrolldowndiv{
+    overflow-y:auto;
+    max-height:300px;
+    overflow:auto;
+}
+
 /*.dropdown:hover .dropdown-content {
     display: block;
 }*/
@@ -637,13 +643,17 @@
                     Select distances from the viewer by clicking on the atoms. Afterwards, import your selections by clicking at the import button. You can also manually introduce the atom indices.
                 </div>
                 <div class="dist_btw" style="margin-right:5px;margin-left:0;">
-                  <div class="dist_pair" id="row2_0">
+                  <div class="dist_pair" id="row2_0" style="margin-bottom:5px">
                     <span class="tick2" ></span>
                     <span class="always2" style="margin-left:14px">
                      Compute distance between 
-                     <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <span class="dist_from_parent">
+                        <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                    </span>
 			and
-                     <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     <span class="dist_to_parent">
+                         <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
+                     </span>
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>  
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
                      <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>
@@ -656,17 +666,20 @@
                 </div>
                 
                 {% if traj_list %}
-                <div style="margin-left:18px;">
-                    <div>
+                <div style="margin-left:17px;">
+                    <div style="margin-bottom:10px;">
                      In trajectory: 
                        <span style="margin-left:5px">
                             <select id="" name="dist_traj">
-                               <option disabled selected value> </option>
+                               <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
                                {% endfor %}
                             </select>
                        </span>
+                    </div>
+                    <div id="dist_stride_parent">
+                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
                         <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
@@ -691,7 +704,7 @@
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
                             <select id="rmsd_traj" name="rmsd_traj">
-                               <option disabled selected value> </option>
+                               <!--option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
@@ -706,13 +719,21 @@
                              <input type="radio" name="rmsd_sel_frames" value="all_frames" checked> 
                                   All
                           </div>
-                          <div class="row" >
+                          <div class="row" style="margin-bottom:5px">
                              <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
                                  From 
-                                 <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span class="rmsd_from_parent">
+                                   <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
+                                 </span>
                                  to 
-                                 <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span class="rmsd_to_parent">
+                                   <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
+                                 </span>
                           </div>
+                          <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
+                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                          </div>
+
                           <div id="rmsd_sel_frames_error" class="row" >
                           </div>
                         </div>
@@ -722,7 +743,7 @@
                             <input placeholder=0 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
                             from trajectory 
                             <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
-                               <option disabled selected value> </option>
+                               <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
@@ -793,7 +814,7 @@
                          In trajectory: 
                            <span style="margin-left:5px">
                                 <select id="" name="int_traj">
-                                   <option disabled selected value> </option>
+                                   <!--<option disabled selected value> </option>-->
                                    {% for traj in traj_list %}
                                    <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
                                    {% endfor %}
@@ -801,9 +822,12 @@
                            </span>
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                    </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;margin-bottom:5px" value=3 placeholder=3> &#8491; 
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;" value=3 placeholder=3> &#8491; 
                           <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;">
@@ -824,8 +848,227 @@
               </div>
               </div>
             {% endif %}
+           <!-- </div> original -->
+<!-- ============= BONDS Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hbonds</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_bonds" class="collapse">
+                 <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                        <div style="margin-left:18px;margin-bottom:10px;">
+                         Trajectory: 
+                                <select id="hbonds_traj" name="hbonds_traj">
+                                   <option disabled selected value> </option>
+                                   {% for traj in traj_list %}
+                                   <option   value="{{traj.0}}">{{traj.1}}</option>
+                                   {% endfor %}
+                                </select>
+
+                        </div>
+                        <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                           </div>
+                           <div id="bonds_sel_frames_id" class="col-md-10" >
+                              <div class="row">
+                                 <input type="radio" name="bonds_sel_frames" value="all_frames" checked> 
+                                      All
+                              </div>
+                              <div class="row" >
+                                 <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
+                                     From 
+                                     <input class="form-control input-sm" id="bonds_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     to 
+                                     <input class="form-control input-sm" id="bonds_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+
+                              </div>
+
+                           <div id="bonds_backbone" class="col-md-10" >
+
+                              <div class="row">
+		                          <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
+                              </div>
+
+                              <div class="row">
+                                 <input type="radio" name="backbone" value="all" checked> 
+                                      All Hydrogen Bonds
+                              </div>
+                              <div class="row" >
+                                 <input type="radio" name="backbone" value="sidechain"> 
+                                      Only Side Chain Hydrogen Bonds
+                              </div>
+
+                              <div id="hbonds_sel_frames_error" class="row" ></div>
+                            </div>
+                        </div>
+                 </div>
+
+                <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
+                    Threshold: <input class="form-control input-sm" id="hbonds_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px"> %
+                </div>
+
+                 <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                        <div id="bondsresult" style="margin-left:18px;margin-bottom:20px"> 
+                           <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+
+                               <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> <br><br>
+                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:None;" >Show All</button></center>
+
+
+                               <div class='scrolldowndiv' id="hbondsnp" style="margin-bottom:10px;padding:0"  class="col-md-6"></div>
+                               <center><button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:None;" >Show All</button></center>
+                            <br>
+                             
+                            
+                           </div>
+                        </div>
+                        <div class=row>
+                          <button id="ComputeHbonds" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                        </div>
+
+                    </div>
+                  </div>
             </div>
+
+<!-- ============= SaltBridges Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt Bridges</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_salt" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="salt_traj" name="salt_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+
+                    </div>
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="salt_sel_frames_id" class="col-md-10" >
+                          <div class="row">
+                             <input type="radio" name="salt_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
+                                 From 
+                                 <input class="form-control input-sm" id="salt_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 to 
+                                 <input class="form-control input-sm" id="salt_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+
+                          </div>
+                          <div id="salt_sel_frames_error" class="row" ></div>
+                        </div>
+                    </div>
+             </div>
+
+            <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm" id="salt_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px"> %
+            </div>
+
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div id="saltresult" style="margin-left:18px;margin-bottom:20px"> 
+                       <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+
+                       <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
+
+                        <center><button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
+                  
+                       </div>
+                    </div>
+                    <div class=row>
+                      <button id="ComputeSaltBridges" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                    </div>
+
+                </div>
+              </div>
+
+<!-- ============= SASA Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_grid" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>SASA analysis</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_grid" class="collapse">
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="grid_traj" name="grid_traj">
+                               <option disabled selected value> </option>
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+
+                    </div>
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="grid_sel_frames_id" class="col-md-10" id="sasa_selection">
+                          <div class="row">
+                             <input type="radio" name="grid_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="grid_sel_frames" value="grid_frames_mine"> 
+                                 From 
+                                 <input class="form-control input-sm" id="grid_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 to 
+                                 <input class="form-control input-sm" id="grid_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+
+                          </div>
+
+
+                           <div class="col-md-10" id="sasa_atoms" >
+                              <div  class="row">
+                                 <input type="radio" name="sasa_sel" value="all" checked> All atoms
+                              </div>
+                              <div  class="row">
+                                 <input type="radio" name="sasa_sel" value="receptor"> Receptor
+                              </div>
+                              <div  class="row">
+                                 <input type="radio" name="sasa_sel" value="half"> Lower half of receptor
+                              </div>
+                              <div class="row">
+                                 <input type="radio" name="sasa_sel" value="bottom"> Intracelular receptor
+                              </div>
+                            </div>
+
+
+                          <div id="grid_sel_frames_error" class="row" ></div>
+                        </div>
+                    </div>
+             </div>
+
+            <!--<div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm" id="grid_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+            </div>-->
+
+
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+                    <div class="col-md-12;clear:left;" id="sasa_chart" ></div>
+                    <div class=row>
+                      <button id="ComputeGrid" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                    </div>
+
+                </div>
+              </div>
+    </div> <!-- new one -->
 <!-- ======================================== -->
+
+
+
            <!-- </div>-->
             </div>
             {% endif %}
