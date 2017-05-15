@@ -351,7 +351,7 @@ def iuphar_parser(file_name):
                     interaction['uniprot']=list(filter(lambda x: len(x)!=0, interaction['uniprot']))
                     
                     interaction['pmid']=list(filter(lambda x: len(x)!=0, interaction['pmid']))
-
+                    interaction['target_id']=fields[1]
                     if len(interaction['uniprot'])!=0 and len(interaction['pubchem_sid'])!=0 and len(interaction['experiment_type'])!=0 and len(interaction['median_value'])!=0 and len(interaction['pmid'])!=0:
                         records.append(interaction)
            
@@ -377,11 +377,10 @@ def to_bindingdb_format(records):
         elif record['experiment_type']=='IC50':
             ic50=record['median_value']
         elif record['experiment_type']=='Ki':
-
             ki=record['median_value']
         else:
             continue 
-            
+        target_id=str(record['target_id'])
         seqlist=[]
         gpcr_flag=0
         for protein in protlist:
@@ -414,7 +413,7 @@ def to_bindingdb_format(records):
         except:
             print(errdata)
             continue
-        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,ki,ic50,{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar','iuphar'])
+        complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,ki,ic50,{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar','iuphar_'+target_id])
 
         print('\n\n\nONE RECORD READY',record)
 
@@ -586,10 +585,10 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
         complextype=2
 
     elif len(ic_fifty)>0:
-        complextype=3
+        complextype=4 #3
 
     elif len(ki)>0:
-        complextype=4    
+        complextype=3  #4  
 
     else:
         complextype=0 #functional
@@ -680,13 +679,13 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             else:
                                 return result
 
-                    if ic_fifty: #we should write the ec50 of this experiment as the reference for this ic_fifty
+                    if ic_fifty: 
                         completmp=comple.copy()
                         completmp[6]=''
                         completmp[7]=''
                         completmp[5]=''
                         try:
-                            if ec_fifty:
+                            if ec_fifty: #two values of efficacy togheter. Save the ec50 of this experiment as the reference for the ic_fifty
                                 intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=2) #ecfifty type with that complex exp
                                 for intd in intdata:
                                     effrec=DyndbEfficacy.objects.filter(description=comple[12]).filter(id=intd.id)
@@ -703,7 +702,11 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                                 return result
 
                 else:
-                    intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype) #one cexp can have data for kd from iuphar and bindingDB
+                    if complextype==4:
+                        complextype_mod=2
+                    else:
+                        complextype_mod=complextype
+                    intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype_mod) #one cexp can have data for kd from iuphar and bindingDB
                     if len(intdata)>0:
                         for expintdata in intdata:		
                             if complextype==1: #kd
@@ -718,17 +721,19 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
 
-                            elif complextype==3: #ic50
+                            elif complextype==3: #ki
+                                if len(DyndbInhibition.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
+                                    #this experiment data is already recorded, do not record it again
+                                    print('This complex was already recorded')
+                                    return 'This complex was already recorded'
+
+                            elif complextype==4: #ic50
                                 if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]).filter(type=3))>0: 
                                     #this experiment data is already recorded, do not record it again
                                     print('This complex was already recorded')
                                     return 'This complex was already recorded'
 
-                            elif complextype==4: #ki
-                                if len(DyndbInhibition.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
-                                    #this experiment data is already recorded, do not record it again
-                                    print('This complex was already recorded')
-                                    return 'This complex was already recorded'
+
 
                         #if python gets to this line is because it has not returned anything-> it has not found any intdata matching the one we want to insert now                 
                         complex_interaction_id=newrecord(['dyndb_exp_interaction_data',DyndbExpInteractionData],{'type':complextype,'id_complex_exp':i},True)
@@ -827,10 +832,10 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
     if complextype==2: #ec_50, efficacy
         if len(DyndbEfficacy.objects.filter(id=complex_interaction_id).filter(description=comple[12]))==0:
             print('new ec50, recording it...')
-            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
+            newrecord(['dyndb_efficacy',DyndbEfficacy],{'id':complex_interaction_id,'type':0,'rvalue':ec_fifty,'units':'nM','description':comple[12]})
             recorded_ids['ec50'].append(complex_interaction_id)
 
-    if complextype==3: #ic_50, inhibition efficacy
+    if complextype==4: #ic_50, inhibition efficacy
         if len(DyndbEfficacy.objects.filter(id=complex_interaction_id).filter(description=comple[12]).filter(type=3))==0:
             print('new ic50, recording it...')
             if ec50_id is not None:
@@ -840,7 +845,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
 
             recorded_ids['ic50'].append(complex_interaction_id)
 
-    if complextype==4: #ki, inhibition
+    if complextype==3: #ki, inhibition
         if len(DyndbInhibition.objects.filter(id=complex_interaction_id).filter(description=comple[12]))==0:
             print('new ki, recording it...')
             newrecord(['dyndb_inhibition',DyndbInhibition],{'id':complex_interaction_id,'rvalue':ki,'units':'nM','description':comple[12]})

@@ -87,7 +87,7 @@
 
                 {%if answer.expdataeff%}
                     {%for datae in answer.expdataeff%}
-                        <b>EC50:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
+                        <b>{{datae.4}}:</b> {{datae.0}} nM <a href= /dynadb/complex/id/{{answer.link_2_complex}}> More details </a><br>
                     {%endfor%}
                 {%endif%}
 

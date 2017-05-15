@@ -1387,13 +1387,8 @@ def hbonds(request):
         csvfile= open(struc_path+'hbonds.csv','w',newline='')
         writer = csv.writer(csvfile,delimiter=' ',
                             quotechar=',', quoting=csv.QUOTE_MINIMAL)
-        #writer.writerow(["#Structure: "+struc_path])
-        #writer.writerow(["#Trajectory: "+traj_path])
-        #writer.writerow(["#Threshold: "+percentage_cutoff])
-        #writer.writerow(["#Frame From: "+start, "#Frame to:", end ])
         header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
         writer.writerow(header)
-
         for keys in hbonds_residue:
             for minilist in hbonds_residue[keys]:
                 rowlist=[keys]+minilist[:-2]
@@ -1463,7 +1458,7 @@ def saltbridges(request):
                             cdis.append([caindex,atom.index])
 
                         for atom in residue.atoms:
-                            if residue.name=='ARG' and (atom.name=='NE' or atom.name=='NH1' or atom.name=='NH2'):
+                            if residue.name=='ARG' and (atom.name=='NH1' or atom.name=='NH2'):
                                 salt_bridges_atoms.append(atom.index+1)
                             if residue.name=='GLU' and (atom.name=='OE2' or atom.name=='OE1' ):
                                 salt_bridges_atoms.append(atom.index+1)

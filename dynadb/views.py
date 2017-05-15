@@ -2869,24 +2869,34 @@ def query_complex(request, complex_id,incall=False):
     for row in q: #warning: one cexp can have more than one binding affinity value (one from bindingdb and other from iuphar)
         if row['ec_fifty_val'] is not None:
             efficacyrow=DyndbEfficacy.objects.get(pk=row['ec_fifty_val'])
-            efficacy['value']=efficacyrow.rvalue
-            efficacy['units']=efficacyrow.units
-            efficacy['description']=efficacyrow.description
-            efflist.append([efficacyrow.rvalue,efficacyrow.units,efficacyrow.description])
-   
+            assay_type=str(efficacyrow.type==3).replace('True','IC50').replace('False','EC50')
+            if 'iuphar' in efficacyrow.description:
+                description=str(efficacyrow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                efflist.append([efficacyrow.rvalue,efficacyrow.units,description,'IUPHAR',assay_type])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+efficacyrow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                efflist.append([efficacyrow.rvalue,efficacyrow.units,description,'BindingDB',assay_type])
+
         if row['binding_val'] is not None:
             bindrow=DyndbBinding.objects.get(pk=row['binding_val'])
-            binding['value']=bindrow.rvalue
-            binding['units']=bindrow.units
-            binding['description']=bindrow.description
-            bindlist.append([bindrow.rvalue,bindrow.units,bindrow.description])
+            if 'iuphar' in bindrow.description: 
+                description=str(bindrow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                bindlist.append([bindrow.rvalue,bindrow.units,description,'IUPHAR'])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+bindrow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                bindlist.append([bindrow.rvalue,bindrow.units,description,'BindingDB'])
 
         if row['inhi_val'] is not None:
             inhirow=DyndbInhibition.objects.get(pk=row['inhi_val'])
-            inhibition['value']=inhirow.rvalue
-            inhibition['units']=inhirow.units
-            inhibition['description']=inhirow.description
-            inhilist.append([inhirow.rvalue,inhirow.units,inhirow.description])
+            if 'iuphar' in inhirow.description: 
+                description=str(inhirow.description.split('_')[1])
+                description='http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId='+description
+                inhilist.append([inhirow.rvalue,inhirow.units,description,'IUPHAR'])
+            else:
+                description='https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id='+inhirow.description+'&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM'
+                inhilist.append([inhirow.rvalue,inhirow.units,description,'BindingDB'])
 
         if row['references'] is not None:
             references=dict()
@@ -2904,7 +2914,7 @@ def query_complex(request, complex_id,incall=False):
                 if references[keys] is None:
                     references[keys]=''
             reference_list.append(references)
-    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'binding':binding,'efficacy':efficacy,'efflist':efflist,'bindlist':bindlist,'inhilist':inhilist,'inhibition':inhibition}
+    comdic={'proteins':plist,'compoundsorto': clistorto,'compoundsalo': clistalo, 'models':model_list, 'reference':reference_list,'efflist':efflist,'bindlist':bindlist,'inhilist':inhilist}
     if incall==True:
         return comdic
     return render(request, 'dynadb/complex_query_result.html',{'answer':comdic})
@@ -3095,7 +3105,7 @@ def query_dynamics(request,dynamics_id):
     
     try: #if it is apomorfic
         dyn_model_id=dynaobj.id_model.id
-        dyna_dic['link2protein'].append([DyndbModel.objects.get(pk=dyn_model_id).id_protein.id, query_protein(request,DyndbModel.objects.get(pk=dyn_model_id).id_protein.id,True)['Protein_name'] ]) #NOT WORKING BECAUSE OF MISSING INFORMATION
+        dyna_dic['link2protein'].append([DyndbModel.objects.get(pk=dyn_model_id).id_protein.id, query_protein(request,DyndbModel.objects.get(pk=dyn_model_id).id_protein.id,True)['Protein_name'] ])
 
     except:
         q = DyndbModel.objects.filter(pk=dyn_model_id)

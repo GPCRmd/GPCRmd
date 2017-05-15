@@ -2404,15 +2404,8 @@ $(document).ready(function(){
 
 
                     */
-                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));
-                    google.visualization.events.addListener(chart_sasa, 'ready', function () {
-                        var img_source =  chart.getImageURI();
-                        console.log(img_source);
-                        $("#sasa_chart").attr("data-url",img_source);
-                    });       
-                    var img_source =$("#sasa_chart").data('url');
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));    
                     chart_sasa.draw(data, options);
-                    $('#sasa_chart').append('<a href='+img_source+'>Download as image</a>');
                     $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
