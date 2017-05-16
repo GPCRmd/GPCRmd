@@ -196,18 +196,19 @@ class DyndbSubmissionMolecule(models.Model):
         db_table = 'dyndb_submission_molecule'
         unique_together = (('submission_id', 'molecule_id'),('submission_id', 'int_id'),)
 
-smol_to_dyncomp_type={0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4} #dictionary from submission_molecule_type to Dynamics components type and Modeled components type (from 0 to 5)
+smol_to_dyncomp_type = {0:1, 1:1, 2:0, 3:2, 4:3, 5:4, 6:3, 7:2, 8:0, 9:4} #dictionary from submission_molecule_type to Dynamics components type and Modeled components type (from 0 to 5)
+smol_to_modelcomp_type = smol_to_dyncomp_type
 
 class DyndbSubmissionModel(models.Model):
-    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=True, unique=True)
-    model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='model_id', blank=True, null=True) 
+    submission_id = models.ForeignKey('DyndbSubmission', models.DO_NOTHING, db_column='submission_id', blank=True, null=False, unique=True)
+    model_id=models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='model_id', blank=True, null=False) 
 
     class Meta:
         managed =True 
         db_table = 'dyndb_submission_model'
 
 class DyndbDynamics(models.Model):
-    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model', blank=True, null=True)
+    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model', blank=True, null=False)
     id_dynamics_methods = models.ForeignKey('DyndbDynamicsMethods', models.DO_NOTHING, db_column='id_dynamics_methods', blank=True, null=True)
     software = models.CharField(max_length=30, blank=True, null=True)
     sversion = models.CharField(max_length=15, blank=True, null=True)
@@ -227,7 +228,7 @@ class DyndbDynamics(models.Model):
     last_update_by_dbengine = models.CharField(max_length=40)
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
-    submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True) 
+    submission_id = models.ForeignKey(DyndbSubmission, models.DO_NOTHING, db_column='submission_id', blank=True, null=True,unique=True) 
     is_published = models.BooleanField(default=False)
     class Meta:
         managed = True
@@ -464,8 +465,8 @@ class DyndbSubmissionDynamicsFiles(models.Model):
         unique_together = (('submission_id', 'filepath'),('submission_id','type','filenum'))
 
 class DyndbFilesModel(models.Model):
-    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',unique=True)
-    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files',unique=True)
+    id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',unique=True,null=False)
+    id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING, db_column='id_files',unique=True,null=False)
 
     class Meta:
         managed = True
@@ -538,7 +539,7 @@ class DyndbModel(models.Model):
     )
 
     name =  models.TextField(max_length=100,null=False,blank=False) 
-    type = models.SmallIntegerField(choices=MODEL_TYPE, default=0) 
+    type = models.SmallIntegerField(choices=MODEL_TYPE, default=0,null=False) 
     id_protein = models.ForeignKey('DyndbProtein', models.DO_NOTHING,  db_column='id_protein',blank=True, null=True) 
     id_complex_molecule = models.ForeignKey(DyndbComplexMolecule, models.DO_NOTHING, db_column='id_complex_molecule',blank=True, null=True) 
     source_type = models.SmallIntegerField(choices=SOURCE_TYPE, default=0) 
