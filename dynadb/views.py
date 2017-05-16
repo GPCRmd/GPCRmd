@@ -12164,7 +12164,7 @@ def submission_summaryiew(request,submission_id):
     compl=[]
     dctypel=[]
     for tt in qDS.values_list('id',flat=True):
-        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).order_by('id')
+        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).exclude(type=None,numberofmol=None).order_by('id')
         compl.append(qDC)
         d=0
         l_ord_mol=[]
