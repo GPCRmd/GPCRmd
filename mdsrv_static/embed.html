@@ -333,12 +333,19 @@
             var dist_groups_li=results["dist_groups_li"];
             var receptorsel = results["receptorsel"]; //[!!!]
             var bs_info= results["bs_info"]; //[!!!]
+            var hbonds= results["hbondarray"];
+            var sbonds_atoms= results["sbondarray"];
+            var all_resids=results["allresidshb"];
+            var all_resids_sb=results["allresidssb"];
+            var hbonds_inter=results["hb_inter"];
+            var sasa_resids=results["all_resids_sasa"];
             var cons_pos = parent.pd; //[!!!]
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
+            
 
             /*for (e in receptorsel){
                 console.log(receptorsel[e]);
@@ -507,6 +514,38 @@
                     }
                 }
             }
+
+            if (sasa_resids.length > 0) {
+                if (typeof(sasa_resids)=='string') {
+                    resids='not water';
+                }else{
+                    var resids= 'protein and';
+                    resids=resids+' ('+sasa_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                }
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
+            if (hbonds.length > 0){
+                var resids= 'protein and';
+                resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
+            if (hbonds_inter.length > 0){
+                var resids='not water and';
+                resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
+            if (sbonds_atoms.length > 0){
+                var resids='protein and ';
+                resids=resids + '( '+ all_resids_sb.join(' or ') + ')';
+                o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
+            }
+
             if (int_res_li.length > 0){
                 var final_sele=[];
                 for (pos_info_n in int_res_li){
@@ -553,6 +592,7 @@
         }
 /////////// Set variables:
             var struc=$(".str_file", window.parent.document).data("struc_file");
+            console.log('THIS IS THE PDB::',struc);
             var traj_li_all = [];
             var  path= "/mdsrv/file/_DB/";
             var  traj_path= "_DB/";
@@ -567,12 +607,17 @@
             //var compDistsLi=[];
             var clickedDist={};
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
+            console.log('THIS IS THE TRAJ::',mytraj);
             if (struc) {
+                console.log('YIHAAAAA, PDB FOUND, SOMEBODY SAYD HELLO?');
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
+                        console.log('HELLOOUUUU');
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
+                        console.log('more than zero traj found');
                         for (t=0 ; t < traj_li_all.length ; t++){
+                            console.log('adding traj:',traj_path +traj_li_all[t]);
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
                         //traj_li=[mytraj];
@@ -581,8 +626,9 @@
                     $(".traj_element" , window.parent.document).click(function(){
                         mytraj=$(this).data("tpath");
                         traj_id=traj_li_all.indexOf(mytraj);
+                        console.log(traj_id);
                         $(".traj_btn").attr("id","playerButton"+traj_id.toString());
-                        
+                        console.log(" HEEEEEEY playerButton"+traj_id.toString());
                     });
                     trajButtons(o);
                     createReps();
@@ -605,7 +651,8 @@
                 });
                 $("#trajRange").change(function(){
                     if (trajComp){
-                        var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                        var toframe=$(".ui-slider-handle").attr("aria-valuenow"); //problem here! toframe=NaN 
+                        console.log('BYE THERE',toframe);
                         trajComp.setFrame(toframe);
                     }
                 });

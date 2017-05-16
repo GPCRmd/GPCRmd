@@ -40,24 +40,29 @@
 {% endif %} 
 <br>
 
-{% if answer.efficacy %}
-    <b>EC50 according to BindingDB:</b><br>
-    {{answer.efficacy.value}} {{answer.efficacy.units}}
-    <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.efficacy.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a><br>
-{% endif %} 
-<br>
-{% if answer.binding %}
-    <b>Kd according to BindingDB:</b><br>
-    {{answer.binding.value}} {{answer.binding.units}} <a href=https://www.bindingdb.org/jsp/dbsearch/Summary_ki.jsp?reactant_set_id={{answer.binding.description}}&energyterm=kJ%2Fmole&kiunit=nM&icunit=nM>See it in Binding DB</a>
-{% endif %} 
+{%if answer.bindlist%}
+    <b>Kd values:</b><br>
+    {%for datab in answer.bindlist%}
+        <b>Kd according to {{datab.3}}:</b> {{datab.0}} nM <a href= {{datab.2}}> Original page </a><br>
+    {%endfor%}
+    <br>
+{%endif%}
 
-<br>
-{% if answer.inhibition %}
-    <b>Ki according to IUPHAR:</b><br>
-    {{answer.inhibition.value}} {{answer.inhibition.units}} <a href=http://www.guidetopharmacology.org/GRAC/ObjectDisplayForward?objectId=317>See it in IUPHAR</a>
-{% endif %} 
+{%if answer.efflist%}
+    <b>Efficacy values:</b><br>
+    {%for datae in answer.efflist%}
+        <b>{{datae.4}} according to {{datae.3}}:</b> {{datae.0}} nM <a href={{datae.2}} > Original page </a><br>
+    {%endfor%}
+    <br>
+{%endif%}
 
-<br>
+{%if answer.inhilist%}
+    <b>Ki values:</b><br>
+    {%for datae in answer.inhilist%}
+        <b>Ki according to {{datae.3}}:</b> {{datae.0}} nM <a href={{datae.2}} > Original page </a><br>
+    {%endfor%}
+    <br>
+{%endif%}
 
 {% if answer.models %} 
     <b>Complex structures in which this complex is used: </b><br><br>

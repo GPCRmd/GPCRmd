@@ -5,6 +5,24 @@ $(document).ready(function(){
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
 
+    function drawBasic(rows,xlabel,ylabel) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('number', xlabel);
+        data.addColumn('number', ylabel);
+
+        data.addRows(rows);
+        var options = {
+        hAxis: {
+          title: xlabel
+        },
+        vAxis: {
+          title: ylabel
+        }
+        };
+
+        return [data,options];
+
+    }
 
     function click_unclick(class_name){
         $(class_name).click(function(){
@@ -300,6 +318,7 @@ $(document).ready(function(){
     maxInputLength('#rmsd_my_sel_sel',"",50);
     maxInputLength('#rmsd_ref_frame',"",8);
     maxInputLength("#int_thr", "",3);
+    maxInputLength(".inp_stride", "",4);
     maxInputLength(".sel_within", ".user_sel_input",40);
 
 
@@ -315,6 +334,7 @@ $(document).ready(function(){
     removeSpacesInInput("#rmsd_frame_2");
     removeSpacesInInput("#rmsd_ref_frame");
     removeSpacesInInput("#int_thr");
+    removeSpacesInInput(".inp_stride");
 
 
     var ti_i=1;
@@ -1043,6 +1063,7 @@ $(document).ready(function(){
     var i_id=1;
     var lig_sel_str;
     $("#gotoInt").click(function(){
+        $("#int_stride_parent").removeClass("has-warning");
         numComputedI = $("#int_info").children().length;
         if (numComputedI < 15){
             var inp_is_num=true;
@@ -1080,6 +1101,7 @@ $(document).ready(function(){
                     } else {
                         dist_scheme_name="Heavy atoms only";
                     }
+                    var stride = strideVal("#int_stride");
                     $("#int_alert , #int_thr_error").html("");
                     ///AJAX!!!
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
@@ -1101,6 +1123,7 @@ $(document).ready(function(){
                           "struc_p": struc,
                           "dist_scheme": dist_scheme,
                           "no_rv" : act_int_tbls.join(),
+                          "stride" : stride,
                         },
                         success: function(int_data) {
                             if ($.active<=1){
@@ -1109,15 +1132,20 @@ $(document).ready(function(){
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
                             var success=int_data.success;
-                            if (success){  // [!]WHAT IF THERE ARE 0 INT!??
+                            if (success){ 
                                 var int_id=int_data.int_id;
+                                var strided=int_data.strided;
                                 var int_data=int_data.result;
+                                var strideText="";
+                                if (Number(strided)> 1){
+                                    strideText = " (str: "+strided+")";
+                                }
                                 if (! isEmptyDict(int_data)){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(traj_path);
                                 //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
-                                    <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+'</div>\
+                                    <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+strideText+'</div>\
                                       <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
@@ -1129,12 +1157,20 @@ $(document).ready(function(){
                                           </tr>\
                                         </thead>\
                                       <tbody>';
+                                    var mylist=[];
                                     for (lig in int_data){
                                         res_int=int_data[lig];
                                         var num_res_int=res_int.length;
                                         table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                         var res_int_1st=res_int[0];
                                         var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
+                                        //
+                                        gnum_mylist=gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1])
+                                        if (gnum_mylist == "-"){
+                                            gnum_mylist=res_int_1st[2]+res_int_1st[0].toString()+":"+res_int_1st[1];
+                                        }
+                                        mylist.push([res_int_1st[0],gnum_mylist ,res_int_1st[3] ]);
+                                        //
                                         for (info in res_int_1st_ok){
                                             table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                         }
@@ -1143,6 +1179,13 @@ $(document).ready(function(){
                                         for (res_infoN in res_int_rest){
                                             var res_info=res_int_rest[res_infoN];
                                             var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
+                                            //
+                                            gnum_mylist=gnumFromPosChain(res_info[0].toString(), res_info[1])
+                                            if (gnum_mylist == "-"){
+                                                gnum_mylist=res_info[2]+res_info[0].toString()+":"+res_info[1];
+                                            }
+                                            mylist.push([res_info[0],gnum_mylist ,res_info[3] ]);
+                                            //
                                             table_html+='<tr>';
                                             for (infoN in res_info_ok){
                                                 var info=res_info_ok[infoN];
@@ -1151,7 +1194,9 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    table_html+="</tbody></table>";
+                                    //console.log(trajFile+' - Threshold: '+thr_ok+' ('+dist_scheme_name+')');
+                                    //console.log(mylist)
+                                    table_html+="</tbody></table>";;
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
@@ -1395,9 +1440,13 @@ $(document).ready(function(){
                   <span class="tick2" ></span>\
                   <span class="always2" style="margin-left:14px">\
                      Compute distance between \
-                     <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     <span class="dist_from_parent">\
+                         <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     </span>\
 			and\
-                     <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+			         <span class="dist_to_parent">\
+                         <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                     </span>\
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                      <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
@@ -1501,15 +1550,48 @@ $(document).ready(function(){
     });
 
 
+    $(".dist_btw").on("blur", ".dist_from, .dist_to" ,function(){
+        var dpair = $(this).closest(".dist_pair");
+        if ($(this).attr("class").indexOf("dist_from") > -1){
+            var d_from=$(this).val().replace(/\s+/g, '');
+            var d_to = $(this).closest(".always2").find(".dist_to").val().replace(/\s+/g, '');
+            if (d_from=="" || /^[\d]+$/.test(d_from)){
+                $(this).parent().removeClass("has-error");            
+            }else {
+                $(this).parent().addClass("has-error");
+            }
+        } else {
+            var d_from = $(this).closest(".always2").find(".dist_from").val().replace(/\s+/g, '');
+            var d_to=$(this).val().replace(/\s+/g, '');
+            if (d_to=="" || /^[\d]+$/.test(d_to)){
+                $(this).parent().removeClass("has-error");            
+            }else {
+                $(this).parent().addClass("has-error");
+            }
+        }
+        dpair.find(".dist_from").val(d_from);
+        dpair.find(".dist_to").val(d_to);
+        if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
+            dpair.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+            dpair.find(".always2").attr("style","");
+            dpair.addClass("d_ok");
+        } else {
+            if (dpair.attr("class").indexOf("d_ok") > -1){
+                dpair.find(".tick2").html("");
+                dpair.find(".always2").attr("style","margin-left:14px");
+                dpair.removeClass("d_ok");
+            }
+        }
+        
+    });
 
-    $(".dist_btw").on("blur", ".dist_pair" ,function(){
+/*    $(".dist_btw").on("blur", ".dist_pair" ,function(){
         var d_from=$(this).find(".dist_from").val().replace(/\s+/g, '');
         var d_to=$(this).find(".dist_to").val().replace(/\s+/g, '');
         $(this).find(".dist_from").val(d_from);
         $(this).find(".dist_to").val(d_to);
         if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
             $(this).find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
-            //$(this).find(".tick2").attr({"class":"glyphicon glyphicon-ok", "style":"font-size:10px;color:#7acc00;padding:0;margin:0"});
             $(this).find(".always2").attr("style","");
             $(this).addClass("d_ok");
         } else {
@@ -1519,7 +1601,7 @@ $(document).ready(function(){
                 $(this).removeClass("d_ok");
             }
         }
-    }); 
+    }); */
 
     function obtainDistToComp(){
         var distToComp="";
@@ -1546,11 +1628,31 @@ $(document).ready(function(){
         return (false);
     }
 
+    function strideVal(inp_div){
+        var stride = $(inp_div).val();
+        if (stride){
+            stride = Number(stride);
+            var pos = Math.abs(stride)
+            var rounded= Math.round(pos);
+            if (rounded <= 0){
+                var rounded = 1;
+            } 
+            if (stride != rounded){
+                stride = rounded;
+                $(inp_div).val(stride);
+                $(inp_div).parent().addClass("has-warning");
+            }
+        } else {
+            stride=1;
+        }
+        return (stride)
+    }
 
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
         numComputedD = $("#dist_chart").children().length;
+        $("#dist_stride_parent").removeClass("has-warning");
         if (numComputedD < 15){
             var res_ids = obtainDistToComp();
             if ($(this).attr("class").indexOf("withTrajs") > -1){
@@ -1558,6 +1660,8 @@ $(document).ready(function(){
                 if (traj_results){        
                     var traj_p=traj_results[0];
                     var traj_id=traj_results[1];
+                    
+                    var stride = strideVal("#dist_stride");
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
                     $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
@@ -1575,6 +1679,7 @@ $(document).ready(function(){
                           "distTraj": traj_p,
                           "dist_residsWT": res_ids,
                           "no_rv" :act_dis_plots.join(),
+                          "stride" : stride,
                         },
                         success: function(data_dist_wt) {
                             $("#wait_dist").remove();
@@ -1585,17 +1690,29 @@ $(document).ready(function(){
                                 var dist_array_f=data_dist_wt.result_f;
                                 var dist_id=data_dist_wt.dist_id;
                                 var small_error=data_dist_wt.msg;
+                                var strided=data_dist_wt.strided;
+                                var strideText="";
+                                if (Number(strided)> 1){
+                                    strideText = ", str: "+strided;
+                                }
                                 function drawChart(){
                                     var patt = /[^/]*$/g;
                                     var trajFile = patt.exec(traj_p);
                                     var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
                                     var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
-                                    var options_t = {'title':'Residue Distance ('+trajFile+')',
+                                    /*var widthval = (dist_array_t.length -1)*1.18;
+                                    console.log(widthval);
+                                    if (widthval < 640){
+                                        widthval = 640;
+                                    }
+                                    console.log(widthval);
+                                    console.log("==========");*/
+                                    var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
-                                    var options_f = {'title':'Residue Distance ('+trajFile+')',
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                    var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
                                         "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"60","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
                                     newgraph_sel="dist_chart_"+d_id.toString();
                                     var plot_html;
                                     if ($.active<=1){
@@ -2025,11 +2142,380 @@ $(document).ready(function(){
         }
         return (set_sel);
     }
+    
+    $("#rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame").on("blur", function(){
+        var val_changed=$(this).val();
+        if (val_changed=="" || /^[\d]+$/.test(val_changed)){
+            $(this).parent().removeClass("has-error");            
+        }else {
+            $(this).parent().addClass("has-error");
+        }
+    });
+    
     var r_id=1;
+
+    $("#ComputeHbonds").click(function(){
+        $('#ShowAllHbInter').hide();
+        $('#ShowAllHbIntra').hide();
+        var struc = $(".str_file").data("struc_file");
+        var dyn_id=$(".str_file").data("dyn_id");
+        rmsdTraj=$("#hbonds_traj").val();
+        backbone=$("#bonds_backbone input[name=backbone]:checked").val()=='all';
+        neigh=$("#bonds_backbone input[name=neighbours]:checked").length>0;
+        rmsdFrames=$("#bonds_sel_frames_id input[name=bonds_sel_frames]:checked").val();
+        cutoff=$("#hbonds_cutoff").val();
+        if (rmsdFrames=="bonds_frames_mine"){
+            frameFrom=$("#bonds_frame_1").val();
+            frameTo=$("#bonds_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=frameFrom + "-" + frameTo;
+                    } else {
+                        showErrorInblock("#hbonds_sel_frames_error", "Initial frame must be lower than final frame.");
+                        rmsdFrames=false;
+                    }
+                } else {
+                    showErrorInblock("#hbonds_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }else{
+            frameFrom=0;
+            frameTo=-1;
+        }
+
+        $.ajax({
+                type: "POST",
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,backbone,neigh] },
+                url:"/view/hbonds/", 
+                dataType: "json",
+                success: function(data) {
+                    hbonds=data.hbonds;
+                    hbonds_np=data.hbonds_notprotein;
+                    var regex = /\d+/g;
+                    var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                    //gnumFromPosChain(pos, chain)
+                    for (var property in hbonds) {
+                        if (hbonds.hasOwnProperty(property)) {
+                            var string =property;
+                            var string2 =hbonds[property][0][0];
+                            var donor = string.match(regex)[0];  // creates array from matches
+                            var acceptor = string2.match(regex)[0];  // creates array from matches
+                            donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
+                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+
+                            table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                            for (index = 1; index < hbonds[property].length; ++index) {
+                                var string2 =hbonds[property][index][0];
+                                var acceptor = string2.match(regex)[0];  // creates array from matches
+                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
+                                table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                            }
+                        }
+                    }
+                    table=table+'</table></center><center>';
+                    $('#ShowAllHbIntra').show();
+                    $('#hbonds').html(table);
+
+
+                    var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
+                    for (var property in hbonds_np) {
+                        if (hbonds_np.hasOwnProperty(property)) {
+                            var string =property;
+                            var string2 =hbonds_np[property][0][0];
+                            var donor = string.match(regex)[0];  // creates array from matches
+                            var acceptor = string2.match(regex)[0];  // creates array from matches
+                            donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
+
+                            tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                            for (index = 1; index < hbonds_np[property].length; ++index) {
+                                var string2 =hbonds_np[property][index][0];
+                                var acceptor = string2.match(regex)[0];  // creates array from matches           
+                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                            }
+                        }
+                    }
+                    tablenp=tablenp+'</table></center><center>';
+                    $('#ShowAllHbInter').show();
+                    $('#hbondsnp').html(tablenp);
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.readyState == 4) {
+                        var responsetext = XMLHttpRequest.responseText;
+
+                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                    }
+                    else if (XMLHttpRequest.readyState == 0) {
+                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+        }); 
+    });
+
+    $("#ComputeSaltBridges").click(function(){
+        var struc = $(".str_file").data("struc_file");
+        var dyn_id=$(".str_file").data("dyn_id");
+        rmsdTraj=$("#salt_traj").val();
+        rmsdFrames=$("#salt_sel_frames_id input[name=salt_sel_frames]:checked").val();
+        cutoff=$("#salt_cutoff").val();
+        if (rmsdFrames=="salt_frames_mine"){
+            frameFrom=$("#salt_frame_1").val();
+            frameTo=$("#salt_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=frameFrom + "-" + frameTo;
+                    } else {
+                        showErrorInblock("#salt_sel_frames_error", "Initial frame must be lower than final frame.");
+                        rmsdFrames=false;
+                    }
+                    //} else {
+                    //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                    //    rmsdFrames=false;
+                    //}
+                } else {
+                    showErrorInblock("#salt_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }else{
+            frameFrom=0;
+            frameTo=-1;
+        }
+        $('#ShowAllSb').hide();
+        $.ajax({
+                type: "POST",
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
+                url:"/view/saltbridges/", 
+                dataType: "json",
+                success: function(data) {
+                    var regex = /\d+/g;
+                    salty=data.salt_bridges;
+                    var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+                    for (var property in salty) {
+                        if (salty.hasOwnProperty(property)) {
+                            var string =property;
+                            var string2 =salty[property][0][0];
+                            var donor = string.match(regex)[0];  // creates array from matches
+                            var acceptor = string2.match(regex)[0];  // creates array from matches
+                            salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showsb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                            for (index = 1; index < salty[property].length; ++index) {
+                                string2=salty[property][index][0]
+                                acceptor = string2.match(regex)[0];
+                                salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showsb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                            }
+                        }
+                    }
+                    salt=salt+'</table></center>';
+                    $('#ShowAllSb').show();
+                    $('#saltbridges').html(salt);
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.readyState == 4) {
+                        var responsetext = XMLHttpRequest.responseText;
+
+                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                    }
+                    else if (XMLHttpRequest.readyState == 0) {
+                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+        }); 
+    });
+    $("#ComputeGrid").click(function(){
+        var struc = $(".str_file").data("struc_file");
+        var dyn_id=$(".str_file").data("dyn_id");
+        rmsdTraj=$("#grid_traj").val();
+        rmsdFrames=$("#grid_sel_frames_id input[name=grid_sel_frames]:checked").val();
+        cutoff=$("#grid_cutoff").val();
+        sasa_sel=$("#sasa_atoms input[name=sasa_sel]:checked").val();
+        if (rmsdFrames=="grid_frames_mine"){
+            frameFrom=$("#grid_frame_1").val();
+            frameTo=$("#grid_frame_2").val();
+            if (frameFrom && frameTo) {
+                if (/^[\d]+$/.test(frameFrom + frameTo)){
+                 //   if (Number(frameFrom) >= 1){
+                    if (Number(frameFrom) < Number(frameTo)){
+                        rmsdFrames=frameFrom + "-" + frameTo;
+                    } else {
+                        showErrorInblock("#grid_sel_frames_error", "Initial frame must be lower than final frame.");
+                        rmsdFrames=false;
+                    }
+                    //} else {
+                    //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
+                    //    rmsdFrames=false;
+                    //}
+                } else {
+                    showErrorInblock("#grid_sel_frames_error", "Input must be a number.");
+                    rmsdFrames=false;
+                }
+            } else {
+                rmsdFrames=false;
+            }
+        }else{
+            frameFrom=0;
+            frameTo=-1;
+        }
+
+        $.ajax({
+                type: "POST",
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel]},
+                url:"/view/grid/", 
+                dataType: "json",
+                success: function(data) {
+                    atomshb=[];
+                    all_resids=[];
+                    atomshb_inter=[];
+                    atomssb=[];
+                    all_resids_sb=[];
+                    all_resids_sasa=data.selected_residues
+                    results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
+                    data=results[0];
+                    options=results[1];
+                    /*
+
+                                            var chart_div = document.getElementById(chart_cont);
+                                            var chart = new google.visualization.LineChart(chart_div);                                
+                                            google.visualization.events.addListener(chart, 'ready', function () {
+                                                var img_source =  chart.getImageURI(); 
+                                                $("#"+chart_cont).attr("data-url",img_source);
+                                            });                                
+                                            chart.draw(data, options);                                    
+                                        }
+                                        $("#"+newgraph_sel+"f").css("display","none");  
+                                        var img_source_t=$("#"+newgraph_sel+"t").data("url");
+                                        $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
+
+
+
+                    */
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));    
+                    chart_sasa.draw(data, options);
+                    $("#selectionDiv").trigger("click");
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    if (XMLHttpRequest.readyState == 4) {
+                        var responsetext = XMLHttpRequest.responseText;
+
+                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                    }
+                    else if (XMLHttpRequest.readyState == 0) {
+                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
+                    }
+                    else {
+                        alert("Unknown error");
+                    }
+                },
+        }); 
+    });
+
+
+    $(document).on('click', '.showhb', function(){
+        all_resids_sasa=[];
+        atomssb=[];
+        atomshb_inter=[];
+        atomshb=$(this).data('atomindexes').split('$%$');
+        atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];
+        resids=$(this).data('resids').split('$%$');
+        all_resids=[Number(resids[0]),Number(resids[1])];
+        $("#selectionDiv").trigger("click");
+    });
+
+    $(document).on('click', '.showhb_inter', function(){
+        all_resids_sasa=[];
+        atomssb=[];
+        atomshb=[];
+        atomshb_inter=$(this).data('atomindexes').split('$%$');
+        atomshb_inter=[[Number(atomshb_inter[0]),Number(atomshb_inter[1])]];
+        resids=$(this).data('resids').split('$%$');
+        all_resids=[Number(resids[0]),Number(resids[1])];
+        $("#selectionDiv").trigger("click");
+    });
+
+    $(document).on('click', '.showsb', function(){
+        all_resids_sasa=[];
+        atomshb=[];
+        atomshb_inter=[];
+        atomssb=$(this).data('atomindexes').split('$%$');
+        atomssb=[[Number(atomssb[0]),Number(atomssb[1])]];
+        resids=$(this).data('resids').split('$%$');
+        all_resids_sb=[Number(resids[0]),Number(resids[1])];
+        $("#selectionDiv").trigger("click");
+    });
+
+    $('#ShowAllHbIntra').click(function(){
+            all_resids_sasa=[];
+            atomssb=[];
+            atomshb=[];
+            all_resids=[];
+            atomshb_inter=[];
+        $('#intramol tr button').each(function(index){
+            resids=$(this).data('resids').split('$%$');
+            all_resids.push(Number(resids[0]));
+            all_resids.push(Number(resids[1]));
+            atoms=$(this).data('atomindexes').split('$%$');
+            atoms=[Number(atoms[0]),Number(atoms[1])];
+            atomshb.push(atoms);
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+    $('#ShowAllHbInter').click(function(){
+            all_resids_sasa=[];
+            atomssb=[];
+            atomshb=[];
+            all_resids=[];
+            atomshb_inter=[];
+        $('#intermol tr button').each(function(index){
+            resids=$(this).data('resids').split('$%$');
+            all_resids.push(Number(resids[0]));
+            all_resids.push(Number(resids[1]));
+            atoms=$(this).data('atomindexes').split('$%$');
+            atoms=[Number(atoms[0]),Number(atoms[1])];
+            atomshb_inter.push(atoms);
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+
+    $('#ShowAllSb').click(function(){
+            all_resids_sasa=[];
+            atomshb=[];
+            all_resids=[];
+            atomshb_inter=[];
+            atomssb=[];
+            all_resids_sb=[];
+        $('#saltresult tr button').each(function(index){
+            resids=$(this).data('resids').split('$%$');
+            all_resids_sb.push(Number(resids[0]));
+            all_resids_sb.push(Number(resids[1]));
+            atoms=$(this).data('atomindexes').split('$%$');
+            atoms=[Number(atoms[0]),Number(atoms[1])];
+            atomssb.push(atoms);
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");
         $("#rmsd_ref_frames_error").html("");
-        
+        $("#rmsd_stride_parent").removeClass("has-warning");
         numComputedR = $("#rmsd_chart").children().length;
         if (numComputedR < 15){
             rmsdTraj=$("#rmsd_traj").val();
@@ -2039,19 +2525,15 @@ $(document).ready(function(){
                 frameTo=$("#rmsd_frame_2").val();
                 if (frameFrom && frameTo) {
                     if (/^[\d]+$/.test(frameFrom + frameTo)){
-                     //   if (Number(frameFrom) >= 1){
                         if (Number(frameFrom) < Number(frameTo)){
                             rmsdFrames=frameFrom + "-" + frameTo;
                         } else {
                             showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be lower than final frame.");
                             rmsdFrames=false;
                         }
-                        //} else {
-                        //    showErrorInblock("#rmsd_sel_frames_error", "Initial frame must be at least 1.");
-                        //    rmsdFrames=false;
-                        //}
+
                     } else {
-                        showErrorInblock("#rmsd_sel_frames_error", "Input must be a number.");
+                        showErrorInblock("#rmsd_sel_frames_error", "Input must be a positive integer.");
                         rmsdFrames=false;
                     }
                 } else {
@@ -2062,7 +2544,7 @@ $(document).ready(function(){
             if (rmsdRefFr == ""){
                 rmsdRefFr="0";
             } else if (! /^[\d]+$/.test(rmsdRefFr)){
-                showErrorInblock("#rmsd_ref_frames_error", "Input must be a number.");
+                showErrorInblock("#rmsd_ref_frames_error", "Input must be a positive integer.");
                 rmsdRefFr=false;
             }/* else if (Number(rmsdRefFr)<1){
                 showErrorInblock("#rmsd_ref_frames_error", "Frame must be at least 1.");
@@ -2085,6 +2567,7 @@ $(document).ready(function(){
                 $("#rmsd_chart").children(".rmsd_plot").each(function(){
                     act_rmsd_plots.push($(this).data("rmsd_id"));
                 });
+                var stride = strideVal("#rmsd_stride");
                 var t0=performance.now();
                 $.ajax({
                     type: "POST",
@@ -2098,16 +2581,21 @@ $(document).ready(function(){
                       "rmsdRefTraj": rmsdRefTraj,
                       "rmsdSel": rmsdSel,
                       "no_rv" :act_rmsd_plots.join(),
+                      "stride" :stride,
                     },
                     success: function(data_rmsd) {
                         $("#wait_rmsd").remove();
                         $("#gotoRMSDPg").removeClass("disabled");
                         var success=data_rmsd.success;
                         if (success){
-    /////////////////////                    
                             var rmsd_array_t=data_rmsd.result_t;
                             var rmsd_array_f=data_rmsd.result_f;
-                            var rmsd_id=data_rmsd.rmsd_id;                               
+                            var rmsd_id=data_rmsd.rmsd_id;          
+                            var strided=data_rmsd.strided;
+                            var strideText="";
+                            if (Number(strided)> 1){
+                                strideText = ", str: "+strided;
+                            }
                             function drawChart2(){
                                 var patt = /[^/]*$/g;
                                 var trajFile = patt.exec(rmsdTraj);
@@ -2116,10 +2604,10 @@ $(document).ready(function(){
                                 var rmsdSelOk=SelectionName(rmsdSel);
                                 var data_t = google.visualization.arrayToDataTable(rmsd_array_t,false);
                                 var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
-                                var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
                                     "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
-                                var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile+', sel: '+rmsdSelOk+')',
+                                var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
                                     "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
@@ -2323,7 +2811,15 @@ $(document).ready(function(){
         return (receptorsel);
     }
 
-
+    var atomshb=[];
+    var grid=[];
+    var grid_shape=[];
+    var grid_atoms=[];
+    var all_resids=[];
+    var all_resids_sb=[];
+    var atomshb_inter=[];
+    var atomssb=[];
+    var all_resids_sasa=[];
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
@@ -2339,6 +2835,7 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
+        console.log('lts return it:  ',all_resids_sasa);
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -2348,7 +2845,13 @@ $(document).ready(function(){
                 "high_pre":high_pre,
                 "traj":traj,
                 "receptorsel":receptorsel,
-                "bs_info" :bs_info
+                "bs_info" :bs_info,
+                "hbondarray":atomshb,
+                "sbondarray":atomssb,
+                "allresidshb":all_resids,
+                "allresidssb":all_resids_sb,
+                "hb_inter":atomshb_inter,
+                "all_resids_sasa":all_resids_sasa,
         });
     }
     
@@ -2402,6 +2905,12 @@ $(document).ready(function(){
          var dist_groups_li=results["dist_groups_li"];
          var receptorsel = results["receptorsel"]; 
          var bs_info = results["bs_info"];
+         var hbonds= results["hbondarray"];
+         var atomssb=results["sbondarray"];
+         var all_resids=results["allresidshb"];
+         var all_resids_sb=results["allresidssb"];
+         var atomshb_inter=results[ "hb_inter"];
+
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);
          var pd = "n";
@@ -2434,6 +2943,12 @@ $(document).ready(function(){
                             "dc":encode(dist_groups_li),
                             "rs":encode(receptorsel),
                             "bs":encode(bs_info),
+                            "hb":encode(hbonds),
+                            "sb":encode(atomssb),
+                            "ib":encode(atomshb_inter),
+                            "ar":encode(all_resids),
+                            "as":encode(all_resids_sb),
+
                             }        
   
         for (varn in add_url_var){
@@ -2447,8 +2962,14 @@ $(document).ready(function(){
     
     
     $("#clearAll").click(function(){
+        all_resids_sasa=[];
+        atomshb=[];
+        all_resids=[];
+        atomshb_inter=[];
+        atomssb=[];
+        all_resids_sb=[];
         removeCompBtns();
-        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input").val("");
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
         $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){
