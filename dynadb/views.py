@@ -7854,22 +7854,23 @@ def DYNAMICSview(request, submission_id, model_id=None):
             for key,value in initDyn.items():
                 dyn_ins[ii].data[key]=value
 
-            if dyn_ins[ii].is_valid():
-                qDe=DyndbDynamics.objects.filter(submission_id=submission_id)
-                if len(qDe) == 0:
+            qDe=DyndbDynamics.objects.filter(submission_id=submission_id)
+            if len(qDe) == 0:
+
+                if dyn_ins[ii].is_valid():
                     PREVIOUS_COMP=False
                     dyn_obj[ii]=dyn_ins[ii].save()
                     DFpk=dyn_obj[ii].pk
                 else:
-                    PREVIOUS_COMP=True
-                    print("\n\n PREVIOUS COMPOUNDS updating dyn object")
-                    DFpk=qDe.values_list('id',flat=True)[0]
-                    qDe.update(update_timestamp=timezone.now(),delta=POSTimod[ii]['delta'], description=POSTimod[ii]['description'].strip() , ff=POSTimod[ii]['ff'].strip(), ffversion=POSTimod[ii]['ffversion'].strip() , id_dynamics_solvent_types =POSTimod[ii]['id_dynamics_solvent_types'], solvent_num =POSTimod[ii]['solvent_num'], sversion =POSTimod[ii]['sversion'].strip() , atom_num = POSTimod[ii]['atom_num'], timestep =POSTimod[ii]['timestep'], id_dynamics_methods =POSTimod[ii]['id_dynamics_methods'] , software=POSTimod[ii]['software'].strip() ,  id_dynamics_membrane_types =POSTimod[ii]['id_dynamics_membrane_types'], id_assay_types =POSTimod[ii]['id_assay_types'])
+                    iii1=dyn_ins[ii].errors.as_text()
+                    print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                    return response
             else:
-                iii1=dyn_ins[ii].errors.as_text()
-                print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                return response
+                PREVIOUS_COMP=True
+                print("\n\n PREVIOUS COMPOUNDS updating dyn object")
+                DFpk=qDe.values_list('id',flat=True)[0]
+                qDe.update(update_timestamp=timezone.now(),delta=POSTimod[ii]['delta'], description=POSTimod[ii]['description'].strip() , ff=POSTimod[ii]['ff'].strip(), ffversion=POSTimod[ii]['ffversion'].strip() , id_dynamics_solvent_types =POSTimod[ii]['id_dynamics_solvent_types'], solvent_num =POSTimod[ii]['solvent_num'], sversion =POSTimod[ii]['sversion'].strip() , atom_num = POSTimod[ii]['atom_num'], timestep =POSTimod[ii]['timestep'], id_dynamics_methods =POSTimod[ii]['id_dynamics_methods'] , software=POSTimod[ii]['software'].strip() ,  id_dynamics_membrane_types =POSTimod[ii]['id_dynamics_membrane_types'], id_assay_types =POSTimod[ii]['id_assay_types'])
 
             print("\nPOSTimod",ii,POSTimod[ii])
             for key,val in POSTimod[ii].items(): # hay que modificar esto!!!!
