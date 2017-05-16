@@ -12285,10 +12285,12 @@ def submission_summaryiew(request,submission_id):
         fh.write("".join(["\n\t\tNum. atoms: ", str(qDSs.atom_num)])) 
         fh.write("".join(["\n\t\tTime step: ", str(qDSs.timestep)])) 
         fh.write("".join(["\n\t\tDelta: ", str(qDSs.delta)])) 
-        fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description])) 
+        fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description]))
+        
+        submission_closed = DyndbSubmission.objects.filter(pk=submission_id).values_list('is_closed',flat=True)
 
 
-    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl })
+    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl,'submission_closed':submission_closed})
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
@@ -12397,6 +12399,29 @@ def model_summaryiew(request,submission_id):
 
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', )
+
+@login_required
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+def close_submission(request,submission_id):
+    redirect_url = reverse('accounts:memberpage')
+    
+    if request.method == 'POST':
+        try:
+            validate_submission(submission_id)
+        except SubmissionValidationError as e:
+            return HttpResponse('Internal Server Error',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+        except Exception:
+            return HttpResponse('Error while validating submission.',status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
+        try:
+            DyndbSubmission.objects.filter(pk=submission_id).update(is_closed=True)
+        except Exception:
+            return HttpResponse('Error while closing submission.',status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
+        return HttpResponse(redirect_url,content_type='text/plain; charset=UTF-8')
+    elif request.method == 'GET':
+        return HttpResponse('Method GET Not Allowed',status=405,reason='Method Not Allowed',content_type='text/plain; charset=UTF-8')
+
+        
+
 
 def validate_submission(submission_id):
     trajectory_max_files = 200
