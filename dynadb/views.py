@@ -33,8 +33,8 @@ from operator import itemgetter
 from os import listdir
 from os.path import isfile, normpath
 from django.db.models.functions import Concat
-from django.db.models import CharField,TextField, Case, When, Value as V, F
-from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles
+from django.db.models import CharField,TextField, Case, When, Value as V, F, Count
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
 from .csv_in_memory_writer import CsvDictWriterNoFile, CsvDictWriterRowQuerySetIterator
@@ -65,7 +65,7 @@ from time import sleep
 from random import randint
 from haystack.generic_views import SearchView
 from haystack.query import SearchQuerySet
-from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type
+from .models import Model2DynamicsMoleculeType, smol_to_dyncomp_type, smol_to_modelcomp_type
 from django.conf import settings
 from django.views.defaults import server_error
 from revproxy.views import ProxyView
@@ -7371,6 +7371,9 @@ def test_accepted_file_extension(ext,file_type):
 @test_if_closed
 def upload_dynamics_files(request,submission_id,trajectory=None):
     trajectory_max_files = 200
+    if hasattr(settings,'TRAJECTORY_MAX_FILES'):
+        trajectory_max_files = settings.trajectory_max_files
+    
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
@@ -7854,22 +7857,23 @@ def DYNAMICSview(request, submission_id, model_id=None):
             for key,value in initDyn.items():
                 dyn_ins[ii].data[key]=value
 
-            if dyn_ins[ii].is_valid():
-                qDe=DyndbDynamics.objects.filter(submission_id=submission_id)
-                if len(qDe) == 0:
+            qDe=DyndbDynamics.objects.filter(submission_id=submission_id)
+            if len(qDe) == 0:
+
+                if dyn_ins[ii].is_valid():
                     PREVIOUS_COMP=False
                     dyn_obj[ii]=dyn_ins[ii].save()
                     DFpk=dyn_obj[ii].pk
                 else:
-                    PREVIOUS_COMP=True
-                    print("\n\n PREVIOUS COMPOUNDS updating dyn object")
-                    DFpk=qDe.values_list('id',flat=True)[0]
-                    qDe.update(update_timestamp=timezone.now(),delta=POSTimod[ii]['delta'], description=POSTimod[ii]['description'].strip() , ff=POSTimod[ii]['ff'].strip(), ffversion=POSTimod[ii]['ffversion'].strip() , id_dynamics_solvent_types =POSTimod[ii]['id_dynamics_solvent_types'], solvent_num =POSTimod[ii]['solvent_num'], sversion =POSTimod[ii]['sversion'].strip() , atom_num = POSTimod[ii]['atom_num'], timestep =POSTimod[ii]['timestep'], id_dynamics_methods =POSTimod[ii]['id_dynamics_methods'] , software=POSTimod[ii]['software'].strip() ,  id_dynamics_membrane_types =POSTimod[ii]['id_dynamics_membrane_types'], id_assay_types =POSTimod[ii]['id_assay_types'])
+                    iii1=dyn_ins[ii].errors.as_text()
+                    print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
+                    response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                    return response
             else:
-                iii1=dyn_ins[ii].errors.as_text()
-                print("errors in the form Dynamics", ii," ", dyn_ins[ii].errors.as_text())
-                response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-                return response
+                PREVIOUS_COMP=True
+                print("\n\n PREVIOUS COMPOUNDS updating dyn object")
+                DFpk=qDe.values_list('id',flat=True)[0]
+                qDe.update(update_timestamp=timezone.now(),delta=POSTimod[ii]['delta'], description=POSTimod[ii]['description'].strip() , ff=POSTimod[ii]['ff'].strip(), ffversion=POSTimod[ii]['ffversion'].strip() , id_dynamics_solvent_types =POSTimod[ii]['id_dynamics_solvent_types'], solvent_num =POSTimod[ii]['solvent_num'], sversion =POSTimod[ii]['sversion'].strip() , atom_num = POSTimod[ii]['atom_num'], timestep =POSTimod[ii]['timestep'], id_dynamics_methods =POSTimod[ii]['id_dynamics_methods'] , software=POSTimod[ii]['software'].strip() ,  id_dynamics_membrane_types =POSTimod[ii]['id_dynamics_membrane_types'], id_assay_types =POSTimod[ii]['id_assay_types'])
 
             print("\nPOSTimod",ii,POSTimod[ii])
             for key,val in POSTimod[ii].items(): # hay que modificar esto!!!!
@@ -11999,7 +12003,7 @@ def save_uploadedfile(filepath,uploadedfile):
         else:
             f.write(uploadedfile.read())
         f.close()
-def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_match=True):
+def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_match=True,searchkey_is_regex=False):
     inverse_type = dict()
     if  searchkey is None:
         dore = False
@@ -12009,8 +12013,10 @@ def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_ma
             flags = 0
         else:
             flags=re.IGNORECASE
-            
-        researchkey = re.compile(re.escape(searchkey),flags=flags)
+        searchkey2 = searchkey
+        if not searchkey_is_regex:
+            searchkey2 = re.escape(searchkey2)
+        researchkey = re.compile(searchkey2,flags=flags)
     for row in type_matrix:
         internal_val = row[0]
         text = row[1]
@@ -12025,7 +12031,11 @@ def type_inverse_search(type_matrix,searchkey=None,case_sensitive=False,first_ma
             inverse_type[text] = internal_val
                 
     if first_match and dore:
-        raise ValueError("Object in first argument doesn't have text '"+searchkey+"'.")        
+        if searchkey_is_regex:
+            raise ValueError("Object in first argument doesn't have text that matches the pattern '"+searchkey+"'.")
+        else:
+            raise ValueError("Object in first argument doesn't have text '"+searchkey+"'.")
+                
     else:
         return inverse_type
 
@@ -12163,7 +12173,7 @@ def submission_summaryiew(request,submission_id):
     compl=[]
     dctypel=[]
     for tt in qDS.values_list('id',flat=True):
-        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).order_by('id')
+        qDC=DyndbDynamicsComponents.objects.filter(id_dynamics=tt).exclude(type=None,numberofmol=None).order_by('id')
         compl.append(qDC)
         d=0
         l_ord_mol=[]
@@ -12276,10 +12286,12 @@ def submission_summaryiew(request,submission_id):
         fh.write("".join(["\n\t\tNum. atoms: ", str(qDSs.atom_num)])) 
         fh.write("".join(["\n\t\tTime step: ", str(qDSs.timestep)])) 
         fh.write("".join(["\n\t\tDelta: ", str(qDSs.delta)])) 
-        fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description])) 
+        fh.write("".join(["\n\t\tAdditional Info: ", qDSs.description]))
+        
+        submission_closed = DyndbSubmission.objects.filter(pk=submission_id).values_list('is_closed',flat=True)
 
 
-    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl })
+    return render(request,'dynadb/SUBMISSION_SUMMARY.html', { 'qPROT':qPROT,'sci_namel':sci_na_codel,'int_id':int_id,'int_id0':int_id0,'alias':alias,'mseq':mseq,'wseq':wseq,'MUTations':MUTations,'submission_id' : submission_id,'urls':urls,'fdbSubs':fdbSubs,'qMOL':qMOL,'labtypels':labtypels,'Types':Types,'imps':imps,'qCOMP':qCOMP,'int_ids':int_ids,'int_ids0':int_ids0,'p':p,'SType':SType,'TypeM':TypeM, 'ddown':ddown,'qDC':qDC, 'dctypel':dctypel, "lcompname":lcompname, 'lcompname':l_ord_mol, 'compl':compl, 'qDS':qDS, 'data':data, 'model_id':model_id, 'SUMMARY':True, 'urlsummary':summaryurl,'submission_closed':submission_closed})
 
 @login_required
 @user_passes_test_args(is_submission_owner,redirect_field_name=None)
@@ -12388,6 +12400,269 @@ def model_summaryiew(request,submission_id):
 
 
     return render(request,'dynadb/SUBMISSION_SUMMARY.html', )
+
+@login_required
+@user_passes_test_args(is_submission_owner,redirect_field_name=None)
+def close_submission(request,submission_id):
+    redirect_url = reverse('accounts:memberpage')
+    
+    if request.method == 'POST':
+        try:
+            validate_submission(submission_id)
+        except SubmissionValidationError as e:
+            return HttpResponse('Internal Server Error',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+        except Exception:
+            return HttpResponse('Error while validating submission.',status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
+        try:
+            DyndbSubmission.objects.filter(pk=submission_id).update(is_closed=True)
+        except Exception:
+            return HttpResponse('Error while closing submission.',status=500,reason='Internal Server Error',content_type='text/plain; charset=UTF-8')
+        return HttpResponse(redirect_url,content_type='text/plain; charset=UTF-8')
+    elif request.method == 'GET':
+        return HttpResponse('Method GET Not Allowed',status=405,reason='Method Not Allowed',content_type='text/plain; charset=UTF-8')
+
+        
+
+
+def validate_submission(submission_id):
+    trajectory_max_files = 200
+    if hasattr(settings,'TRAJECTORY_MAX_FILES'):
+        trajectory_max_files = settings.trajectory_max_files
+    if not DyndbSubmission.objects.filter(pk=submission_id).exists():
+        raise SubmissionValidationError('Submission does not exists.')
+    
+    # check if dynamics exists and retrieve model ID
+    qdyn = DyndbDynamics.objects.filter(submission_id=submission_id)
+    qdyn = qdyn.values('pk','id_model')
+    if len(qdyn) > 0:
+        dyn_id = qdyn[0]['pk']
+        model_id = qdyn[0]['id_model']
+    else:
+        raise SubmissionValidationError('Submission has no dynamics information.')
+    
+    if model_id is None:
+        raise SubmissionValidationError('Submission has no complex structure information.')
+    
+    if not DyndbSubmissionModel.objects.filter(submission_id=submission_id,model_id=model_id).exists():
+        raise ValueError('Submission model ID does not match dynamics model ID or does not exists.')
+    
+    # check the number of dynamics files
+    coortype_int = type_inverse_search(DyndbFilesDynamics.file_types,searchkey='coor',case_sensitive=False,first_match=True)
+    trajtype_int = type_inverse_search(DyndbFilesDynamics.file_types,searchkey='traj',case_sensitive=False,first_match=True)
+    toptype_int = type_inverse_search(DyndbFilesDynamics.file_types,searchkey='top',case_sensitive=False,first_match=True)
+    prmtype_int = type_inverse_search(DyndbFilesDynamics.file_types,searchkey='p(arm?|rm)',case_sensitive=False,\
+    first_match=True,searchkey_is_regex=True)
+    othertype_int = type_inverse_search(DyndbFilesDynamics.file_types,searchkey='other',case_sensitive=False,first_match=True)
+    
+    mandatory_types_int = {coortype_int,trajtype_int}
+    
+    
+    qfilesdyn = DyndbFilesDynamics.objects.filter(id_dynamics=dyn_id)
+    qfilesdyn = qfilesdyn.annotate(count=Count('type'))
+    qfilesdyn = qfilesdyn.values('type','count')
+    
+    for filetype in qfilesdyn:
+        filetype_int = filetype['type']
+        count = filetype['count']
+        if filetype_int in mandatory_types_int and count < 1:
+            raise SubmissionValidationError('Dynamics has no %s file.' % (DyndbFilesDynamics.file_types[filetype_int].lower()))
+        elif filetype_int == trajtype_int and count > trajectory_max_files:
+            raise SubmissionValidationError('Dynamics has too many (%d) %s files. Max(%d)' % \
+        (count,DyndbFilesDynamics.file_types[filetype_int].lower(),trajectory_max_files))
+        elif count > 1:
+            raise SubmissionValidationError('Dynamics has more than one %s file.' % \
+        (DyndbFilesDynamics.file_types[filetype_int].lower()))
+    
+    # get molecules ID in submission
+    sub_bulk_compound_types_dict = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='bulk',\
+    case_sensitive=False,first_match=False)
+    sub_ligand_compound_types_dict = type_inverse_search(DyndbSubmissionMolecule.COMPOUND_TYPE,searchkey='lig',\
+    case_sensitive=False,first_match=False)
+    
+    sub_bulk_compound_types_int = set(sub_bulk_compound_types_dict.values())
+    sub_ligand_compound_types_int = set(sub_ligand_compound_types_dict.values())
+    
+    qsubmol = DyndbSubmissionMolecule.objects.filter(submission_id=submission_id)
+    qsubmol = qsubmol.values('molecule_id','type', 'not_in_model')
+        
+    sub_bulk_mols = []
+    sub_model_mols = []
+    sub_ligand_mols = []
+    sub_molecule_id_type = {}
+    for molecule in qsubmol:
+        moltype = molecule['type']
+        molid = molecule['molecule_id']
+        not_in_model = molecule['not_in_model']
+        sub_molecule_id_type[molid] = moltype
+        if moltype not in sub_bulk_compound_types_int and not not_in_model:
+            sub_model_mols.append(molid)
+            if moltype in sub_ligand_compound_types_int:
+                sub_ligand_mols.append(molid)
+        elif moltype in sub_bulk_compound_types_int and not_in_model:
+            sub_bulk_mols.append(molid)
+        else:
+            raise ValueError('Error while determining if molecule ID: %d is in bulk.' % (molecule['molecule_id']))
+    sub_bulk_mols = set(sub_bulk_mols)
+    sub_model_mols = set(sub_model_mols)
+    sub_ligand_mols = set(sub_ligand_mols)
+    
+    
+    sub_bulk_mol_num = len(sub_bulk_mols)
+    sub_model_mol_num = len(sub_model_mols)
+    sub_ligand_mol_num = len(sub_ligand_mols)
+
+    # check submission proteins
+    qsubprot = DyndbSubmissionProtein.objects.filter(submission_id=submission_id)
+    qsubprot = qsubprot.annotate(receptor_id=F('protein_id__receptor_id_protein'))
+    qsubprot = qsubprot.values_list('protein_id','receptor_id','int_id')
+    sub_prots_int_id_1 = dict()
+    receptor_num = 0
+    for protid, receptor_id, int_id in qsubprot:
+        sub_prots_int_id_1[protid] = int_id + 1
+        if receptor_id is not None:
+            receptor_num =+ 1
+    sub_prots = set(sub_prots_int_id_1.keys())
+    sub_prot_num = len(sub_prots)
+    if sub_prot_num == 0:
+        raise SubmissionValidationError('Submission has no proteins.')
+    if receptor_num == 0:
+        raise SubmissionValidationError('Submission has no GPCRs.')
+
+    # check if complex or apoform model type are correctly assigned acording to submission tables
+    apo_int = type_inverse_search(DyndbModel.MODEL_TYPE,searchkey='apo',case_sensitive=False,first_match=True)
+    complex_int = type_inverse_search(DyndbModel.MODEL_TYPE,searchkey='complex',case_sensitive=False,first_match=True)
+    
+    qmodel = DyndbModel.objects.filter(pk=model_id)
+    qmodel = qmodel.values('type','id_protein','id_complex_molecule')
+    
+    modeltype = qmodel[0]['type']
+    id_protein = qmodel[0]['id_protein']
+    id_complex_mol = qmodel[0]['id_complex_molecule']
+    
+    if modeltype == apo_int and id_protein is not None and id_complex_mol is None:
+        
+        if sub_prot_num > 1:
+            raise SubmissionValidationError('Submission has more than one protein, ' + \
+            'but complex structure type is a protein apoform.')
+        if qsubprot[0]['protein_id'] != id_protein:
+            raise SubmissionValidationError('Submitted protein does not match with complex structure ' + \
+            'protein apoform. Please, update your complex structure information.')
+        
+        if sub_ligand_mol_num > 1:
+            raise SubmissionValidationError('Submission has molecules defined as ligands, ' + \
+            'but complex structure type is a protein apoform.')
+
+    elif modeltype == complex_int and id_protein is None and id_complex_mol is not None:
+        if sub_prot_num == 1 and sub_model_mol_num == 0:
+            raise SubmissionValidationError('Submission has only one protein and no ligands, ' + \
+            'but complex structure type is a protein complex or a protein-ligand complex.')
+    else:
+        raise ValueError('Error while reading complex structure type.')
+    
+    #check complex_molecule
+    if id_complex_mol is not None:
+        qcomplexmol = DyndbComplexMolecule.objects.filter(pk=id_complex_mol)
+        qcomplexmol =  qcomplexmol.values_list('id_complex_exp',flat=True)
+        
+        if len(qcomplexmol) > 0:
+            id_complex_exp = qcomplexmol[0]
+        else:
+            raise ValueError('Error complex molecule with ID: %d does not exist.' % id_complex_mol)
+        
+        # check complex_protein
+        qcomplex_prot = DyndbComplexProtein.objects.filter(id_complex_exp=id_complex_exp)
+        complex_prots = set(qcomplex_prot.values_list('id_protein',flat=True))
+        if sub_prots != complex_prots:
+            raise SubmissionValidationError('Mismatch between declared proteins and proteins present ' + \
+            'in the complex. Please, update your crystal structure information.')
+        # check complex_molecule
+        qcomplex_mol = DyndbComplexMoleculeMolecule.objects.filter(id_complex_molecule=id_complex_mol)
+        qcomplex_mol = qcomplex_mol.annotate(id_compound=F('id_molecule__id_compound'))
+        qcomplex_mol = qcomplex_mol.values('id_molecule','id_compound')
+        complex_mols = set([row['id_molecule'] for row in qcomplex_mol])
+        complex_mol_compounds = set([row['id_compound'] for row in qcomplex_mol])
+        
+        if sub_ligand_mols != complex_mols:
+            raise SubmissionValidationError('Mismatch between declared ligand molecules and ligands present ' + \
+            'in the complex. Please, update your crystal structure information.')
+        # check complex_compound
+        qcomplex_compound = DyndbComplexCompound.objects.filter(id_complex_exp=id_complex_exp)
+        complex_compounds = set(qcomplex_compound.values_list('id_compound',flat=True))
+        if complex_mol_compounds != complex_compounds:
+            raise ValueError('Mismatch between complex molecule molecules and experimental complex compounds.')
+        
+    #check model_components vs submission tables
+    qmodel_comp = DyndbModelComponents.objects.filter(id_model=model_id)
+    qmodel_comp = qmodel_comp.values('id_molecule','type','resname')
+    model_comp_resnames = {}
+    for molecule in qmodel_comp:
+        id_molecule = molecule['id_molecule']
+        type_int = molecule['type']
+        if smol_to_modelcomp_type[sub_molecule_id_type[id_molecule]] != type_int:
+            raise SubmissionValidationError('Mismatch between declared molecule type and crystal ' + \
+            'structure components molecule type. Please, update your complex structure information.')
+        if id_molecule not in model_comp_resnames:
+            model_comp_resnames[id_molecule] = set()
+        model_comp_resnames[id_molecule].add(molecule['resname'])
+   
+    if sub_model_mols != model_comp_resnames.keys():
+            raise SubmissionValidationError('Mismatch between declared crystal molecules and ' + \
+            'crystal structure components. Please, update your complex structure information.')
+        
+    
+    
+    #check dynamics_components vs submission tables
+    qdyn_comp = DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id)
+    qdyn_comp = qdyn_comp.values('id_molecule','type','resname')
+    dyn_comp_resnames = {}
+    for molecule in qdyn_comp:
+        id_molecule = molecule['id_molecule']
+        type_int = molecule['type']
+        if smol_to_dyncomp_type[sub_molecule_id_type[id_molecule]] != type_int:
+            raise SubmissionValidationError('Mismatch between declared molecule type and dynamics ' + \
+            'components molecule type. Please, update your dynamics information.')
+        if id_molecule not in dyn_comp_resnames.keys():
+            dyn_comp_resnames[id_molecule] = set()
+        dyn_comp_resnames[id_molecule].add(molecule['resname'])
+    
+    dyn_comp_molids = set(dyn_comp_resnames.keys())
+    model_comp_molids = set(model_comp_resnames.keys())
+   
+    
+    if sub_model_mols.union(sub_bulk_mols) != dyn_comp_molids:
+            raise SubmissionValidationError('Mismatch between declared molecules and dynamics components. ' + \
+            'Please, update your dynamics information.')
+    
+    #check model_components vs check dynamics_components
+    if not model_comp_molids.issubset(dyn_comp_molids):
+                    raise SubmissionValidationError('Mismatch between crystal structure components and .' + \
+            'dynamics components. Please, update your complex structure and/or your dynamics information.')
+            
+    for molid,resname_list in model_comp_resnames.items():
+        if not resname_list.issubset(dyn_comp_resnames[molid]):
+            raise SubmissionValidationError('Mismatch between crystal structure components residue names and ' + \
+            'dynamics components residue names. Please, update your complex structure and/or your dynamics information.')
+            
+    #check model pdb file exists
+    qmodelfile = DyndbFilesModel.objects.filter(id_model=model_id)
+    if not qmodelfile.exists():
+        raise SubmissionValidationError('Missing complex structure PDB file.' + \
+        'Please, update your complex structure and/or your dynamics information.')
+    #check min protein fragments
+    qmodelres = DyndbModeledResidues.objects.filter(id_model=model_id)
+    modeled_res_prot_ids = set(qmodelres.values_list('id_protein',flat=True))
+    
+    if not modeled_res_prot_ids.issubset(sub_prots):
+                raise SubmissionValidationError('Modeled residues information contains fragments about ' + \
+                'non-declared proteins. Please, update your complex structure information.')
+    
+    diff_prot = sub_prots.difference(modeled_res_prot_ids)
+        
+    if diff_prot != set():
+        raise SubmissionValidationError('Modeled residues information missing for proteins #%s. ' + \
+        'Please, update your complex structure information.' % ', #'.join([str(i) for i in diff_prot]))
+    
+    
 
 @login_required
 def serve_submission_files(request,obj_folder,submission_folder,path):
