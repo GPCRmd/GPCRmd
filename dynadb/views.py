@@ -4135,14 +4135,17 @@ def pdbcheck_molecule(request,submission_id,form_type):
                         print("\n------------------------------\n",file=logfile)
                         try:
                             print("Checking mol #"+str(int_id+1)+" resname "+resname+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
-                            failc, pdbmol = diff_mol_pdb(mol,pdbdict[resname],logfile=logfile)
+                            failc, pdbmol, nhpdbmol = diff_mol_pdb(mol,pdbdict[resname],logfile=logfile)
                             fail += failc
                             try:
                                 generate_png(pdbmol,pdbdict[resname]+'.png',logfile=os.devnull,size=300)
+                                write_sdf(pdbmol,pdbdict[resname]+'.sdf')
+                                write_sdf(nhpdbmol,pdbdict[resname]+'nh.sdf')
                             except:
                                 pass
                             finally:
                                 del pdbmol
+                                del nhpdbmol
                         except ParsingError as e:
                             print(e.args[0],file=logfile)
                             data['msg'] = "Cannot read from PDB mol #"+str(int_id+1)+" resname "+resname+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.'
