@@ -156,10 +156,11 @@
             </div><!--lef right div end-->
         </div>  <!--bottoninfoleft-->
 
-
+        {% if answer.ortoligands or answer.aloligands %}
         <div id='bottoninforight' class="col-sm-6">
             <div id="container-01" class="mol-container" style="border: 1px solid black; width:85%;"></div>
         </div> <!--bottoninforight-->
+        {% endif %}
     </div> <!--down-->
 
 

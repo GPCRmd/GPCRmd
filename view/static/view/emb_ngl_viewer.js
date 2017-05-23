@@ -2104,6 +2104,25 @@ $(document).ready(function(){
             }
             var fin_val = act_val + or + "protein and ("+ pos_str +")";
             sel_input_cont.val(fin_val);
+            seq_ids.length = 0
+            $('.sel').each(function(){
+                seq_ids.push(Number(this.id));
+            });
+
+            residueslist=[]
+            for (i=0;i<seq_ids.length;i++){
+                parentid='#'+seq_ids[i].toString();
+                residue=$(parentid).children('#ss_seq').html()+$(parentid).children('#ss_pos').html()
+                residueslist.push(residue);
+            }
+
+            var basehtml='<input type="radio" name="sasa_sel" value="sequence"> Sequence Selection '
+            if (residueslist.length < 4){
+                $('#show_seq_sel').html(basehtml+'('+residueslist.join(', ')+')');
+            }else{
+                shortlist=residueslist[0]+', ... , '+residueslist[residueslist.length-1];
+                $('#show_seq_sel').html(basehtml+'('+shortlist+')');
+            }
             $("#selectionDiv").trigger("click");
         }
     });    
@@ -2343,6 +2362,7 @@ $(document).ready(function(){
         rmsdTraj=$("#grid_traj").val();
         rmsdFrames=$("#grid_sel_frames_id input[name=grid_sel_frames]:checked").val();
         cutoff=$("#grid_cutoff").val();
+        console.log('These are the ides:',seq_ids);
         sasa_sel=$("#sasa_atoms input[name=sasa_sel]:checked").val();
         if (rmsdFrames=="grid_frames_mine"){
             frameFrom=$("#grid_frame_1").val();
@@ -2372,9 +2392,10 @@ $(document).ready(function(){
             frameTo=-1;
         }
 
+
         $.ajax({
                 type: "POST",
-                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel]},
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
                 url:"/view/grid/", 
                 dataType: "json",
                 success: function(data) {
@@ -2385,7 +2406,7 @@ $(document).ready(function(){
                     all_resids_sb=[];
                     all_resids_sasa=data.selected_residues
                     results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
-                    data=results[0];
+                    data_graph=results[0];
                     options=results[1];
                     /*
 
@@ -2404,8 +2425,10 @@ $(document).ready(function(){
 
 
                     */
-                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));    
-                    chart_sasa.draw(data, options);
+                    newid='sasa_chart_'+data.sasa_id.toString();
+                    $("#sasa_container").append('<div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));    
+                    chart_sasa.draw(data_graph, options);
                     $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -2810,7 +2833,7 @@ $(document).ready(function(){
         }
         return (receptorsel);
     }
-
+    var seq_ids=[];
     var atomshb=[];
     var grid=[];
     var grid_shape=[];
@@ -2835,7 +2858,6 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
-        console.log('lts return it:  ',all_resids_sasa);
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
