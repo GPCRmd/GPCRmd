@@ -1690,7 +1690,10 @@ def grid(request):
         mintop=np.array([0,0,0])
         print('ck1')
         print(str(len(trajprot)))
+        i=0
         for frame in range(len(trajprot)):
+            print("frame: ",i)
+            i+=1
             for atom in trajprot.xyz[frame]:
                 if atom[0]<mintop[0]:
                     mintop[0]=atom[0]

@@ -313,13 +313,11 @@ $(document).ready(function(){
     maxInputLength('.inputdist',"",6);
     maxInputLength('input.sel_input',"",100);
     maxInputLength('input.seq_input',"",100);
-    maxInputLength('#rmsd_frame_1',"",8);
-    maxInputLength('#rmsd_frame_2',"",8);
     maxInputLength('#rmsd_my_sel_sel',"",50);
-    maxInputLength('#rmsd_ref_frame',"",8);
     maxInputLength("#int_thr", "",3);
     maxInputLength(".inp_stride", "",4);
     maxInputLength(".sel_within", ".user_sel_input",40);
+    maxInputLength(".maxinp8","",8);
 
 
 
@@ -335,6 +333,7 @@ $(document).ready(function(){
     removeSpacesInInput("#rmsd_ref_frame");
     removeSpacesInInput("#int_thr");
     removeSpacesInInput(".inp_stride");
+    removeSpacesInInput(".rvSpaces");
 
 
     var ti_i=1;
@@ -2136,13 +2135,19 @@ $(document).ready(function(){
         }
     });*/
 
-//-------- RMSD computation --------
+//-------- H bonds computation --------
 
 
     function showErrorInblock(selector, error_msg){
          var sel_fr_error="<div style='color:#DC143C'>" + error_msg + "</div>";
          $(selector).html(sel_fr_error);
     }
+    
+    function showBigError(msg,selector){
+        add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
+        $(selector).html(add_error);  
+    }
+    
 
     function SelectionName(traj_sel){
         var set_sel;
@@ -2162,7 +2167,7 @@ $(document).ready(function(){
         return (set_sel);
     }
     
-    $("#rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame").on("blur", function(){
+    $(".changeVal").on("change", function(){
         var val_changed=$(this).val();
         if (val_changed=="" || /^[\d]+$/.test(val_changed)){
             $(this).parent().removeClass("has-error");            
@@ -2171,9 +2176,36 @@ $(document).ready(function(){
         }
     });
     
+    $(".inp_stride, #int_thr").on("change" , function(){
+        var stride = $(this).val();
+        stride = Number(stride);
+        var pos = Math.abs(stride)
+        var rounded= Math.round(pos);
+        if (rounded <= 0){
+            var rounded = 1;
+        } 
+        if (stride != rounded){
+            stride = rounded;
+            $(this).val(stride);
+        }
+    });
+
+    $(".changeThresh").on("change" , function(){
+        var stride = $(this).val();
+        stride = Number(stride);
+        var pos = Math.abs(stride)
+        var rounded= Math.round(pos);
+        if (stride != rounded){
+            stride = rounded;
+            $(this).val(stride);
+        }
+    });
+    
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
+        $("#bonds_alert").html("");
+        $("#hbonds_sel_frames_error").html("");
         $('#ShowAllHbInter').hide();
         $('#ShowAllHbIntra').hide();
         var struc = $(".str_file").data("struc_file");
@@ -2183,12 +2215,15 @@ $(document).ready(function(){
         neigh=$("#bonds_backbone input[name=neighbours]:checked").length>0;
         rmsdFrames=$("#bonds_sel_frames_id input[name=bonds_sel_frames]:checked").val();
         cutoff=$("#hbonds_cutoff").val();
+        if (cutoff == ""){
+            cutoff =$("#hbonds_cutoff").attr("placeholder");
+            console.log(cutoff);
+        }
         if (rmsdFrames=="bonds_frames_mine"){
             frameFrom=$("#bonds_frame_1").val();
             frameTo=$("#bonds_frame_2").val();
             if (frameFrom && frameTo) {
                 if (/^[\d]+$/.test(frameFrom + frameTo)){
-                 //   if (Number(frameFrom) >= 1){
                     if (Number(frameFrom) < Number(frameTo)){
                         rmsdFrames=frameFrom + "-" + frameTo;
                     } else {
@@ -2206,86 +2241,107 @@ $(document).ready(function(){
             frameFrom=0;
             frameTo=-1;
         }
-
-        $.ajax({
-                type: "POST",
-                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,backbone,neigh] },
-                url:"/view/hbonds/", 
-                dataType: "json",
-                success: function(data) {
-                    hbonds=data.hbonds;
-                    hbonds_np=data.hbonds_notprotein;
-                    var regex = /\d+/g;
-                    var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
-                    //gnumFromPosChain(pos, chain)
-                    for (var property in hbonds) {
-                        if (hbonds.hasOwnProperty(property)) {
-                            var string =property;
-                            var string2 =hbonds[property][0][0];
-                            var donor = string.match(regex)[0];  // creates array from matches
-                            var acceptor = string2.match(regex)[0];  // creates array from matches
-                            donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
-                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
-
-                            table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
-                            for (index = 1; index < hbonds[property].length; ++index) {
-                                var string2 =hbonds[property][index][0];
+        if (rmsdFrames == false){
+            var msn="Some fields are empty or contain errors";
+            showBigError(msn, "#bonds_alert");
+        } else {
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing Hbonds...</p>");   
+            $.ajax({
+                    type: "POST",
+                    data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,backbone,neigh] },
+                    url:"/view/hbonds/", 
+                    dataType: "json",
+                    success: function(data) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_hbonds").remove();
+                        hbonds=data.hbonds;
+                        hbonds_np=data.hbonds_notprotein;
+                        var regex = /\d+/g;
+                        var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                        //gnumFromPosChain(pos, chain)
+                        for (var property in hbonds) {
+                            if (hbonds.hasOwnProperty(property)) {
+                                var string =property;
+                                var string2 =hbonds[property][0][0];
+                                var donor = string.match(regex)[0];  // creates array from matches
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
-                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
-                                table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
+                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+
+                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                                for (index = 1; index < hbonds[property].length; ++index) {
+                                    var string2 =hbonds[property][index][0];
+                                    var acceptor = string2.match(regex)[0];  // creates array from matches
+                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
+                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                }
                             }
                         }
-                    }
-                    table=table+'</table></center><center>';
-                    $('#ShowAllHbIntra').show();
-                    $('#hbonds').html(table);
+                        table=table+'</table></center><center>';
+                        $('#ShowAllHbIntra').show();
+                        $('#hbonds').html(table);
 
 
-                    var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
-                    for (var property in hbonds_np) {
-                        if (hbonds_np.hasOwnProperty(property)) {
-                            var string =property;
-                            var string2 =hbonds_np[property][0][0];
-                            var donor = string.match(regex)[0];  // creates array from matches
-                            var acceptor = string2.match(regex)[0];  // creates array from matches
-                            donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
-                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
+                        var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
+                        for (var property in hbonds_np) {
+                            if (hbonds_np.hasOwnProperty(property)) {
+                                var string =property;
+                                var string2 =hbonds_np[property][0][0];
+                                var donor = string.match(regex)[0];  // creates array from matches
+                                var acceptor = string2.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
 
-                            tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
-                            for (index = 1; index < hbonds_np[property].length; ++index) {
-                                var string2 =hbonds_np[property][index][0];
-                                var acceptor = string2.match(regex)[0];  // creates array from matches           
-                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
-                                tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                                for (index = 1; index < hbonds_np[property].length; ++index) {
+                                    var string2 =hbonds_np[property][index][0];
+                                    var acceptor = string2.match(regex)[0];  // creates array from matches           
+                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                }
                             }
                         }
-                    }
-                    tablenp=tablenp+'</table></center><center>';
-                    $('#ShowAllHbInter').show();
-                    $('#hbondsnp').html(tablenp);
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    if (XMLHttpRequest.readyState == 4) {
-                        var responsetext = XMLHttpRequest.responseText;
+                        tablenp=tablenp+'</table></center><center>';
+                        $('#ShowAllHbInter').show();
+                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding-top:15px");
+                        $('#hbondsnp').html(tablenp);
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_hbonds").remove();
+                        if (XMLHttpRequest.readyState == 4) {
+                            var responsetext = XMLHttpRequest.responseText;
 
-                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
-                    }
-                    else if (XMLHttpRequest.readyState == 0) {
-                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
-                    }
-                    else {
-                        alert("Unknown error");
-                    }
-                },
-        }); 
+                            alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                            showBigError("An error occurred.", "#bonds_alert");
+                        }
+                        else if (XMLHttpRequest.readyState == 0) {
+                            var msn="Connection error. Please, try later and check that your file is not larger than 50 MB.";
+                            showBigError(msn, "#bonds_alert");
+                        }
+                        else {
+                            var msn="Unknown error.";
+                            showBigError(msn, "#bonds_alert");
+                        }
+                    },
+            }); 
+        }
     });
+    
+//-------- Salt bridges computation --------
 
     $("#ComputeSaltBridges").click(function(){
+        $("#salt_sel_frames_error").html("");
+        $("#salt_alert").html("");
         var struc = $(".str_file").data("struc_file");
         var dyn_id=$(".str_file").data("dyn_id");
         rmsdTraj=$("#salt_traj").val();
         rmsdFrames=$("#salt_sel_frames_id input[name=salt_sel_frames]:checked").val();
         cutoff=$("#salt_cutoff").val();
+        if (cutoff == ""){
+            cutoff=$("#salt_cutoff").attr("placeholder");
+        }
         if (rmsdFrames=="salt_frames_mine"){
             frameFrom=$("#salt_frame_1").val();
             frameTo=$("#salt_frame_2").val();
@@ -2313,49 +2369,66 @@ $(document).ready(function(){
             frameFrom=0;
             frameTo=-1;
         }
-        $('#ShowAllSb').hide();
-        $.ajax({
-                type: "POST",
-                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
-                url:"/view/saltbridges/", 
-                dataType: "json",
-                success: function(data) {
-                    var regex = /\d+/g;
-                    salty=data.salt_bridges;
-                    var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
-                    for (var property in salty) {
-                        if (salty.hasOwnProperty(property)) {
-                            var string =property;
-                            var string2 =salty[property][0][0];
-                            var donor = string.match(regex)[0];  // creates array from matches
-                            var acceptor = string2.match(regex)[0];  // creates array from matches
-                            salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showsb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
-                            for (index = 1; index < salty[property].length; ++index) {
-                                string2=salty[property][index][0]
-                                acceptor = string2.match(regex)[0];
-                                salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showsb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+        if (rmsdFrames == false){
+            var msn="Some fields are empty or contain errors";
+            showBigError(msn, "#salt_alert");
+        }else{
+            $('#ShowAllSb').hide();
+            $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $.ajax({
+                    type: "POST",
+                    data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
+                    url:"/view/saltbridges/", 
+                    dataType: "json",
+                    success: function(data) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_saltb").remove();
+                        var regex = /\d+/g;
+                        salty=data.salt_bridges;
+                        var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+                        for (var property in salty) {
+                            if (salty.hasOwnProperty(property)) {
+                                var string =property;
+                                var string2 =salty[property][0][0];
+                                var donor = string.match(regex)[0];  // creates array from matches
+                                var acceptor = string2.match(regex)[0];  // creates array from matches
+                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showsb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                                for (index = 1; index < salty[property].length; ++index) {
+                                    string2=salty[property][index][0]
+                                    acceptor = string2.match(regex)[0];
+                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showsb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                                }
                             }
                         }
-                    }
-                    salt=salt+'</table></center>';
-                    $('#ShowAllSb').show();
-                    $('#saltbridges').html(salt);
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    if (XMLHttpRequest.readyState == 4) {
-                        var responsetext = XMLHttpRequest.responseText;
+                        salt=salt+'</table></center>';
+                        $('#ShowAllSb').show();
+                        $('#saltbridges').html(salt);
+                        $("#saltresult_par").attr("style","border:1px solid #F3F3F3;padding-top:5px;display:block;margin-top:10px");
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_saltb").remove();
+                        if (XMLHttpRequest.readyState == 4) {
+                            var responsetext = XMLHttpRequest.responseText;
 
-                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
-                    }
-                    else if (XMLHttpRequest.readyState == 0) {
-                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
-                    }
-                    else {
-                        alert("Unknown error");
-                    }
-                },
-        }); 
+                            alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                            showBigError("An error occurred.", "#salt_alert");
+                        }
+                        else if (XMLHttpRequest.readyState == 0) {
+                            var msg="Connection error. Please, try later and check that your file is not larger than 50 MB.";
+                            showBigError(msg, "#salt_alert");
+                        }
+                        else {
+                            showBigError("Unknown error.", "#salt_alert");
+                        }
+                    },
+            }); 
+        }
     });
+    
+//-------- SASA computation --------
+    
     $("#ComputeGrid").click(function(){
         var struc = $(".str_file").data("struc_file");
         var dyn_id=$(".str_file").data("dyn_id");
@@ -2392,13 +2465,14 @@ $(document).ready(function(){
             frameTo=-1;
         }
 
-
+        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
         $.ajax({
                 type: "POST",
                 data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
                 url:"/view/grid/", 
                 dataType: "json",
                 success: function(data) {
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
                     atomshb=[];
                     all_resids=[];
                     atomshb_inter=[];
@@ -2432,6 +2506,7 @@ $(document).ready(function(){
                     $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
                     if (XMLHttpRequest.readyState == 4) {
                         var responsetext = XMLHttpRequest.responseText;
 
@@ -2534,6 +2609,7 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
 
+//-------- RMSD computation --------
 
     $("#gotoRMSDPg").click(function(){
         $("#rmsd_sel_frames_error").html("");

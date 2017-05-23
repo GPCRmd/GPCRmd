@@ -723,11 +723,11 @@
                              <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
                                  From 
                                  <span class="rmsd_from_parent">
-                                   <input class="form-control input-sm" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
+                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
                                  </span>
                                  to 
                                  <span class="rmsd_to_parent">
-                                   <input class="form-control input-sm" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
+                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
                                  </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
@@ -740,7 +740,7 @@
                     </div>
                     <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
                         Reference: frame 
-                            <input placeholder=0 class="form-control input-sm" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                            <input placeholder=0 class="form-control input-sm maxinp8 changeVal" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
                             from trajectory 
                             <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
                                <!--<option disabled selected value> </option>-->
@@ -860,7 +860,6 @@
                         <div style="margin-left:18px;margin-bottom:10px;">
                          Trajectory: 
                                 <select id="hbonds_traj" name="hbonds_traj">
-                                   <option disabled selected value> </option>
                                    {% for traj in traj_list %}
                                    <option   value="{{traj.0}}">{{traj.1}}</option>
                                    {% endfor %}
@@ -870,7 +869,7 @@
                         <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
                            <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
                            </div>
-                           <div id="bonds_sel_frames_id" class="col-md-10" >
+                           <div id="bonds_sel_frames_id" class="col-md-10" style="margin-bottom:5px" >
                               <div class="row">
                                  <input type="radio" name="bonds_sel_frames" value="all_frames" checked> 
                                       All
@@ -878,17 +877,36 @@
                               <div class="row" >
                                  <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
                                      From 
-                                     <input class="form-control input-sm" id="bonds_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     <span id="bonds_frame_1_par">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     </span>
                                      to 
-                                     <input class="form-control input-sm" id="bonds_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     <span id="bonds_frame_2_par">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     </span>
 
                               </div>
-
-                           <div id="bonds_backbone" class="col-md-10" >
-
-                              <div class="row">
-		                          <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
+                              <div id="hbonds_sel_frames_error" class="row" >
                               </div>
+                        </div>
+                        
+                        
+                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                           </div>
+                           <div id="bonds_backbone" class="col-md-10" style="margin-bottom:10px">
+                                 <div class="row">
+		                              <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
+                                  </div>
+
+                                  <div class="row">
+                                     <input type="radio" name="backbone" value="all" checked> 
+                                          All Hydrogen Bonds
+                                  </div>
+                                  <div class="row" >
+                                     <input type="radio" name="backbone" value="sidechain"> 
+                                          Only Side Chain Hydrogen Bonds
+                                  </div>
+
 
                               <div class="row">
                                  <input type="radio" name="backbone" value="all" checked> 
@@ -899,33 +917,35 @@
                                       Only Side Chain Hydrogen Bonds
                               </div>
 
-                              <div id="hbonds_sel_frames_error" class="row" ></div>
-                            </div>
+
+                           </div>
+                        <div>
+                            <span id="hbonds_cutoff_par">
+                                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" placeholder=10 id="hbonds_cutoff" type="number" style="width:60px;padding-left:7px;margin-bottom:5px"> %
+                            </span>
                         </div>
                  </div>
 
-                <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
-                    Threshold: <input class="form-control input-sm" id="hbonds_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px"> %
-                </div>
 
-                 <div class="row" style="margin-top:10px;margin-bottom:15px">
+                <div class=row>
+                  <button id="ComputeHbonds" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                </div>
+                <div id="bonds_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
+                 <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
 
                         <div id="bondsresult" style="margin-left:18px;margin-bottom:20px"> 
                            <div style="margin-bottom:10px;padding:0"  class="col-md-12">
 
                                <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> <br><br>
-                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:None;" >Show All</button></center>
+                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
 
 
                                <div class='scrolldowndiv' id="hbondsnp" style="margin-bottom:10px;padding:0"  class="col-md-6"></div>
-                               <center><button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:None;" >Show All</button></center>
+                               <center><button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
                             <br>
                              
                             
                            </div>
-                        </div>
-                        <div class=row>
-                          <button id="ComputeHbonds" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                         </div>
 
                     </div>
@@ -938,19 +958,18 @@
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt Bridges</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_salt" class="collapse">
-             <div class="row" style="margin-top:10px;margin-bottom:15px">
+             <div class="row" style="margin-top:10px;">
 
-                    <div style="margin-left:18px;margin-bottom:10px;">
+                    <div style="margin-left:18px;margin-bottom:5px;">
                      Trajectory: 
                             <select id="salt_traj" name="salt_traj">
-                               <option disabled selected value> </option>
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
                             </select>
 
                     </div>
-                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:15x;padding:0"> 
                        <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
                        </div>
                        <div id="salt_sel_frames_id" class="col-md-10" >
@@ -961,9 +980,13 @@
                           <div class="row" >
                              <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
                                  From 
-                                 <input class="form-control input-sm" id="salt_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span id="salt_frame_1_par">
+                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 </span>
                                  to 
-                                 <input class="form-control input-sm" id="salt_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span id="salt_frame_2_par">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 </span>
 
                           </div>
                           <div id="salt_sel_frames_error" class="row" ></div>
@@ -971,24 +994,26 @@
                     </div>
              </div>
 
-            <div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
-                Threshold: <input class="form-control input-sm" id="salt_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px"> %
+            <div class="row" style="margin-top:5px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" id="salt_cutoff" type="number" placeholder=10 style="width:60px;padding-left:7px;margin-bottom:5px"> %
             </div>
 
              <div class="row" style="margin-top:10px;margin-bottom:15px">
-
-                    <div id="saltresult" style="margin-left:18px;margin-bottom:20px"> 
-                       <div style="margin-bottom:10px;padding:0"  class="col-md-12">
-
-                       <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
-
-                        <center><button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
-                  
-                       </div>
-                    </div>
                     <div class=row>
                       <button id="ComputeSaltBridges" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
+                    <div id="salt_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
+                    <div id="saltresult_par" style="display:none" class="col-md-12" >
+                        <div id="saltresult" style="margin-left:18px;margin-bottom:20px"> 
+                           <div style="margin-bottom:10px;padding:0"  class="col-md-12" >
+
+                           <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
+
+                            <center><button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
+                      
+                           </div>
+                        </div>
+                      </div>
 
                 </div>
               </div>
@@ -1004,7 +1029,6 @@
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
                             <select id="grid_traj" name="grid_traj">
-                               <option disabled selected value> </option>
                                {% for traj in traj_list %}
                                <option   value="{{traj.0}}">{{traj.1}}</option>
                                {% endfor %}
@@ -1022,9 +1046,13 @@
                           <div class="row" >
                              <input type="radio" name="grid_sel_frames" value="grid_frames_mine"> 
                                  From 
-                                 <input class="form-control input-sm" id="grid_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span id="grid_frame_1_par">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 </span>
                                  to 
-                                 <input class="form-control input-sm" id="grid_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 <span id="grid_frame_2_par">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                 </span>
 
                           </div>
 

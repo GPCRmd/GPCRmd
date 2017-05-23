@@ -529,6 +529,17 @@ def count_implicit_hydrogens(mol):
        valdiff +=  atom.GetNumImplicitHs()
     return valdiff
 
+def alt_count_hydrogens(atom):
+    count = 0
+    atomidx = atom.GetIdx()
+    for bond in atom.GetBonds():
+        if bond.GetBeginAtomIdx() == atomidx:
+            batom = bond.GetEndAtom()
+        else:
+            batom = bond.GetBeginAtom()
+        if batom.GetSymbol() == 'H':
+            count += 1
+    return count
 def disconnect(mol):
     edmol = Chem.EditableMol(mol)
     for atom in mol.GetAtoms():
@@ -581,6 +592,65 @@ def truncate_inchi(inchi,options):
          else:
             return ''
     return tinchi
+    
+
+def correct_hydrogen_num_from_pdbmol(refpdbmol,mol):
+    molH = Chem.MolFromSmiles('[H]')
+    molH.Compute2DCoords()
+    Chem.rdDistGeom.EmbedMolecule(molH)
+    pdb_2_nhpdb = get_pdb_2_nhpdb(refpdbmol)
+    newmol = Chem.Mol(mol)
+    for molatom in mol.GetAtoms():
+        if molatom.GetSymbol() != 'H':
+            idx = molatom.GetIdx()
+            refatom = refpdbmol.GetAtomWithIdx(pdb_2_nhpdb[idx])
+            newatom = newmol.GetAtomWithIdx(idx)
+            molnumh = alt_count_hydrogens(molatom)
+            refnumh = alt_count_hydrogens(refatom)
+            charge_to_incr = refnumh - molnumh
+            if charge_to_incr != 0:
+                atom_chg = molatom.GetFormalCharge()
+                newmol.GetAtomWithIdx(idx).SetFormalCharge(atom_chg+charge_to_incr)
+    newmol.UpdatePropertyCache()
+    Chem.SanitizeMol(newmol,catchErrors=True)
+    newmol = Chem.RemoveHs(newmol,implicitOnly=False, updateExplicitCount=True, sanitize=True)
+    newmol = Chem.AddHs(newmol,addCoords=True,explicitOnly=False)
+    return newmol
+
+def get_pdb_2_nhpdb(refpdbmol):
+    idxlist = []
+    for atom in refpdbmol.GetAtoms():
+        if atom.GetSymbol() != 'H':
+            idxlist.append(atom.GetIdx())
+    return idxlist
+    
+def get_hydrogen_idxs(mol):
+    idxlist = []
+    for atom in mol.GetAtoms():
+        if atom.GetSymbol() == 'H':
+            idxlist.append(atom.GetIdx())
+    return idxlist
+
+
+def set_hydrogen_coor_from_pdbmol(refpdbmol,mol,refconfId=-1,confId=-1):
+    newmol = Chem.Mol(mol)
+    hidxs = get_hydrogen_idxs(mol)
+    pdb_2_nhpdb = get_pdb_2_nhpdb(refpdbmol)
+    refconf = refpdbmol.GetConformer(-1)
+    molconf = newmol.GetConformer(-1)
+    molconfid = molconf.GetId()
+    hcount = 0
+    for atom in refpdbmol.GetAtoms():
+        if atom.GetSymbol() == 'H':
+            idx = atom.GetIdx()
+            pos = refconf.GetAtomPosition(idx)
+            molconf.SetAtomPosition(hidxs[hcount],pos)
+            hcount += 1
+    newmol.AddConformer(molconf,assignId=molconfid)
+    Chem.AssignAtomChiralTagsFromStructure(newmol,replaceExistingTags=True)
+    return newmol
+    
+    
 def diff_mol_pdb(mol,pdbfile,logfile=devnull):
     with stdout_redirected(to=logfile,stdout=sys_stderr):
         with stdout_redirected(to=logfile,stdout=sys_stdout):
@@ -601,30 +671,38 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
                 if pdbmol is None:
                     raise ParsingError("Cannot open PDB molecule.")
                 pdbmol = disconnect(pdbmol)
-                Chem.SanitizeMol(pdbmol,catchErrors=True)   
+                Chem.SanitizeMol(pdbmol,catchErrors=True)
+            
             nhpdbmol = Chem.RemoveHs(pdbmol,implicitOnly=False, updateExplicitCount=True, sanitize=False)
               
             Chem.SanitizeMol(nhpdbmol,catchErrors=True)
 
             try:
+                print('Applying bond orders and formal charges from molecule file to PDB molecule ... ')
                 nhpdbmol = AssignBondOrdersFromTemplate(nhmol,nhpdbmol)
-                pdbmol = Chem.AddHs(nhpdbmol,addCoords=True,explicitOnly=True)
-            except:
+                newpdbmol = Chem.AddHs(nhpdbmol,addCoords=True,explicitOnly=True)
+                newpdbmol.UpdatePropertyCache()
+                newpdbmol = correct_hydrogen_num_from_pdbmol(pdbmol,newpdbmol)
+                newpdbmol = set_hydrogen_coor_from_pdbmol(pdbmol,newpdbmol,refconfId=-1,confId=-1)
+            except Exception:
                 print("WARNING: Cannot assign bond orders from molecule file template. Checking only non-hydrogen connectivity.")
                 checkconnect = False
                 pass
+
             #Stoichiometric formula check
-            impnum = count_implicit_hydrogens(pdbmol)
+            impnum = count_implicit_hydrogens(newpdbmol)
+            
+            failnum = 0
             result = 'OK'
             unformula = remove_charge_formula(rdMolDescriptors.CalcMolFormula(mol))
-
-
-            pdbunformula = remove_charge_formula(rdMolDescriptors.CalcMolFormula(pdbmol))
+            pdbunformula = remove_charge_formula(rdMolDescriptors.CalcMolFormula(newpdbmol))
             #print(pdbunformula)
             pdbunformula = fix_formula(pdbunformula, impnum)
             if unformula != pdbunformula:
+                failnum += 1
                 result= 'FAIL: Molecules have different Stoichiometric formulas '+unformula+' '+pdbunformula+'.'
-            print('Stoichiometric formula check (without charge): '+result)
+            print('Stoichiometric formula check (without charge): '+result)          
+            
             print('Generating Fixed H InChI for molecule file ... ')
             inchi,code,msg,log,aux = rdinchi.MolToInchi(mol,options='-FixedH -DoNotAddH')
             if code == 0:
@@ -650,7 +728,7 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
             maininchi = truncate_inchi(inchi,['connect'])
             
             print('Generating Fixed H InChI for PDB molecule ... ')
-            pdbinchi,code,msg,log,aux = rdinchi.MolToInchi(pdbmol,options='-FixedH -DoNotAddH')
+            pdbinchi,code,msg,log,aux = rdinchi.MolToInchi(newpdbmol,options='-FixedH -DoNotAddH')
             if code == 0:
                 pass
             if code == 1:
@@ -659,7 +737,7 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
                 print(msg)
                 
             print('Generating Standard InChI for PDB molecule ... ')    
-            pdbsinchi,code,msg,log,aux = rdinchi.MolToInchi(pdbmol,options=' -DoNotAddH')
+            pdbsinchi,code,msg,log,aux = rdinchi.MolToInchi(newpdbmol,options=' -DoNotAddH')
             if code == 0:
                 pass
             if code == 1:
@@ -672,7 +750,7 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
 
 
 
-            failnum = 0
+            
             result = 'OK'
             if maininchi != pdbmaininchi:
                 result= 'FAIL: Molecules have diferent scaffolds\n'+maininchi+' '+pdbmaininchi+'.'
@@ -695,9 +773,8 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
                         print('Fixed H InChI check: '+result)
                         print('OK')
 
-            del nhpdbmol
 
-            return failnum, pdbmol
+            return failnum, newpdbmol, nhpdbmol
 
 def mdtraj_get_frames_num(trajfile,init=0,step=100000):
     ''' Recursive function to get the number of frames out of a mdtraj trajectory object (trajfile).
