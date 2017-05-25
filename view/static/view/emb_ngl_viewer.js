@@ -2217,7 +2217,6 @@ $(document).ready(function(){
         cutoff=$("#hbonds_cutoff").val();
         if (cutoff == ""){
             cutoff =$("#hbonds_cutoff").attr("placeholder");
-            console.log(cutoff);
         }
         if (rmsdFrames=="bonds_frames_mine"){
             frameFrom=$("#bonds_frame_1").val();
@@ -2435,7 +2434,6 @@ $(document).ready(function(){
         rmsdTraj=$("#grid_traj").val();
         rmsdFrames=$("#grid_sel_frames_id input[name=grid_sel_frames]:checked").val();
         cutoff=$("#grid_cutoff").val();
-        console.log('These are the ides:',seq_ids);
         sasa_sel=$("#sasa_atoms input[name=sasa_sel]:checked").val();
         if (rmsdFrames=="grid_frames_mine"){
             frameFrom=$("#grid_frame_1").val();
@@ -2482,27 +2480,16 @@ $(document).ready(function(){
                     results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
                     data_graph=results[0];
                     options=results[1];
-                    /*
-
-                                            var chart_div = document.getElementById(chart_cont);
-                                            var chart = new google.visualization.LineChart(chart_div);                                
-                                            google.visualization.events.addListener(chart, 'ready', function () {
-                                                var img_source =  chart.getImageURI(); 
-                                                $("#"+chart_cont).attr("data-url",img_source);
-                                            });                                
-                                            chart.draw(data, options);                                    
-                                        }
-                                        $("#"+newgraph_sel+"f").css("display","none");  
-                                        var img_source_t=$("#"+newgraph_sel+"t").data("url");
-                                        $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
-
-
-
-                    */
                     newid='sasa_chart_'+data.sasa_id.toString();
-                    $("#sasa_container").append('<div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
-                    var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));    
+                    titlegraph=['From Frame:',frameFrom,'To Frame:',frameTo,'Trajectory:',rmsdTraj,'Selection:',sasa_sel].join(' ');
+                    $("#sasa_container").append('<hr><center>'+titlegraph+'</center><br><div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));
+                    google.visualization.events.addListener(chart_sasa, 'ready', function () {
+                        var img_source =  chart_sasa.getImageURI(); 
+                        $("#"+newid).attr("data-url",img_source);
+                    });
                     chart_sasa.draw(data_graph, options);
+                    $("#"+newid).append('<a href='+$("#"+newid).attr("data-url")+'>Download graph as image</a>');
                     $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {

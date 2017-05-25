@@ -130,11 +130,12 @@
         </ol>
 
         <p class=ptext>
-        Option 1, if selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices. <br>
-        Option 2, if selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).<br>
-        Option 3, if selected, only includes hydrogen bonds formed between side chain atoms.<br><br>
+            <ul>
+             <li><span class=highlight>Option 1, if selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</span></li>
+        <li><span class=highlight>Option 2, if selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</span></li>
+        <li><span class=highlight>Option 3, if selected, only includes hydrogen bonds formed between side chain atoms.</span></li>
 
-        Finally, you can set a frequency threshold, so only those hydrogen bonds which appear in a proportion of the frames greater than the value you have set will appear in the results.<br>
+        Finally, you can set a frequency threshold so only those hydrogen bonds which appear in a proportion of the frames greater than the value you have set will appear in the results. You can also define an interval of frames into which perform the analysis. <br>
 
         Results have a "Show Hbond" button next to them which plots the bond in the viewer. At the end of the table of results, you can find a "Show All" button, which plots all the bonds in that table at once.<br>
         </p>
@@ -145,7 +146,7 @@
         </p>
 
         <h5 class=subsect>SASA analysis</h5>
-        <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the shrake_rupley function from MDTraj module (<a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html">Details</a>). Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms in a single frame. And we plot this sum at each frame, so you can see how the SASA of that set of atoms fluctuate across time. We have defined a few options that we thought will be useful, but you can also select the desired residues using the Select Sequence tool. The options are:</p>
+        <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the shrake_rupley function from MDTraj module (<a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>Details</a>). Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms in a single frame. Then, we plot this sum at each frame, so you can see how the SASA of that set of atoms fluctuate across time. We have defined a few options that we thought will be useful, but you can also select the desired residues using the Select Sequence tool. The options are:</p>
 
         <ol style="margin-bottom:20px;">
             <li>All atoms</li>
@@ -164,14 +165,15 @@
 
         </ol>
         <p class=ptext>
-            Option 1 includes all atoms in the simulation.<br>
-            Option 2 imports the selection you have defined in the "Sequence Selection" tool (remember to click "Confirm Selection" button)<br>
-            Option 3 includes only protein receptors<br>
-            Option 4 includes atoms in the GPCR whose Z component is less than the mean Z component of P atoms in the lipid leaflets.<br>
-            Option 5 is the opposite of option 4.<br>
-            Option 6 includes all atoms in the GPCR whose Z component is greater than the mean Z component of the P atoms in the outter membrane leaflet <br>
-            Option 7 includes all atoms in the GPCR whose Z component is less than the mean Z component of the P atoms in the inner membrane leaflet.<br><br>
-
+            <ul>
+             <li><span class=highlight>Option 1 includes all atoms in the simulation.</span></li>
+             <li><span class=highlight>Option 2 imports the selection you have defined in the "Sequence Selection" tool (remember to click "Confirm Selection" button)</span></li>
+             <li><span class=highlight>Option 3 includes all GPCR atoms</span></li>
+             <li><span class=highlight>Option 4 includes atoms in the GPCR whose Z component is less than the mean Z component of P atoms in the lipid leaflets.</span></li>
+             <li><span class=highlight>Option 5 is the opposite of option 4.</span></li>
+             <li><span class=highlight>Option 6 includes all atoms in the GPCR whose Z component is greater than the mean Z component of the P atoms in the outter membrane leaflet </span></li>
+             <li><span class=highlight>Option 7 includes all atoms in the GPCR whose Z component is less than the mean Z component of the P atoms in the inner membrane leaflet.</span></li>
+            </ul>
             Furthermore, you can select an interval of frames, instead of the whole trajectory.
         </p>
 

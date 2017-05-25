@@ -158,7 +158,6 @@ def exactmatchtest_complex_exp(arrays,return_type,result_id):
 
 def scorenames(names_list):
     '''Given a list of synomins, returns the most human friendly'''
-    print('\n\n',names_list)
     maxscore=-99999
     bestname=names_list[0]
     for name in names_list:
@@ -171,7 +170,6 @@ def scorenames(names_list):
         if score>maxscore and len(name)<60:
             maxscore=score
             bestname=oriname
-    print('\n\n',bestname)
     return bestname
     
     
@@ -226,7 +224,6 @@ def fetch_abstract(pmid):
     try:
         handle = efetch(db='pubmed', id=pmid, retmode='xml')
     except:
-        print("Going to sleep fo' 5 secs ma'am, then I will try gein")
         time.sleep(5)
         handle = efetch(db='pubmed', id=pmid, retmode='xml')
     xml_data = handle.read()
@@ -365,7 +362,7 @@ def to_bindingdb_format(records):
     '''Transforms data from iuphar format into the one we use to fill the database'''
     complexes=[]
     for record in records:
-        print('processing record:',record)
+        print('\n\n\n\nPROCCESSING RECORD:',record)
         kd=''
         ec50=''
         ic50=''
@@ -394,7 +391,7 @@ def to_bindingdb_format(records):
             seq=''.join(sequenceraw)
             seqlist.append(seq)
         
-        if gpcr_flag==0 or len(seq)==0:
+        if gpcr_flag==0 or len(seq)==0 or len(target_id)==0:
             continue #no interest in non gpcr coomplexes nor empty sequences
         pubchemid=requests.get('https://pubchem.ncbi.nlm.nih.gov/rest/pug/substance/sid/'+str(record['pubchem_sid'])+'/cids/json?cids_type=all')
         pubchemid=pubchemid.json()
@@ -413,6 +410,7 @@ def to_bindingdb_format(records):
             sinchikey,errdata=retreive_compound_data_pubchem_post_json('cid',pubchemid,operation='property',outputproperty='InChIKey')
             sinchikey=sinchikey['PropertyTable']['Properties'][0]['InChIKey']
         except:
+            print('ERROR WHEN SEARCHING SINCHI AND SINCHIKEY')
             continue
         complexes.append([sinchikey,sinchi,pubchemid,'',protlist,kd,ec50,ki,ic50,{'pmid':record['pmid'],'DOI':'','bindingdblink':'','authors':''},seqlist,'iuphar','iuphar_'+target_id])
 
@@ -641,8 +639,8 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                 if exactmatchtest_complex_exp(query_array,'complex',i)=='pass':
                     exactest=1 #this complex already exists
                     complex_id=i
+                    print('This is the complex id found',i)
                     if complextype==5: #Call again this function, this time with only one rvalue at a time.
-                        print('dous de cada ves.')
                         if kd:
                             completmp=comple.copy()
                             completmp[6]=''
@@ -710,29 +708,30 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             complextype_mod=complextype
                         intdata=DyndbExpInteractionData.objects.filter(id_complex_exp=i).filter(type=complextype_mod) #one cexp can have data for kd from iuphar and bindingDB
                         if len(intdata)>0:
+                            print('we have a record for that cexp already',str(intdata))
                             for expintdata in intdata:		
                                 if complextype==1: #kd
                                     if len(DyndbBinding.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                         #this experiment data is already recorded, do not record it again
-                                        print('This complex was already recorded')
+                                        print('\n\n\nThis complex was already recorded\n\n\n')
                                         return 'This complex was already recorded'
                             
                                 elif complextype==2: #ec50
                                     if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                         #this experiment data is already recorded, do not record it again
-                                        print('This complex was already recorded')
+                                        print('\n\n\nThis complex was already recorded')
                                         return 'This complex was already recorded'
 
                                 elif complextype==3: #ki
                                     if len(DyndbInhibition.objects.filter(id=expintdata.id).filter(description=comple[12]))>0: 
                                         #this experiment data is already recorded, do not record it again
-                                        print('This complex was already recorded')
+                                        print('\n\n\nThis complex was already recorded')
                                         return 'This complex was already recorded'
 
                                 elif complextype==4: #ic50
                                     if len(DyndbEfficacy.objects.filter(id=expintdata.id).filter(description=comple[12]).filter(type=3))>0: 
                                         #this experiment data is already recorded, do not record it again
-                                        print('This complex was already recorded')
+                                        print('\n\n\nThis complex was already recorded')
                                         return 'This complex was already recorded'
 
 
@@ -794,7 +793,6 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
 
             #does this reference already exist?
             if (len(doiresdoi)>0 and comple[9]['DOI']!=None) or (len(doiresurl)>0 and str(comple[9]['bindingdblink'])!='') or (len(doirespmid)>0 and comple[9]['pmid']!=None):
-                print('referenc already exists, no need to record')
                 if len(doiresdoi)>0:
                     reference_id=doiresdoi[0].id
                 elif len(doiresurl)>0:
@@ -1051,7 +1049,6 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             sdfhand.write(line)
                 else:
                     datasdfpubchem,errdata = retreive_compound_sdf_pubchem('cid',pubchem_id,outputfile=SDFpath,in3D=True)
-                    print(datasdfpubchem,'errordata:',errdata)
 
                 dyndbfilesid=newrecord(['dyndb_files',DyndbFiles],{'filename':SDFname,'filepath':SDFpath,'id_file_types':20},True)
 
@@ -1189,6 +1186,18 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                 newrecord(['dyndb_complex_molecule_molecule',DyndbComplexMoleculeMolecule],{'id_molecule':molecule_id,'id_complex_molecule':cmol_id,'type':0},True)
 
             newrecord(['dyndb_complex_compound',DyndbComplexCompound],{'id_compound':compound_id,'id_complex_exp':complex_id,'type':0},True)
+
+
+        intdata_id=recorded_ids['intdata'][0]
+        id_complex_exp=DyndbExpInteractionData.objects.filter(id=intdata_id)[0].id_complex_exp.id #ecfifty type with that complex exp
+        prot_id=DyndbComplexProtein.objects.filter(id_complex_exp=id_complex_exp)[0].id_protein.id
+        compound_id=DyndbComplexCompound.objects.filter(id_complex_exp=id_complex_exp)[0].id_compound.id
+        with closing(connection.cursor()) as cursor:
+            cursor.execute ("""
+               UPDATE dyndb_exp_interaction_data
+               SET ligand1=%s,protein1=%s
+               WHERE id=%s
+            """, ( str(compound_id), str(prot_id), str(intdata_id) )  )
     except:
         return recorded_ids
 
@@ -1320,16 +1329,23 @@ def fill_db_iuphar(filename):
     '''Fills Binding and efficacy table with IUPHAR csv data. The file iuphar_useful_complexes_pickle is a serialized python list,
      containing the csv records in a format available to the record_complex_in_DB function. This file is created after the first use. '''
     records=iuphar_parser(filename)
-    #with open ('/protwis/sites/protwis/iuphar_useful_complexes_pickle', 'rb') as fp:
-    #    complexes = pickle.load(fp)
-    complexes=to_bindingdb_format(records)
+    try:
+        with open ('/protwis/sites/protwis/iuphar_useful_complexes_pickle', 'rb') as fp:
+            complexes = pickle.load(fp)
+        print('Pickle found...this is going to be fast')
+    except:
+        print('This could take a while...')
+        complexes=to_bindingdb_format(records)
+        with open ('/protwis/sites/protwis/iuphar_useful_complexes_pickle', 'wb') as fp:
+            pickle.dump(complexes,fp) 
+    print('lets record in DB')
     for comple in complexes:
         try:
-            record_complex_in_DB(comple,fromiuphar=False)
+            record_complex_in_DB(comple,fromiuphar=True)
         except:
-            continue
+            raise
 
 mypath='/protwis/sites/protwis/dynadb/chunks/chunksBindingDB'
-chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))][59:]
-#fill_db(chunks)
+chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))][:3]
+fill_db(chunks)
 fill_db_iuphar('./dynadb/interactions.csv')
