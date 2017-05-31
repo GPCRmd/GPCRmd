@@ -640,7 +640,8 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                     exactest=1 #this complex already exists
                     complex_id=i
                     print('This is the complex id found',i)
-                    if complextype==5: #Call again this function, this time with only one rvalue at a time.
+                    if complextype==5: #Call again this function, this time with only one rvalue at a time. WARNING, THIS HAS CAUSED ERRORS IN CHUNK: BindingDB_All_3D_from_complex_540002_to_complex_560001sdf
+                        print('\n\n\n\n\nMore than one data affinity in one record!\n\n\n\n\n')
                         if kd:
                             completmp=comple.copy()
                             completmp[6]=''
@@ -649,10 +650,9 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             try:
                                 result=record_complex_in_DB(completmp,fromiuphar)   
                             except:
-                                if type(result)!=dict:
-                                    pass
-                                else:
-                                    return result #returning now will miss some data, but the remaining data may be corrupted as well.
+                                if type(result)==dict:
+                                    return result
+
                         if ec_fifty:
                             completmp=comple.copy()
                             completmp[5]=''
@@ -661,9 +661,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             try:
                                 result=record_complex_in_DB(completmp,fromiuphar)  
                             except:
-                                if type(result)!=dict:
-                                    pass
-                                else:
+                                if type(result)==dict:
                                     return result
 
                         if ki:
@@ -674,9 +672,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                             try:
                                 result=record_complex_in_DB(completmp,fromiuphar)  
                             except:
-                                if type(result)!=dict:
-                                    pass
-                                else:
+                                if type(result)==dict:
                                     return result
 
                         if ic_fifty: 
@@ -696,9 +692,7 @@ def record_complex_in_DB(comple,fromiuphar=False,ec50_id=None):
                                 else:
                                     result=record_complex_in_DB(completmp,fromiuphar)
                             except:
-                                if type(result)!=dict:
-                                    pass
-                                else:
+                                if type(result)==dict:
                                     return result
 
                     else:
@@ -1362,6 +1356,6 @@ def fill_db_iuphar(filename):
             raise
 
 mypath='/protwis/sites/protwis/dynadb/chunks/chunksBindingDB'
-chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
+chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))][28:]
 fill_db(chunks)
 fill_db_iuphar('./dynadb/interactions.csv')
