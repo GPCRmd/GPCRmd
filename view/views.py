@@ -1217,10 +1217,6 @@ def parser(filename):
 
     return atoms
 
-
-def hbonds_baker(t):
-    pass
-
 def hbonds(request):
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
@@ -1357,6 +1353,16 @@ def hbonds(request):
                                     hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
 
         if False: #warning, to implement download of csv file
+
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["#Structure: "+struc_filename])
+            writer.writerow(["#Trajectory: "+traj_filename])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
+            writer.writerow(["#Selection: "+proper_name(traj_sel)])
             struc_path=struc_path[:-4]
             csvfile= open(struc_path+'hbonds.csv','w',newline='')
             writer = csv.writer(csvfile,delimiter=' ',
@@ -1383,6 +1389,7 @@ def hbonds(request):
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
+
 
 def saltbridges(request):
     if request.method == 'POST':

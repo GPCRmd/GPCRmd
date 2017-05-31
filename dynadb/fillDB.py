@@ -1215,113 +1215,129 @@ def fill_db(chunks):
             #record_complex_in_DB(comple,fromiuphar=False)
             try:
                 error_dict=record_complex_in_DB(comple,fromiuphar=False) #only saves the return value if it finishes without errror! keeps the prevous one!
-                print('\n\n\nComplex recorded without errors.\n\n\n')
-                pos+=1
-            except:
-                log.write(str(comple))
-                log.write('THIS IS WHAT THE FUNCTION RETURNS:')
-                log.write(str(error_dict))
-                raise
-                if type(error_dict)!=dict:
+                if type(error_dict)==dict:
                     neg+=1
-                    continue
+                    log.write(str(comple))
+                    log.write('THIS IS WHAT THE FUNCTION RETURNS:')
+                    log.write(str(error_dict))
+                    print('\n\n\nError in chunk: '+chunk+'\n\n\n')
+
+                    for instance_id in error_dict['bind']:
+                        try:
+                            log.write('Deleting binding record...\n')
+                            instance = DyndbBinding.objects.get(id=instance_id)
+                            instance.delete()                                          
+                        except:
+                            log.write('error dele binding\n')
+                            continue
+
+                    for instance_id in error_dict['ki']:
+                        try:
+                            log.write('Deleting ki record...\n')
+                            instance = DyndbInhibition.objects.get(id=instance_id)
+                            instance.delete()                                          
+                        except:
+                            log.write('error dele ki\n')
+                            continue
+
+                    for instance_id in error_dict['ec50']:
+                        try:
+                            log.write('deltetin eff record\n')
+                            instance = DyndbEfficacy.objects.get(id=instance_id)
+                            instance.delete()
+                        except:
+                            log.write('error deleting eff\n')
+                            continue   
+
+                    for instance_id in error_dict['ic50']:
+                        try:
+                            log.write('deltetin eff record\n')
+                            instance = DyndbEfficacy.objects.get(id=instance_id)
+                            instance.delete()
+                        except:
+                            log.write('error deleting eff\n')
+                            continue  
+  
+
+                    for instance_id in error_dict['intdataref']:
+                        try:
+                            log.write('trying to delete intdataref\n')
+                            instance = DyndbReferencesExpInteractionData.objects.get(id=instance_id)
+                            instance.delete()
+                        except:
+                            log.write('error deleting intdataref\n')
+                            continue
+
+                    for instance_id in error_dict['intdata']:
+                        try:
+                            log.write('deletin intdata...\n')
+                            instance = DyndbExpInteractionData.objects.get(id=instance_id)
+                            instance.delete()
+                        except:
+                            log.write('error deleting intdata\n')
+                            continue
+                    try:
+                        log.write('deleting cmolmol\n')
+                        instance = DyndbComplexMoleculeMolecule.objects.get(id=error_dict['cmolmol'])
+                        instance.delete()
+                    except:
+                        log.write('error deleting cmolmol\n')
+                        pass
                     
-                
-                print('\n\n\nError in chunk: '+chunk+'\n\n\n')
-                
-                for instance_id in error_dict['bind']:
                     try:
-                        log.write('deleteing binding record...')
-                        instance = DyndbBinding.objects.get(id=instance_id)
-                        instance.delete()                                          
-                    except:
-                        log.write('error dele binding')
-                        continue
-
-                for instance_id in error_dict['ec50']:
-                    try:
-                        log.write('deltetin eff record')
-                        instance = DyndbEfficacy.objects.get(id=instance_id)
+                        log.write('deleting cmol\n')
+                        instance = DyndbComplexMolecule.objects.get(id=error_dict['complexmol'])
                         instance.delete()
                     except:
-                        log.write('error deleting eff')
-                        continue     
-
-                for instance_id in error_dict['intdataref']:
+                        log.write('error deleting cmol\n')
+                        pass
+                    
                     try:
-                        log.write('trying to delete intdataref')
-                        instance = DyndbReferencesExpInteractionData.objects.get(id=instance_id)
+                        log.write('deleting cprot\n')
+                        instance = DyndbComplexProtein.objects.get(id=error_dict['cprotein'])
                         instance.delete()
                     except:
-                        log.write('error deleting intdataref')
-                        continue
-
-                for instance_id in error_dict['intdata']:
+                        log.write('error deleting cprot\n')
+                        pass
+                    
                     try:
-                        log.write('deletin intdata...')
-                        instance = DyndbExpInteractionData.objects.get(id=instance_id)
+                        log.write('deleting cexp\n')
+                        instance = DyndbComplexExp.objects.get(id=error_dict['complexid'])
                         instance.delete()
                     except:
-                        log.write('error deleting intdata')
-                        continue
-                try:
-                    log.write('deleting cmolmol')
-                    instance = DyndbComplexMoleculeMolecule.objects.get(id=error_dict['cmolmol'])
-                    instance.delete()
-                except:
-                    log.write('error deleting cmolmol')
-                    pass
-                
-                try:
-                    log.write('deleting cmol')
-                    instance = DyndbComplexMolecule.objects.get(id=error_dict['complexmol'])
-                    instance.delete()
-                except:
-                    log.write('error deleting cmol')
-                    pass
-                
-                try:
-                    log.write('deleting cprot')
-                    instance = DyndbComplexProtein.objects.get(id=error_dict['cprotein'])
-                    instance.delete()
-                except:
-                    log.write('error deleting cprot')
-                    pass
-                
-                try:
-                    log.write('deleting cexp')
-                    instance = DyndbComplexExp.objects.get(id=error_dict['complexid'])
-                    instance.delete()
-                except:
-                    log.write('error deleting cexp')
-                    pass                
-                try:
-                    log.write('trying to delete refcom')
-                    instance = DyndbReferencesCompound.objects.get(id=error_dict['refcompound'])
-                    instance.delete()
-                except:
-                    log.write('error deleting refcom')
-                    pass
-                
-                try:
-                    log.write('lets delete that compound')
-                    log.write(error_dict['compound'])                
-                    instance = DyndbCompound.objects.get(id=error_dict['compound'])
-                    instance.delete()
-                except:
-                    log.write('error del compound')
-                    pass
-                
-                try:
-                    log.write('deltin molecule')
-                    instance = DyndbMolecule.objects.get(id=error_dict['molecule'])
-                    instance.delete()
-                except:
-                    log.write('error deleting molecule')
-                    pass
+                        log.write('error deleting cexp\n')
+                        pass                
+                    try:
+                        log.write('trying to delete refcom\n')
+                        instance = DyndbReferencesCompound.objects.get(id=error_dict['refcompound'])
+                        instance.delete()
+                    except:
+                        log.write('error deleting refcom\n')
+                        pass
+                    
+                    try:
+                        log.write('lets delete that compound\n')
+                        log.write(error_dict['compound'])                
+                        instance = DyndbCompound.objects.get(id=error_dict['compound'])
+                        instance.delete()
+                    except:
+                        log.write('error del compound\n')
+                        pass
+                    
+                    try:
+                        log.write('deltin molecule\n')
+                        instance = DyndbMolecule.objects.get(id=error_dict['molecule'])
+                        instance.delete()
+                    except:
+                        log.write('error deleting molecule\n')
+                        pass
 
-                neg+=1
-                continue
+                    continue
+                else:
+                    print('\n\n\nComplex recorded without errors.\n\n\n')
+                    pos+=1
+            except:
+                raise
         print('this chunk had ',str(neg),'errors and',str(pos),'successes')
         time.sleep(5)
                 
@@ -1346,6 +1362,6 @@ def fill_db_iuphar(filename):
             raise
 
 mypath='/protwis/sites/protwis/dynadb/chunks/chunksBindingDB'
-chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))][:3]
+chunks=[os.path.join(mypath, f) for f in os.listdir(mypath) if os.path.isfile(os.path.join(mypath, f))]
 fill_db(chunks)
 fill_db_iuphar('./dynadb/interactions.csv')
