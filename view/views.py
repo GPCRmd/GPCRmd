@@ -244,7 +244,7 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
         if numbers[name]:
             other_classes_ok.append(name)
             gnum_classes_rel[name]={}
-    for pos, (res,gnum) in pos_gnum.items():
+    for pos, (res,gnum,segm) in pos_gnum.items():
         if gnum:
             for class_name in other_classes_ok:
                 gnum_altclass=numbers[class_name][pos][1]
