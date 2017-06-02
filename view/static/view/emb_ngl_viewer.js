@@ -314,7 +314,7 @@ $(document).ready(function(){
     maxInputLength('input.sel_input',"",100);
     maxInputLength('input.seq_input',"",100);
     maxInputLength('#rmsd_my_sel_sel',"",50);
-    maxInputLength("#int_thr", "",3);
+    maxInputLength("#int_thr", "",4);
     maxInputLength(".inp_stride", "",4);
     maxInputLength(".sel_within", ".user_sel_input",40);
     maxInputLength(".maxinp8","",8);
@@ -1439,13 +1439,25 @@ $(document).ready(function(){
                   <span class="tick2" ></span>\
                   <span class="always2" style="margin-left:14px">\
                      Compute distance between \
+                     <select class="dist_el_sel">\
+                        <option class="dist_el_opt" name="dist_el" value="atoms" selected >atoms</option>\
+                        <option class="dist_el_opt" name="dist_el" value="residues">residues</option>\
+                     </select>\
                      <span class="dist_from_parent">\
-                         <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                         <input class="form-control input-sm dist_from" title="Introduce atom index" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
                      </span>\
+                     <span class="dist_from_res_parent dis_res_bth_parent" style="display:none">\
+                        <input class="form-control input-sm dist_from_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" style="width:50px;padding-left:7px;margin-bottom:5px;" placeholder="xx:C">\
+                    </span>\
+                     <span class="dist_from_atomNm_parent"></span>\
 			and\
 			         <span class="dist_to_parent">\
-                         <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
+                         <input class="form-control input-sm dist_to" title="Introduce atom index" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">\
                      </span>\
+                     <span class="dist_to_res_parent dis_res_bth_parent" style="display:none">\
+                        <input class="form-control input-sm dist_to_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" style="width:50px;padding-left:7px;margin-bottom:5px;" placeholder="xx:C">\
+                     </span>\
+                     <span class="dist_to_atomNm_parent"></span>\
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                      <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
@@ -1454,6 +1466,36 @@ $(document).ready(function(){
             $(".dist_btw").append(row_d);
             i_dist+=1;
         }
+    });
+    
+    $(".dist_btw").on("change" , ".dist_el_sel" , function(){
+        var selection=$(this).val();
+        var drow = $(this).closest(".dist_pair");
+        if (selection == "residues"){
+            var atomNm_from = '<select class="dist_atomNm_from_sel">\
+                                <option class="dist_atomNm_from_opt" name="dist_atomNm_from" value="CA" selected >CA</option>\
+                                <option class="dist_atomNm_from_opt" name="dist_atomNm_from" value="CB">CB</option>\
+                             </select>';
+            var atomNm_to = '<select class="dist_atomNm_to_sel">\
+                                <option class="dist_atomNm_to_opt" name="dist_atomNm_to" value="CA" selected >CA</option>\
+                                <option class="dist_atomNm_to_opt" name="dist_atomNm_to" value="CB">CB</option>\
+                             </select>';
+            drow.find(".dist_from_atomNm_parent").html(atomNm_from);
+            drow.find(".dist_to_atomNm_parent").html(atomNm_to);
+            drow.find(".dist_from_parent").css("display","none");
+            drow.find(".dist_to_parent").css("display","none");
+            drow.find(".dist_from_res_parent").css("display","inline");
+            drow.find(".dist_to_res_parent").css("display","inline");
+            
+        } else {
+            drow.find(".dist_from_atomNm_parent").html("");
+            drow.find(".dist_to_atomNm_parent").html("");
+            drow.find(".dist_from_parent").css("display","inline");
+            drow.find(".dist_to_parent").css("display","inline");
+            drow.find(".dist_from_res_parent").css("display","none");
+            drow.find(".dist_to_res_parent").css("display","none");
+        
+        } 
     });
     
     function addClickedDistInputs(clickedDist){
@@ -1466,15 +1508,31 @@ $(document).ready(function(){
                     var row_d='<div class="dist_pair d_ok" id=row2_'+i_dist+'>\
                           <span class="tick2"><span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span></span>\
                           <span class="always2">\
-                             Compute distance between \
-                             <input class="form-control input-sm dist_from" type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair0+'">\
-			        and\
-                             <input class="form-control input-sm dist_to"  type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair1+'">\
+                     Compute distance between \
+                     <select class="dist_el_sel">\
+                        <option class="dist_el_opt" name="dist_el" value="atoms" selected >atoms</option>\
+                        <option class="dist_el_opt" name="dist_el" value="residues">residues</option>\
+                     </select>\
+                     <span class="dist_from_parent">\
+                         <input class="form-control input-sm dist_from" title="Introduce atom index" type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair0+'">\
+                     </span>\
+                     <span class="dist_from_res_parent dis_res_bth_parent" style="display:none">\
+                        <input class="form-control input-sm dist_from_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" style="width:50px;padding-left:7px;margin-bottom:5px;" placeholder="xx:C">\
+                    </span>\
+                     <span class="dist_from_atomNm_parent"></span>\
+			and\
+			         <span class="dist_to_parent">\
+                         <input class="form-control input-sm dist_to" title="Introduce atom index" type="text" style="width:50px;padding-left:7px;margin-bottom:5px" value="'+dpair1+'">\
+                     </span>\
+                     <span class="dist_to_res_parent dis_res_bth_parent" style="display:none">\
+                        <input class="form-control input-sm dist_to_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" style="width:50px;padding-left:7px;margin-bottom:5px;" placeholder="xx:C">\
+                     </span>\
+                     <span class="dist_to_atomNm_parent"></span>\
                              <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                              <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                              <button title="Import from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>\
                           </span>\
-                          </div>';
+                          </div>';                          
                     $(".dist_btw").append(row_d);
                     i_dist+=1;
                }
@@ -1510,7 +1568,8 @@ $(document).ready(function(){
             var last_from=last_from_sel.val();
             var last_to_sel=$(".dist_btw").find(".dist_to:last");
             var last_to=last_to_sel.val();
-            if ( last_from=="" && last_to==""){                
+            var selElm = $(".dist_btw").find(".dist_el_sel").val();
+            if ( selElm=="atoms" && last_from=="" && last_to==""){                
                 var fstRow0 =clickedDist[0][0];
                 var fstRow1 =clickedDist[0][1];
                 last_from_sel.val(fstRow0);
@@ -1535,8 +1594,15 @@ $(document).ready(function(){
     $(".dist_btw").on("click", ".del_btn2" , function(){ 
         var numDistRows = $(".dist_btw").children().length;
         if(numDistRows==1){
-            $(".dist_btw").find(".dist_from").val("");
-            $(".dist_btw").find(".dist_to").val("");
+            var drow=$(".dist_btw");
+            drow.find(".dist_from").val("");
+            drow.find(".dist_to").val("");
+            drow.find(".dis_res_bth").val("");
+            drow.find(".fist_from_parent, .dist_to_parent, .dis_res_bth_parent").removeClass("has-error");
+            var dpair = $(this).closest(".dist_pair");
+            dpair.find(".tick2").html("");
+            dpair.find(".always2").attr("style","margin-left:14px");
+            dpair.removeClass("d_ok");
         }else{
             var dBlock =$(this).closest(".dist_pair");
             if (dBlock.is(':last-child')){
@@ -1584,6 +1650,68 @@ $(document).ready(function(){
         
     });
 
+
+
+    $(".dist_btw").on("change", ".dis_res_bth" ,function(){
+        var dpair = $(this).closest(".dist_pair");
+        var myres= $(this).val().replace(/\s+/g, '');
+        var isOk = /^\d{1,5}:[a-zA-Z]$/.test(myres);
+        if (isOk){
+            $(this).parent().removeClass("has-error");
+            var siblRes = $(this).parent().siblings(".dis_res_bth_parent").children(".dis_res_bth").val().replace(/\s+/g, '');
+            var isSiblOk =/^\d{1,5}:[a-zA-Z]$/.test(siblRes); 
+            if (isSiblOk){
+                if (! dpair.hasClass("d_ok")){
+                    dpair.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+                    dpair.find(".always2").attr("style","");
+                    dpair.addClass("d_ok");
+                }
+             }
+        } else {
+            $(this).parent().addClass("has-error");
+            if (dpair.hasClass("d_ok")){
+                dpair.find(".tick2").html("");
+                dpair.find(".always2").attr("style","margin-left:14px");
+                dpair.removeClass("d_ok");
+             }
+        }
+    });
+    
+    $(".dist_btw").on("change", ".dist_el_sel", function(){
+        var dpair = $(this).closest(".dist_pair");
+        if ( $(this).val() == "atoms"){
+            var d_from = $(this).siblings(".dist_from_parent").children(".dist_from").val();
+            var d_to = $(this).siblings(".dist_to_parent").children(".dist_to").val();
+            if (d_from && d_to && /^[\d]+$/.test(d_from + d_to)) {
+                dpair.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+                dpair.find(".always2").attr("style","");
+                dpair.addClass("d_ok");
+            } else {
+                if (dpair.attr("class").indexOf("d_ok") > -1){
+                    dpair.find(".tick2").html("");
+                    dpair.find(".always2").attr("style","margin-left:14px");
+                    dpair.removeClass("d_ok");
+                }
+            }
+            
+        } else {
+            var res_from = $(this).siblings(".dist_from_res_parent").children(".dist_from_res").val();
+            var res_to = $(this).siblings(".dist_to_res_parent").children(".dist_to_res").val();
+            var isOK_from= /^\d{1,5}:[a-zA-Z]$/.test(res_from);
+            var isOK_to= /^\d{1,5}:[a-zA-Z]$/.test(res_to);
+            if (isOK_from && isOK_to){
+                dpair.find(".tick2").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
+                dpair.find(".always2").attr("style","");
+                dpair.addClass("d_ok");
+            } else {
+                dpair.find(".tick2").html("");
+                dpair.find(".always2").attr("style","margin-left:14px");
+                dpair.removeClass("d_ok");
+            }
+        }
+    });
+
+
 /*    $(".dist_btw").on("blur", ".dist_pair" ,function(){
         var d_from=$(this).find(".dist_from").val().replace(/\s+/g, '');
         var d_to=$(this).find(".dist_to").val().replace(/\s+/g, '');
@@ -1602,18 +1730,45 @@ $(document).ready(function(){
         }
     }); */
 
-    function obtainDistToComp(){
-        var distToComp="";
+/*    function obtainDistToComp(){
+        var distToCompAtms="";
+        var distToCompRes=[];
         $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
-            var d_from=$(this).find(".dist_from").val();
-            var d_to=$(this).find(".dist_to").val();
-            distToComp += d_from+"-"+d_to+"a";
+            if ($(this).find(".dist_el_sel").val() == "atoms"){
+                var d_from=$(this).find(".dist_from").val();
+                var d_to=$(this).find(".dist_to").val();
+                distToCompAtms += d_from+"-"+d_to+"a";
+            } else {
+                var d_from=$(this).find(".dist_from_res").val();
+                var an_from=$(this).find(".dist_atomNm_from_sel").val();
+                var d_to=$(this).find(".dist_to_res").val();
+                var an_to=$(this).find(".dist_atomNm_to_sel").val();
+                distToCompRes.push(d_from+":"+an_from+"-"+d_to+":"+an_to);
+            }
         });
-        if (distToComp){
-            return (distToComp.slice(0, -1));
-        } else {
-            return "";
+        if (distToCompAtms){
+            distToCompAtms.slice(0, -1);
         }
+        return [distToCompAtms,distToCompRes.join()];
+
+    }*/
+    function obtainDistToComp(){
+        var distToComp=[];
+        $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
+            if ($(this).find(".dist_el_sel").val() == "atoms"){
+                var d_from=$(this).find(".dist_from").val();
+                var d_to=$(this).find(".dist_to").val();
+                distToComp.push(d_from+"-"+d_to);
+            } else {
+                var d_from=$(this).find(".dist_from_res").val();
+                var an_from=$(this).find(".dist_atomNm_from_sel").val();
+                var d_to=$(this).find(".dist_to_res").val();
+                var an_to=$(this).find(".dist_atomNm_to_sel").val();
+                distToComp.push(d_from+":"+an_from+"-"+d_to+":"+an_to);
+            }
+        });
+        return distToComp.join();
+
     }
 
     function obtainTrajUsedInDistComputatiion(res_ids){
@@ -1676,7 +1831,7 @@ $(document).ready(function(){
                         data: { 
                           "distStrWT": struc,
                           "distTraj": traj_p,
-                          "dist_residsWT": res_ids,
+                          "dist_atmsWT": res_ids,
                           "no_rv" :act_dis_plots.join(),
                           "stride" : stride,
                         },
@@ -1685,134 +1840,165 @@ $(document).ready(function(){
                             $("#gotoDistPg").removeClass("disabled");
                             var success=data_dist_wt.success;
                             if (success){
-                                var dist_array_t=data_dist_wt.result_t;
-                                var dist_array_f=data_dist_wt.result_f;
-                                var dist_id=data_dist_wt.dist_id;
                                 var small_error=data_dist_wt.msg;
                                 var strided=data_dist_wt.strided;
+                                var isEmpty = data_dist_wt.isEmpty;
+                                var dist_pair_new=data_dist_wt.dist_pair_new;
                                 var strideText="";
                                 if (Number(strided)> 1){
                                     strideText = ", str: "+strided;
                                 }
-                                function drawChart(){
+                                if (isEmpty){
+                                    var errors_html="";
+                                    for (error_msg in small_error){
+                                        errors_html+="<p>"+small_error[error_msg]+"</p>";
+                                    }
+                                    errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html+'</div>';
+                                    
                                     var patt = /[^/]*$/g;
                                     var trajFile = patt.exec(traj_p);
-                                    var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
-                                    var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
-                                    /*var widthval = (dist_array_t.length -1)*1.18;
-                                    console.log(widthval);
-                                    if (widthval < 640){
-                                        widthval = 640;
+                                    var noDist_msg="<div class='empty_dist_plot' style='border:1px solid #F3F3F3;padding:10px;'>\
+                                            <div style='font-size:12px;margin-bottom:5px' ><b>Residue Distance ("+trajFile+")</b></div>"
+                                            +errors_html_div+
+                                            "<div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
+                                                <span title='Delete' class='glyphicon glyphicon-trash delete_empty_dist_plot' ></span>\
+                                            </div>\
+                                    </div>";
+                                    $("#dist_chart").append(noDist_msg);
+                                    
+                                } else {
+                                    var dist_array_t=data_dist_wt.result_t;
+                                    var dist_array_f=data_dist_wt.result_f;
+                                    var dist_id=data_dist_wt.dist_id;
+                                    function drawChart(){
+                                        var patt = /[^/]*$/g;
+                                        var trajFile = patt.exec(traj_p);
+                                        var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
+                                        var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
+                                        /*var widthval = (dist_array_t.length -1)*1.18;
+                                        console.log(widthval);
+                                        if (widthval < 640){
+                                            widthval = 640;
+                                        }
+                                        console.log(widthval);
+                                        console.log("==========");*/
+                                        var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
+                                            "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                        var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
+                                            "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                        newgraph_sel="dist_chart_"+d_id.toString();
+                                        var plot_html;
+                                        if ($.active<=1){
+                                            plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                            <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                            <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                            <div class='settings' style='margin:5px'>\
+                                                                <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                                  Plot distance by\
+                                                                    <span >\
+                                                                        <select class='plot_dist_by_sel' name='frame_time'>\
+                                                                            <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                            <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                        </select>\
+                                                                    </span>\
+                                                                </div>\
+                                                                <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                                    <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                        <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                                    </a>\
+                                                                </div>\
+                                                                <div style='display:inline-block;margin:5px;'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                    </a>\
+                                                                </div>\
+                                                                <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
+                                                                    <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
+                                                                </div>\
+                                                                <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                            <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+dist_pair_new+" data-traj_id="+traj_id+">Display distance</label>\
+                                                                </div>\
+                                                            </div>\
+                                                        </div>";
+                                        }else{
+                                            plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
+                                                            <div class='dist_time' id='"+newgraph_sel+"t'></div>\
+                                                            <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
+                                                            <div class='settings' style='margin:5px'>\
+                                                                <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
+                                                                  Plot distance by\
+                                                                    <span >\
+                                                                        <select  name='frame_time' class='plot_dist_by_sel'>\
+                                                                            <option class='plot_dist_by' selected value='time'>time</option>\
+                                                                            <option class='plot_dist_by' value='frame'>frame</option>\
+                                                                        </select>\
+                                                                    </span>\
+                                                                </div>\
+                                                            <div class='checkbox' style='font-size:12px;'>\
+		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+dist_pair_new+" >Display distance</label>\
+                                                            </div>\
+                                                            <div style='margin:5px'>\
+                                                                <div style='display:inline-block;margin:5px;cursor:pointer;'>\
+                                                                    <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                        <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
+                                                                    </a>\
+                                                                </div>\
+                                                                <div style='display:inline-block;margin:5px;'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                    </a>\
+                                                                </div>\
+                                                                <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
+                                                                    <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
+                                                                </div>\
+                                                                <div class='checkbox' style='font-size:12px;display:inline-block'>\
+		                                                            <label><input type='checkbox' name='view_this_dist' class='display_this_dist' data-this_dist="+dist_pair_new+" data-traj_id="+traj_id+">Display distance</label>\
+                                                                </div>\
+                                                            </div>\
+                                                        </div>";                            
+                                        } 
+                                        $("#dist_chart").append(plot_html);
+                                        var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
+                                        for (chartN in chart_cont_li){
+                                            var chart_cont=chart_cont_li[chartN][0];
+                                            var data=chart_cont_li[chartN][1];
+                                            var options=chart_cont_li[chartN][2];
+                                            var chart_div = document.getElementById(chart_cont);
+                                            var chart = new google.visualization.LineChart(chart_div);                                
+                                            google.visualization.events.addListener(chart, 'ready', function () {
+                                                var img_source =  chart.getImageURI(); 
+                                                $("#"+chart_cont).attr("data-url",img_source);
+                                            });                                
+                                            chart.draw(data, options);                                    
+                                        }
+                                        $("#"+newgraph_sel+"f").css("display","none");  
+                                        var img_source_t=$("#"+newgraph_sel+"t").data("url");
+                                        $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
+                                        
+                                        if (small_error){
+    //////////////////
+                                            var errors_html="";
+                                            for (error_msg in small_error){
+                                                errors_html+="<p>"+small_error[error_msg]+"</p>";
+                                            }
+                                            errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
+                                                                    
+    /////////////////
+                                        
+                                            //var di_Serror='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><p>'+small_error+'</p></div>';
+                                            $("#all_"+newgraph_sel).find(".settings").after(errors_html_div);
+                                        }
+                                        
+                                        $("#all_"+newgraph_sel).find(".display_this_dist").attr("checked","true");
+                                        $("#selectionDiv").trigger("click");
+                                        
+                                        d_id+=1;
+                                        
                                     }
-                                    console.log(widthval);
-                                    console.log("==========");*/
-                                    var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
-                                        "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
-                                    var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
-                                        "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                        "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
-                                    newgraph_sel="dist_chart_"+d_id.toString();
-                                    var plot_html;
-                                    if ($.active<=1){
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                        <div class='dist_time' id='"+newgraph_sel+"t'></div>\
-                                                        <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
-                                                        <div class='settings' style='margin:5px'>\
-                                                            <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                              Plot distance by\
-                                                                <span >\
-                                                                    <select class='plot_dist_by_sel' name='frame_time'>\
-                                                                        <option class='plot_dist_by' selected value='time'>time</option>\
-                                                                        <option class='plot_dist_by' value='frame'>frame</option>\
-                                                                    </select>\
-                                                                </span>\
-                                                            </div>\
-                                                            <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                                <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                    <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                                </a>\
-                                                            </div>\
-                                                            <div style='display:inline-block;margin:5px;'>\
-                                                                <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
-                                                                </a>\
-                                                            </div>\
-                                                            <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
-                                                                <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
-                                                            </div>\
-                                                            <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
-                                                            </div>\
-                                                        </div>\
-                                                    </div>";
-                                    }else{
-                                        plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
-                                                        <div class='dist_time' id='"+newgraph_sel+"t'></div>\
-                                                        <div class='dist_frame' id='"+newgraph_sel+"f'></div>\
-                                                        <div class='settings' style='margin:5px'>\
-                                                            <div class='plot_dist_by_sel_cont' style='font-size:12px;margin-left:5px'>\
-                                                              Plot distance by\
-                                                                <span >\
-                                                                    <select  name='frame_time' class='plot_dist_by_sel'>\
-                                                                        <option class='plot_dist_by' selected value='time'>time</option>\
-                                                                        <option class='plot_dist_by' value='frame'>frame</option>\
-                                                                    </select>\
-                                                                </span>\
-                                                            </div>\
-                                                        <div class='checkbox' style='font-size:12px;'>\
-		                                                    <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+res_ids+" >Display distance</label>\
-                                                        </div>\
-                                                        <div style='margin:5px'>\
-                                                            <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                                <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                    <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
-                                                                </a>\
-                                                            </div>\
-                                                            <div style='display:inline-block;margin:5px;'>\
-                                                                <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
-                                                                </a>\
-                                                            </div>\
-                                                            <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
-                                                                <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
-                                                            </div>\
-                                                            <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                        <label><input type='checkbox' name='view_this_dist' class='display_this_dist' data-this_dist="+res_ids+" data-traj_id="+traj_id+">Display distance</label>\
-                                                            </div>\
-                                                        </div>\
-                                                    </div>";                            
-                                    } 
-                                    $("#dist_chart").append(plot_html);
-                                    var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
-                                    for (chartN in chart_cont_li){
-                                        var chart_cont=chart_cont_li[chartN][0];
-                                        var data=chart_cont_li[chartN][1];
-                                        var options=chart_cont_li[chartN][2];
-                                        var chart_div = document.getElementById(chart_cont);
-                                        var chart = new google.visualization.LineChart(chart_div);                                
-                                        google.visualization.events.addListener(chart, 'ready', function () {
-                                            var img_source =  chart.getImageURI(); 
-                                            $("#"+chart_cont).attr("data-url",img_source);
-                                        });                                
-                                        chart.draw(data, options);                                    
-                                    }
-                                    $("#"+newgraph_sel+"f").css("display","none");  
-                                    var img_source_t=$("#"+newgraph_sel+"t").data("url");
-                                    $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
-                                    
-                                    if (small_error){
-                                        var di_Serror='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><p>'+small_error+'</p></div>';
-                                        $("#all_"+newgraph_sel).find(".settings").after(di_Serror);
-                                    }
-                                    
-                                    $("#all_"+newgraph_sel).find(".display_this_dist").attr("checked","true");
-                                    $("#selectionDiv").trigger("click");
-                                    
-                                    d_id+=1;
-                                    
+                                    google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
                                 }
-                                google.load("visualization", "1", {packages:["corechart"],'callback': drawChart});
                             } else {
                                 var msg=data_dist_wt.msg;
                                 add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+ msg;
@@ -1901,6 +2087,10 @@ $(document).ready(function(){
         if (isChecked){
             $("#selectionDiv").trigger("click");
         }
+    });
+    
+    $('body').on('click','.delete_empty_dist_plot', function(){
+        $(this).closest(".empty_dist_plot").remove();
     });
    
 
@@ -2157,7 +2347,7 @@ $(document).ready(function(){
         }
     });
     
-    $(".inp_stride, #int_thr").on("change" , function(){
+    $(".inp_stride").on("change" , function(){
         var stride = $(this).val();
         stride = Number(stride);
         var pos = Math.abs(stride)
@@ -2167,6 +2357,16 @@ $(document).ready(function(){
         } 
         if (stride != rounded){
             stride = rounded;
+            $(this).val(stride);
+        }
+    });
+    
+    $("#int_thr").on("change" , function(){
+        var stride = $(this).val();
+        stride = Number(stride);
+        var pos = Math.abs(stride);
+        if (stride != pos){
+            stride = pos;
             $(this).val(stride);
         }
     });
@@ -2198,7 +2398,6 @@ $(document).ready(function(){
         cutoff=$("#hbonds_cutoff").val();
         if (cutoff == ""){
             cutoff =$("#hbonds_cutoff").attr("placeholder");
-            console.log(cutoff);
         }
         if (rmsdFrames=="bonds_frames_mine"){
             frameFrom=$("#bonds_frame_1").val();
@@ -2911,7 +3110,6 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
-        console.log('lts return it:  ',all_resids_sasa);
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -3045,7 +3243,7 @@ $(document).ready(function(){
         atomssb=[];
         all_resids_sb=[];
         removeCompBtns();
-        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride").val("");
+        $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride, .dis_res_bth").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
         $(".sel_within").find(".dist_sel:not(:first-child)").each(function(){

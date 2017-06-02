@@ -483,29 +483,69 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
+def res_to_atom(chain_names,struc,res, chain, atm):
+    chain = chain.upper()
+    if chain in chain_names:
+        chain_ind=chain_names.index(chain)
+        atm_index_arr = struc.topology.select("residue "+str(res)+" and chainid "+str(chain_ind)+" and name "+atm)
+        if atm_index_arr:
+            return (str(atm_index_arr[0]))
+        else:
+            return False
+    else:
+        return False
+
+
 def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     struc_path = "/protwis/sites/files/"+struc_path
     traj_path = "/protwis/sites/files/"+traj_path
-    dist_li=re.findall("\d+-\d+",dist_str)
+    dist_li=dist_str.split(",")
     #serial_mdInd=relate_atomSerial_mdtrajIndex(struc_path) 
     frames=[]
     axis_lab=[["Frame"]]
     atom_pairs=np.array([]).reshape(0,2)
-    small_error=None
+    small_error=[]
+    # If some dist needs re -> atom traduction:
+    chain_names=obtain_all_chains(struc_path)
+    if (":" in dist_str):
+        struc=md.load(struc_path)
+    dist_pair_new=[]
     if len(dist_li) > 20:
         dist_li =dist_li[:20]
-        small_error="Too much distances to compute. Some have been omitted."
+        small_error.append("Too much distances to compute. Some have been omitted.")
     for dist_pair in dist_li:
-        pos_from,pos_to=re.findall("\d+",dist_pair)
-        var_lab="dist "+pos_from+"-"+pos_to
+        if ":" in dist_pair:
+            (inf_from,inf_to)=dist_pair.split("-")
+            (resF, chainF, atmF)= inf_from.split(":")
+            (resT, chainT, atmT)= inf_to.split(":")
+            pos_from=res_to_atom(chain_names,struc,resF, chainF, atmF)
+            pos_to=res_to_atom(chain_names,struc,resT, chainT, atmT)
+            var_lab="dist "+resF +":"+ chainF+"("+atmF+")-"+resT +":"+ chainT+"("+atmT+")"
+            skip=False
+            if not pos_from:
+                small_error.append("Selection "+resF+":"+chainF+" "+atmF+" not found")
+                skip=True
+            if not pos_to:
+                small_error.append("Selection "+resT+":"+chainT+" "+atmT+" not found")
+                skip=True
+            if skip:
+                continue
+            
+        else:
+            pos_from,pos_to=re.findall("\d+",dist_pair)
+            var_lab="dist "+pos_from+"-"+pos_to
+        dist_pair_new.append(dist_pair)
         axis_lab[0].append(var_lab) 
         #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]])
         from_to=np.array([[pos_from,pos_to]])        
         atom_pairs=np.append(atom_pairs,from_to, axis=0)
+    if (len(atom_pairs) ==0):
+        return (True,[], small_error, True, ",".join(dist_pair_new))
+        
     try:
         itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
-        return (False,None, "Error loading the file.")
+        return (False,None, "Error loading the file.",True,"")
     dist=np.array([]).reshape((0,len(atom_pairs))) 
     for itraj in itertraj:
         try:
@@ -513,12 +553,14 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
         except Exception:
             num_atoms=itraj.n_atoms
             error_msg="Atom indices must be between 0 and "+str(num_atoms)
-            return (False, None, error_msg)
+            return (False, None, error_msg,True,"")
         dist=np.append(dist,d,axis=0)
     frames=np.arange(0,len(dist)*strideVal, strideVal,dtype=np.int32).reshape((len(dist),1))
     data=np.append(frames,dist, axis=1).tolist()
     data_fin=axis_lab + data
-    return (True,data_fin, small_error)
+    if not small_error:
+        small_error=None
+    return (True,data_fin, small_error,False,",".join(dist_pair_new))
 
 def obtain_domain_url(request):
     current_host = request.get_host()
@@ -605,7 +647,7 @@ def index(request, dyn_id):
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
         elif request.POST.get("distStrWT"):
             dist_struc_p=request.POST.get("distStrWT")
-            dist_ids=request.POST.get("dist_residsWT")
+            dist_ids=request.POST.get("dist_atmsWT")
             dist_traj_p=request.POST.get("distTraj")
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
@@ -625,8 +667,8 @@ def index(request, dyn_id):
                 dist_dict={}
                 
             if len(dist_dict) < 15:
-                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
-                if success:
+                (success,data_fin, msg, isEmpty,dist_pair_new)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
+                if success and not isEmpty:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
                     data_store[0].insert(1,"Time")
@@ -643,11 +685,11 @@ def index(request, dyn_id):
                     dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename,strideVal)
                     request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                          "traj_filename":traj_filename, "struc_filename":struc_filename}
-                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal}
+                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal , "isEmpty":isEmpty , "dist_pair_new":dist_pair_new}
                 else: 
-                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal}
+                    data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal, "isEmpty":isEmpty, "dist_pair_new":dist_pair_new}
             else:
-                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal}
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal, "isEmpty":isEmpty, "dist_pair_new":dist_pair_new}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")

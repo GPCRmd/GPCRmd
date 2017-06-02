@@ -318,6 +318,24 @@
 
         }
         
+        function res_to_atom(o,d_info){
+            var d_all=d_info.split(":");
+            var res=d_all[0];
+            var chain=d_all[1];
+            var atmn=d_all[2];
+            var res_sele =  new NGL.Selection( res+":"+chain );
+            //console.log(res_sele)
+            //console.log(atmn);
+            var mypos="";
+            o.structure.eachAtom(function(a){
+                if (a.atomname == atmn){
+                    mypos=a.index;
+                }
+            },res_sele);
+            //console.log(mypos);
+            //console.log("------");
+            return(mypos)
+        }
         
         function createReps(){
             parent.passInfoToIframe();
@@ -498,13 +516,17 @@
                 var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
                 for (distgN in dist_groups_li){
                     var dist_group=dist_groups_li[distgN];
-                    var dist_pair_li=dist_group.split("a");
+                    var dist_pair_li=dist_group.split(",");
                     for (pair_n in dist_pair_li){
                         var d_from_to_str = dist_pair_li[pair_n];
                         if (typeof d_from_to_str == "string"){
                             var d_from_to = d_from_to_str.split("-");
                             var d_from = d_from_to[0];
                             var d_to = d_from_to[1];
+                            if (d_from_to_str.indexOf(":") > -1){
+                                d_from=res_to_atom(o,d_from);
+                                d_to=res_to_atom(o,d_to);
+                            } 
                             var comp_dist_name="comp_dist_"+cd_id.toString();
                            // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
                             o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" ,name : comp_dist_name } );
@@ -592,7 +614,6 @@
         }
 /////////// Set variables:
             var struc=$(".str_file", window.parent.document).data("struc_file");
-            console.log('THIS IS THE PDB::',struc);
             var traj_li_all = [];
             var  path= "/mdsrv/file/_DB/";
             var  traj_path= "_DB/";
@@ -607,17 +628,12 @@
             //var compDistsLi=[];
             var clickedDist={};
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
-            console.log('THIS IS THE TRAJ::',mytraj);
             if (struc) {
-                console.log('YIHAAAAA, PDB FOUND, SOMEBODY SAYD HELLO?');
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
-                        console.log('HELLOOUUUU');
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
-                        console.log('more than zero traj found');
                         for (t=0 ; t < traj_li_all.length ; t++){
-                            console.log('adding traj:',traj_path +traj_li_all[t]);
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
                         //traj_li=[mytraj];
@@ -626,9 +642,7 @@
                     $(".traj_element" , window.parent.document).click(function(){
                         mytraj=$(this).data("tpath");
                         traj_id=traj_li_all.indexOf(mytraj);
-                        console.log(traj_id);
                         $(".traj_btn").attr("id","playerButton"+traj_id.toString());
-                        console.log(" HEEEEEEY playerButton"+traj_id.toString());
                     });
                     trajButtons(o);
                     createReps();
@@ -652,7 +666,6 @@
                 $("#trajRange").change(function(){
                     if (trajComp){
                         var toframe=$(".ui-slider-handle").attr("aria-valuenow"); //problem here! toframe=NaN 
-                        console.log('BYE THERE',toframe);
                         trajComp.setFrame(toframe);
                     }
                 });

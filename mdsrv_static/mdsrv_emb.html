@@ -153,6 +153,26 @@
         }
 
 
+        function res_to_atom(o,d_info){
+            var d_all=d_info.split(":");
+            var res=d_all[0];
+            var chain=d_all[1];
+            var atmn=d_all[2];
+            var res_sele =  new NGL.Selection( res+":"+chain );
+            //console.log(res_sele)
+            //console.log(atmn);
+            var mypos="";
+            o.structure.eachAtom(function(a){
+                if (a.atomname == atmn){
+                    mypos=a.index;
+                }
+            },res_sele);
+            //console.log(mypos);
+            //console.log("------");
+            return(mypos)
+        }
+        
+
 
         function fromChainLiToNGL(nonGPCR){ 
             var nonGPCR_li=nonGPCR.split(",");
@@ -385,9 +405,13 @@
                                                 var d_from_to = d_from_to_str.split("-");
                                                 var d_from = d_from_to[0];
                                                 var d_to = d_from_to[1];
+                                                if (d_from_to_str.indexOf(":") > -1){
+                                                    d_from=res_to_atom(o,d_from);
+                                                    d_to=res_to_atom(o,d_to);
+                                                } 
                                                 var comp_dist_name="comp_dist_"+cd_id.toString();
                                                // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
-                                                o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" ,name : comp_dist_name } );
+                                                o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[cd_id], colorScheme:"uniform", labelColor: plot_colors[cd_id] ,fontWeight: "normal" ,name : comp_dist_name } );
                                                 //compDistsLi.push(comp_dist_name);
                                                 cd_id +=1;
                                             }

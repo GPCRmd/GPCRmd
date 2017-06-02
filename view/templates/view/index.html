@@ -647,13 +647,27 @@
                     <span class="tick2" ></span>
                     <span class="always2" style="margin-left:14px">
                      Compute distance between 
+                     
+                     <select class="dist_el_sel">
+                        <option class="dist_el_opt" name="dist_el" value="atoms" selected >atoms</option>
+                        <option class="dist_el_opt" name="dist_el" value="residues">residues</option>
+                     </select>
+                     
                      <span class="dist_from_parent">
                         <input class="form-control input-sm dist_from" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
                     </span>
-			and
+                     <span class="dist_from_res_parent dis_res_bth_parent" style="display:none">
+                        <input class="form-control input-sm dist_from_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" placeholder="xx:C" style="width:50px;padding-left:7px;margin-bottom:5px;">
+                    </span>
+                    <span class="dist_from_atomNm_parent"></span>
+			        and
                      <span class="dist_to_parent">
                          <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
                      </span>
+                     <span class="dist_to_res_parent dis_res_bth_parent" style="display:none">
+                        <input class="form-control input-sm dist_to_res dis_res_bth" type="text" placeholder="xx:C" title="Introduce residue number and chain name (ex. 50:P)" style="width:50px;padding-left:7px;margin-bottom:5px;">
+                    </span>
+                     <span class="dist_to_atomNm_parent"></span>
                      <button class="btn btn-link del_btn2" style="color:#DC143C;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-remove-sign"></span></button>  
                      <button class="btn btn-link only1st add_btn2" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
                      <button title="Import distances from the structure." class="btn btn-link only1st imp_btn2" style="color:#1e90ff;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-circle-arrow-down"></span></button>
