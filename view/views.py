@@ -251,6 +251,8 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
+
+    print(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
     return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
@@ -1305,9 +1307,6 @@ def hbonds(request):
         struc_path = "/protwis/sites/files/"+arrays[4]
         all_chains=obtain_all_chains(struc_path)
         traj_path = "/protwis/sites/files/"+arrays[3]
-        #t = md.load(traj_path,top=struc_path)
-        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
         start=int(arrays[0])
         end=int(arrays[1])
         backbone=arrays[6]=='true'
@@ -1325,7 +1324,7 @@ def hbonds(request):
         traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
         bonds_path=traj_path[:traj_path.rfind('/')]+traj_name+'_bonds'
         if neighbours:
-            resid_dist=60
+            resid_dist=4
         else:
             resid_dist=0
         try:
@@ -1340,18 +1339,7 @@ def hbonds(request):
         if not precomputed:
             precomputed_bonds=[]
             for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
-                '''
-                rframes=end-nframes
-                if rframes==0:
-                    break
-                if rframes<chunksize:
-                    t=t[:rframes]
-
-                nframes+=len(t)
-                '''
                 hbonds_ks+=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False) # i could save this precomputed matrix
-
-
             with open(bonds_path, 'wb') as fp:
                 pickle.dump(hbonds_ks, fp)
 
@@ -1380,7 +1368,7 @@ def hbonds(request):
             chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
             chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
-            is_not_neighbour=abs(keys[0]-keys[2])>resid_dist
+            is_not_neighbour=abs(t.topology.atom(keys[0]).residue.index-t.topology.atom(keys[2]).residue.index)>resid_dist
             if backbone:
                 if histhbond[keys]>percentage_cutoff and is_not_neighbour: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
                     labelbond=label([keys[0],histhbond[keys],keys[2]])
@@ -1395,14 +1383,9 @@ def hbonds(request):
                         if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
                             try:
                                 if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
-                                    #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
-                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
-
+                                    hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
                                 else: #acceptor is protein
-                                    #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                    hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
                             except KeyError:
                                 if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
                                     hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
@@ -1411,23 +1394,19 @@ def hbonds(request):
 
                         else: #intraprotein hbonds
                             try:
-                                #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                                if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
-                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
                             except KeyError:
                                 hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
             else:
-                if histhbond[keys]>percentage_cutoff: #not neighbours abs(keys[0]-keys[2])>60 ??
+                if histhbond[keys]>percentage_cutoff:
                     if t.topology.atom(keys[0]).residue.is_protein:
                         a1=t.topology.atom(keys[0]).is_sidechain
                     else:
                         a1=True
-
                     if t.topology.atom(keys[2]).residue.is_protein:
                         a2=t.topology.atom(keys[2]).is_sidechain
                     else:
                         a2=True    
-  
                     if a1 and a2 and is_not_neighbour:
                         labelbond=label([keys[0],histhbond[keys],keys[2]])
                         labelbond=labelbond.replace(' ','')
@@ -1441,14 +1420,9 @@ def hbonds(request):
                             if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
                                 try:
                                     if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
-                                        #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
-                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
-                                            hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
-
+                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
                                     else: #acceptor is protein
-                                        #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                            hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
                                 except KeyError:
                                     if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
                                         hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
@@ -1457,44 +1431,43 @@ def hbonds(request):
 
                             else: #intraprotein hbonds
                                 try:
-                                    #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
-                                        hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
                                 except KeyError:
                                     hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
 
+        if False: #warning, to implement download of csv file
 
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["#Structure: "+struc_filename])
+            writer.writerow(["#Trajectory: "+traj_filename])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
+            writer.writerow(["#Selection: "+proper_name(traj_sel)])
+            struc_path=struc_path[:-4]
+            csvfile= open(struc_path+'hbonds.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',
+                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
+            for keys in hbonds_residue:
+                for minilist in hbonds_residue[keys]:
+                    rowlist=[keys]+minilist[:-2]
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
 
-
-        struc_path=struc_path[:-4]
-        csvfile= open(struc_path+'hbonds.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-        header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
-        for keys in hbonds_residue:
-            for minilist in hbonds_residue[keys]:
-                rowlist=[keys]+minilist[:-2]
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
-
-        csvfile= open(struc_path+'hbonds_notprotein.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-
-        header=['Residue1_(protein)', 'Residue2_(other)', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
-
-        for keys in hbonds_residue_notprotein:
-            for minilist in hbonds_residue_notprotein[keys]:
-                rowlist=[keys]+minilist[:-2]
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
+            csvfile= open(struc_path+'hbonds_notprotein.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            header=['Residue1_(protein)', 'Residue2_(other)', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
+            for keys in hbonds_residue_notprotein:
+                for minilist in hbonds_residue_notprotein[keys]:
+                    rowlist=[keys]+minilist[:-2]
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
         
-        print('hereaaaa')
-
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
@@ -1506,9 +1479,6 @@ def saltbridges(request):
         arrays=request.POST.getlist('frames[]')
         struc_path = "/protwis/sites/files/"+arrays[4]
         traj_path = "/protwis/sites/files/"+arrays[3]
-        #t = md.load(traj_path,top=struc_path)
-        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/cara.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         full_results=dict()
         chunksize=50
@@ -1552,7 +1522,6 @@ def saltbridges(request):
                             if residue.name=='LYS' and atom.name=='NZ':
                                 salt_bridges_atoms.append(atom.index+1)
 
-
                 if False:
                     distance=md.compute_distances(t, np.array(cdis),periodic=False) #shape=(n_frames, num_pairs)
                     distancedic=dict()
@@ -1585,13 +1554,11 @@ def saltbridges(request):
                 frequency+=np.sum(distances < distance_threshold,axis=0)
 
             counter+=1
-        print('Salt Bridge analysis DONE')
+
         frequency=frequency/nframes
         distances= frequency> percentage_threshold #[True, False, True, True, ...]
         combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
         salt_bridges_residues=combfreq[distances] #logical mask to combinationcs [[10,34],[11,90],[42,666],[],...][True, False, True, True, ...]
-
-
         full_results['salt_bridges'] = salt_bridges_residues
         full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
         #-1 to return to zero indexing.
@@ -1611,20 +1578,20 @@ def saltbridges(request):
             else:
                bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
 
-        struc_path=struc_path[:-4]
-        csvfile= open(struc_path+'saltbridges.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+        if False: #warning, to implement in future, download csv with results
+            struc_path=struc_path[:-4]
+            csvfile= open(struc_path+'saltbridges.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',
+                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
 
-        header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
+            header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
 
-        for keys in bridge_dic:
-            for minilist in bridge_dic[keys]:
-                rowlist=[keys]+minilist
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
+            for keys in bridge_dic:
+                for minilist in bridge_dic[keys]:
+                    rowlist=[keys]+minilist
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
 
         full_results['salt_bridges']=bridge_dic
         data = json.dumps(full_results)
@@ -1636,11 +1603,7 @@ def sasa(request):
     struc_path = "/protwis/sites/files/"+arrays[4]
     traj_path = "/protwis/sites/files/"+arrays[3]
     sel=arrays[6]
-    #struc_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/build.pdb"
-    #traj_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/b2ar.dcd"
-    #struc_path = "/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb"
-    #traj_path = "/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd"
-
+    residue_indexes=arrays[7].split(',')
     print(struc_path,traj_path)
     traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
     sasa_path=traj_path[:traj_path.rfind('/')]+traj_name+'.npy'
@@ -1686,7 +1649,8 @@ def sasa(request):
             atoms_prot_bootom=[]
             atoms_half=[]
             atoms_receptor=[]
-            
+            atoms_up=[]
+            atoms_uphalf=[]
             for i in range(tori.xyz[0].shape[0]):
                 if normal:
                     if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
@@ -1695,19 +1659,26 @@ def sasa(request):
                         atoms_half.append(i)
                     if tori.topology.atom(i).residue.is_protein:
                         atoms_receptor.append(i)
+                    if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
+                        atoms_up.append(i)
+                    if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_uphalf.append(i)
                 else:
                     if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
                         atoms_prot_bootom.append(i)
                     if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
                         atoms_half.append(i)
+                    if tori.xyz[0][i][2]<zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_uphalf.append(i)
                     if tori.topology.atom(i).residue.is_protein:
                         atoms_receptor.append(i)
+                    if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
+                        atoms_up.append(i)
 
             if not precomputed:
                 sasa=md.shrake_rupley(tori)
 
         elif counter>0 and not precomputed:
-            print(str(counter))
             sasa=np.concatenate((sasa,md.shrake_rupley(t)))
 
         else:
@@ -1719,8 +1690,7 @@ def sasa(request):
         traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
         sasa_path=traj_path[:traj_path.rfind('/')]+traj_name
         np.save(sasa_path,sasa)
-    print(sasa)
-    print(str(start),str(end))
+
     sasa=sasa[start:end]
     selected_resids=[]
     if sel=='half':
@@ -1738,6 +1708,25 @@ def sasa(request):
     elif sel=='all':
         sasaours=sasa[:] #pick only the sasa columns of our atoms.
         selected_resids=[]
+    elif sel=='sequence':
+        sequence_atoms=[]
+        for resid in residue_indexes:
+            resid=int(resid)-1
+            selected_resids.append(tori.topology.residue(resid))
+            for atom in tori.topology.residue(resid).atoms:
+                sequence_atoms.append(atom.index)
+
+        sasaours=sasa[:,sequence_atoms] #pick only the sasa columns of our atoms.
+
+    elif sel=='up':
+        sasaours=sasa[:,atoms_up] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_up:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+
+    elif sel=='up_half':
+        sasaours=sasa[:,atoms_uphalf] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_uphalf:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
 
     sasaours_peratom=sasaours.sum(axis=0)
     sasaours_perframe=sasaours.sum(axis=1)
@@ -1748,21 +1737,25 @@ def sasa(request):
     final_resids=list(set(final_resids))
     if sel=='all':
         final_resids='all'
-    '''
-    print('SASA per atom')
-    for pos,atomindex in enumerate(atoms_prot_bootom):
-        print(t.topology.atom(atomindex),sasaours_peratom[pos])
 
-    print('SASA per frame')
-    for f in range(len(sasaours_perframe)):
-        print(f, sasaours_perframe[f])
-    '''
     sasaours_perframe=sasaours_perframe.tolist()
     time=sasa.shape[0] #number of frames
     time=[i for i in range(time)]
     result=zip(time,sasaours_perframe)
     result=[list(i) for i in result]
     sasares={'sasa':result,'selected_residues':final_resids}
+    if request.session.get('sasa_data', False):
+        sasa_data=request.session['sasa_data']
+        sasa_dict=sasa_data["sasa_dict"]
+        new_sasa_id=sasa_data["new_sasa_id"]+1
+
+    else:
+        new_sasa_id=1
+        sasa_dict={}
+            
+    sasa_dict["sasa_"+str(new_sasa_id)]=sasares
+    request.session['sasa_data']={"sasa_dict":sasa_dict, "new_sasa_id":new_sasa_id}
+    sasares={'sasa':result,'selected_residues':final_resids,'sasa_id':new_sasa_id}
     data = json.dumps(sasares)
     return HttpResponse(data, content_type='application/json')
 

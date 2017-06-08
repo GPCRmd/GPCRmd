@@ -923,6 +923,15 @@
                                   </div>
 
 
+                              <div class="row">
+                                 <input type="radio" name="backbone" value="all" checked> 
+                                       Include backbone Hydrogen Bonds
+                              </div>
+                              <div class="row" >
+                                 <input type="radio" name="backbone" value="sidechain"> 
+                                      Only Side Chain Hydrogen Bonds
+                              </div>
+
 
                            </div>
                         <div>
@@ -1067,11 +1076,20 @@
                               <div  class="row">
                                  <input type="radio" name="sasa_sel" value="all" checked> All atoms
                               </div>
+                              <div id='show_seq_sel'  class="row">
+                                 <input type="radio" name="sasa_sel" value="sequence"> Sequence Selection
+                              </div>
                               <div  class="row">
                                  <input type="radio" name="sasa_sel" value="receptor"> Receptor
                               </div>
                               <div  class="row">
                                  <input type="radio" name="sasa_sel" value="half"> Lower half of receptor
+                              </div>
+                              <div  class="row">
+                                 <input type="radio" name="sasa_sel" value="up_half"> Upper half of receptor
+                              </div>
+                              <div  class="row">
+                                 <input type="radio" name="sasa_sel" value="up"> Extracellular receptor
                               </div>
                               <div class="row">
                                  <input type="radio" name="sasa_sel" value="bottom"> Intracelular receptor
@@ -1090,8 +1108,10 @@
 
 
              <div class="row" style="margin-top:10px;margin-bottom:15px">
+                    <!--<div class="col-md-12;clear:left;" id="sasa_chart" ></div>  ANTES-->   
+                    <div id="sasa_container">
 
-                    <div class="col-md-12;clear:left;" id="sasa_chart" ></div>
+                    </div>
                     <div class=row>
                       <button id="ComputeGrid" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>

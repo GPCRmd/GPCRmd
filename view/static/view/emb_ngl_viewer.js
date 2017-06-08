@@ -2293,6 +2293,25 @@ $(document).ready(function(){
             }
             var fin_val = act_val + or + "protein and ("+ pos_str +")";
             sel_input_cont.val(fin_val);
+            seq_ids.length = 0
+            $('.sel').each(function(){
+                seq_ids.push(Number(this.id));
+            });
+
+            residueslist=[]
+            for (i=0;i<seq_ids.length;i++){
+                parentid='#'+seq_ids[i].toString();
+                residue=$(parentid).children('#ss_seq').html()+$(parentid).children('#ss_pos').html()
+                residueslist.push(residue);
+            }
+
+            var basehtml='<input type="radio" name="sasa_sel" value="sequence"> Sequence Selection '
+            if (residueslist.length < 4){
+                $('#show_seq_sel').html(basehtml+'('+residueslist.join(', ')+')');
+            }else{
+                shortlist=residueslist[0]+', ... , '+residueslist[residueslist.length-1];
+                $('#show_seq_sel').html(basehtml+'('+shortlist+')');
+            }
             $("#selectionDiv").trigger("click");
         }
     });    
@@ -2643,10 +2662,11 @@ $(document).ready(function(){
             frameFrom=0;
             frameTo=-1;
         }
+
         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
         $.ajax({
                 type: "POST",
-                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel]},
+                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
                 url:"/view/grid/", 
                 dataType: "json",
                 success: function(data) {
@@ -2658,27 +2678,18 @@ $(document).ready(function(){
                     all_resids_sb=[];
                     all_resids_sasa=data.selected_residues
                     results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
-                    data=results[0];
+                    data_graph=results[0];
                     options=results[1];
-                    /*
-
-                                            var chart_div = document.getElementById(chart_cont);
-                                            var chart = new google.visualization.LineChart(chart_div);                                
-                                            google.visualization.events.addListener(chart, 'ready', function () {
-                                                var img_source =  chart.getImageURI(); 
-                                                $("#"+chart_cont).attr("data-url",img_source);
-                                            });                                
-                                            chart.draw(data, options);                                    
-                                        }
-                                        $("#"+newgraph_sel+"f").css("display","none");  
-                                        var img_source_t=$("#"+newgraph_sel+"t").data("url");
-                                        $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
-
-
-
-                    */
-                    var chart_sasa = new google.visualization.LineChart(document.getElementById('sasa_chart'));    
-                    chart_sasa.draw(data, options);
+                    newid='sasa_chart_'+data.sasa_id.toString();
+                    titlegraph=['From Frame:',frameFrom,'To Frame:',frameTo,'Trajectory:',rmsdTraj,'Selection:',sasa_sel].join(' ');
+                    $("#sasa_container").append('<hr><center>'+titlegraph+'</center><br><div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
+                    var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));
+                    google.visualization.events.addListener(chart_sasa, 'ready', function () {
+                        var img_source =  chart_sasa.getImageURI(); 
+                        $("#"+newid).attr("data-url",img_source);
+                    });
+                    chart_sasa.draw(data_graph, options);
+                    $("#"+newid).append('<a href='+$("#"+newid).attr("data-url")+'>Download graph as image</a>');
                     $("#selectionDiv").trigger("click");
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -3094,7 +3105,7 @@ $(document).ready(function(){
         }
         return (receptorsel);
     }
-
+    var seq_ids=[];
     var atomshb=[];
     var grid=[];
     var grid_shape=[];
