@@ -19,7 +19,8 @@ import copy
 import csv
 import pickle
 import math
-
+from os import path
+from dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
@@ -483,6 +484,23 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
+def obtain_protein_names(dyn_id):
+    """Given a dynamic id, gets a list of the GPCR names"""
+    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    prot_li_names=[]
+    if model.id_protein:
+        gprot= model.id_protein.receptor_id_protein
+        if gprot:#it means it is a GPCR
+            prot_li_names.append(model.id_protein.name)
+    else:
+        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+        for dprot in dprot_li_all:
+            gprot= dprot.receptor_id_protein
+            if gprot:#it means it is a GPCR
+                prot_li_names.append(dprot.name)
+    return ",".join(prot_li_names)
+
+
 def res_to_atom(chain_names,struc,res, chain, atm):
     chain = chain.upper()
     if chain in chain_names:
@@ -582,6 +600,23 @@ def obtain_domain_url(request):
     else:
         mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
+
+def get_fplot_path(dyn_id,traj_list):
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
+    fplot_path=[]
+    for (trajfile, trajfile_name, f_id) in traj_list:
+        fpfilename = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!
+        ###########[!] Change get_file_name() to obtain it automatically
+        (pre,post)=fpfilename.split(".")
+        fpfilename=pre+"_hbonds."+post
+        ###########
+        fppath = path.join(fpdir,fpfilename)
+        exists=path.isfile(fppath)
+        if exists:
+            fplot_path.append([f_id,fpfilename,trajfile_name])
+    return fplot_path
+        
+    
 
 @ensure_csrf_cookie
 def index(request, dyn_id):
@@ -754,6 +789,7 @@ def index(request, dyn_id):
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
+        fplot_path=get_fplot_path(dyn_id,traj_list)
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
@@ -883,7 +919,8 @@ def index(request, dyn_id):
                         "other_prots":other_prots,#["protein and (:A or :B or :C)" , "Chains A, B, C" , "A, B,C"]
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
                         "all_chains": ",".join(all_chains),
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -902,7 +939,8 @@ def index(request, dyn_id):
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "gpcr_pdb": "no",
                         "all_chains": ",".join(all_chains),
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -919,7 +957,8 @@ def index(request, dyn_id):
                         "other_prots":other_prots,
                         "chains" : chain_str,            
                         "gpcr_pdb": "no",
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -935,7 +974,9 @@ def index(request, dyn_id):
                     "other_prots":[],
                     "ligands_short": ",".join(lig_li_s),                  
                     "chains" : "",            
-                    "gpcr_pdb": "no"}
+                    "gpcr_pdb": "no",
+                    "fplot_path" : fplot_path
+                    }
             return render(request, 'view/index.html', context)
 
 
@@ -1785,4 +1826,21 @@ def grid(request):
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
-
+#def fplot_test(request, filename):
+#    context={"json_name":filename+".json"}
+#    return render(request, 'view/flare_plot_test.html', context)
+    
+def fplot_gpcr(request, dyn_id, filename):
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+    pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
+    pdbpath=pdbpath.replace("/protwis/sites", "/dynadb")
+    prot_names=obtain_protein_names(dyn_id)
+    traj_id=int(re.match("^\d+",filename).group())
+    traj_name=DyndbFiles.objects.get(id=14).filename
+    context={"json_path":fpdir + filename,
+             "pdb_path": pdbpath,
+             "prot_names": prot_names,
+             "traj_name" :traj_name
+            }
+    return render(request, 'view/flare_plot.html', context)
+    

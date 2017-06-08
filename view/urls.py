@@ -14,7 +14,8 @@ urlpatterns = [
     url(r'^docs/$', views.viewer_docs, name='viewer_docs'),
     url(r'^hbonds/$', views.hbonds, name='hbonds'),
     url(r'^saltbridges/$', views.saltbridges, name='saltbridges'),
-    url(r'^grid/$', views.sasa, name='sasa')
+    url(r'^grid/$', views.sasa, name='sasa'),
+    url(r'^fplot/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/$', views.fplot_gpcr, name='fplot_gpcr')
 ]
 
 if settings.DEBUG:

@@ -696,11 +696,11 @@
                         Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
-                        <button id="gotoDistPg" class="pull-right btn btn-default withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                        <button id="gotoDistPg" class="pull-right btn btn-info withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
                 </div>
                 {% else %}
-                <button id="gotoDistPg" class="btn btn-default withoutTrajs" style="padding:5px;margin-left:14px;margin-right:15px" >Compute</button>
+                <button id="gotoDistPg" class="btn btn-info withoutTrajs" style="padding:5px;margin-left:14px;margin-right:15px" >Compute</button>
                 {% endif %}
                 <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" id="dist_alert"> </div>
                 <div id="dist_chart" style="margin-bottom:15px"></div>
@@ -794,7 +794,7 @@
                         </div>
                    </div>
                     <div class=row>
-                      <button id="gotoRMSDPg" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                      <button id="gotoRMSDPg" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
                     <div class="row" style="margin-left:14px;margin-top:5px;padding-right:15px;clear:left;" id="rmsd_alert"> </div>
                   <div class="col-md-12;clear:left;" id="rmsd_chart" ></div>
@@ -852,7 +852,7 @@
                             </select>  
                     </div>
                     <div class="row">
-                            <button id="gotoInt" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Compute</button>
+                            <button id="gotoInt" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Compute</button>
                     </div>
                     <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px" id="int_alert"> </div>
                     <div style="margin-top:5px;"  id="int_info" ></div>
@@ -870,6 +870,7 @@
            </div>
              <div id="analysis_bonds" class="collapse">
                  <div class="row" style="margin-top:10px;margin-bottom:15px">
+
 
                         <div style="margin-left:18px;margin-bottom:10px;">
                          Trajectory: 
@@ -933,7 +934,7 @@
 
 
                 <div class=row>
-                  <button id="ComputeHbonds" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                  <button id="ComputeHbonds" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                 </div>
                 <div id="bonds_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
                  <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
@@ -1005,7 +1006,7 @@
 
              <div class="row" style="margin-top:10px;margin-bottom:15px">
                     <div class=row>
-                      <button id="ComputeSaltBridges" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                      <button id="ComputeSaltBridges" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
                     <div id="salt_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
                     <div id="saltresult_par" style="display:none" class="col-md-12" >
@@ -1092,17 +1093,37 @@
 
                     <div class="col-md-12;clear:left;" id="sasa_chart" ></div>
                     <div class=row>
-                      <button id="ComputeGrid" class="pull-right btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                      <button id="ComputeGrid" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
 
                 </div>
               </div>
-    </div> <!-- new one -->
 <!-- ======================================== -->
+        {% if fplot_path %}
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+           <div id="analysis_fplot" class="collapse">
+               <div class="row" style="margin-top:10px;margin-bottom:15px">
+                    <div style="margin-left:18px;margin-bottom:10px;color:#808080">Represent <span style="font-weight:bold"> intra-protein hydrogen bonds</span> of a trajectory as a dynamic interaction network.
+                    </div>
+                    <div style="margin-left:18px;margin-bottom:10px;">
+                     Trajectory: 
+                            <select id="fplot_traj" name="fplot_traj">
+                               {% for fp in fplot_path %}
+                                   <option   value="{{fp.1}}">{{fp.2}}</option>
+                               {% endfor %}
+                            </select>
 
-
-
-           <!-- </div>-->
+                     </div>
+               </div>
+                <div class="row">
+                        <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=fplot_path.0.1  %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
+                </div>
+           </div> 
+        {% endif %}
+<!-- ======================================== -->
+            </div><!-- End of analysis --->
             </div>
             {% endif %}
           </div>

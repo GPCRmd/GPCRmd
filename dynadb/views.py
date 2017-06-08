@@ -12784,3 +12784,32 @@ def reset_permissions(request):
         ex_type, ex, tb = sys.exc_info()
         traceback.print_tb(tb)
     return HttpResponse('Done!',content_type='text/plain; charset=UTF-8')
+    
+    
+from django.conf import settings
+from dynadb.views import join_path
+
+def get_precomputed_file_path(objecttype,comp_type=None,url=False):
+    precomputed_folder = "Precomputed"
+    if url:
+        root = get_file_url_root()
+    else:
+        root = settings.MEDIA_ROOT
+        
+    filepathdict = dict()
+    #define objects
+    filepathdict['flare_plot'] = dict()
+    #define main folders
+    filepathdict['flare_plot']['main'] = "flare_plot"
+    filepathdict['flare_plot']['type'] = dict()
+    #define computation type = folder
+    filepathdict['flare_plot']['type']['hbonds'] = "hbonds"
+    
+    path1 = join_path(root,precomputed_folder,filepathdict[objecttype]['main'],relative=False,url=url)
+    path = join_path(path1,filepathdict[objecttype]['type'][comp_type],relative=False,url=url) 
+    if url:
+        path += '/'
+    else:
+        path += os.path.sep
+    return path
+

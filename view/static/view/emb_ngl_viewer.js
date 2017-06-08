@@ -3034,6 +3034,15 @@ $(document).ready(function(){
             $(this).closest(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",img_source);
         }
     });
+    
+//-------- Flare Plots --------    
+    $("#fplot_traj").change(function(){
+        var seltraj= $(this).val();
+        var oldhref = $("#gotofplot").attr("href");
+        newhref=oldhref.replace(/\w+.json/i,seltraj);
+        $("#gotofplot").attr("href",newhref);
+    });
+    
 //-------- Buttons --------
 
     click_unclick(".high_pdA");

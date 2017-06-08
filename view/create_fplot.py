@@ -37,119 +37,89 @@ def obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li):
    
 
     
-def create_fplot(dyn_id,traj_id):# Not sure what will happen in pdbs with more than 1 gpcr . Use traj 14 or 15 for dyn 1
+def create_fplot(self,dyn_id,newpath,pdbpath=None,trajpath=None,traj_id=None,stride=1):# Not sure what will happen in pdbs with more than 1 gpcr . Use traj 14 or 15 for dyn 1
+    """Generates the json files necessary to visualize flare plots."""
     gpcr_mode=True
-    dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
-    if len(dynfiles) ==0:
-        error="Structure file not found."
-        #return render(request, 'view/index_error.html', {"error":error} )
-        print("\n", error, "\n")
-    else:
-        trajs_dict={}
-        structure_file=""
-        p=re.compile("(/protwis/sites/files/)(.*)")
-        p2=re.compile("[\.\w]*$")
-        for e in dynfiles:
-            f_id=e.id_files.id
-            f_path=e.id_files.filepath
-            #trajs_dict[f_id]=f_path
-            myfile=p.search(f_path).group(2)
-            myfile_name=p2.search(f_path).group()
-            if myfile_name.endswith(".pdb"):
-                structure_file=myfile
-            elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
-                trajs_dict[f_id]=(myfile, myfile_name)
-        if traj_id in trajs_dict:
-            traj_file=trajs_dict[traj_id][0]
-            traj_name=trajs_dict[traj_id][1]
-            p3=re.compile("(\w*)(\.\w*)$")
-            traj_name_ok=p3.search(traj_name).group(1)
-            trj_file="/protwis/sites/files/"+traj_file # For the moment I only use the 1st traj or it would be reaaally slow
-            top_file="/protwis/sites/files/"+structure_file            
-            chain_name_li=obtain_prot_chains(top_file)
-            if (len(chain_name_li)==0):
-                error="Protein chains not found."
-                #return render(request, 'view/index_error.html', {"error":error} )
-                print("\n", error, "\n")
-      
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)
-            dprot_chains={}
-            chains_taken=set()
-            prot_seq_pos={}
-            seq_pos_n=1
-            for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
-                seq_pos=[]
-                dprot_chains[prot_id]=[[],[]]  
-                for chain_name in chain_name_li:
-                    checkpdb_res=checkpdb_ngl(top_file, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
-                    if isinstance(checkpdb_res, tuple):
-                        tablepdb,pdb_sequence,hexflag=checkpdb_res 
-                        result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
-                        type(result)
-                        if isinstance(result, list):
-                            #chain_results[chain_name]=result
-                            if chain_name not in chains_taken:
-                                chains_taken.add(chain_name)
-                                dprot_chains[prot_id][0].append((chain_name,result))
-                                seq_pos,seq_pos_n=(seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,True)
-                                dprot_chains[prot_id][1]=seq_pos
-                prot_seq_pos[prot_id]=(prot_name,seq_pos)
-            keys_to_rm=set()
-            for key, val in dprot_chains.items():
-                if val==([],[]):
-                    keys_to_rm.add(key)
-            for key in keys_to_rm:
-                del dprot_chains[key]
-  
-            if chains_taken: # To check if some result have been obtained               
-                for gpcr_DprotGprot in prot_li_gpcr:
-                    gpcr_Dprot=gpcr_DprotGprot[0]
-                    gpcr_Gprot=gpcr_DprotGprot[1]
-                    dprot_id=gpcr_Dprot.id
-                    dprot_name=gpcr_Dprot.name
-                    gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot) 
-                    if len(gen_num_res) > 2:
-                        (numbers, num_scheme, db_seq, current_class) = gen_num_res
-                        current_class=findGPCRclass(num_scheme)
-                        gpcr_n_ex=""
-                        for pos_gnum in numbers[current_class].values():
-                            if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
-                                gpcr_n_ex=pos_gnum[1]
-                                break
-                        if not "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
-                            error="Error obtaining GPCR generic numbering."
-                            #return render(request, 'view/index_error.html', {"error":error} ) 
-                            print("\n", error, "\n")
-                        (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
-                        for chain_name, result in dprot_chain_li:
-                            (resi_to_group,resi_to_name,cluster_dict)=obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li)
-                        ###
-                        trj_file="/protwis/sites/files/Dynamics/14_trj_1_strid10.dcd"
-                        traj_name_ok="14_trj_1_strid10"
-                        ###
-                        if gpcr_mode:
-                            for (pos, gnum) in resi_to_name.items():
-                                if gnum != "None":
-                                    chain=gnum.split("x",1)[0]
-                                    resi_to_name[pos]=chain+"."+gnum
-                            create_json_GPCR(trj_file,traj_name_ok,top_file,resi_to_group,resi_to_name)
-                        else:
-                            create_json(trj_file,traj_name_ok,top_file,resi_to_group,resi_to_name)
-                        #gpcr_fplot_info[dprot_id]=(resi_to_group,resi_to_name)
-                        #json_name=traj_name_ok+"_HT2b.json"
-                        #context={"json_name":json_name}
-                        #return render(request, 'view/flare_plot_test.html', context)
-                        print("\nJSON file created\n")
-                    else:
-                        error="Error obtaining GPCR generic numbering."
-                        #return render(request, 'view/index_error.html', {"error":error} )
-                        print("\n", error, "\n")
+    if (trajpath==None and traj_id):
+        trajpath=DyndbFiles.objects.get(id=traj_id)
+    if (pdbpath==None):
+        pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
+       
+    chain_name_li=obtain_prot_chains(pdbpath)
+    if (len(chain_name_li)==0):
+        error="Protein chains not found."
+        self.stdout.write(self.style.NOTICE(error))
+        return
+
+    (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)
+    dprot_chains={}
+    chains_taken=set()
+    prot_seq_pos={}
+    seq_pos_n=1
+    for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
+        seq_pos=[]
+        dprot_chains[prot_id]=[[],[]]  
+        for chain_name in chain_name_li:
+            checkpdb_res=checkpdb_ngl(pdbpath, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
+            if isinstance(checkpdb_res, tuple):
+                tablepdb,pdb_sequence,hexflag=checkpdb_res 
+                result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
+                type(result)
+                if isinstance(result, list):
+                    #chain_results[chain_name]=result
+                    if chain_name not in chains_taken:
+                        chains_taken.add(chain_name)
+                        dprot_chains[prot_id][0].append((chain_name,result))
+                        seq_pos,seq_pos_n=(seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,True)
+                        dprot_chains[prot_id][1]=seq_pos
+        prot_seq_pos[prot_id]=(prot_name,seq_pos)
+    keys_to_rm=set()
+    for key, val in dprot_chains.items():
+        if val==([],[]):
+            keys_to_rm.add(key)
+    for key in keys_to_rm:
+        del dprot_chains[key]
+
+    if chains_taken: # To check if some result have been obtained               
+        for gpcr_DprotGprot in prot_li_gpcr:
+            gpcr_Dprot=gpcr_DprotGprot[0]
+            gpcr_Gprot=gpcr_DprotGprot[1]
+            dprot_id=gpcr_Dprot.id
+            dprot_name=gpcr_Dprot.name
+            gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot) 
+            if len(gen_num_res) > 2:
+                (numbers, num_scheme, db_seq, current_class) = gen_num_res
+                current_class=findGPCRclass(num_scheme)
+                gpcr_n_ex=""
+                for pos_gnum in numbers[current_class].values():
+                    if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
+                        gpcr_n_ex=pos_gnum[1]
+                        break
+                if not "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
+                    error="Error obtaining GPCR generic numbering."
+                    self.stdout.write(self.style.NOTICE(error))
+                    return
+
+                (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
+                for chain_name, result in dprot_chain_li:
+                    (resi_to_group,resi_to_name,cluster_dict)=obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li)
+                if gpcr_mode:
+                    for (pos, gnum) in resi_to_name.items():
+                        if gnum != "None":
+                            chain=gnum.split("x",1)[0]
+                            resi_to_name[pos]=chain+"."+gnum
+                    create_json(self,True,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride)
+                else:
+                    create_json(self,False,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride)
+                out_file  = re.search("(\w*)(\.\w*)$" , newpath).group()
+                self.stdout.write(self.style.SUCCESS('JSON file '+out_file+' successfully created'))
             else:
-                error="Unexpected error."
-                #return render(request, 'view/index_error.html', {"error":error} )
-                print("\n", error, "\n")
-        else:
-            error="Trajectory not found."
-            #return render(request, 'view/index_error.html', {"error":error} )    
-            print("\n", error, "\n")
+                error="Error obtaining GPCR generic numbering."
+                self.stdout.write(self.style.NOTICE(error))
+                return
+    else:
+        error="Error assigning the GPCR generic numbering to the PDB"
+        self.stdout.write(self.style.NOTICE(error))
+        return
+
 
