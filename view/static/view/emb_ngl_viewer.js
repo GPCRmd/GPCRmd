@@ -86,6 +86,7 @@ $(document).ready(function(){
         setTimeout(function(){ $(this).css("color","#585858"); }, 1000);
     });*/
     
+
 //-------- Obtain important data from template --------
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");
@@ -318,6 +319,7 @@ $(document).ready(function(){
     maxInputLength(".inp_stride", "",4);
     maxInputLength(".sel_within", ".user_sel_input",40);
     maxInputLength(".maxinp8","",8);
+    maxInputLength("#trajStep","",3);
 
 
 
@@ -980,7 +982,11 @@ $(document).ready(function(){
                 }
             }
 
-        });    
+        });
+        /*var updateSelOrNot= $(".updateSelOrNot:checked").val();
+        if (updateSelOrNot == "updateFalse"){
+            console.log(restrFr)
+        }*/
         return (dist_of);
     }
 
@@ -1042,7 +1048,12 @@ $(document).ready(function(){
             activate_or_inactivate_row(this);
         }
     });
-
+//!!!!!!!!!!!!!!!!!!!!
+    $(".updateSelOrNot").change(function(){
+        
+        $("#selectionDiv").trigger("click");
+    });
+//!!!!!!!!!!!!!!!!!!!!
 
 //-------- Freq of Interaction --------
     function gnumFromPosChain(pos, chain){
@@ -2401,6 +2412,7 @@ $(document).ready(function(){
         }
     });
     
+
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
@@ -3222,6 +3234,10 @@ $(document).ready(function(){
         }
         layers_li=layers_li.join("-;;-");
         var dist_of=obtainDistSel(); 
+        var projection="";
+        if ($("#projOrtho").hasClass("active")){
+            projection="o"
+        }
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
         var add_url_var ={"traj":encode(traj) , 
                             "ly":encode(layers_li) , 
@@ -3242,7 +3258,7 @@ $(document).ready(function(){
                             "ib":encode(atomshb_inter),
                             "ar":encode(all_resids),
                             "as":encode(all_resids_sb),
-
+                            "pj": projection,
                             }        
   
         for (varn in add_url_var){

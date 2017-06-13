@@ -184,7 +184,7 @@
             return nonGPCR_mod;
         }
 ///////////////
-            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info  ="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection ="";
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";
             var t_path = "file://_DB/";
@@ -214,6 +214,8 @@
             var call_resids=all_resids
             var all_resids_sb=NGL.getQuery("as");
             var call_resids_sb=all_resids_sb;
+            var projection=NGL.getQuery("pj");
+            
 
              /*var va = "test";             
              for (v in va){ 
@@ -295,7 +297,6 @@
                                 }
 
                                 if (cbonds){
-                                    console.log('here');
                                     var cbonds2=decodeURIComponent(cbonds.replace(/\+/g, " "));
                                     var all_resids=decodeURIComponent(call_resids.replace(/\+/g, " ")).split(',');
                                     cbonds2=cbonds2.split(',');
@@ -315,7 +316,6 @@
                                 }
 
                                 if (catomssb){
-                                    console.log('here1');
                                     all_resids_sb=decodeURIComponent(call_resids_sb.replace(/\+/g, " ")).split(',');
                                     var atomssb2=decodeURIComponent(catomssb.replace(/\+/g, " "));
                                     atomssb2=atomssb2.split(',');
@@ -334,7 +334,6 @@
                                     o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                                 }
                                 if (catomssb_inter){
-                                    console.log('here2');
                                     all_resids=decodeURIComponent(call_resids.replace(/\+/g, " ")).split(',');
                                     var atomssb_inter2=decodeURIComponent(catomssb_inter.replace(/\+/g, " "));
                                     atomssb_inter2=atomssb_inter2.split(',');
@@ -464,6 +463,10 @@
                                     final_sele=final_sele.join(" , ");
                                     o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#461bff" } );
 
+                                }
+                                if (projection){
+                                    alert("ortho")
+                                    stage.setParameters( { cameraType: "orthographic"} );
                                 }
                                 
                                 clickDists(o);

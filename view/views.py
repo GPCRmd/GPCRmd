@@ -225,6 +225,7 @@ def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
 def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
     #chain_nm_seq_pos=""
+    rs_by_seg={1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 15: [], 16: [], 17: []}
     if multiple_chains:
         chain_nm_seq_pos=chain_name
     pos_gnum = numbers[current_class]
@@ -237,8 +238,20 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gpcr_pdb[this_gnum]=[pos[0][1],chain_name]
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
+                rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1])
             seq_pos[seq_pos_n][2]=gnum_or_nth
             seq_pos_n+=1
+    #######
+    seg_li=[]
+    for seg in range(2,17):
+        slen=len(rs_by_seg[seg])
+        if slen==0:
+            seg_li.append([])
+        elif slen==1:
+            seg_li.append([rs_by_seg[seg][0]])
+        else:
+            seg_li.append([rs_by_seg[seg][0],rs_by_seg[seg][-1]])
+    #######
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
     for name in other_classes:
@@ -251,9 +264,7 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
-
-    print(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
-    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
+    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
     """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
@@ -862,6 +873,7 @@ def index(request, dyn_id):
             if chains_taken: # To check if some result have been obtained
                 request.session['main_strc_data']["gpcr_chains"]=gpcr_chains
                 all_gpcrs_info=[]
+                seg_li_all={}
                 gpcr_pdb_all={}
                 gpcr_id_name={}
                 for gpcr_DprotGprot in prot_li_gpcr:
@@ -886,7 +898,7 @@ def index(request, dyn_id):
                             (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                             cons_pos_dict_mod=copy.deepcopy(cons_pos_dict)
                             for chain_name, result in dprot_chain_li:
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
                                 (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
@@ -896,6 +908,7 @@ def index(request, dyn_id):
                             all_gpcrs_info.append((dprot_id, dprot_name, show_class, active_class, copy.deepcopy(cons_pos_dict_mod) , motifs_dict_def))
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
+                            seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
 
                 if all_gpcrs_info:
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
@@ -922,7 +935,8 @@ def index(request, dyn_id):
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fplot_path" : fplot_path
+                        "fplot_path" : fplot_path,
+                        "seg_li":",".join(["-".join(seg) for seg in seg_li])
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1823,17 +1837,27 @@ def grid(request):
 #    context={"json_name":filename+".json"}
 #    return render(request, 'view/flare_plot_test.html', context)
     
-def fplot_gpcr(request, dyn_id, filename):
+def fplot_gpcr(request, dyn_id, filename,seg_li):
+    #seg_li_ok=[seg.split("-") for seg in seg_li.split(",")]
     fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
     pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
     pdbpath=pdbpath.replace("/protwis/sites", "/dynadb")
     prot_names=obtain_protein_names(dyn_id)
     traj_id=int(re.match("^\d+",filename).group())
-    traj_name=DyndbFiles.objects.get(id=14).filename
+    traj_name=DyndbFiles.objects.get(id=traj_id).filename
+    
+    comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
+    lig_li=[]
+    for c in comp:
+        if c.type ==1:
+            lig_li.append(c.resname)
+
     context={"json_path":fpdir + filename,
              "pdb_path": pdbpath,
              "prot_names": prot_names,
-             "traj_name" :traj_name
+             "traj_name" :traj_name,
+             "lig_li" : lig_li,
+             "seg_li":seg_li
             }
     return render(request, 'view/flare_plot.html', context)
     

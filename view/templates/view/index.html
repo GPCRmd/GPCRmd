@@ -167,7 +167,7 @@
                           </div>                      
                           <button class="btn btn-default" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
                           -->
-                          
+                          <button id="restartPos" type="button" class="btn btn-link settingsB" title="Reset position" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-repeat"></span></button>       
                           <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
                           <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
                           <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>                                    
@@ -218,7 +218,7 @@
                 
                <div class="row" style="margin-top:15px">
                
-                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:5px;">
+                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:10px;">
                   <div class="dist_sel" id="row0" style="margin-bottom:5px">
                     <span class="tick" ></span>
                     <span class="always" style="margin-left:14px">
@@ -251,6 +251,24 @@
                 </div>
                 
                </div>
+               <!--<div style="margin-left:18px">
+                   <div class="row">
+                     <input class="updateSelOrNot" type="radio" checked value="updateTrue" name="updateSelOrNot"> 
+                      Update selection at each frame
+                   </div>
+                   <div class="row">
+                     <input class="updateSelOrNot" type="radio" value="updateFalse" name="updateSelOrNot"> 
+                      Restrict selection at frame 
+                        <input type="number" style="width:50px;padding-left:7px;padding-right:2px;"  id="distSelFr" class="form-control input-sm rvSpaces">
+                      of trajectory
+                            <select id="" name="distSel_traj">
+                               {% for traj in traj_list %}
+                               <option class="distSel_traj" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                               {% endfor %}
+                            </select>
+                      
+                   </div>
+               </div>-->
                
             </div>
         </div>
@@ -630,7 +648,7 @@
                 </h4>
             </div>
         </div>
-           <div id="all_analysis" style="margin-bottom:20px">   
+           <div id="all_analysis" style="margin-bottom:30px">   
            
 <!-- ============= Compute distances =========== --> 
 
@@ -1138,15 +1156,53 @@
                      </div>
                </div>
                 <div class="row">
-                        <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=fplot_path.0.1  %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
+                        <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=fplot_path.0.1 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
                 </div>
            </div> 
         {% endif %}
 <!-- ======================================== -->
             </div><!-- End of analysis --->
-            </div>
+
             {% endif %}
-          </div>
+          
+        <div style="margin-bottom:20px">
+            <div style="text-align:center;margin:0;">
+                <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+                    <h4 id="SettingsDiv" style="padding:0;margin:0;">Settings
+                    </h4>
+                </div>
+            </div>
+            
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#preferences" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Preferences </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+            </div>
+             <div id="preferences" class="collapse row">
+                 <div style="margin-top:10px;margin-left:23px">
+                    <div style="margin-bottom:10px;">
+                        Projection 
+                         <div class="btn-group btn-group-xs">
+                          <button type="button" id="projOrtho" class="btn btn-default projectionOP" style="padding:2px 5px 2px 5px;width:85px">Orthographic</button>
+                          <button type="button" id="projPersp" class="btn btn-default active projectionOP" style="padding:2px 5px 2px 5px;width:85px">Perspective</button>
+                        </div> 
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        Spin 
+                         <div class="btn-group btn-group-xs">
+                          <button type="button" id="spinOn" class="btn btn-default spinSet" style="padding:2px 5px 2px 5px;">On</button>
+                          <button type="button" id="spinOff" class="btn btn-default active spinSet" style="padding:2px 5px 2px 5px;">Off</button>
+                        </div> 
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        Trajectory step size: <input class="form-control input-sm rvSpaces" id="trajStep"  type="number" placeholder=3 style="width:50px;padding-left:7px;padding-right:2px;">
+                    </div>
+                    
+                 </div>
+             </div>
+             
+             
+        </div><!--End of Settings-->
+    </div> <!-- Panel-body -->          
+   </div>
           
           <!--<input type="checkbox" name="nglCall" value="nglCallSign">-->
         </div>
