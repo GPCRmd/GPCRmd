@@ -909,8 +909,10 @@ def index(request, dyn_id):
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
                             seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
+                            
 
                 if all_gpcrs_info:
+                    request.session['gpcr_pdb_all']= gpcr_pdb_all
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
                     context={
@@ -1838,6 +1840,14 @@ def grid(request):
 #    return render(request, 'view/flare_plot_test.html', context)
     
 def fplot_gpcr(request, dyn_id, filename,seg_li):
+    nameToResiTable={}
+    if request.session.get('gpcr_pdb_all', False):
+        gpcr_pdb_all=request.session['gpcr_pdb_all']
+        gpcr_pdb=gpcr_pdb_all[int(dyn_id)]
+        nameToResiTable={}
+        for (gnum,posChain) in gpcr_pdb.items():
+            gnumOk=gnum[:gnum.find(".")]+gnum[gnum.find("x"):]
+            nameToResiTable[gnumOk]=[posChain[1]+"."+posChain[0],""]
     #seg_li_ok=[seg.split("-") for seg in seg_li.split(",")]
     fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
     pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
@@ -1857,7 +1867,8 @@ def fplot_gpcr(request, dyn_id, filename,seg_li):
              "prot_names": prot_names,
              "traj_name" :traj_name,
              "lig_li" : lig_li,
-             "seg_li":seg_li
+             "seg_li":seg_li,
+             "nameToResiTable":json.dumps(nameToResiTable)
             }
     return render(request, 'view/flare_plot.html', context)
     
