@@ -111,16 +111,16 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
     all_num_schemes[gpcr_class]=res_gpcr_li
     other_classes=list({"A","B","C","F"} - set(gpcr_class))
     for alt_class in other_classes:
-        try:
-            file = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+"_"+alt_class,'rb')
-            all_num_schemes[alt_class]= pickle.load(file)
-            file.close()
-        except:
-            filehandler = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+'_'+alt_class,"wb") 
-            all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
-            pickle.dump(all_num_schemes[alt_class],filehandler)
-            filehandler.close()
-
+        all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
+#        try:
+#            file = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+"_"+alt_class,'rb')
+#            all_num_schemes[alt_class]= pickle.load(file)
+#            file.close()
+#        except:
+#            filehandler = open("/protwis/sites/files/Dynamics/ballesteros_"+str(dyn_id)+'_'+alt_class,"wb") 
+#            all_num_schemes[alt_class]=obtain_gpcr_num_alt(alt_class,res_gpcr_li,rgn_ids)
+#            pickle.dump(all_num_schemes[alt_class],filehandler)
+#            filehandler.close()
     numbers_final = {"A":{},"B":{},"C":{},"F":{}}
     if DyndbProtein.objects.get(id=dprot_id).is_mutated:
         mutations=DyndbProteinMutations.objects.filter(id_protein=dprot_id)
