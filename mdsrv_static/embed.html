@@ -67,7 +67,6 @@
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
             $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"6px"});
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
-            var some_clicked=false;
             $(".traj_btn").click( function(){
                 parent.passinfoToPlayTraj();
                 var bs_info = parent.bs_info;
@@ -81,15 +80,16 @@
                 if(isact){
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.step=stepsize;
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
                     player.play();
                     player.pause();
-                    some_clicked=false;
-                } else if (! some_clicked){
+                } else {
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     $("#trajRange").attr("max",trajComp.trajectory.numframes);
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.step=stepsize;
                     //$("#toiframe").find("#trajRangeDiv").css("visibility","visible");
                     player.play();
                     $(this).addClass("active");
@@ -99,7 +99,6 @@
                     var res = patt.exec(traj_li_all[btn_traj_id]);
                     var mytraj_nm=res[1];
                     $("#last_played").text(mytraj_nm);
-                    some_clicked=true;
                     trajComp.signals.frameChanged.add(function(){
                         var fnum=trajComp.trajectory.currentFrame;
                         $("#trajRange").val(fnum);
@@ -318,6 +317,24 @@
 
         }
         
+        function res_to_atom(o,d_info){
+            var d_all=d_info.split(":");
+            var res=d_all[0];
+            var chain=d_all[1];
+            var atmn=d_all[2];
+            var res_sele =  new NGL.Selection( res+":"+chain );
+            //console.log(res_sele)
+            //console.log(atmn);
+            var mypos="";
+            o.structure.eachAtom(function(a){
+                if (a.atomname == atmn){
+                    mypos=a.index;
+                }
+            },res_sele);
+            //console.log(mypos);
+            //console.log("------");
+            return(mypos)
+        }
         
         function createReps(){
             parent.passInfoToIframe();
@@ -331,8 +348,8 @@
             var int_res_li =results["int_res_li"];
             var int_res_li_ch =results["int_res_li_ch"];
             var dist_groups_li=results["dist_groups_li"];
-            var receptorsel = results["receptorsel"]; //[!!!]
-            var bs_info= results["bs_info"]; //[!!!]
+            var receptorsel = results["receptorsel"]; 
+            var bs_info= results["bs_info"]; 
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
@@ -389,6 +406,8 @@
             //console.log(o);
             $("#buttons").html("");
             o.setSelection( "*" );
+          
+            
             
             if (receptorsel.length > 0){
                 o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel } );
@@ -498,13 +517,17 @@
                 var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
                 for (distgN in dist_groups_li){
                     var dist_group=dist_groups_li[distgN];
-                    var dist_pair_li=dist_group.split("a");
+                    var dist_pair_li=dist_group.split(",");
                     for (pair_n in dist_pair_li){
                         var d_from_to_str = dist_pair_li[pair_n];
                         if (typeof d_from_to_str == "string"){
                             var d_from_to = d_from_to_str.split("-");
                             var d_from = d_from_to[0];
                             var d_to = d_from_to[1];
+                            if (d_from_to_str.indexOf(":") > -1){
+                                d_from=res_to_atom(o,d_from);
+                                d_to=res_to_atom(o,d_to);
+                            } 
                             var comp_dist_name="comp_dist_"+cd_id.toString();
                            // o.addRepresentation( "label", {sele: Number(d_from), scale: 1.7, labelType: "serial"  } );
                             o.addRepresentation( "distance", { atomPair: [[Number(d_from),Number(d_to)]] , colorValue: plot_colors[pair_n], colorScheme:"uniform", labelColor: plot_colors[pair_n] ,fontWeight: "normal" ,name : comp_dist_name } );
@@ -592,50 +615,52 @@
         }
 /////////// Set variables:
             var struc=$(".str_file", window.parent.document).data("struc_file");
-            console.log('THIS IS THE PDB::',struc);
             var traj_li_all = [];
             var  path= "/mdsrv/file/_DB/";
             var  traj_path= "_DB/";
             $(".traj_element",window.parent.document).each(function(){
                 traj_li_all[traj_li_all.length]=$(this).data("tpath");
             });
-            var trajComp, player;
+            var trajComp, player, ori ;
             var clickedRep={};
             var clickedRepLi=[];
             var clickedDistData={};
             var clickedLabData={};
             //var compDistsLi=[];
             var clickedDist={};
+            var stepsize = 3;
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
-            console.log('THIS IS THE TRAJ::',mytraj);
             if (struc) {
-                console.log('YIHAAAAA, PDB FOUND, SOMEBODY SAYD HELLO?');
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
-                        console.log('HELLOOUUUU');
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
-                        console.log('more than zero traj found');
                         for (t=0 ; t < traj_li_all.length ; t++){
-                            console.log('adding traj:',traj_path +traj_li_all[t]);
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
                         }
+                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
+                        var patt = new RegExp("/(.*)$");
+                        var res = patt.exec(traj_li_all[0]);
+                        var mytraj_nm=res[1];
+                        $("#last_played").text(mytraj_nm);
                         //traj_li=[mytraj];
                         //$("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
                     }
                     $(".traj_element" , window.parent.document).click(function(){
                         mytraj=$(this).data("tpath");
                         traj_id=traj_li_all.indexOf(mytraj);
-                        console.log(traj_id);
                         $(".traj_btn").attr("id","playerButton"+traj_id.toString());
-                        console.log(" HEEEEEEY playerButton"+traj_id.toString());
+                        if (player && $(".traj_btn").hasClass("active")){
+                            player.pause();
+                            $(".traj_btn").removeClass("active");
+                            $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                        }
                     });
                     trajButtons(o);
                     createReps();
                     stage.centerView("protein");
-                    /*$("#submit", window.parent.document).click(function(){
-                        createReps();
-                    });*/
+                    ori= stage.getOrientation();
+
                     $("#clearAll", window.parent.document).click(function(){
                         createReps();
                     });
@@ -648,11 +673,24 @@
                     //selChange();      
 
                     clickDists();
+
+
                 });
+////////////SETTINGS:
                 $("#trajRange").change(function(){
+                    /*var btn_traj_Bid=$(".traj_btn").attr("id");
+                    var tPatt = /\d*$/g;
+                    var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                    var patt = new RegExp("/(.*)$");
+                    var res = patt.exec(traj_li_all[btn_traj_id]);
+                    var mytraj_nm=res[1];
+                    $("#last_played").text(mytraj_nm); 
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];                
+                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    var toframe=$(".ui-slider-handle").attr("aria-valuenow");
+                    trajComp.setFrame(toframe);*/
                     if (trajComp){
-                        var toframe=$(".ui-slider-handle").attr("aria-valuenow"); //problem here! toframe=NaN 
-                        console.log('BYE THERE',toframe);
+                        var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
                         trajComp.setFrame(toframe);
                     }
                 });
@@ -702,8 +740,59 @@
                     }
                 });*/
                 $("#center", window.parent.document).click(function(){
+                    //stage.setOrientation([[-1.504730224609375, 2.6254119873046875, 1.9448356628417969], [-1.504730224609375, 2.6254119873046875, -117.27891736575096], [0, 1, 0]])
                     stage.centerView();
                 });
+                $("#restartPos", window.parent.document).click(function(){
+                    stage.setOrientation(ori);
+                });
+                
+                $(".projectionOP", window.parent.document).click(function(){
+                    if (! $(this).hasClass("active")){
+                        $(this).addClass("active");
+                        $(this).siblings(".projectionOP").removeClass("active");
+                        if ($(this).attr("id") == "projOrtho"){
+                            stage.setParameters( { cameraType: "orthographic"} );
+                        } else {
+                            stage.setParameters( { cameraType: "perspective"} );
+                        }
+                    }
+                });
+                $(".spinSet", window.parent.document).click(function(){
+                    if (! $(this).hasClass("active")){
+                        $(this).addClass("active");
+                        $(this).siblings(".spinSet").removeClass("active");
+                        if ($(this).attr("id") == "spinOn"){
+                            stage.setSpin( [ 0, 1, 0 ], 0.01 );
+                        } else {
+                            stage.setSpin( null );
+                        }
+                    }
+                });
+                $("#trajStep", window.parent.document).on("change" , function(){
+                    var tajstep = $(this).val();
+                    if (tajstep){
+                        tajstep = Number(tajstep);
+                        var pos = Math.abs(tajstep)
+                        var rounded= Math.round(pos);
+                        if (rounded <= 0){
+                            var rounded = 1;
+                        } 
+                        if (tajstep != rounded){
+                            tajstep = rounded;
+                            $(this).val(tajstep);
+                        }
+                    } else {
+                        tajstep=3;
+                    }
+                    if (player && $(".traj_btn").hasClass("active")){
+                        player.pause();
+                        $(".traj_btn").removeClass("active");
+                        $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                    }
+                    stepsize = tajstep;
+                });
+                
             }
         });
         });

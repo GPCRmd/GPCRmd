@@ -77,7 +77,7 @@
                 <a href="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}">Open</a></td>
             <td><button name="delete_submission_id_{{sub.submission_id}}" disabled type="submit">Delete</button></td>
             {% else %}
-            <td></td><td></td>
+            <a href="{% url 'dynadb:submission_summary' submission_id=sub.submission_id %}">See summary</a></td><td></td>
             {% endif %}
        </tr>
        {% endfor %}

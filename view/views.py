@@ -19,7 +19,8 @@ import copy
 import csv
 import pickle
 import math
-
+from os import path
+from dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
@@ -224,6 +225,7 @@ def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
 def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
     #chain_nm_seq_pos=""
+    rs_by_seg={1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 15: [], 16: [], 17: []}
     if multiple_chains:
         chain_nm_seq_pos=chain_name
     pos_gnum = numbers[current_class]
@@ -236,21 +238,33 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gpcr_pdb[this_gnum]=[pos[0][1],chain_name]
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
+                rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1])
             seq_pos[seq_pos_n][2]=gnum_or_nth
             seq_pos_n+=1
+    #######
+    seg_li=[]
+    for seg in range(2,17):
+        slen=len(rs_by_seg[seg])
+        if slen==0:
+            seg_li.append([])
+        elif slen==1:
+            seg_li.append([rs_by_seg[seg][0]])
+        else:
+            seg_li.append([rs_by_seg[seg][0],rs_by_seg[seg][-1]])
+    #######
     other_classes=list({"A","B","C","F"} - set(current_class))
     other_classes_ok=[]
     for name in other_classes:
         if numbers[name]:
             other_classes_ok.append(name)
             gnum_classes_rel[name]={}
-    for pos, (res,gnum) in pos_gnum.items():
+    for pos, (res,gnum,segm) in pos_gnum.items():
         if gnum:
             for class_name in other_classes_ok:
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
-    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n)
+    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
     """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
@@ -483,29 +497,86 @@ def obtain_DyndbProtein_id_list(dyn_id):
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
 
+def obtain_protein_names(dyn_id):
+    """Given a dynamic id, gets a list of the GPCR names"""
+    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    prot_li_names=[]
+    if model.id_protein:
+        gprot= model.id_protein.receptor_id_protein
+        if gprot:#it means it is a GPCR
+            prot_li_names.append(model.id_protein.name)
+    else:
+        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+        for dprot in dprot_li_all:
+            gprot= dprot.receptor_id_protein
+            if gprot:#it means it is a GPCR
+                prot_li_names.append(dprot.name)
+    return ",".join(prot_li_names)
+
+
+def res_to_atom(chain_names,struc,res, chain, atm):
+    chain = chain.upper()
+    if chain in chain_names:
+        chain_ind=chain_names.index(chain)
+        atm_index_arr = struc.topology.select("residue "+str(res)+" and chainid "+str(chain_ind)+" and name "+atm)
+        if atm_index_arr:
+            return (str(atm_index_arr[0]))
+        else:
+            return False
+    else:
+        return False
+
+
 def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     struc_path = "/protwis/sites/files/"+struc_path
     traj_path = "/protwis/sites/files/"+traj_path
-    dist_li=re.findall("\d+-\d+",dist_str)
+    dist_li=dist_str.split(",")
     #serial_mdInd=relate_atomSerial_mdtrajIndex(struc_path) 
     frames=[]
     axis_lab=[["Frame"]]
     atom_pairs=np.array([]).reshape(0,2)
-    small_error=None
+    small_error=[]
+    # If some dist needs re -> atom traduction:
+    chain_names=obtain_all_chains(struc_path)
+    if (":" in dist_str):
+        struc=md.load(struc_path)
+    dist_pair_new=[]
     if len(dist_li) > 20:
         dist_li =dist_li[:20]
-        small_error="Too much distances to compute. Some have been omitted."
+        small_error.append("Too much distances to compute. Some have been omitted.")
     for dist_pair in dist_li:
-        pos_from,pos_to=re.findall("\d+",dist_pair)
-        var_lab="dist "+pos_from+"-"+pos_to
+        if ":" in dist_pair:
+            (inf_from,inf_to)=dist_pair.split("-")
+            (resF, chainF, atmF)= inf_from.split(":")
+            (resT, chainT, atmT)= inf_to.split(":")
+            pos_from=res_to_atom(chain_names,struc,resF, chainF, atmF)
+            pos_to=res_to_atom(chain_names,struc,resT, chainT, atmT)
+            var_lab="dist "+resF +":"+ chainF+"("+atmF+")-"+resT +":"+ chainT+"("+atmT+")"
+            skip=False
+            if not pos_from:
+                small_error.append("Selection "+resF+":"+chainF+" "+atmF+" not found")
+                skip=True
+            if not pos_to:
+                small_error.append("Selection "+resT+":"+chainT+" "+atmT+" not found")
+                skip=True
+            if skip:
+                continue
+            
+        else:
+            pos_from,pos_to=re.findall("\d+",dist_pair)
+            var_lab="dist "+pos_from+"-"+pos_to
+        dist_pair_new.append(dist_pair)
         axis_lab[0].append(var_lab) 
         #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]])
         from_to=np.array([[pos_from,pos_to]])        
         atom_pairs=np.append(atom_pairs,from_to, axis=0)
+    if (len(atom_pairs) ==0):
+        return (True,[], small_error, True, ",".join(dist_pair_new))
+        
     try:
         itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
-        return (False,None, "Error loading the file.")
+        return (False,None, "Error loading the file.",True,"")
     dist=np.array([]).reshape((0,len(atom_pairs))) 
     for itraj in itertraj:
         try:
@@ -513,12 +584,14 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
         except Exception:
             num_atoms=itraj.n_atoms
             error_msg="Atom indices must be between 0 and "+str(num_atoms)
-            return (False, None, error_msg)
+            return (False, None, error_msg,True,"")
         dist=np.append(dist,d,axis=0)
     frames=np.arange(0,len(dist)*strideVal, strideVal,dtype=np.int32).reshape((len(dist),1))
     data=np.append(frames,dist, axis=1).tolist()
     data_fin=axis_lab + data
-    return (True,data_fin, small_error)
+    if not small_error:
+        small_error=None
+    return (True,data_fin, small_error,False,",".join(dist_pair_new))
 
 def obtain_domain_url(request):
     current_host = request.get_host()
@@ -540,6 +613,23 @@ def obtain_domain_url(request):
     else:
         mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
+
+def get_fplot_path(dyn_id,traj_list):
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
+    fplot_path=[]
+    for (trajfile, trajfile_name, f_id) in traj_list:
+        fpfilename = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!
+        ###########[!] Change get_file_name() to obtain it automatically
+        (pre,post)=fpfilename.split(".")
+        fpfilename=pre+"_hbonds."+post
+        ###########
+        fppath = path.join(fpdir,fpfilename)
+        exists=path.isfile(fppath)
+        if exists:
+            fplot_path.append([f_id,fpfilename,trajfile_name])
+    return fplot_path
+        
+    
 
 @ensure_csrf_cookie
 def index(request, dyn_id):
@@ -605,7 +695,7 @@ def index(request, dyn_id):
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
         elif request.POST.get("distStrWT"):
             dist_struc_p=request.POST.get("distStrWT")
-            dist_ids=request.POST.get("dist_residsWT")
+            dist_ids=request.POST.get("dist_atmsWT")
             dist_traj_p=request.POST.get("distTraj")
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
@@ -625,8 +715,8 @@ def index(request, dyn_id):
                 dist_dict={}
                 
             if len(dist_dict) < 15:
-                (success,data_fin, msg)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
-                if success:
+                (success,data_fin, msg, isEmpty,dist_pair_new)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
+                if success and not isEmpty:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
                     data_store[0].insert(1,"Time")
@@ -643,11 +733,11 @@ def index(request, dyn_id):
                     dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename,strideVal)
                     request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
                          "traj_filename":traj_filename, "struc_filename":struc_filename}
-                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal}
+                    data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal , "isEmpty":isEmpty , "dist_pair_new":dist_pair_new}
                 else: 
-                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal}
+                    data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal, "isEmpty":isEmpty, "dist_pair_new":dist_pair_new}
             else:
-                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal}
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Please, remove some distance results to obtain new ones.", "strided":strideVal, "isEmpty":isEmpty, "dist_pair_new":dist_pair_new}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)       
         elif request.POST.get("all_ligs"):
             all_ligs=request.POST.get("all_ligs")
@@ -712,6 +802,7 @@ def index(request, dyn_id):
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
+        fplot_path=get_fplot_path(dyn_id,traj_list)
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
@@ -782,6 +873,7 @@ def index(request, dyn_id):
             if chains_taken: # To check if some result have been obtained
                 request.session['main_strc_data']["gpcr_chains"]=gpcr_chains
                 all_gpcrs_info=[]
+                seg_li_all={}
                 gpcr_pdb_all={}
                 gpcr_id_name={}
                 for gpcr_DprotGprot in prot_li_gpcr:
@@ -806,7 +898,7 @@ def index(request, dyn_id):
                             (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                             cons_pos_dict_mod=copy.deepcopy(cons_pos_dict)
                             for chain_name, result in dprot_chain_li:
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
                                 (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
@@ -816,8 +908,11 @@ def index(request, dyn_id):
                             all_gpcrs_info.append((dprot_id, dprot_name, show_class, active_class, copy.deepcopy(cons_pos_dict_mod) , motifs_dict_def))
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
+                            seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
+                            
 
                 if all_gpcrs_info:
+                    request.session['gpcr_pdb_all']= gpcr_pdb_all
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
                     context={
@@ -841,7 +936,9 @@ def index(request, dyn_id):
                         "other_prots":other_prots,#["protein and (:A or :B or :C)" , "Chains A, B, C" , "A, B,C"]
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
                         "all_chains": ",".join(all_chains),
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path,
+                        "seg_li":",".join(["-".join(seg) for seg in seg_li])
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -860,7 +957,8 @@ def index(request, dyn_id):
                         "prot_seq_pos": list(prot_seq_pos.values()),
                         "gpcr_pdb": "no",
                         "all_chains": ",".join(all_chains),
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -877,7 +975,8 @@ def index(request, dyn_id):
                         "other_prots":other_prots,
                         "chains" : chain_str,            
                         "gpcr_pdb": "no",
-                        "all_prot_names" : ", ".join(all_prot_names)
+                        "all_prot_names" : ", ".join(all_prot_names),
+                        "fplot_path" : fplot_path
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -893,7 +992,9 @@ def index(request, dyn_id):
                     "other_prots":[],
                     "ligands_short": ",".join(lig_li_s),                  
                     "chains" : "",            
-                    "gpcr_pdb": "no"}
+                    "gpcr_pdb": "no",
+                    "fplot_path" : fplot_path
+                    }
             return render(request, 'view/index.html', context)
 
 
@@ -1222,9 +1323,6 @@ def hbonds(request):
         struc_path = "/protwis/sites/files/"+arrays[4]
         all_chains=obtain_all_chains(struc_path)
         traj_path = "/protwis/sites/files/"+arrays[3]
-        #t = md.load(traj_path,top=struc_path)
-        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
         start=int(arrays[0])
         end=int(arrays[1])
         backbone=arrays[6]=='true'
@@ -1242,7 +1340,7 @@ def hbonds(request):
         traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
         bonds_path=traj_path[:traj_path.rfind('/')]+traj_name+'_bonds'
         if neighbours:
-            resid_dist=60
+            resid_dist=4
         else:
             resid_dist=0
         try:
@@ -1257,18 +1355,7 @@ def hbonds(request):
         if not precomputed:
             precomputed_bonds=[]
             for t in md.iterload(traj_path, top=struc_path,chunk=chunksize,skip=start):
-                '''
-                rframes=end-nframes
-                if rframes==0:
-                    break
-                if rframes<chunksize:
-                    t=t[:rframes]
-
-                nframes+=len(t)
-                '''
                 hbonds_ks+=md.wernet_nilsson(t, exclude_water=True, periodic=True, sidechain_only=False) # i could save this precomputed matrix
-
-
             with open(bonds_path, 'wb') as fp:
                 pickle.dump(hbonds_ks, fp)
 
@@ -1297,7 +1384,7 @@ def hbonds(request):
             chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
             chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
-            is_not_neighbour=abs(keys[0]-keys[2])>resid_dist
+            is_not_neighbour=abs(t.topology.atom(keys[0]).residue.index-t.topology.atom(keys[2]).residue.index)>resid_dist
             if backbone:
                 if histhbond[keys]>percentage_cutoff and is_not_neighbour: #the hbond is not between neighbourd atoms and the frecuency across the traj is more than 10%
                     labelbond=label([keys[0],histhbond[keys],keys[2]])
@@ -1312,14 +1399,9 @@ def hbonds(request):
                         if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
                             try:
                                 if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
-                                    #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
-                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
-
+                                    hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
                                 else: #acceptor is protein
-                                    #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                    hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
                             except KeyError:
                                 if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
                                     hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
@@ -1328,23 +1410,19 @@ def hbonds(request):
 
                         else: #intraprotein hbonds
                             try:
-                                #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                                if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
-                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
                             except KeyError:
                                 hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
             else:
-                if histhbond[keys]>percentage_cutoff: #not neighbours abs(keys[0]-keys[2])>60 ??
+                if histhbond[keys]>percentage_cutoff:
                     if t.topology.atom(keys[0]).residue.is_protein:
                         a1=t.topology.atom(keys[0]).is_sidechain
                     else:
                         a1=True
-
                     if t.topology.atom(keys[2]).residue.is_protein:
                         a2=t.topology.atom(keys[2]).is_sidechain
                     else:
                         a2=True    
-  
                     if a1 and a2 and is_not_neighbour:
                         labelbond=label([keys[0],histhbond[keys],keys[2]])
                         labelbond=labelbond.replace(' ','')
@@ -1358,14 +1436,9 @@ def hbonds(request):
                             if (not t.topology.atom(keys[0]).residue.is_protein) or (not t.topology.atom(keys[2]).residue.is_protein): #other hbonds
                                 try:
                                     if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
-                                        #if acceptor_res not in [i[0] for i in hbonds_residue_notprotein[donor_res]]:
-                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[donor_res]]:
-                                            hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
-
+                                        hbonds_residue_notprotein[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]) # HBONDS[donor]=[acceptor,freq,atom1index,atom2index]
                                     else: #acceptor is protein
-                                        #if donor_res not in [i[0] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                        if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue_notprotein[acceptor_res]]:
-                                            hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
+                                        hbonds_residue_notprotein[acceptor_res].append([donor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain1,chain0])          
                                 except KeyError:
                                     if t.topology.atom(keys[1]).residue.is_protein: #donor is protein
                                         hbonds_residue_notprotein[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
@@ -1374,44 +1447,43 @@ def hbonds(request):
 
                             else: #intraprotein hbonds
                                 try:
-                                    #if acceptor_res not in [i[0] for i in hbonds_residue[donor_res]]:
-                                    if [str(keys[1]),str(keys[2])] not in [i[2:4] for i in hbonds_residue[donor_res]]:
-                                        hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
+                                    hbonds_residue[donor_res].append([acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1])
                                 except KeyError:
                                     hbonds_residue[donor_res]=[[acceptor_res,histhbond[keys],str(keys[1]),str(keys[2]),chain0,chain1]]
 
+        if False: #warning, to implement download of csv file
 
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["#Structure: "+struc_filename])
+            writer.writerow(["#Trajectory: "+traj_filename])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
+            writer.writerow(["#Selection: "+proper_name(traj_sel)])
+            struc_path=struc_path[:-4]
+            csvfile= open(struc_path+'hbonds.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',
+                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
+            for keys in hbonds_residue:
+                for minilist in hbonds_residue[keys]:
+                    rowlist=[keys]+minilist[:-2]
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
 
-
-        struc_path=struc_path[:-4]
-        csvfile= open(struc_path+'hbonds.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-        header=['Donor_residue', 'Acceptor_Residue', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
-        for keys in hbonds_residue:
-            for minilist in hbonds_residue[keys]:
-                rowlist=[keys]+minilist[:-2]
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
-
-        csvfile= open(struc_path+'hbonds_notprotein.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
-
-        header=['Residue1_(protein)', 'Residue2_(other)', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
-
-        for keys in hbonds_residue_notprotein:
-            for minilist in hbonds_residue_notprotein[keys]:
-                rowlist=[keys]+minilist[:-2]
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
+            csvfile= open(struc_path+'hbonds_notprotein.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',quotechar=',', quoting=csv.QUOTE_MINIMAL)
+            header=['Residue1_(protein)', 'Residue2_(other)', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
+            for keys in hbonds_residue_notprotein:
+                for minilist in hbonds_residue_notprotein[keys]:
+                    rowlist=[keys]+minilist[:-2]
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
         
-        print('hereaaaa')
-
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
@@ -1423,9 +1495,6 @@ def saltbridges(request):
         arrays=request.POST.getlist('frames[]')
         struc_path = "/protwis/sites/files/"+arrays[4]
         traj_path = "/protwis/sites/files/"+arrays[3]
-        #t = md.load(traj_path,top=struc_path)
-        #t = md.load('dynadb/b2ar_isoprot/b2ar.dcd',top='dynadb/b2ar_isoprot/build.pdb')
-        #t = md.load('/protwis/sites/files/Dynamics/b2ar_cara/cara.dcd',top='/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb')
         label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
         full_results=dict()
         chunksize=50
@@ -1469,7 +1538,6 @@ def saltbridges(request):
                             if residue.name=='LYS' and atom.name=='NZ':
                                 salt_bridges_atoms.append(atom.index+1)
 
-
                 if False:
                     distance=md.compute_distances(t, np.array(cdis),periodic=False) #shape=(n_frames, num_pairs)
                     distancedic=dict()
@@ -1502,13 +1570,11 @@ def saltbridges(request):
                 frequency+=np.sum(distances < distance_threshold,axis=0)
 
             counter+=1
-        print('Salt Bridge analysis DONE')
+
         frequency=frequency/nframes
         distances= frequency> percentage_threshold #[True, False, True, True, ...]
         combfreq=np.concatenate((combinations,np.array([frequency]).T),axis=1) # atom1,atom2, freq
         salt_bridges_residues=combfreq[distances] #logical mask to combinationcs [[10,34],[11,90],[42,666],[],...][True, False, True, True, ...]
-
-
         full_results['salt_bridges'] = salt_bridges_residues
         full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
         #-1 to return to zero indexing.
@@ -1528,20 +1594,20 @@ def saltbridges(request):
             else:
                bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
 
-        struc_path=struc_path[:-4]
-        csvfile= open(struc_path+'saltbridges.csv','w',newline='')
-        writer = csv.writer(csvfile,delimiter=' ',
-                            quotechar=',', quoting=csv.QUOTE_MINIMAL)
+        if False: #warning, to implement in future, download csv with results
+            struc_path=struc_path[:-4]
+            csvfile= open(struc_path+'saltbridges.csv','w',newline='')
+            writer = csv.writer(csvfile,delimiter=' ',
+                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
 
-        header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
-        writer.writerow(header)
+            header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
+            writer.writerow(header)
 
-        for keys in bridge_dic:
-            for minilist in bridge_dic[keys]:
-                rowlist=[keys]+minilist
-                print(rowlist)
-                writer.writerow(rowlist)
-            writer.writerow(['','','','',''])
+            for keys in bridge_dic:
+                for minilist in bridge_dic[keys]:
+                    rowlist=[keys]+minilist
+                    writer.writerow(rowlist)
+                writer.writerow(['','','','',''])
 
         full_results['salt_bridges']=bridge_dic
         data = json.dumps(full_results)
@@ -1553,11 +1619,7 @@ def sasa(request):
     struc_path = "/protwis/sites/files/"+arrays[4]
     traj_path = "/protwis/sites/files/"+arrays[3]
     sel=arrays[6]
-    #struc_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/build.pdb"
-    #traj_path = "/protwis/sites/files/Dynamics/b2ar_isoprot/b2ar.dcd"
-    #struc_path = "/protwis/sites/files/Dynamics/b2ar_cara/frame0.pdb"
-    #traj_path = "/protwis/sites/files/Dynamics/b2ar_cara/kara2.dcd"
-
+    residue_indexes=arrays[7].split(',')
     print(struc_path,traj_path)
     traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
     sasa_path=traj_path[:traj_path.rfind('/')]+traj_name+'.npy'
@@ -1603,7 +1665,8 @@ def sasa(request):
             atoms_prot_bootom=[]
             atoms_half=[]
             atoms_receptor=[]
-            
+            atoms_up=[]
+            atoms_uphalf=[]
             for i in range(tori.xyz[0].shape[0]):
                 if normal:
                     if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
@@ -1612,19 +1675,26 @@ def sasa(request):
                         atoms_half.append(i)
                     if tori.topology.atom(i).residue.is_protein:
                         atoms_receptor.append(i)
+                    if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
+                        atoms_up.append(i)
+                    if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_uphalf.append(i)
                 else:
                     if tori.xyz[0][i][2]>zleaftop and tori.topology.atom(i).residue.is_protein:
                         atoms_prot_bootom.append(i)
                     if tori.xyz[0][i][2]>zetahalf and tori.topology.atom(i).residue.is_protein:
                         atoms_half.append(i)
+                    if tori.xyz[0][i][2]<zetahalf and tori.topology.atom(i).residue.is_protein:
+                        atoms_uphalf.append(i)
                     if tori.topology.atom(i).residue.is_protein:
                         atoms_receptor.append(i)
+                    if tori.xyz[0][i][2]<zleafbottom and tori.topology.atom(i).residue.is_protein:
+                        atoms_up.append(i)
 
             if not precomputed:
                 sasa=md.shrake_rupley(tori)
 
         elif counter>0 and not precomputed:
-            print(str(counter))
             sasa=np.concatenate((sasa,md.shrake_rupley(t)))
 
         else:
@@ -1636,8 +1706,7 @@ def sasa(request):
         traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
         sasa_path=traj_path[:traj_path.rfind('/')]+traj_name
         np.save(sasa_path,sasa)
-    print(sasa)
-    print(str(start),str(end))
+
     sasa=sasa[start:end]
     selected_resids=[]
     if sel=='half':
@@ -1655,6 +1724,25 @@ def sasa(request):
     elif sel=='all':
         sasaours=sasa[:] #pick only the sasa columns of our atoms.
         selected_resids=[]
+    elif sel=='sequence':
+        sequence_atoms=[]
+        for resid in residue_indexes:
+            resid=int(resid)-1
+            selected_resids.append(tori.topology.residue(resid))
+            for atom in tori.topology.residue(resid).atoms:
+                sequence_atoms.append(atom.index)
+
+        sasaours=sasa[:,sequence_atoms] #pick only the sasa columns of our atoms.
+
+    elif sel=='up':
+        sasaours=sasa[:,atoms_up] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_up:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
+
+    elif sel=='up_half':
+        sasaours=sasa[:,atoms_uphalf] #pick only the sasa columns of our atoms.
+        for atom_index in atoms_uphalf:
+            selected_resids.append(tori.topology.atom(atom_index).residue)
 
     sasaours_peratom=sasaours.sum(axis=0)
     sasaours_perframe=sasaours.sum(axis=1)
@@ -1665,21 +1753,25 @@ def sasa(request):
     final_resids=list(set(final_resids))
     if sel=='all':
         final_resids='all'
-    '''
-    print('SASA per atom')
-    for pos,atomindex in enumerate(atoms_prot_bootom):
-        print(t.topology.atom(atomindex),sasaours_peratom[pos])
 
-    print('SASA per frame')
-    for f in range(len(sasaours_perframe)):
-        print(f, sasaours_perframe[f])
-    '''
     sasaours_perframe=sasaours_perframe.tolist()
     time=sasa.shape[0] #number of frames
     time=[i for i in range(time)]
     result=zip(time,sasaours_perframe)
     result=[list(i) for i in result]
     sasares={'sasa':result,'selected_residues':final_resids}
+    if request.session.get('sasa_data', False):
+        sasa_data=request.session['sasa_data']
+        sasa_dict=sasa_data["sasa_dict"]
+        new_sasa_id=sasa_data["new_sasa_id"]+1
+
+    else:
+        new_sasa_id=1
+        sasa_dict={}
+            
+    sasa_dict["sasa_"+str(new_sasa_id)]=sasares
+    request.session['sasa_data']={"sasa_dict":sasa_dict, "new_sasa_id":new_sasa_id}
+    sasares={'sasa':result,'selected_residues':final_resids,'sasa_id':new_sasa_id}
     data = json.dumps(sasares)
     return HttpResponse(data, content_type='application/json')
 
@@ -1704,7 +1796,10 @@ def grid(request):
         mintop=np.array([0,0,0])
         print('ck1')
         print(str(len(trajprot)))
+        i=0
         for frame in range(len(trajprot)):
+            print("frame: ",i)
+            i+=1
             for atom in trajprot.xyz[frame]:
                 if atom[0]<mintop[0]:
                     mintop[0]=atom[0]
@@ -1740,4 +1835,40 @@ def grid(request):
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 
+#def fplot_test(request, filename):
+#    context={"json_name":filename+".json"}
+#    return render(request, 'view/flare_plot_test.html', context)
+    
+def fplot_gpcr(request, dyn_id, filename,seg_li):
+    nameToResiTable={}
+    if request.session.get('gpcr_pdb_all', False):
+        gpcr_pdb_all=request.session['gpcr_pdb_all']
+        gpcr_pdb=gpcr_pdb_all[int(dyn_id)]
+        nameToResiTable={}
+        for (gnum,posChain) in gpcr_pdb.items():
+            gnumOk=gnum[:gnum.find(".")]+gnum[gnum.find("x"):]
+            nameToResiTable[gnumOk]=[posChain[1]+"."+posChain[0],""]
+    #seg_li_ok=[seg.split("-") for seg in seg_li.split(",")]
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+    pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
+    pdbpath=pdbpath.replace("/protwis/sites", "/dynadb")
+    prot_names=obtain_protein_names(dyn_id)
+    traj_id=int(re.match("^\d+",filename).group())
+    traj_name=DyndbFiles.objects.get(id=traj_id).filename
+    
+    comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
+    lig_li=[]
+    for c in comp:
+        if c.type ==1:
+            lig_li.append(c.resname)
 
+    context={"json_path":fpdir + filename,
+             "pdb_path": pdbpath,
+             "prot_names": prot_names,
+             "traj_name" :traj_name,
+             "lig_li" : lig_li,
+             "seg_li":seg_li,
+             "nameToResiTable":json.dumps(nameToResiTable)
+            }
+    return render(request, 'view/flare_plot.html', context)
+    

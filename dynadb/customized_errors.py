@@ -53,6 +53,9 @@ class TooManyFiles(Exception):
             msg = "Too many files uploaded (Max.'"+str(max_files)+")."
         super(TooManyFiles, self).__init__(msg,*args, **kwrags)
         
+        
+class SubmissionValidationError(Exception):
+    pass        
     
 def sizeof_fmt(num, suffix='B'):
     '''Stack Overflow http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size

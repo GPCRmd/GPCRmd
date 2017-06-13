@@ -80,11 +80,11 @@
 
     </div>
 
-
-    <div class="col-sm-12" style="padding: 100; margin: 100 100;"><br><br><br>
-        <center><div id="container-01" class="mol-container" style="border: 1px solid black; width:85%;"></div></center>
-    </div>
-
+    {% if answer.ortoligands or answer.aloligands %}
+        <div class="col-sm-12" style="padding: 100; margin: 100 100;"><br><br><br>
+            <center><div id="container-01" class="mol-container" style="border: 1px solid black; width:85%;"></div></center>
+        </div>
+    {% endif %}
     <div class="col-sm-12" style="padding: 100; margin: 100 100;"><br><br><br>
 
         {% if answer.components%} 
