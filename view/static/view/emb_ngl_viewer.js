@@ -1317,7 +1317,9 @@ $(document).ready(function(){
                             }
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
-                        }
+                        },
+                        timeout: 600000
+                        
                     });
                 } else {
                     //$("#int_traj_error").text("Please select a trajectory.");
@@ -2029,7 +2031,8 @@ $(document).ready(function(){
                             }
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#dist_alert").html(add_error);                
-                        }
+                        },
+                        timeout: 600000
                     });
                     $("#dist_alert").html("");
                 } else {
@@ -2060,7 +2063,8 @@ $(document).ready(function(){
                         error: function() {
                             
                             $("#dist_alert").html(add_error_d);             
-                        }
+                        },
+                        timeout: 600000
                     });
                 } else {
                     add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
@@ -2536,6 +2540,7 @@ $(document).ready(function(){
                             showBigError(msn, "#bonds_alert");
                         }
                     },
+                    timeout: 600000
             }); 
         }
     });
@@ -2634,6 +2639,7 @@ $(document).ready(function(){
                             showBigError("Unknown error.", "#salt_alert");
                         }
                     },
+                    timeout: 600000
             }); 
         }
     });
@@ -2718,6 +2724,7 @@ $(document).ready(function(){
                         alert("Unknown error");
                     }
                 },
+                timeout: 600000
         }); 
     });
 
@@ -3024,7 +3031,8 @@ $(document).ready(function(){
                         if ($.active<=1){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
-                    }
+                    },
+                    timeout: 600000
                 });
 
             }
