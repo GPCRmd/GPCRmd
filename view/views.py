@@ -1620,7 +1620,6 @@ def sasa(request):
     traj_path = "/protwis/sites/files/"+arrays[3]
     sel=arrays[6]
     residue_indexes=arrays[7].split(',')
-    print(struc_path,traj_path)
     traj_name=traj_path[traj_path.rfind('/'):].replace('.','_')
     sasa_path=traj_path[:traj_path.rfind('/')]+traj_name+'.npy'
     try:
@@ -1628,7 +1627,6 @@ def sasa(request):
         precomputed=True
     except:
         precomputed=False
-    print('Is it precomputed?',precomputed)
     chunksize=50
     start=int(arrays[0])
     end=int(arrays[1])
