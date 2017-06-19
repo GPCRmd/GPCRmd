@@ -633,6 +633,10 @@ def get_fplot_path(dyn_id,traj_list):
 
 @ensure_csrf_cookie
 def index(request, dyn_id):
+#    if request.session.get('dist_data', False):
+#        dist_data=request.session['dist_data']
+#        dist_dict=dist_data["dist_dict"]
+#        print("\n\n",len(dist_dict))
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
     delta=DyndbDynamics.objects.get(id=dyn_id).delta
@@ -715,6 +719,7 @@ def index(request, dyn_id):
                 dist_dict={}
                 
             if len(dist_dict) < 15:
+                
                 (success,data_fin, msg, isEmpty,dist_pair_new)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
                 if success and not isEmpty:
                     data_frame=data_fin
@@ -912,7 +917,7 @@ def index(request, dyn_id):
                             
 
                 if all_gpcrs_info:
-                    request.session['gpcr_pdb_all']= gpcr_pdb_all
+                    request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
                     context={
@@ -1841,9 +1846,8 @@ def grid(request):
     
 def fplot_gpcr(request, dyn_id, filename,seg_li):
     nameToResiTable={}
-    if request.session.get('gpcr_pdb_all', False):
-        gpcr_pdb_all=request.session['gpcr_pdb_all']
-        gpcr_pdb=gpcr_pdb_all[int(dyn_id)]
+    if request.session.get('gpcr_pdb', False):
+        gpcr_pdb=request.session['gpcr_pdb']
         nameToResiTable={}
         for (gnum,posChain) in gpcr_pdb.items():
             gnumOk=gnum[:gnum.find(".")]+gnum[gnum.find("x"):]

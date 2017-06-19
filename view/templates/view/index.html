@@ -517,7 +517,7 @@
                             <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Higly conserved motifs</p>
+                                        <p>Highly conserved motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -574,7 +574,7 @@
                             <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Higly conserved motifs</p>
+                                        <p>Highly conserved motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -945,12 +945,6 @@
                                  <input type="radio" name="backbone" value="all" checked> 
                                        Include backbone Hydrogen Bonds
                               </div>
-                              <div class="row" >
-                                 <input type="radio" name="backbone" value="sidechain"> 
-                                      Only Side Chain Hydrogen Bonds
-                              </div>
-
-
                            </div>
                         <div>
                             <span id="hbonds_cutoff_par">
@@ -1086,6 +1080,8 @@
                                  <span id="grid_frame_2_par">
                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
                                  </span>
+                                 
+                               <div id="grid_sel_frames_error" ></div>
 
                           </div>
 
@@ -1114,8 +1110,6 @@
                               </div>
                             </div>
 
-
-                          <div id="grid_sel_frames_error" class="row" ></div>
                         </div>
                     </div>
              </div>
@@ -1124,18 +1118,19 @@
                 Threshold: <input class="form-control input-sm" id="grid_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
             </div>-->
 
-
-             <div class="row" style="margin-top:10px;margin-bottom:15px">
+            <div class=row>
+              <button id="ComputeGrid" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+            </div>
+            <div id="sasa_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
+            
+            
+             <div class="row" id="sasa_par" style="margin-top:10px;margin-bottom:15px">
                     <!--<div class="col-md-12;clear:left;" id="sasa_chart" ></div>  ANTES-->   
                     <div id="sasa_container">
-
-                    </div>
-                    <div class=row>
-                      <button id="ComputeGrid" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
                     </div>
 
-                </div>
-              </div>
+            </div>
+          </div>
 <!-- ======================================== -->
         {% if fplot_path %}
            <div class="row">
