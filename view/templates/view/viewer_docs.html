@@ -108,7 +108,16 @@
 
         <h4 class=myheader>Analysis tools</h4>
         <h5 class=subsect>Distance within 2 atoms</h5>
-        <p class=ptext>This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. To calculate a distance, you can manually input pairs of atom indices at the text input fields. You can also select them at the viewer screen by clicking on the atoms and, afterwards, <span class=highlight>importing the created distances</span> with the blue arrow button <span style="color:#1e90ff" class="glyphicon glyphicon-circle-arrow-down"></span>. It is necessary to select the trajectory that will be used for the calculation. Finally, just click at <span class=highlight>Compute</span>. Only atom pairs which are marked with a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will be considered, since the absence of a checkmark indicates an error in the input (only numbers are allowed).
+        <p class=ptext  style="margin-bottom:10px">This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. 
+        To calculate a distance, you need to indicate the pair or pairs of atoms you are interested in. This can be done in different ways:</p>
+        <ul>
+        <li>Select a pair of atoms at the viewer screen by clicking on them and, afterwards, <span class=highlight>importing the created distances</span> with the blue arrow button <span style="color:#1e90ff" class="glyphicon glyphicon-circle-arrow-down"></span>.</li>
+        <li>Indicate the desired atom pairs manually, by selecting "Compute distance between" <span class=highlight>atoms</span> and inputting a pair of atom indices at the text input fields.</li>
+        <li>Indicate the desired atom pairs manually, by selecting "Compute distance between" <span class=highlight>residues</span> and indicating the residue, chain and atom name you are interested in. The residue number and chain name must be indicated according to the NGL selection language (ex. 50:P), and the atom name selected from the droplist.</li>
+        </ul>
+       <p class=ptext>It is also necessary to select the trajectory that will be used for the calculation. <br>
+        
+        Finally, just click at <span class=highlight>Compute</span>. Only atom pairs which are marked with a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will be considered, since the absence of a checkmark indicates an error in the input (only numbers are allowed).
         The result will appear as a plot of distance by time or by frame, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. It is also possible to download the data obtained as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>). Moreover, the distances calculated can be displayed at the viewer screen, in the colors indicated at the plot legend. Such distance representations can be deactivated by deselecting the "Display distance" checkbox.</p>
 
         <h5 class=subsect>RMSD</h5>
@@ -120,66 +129,60 @@
         The result is presented as table and a plot, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. The residues that are found to interact can be displayed at the viewer screen (shown in purple), which can be deactivated using the "Display interacting residues" checkbox. It is also possible to download the interaction data obtained (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
 
         <h5 class=subsect>HBonds</h5>
-        <p class=ptext>This tool searches Hydrogen Bonds in the simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function called "wernet_wilson" (<a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html> Details </a>) , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; more concretely, this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). You can select between a few options:</p>
+        <p class=ptext>This tool identifies Hydrogen Bonds formed in a simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function called <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>"wernet_wilson"</a> , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; more concretely, this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). You can select between a few options:</p>
         <ol style="margin-bottom:20px;">
-            <li>Do not include Hbonds between neighbours</li>
+            <li><span class=highlight>Do not include Hbonds between neighbours:</span> If selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</li>
 
-            <li>Include backbone Hydrogen Bonds</li>
+            <li><span class=highlight>Include backbone Hydrogen Bonds:</span> If selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</li>
 
-            <li>Only Side Chain Hydrogen Bonds</li>
+            <li><span class=highlight>Only Side Chain Hydrogen Bonds:</span> If selected, only includes hydrogen bonds formed between side chain atoms.</li>
         </ol>
 
         <p class=ptext>
-            <ul>
-             <li><span class=highlight>Option 1, if selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</span></li>
-        <li><span class=highlight>Option 2, if selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</span></li>
-        <li><span class=highlight>Option 3, if selected, only includes hydrogen bonds formed between side chain atoms.</span></li>
 
         Finally, you can set a frequency threshold so only those hydrogen bonds which hold the cited condition in a proportion of the frames greater than the value you have set will appear in the results. You can also define an interval of frames into which perform the analysis. <br>
 
-        Results have a "Show Hbond" button next to them which plots the bond in the viewer. At the end of the table of results, you can find a "Show All" button, which plots all the bonds in that table at once.<br>
+        Results have a "Show Hbond" button next to them which displays the bond in the viewer. At the end of the results table, you can find a "Show All" button, which displays all the bonds in that table at once.<br>
         </p>
 
 
         <h5 class=subsect>Salt Bridges</h5>
-        <p class=ptext> This tool allows you to search the simulation for salt bridges, which we define as any combination between these two sets: {Arg-NH1, Arg-NH2, Lys-NZ, His-NE2, His-ND1} and {Glu-OE1, Glu-OE2, Asp-OD1, Asp-OD2} in which the participating atoms are closer than 4 Angstroms. Histidine atoms are only considered if the residue is protonated. As with hydrogen bond analysis, you can select a percentage threshold, and the results include a "Show Salt Bridge" button and a "Show All" button. Furthermore, you can select an interval of frames, instead of the whole trajectory.
+        <p class=ptext> This tool allows you to identify the salt bridges formed through a simulation. Salt bridges are defined as any combination between these two sets: {Arg-NH1, Arg-NH2, Lys-NZ, His-NE2, His-ND1} and {Glu-OE1, Glu-OE2, Asp-OD1, Asp-OD2} in which the participating atoms are closer than 4 Angstroms. Histidine atoms are only considered if the residue is protonated. As with hydrogen bond analysis, you can select a percentage threshold, and the results include a "Show Salt Bridge" button and a "Show All" button. Furthermore, you can select an interval of frames, instead of the whole trajectory.
         </p>
 
         <h5 class=subsect>SASA analysis</h5>
-        <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the shrake_rupley function from MDTraj module (<a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>Details</a>). Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms in a single frame. Then, we plot this sum at each frame, so you can see how the SASA of that set of atoms fluctuate across time. We have defined a few options that we thought will be useful, but you can also select the desired residues using the Select Sequence tool. The options are:</p>
+        <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the <a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>shrake_rupley</a> function from MDTraj module. Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms belonging to each frame. Then, we plot the obtained value per frame, so you can see how the SASA of that set of atoms fluctuates through time. We have defined a few options to define the atoms that will be considered:</p>
 
         <ol style="margin-bottom:20px;">
-            <li>All atoms</li>
+            <li><span class=highlight>All atoms:</span> Includes all atoms in the simulation.</li>
 
-            <li>Sequence Selection</li>
+            <li><span class=highlight>Sequence Selection:</span> Imports the selection you have defined in the <span class=highlight>Sequence Selection<span> tool (remember to click "Confirm Selection" button).</li>
 
-            <li>Receptor</li>
+            <li><span class=highlight>Receptor:</span>Includes all GPCR atoms.</li>
 
-            <li>Lower half of receptor</li>
+            <li><span class=highlight>Lower half of receptor:</span> Includes atoms in the GPCR whose Z component is less than the mean Z component of P atoms in the lipid leaflets.</li>
 
-            <li>Upper half of receptor</li>
+            <li><span class=highlight>Upper half of receptor:</span> The opposite of option 4.</li>
 
-            <li>Extracellular receptor</li>
+            <li><span class=highlight>Extracellular receptor:</span> Includes all atoms in the GPCR whose Z component is greater than the mean Z component of the P atoms in the outter membrane leaflet.</li>
 
-            <li>Intracelular receptor</li>
+            <li><span class=highlight>Intracelular receptor:</span> Includes all atoms in the GPCR whose Z component is less than the mean Z component of the P atoms in the inner membrane leaflet.</li>
 
         </ol>
         <p class=ptext>
-            <ul>
-             <li><span class=highlight>Option 1 includes all atoms in the simulation.</span></li>
-             <li><span class=highlight>Option 2 imports the selection you have defined in the "Sequence Selection" tool (remember to click "Confirm Selection" button)</span></li>
-             <li><span class=highlight>Option 3 includes all GPCR atoms</span></li>
-             <li><span class=highlight>Option 4 includes atoms in the GPCR whose Z component is less than the mean Z component of P atoms in the lipid leaflets.</span></li>
-             <li><span class=highlight>Option 5 is the opposite of option 4.</span></li>
-             <li><span class=highlight>Option 6 includes all atoms in the GPCR whose Z component is greater than the mean Z component of the P atoms in the outter membrane leaflet </span></li>
-             <li><span class=highlight>Option 7 includes all atoms in the GPCR whose Z component is less than the mean Z component of the P atoms in the inner membrane leaflet.</span></li>
-            </ul>
             Furthermore, you can select an interval of frames, instead of the whole trajectory.
         </p>
 
-
-
-
+        <h5 class=subsect>Flare plots</h5>
+        <p class=ptext>If a flare plot is available for the simulation being displayed at the viewer, the option to obtain it will be available at the analysis section. Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. 
+Applied to the study of GPCRs, Flare plots are capable to generate networks which group protein residues according to the helix in which they belong and differentiate interactions between residues of the same helix from inter-helix interactions. For the moment, flare plots are available for the representation of <span class=highlight>hydrogen bonds</span> formed between residues of the GPCR through a given simulation trajectory. Hydrogen bonds interactions are represented as lines connecting residue pairs.</p>
+        <p class=ptext style="margin-bottom:10px">Once the flare plot page is accessed, there are a series of control options available: </p>
+        <ul>
+            <li>It is possible to <span class=highlight>summarize</span> the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
+            <li>The <span class=highlight>Track HB freq.</span> button indicates the frequency in which each residue takes part in an interaction. Such frequency is indicated by the height of a coloured box adjacent to each residue.</li>
+            <li>The <span class=highlight>Sort within helix</span> button sorts the residues belonging to the same helix according to the frequency in which they take part in an interaction. Note that the "Track HB freq." option needs to be activated.</li>
+        </ul>
+        <p class=ptext>Hover or click a residue to highligh the lines representing the interactions in which it participates. Clicked interactions will appear at the GPCR representation displayed at the left of the flare plot.</p>
 
 
 <!--    <h4 class=myheader>Trajectory display</h4>

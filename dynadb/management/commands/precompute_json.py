@@ -46,6 +46,9 @@ class Command(BaseCommand):
         )
         
     def handle(self, *args, **options):
+        hb_json_path="/protwis/sites/files/Precomputed/flare_plot/hbonds"
+        if not os.path.isdir(hb_json_path):
+            os.makedirs(hb_json_path)
         dynobj=DyndbDynamics.objects.filter(is_published=True)
         if options['submission_id']:
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
@@ -81,6 +84,7 @@ class Command(BaseCommand):
                     ###########
                     
                     newpath = path.join(newdir,newfilename)
+                    print("\n\n",newpath)
                     exists=path.isfile(newpath)
                     if not exists:
                         self.stdout.write(self.style.NOTICE("Creating flareplot "+newfilename+"..."))
