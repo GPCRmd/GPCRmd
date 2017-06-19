@@ -1949,9 +1949,6 @@ $(document).ready(function(){
                                                                         </select>\
                                                                     </span>\
                                                                 </div>\
-                                                            <div class='checkbox' style='font-size:12px;'>\
-		                                                        <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+dist_pair_new+" >Display distance</label>\
-                                                            </div>\
                                                             <div style='margin:5px'>\
                                                                 <div style='display:inline-block;margin:5px;cursor:pointer;'>\
                                                                     <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
@@ -1967,7 +1964,7 @@ $(document).ready(function(){
                                                                     <span title='Delete' class='glyphicon glyphicon-trash delete_dist_plot' data-dist_id='"+dist_id+"'></span>\
                                                                 </div>\
                                                                 <div class='checkbox' style='font-size:12px;display:inline-block'>\
-		                                                            <label><input type='checkbox' name='view_this_dist' class='display_this_dist' data-this_dist="+dist_pair_new+" data-traj_id="+traj_id+">Display distance</label>\
+		                                                            <label><input type='checkbox' name='view_this_dist' checked class='display_this_dist' data-this_dist="+dist_pair_new+" data-traj_id="+traj_id+">Display distance</label>\
                                                                 </div>\
                                                             </div>\
                                                         </div>";                            
@@ -2586,7 +2583,7 @@ $(document).ready(function(){
             frameTo=-1;
         }
         if (rmsdFrames == false){
-            var msn="Some fields are empty or contain errors";
+            var msn="Some fields are empty or contain errors.";
             showBigError(msn, "#salt_alert");
         }else{
             $('#ShowAllSb').hide();
@@ -2647,6 +2644,8 @@ $(document).ready(function(){
 //-------- SASA computation --------
     
     $("#ComputeGrid").click(function(){
+        $("#sasa_alert").html("");
+        $("#grid_sel_frames_error").html("");
         var struc = $(".str_file").data("struc_file");
         var dyn_id=$(".str_file").data("dyn_id");
         rmsdTraj=$("#grid_traj").val();
@@ -2680,52 +2679,62 @@ $(document).ready(function(){
             frameFrom=0;
             frameTo=-1;
         }
+        if (rmsdFrames == false){
+            var msn="Some fields are empty or contain errors";
+            showBigError(msn, "#sasa_alert");
+        } else {
+            
+            $("#sasa_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_sasa'><span class='glyphicon glyphicon-time'></span> Computing SASA. This may take a while...</p>");   
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $.ajax({
+                    type: "POST",
+                    data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
+                    url:"/view/grid/", 
+                    dataType: "json",
+                    success: function(data) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_sasa").remove();
+                        atomshb=[];
+                        all_resids=[];
+                        atomshb_inter=[];
+                        atomssb=[];
+                        all_resids_sb=[];
+                        all_resids_sasa=data.selected_residues
+                        results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
+                        data_graph=results[0];
+                        options=results[1];
+                        newid='sasa_chart_'+data.sasa_id.toString();
+                        titlegraph=['From Frame:',frameFrom,'To Frame:',frameTo,'Trajectory:',rmsdTraj,'Selection:',sasa_sel].join(' ');
+                        $("#sasa_container").append('<hr><center>'+titlegraph+'</center><br><div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
+                        var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));
+                        google.visualization.events.addListener(chart_sasa, 'ready', function () {
+                            var img_source =  chart_sasa.getImageURI(); 
+                            $("#"+newid).attr("data-url",img_source);
+                        });
+                        chart_sasa.draw(data_graph, options);
+                        $("#"+newid).append('<a href='+$("#"+newid).attr("data-url")+'>Download graph as image</a>');
+                        $("#selectionDiv").trigger("click");
+                    },
+                    error: function(XMLHttpRequest, textStatus, errorThrown) {
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $("#wait_sasa").remove();
+                        if (XMLHttpRequest.readyState == 4) {
+                            var responsetext = XMLHttpRequest.responseText;
 
-        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
-        $.ajax({
-                type: "POST",
-                data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
-                url:"/view/grid/", 
-                dataType: "json",
-                success: function(data) {
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
-                    atomshb=[];
-                    all_resids=[];
-                    atomshb_inter=[];
-                    atomssb=[];
-                    all_resids_sb=[];
-                    all_resids_sasa=data.selected_residues
-                    results=drawBasic(data.sasa,'Time (ns)','SASA (nm^2)');
-                    data_graph=results[0];
-                    options=results[1];
-                    newid='sasa_chart_'+data.sasa_id.toString();
-                    titlegraph=['From Frame:',frameFrom,'To Frame:',frameTo,'Trajectory:',rmsdTraj,'Selection:',sasa_sel].join(' ');
-                    $("#sasa_container").append('<hr><center>'+titlegraph+'</center><br><div class="col-md-12;clear:left;" id="'+newid+'" ></div>');
-                    var chart_sasa = new google.visualization.LineChart(document.getElementById(newid));
-                    google.visualization.events.addListener(chart_sasa, 'ready', function () {
-                        var img_source =  chart_sasa.getImageURI(); 
-                        $("#"+newid).attr("data-url",img_source);
-                    });
-                    chart_sasa.draw(data_graph, options);
-                    $("#"+newid).append('<a href='+$("#"+newid).attr("data-url")+'>Download graph as image</a>');
-                    $("#selectionDiv").trigger("click");
-                },
-                error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
-                    if (XMLHttpRequest.readyState == 4) {
-                        var responsetext = XMLHttpRequest.responseText;
-
-                        alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
-                    }
-                    else if (XMLHttpRequest.readyState == 0) {
-                        alert("Connection error. Please, try later and check that your file is not larger than 50 MB.");
-                    }
-                    else {
-                        alert("Unknown error");
-                    }
-                },
-                timeout: 600000
-        }); 
+                            alert(textStatus.substr(0,1).toUpperCase()+textStatus.substr(1)+":\nStatus: " + XMLHttpRequest.textStatus+". "+errorThrown+".\n"+responsetext);
+                            showBigError("An error occurred.", "#sasa_alert");
+                        }
+                        else if (XMLHttpRequest.readyState == 0) {
+                            var msg="Connection error. Please, try later and check that your file is not larger than 50 MB.";
+                            showBigError(msg, "#sasa_alert");
+                        }
+                        else {
+                            showBigError("Unknown error.", "#sasa_alert");
+                        }
+                    },
+                    timeout: 1200000
+            }); 
+        }
     });
 
 
