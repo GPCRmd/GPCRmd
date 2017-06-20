@@ -21,7 +21,7 @@
 {% block content %} 
 {% csrf_token %}
 <section class="main-head">
-   <h1 class="main-title"  style="background-color:blue;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px"><b>Flare plot</b> - <span style="font-size:24px">Intra-protein H bonds</span></h1>
+   <h1 class="main-title"  style="background-color:blue;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px"><b>Flare plot</b> - <span style="font-size:24px"><!--Dynamic interaction network of -->Hydrogen bonds (HB)</span></h1>
    <h1 id="info" data-json_path={{json_path}} data-pdb_path={{pdb_path}} data-lig_li={{lig_li}} data-seg_li={{seg_li}} data-nametoresi="{{nameToResiTable}}" style="background-color:#F3F3F3; border-radius:2px;font-size:18px;text-align:center;padding-top:10px;padding-bottom:10px;">{{prot_names}} ({{traj_name}})</h1>
 </section>
 
@@ -72,7 +72,8 @@
 <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
 <link rel="stylesheet" type="text/css" href="{% static 'view/fplot/stylesheets/gpcr_demo.css' %}" media="screen">
 
-  <script src="http://d3js.org/d3.v3.min.js"></script>
+  <!--<script src="http://d3js.org/d3.v3.min.js"></script>-->
+  <script src="{% static 'view/fplot/gpcr_demo2/d3.v3.min.js' %}"></script>
   <script src="{% static 'view/fplot/gpcr_demo2/parse.js' %}"></script>
   <script src="{% static 'view/fplot/gpcr_demo2/pv.min.js' %}"></script>
   <script src="{% static 'view/fplot/gpcr_demo2/main_test.js' %}"></script>

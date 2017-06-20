@@ -808,6 +808,7 @@ def index(request, dyn_id):
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
         fplot_path=get_fplot_path(dyn_id,traj_list)
+        #fplot_path=[]#[!!!!]
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
