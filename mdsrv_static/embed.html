@@ -690,6 +690,10 @@
                     var toframe=$(".ui-slider-handle").attr("aria-valuenow");
                     trajComp.setFrame(toframe);*/
                     if (trajComp){
+                        numfr=trajComp.trajectory.numframes;
+                        if ($("#trajRange").attr("max") != numfr){
+                            $("#trajRange").attr("max",numfr);
+                        }
                         var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
                         trajComp.setFrame(toframe);
                     }
