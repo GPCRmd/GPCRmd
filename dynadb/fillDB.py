@@ -160,6 +160,7 @@ def scorenames(names_list):
     '''Given a list of synomins, returns the most human friendly'''
     maxscore=-99999
     bestname=names_list[0]
+    counter=0
     for name in names_list:
         oriname=name
         score=0
@@ -167,9 +168,11 @@ def scorenames(names_list):
         score=len(name)*-0.4 #the longer the name, the worse the score
         score=score+ 3*((name.count('a')+name.count('e')+name.count('i')+name.count('o')+name.count('u'))*100/len(name))
         score=score-len(re.findall("\d", name))
+        score=score-counter #ponderate the order
         if score>maxscore and len(name)<60:
             maxscore=score
             bestname=oriname
+        counter=+1
     return bestname
     
     
