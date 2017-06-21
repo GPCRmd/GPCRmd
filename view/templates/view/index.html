@@ -114,7 +114,7 @@
              			<h4><br>GPCR visualizaion</h4>
             		</div><br>   -->
 
-        <div class="container-fluid">
+        <div class="container-fluid" id="main_container">
         {% if all_prot_names %}
         <div style="margin:5px 0 5px 0;">
             <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:2px;">
@@ -996,11 +996,17 @@
                            <div style="margin-bottom:10px;padding:0"  class="col-md-12">
 
                                <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> 
-                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;display:none;" >Show All</button></center>
+                              <center>
+                                <button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;display:none;" >Show All</button>
+                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear all</button>
+                               </center>
 
 
                                <div class='scrolldowndiv' id="hbondsnp" style="margin-bottom:10px;padding:0"  class="col-md-6"></div>
-                               <center><button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
+                               <center>
+                                    <button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button>
+                                    <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb_inter">Clear all</button>
+                                </center>
                                                          
                             
                            </div>
@@ -1067,7 +1073,10 @@
 
                            <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
 
-                            <center><button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
+                            <center>
+                                <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button>
+                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear all</button>
+                            </center>
                       
                            </div>
                         </div>
