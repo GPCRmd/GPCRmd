@@ -194,10 +194,10 @@ $(document).ready(function(){
             arrow.addClass("glyphicon-chevron-up");
         }
     });
-//-------- Text Input --------
+//-------- Color dropdown --------
 
-    function displayDropBtn(input_select){
-        $(input_select).on("click",".dropbtn",function(){
+    function displayDropBtn(input_select, btn_select){
+        $(input_select).on("click", btn_select,function(){
             if ($(this).hasClass("opened")){
                 $(this).siblings(".dropdown-content").css("display","none");
                 $(this).removeClass("opened");
@@ -207,8 +207,10 @@ $(document).ready(function(){
             }
         });
     }
-    displayDropBtn("#text_input_all");
-    displayDropBtn("#seq_input_all");
+    displayDropBtn("#text_input_all",".dropbtn");
+    displayDropBtn("#seq_input_all",".dropbtn");
+    displayDropBtn("#moreSettings",".dropbtn");
+    displayDropBtn("#moreSettings_div",".dropbtn_opt");
     
     function colorSel(input_select){
         $(input_select).on("click",".dropcolor",function(){
@@ -248,6 +250,7 @@ $(document).ready(function(){
     colorSel("#text_input_all");
     colorSel("#seq_input_all");
     
+//-------- Text Input --------
     function obtainTextInput(){
         var layer=[];
         $("#text_input_all").find(".text_input").each(function(){
@@ -2470,7 +2473,7 @@ $(document).ready(function(){
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
                         //gnumFromPosChain(pos, chain)
                         for (var property in hbonds) {
                             if (hbonds.hasOwnProperty(property)) {
@@ -2481,12 +2484,12 @@ $(document).ready(function(){
                                 donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
                                 acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
 
-                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) </td><td><button class="showhb btn btn-default btn-xs"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
                                 for (index = 1; index < hbonds[property].length; ++index) {
                                     var string2 =hbonds[property][index][0];
                                     var acceptor = string2.match(regex)[0];  // creates array from matches
                                     acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
-                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) </td><td><button class="showhb btn btn-default btn-xs" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
                                 }
                             }
                         }
@@ -2495,7 +2498,7 @@ $(document).ready(function(){
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
                         for (var property in hbonds_np) {
                             if (hbonds_np.hasOwnProperty(property)) {
                                 var string =property;
@@ -2505,18 +2508,18 @@ $(document).ready(function(){
                                 donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
                                 acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
 
-                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
                                 for (index = 1; index < hbonds_np[property].length; ++index) {
                                     var string2 =hbonds_np[property][index][0];
                                     var acceptor = string2.match(regex)[0];  // creates array from matches           
                                     acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
-                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
                                 }
                             }
                         }
                         tablenp=tablenp+'</table></center><center>';
                         $('#ShowAllHbInter').show();
-                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding-top:15px");
+                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
                         $('#hbondsnp').html(tablenp);
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -2599,18 +2602,18 @@ $(document).ready(function(){
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
-                        var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+                        var salt='<center><table class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency%)</th><th></th><tbody>';
                         for (var property in salty) {
                             if (salty.hasOwnProperty(property)) {
                                 var string =property;
                                 var string2 =salty[property][0][0];
                                 var donor = string.match(regex)[0];  // creates array from matches
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
-                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showsb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) </td><td><button class="showsb btn btn-default btn-xs"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
                                 for (index = 1; index < salty[property].length; ++index) {
                                     string2=salty[property][index][0]
                                     acceptor = string2.match(regex)[0];
-                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showsb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) </td><td><button class="showsb btn btn-default btn-xs" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
                                 }
                             }
                         }

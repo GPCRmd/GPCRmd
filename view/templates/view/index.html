@@ -167,12 +167,44 @@
                           </div>                      
                           <button class="btn btn-default" type="button" id="screenshot"  style="font-size:12px;padding-right:7px;padding-left:7px;height:35px" ><span class="glyphicon glyphicon-camera" style="margin-right:5px"></span>Screenshot</button>
                           -->
+                                
+                          
+                          
                           <button id="restartPos" type="button" class="btn btn-link settingsB" title="Reset position" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-repeat"></span></button>       
                           <button id="center" type="button" class="btn btn-link settingsB" title="Center" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-record"></span></button>
                           <button id="background" type="button" class="btn btn-link settingsB light" title="Dark background" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-adjust"></span></button>
                           <button id="screenshot" type="button" class="btn btn-link settingsB" title="Take screenshot" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-camera"></span></button>                                    
                         <!--  <a id="to_mdsrv" class="settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>-->
                         <a id="to_mdsrv" class="btn btn-link settingsB" href="{{mdsrv_url}}/html/mdsrv_emb.html" target="_blank" style="padding:7px;color:#585858" title="Advanced visualization"><span class="glyphicon glyphicon-cog"></span></a>
+                        
+                          <div  id="moreSettings_div" class="dropdown displaydrop pull-right" >
+                            <button id="moreSettings" type="button" class="btn btn-link settingsB dropbtn_opt" title="More setting options" style="padding:7px;color:#585858"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                            <div class="dropdown-content" style="padding: 7px; background-color: white; width: 252px; display: block; border: 1px solid #808080; border-radius:2px;display:none">
+                                  
+                                  
+                                    <div style="margin-bottom:10px;">
+                                        Projection 
+                                         <div class="btn-group btn-group-xs">
+                                          <button type="button" id="projOrtho" class="btn btn-default projectionOP" style="padding:2px 5px 2px 5px;width:85px">Orthographic</button>
+                                          <button type="button" id="projPersp" class="btn btn-default active projectionOP" style="padding:2px 5px 2px 5px;width:85px">Perspective</button>
+                                        </div> 
+                                    </div>
+                                    <div style="margin-bottom:10px;">
+                                        Spin 
+                                         <div class="btn-group btn-group-xs">
+                                          <button type="button" id="spinOn" class="btn btn-default spinSet" style="padding:2px 5px 2px 5px;">On</button>
+                                          <button type="button" id="spinOff" class="btn btn-default active spinSet" style="padding:2px 5px 2px 5px;">Off</button>
+                                        </div> 
+                                    </div>
+                                    <div >
+                                        Trajectory step size: <input class="form-control input-sm rvSpaces" id="trajStep"  type="number" placeholder=3 style="width:50px;padding-left:7px;padding-right:2px;">
+                                    </div>
+                                    
+
+
+                                  
+                            </div>
+                          </div>
    
                       </div>
                    </div>
@@ -960,17 +992,16 @@
                 <div id="bonds_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
                  <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
 
-                        <div id="bondsresult" style="margin-left:18px;margin-bottom:20px"> 
+                        <div id="bondsresult" style="margin-bottom:20px"> 
                            <div style="margin-bottom:10px;padding:0"  class="col-md-12">
 
-                               <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> <br><br>
-                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
+                               <div class='scrolldowndiv' id="hbonds" style="margin-bottom:10px;padding:0"  class="col-md-6"></div> 
+                              <center><button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;display:none;" >Show All</button></center>
 
 
                                <div class='scrolldowndiv' id="hbondsnp" style="margin-bottom:10px;padding:0"  class="col-md-6"></div>
                                <center><button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button></center>
-                            <br>
-                             
+                                                         
                             
                            </div>
                         </div>
@@ -1031,7 +1062,7 @@
                     </div>
                     <div id="salt_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
                     <div id="saltresult_par" style="display:none" class="col-md-12" >
-                        <div id="saltresult" style="margin-left:18px;margin-bottom:20px"> 
+                        <div id="saltresult" style="margin-bottom:20px"> 
                            <div style="margin-bottom:10px;padding:0"  class="col-md-12" >
 
                            <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
@@ -1138,7 +1169,9 @@
            </div>
            <div id="analysis_fplot" class="collapse">
                <div class="row" style="margin-top:10px;margin-bottom:15px">
-                    <div style="margin-left:18px;margin-bottom:10px;color:#808080">Represent <span style="font-weight:bold"> intra-protein hydrogen bonds</span> of a trajectory as a dynamic interaction network.
+                    <div style="margin-left:18px;margin-bottom:10px;color:#808080">
+                        <!--Represent <span style="font-weight:bold"> intra-protein hydrogen bonds</span> of a trajectory as a dynamic interaction network.-->
+                        Represent a dynamic interaction network of <span style="font-weight:bold">hydrogen bonds</span> in the GPCR.
                     </div>
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
@@ -1160,42 +1193,6 @@
 
             {% endif %}
           
-        <div style="margin-bottom:20px">
-            <div style="text-align:center;margin:0;">
-                <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
-                    <h4 id="SettingsDiv" style="padding:0;margin:0;">Settings
-                    </h4>
-                </div>
-            </div>
-            
-           <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#preferences" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Preferences </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
-            </div>
-             <div id="preferences" class="collapse row">
-                 <div style="margin-top:10px;margin-left:23px">
-                    <div style="margin-bottom:10px;">
-                        Projection 
-                         <div class="btn-group btn-group-xs">
-                          <button type="button" id="projOrtho" class="btn btn-default projectionOP" style="padding:2px 5px 2px 5px;width:85px">Orthographic</button>
-                          <button type="button" id="projPersp" class="btn btn-default active projectionOP" style="padding:2px 5px 2px 5px;width:85px">Perspective</button>
-                        </div> 
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        Spin 
-                         <div class="btn-group btn-group-xs">
-                          <button type="button" id="spinOn" class="btn btn-default spinSet" style="padding:2px 5px 2px 5px;">On</button>
-                          <button type="button" id="spinOff" class="btn btn-default active spinSet" style="padding:2px 5px 2px 5px;">Off</button>
-                        </div> 
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        Trajectory step size: <input class="form-control input-sm rvSpaces" id="trajStep"  type="number" placeholder=3 style="width:50px;padding-left:7px;padding-right:2px;">
-                    </div>
-                    
-                 </div>
-             </div>
-             
-             
-        </div><!--End of Settings-->
     </div> <!-- Panel-body -->          
    </div>
           

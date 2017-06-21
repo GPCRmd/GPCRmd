@@ -1871,7 +1871,8 @@ def fplot_gpcr(request, dyn_id, filename,seg_li):
              "traj_name" :traj_name,
              "lig_li" : lig_li,
              "seg_li":seg_li,
-             "nameToResiTable":json.dumps(nameToResiTable)
+             "nameToResiTable":json.dumps(nameToResiTable),
+             "dyn_id":dyn_id
             }
     return render(request, 'view/flare_plot.html', context)
     

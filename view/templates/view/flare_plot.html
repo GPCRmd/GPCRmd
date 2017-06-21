@@ -21,8 +21,9 @@
 {% block content %} 
 {% csrf_token %}
 <section class="main-head">
-   <h1 class="main-title"  style="background-color:blue;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px"><b>Flare plot</b> - <span style="font-size:24px"><!--Dynamic interaction network of -->Hydrogen bonds (HB)</span></h1>
+   <h1 class="main-title"  style="background-color:blue;border-radius:5px;color:white;padding-top:15px;padding-bottom:15px;margin-top:0;margin-bottom:10px"><b>Flare plot</b> - <span style="font-size:24px">Dynamic interaction network of Hydrogen bonds (HB)</span></h1>
    <h1 id="info" data-json_path={{json_path}} data-pdb_path={{pdb_path}} data-lig_li={{lig_li}} data-seg_li={{seg_li}} data-nametoresi="{{nameToResiTable}}" style="background-color:#F3F3F3; border-radius:2px;font-size:18px;text-align:center;padding-top:10px;padding-bottom:10px;">{{prot_names}} ({{traj_name}})</h1>
+   <a id="to_viewer" class="btn btn-info btn-xs" href="{% url 'view:index' dyn_id=dyn_id %}" >Go back to viewer</a>
 </section>
 
 <section class="main-content">
