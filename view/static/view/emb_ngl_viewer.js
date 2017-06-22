@@ -2740,25 +2740,28 @@ $(document).ready(function(){
         }
     });
 
+
+//-------- Selecton of HB and SB interactions to display --------
+
     $(document).on('click', "#ShowAllHbIntra",function(){
         $("#bondsresult_par").find(".showhb:not(.active)").each(function(){
             $(this).addClass("active");
         });
-        //$("#selectionDiv").trigger("click");
+        $("#selectionDiv").trigger("click");
     });
 
     $(document).on('click', "#ShowAllHbInter",function(){
         $("#bondsresult_par").find(".showhb_inter:not(.active)").each(function(){
             $(this).addClass("active");
         });
-        //$("#selectionDiv").trigger("click");
+        $("#selectionDiv").trigger("click");
     });
 
     $(document).on('click', "#ShowAllSb",function(){
         $("#saltresult_par").find(".showsb:not(.active)").each(function(){
             $(this).addClass("active");
         });
-        //$("#selectionDiv").trigger("click");
+        $("#selectionDiv").trigger("click");
     });
 
 
@@ -2768,13 +2771,55 @@ $(document).ready(function(){
         $(document).find("."+selclass).each(function(){
             $(this).removeClass("active");
         });
-        //$("#selectionDiv").trigger("click");
+        $("#selectionDiv").trigger("click");
     });
 
 
+    function selectionHBSB(){
+        var atomshb=[];
+        var all_resids=[];
+        var all_resids_sb=[];
+        var atomshb_inter=[];
+        var atomssb=[];
+        var all_resids_sasa=[];
+        var all_resids_inter=[];
+        $("#analysis_bonds").find(".showhb.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomshb.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids.push(Number(resids[0]));
+            all_resids.push(Number(resids[1]));
+        });
+        
+        $("#analysis_bonds").find(".showhb_inter.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomshb_inter.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids_inter.push(Number(resids[0]));
+            all_resids_inter.push(Number(resids[1]));
+        });
+        
+        $("#analysis_salt").find(".showsb.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomssb.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids_sb.push(Number(resids[0]));
+            all_resids_sb.push(Number(resids[1]));
+        });        
+        return({
+                "atomshb":atomshb,
+                "atomshb_inter":atomshb_inter,
+                "atomssb":atomssb,
+                "all_resids":all_resids,
+                "all_resids_inter": all_resids_inter,
+                "all_resids_sb":all_resids_sb
+                })
+    }
     
 
-    
     
 
 /*    $(document).on('click', '.showhb', function(){
@@ -3175,15 +3220,17 @@ $(document).ready(function(){
         return (receptorsel);
     }
     var seq_ids=[];
-    var atomshb=[];
+    
+    var atomshb=[];//
     var grid=[];
     var grid_shape=[];
     var grid_atoms=[];
-    var all_resids=[];
-    var all_resids_sb=[];
-    var atomshb_inter=[];
-    var atomssb=[];
-    var all_resids_sasa=[];
+    var all_resids=[];//
+    var all_resids_sb=[];//
+    var atomshb_inter=[];//
+    var atomssb=[];//
+    var all_resids_sasa=[];//
+    
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
@@ -3199,6 +3246,7 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
+        var resultHBSB=selectionHBSB();
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -3209,11 +3257,12 @@ $(document).ready(function(){
                 "traj":traj,
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
-                "hbondarray":atomshb,
-                "sbondarray":atomssb,
-                "allresidshb":all_resids,
-                "allresidssb":all_resids_sb,
-                "hb_inter":atomshb_inter,
+                "hbondarray":resultHBSB["atomshb"],
+                "hb_inter":resultHBSB["atomshb_inter"],
+                "sbondarray":resultHBSB["atomssb"],
+                "allresidshb":resultHBSB["all_resids"],
+                "allresidshbInt":resultHBSB["all_resids_inter"],
+                "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
         });
     }
@@ -3270,9 +3319,10 @@ $(document).ready(function(){
          var bs_info = results["bs_info"];
          var hbonds= results["hbondarray"];
          var atomssb=results["sbondarray"];
+         var atomshb_inter=results[ "hb_inter"];
          var all_resids=results["allresidshb"];
          var all_resids_sb=results["allresidssb"];
-         var atomshb_inter=results[ "hb_inter"];
+         var all_resids_inter=results[ "allresidshbInt"];
 
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);
@@ -3315,6 +3365,7 @@ $(document).ready(function(){
                             "ib":encode(atomshb_inter),
                             "ar":encode(all_resids),
                             "as":encode(all_resids_sb),
+                            "ai" : encode(all_resids_inter),
                             "pj": projection,
                             }        
   
@@ -3383,6 +3434,9 @@ $(document).ready(function(){
         $("#seq_input_all").find(".seq_input").val("");
         $("#seq_input_all").find(".input_dd_color").val("");
         $("#addToSel").css("display","none");
+        $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");
+        $("#analysis_salt").find(".showsb.active").removeClass("active");
+        $("#analysis_bonds").find(".showhb.active").removeClass("active");
     }); 
 });
 
