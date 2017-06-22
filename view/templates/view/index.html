@@ -493,7 +493,7 @@
                             <div style="margin:0;" id="classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
                                 {% if cons_pos_all_info.1.A %}
                                     {% if cons_pos_all_info.0.A.1 %}
-                                        <p>Highly conserved motifs</p>
+                                        <p>Highly conserved residues and motifs</p>
 	                                        {% for pos in cons_pos_all_info.0.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -502,7 +502,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_pos_all_info.0.A.0 %}
-                                        <p>Most conserved motifs</p>
+                                        <p>Most conserved residues</p>
 	                                        {% for pos in cons_pos_all_info.0.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -511,7 +511,7 @@
                             </div>
                             <div id="classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
                                   {% if cons_pos_all_info.0.B.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -519,7 +519,7 @@
                             </div>  
                             <div id="classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
                                   {% if cons_pos_all_info.0.C.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -527,7 +527,7 @@
                             </div>  
                             <div id="classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
                                   {% if cons_pos_all_info.0.F.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -549,7 +549,7 @@
                             <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Highly conserved motifs</p>
+                                        <p>Highly conserved residues and motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -558,7 +558,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
-                                        <p>Most conserved motifs</p>
+                                        <p>Most conserved residues</p>
 	                                        {% for pos in cons_class.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -567,7 +567,7 @@
                             </div>
                             <div id="classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
                                   {% if cons_class.B.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -575,7 +575,7 @@
                             </div>  
                             <div id="classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
                                   {% if cons_class.C.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -583,7 +583,7 @@
                             </div>  
                             <div id="classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
                                   {% if cons_class.F.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -606,7 +606,7 @@
                             <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
                                 {% if show_class.A %}
                                     {% if cons_class.A.1 %}
-                                        <p>Highly conserved motifs</p>
+                                        <p>Highly conserved residues and motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -615,7 +615,7 @@
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
-                                        <p>Most conserved motifs</p>
+                                        <p>Most conserved residues</p>
 	                                        {% for pos in cons_class.A.0 %}
                                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
@@ -624,7 +624,7 @@
                             </div>
                             <div id="classB" class="tab-pane {{active_class.B.1}}">
                                   {% if cons_class.B.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.B.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
@@ -632,7 +632,7 @@
                             </div>  
                             <div id="classC" class="tab-pane {{active_class.C.1}}">
                                   {% if cons_class.C.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.C.0 %}
                                     <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -640,7 +640,7 @@
                             </div>  
                             <div id="classF" class="tab-pane {{active_class.F.1}}">
                                   {% if cons_class.F.0 %}
-                                    <p>Most conserved motifs</p>
+                                    <p>Most conserved residues</p>
                                     {% for pos in cons_class.F.0 %}
                                   <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
@@ -787,11 +787,11 @@
                              <input type="radio" name="rmsd_sel_frames" value="rmsd_frames_mine"> 
                                  From 
                                  <span class="rmsd_from_parent">
-                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_1" type="text" style="width:40px;padding-left:7px;">
+                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_1" type="text" style="width:50px;padding-left:7px;">
                                  </span>
                                  to 
                                  <span class="rmsd_to_parent">
-                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_2" type="text" style="width:40px;padding-left:7px;">
+                                   <input class="form-control input-sm maxinp8 changeVal" id="rmsd_frame_2" type="text" style="width:50px;padding-left:7px;">
                                  </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
@@ -804,7 +804,7 @@
                     </div>
                     <div class="col-md-12" style="margin-left:18px;margin-bottom:10px;padding:0"> 
                         Reference: frame 
-                            <input placeholder=0 class="form-control input-sm maxinp8 changeVal" id="rmsd_ref_frame" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                            <input placeholder=0 class="form-control input-sm maxinp8 changeVal" id="rmsd_ref_frame" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                             from trajectory 
                             <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
                                <!--<option disabled selected value> </option>-->
@@ -943,11 +943,11 @@
                                  <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
                                      From 
                                      <span id="bonds_frame_1_par">
-                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                      </span>
                                      to 
                                      <span id="bonds_frame_2_par">
-                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                      </span>
 
                               </div>
@@ -980,7 +980,7 @@
                            </div>
                         <div>
                             <span id="hbonds_cutoff_par">
-                                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" placeholder=10 id="hbonds_cutoff" type="number" style="width:60px;padding-left:7px;margin-bottom:5px"> %
+                                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" placeholder=10 id="hbonds_cutoff" type="number" style="width:60px;padding-left:7px;margin-bottom:5px" title="Hydrogen bonds with a frequency lower than the threshold will be filtered out."> %
                             </span>
                         </div>
                  </div>
@@ -1045,11 +1045,11 @@
                              <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
                                  From 
                                  <span id="salt_frame_1_par">
-                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                  </span>
                                  to 
                                  <span id="salt_frame_2_par">
-                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                  </span>
 
                           </div>
@@ -1059,7 +1059,7 @@
              </div>
 
             <div class="row" style="margin-top:5px;margin-bottom:15px;margin-left:3px">
-                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" id="salt_cutoff" type="number" placeholder=10 style="width:60px;padding-left:7px;margin-bottom:5px"> %
+                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" id="salt_cutoff" type="number" placeholder=10 title="Salt bridges with a frequency lower than the threshold will be filtered out." style="width:60px;padding-left:7px;margin-bottom:5px"> %
             </div>
 
              <div class="row" style="margin-top:10px;margin-bottom:15px">
@@ -1114,11 +1114,11 @@
                              <input type="radio" name="grid_sel_frames" value="grid_frames_mine"> 
                                  From 
                                  <span id="grid_frame_1_par">
-                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_1" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                  </span>
                                  to 
                                  <span id="grid_frame_2_par">
-                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_2" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="grid_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                                  </span>
                                  
                                <div id="grid_sel_frames_error" ></div>
