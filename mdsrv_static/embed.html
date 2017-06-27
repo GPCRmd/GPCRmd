@@ -65,7 +65,7 @@
             $(".ui-slider").css({"margin-left":"25px"});
             $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-            $(".ui-slider-input").css({"font-size":"12px","padding":"2px","margin-top":"2px","margin-left":"6px"});
+            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
             $(".traj_btn").click( function(){
                 parent.passinfoToPlayTraj();
@@ -304,7 +304,7 @@
                             }
                         }
                         if (clickedRepLi.length > 0){
-                            $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear dists.</button>');
+                            $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear labels/dists.</button>');
                         }
                     } else {
                         $("#atomClicked").text("");
@@ -353,6 +353,7 @@
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
+            var all_resids_inter=results["allresidshbInt"];
             var all_resids_sb=results["allresidssb"];
             var hbonds_inter=results["hb_inter"];
             var sasa_resids=results["all_resids_sasa"];
@@ -557,7 +558,7 @@
 
             if (hbonds_inter.length > 0){
                 var resids='not water and';
-                resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
             }
@@ -607,7 +608,7 @@
                     o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
                 }
                 final_sele=final_sele.join(" , ");
-                o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#461bff" } );// colorValue: "#00d215"
+                o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue:"#f2e14e"/*"#461bff"*/ } );// colorValue: "#00d215"
 
             }
 

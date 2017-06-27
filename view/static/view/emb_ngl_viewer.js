@@ -25,7 +25,7 @@ $(document).ready(function(){
     }
 
     function click_unclick(class_name){
-        $(class_name).click(function(){
+        $("#main_container").on("click",class_name,function(){
             pos_class=$(this).attr("class");
             if(pos_class.indexOf("active") > -1){
                 $(this).removeClass("active");
@@ -194,10 +194,10 @@ $(document).ready(function(){
             arrow.addClass("glyphicon-chevron-up");
         }
     });
-//-------- Text Input --------
+//-------- Color dropdown --------
 
-    function displayDropBtn(input_select){
-        $(input_select).on("click",".dropbtn",function(){
+    function displayDropBtn(input_select, btn_select){
+        $(input_select).on("click", btn_select,function(){
             if ($(this).hasClass("opened")){
                 $(this).siblings(".dropdown-content").css("display","none");
                 $(this).removeClass("opened");
@@ -207,8 +207,10 @@ $(document).ready(function(){
             }
         });
     }
-    displayDropBtn("#text_input_all");
-    displayDropBtn("#seq_input_all");
+    displayDropBtn("#text_input_all",".dropbtn");
+    displayDropBtn("#seq_input_all",".dropbtn");
+    displayDropBtn("#moreSettings",".dropbtn");
+    displayDropBtn("#moreSettings_div",".dropbtn_opt");
     
     function colorSel(input_select){
         $(input_select).on("click",".dropcolor",function(){
@@ -248,6 +250,7 @@ $(document).ready(function(){
     colorSel("#text_input_all");
     colorSel("#seq_input_all");
     
+//-------- Text Input --------
     function obtainTextInput(){
         var layer=[];
         $("#text_input_all").find(".text_input").each(function(){
@@ -2470,7 +2473,7 @@ $(document).ready(function(){
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4>Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="width:90%;"><thead><tr><th>Donor<th>Acceptors (Frecuency)<tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
                         //gnumFromPosChain(pos, chain)
                         for (var property in hbonds) {
                             if (hbonds.hasOwnProperty(property)) {
@@ -2481,12 +2484,12 @@ $(document).ready(function(){
                                 donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
                                 acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
 
-                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) <button class="showhb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
                                 for (index = 1; index < hbonds[property].length; ++index) {
                                     var string2 =hbonds[property][index][0];
                                     var acceptor = string2.match(regex)[0];  // creates array from matches
                                     acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
-                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) <button class="showhb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
                                 }
                             }
                         }
@@ -2495,7 +2498,7 @@ $(document).ready(function(){
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4>Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency)<tbody>';
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
                         for (var property in hbonds_np) {
                             if (hbonds_np.hasOwnProperty(property)) {
                                 var string =property;
@@ -2505,18 +2508,18 @@ $(document).ready(function(){
                                 donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
                                 acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
 
-                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
+                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
                                 for (index = 1; index < hbonds_np[property].length; ++index) {
                                     var string2 =hbonds_np[property][index][0];
                                     var acceptor = string2.match(regex)[0];  // creates array from matches           
                                     acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
-                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) <button class="showhb_inter"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
                                 }
                             }
                         }
                         tablenp=tablenp+'</table></center><center>';
                         $('#ShowAllHbInter').show();
-                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding-top:15px");
+                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
                         $('#hbondsnp').html(tablenp);
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -2599,18 +2602,18 @@ $(document).ready(function(){
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
-                        var salt='<center><table class="table table-condesed" style="width:90%;"><thead><tr><th>Residue1<th>Residue2 (Frecuency%)<tbody>';
+                        var salt='<center><table class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency%)</th><th></th><tbody>';
                         for (var property in salty) {
                             if (salty.hasOwnProperty(property)) {
                                 var string =property;
                                 var string2 =salty[property][0][0];
                                 var donor = string.match(regex)[0];  // creates array from matches
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
-                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) <button class="showsb"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
                                 for (index = 1; index < salty[property].length; ++index) {
                                     string2=salty[property][index][0]
                                     acceptor = string2.match(regex)[0];
-                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) <button class="showsb" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
                                 }
                             }
                         }
@@ -2738,7 +2741,88 @@ $(document).ready(function(){
     });
 
 
-    $(document).on('click', '.showhb', function(){
+//-------- Selecton of HB and SB interactions to display --------
+
+    $(document).on('click', "#ShowAllHbIntra",function(){
+        $("#bondsresult_par").find(".showhb:not(.active)").each(function(){
+            $(this).addClass("active");
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+    $(document).on('click', "#ShowAllHbInter",function(){
+        $("#bondsresult_par").find(".showhb_inter:not(.active)").each(function(){
+            $(this).addClass("active");
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+    $(document).on('click', "#ShowAllSb",function(){
+        $("#saltresult_par").find(".showsb:not(.active)").each(function(){
+            $(this).addClass("active");
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+
+    $(document).on('click',".clearAnalysisView",function(){
+        identif=$(this).attr("id");
+        selclass=identif.replace("clear_","");
+        $(document).find("."+selclass).each(function(){
+            $(this).removeClass("active");
+        });
+        $("#selectionDiv").trigger("click");
+    });
+
+
+    function selectionHBSB(){
+        var atomshb=[];
+        var all_resids=[];
+        var all_resids_sb=[];
+        var atomshb_inter=[];
+        var atomssb=[];
+        var all_resids_sasa=[];
+        var all_resids_inter=[];
+        $("#analysis_bonds").find(".showhb.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomshb.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids.push(Number(resids[0]));
+            all_resids.push(Number(resids[1]));
+        });
+        
+        $("#analysis_bonds").find(".showhb_inter.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomshb_inter.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids_inter.push(Number(resids[0]));
+            all_resids_inter.push(Number(resids[1]));
+        });
+        
+        $("#analysis_salt").find(".showsb.active").each(function(){
+            var atoms_pre=$(this).data('atomindexes').split('$%$');
+            var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
+            atomssb.push(atoms_pre2);
+            var resids=$(this).data('resids').split('$%$');
+            all_resids_sb.push(Number(resids[0]));
+            all_resids_sb.push(Number(resids[1]));
+        });        
+        return({
+                "atomshb":atomshb,
+                "atomshb_inter":atomshb_inter,
+                "atomssb":atomssb,
+                "all_resids":all_resids,
+                "all_resids_inter": all_resids_inter,
+                "all_resids_sb":all_resids_sb
+                })
+    }
+    
+
+    
+
+/*    $(document).on('click', '.showhb', function(){
         all_resids_sasa=[];
         atomssb=[];
         atomshb_inter=[];
@@ -2823,7 +2907,7 @@ $(document).ready(function(){
         });
         $("#selectionDiv").trigger("click");
     });
-
+*/
 //-------- RMSD computation --------
 
     $("#gotoRMSDPg").click(function(){
@@ -3092,6 +3176,7 @@ $(document).ready(function(){
     click_unclick(".rep_elements");
     click_unclick("#col_btn");
     click_unclick("#receptor");
+    click_unclick(".clickUnclick")
     $("#btn_all").click(function(){
         $(".rep_elements").addClass("active");
         $("#receptor").addClass("active");
@@ -3135,15 +3220,17 @@ $(document).ready(function(){
         return (receptorsel);
     }
     var seq_ids=[];
-    var atomshb=[];
+    
+    var atomshb=[];//
     var grid=[];
     var grid_shape=[];
     var grid_atoms=[];
-    var all_resids=[];
-    var all_resids_sb=[];
-    var atomshb_inter=[];
-    var atomssb=[];
-    var all_resids_sasa=[];
+    var all_resids=[];//
+    var all_resids_sb=[];//
+    var atomshb_inter=[];//
+    var atomssb=[];//
+    var all_resids_sasa=[];//
+    
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
@@ -3159,6 +3246,7 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
+        var resultHBSB=selectionHBSB();
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -3169,11 +3257,12 @@ $(document).ready(function(){
                 "traj":traj,
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
-                "hbondarray":atomshb,
-                "sbondarray":atomssb,
-                "allresidshb":all_resids,
-                "allresidssb":all_resids_sb,
-                "hb_inter":atomshb_inter,
+                "hbondarray":resultHBSB["atomshb"],
+                "hb_inter":resultHBSB["atomshb_inter"],
+                "sbondarray":resultHBSB["atomssb"],
+                "allresidshb":resultHBSB["all_resids"],
+                "allresidshbInt":resultHBSB["all_resids_inter"],
+                "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
         });
     }
@@ -3230,9 +3319,10 @@ $(document).ready(function(){
          var bs_info = results["bs_info"];
          var hbonds= results["hbondarray"];
          var atomssb=results["sbondarray"];
+         var atomshb_inter=results[ "hb_inter"];
          var all_resids=results["allresidshb"];
          var all_resids_sb=results["allresidssb"];
-         var atomshb_inter=results[ "hb_inter"];
+         var all_resids_inter=results[ "allresidshbInt"];
 
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);
@@ -3275,6 +3365,7 @@ $(document).ready(function(){
                             "ib":encode(atomshb_inter),
                             "ar":encode(all_resids),
                             "as":encode(all_resids_sb),
+                            "ai" : encode(all_resids_inter),
                             "pj": projection,
                             }        
   
@@ -3343,6 +3434,9 @@ $(document).ready(function(){
         $("#seq_input_all").find(".seq_input").val("");
         $("#seq_input_all").find(".input_dd_color").val("");
         $("#addToSel").css("display","none");
+        $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");
+        $("#analysis_salt").find(".showsb.active").removeClass("active");
+        $("#analysis_bonds").find(".showhb.active").removeClass("active");
     }); 
 });
 
