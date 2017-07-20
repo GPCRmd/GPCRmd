@@ -139,12 +139,12 @@
 
 <!-- ============= IFRAME =========== -->
             <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}">
-                <div class="row" style=max-width:590px;margin:auto>
+                <div class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                 </div>  
                 <div >
-                    <div style="margin:auto;position:relative;overflow:hidden;height:395px;max-width:590px;border: 1px solid #F5F5F5;margin-bottom:5px">
+                    <div style="margin:auto;position:relative;overflow-y:hidden;overflow-x:auto;height:445px;max-width:622px;border: 1px solid #F5F5F5;margin-bottom:5px">
                     
                          {% if traj_list %}
                           <div class="dropdown" style="position:absolute;z-index:10">
@@ -158,7 +158,7 @@
                             </ul>
                           </div>
                          {% endif %}
-                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="590px"></iframe>
+                        <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="620px"></iframe>
                     </div>
 
                 </div>          
