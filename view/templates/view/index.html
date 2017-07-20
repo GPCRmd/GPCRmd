@@ -53,6 +53,9 @@
     display: block;
 }*/
 
+#content{
+    width:100%;
+}
 
 </style>
 {% endblock %}
@@ -62,51 +65,53 @@
 {% block content %} 
 {% csrf_token %}
 
- <!-- description column -->
- <div class="col-md-4">
+ <!-- description  -->
+ <div class="col-md-12" id="page_info">
 
-     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;">   
+     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;margin-bottom:10px">   
          <div class="panel-body">
         	<h3 >GPCR viewer</h3>
          </div> 
      </div>
 
      <!-- main description -->
-     <div class="col-md-12 panel panel-primary">
+     
+     
+     <div class="col-md-12 panel panel-primary" style="margin-bottom:10px">
+         <div id="show_hide_info" class="section_pan"  data-target="#more_info" data-toggle="collapse" style="cursor:pointer"><span id="show_hide_info_text" style="margin-left:5px;font-size:12px">Show info </span><span class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+     </div>
+
+     
+     <div class="col-md-12 panel panel-primary collapse" id="more_info">
          <div class="panel-body">
 
             <div style="text-align:center"> 
              <!--<h4 >GPCR VIEWER</h4>-->
-	    </div>
+            </div>
              <p style="text-align: justify;">Please indicate what you want to display in your molecular representation.</p>
 
-	     <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
+         <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
         {% if gpcr_pdb != "no" %}
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
         <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
-		<span><p class="falselist">Left button hold and move: rotate camera around center.</p>
-		<p class="falselist">Left button click: pick atom or distance.</p>
-		<p class="falselist">Middle button hold and move: zoom camera in and out.</p>
-		<p class="falselist">Middle button click: center camera on atom.</p>
-		<p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
+	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
+	    <p class="falselist">Left button click: pick atom or distance.</p>
+	    <p class="falselist">Middle button hold and move: zoom camera in and out.</p>
+	    <p class="falselist">Middle button click: center camera on atom.</p>
+	    <p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
             <!-- <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>-->
+         <p>For more information, see the <a href="{% url 'view:viewer_docs' %}" target="_blank" >docs</a>.
+         </p>
 
          </div>
      </div>
 
-     <!-- link to docs -->
-     <div class="col-md-12 panel panel-primary">
-         <div class="panel-body">
-             <p>For more information, see the <a href="{% url 'view:viewer_docs' %}" target="_blank" >docs</a>.
-             </p>
-         </div>
-     </div>
-  </div>
- <!--   <body> -->
+</div> <!-- End page_info-->
 
-<div id="pprotform"class="col-md-8 "> 
+
+<div id="pprotform"class="col-md-6 "> 
   <div id="protform" class="col-md-12 panel panel-primary"> 
     <div class="panel-body" style="padding-top:10px">
 
@@ -115,10 +120,18 @@
             		</div><br>   -->
 
         <div class="container-fluid" id="main_container">
+
+        <div style="text-align:center;margin:5px 0 0 0;">
+            <div class="row" id="VisualizationDiv" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+                <h4 style="padding:0;margin:0;">Visualization
+                </h4>
+            </div>
+        </div>
+
         {% if all_prot_names %}
         <div style="margin:5px 0 5px 0;">
-            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:2px;">
-                <p style="margin:0;padding: 2px 5px 2px 5px">{{all_prot_names}}</p>
+            <div class="row" style="padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;">
+                {{all_prot_names}}
             </div>
         </div>
         {% endif %}
@@ -135,12 +148,12 @@
                     
                          {% if traj_list %}
                           <div class="dropdown" style="position:absolute;z-index:10">
-                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" data-tpath={{traj_list.0.0}}>{{ traj_list.0.1 }}
+                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >{{ traj_list.0.1 }}
                             <span class="caret"></span></button>
                             <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
-                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} >{{traj_list.0.1}}</li>
+                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >{{traj_list.0.1}}</li>
                             {% for traj in traj_list|slice:"1:" %}
-                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} >{{traj.1}}</li>
+                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3}} >{{traj.1}}</li>
                             {% endfor %}
                             </ul>
                           </div>
@@ -672,16 +685,76 @@
           </div>
           {% endif %}-->
         </div><!-- End allSelTools -->
+
+          
+    </div> <!-- Panel-body -->          
+   </div>
+          
+          <!--<input type="checkbox" name="nglCall" value="nglCallSign">-->
+        </div>
+         
+    </div> <!-- left half -->
+
+     <div class="col-md-6" id="right_half">
+        <div class="col-md-12 panel panel-primary" >
+            <div class="panel-body" style="padding-top:10px">
+                <div class="container-fluid" id="main_analysis_container">        
+<!-- ANALYSIS -->                
+                
 <!-- ============= Analysis =========== --> 
            {% if traj_list %}  
-        <div style="text-align:center;margin:0;">
-            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
-                <h4 id="analysisDiv" style="padding:0;margin:0;">Analysis
+        <div style="text-align:center;margin:0;padding:5px;">
+            <div class="row" style="background-color:#F3F3F3; border-radius:2px;">
+                <h4 id="analysisDiv" style="padding:0;margin:0;padding:5px;">Analysis
                 </h4>
             </div>
         </div>
            <div id="all_analysis" style="margin-bottom:30px">   
-           
+<!-- ======================================== -->
+        {% if fpdir %}
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+           <div id="analysis_fplot" class="collapse" >
+                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:10px;overflow:auto">
+
+    <!-- 
+                   <div class="row" style="margin-top:10px;margin-bottom:15px" >
+                       <div style="margin-left:18px;margin-bottom:10px;color:#808080">
+                            Represent a dynamic interaction network of <span style="font-weight:bold">hydrogen bonds</span> in the GPCR.
+                        </div>
+                        <div id="fpinfo" style="margin-left:18px;margin-bottom:10px;" >
+                         Trajectory: 
+                                <select id="fplot_traj" name="fplot_traj">
+                                   {% for fp in fplot_path %}
+                                       <option   value="{{fp.1}}">{{fp.2}}</option>
+                                   {% endfor %}
+                                </select>
+
+                         </div>
+                   </div>
+     -->
+
+    <!-- Link to big FP with slide  -->
+     <!--               <div class="row"> 
+                            <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=traj_list.0.3 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
+                    </div>-->
+                    
+               <center>
+                 <div id="flare-container"></div>
+
+                  <button id="FPdisplay" class="btn btn-info clickUnclick active" type="button" style="margin-top:10px;">
+                    Display int.
+                  </button>
+               
+                  <button class="summarizeFP btn btn-info" type="button" style="margin-top:10px;">
+                    Summarize
+                  </button>
+               </center>
+               </div><!-- End dpfiv -->
+           </div> 
+        {% endif %}
+<!-- ======================================== -->
 <!-- ============= Compute distances =========== --> 
 
            <div class="row">
@@ -1171,51 +1244,28 @@
 
             </div>
           </div>
-<!-- ======================================== -->
-        {% if fplot_path %}
-           <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
-           </div>
-           <div id="analysis_fplot" class="collapse">
-               <div class="row" style="margin-top:10px;margin-bottom:15px">
-                    <div style="margin-left:18px;margin-bottom:10px;color:#808080">
-                        <!--Represent <span style="font-weight:bold"> intra-protein hydrogen bonds</span> of a trajectory as a dynamic interaction network.-->
-                        Represent a dynamic interaction network of <span style="font-weight:bold">hydrogen bonds</span> in the GPCR.
-                    </div>
-                    <div style="margin-left:18px;margin-bottom:10px;">
-                     Trajectory: 
-                            <select id="fplot_traj" name="fplot_traj">
-                               {% for fp in fplot_path %}
-                                   <option   value="{{fp.1}}">{{fp.2}}</option>
-                               {% endfor %}
-                            </select>
 
-                     </div>
-               </div>
-                <div class="row">
-                        <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=fplot_path.0.1 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
-                </div>
-           </div> 
-        {% endif %}
-<!-- ======================================== -->
             </div><!-- End of analysis --->
 
             {% endif %}
-          
-    </div> <!-- Panel-body -->          
-   </div>
-          
-          <!--<input type="checkbox" name="nglCall" value="nglCallSign">-->
+                
+<!-- ANALYSIS END -->        
+                </div>
+            </div>
         </div>
-    </div>
+     </div>
 
 {% endblock content %} 
          
 
 {% block addon_js %} 
-    
-    <script src="{% static 'view/emb_ngl_viewer.js' %}"></script>
-
+       <script src="{% static 'view/emb_ngl_viewer.js' %}"></script>
+ <!-- Flare plots -->
+        <link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}" />
+        <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+        <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
+       
+ <!-- End Flare plots -->
 {% endblock %}
 
 

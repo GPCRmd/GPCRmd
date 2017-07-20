@@ -1,0 +1,145 @@
+/* Legend Panel */
+
+.fpSelectLegend td.include, .fpSelectLegend td.exclude{
+  background-color:white;
+  color:black;
+  border:1px;
+  border-color:#acacac;
+  border-style: solid;
+  width:15px;
+  height:15px;
+  text-align: center;
+  font-size:12px;
+}
+
+.fpScrollLegend td.include{
+  background-color:#acacac;
+  color:#acacac;
+  width:15px;
+  height:15px
+}
+.fpScrollLegend td.exclude {
+  background-color:white;
+  color:white;
+  border:1px;
+  border-color:#acacac;
+  border-style: solid;
+  width:13px;
+  height:13px
+}
+.fpScrollLegend td.text {
+  font-size:12px;
+}
+
+
+/* Fingerprint selection query menu*/
+.fpSelection * {
+    box-sizing: border-box;
+}
+.fpSelection td, .fpSelection th{
+    width:20px;
+    border: 1px solid white;
+}
+.fpSelection tbody tr {
+    position: relative;
+    border: 1px solid white;
+}
+
+.fpSelection tbody td{
+    height:20px;
+    cursor:pointer;
+    border:1px solid #acacac;
+}
+.fpSelection tbody td.include{
+  background-color:white;
+  color:black;
+  text-align: center;
+  font-size:12px;
+}
+.fpSelection tbody td.exclude{
+    background-color: white;
+    color:black;
+    text-align: center;
+    font-size:12px;
+}
+.fpSelection thead th {
+    position: relative;
+    height: 80px;
+}
+.terminal-cell {
+    width: 5px;
+}
+.fpSelection thead th span {
+    transform-origin: 0 50%;
+    transform: rotate(-40deg);
+    white-space: nowrap;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    font-weight: normal;
+    font-size: 12px;
+}
+.fpSelection thead, tbody {
+    display: block;
+}
+.fpSelection tbody {
+    overflow-y: auto;
+}
+
+
+/* Scrollable Selection Menu legend*/
+
+.fpScrolldown * {
+    box-sizing: border-box;
+}
+.fpScrolldown td, .fpScrolldown th{
+    width:20px;
+    border: 1px solid white;
+}
+.fpScrolldown tbody tr {
+    position: relative;
+    border: 1px solid white;
+}
+.fpScrolldown tbody tr.selected {
+    background-color: #eaeaf8;
+}
+.fpScrolldown tbody tr:hover {
+    background-color: #e1e1ee;
+}
+.fpScrolldown tbody td{
+    height:20px;
+    cursor:pointer;
+}
+.fpScrolldown tbody td.include{
+    background-color: #b9b9b9;
+}
+.fpScrolldown thead th {
+    position: relative;
+    height: 80px;
+}
+.terminal-cell {
+    width: 5px;
+}
+.fpScrolldown thead th span {
+    transform-origin: 0 50%;
+    transform: rotate(-40deg);
+    white-space: nowrap;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    font-weight: normal;
+    font-size: 12px;
+}
+.fpScrolldown thead, tbody {
+    display: block;
+}
+.fpScrolldown tbody {
+    height: 100px;
+    overflow-y: auto;
+}
+table{
+    margin-top:10px;
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+}
