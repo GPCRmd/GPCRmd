@@ -88,13 +88,14 @@
             <div style="text-align:center"> 
              <!--<h4 >GPCR VIEWER</h4>-->
             </div>
-             <p style="text-align: justify;">Please indicate what you want to display in your molecular representation.</p>
+             <p style="text-align: justify;">Indicate what you want to display in your molecular representation using the selection options.</p>
 
-         <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
+         <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
         {% if gpcr_pdb != "no" %}
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
-        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>
+<!--        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>-->
+        <p style="text-align: justify;">Visualization powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
 	    <p class="falselist">Left button click: pick atom or distance.</p>
@@ -354,6 +355,9 @@
                                        <option value="resname">Residue name</option>
                                        <option value="residueindex">Residue index</option>
                                        <option value="hydrophobicity">Hydrophobicity</option>
+                                       {% if seg_li %}
+                                       <option value="FPscheme">GPCR Helices</option>
+                                       {% endif %}
                                     </select>
                                   </div>
                                   <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
@@ -421,6 +425,9 @@
                                        <option value="resname">Residue name</option>
                                        <option value="residueindex">Residue index</option>
                                        <option value="hydrophobicity">Hydrophobicity</option>
+                                       {% if seg_li %}
+                                       <option value="FPscheme">GPCR Helices</option>
+                                       {% endif %}
                                     </select>
                                   </div>
                                   <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
@@ -713,10 +720,10 @@
 <!-- ======================================== -->
         {% if fpdir %}
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
            </div>
-           <div id="analysis_fplot" class="collapse" >
-                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:10px;overflow:auto">
+           <div id="analysis_fplot" class="collapse in" >
+                <div id="fpdiv" data-fpdir="{{fpdir}}" data-fpseg_li="{{seg_li}}" style="margin-top:10px;overflow:auto">
 
     <!-- 
                    <div class="row" style="margin-top:10px;margin-bottom:15px" >
@@ -736,22 +743,27 @@
      -->
 
     <!-- Link to big FP with slide  -->
-     <!--               <div class="row"> 
+     <!--           {% if seg_li %}    
+                    <div class="row"> 
                             <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=traj_list.0.3 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
-                    </div>-->
+                    </div>
+                    {% endif %}-->
                     
                <center>
                  <div id="flare-container"></div>
 
-                  <button id="FPdisplay" class="btn btn-info clickUnclick active" type="button" style="margin-top:10px;">
-                    Display int.
+                  <button id="FPdisplay" class="btn btn-info active showIfTrajFP" type="button" style="margin-top:10px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                    Hide interactions
                   </button>
                
-                  <button class="summarizeFP btn btn-info" type="button" style="margin-top:10px;">
+                  <button class="summarizeFP showIfTrajFP btn btn-info" type="button" style="margin-top:10px;width:115px;font-size:12px;">
                     Summarize
                   </button>
                </center>
-               </div><!-- End dpfiv -->
+               <div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
+                    <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.
+                </div>
+               </div><!-- End fpdiv -->
            </div> 
         {% endif %}
 <!-- ======================================== -->
@@ -1160,7 +1172,7 @@
 
 <!-- ============= SASA Analysis =========== --> 
 
-           <div class="row">
+<!--           <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_grid" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>SASA analysis</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_grid" class="collapse">
@@ -1227,10 +1239,6 @@
                     </div>
              </div>
 
-            <!--<div class="row" style="margin-top:10px;margin-bottom:15px;margin-left:3px">
-                Threshold: <input class="form-control input-sm" id="grid_cutoff" type="text" style="width:40px;padding-left:7px;margin-bottom:5px">
-            </div>-->
-
             <div class=row>
               <button id="ComputeGrid" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
             </div>
@@ -1238,14 +1246,13 @@
             
             
              <div class="row" id="sasa_par" style="margin-top:10px;margin-bottom:15px">
-                    <!--<div class="col-md-12;clear:left;" id="sasa_chart" ></div>  ANTES-->   
                     <div id="sasa_container">
                     </div>
 
             </div>
-          </div>
+          </div> --><!-- End of SASA analysis --->
 
-            </div><!-- End of analysis --->
+            </div><!-- End of ALL analysis --->
 
             {% endif %}
                 

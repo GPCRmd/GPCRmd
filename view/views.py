@@ -930,7 +930,7 @@ def index(request, dyn_id):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
+                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, ""])#'10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -974,6 +974,7 @@ def index(request, dyn_id):
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
+                        "seg_li":""
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -992,6 +993,7 @@ def index(request, dyn_id):
                         "gpcr_pdb": "no",
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
+                        "seg_li":""
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1009,6 +1011,7 @@ def index(request, dyn_id):
                     "chains" : "",            
                     "gpcr_pdb": "no",
                     "fpdir" : fpdir,
+                    "seg_li":""
                     }
             return render(request, 'view/index.html', context)
 

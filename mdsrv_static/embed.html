@@ -61,10 +61,8 @@
             return(atom_pos)
         }
         
-        function selWithinComponent(o,dist_comp){
-            var show = dist_comp[0];
-            var radius=Number(dist_comp[1]);
-            var ligSele =dist_comp[2];
+        function selWithinComponent(o,show,radius,ligSele){
+            var radius=Number(radius);
             var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
             //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
@@ -140,7 +138,10 @@
                             var bsnum =0;
                             for (liN = 0; liN < ligli.length; liN++){
                                 var lig = ligli[liN];
-                                var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                                if (! isNaN(parseInt(lig))){
+                                    lig="["+lig+"]";
+                                }
+                                var result = selWithinComponent(o,recept , "2.5" ,lig );
                                 var sele = result[0];
                                 var sele2 = result[1];
                                 BSRepName="BS"+bsnum.toString();
@@ -153,13 +154,19 @@
                             for (wth_n=0 ; wth_n < dist_within_li.length ; wth_n++){
                                 var dist_comp=  dist_within_li[wth_n].split("-");
                                 var show=dist_comp[0];
+                                if (! isNaN(parseInt(show))){
+                                    show="["+show+"]";
+                                }
                                 var ligSele=dist_comp[2];
+                                if (! isNaN(parseInt(ligSele))){
+                                    ligSele="["+ligSele+"]";
+                                }
                                 var restriction="";
                                 var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
                                 if (show_sup != "NONE"){
                                     restriction="not ("+ligSele+") and ";
                                 } 
-                                var result=selWithinComponent(o,dist_comp);
+                                var result=selWithinComponent(o,show,dist_comp[1],ligSele);
                                 var sele = result[0];
                                 var sele2 = result[1];
                                 WthRepName="sel"+dist_comp[2];
@@ -455,7 +462,11 @@
             if (cp.length > 0){
                 var all_cp="";
                 for (comp=0 ; comp < cp.length ; comp++){
-                    all_cp += (cp[comp] + " or ");
+                    var mycomp=cp[comp];
+                    if (! isNaN(parseInt(mycomp))){
+                        mycomp="["+mycomp+"]";
+                    }
+                    all_cp += (mycomp + " or ");
                 }
                 all_cp = all_cp.slice(0, -3);
                 o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );            
@@ -482,7 +493,11 @@
                     var rep = layer_all[1];
                     var color = layer_all[2];
                     var scheme = layer_all[3];
-                    o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                    if (scheme=="FPscheme"){
+                        o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
+                    } else {
+                        o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                    }
                 }
             }
             
@@ -493,7 +508,10 @@
                 var bsnum =0;
                 for (liN = 0; liN < ligli.length; liN++){
                     var lig = ligli[liN];
-                    var result = selWithinComponent(o,[recept , "2.5" ,lig ]);
+                    if (! isNaN(parseInt(lig))){
+                        lig="["+lig+"]";
+                    }
+                    var result = selWithinComponent(o,recept , "2.5" ,lig );
                     var sele = result[0];
                     var sele2 = result[1];
                     BSRepName="BS"+bsnum.toString();
@@ -508,14 +526,20 @@
                 for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                     var dist_comp=  dist_within_li[wth_n].split("-");
                     var show = dist_comp[0];
+                    if (! isNaN(parseInt(show))){
+                        show="["+show+"]";
+                    }
                     var ligSele=dist_comp[2];
+                    if (! isNaN(parseInt(ligSele))){
+                        ligSele="["+ligSele+"]";
+                    }
                     var restriction="";
                     var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
                     if (show_sup != "NONE"){
                         o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:"sel_within_0" } );
                         restriction="not ("+ligSele+") and ";
                     }   
-                    var result=selWithinComponent(o,dist_comp);
+                    var result=selWithinComponent(o,show,dist_comp[1],ligSele);
                     var sele = result[0];
                     var sele2 = result[1];
                     WthRepName="sel"+ligSele;
@@ -681,6 +705,23 @@
             var clickedDist={};
             var stepsize = 3;
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
+            
+            //!
+            var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
+            if (fpsegStr){
+                var fpsegli=fpsegStr.split(",");
+                var fpcolors=[];
+                var helix_colors =["#78C5D5","#5FB0BF","#459BA8","#5FAF88","#79C268","#9FCD58","#C5D747","#DDD742","#F5D63D","#F3B138","#F18C32","#ED7A6A","#E868A1","#D466A4","#BF63A6"];
+                for (segN=0; segN<fpsegli.length ;segN++ ){
+                    var segsel=fpsegli[segN];
+                    if (segsel){
+                        fpcolors.push([helix_colors[segN] , "protein and ("+ segsel +")" ]);
+                    }
+                }
+                var FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );
+                
+            }
+            
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
@@ -708,13 +749,13 @@
                         }
                     });
                     trajButtons(o);
-                    createReps();
+                    //createReps();
                     stage.centerView("protein");
                     ori= stage.getOrientation();
 
-                    $("#clearAll", window.parent.document).click(function(){
+                    /*$("#clearAll", window.parent.document).click(function(){
                         createReps();
-                    });
+                    });*/
                     
                     
                     $("#selectionDiv", window.parent.document).on("click" , function(){
@@ -852,7 +893,7 @@
         });
         });
     </script>
-    <div id="toiframe" style="width:620px">
+    <div id="toiframe" style="width:620px;height:445px">
         <div id="viewport" style="width:620px; height:420px;"></div><!--395 -> 445 -->
         <div style="height:80px">
             <div id="buttons" style="width:616px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
@@ -866,7 +907,7 @@
 
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
-        <div style="width:616px;height:30px;margin-top:260px;margin-left:2px;">
+        <div style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>
