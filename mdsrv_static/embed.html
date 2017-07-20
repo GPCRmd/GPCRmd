@@ -50,6 +50,16 @@
         document.domain=document.domain;
         stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
         
+        function atomFromPosSel(o,posSel){
+            var res_sele =  new NGL.Selection( posSel );
+            var atom_pos="";
+            o.structure.eachAtom(function(a){
+                if (a.atomname == "CA"){
+                    atom_pos=a.index;
+                }
+            },res_sele);
+            return(atom_pos)
+        }
         
         function selWithinComponent(o,dist_comp){
             var show = dist_comp[0];
@@ -101,8 +111,28 @@
                     $("#last_played").text(mytraj_nm);
                     trajComp.signals.frameChanged.add(function(){
                         var fnum=trajComp.trajectory.currentFrame;
+                        var fpSelInt= parent.updateFlarePlotFrame(fnum);                    
                         $("#trajRange").val(fnum);
                         $("#trajRange").slider("refresh");
+                        /////////
+                        if (! $.isEmptyObject(fpSelInt)){
+                            var uplinksli=[];
+                            var uplinkres="";
+                            for (posfrom in fpSelInt){
+                                var atom_from=atomFromPosSel(o,posfrom);
+                                var postoLi=fpSelInt[posfrom];
+                                uplinkres+=(posfrom + " or ");
+                                for (posn=0 ; posn < postoLi.length ; posn++){
+                                    var posto=postoLi[posn];
+                                    uplinkres+=(posto + " or ");
+                                    var atom_to=atomFromPosSel(o,posto);
+                                    uplinksli.push([atom_from,atom_to])
+                                }
+                            }
+                            stage.getRepresentationsByName('FP int').setParameters({atomPair: uplinksli});
+                            stage.getRepresentationsByName('FP res').setSelection( uplinkres.slice(0, -4));
+                        }
+                        /////////
                         if (bs_info.length > 0){
                             var bs_info_li=bs_info.split("-");
                             var recept =bs_info_li[0];
@@ -120,7 +150,7 @@
                             }
                         }
                         if (dist_within_li.length > 0){
-                            for (wth_n in dist_within_li){
+                            for (wth_n=0 ; wth_n < dist_within_li.length ; wth_n++){
                                 var dist_comp=  dist_within_li[wth_n].split("-");
                                 var show=dist_comp[0];
                                 var ligSele=dist_comp[2];
@@ -145,7 +175,7 @@
         function fromChainLiToNGL(nonGPCR){ 
             var nonGPCR_li=nonGPCR.split(",");
             var nonGPCR_mod="";
-            for (chain_n in nonGPCR_li){
+            for (chain_n =0 ; chain_n < nonGPCR_li.length ; chain_n++){
                 nonGPCR_mod+=":"+nonGPCR_li[chain_n]+" , ";
             }
             nonGPCR_mod=nonGPCR_mod.slice(0,-3);
@@ -158,7 +188,7 @@
                 stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
                 stage.getRepresentationsByName(lbl_name1).setVisibility(false);
             }
-            for (repN in clickedRepLi){
+            for (repN=0 ;repN < clickedRepLi.length ; repN++){
                 var repNm =clickedRepLi[repN];
                 if (typeof repNm =="string"){
                     var rep_to_rv=stage.getRepresentationsByName(repNm);
@@ -241,14 +271,14 @@
                             if (! clickedRep[atom2]){
                                 clickedRep[atom2]=[];
                             }
-                            for (an in add1){
+                            for (an =0 ; an < add1.length ; an++){
                                 var repNm=add1[an];
                                 clickedRep[atom1][clickedRep[atom1].length]=repNm;
                                 if (!(repNm in clickedRepLi)){
                                     clickedRepLi.push(repNm);
                                 }
                             }
-                            for (an in add2){
+                            for (an =0 ; an < add2.length ; an++){
                                 clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                             }
                             labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
@@ -264,7 +294,7 @@
                         } else {
                             if (atom1 in clickedRep){
                                 var toRv=clickedRep[atom1];
-                                for (rvN in toRv){
+                                for (rvN=0 ; rvN < toRv.length ; rvN++){
                                     var repName=toRv[rvN];
                                     stage.getRepresentationsByName(repName).list[0].repr.clear();
                                     stage.getRepresentationsByName(repName).setVisibility(false);
@@ -357,6 +387,7 @@
             var all_resids_sb=results["allresidssb"];
             var hbonds_inter=results["hb_inter"];
             var sasa_resids=results["all_resids_sasa"];
+            var fpSelInt = results["fpSelInt"];
             var cons_pos = parent.pd; //[!!!]
             var dist_within_li=parent.dist_of;
             var  pdA= high_pre["A"];
@@ -415,7 +446,7 @@
             } 
             
             if (nonGPCR.length > 0){
-                for (ng in nonGPCR){
+                for (ng=0 ; ng < nonGPCR.length ; ng++){
                     chains_s = nonGPCR[ng];
                     nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: nonGPCR_sel } );
@@ -423,7 +454,7 @@
             }
             if (cp.length > 0){
                 var all_cp="";
-                for (comp in cp){
+                for (comp=0 ; comp < cp.length ; comp++){
                     all_cp += (cp[comp] + " or ");
                 }
                 all_cp = all_cp.slice(0, -3);
@@ -432,7 +463,7 @@
             if (cons_pos == "y"){
                 var pd_all = [pdA,pdB,pdC,pdF];
                 var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
-                for (ind in pd_all) {
+                for (ind =0 ; ind < pd_all.length ; ind++){
                     class_li=pd_all[ind];
                     if (typeof class_li == "object"){
                         if (class_li.length > 0){
@@ -445,7 +476,7 @@
             }            
             
             if (layers_li.length > 0){
-                for (lN in layers_li){
+                for (lN = 0; lN < layers_li.length; lN++) {
                     var layer_all = layers_li[lN];
                     var sel = layer_all[0];
                     var rep = layer_all[1];
@@ -474,7 +505,7 @@
             }
 
             if (dist_within_li.length > 0){
-                for (wth_n in dist_within_li){
+                for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                     var dist_comp=  dist_within_li[wth_n].split("-");
                     var show = dist_comp[0];
                     var ligSele=dist_comp[2];
@@ -516,10 +547,10 @@
             if (dist_groups_li.length>0){
                 var cd_id=0;
                 var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
-                for (distgN in dist_groups_li){
+                for (distgN = 0; distgN < dist_groups_li.length; distgN++) {
                     var dist_group=dist_groups_li[distgN];
                     var dist_pair_li=dist_group.split(",");
-                    for (pair_n in dist_pair_li){
+                    for (pair_n = 0; pair_n < dist_pair_li.length; pair_n++) {
                         var d_from_to_str = dist_pair_li[pair_n];
                         if (typeof d_from_to_str == "string"){
                             var d_from_to = d_from_to_str.split("-");
@@ -572,7 +603,7 @@
 
             if (int_res_li.length > 0){
                 var final_sele=[];
-                for (pos_info_n in int_res_li){
+                for (pos_info_n = 0; pos_info_n < int_res_li.length; pos_info_n++) {
                     var pos_info = int_res_li[pos_info_n];
                     var pos = pos_info[0]+":"+pos_info[1];
                     final_sele.push(pos);
@@ -593,7 +624,7 @@
             
             if (int_res_li_ch.length > 0){
                 var final_sele=[];
-                for (pos_info_n in int_res_li_ch){
+                for (pos_info_n = 0; pos_info_n < int_res_li_ch.length; pos_info_n++) {
                     var pos_info = int_res_li_ch[pos_info_n];
                     var pos = pos_info[0]+":"+pos_info[1];
                     final_sele.push(pos);
@@ -612,6 +643,25 @@
 
             }
 
+            if (! $.isEmptyObject(fpSelInt)){
+                var linksli=[];
+                var linkres="";
+                for (posfrom in fpSelInt){
+                    var atom_from=atomFromPosSel(o,posfrom);
+                    var postoLi=fpSelInt[posfrom];
+                    linkres+= (posfrom + " or ");
+                    for (posn=0 ; posn < postoLi.length ; posn++){
+                        var posto=postoLi[posn];
+                        
+                        var atom_to=atomFromPosSel(o,posto);
+                        linksli.push([atom_from,atom_to])
+                        linkres += (posto +" or ");
+                    }
+                }
+                o.addRepresentation( "distance", { atomPair: linksli, colorValue: "#000000", colorScheme:"uniform", labelVisible:false   ,fontWeight: "normal" ,name : 'FP int' } );            
+                o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: linkres.slice(0, -4) , name:"FP res" } );
+
+            }            
             //o.centerView();
         }
 /////////// Set variables:
@@ -802,21 +852,21 @@
         });
         });
     </script>
-    <div id="toiframe" style="width:590px">
-        <div id="viewport" style="width:590px; height:370px;"></div>
+    <div id="toiframe" style="width:620px">
+        <div id="viewport" style="width:620px; height:420px;"></div><!--395 -> 445 -->
         <div style="height:80px">
-            <div id="buttons" style="width:586px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+            <div id="buttons" style="width:616px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
             </div>
             <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:65px">
             </div>
         </div>
-        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:215px;margin-left:2px;visibility:hidden">
+        <div id="trajRangeDiv" style="position:absolute;width:616px;height:30px;margin-top:265px;margin-left:2px;visibility:hidden">
             <p style="margin-right:18px;font-size:12px;color:#B8B8B8" class="pull-right" id="last_played"></p>
             <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
 
           <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
         </div>
-        <div style="width:586px;height:30px;margin-top:260px;margin-left:2px;">
+        <div style="width:616px;height:30px;margin-top:260px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>

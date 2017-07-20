@@ -183,7 +183,7 @@ def obtain_dyn_files(paths_dict):
             structure_file_id=f_id
             structure_name=myfile_name
         elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
-            traj_list.append((myfile, myfile_name, f_id))
+            traj_list.append([myfile, myfile_name, f_id])
     return (structure_file,structure_file_id,structure_name, traj_list)
 
 def obtain_prot_chains(pdb_name):
@@ -616,18 +616,27 @@ def obtain_domain_url(request):
 
 def get_fplot_path(dyn_id,traj_list):
     fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
-    fplot_path=[]
+    fpdir_url=""
+    fp_exist=False
+    li_n=0
     for (trajfile, trajfile_name, f_id) in traj_list:
-        fpfilename = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!
+        fpfilename = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!        
         ###########[!] Change get_file_name() to obtain it automatically
         (pre,post)=fpfilename.split(".")
         fpfilename=pre+"_hbonds."+post
         ###########
         fppath = path.join(fpdir,fpfilename)
         exists=path.isfile(fppath)
+        addname=""
         if exists:
-            fplot_path.append([f_id,fpfilename,trajfile_name])
-    return fplot_path
+            fp_exist=True
+            addname=fpfilename
+            #fplot_path.append([f_id,fpfilename,trajfile_name])
+        traj_list[li_n].append(addname)
+        li_n+=1
+    if fp_exist:
+        fpdir_url = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+    return (traj_list,fpdir_url)
         
     
 
@@ -807,8 +816,8 @@ def index(request, dyn_id):
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
-        fplot_path=get_fplot_path(dyn_id,traj_list)
-        #fplot_path=[]#[!!!!]
+        (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
+
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
@@ -921,6 +930,7 @@ def index(request, dyn_id):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
+                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -928,7 +938,6 @@ def index(request, dyn_id):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
-                        #"traj_list": [("Dynamics/f500.dcd","f500.dcd",1),("Dynamics/f1000.dcd","f1000.dcd",2),("Dynamics/f2500.dcd","f2500.dcd",3),("Dynamics/f5000.dcd","f5000.dcd",4)],#[!] TEST
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -943,8 +952,8 @@ def index(request, dyn_id):
                         "chains" : chain_str, # string defining GPCR chains. If empty, GPCR chains = protein
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fplot_path" : fplot_path,
-                        "seg_li":",".join(["-".join(seg) for seg in seg_li])
+                        "seg_li":",".join(["-".join(seg) for seg in seg_li]),
+                        "fpdir" : fpdir,
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -964,7 +973,7 @@ def index(request, dyn_id):
                         "gpcr_pdb": "no",
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fplot_path" : fplot_path
+                        "fpdir" : fpdir,
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -982,7 +991,7 @@ def index(request, dyn_id):
                         "chains" : chain_str,            
                         "gpcr_pdb": "no",
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fplot_path" : fplot_path
+                        "fpdir" : fpdir,
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -999,7 +1008,7 @@ def index(request, dyn_id):
                     "ligands_short": ",".join(lig_li_s),                  
                     "chains" : "",            
                     "gpcr_pdb": "no",
-                    "fplot_path" : fplot_path
+                    "fpdir" : fpdir,
                     }
             return render(request, 'view/index.html', context)
 
@@ -1876,3 +1885,16 @@ def fplot_gpcr(request, dyn_id, filename,seg_li):
             }
     return render(request, 'view/flare_plot.html', context)
     
+    
+def fplot_gpcr_slide(request, dyn_id, filename,seg_li):
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+    prot_names=obtain_protein_names(dyn_id)
+    traj_id=int(re.match("^\d+",filename).group())
+    traj_name=DyndbFiles.objects.get(id=traj_id).filename
+    
+    context={"json_path":fpdir + filename,
+             "prot_names": prot_names,
+             "traj_name" :traj_name,
+             "dyn_id":dyn_id
+            }
+    return render(request, 'view/flare_plot_slide.html', context)

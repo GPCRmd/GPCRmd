@@ -1,7 +1,7 @@
 from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
-from view.traj2flare_modified import * #[!]
-from view.views import findGPCRclass, obtain_prot_chains, obtain_DyndbProtein_id_list, obtain_seq_pos_info
+from view.traj2flare_modified_wn import * #[!] Now it's the wn version (new version that uses MDtraj wernet_nilsson function)
+from view.views import findGPCRclass, obtain_all_chains, obtain_DyndbProtein_id_list, obtain_seq_pos_info
 from dynadb.pipe4_6_0 import *
 from view.data import *
 import re
@@ -45,7 +45,7 @@ def create_fplot(self,dyn_id,newpath,pdbpath=None,trajpath=None,traj_id=None,str
     if (pdbpath==None):
         pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
        
-    chain_name_li=obtain_prot_chains(pdbpath)
+    chain_name_li=obtain_all_chains(pdbpath)
     if (len(chain_name_li)==0):
         error="Protein chains not found."
         self.stdout.write(self.style.NOTICE(error))

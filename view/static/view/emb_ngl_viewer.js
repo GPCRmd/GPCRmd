@@ -1,5 +1,6 @@
 $(document).ready(function(){
     
+    
     $(".sel_input, .inputdist, .dist_from, .dist_to").val("");
     //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
@@ -25,7 +26,7 @@ $(document).ready(function(){
     }
 
     function click_unclick(class_name){
-        $("#main_container").on("click",class_name,function(){
+        $("body").on("click",class_name,function(){
             pos_class=$(this).attr("class");
             if(pos_class.indexOf("active") > -1){
                 $(this).removeClass("active");
@@ -98,18 +99,40 @@ $(document).ready(function(){
     $(".traj_element").click(function(){
         var traj_p=$(this).data("tpath");
         var traj_n=$(this).text();
-        $("#selectedTraj").data("tpath",traj_p).html(traj_n+' <span class="caret">');
+        var fpfile_new=$(this).data("fplot_file");
+        var old_fp=$("#selectedTraj").data("fplot_file");
+        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
         $(this).css("background-color","#FFF7F7").addClass("tsel");
         $(this).siblings().css("background-color","#FFFFFF").removeClass("tsel");
+        
+        /* [!] Link to big FP with slide
+        var oldhref = $("#gotofplot").attr("href");
+        newhref=oldhref.replace(/\w+.json/i,fpfile_new);
+        $("#gotofplot").attr("href",newhref);
+        */
+        
+        if (fpfile_new != old_fp){
+            if (fpfile_new){
+                d3.json(fpdir+fpfile_new, function(jsonData){
+                    $("#flare-container").html("");
+                    plot = createFlareplot(600, jsonData, "#flare-container");
+                    allEdges= plot.getEdges();
+                    numfr = plot.getNumFrames();
+                    $(".summarizeFP").css("display","inline");
+                });
+                
+            } else {
+                alert_msg='<div class="alert alert-info">\
+                            There is no flare plot available for this trajectory yet.\
+                          </div>';
+                $("#flare-container").html(alert_msg);
+                $(".summarizeFP").css("display","none");
+            }
+            fpSelInt={};
+            $("#selectionDiv").trigger("click");
+        }        
     });
     
-    /*function obtainCheckedTrajs(){
-        var traj = [];
-        $(".traj_element").each(function(){
-            traj[traj.length]=$(this).data("tpath");
-        }); 
-        return traj;
-    }*/
     
     function obtainDicts(gpcr_pdb_dict){
         all_gpcr_dicts={};
@@ -146,7 +169,118 @@ $(document).ready(function(){
         all_gpcr_dicts=dicts_results[0];
         num_gpcrs =dicts_results[1];
     }
+    
+//-------- Flare Plots --------
 
+    var fpdir=$("#fpdiv").data("fpdir");
+    var fpfile = $("#selectedTraj").data("fplot_file");
+    //fpfile="10140_trj_4_hbonds.json";//
+
+    var plot, allEdges, numfr;
+    var fpSelInt={};
+    if (fpdir){
+        d3.json(fpdir+fpfile, function(jsonData){
+            plot = createFlareplot(600, jsonData, "#flare-container");
+            allEdges= plot.getEdges()
+            numfr = plot.getNumFrames();
+        });
+    };    
+    
+    
+    
+    var updateFlarePlotFrame = function(framenum){
+        if (plot){
+            if (! $(".summarizeFP").hasClass("active")){
+                plot.setFrame(Number(framenum));
+                updateFPInt();
+            }
+        }
+        if ($("#FPdisplay").hasClass("active")){
+            return(fpSelInt);
+        } else {
+            return({});
+        }
+    }
+    window.updateFlarePlotFrame=updateFlarePlotFrame;
+    
+    
+    
+    var fpgpcrdb_dict;
+    for (gpcr_id in all_gpcr_dicts){
+        fpgpcrdb_dict=all_gpcr_dicts[gpcr_id]["gpcrDB_num"];
+    }
+    
+    $("#flare-container").on("click" , "g.node" , function(){
+        if (allEdges){
+            var nodename=$(this).attr("id");
+            if (nodename.indexOf("node-") !== -1){
+                var nodenum=nodename.split("-")[1];
+                var nodeclass=$(this).attr("class");
+                var nodepos=fpgpcrdb_dict[nodenum].join(":");
+                if (nodeclass.indexOf("toggledNode") == -1){
+                    delete fpSelInt[nodepos];
+                } else {
+                    var edges=[];
+                    allEdges.forEach(function(e){
+                        if (e.edge.name1==nodenum){
+                            var othernum=e.edge.name2;
+                            edges.push(fpgpcrdb_dict[othernum].join(":"));
+                        } else if (e.edge.name2==nodenum){
+                            var othernum=e.edge.name1;
+                            edges.push(fpgpcrdb_dict[othernum].join(":"));
+                        }
+                    });
+                    if (edges.length > 0){
+                        fpSelInt[nodepos]=edges;
+                    }
+                }
+                $("#selectionDiv").trigger("click");
+            }
+        }
+    });
+
+    function updateFPInt(){
+        allEdges= plot.getEdges()
+        var updFpSelInt={}
+        $("#flare-container").find("g.node.toggledNode").each(function(){
+            var nodename=$(this).attr("id");
+            if (nodename.indexOf("node-") !== -1){
+                var nodenum=nodename.split("-")[1];
+                var nodepos=fpgpcrdb_dict[nodenum].join(":");
+                
+                var edges=[];
+                allEdges.forEach(function(e){
+                    if (e.edge.name1==nodenum){
+                        var othernum=e.edge.name2;
+                        edges.push(fpgpcrdb_dict[othernum].join(":"));
+                    } else if (e.edge.name2==nodenum){
+                        var othernum=e.edge.name1;
+                        edges.push(fpgpcrdb_dict[othernum].join(":"));
+                    }
+                });
+                if (edges.length > 0){
+                    updFpSelInt[nodepos]=edges;
+                }
+            }
+        })
+        fpSelInt = updFpSelInt;
+    }
+
+
+
+    $("#fpdiv").on("click",".summarizeFP",function(){
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active");
+            plot.setFrame(0);
+        } else{
+            $(this).addClass("active");
+            plot.framesSum(0, numfr);
+        }
+        updateFPInt();
+        $("#selectionDiv").trigger("click");
+    });
+
+    
 //-------- AJAX --------
 
     function csrfSafeMethod(method) {
@@ -194,6 +328,16 @@ $(document).ready(function(){
             arrow.addClass("glyphicon-chevron-up");
         }
     });
+    
+    $("#show_hide_info").click(function(){
+
+        if ($("#more_info").attr("aria-expanded")=="true"){
+            $("#show_hide_info_text").text("Show info");
+        } else {
+            $("#show_hide_info_text").text("Hide info");
+        }
+    });
+    
 //-------- Color dropdown --------
 
     function displayDropBtn(input_select, btn_select){
@@ -370,6 +514,7 @@ $(document).ready(function(){
                                            <option value="sstruc">Structure</option>\
                                            <option value="resname">Residue name</option>\
                                            <option value="residueindex">Residue index</option>\
+                                           <option value="hydrophobicity">Hydrophobicity</option>\
                                         </select>\
                                       </div>\
                                       <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
@@ -548,7 +693,7 @@ $(document).ready(function(){
         if (num_gpcrs >1){
             add_or=" or ";
         }    
-        for (i in lonely_gpcrs) {
+        for (i = 0; i < lonely_gpcrs.length; i++) {
             var my_gpcr = lonely_gpcrs[i];
             var subst_pos_all ="";
             for (gpcr_id in all_gpcr_dicts){
@@ -597,7 +742,7 @@ $(document).ready(function(){
         if (num_gpcrs >1){
             add_or=" or ";
         }    
-        for (i in gpcr_ranges) {
+        for (i=0 ; i < gpcr_ranges.length ; i++){
             var gpcr_pair_str = gpcr_ranges[i];
             var gpcr_pair=gpcr_pair_str.split(new RegExp('\\s*-\\s*','g'));
             var pos_range_all="";
@@ -609,7 +754,7 @@ $(document).ready(function(){
                 gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
                 var chain_pair=[];
                 var res_pair=[];
-                for (n in gpcr_pair){
+                for (n=0 ; n < gpcr_pair.length ; n++){
                     var gpcr_n=gpcr_pair[n];  
                     if(gpcr_comb_dict[gpcr_n] != undefined) {
                         var res_chain=gpcr_comb_dict[gpcr_n];  
@@ -640,7 +785,7 @@ $(document).ready(function(){
                         end=all_chains.indexOf(chain_pair[1]);
                         var middle_str="";
                         considered_chains=all_chains.slice(start+1,end);
-                        for (chain in considered_chains){
+                        for (chain=0 ; chain < considered_chains.length ; chain++){
                             middle_str += " or :"+ considered_chains[chain];
                         }
                         pos_range=" ("+res_pair[0] + "-:"+chain_pair[0] + middle_str+ " or 1-"+res_pair[1]+":" +chain_pair[1]+")";
@@ -698,7 +843,7 @@ $(document).ready(function(){
         }
         var sel_sp = sel.match(/(\s)+-(\s)+/g);
         if (sel_sp != null){ //Remove white spaces between "-" and nums
-            for (i in sel_sp){
+            for(i=0; i < sel_sp.length ; i++){
                 var sp=sel_sp[i];
                 sel=sel.replace(sp,"-");
             }
@@ -819,7 +964,7 @@ $(document).ready(function(){
             if (range != "None"){
                 if (range.indexOf(",") > -1){
                     range_li=range.split(",");
-                    for (num in range_li){
+                    for (num=0; num < range_li.length ; num++){
                         selPosList[selPosList.length]=" " + range_li[num];
                     }
                 } else{
@@ -850,6 +995,7 @@ $(document).ready(function(){
         $(".high_pd.active").each(function(){
             $(this).removeClass("active");
         });
+        $("#selectionDiv").trigger("click");
     });    
 
 
@@ -871,7 +1017,7 @@ $(document).ready(function(){
         var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"};
         var legend="";
         if (legend_el.length > 1){
-            for (el in legend_el){
+            for (el=0; el < legend_el.length ; el++){
                 var add=color_dict[legend_el[el]];
                 legend+=add;
             }
@@ -904,7 +1050,7 @@ $(document).ready(function(){
     });
 
     var select="";
-    for (comp_n in comp_lg){
+    for (comp_n = 0; comp_n < comp_lg.length ; comp_n++){
         var option='<option value="'+comp_sh[comp_n]+'">'+comp_lg[comp_n]+'</option>';
         select += option;
     }
@@ -1184,12 +1330,12 @@ $(document).ready(function(){
                                         }
                                         mylist.push([res_int_1st[0],gnum_mylist ,res_int_1st[3] ]);
                                         //
-                                        for (info in res_int_1st_ok){
+                                        for (info=0 ; info < res_int_1st_ok.length ; info++){
                                             table_html+='<td>'+res_int_1st_ok[info]+'</td>';
                                         }
                                         table_html+='</tr>';
                                         var res_int_rest=res_int.slice(1,res_int.length);
-                                        for (res_infoN in res_int_rest){
+                                        for (res_infoN=0; res_infoN < res_int_rest.length ; res_infoN++){
                                             var res_info=res_int_rest[res_infoN];
                                             var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
                                             //
@@ -1200,7 +1346,7 @@ $(document).ready(function(){
                                             mylist.push([res_info[0],gnum_mylist ,res_info[3] ]);
                                             //
                                             table_html+='<tr>';
-                                            for (infoN in res_info_ok){
+                                            for (infoN=0 ; infoN < res_info_ok.length ; infoN++){
                                                 var info=res_info_ok[infoN];
                                                 table_html+='<td>'+info+'</td>';
                                             }
@@ -1244,7 +1390,7 @@ $(document).ready(function(){
                                     for (lig in int_data){
                                         res_int=int_data[lig];
                                         var res_int_ok=[["Position","Freq"]];
-                                        for (posN in res_int){
+                                        for (posN=0 ; posN < res_int.length ; posN++){
                                             var pos=res_int[posN];
                                             var gnum=gnumFromPosChain(pos[0].toString(), pos[1]);
                                             if (gnum == "-"){
@@ -1515,7 +1661,7 @@ $(document).ready(function(){
     });
     
     function addClickedDistInputs(clickedDist){
-        for (dpairN in clickedDist){
+        for (dpairN=0 ; dpairN < clickedDist.length ; dpairN++){
             var dpair0 = clickedDist[dpairN][0];
             var dpair1 = clickedDist[dpairN][1];
             if ($(".dist_btw").children().length < 20){
@@ -1568,7 +1714,7 @@ $(document).ready(function(){
         });
         str_dPairsInp=JSON.stringify(dPairsInp);       
         var clickedDist=[];
-        for (addPosN in clickedDist_pre){
+        for (addPosN=0 ; addPosN < clickedDist_pre.length ; addPosN++){
             var addpos=clickedDist_pre[addPosN];
             if (str_dPairsInp.indexOf(JSON.stringify(addpos)) == -1){
                 clickedDist.push(addpos);
@@ -1866,7 +2012,7 @@ $(document).ready(function(){
                                 }
                                 if (isEmpty){
                                     var errors_html="";
-                                    for (error_msg in small_error){
+                                    for (error_msg=0; error_msg< small_error.length; error_msg++){
                                         errors_html+="<p>"+small_error[error_msg]+"</p>";
                                     }
                                     errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html+'</div>';
@@ -1974,7 +2120,7 @@ $(document).ready(function(){
                                         } 
                                         $("#dist_chart").append(plot_html);
                                         var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
-                                        for (chartN in chart_cont_li){
+                                        for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
                                             var chart_cont=chart_cont_li[chartN][0];
                                             var data=chart_cont_li[chartN][1];
                                             var options=chart_cont_li[chartN][2];
@@ -1993,7 +2139,7 @@ $(document).ready(function(){
                                         if (small_error){
     //////////////////
                                             var errors_html="";
-                                            for (error_msg in small_error){
+                                            for (error_msg=0 ; error_msg < small_error.length ; error_msg++){
                                                 errors_html+="<p>"+small_error[error_msg]+"</p>";
                                             }
                                             errors_html_div='<div style="margin:3px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
@@ -2124,12 +2270,12 @@ $(document).ready(function(){
     });
 //-------- Select protein segment to highligh/select from the sequence --------
 
+    var firstsel=true;
     function selectFromSeq(){
         var click_n=1;
         var seq_pos_1;
         var seq_pos_fin;
         var pos_li=[];
-        var firstsel=true;
         $(".seq_sel").click(function(){    
             if (click_n==1){
                 var range=$(this).attr("class"); 
@@ -2222,7 +2368,7 @@ $(document).ready(function(){
             end=all_chains.indexOf(chain_r);
             var middle_str="";
             considered_chains=all_chains.slice(start+1,end);
-            for (chain in considered_chains){
+            for (chain=0; chain < considered_chains.length ; chain++){
                 middle_str += " or :"+ considered_chains[chain];
             }
             var pos_chain_str= pos_l + "-:"+chain_l +middle_str +" or 1-"+pos_r+":" +chain_r;
@@ -2237,7 +2383,7 @@ $(document).ready(function(){
         var o_min;
         sel_ranges=uniq(sel_ranges);
         if (chains_str == ""){
-            for (p in sel_ranges) {
+            for (p=0 ; p < sel_ranges.length ; p++){
                 var my_range_str=sel_ranges[p];
                 var my_range = my_range_str.match(/(\d)+/g);
                 var my_min=my_range[0];
@@ -2254,7 +2400,7 @@ $(document).ready(function(){
                }
             }
         } else { 
-            for (p in sel_ranges) {
+            for (p=0 ; p < sel_ranges.length ; p++){
                 var my_range_str=sel_ranges[p];
                 var my_range = my_range_str.match(/(\d)+/g);
                 var my_min=my_range[0];
@@ -2302,11 +2448,11 @@ $(document).ready(function(){
             pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
             var sel_input_cont=$(".seq_input_row:last-child").find(".seq_input");
             var act_val=sel_input_cont.val();
-            var or="";
             if (act_val){
-                or = " or ";
+                var fin_val = "("+act_val + ") or protein and ("+ pos_str +")";
+            } else {
+                var fin_val = "protein and ("+ pos_str +")";
             }
-            var fin_val = act_val + or + "protein and ("+ pos_str +")";
             sel_input_cont.val(fin_val);
             seq_ids.length = 0
             $('.sel').each(function(){
@@ -3071,7 +3217,7 @@ $(document).ready(function(){
                                 } 
                                 $("#rmsd_chart").append(RMSDplot_html);
                                 var chart_cont_li =[[newRMSDgraph_sel+"t",data_t,options_t],[newRMSDgraph_sel+"f",data_f,options_f]];
-                                for (chartN in chart_cont_li){
+                                for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
                                     var chart_cont=chart_cont_li[chartN][0];
                                     var data=chart_cont_li[chartN][1];
                                     var options=chart_cont_li[chartN][2];
@@ -3091,7 +3237,7 @@ $(document).ready(function(){
                                 
                                 if (small_errors.length >= 1){
                                     errors_html="";
-                                    for (error_msg in small_errors){
+                                    for (error_msg =0 ; error_msg < small_errors.length ; error_msg++){
                                         errors_html+="<p>"+small_errors[error_msg]+"</p>";
                                     }
                                     errors_html_div='<div style="margin-bottom:5px;clear:left" class="alert alert-warning"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+errors_html;
@@ -3159,14 +3305,7 @@ $(document).ready(function(){
         }
     });
     
-//-------- Flare Plots --------    
-    $("#fplot_traj").change(function(){
-        var seltraj= $(this).val();
-        var oldhref = $("#gotofplot").attr("href");
-        newhref=oldhref.replace(/\w+.json/i,seltraj);
-        $("#gotofplot").attr("href",newhref);
-    });
-    
+
 //-------- Buttons --------
 
     click_unclick(".high_pdA");
@@ -3203,7 +3342,7 @@ $(document).ready(function(){
             var chains_s=/:(.*)$/.exec(chains_str)[1];
             var chains_l = chains_s.match(/\w+/g);
             receptorsel="protein and (";
-            for (cN in chains_l){
+            for (cN=0 ; cN < chains_l.length ;cN++){
                 receptorsel+=":"+chains_l[cN]+ " , ";
             }
             receptorsel=receptorsel.slice(0,-3) +")";
@@ -3247,6 +3386,10 @@ $(document).ready(function(){
         var receptorsel=gpcr_selection_active();
         bs_info=obtainBS();
         var resultHBSB=selectionHBSB();
+        fpSelInt_send={};
+        if ($("#FPdisplay").hasClass("active")){
+            fpSelInt_send=fpSelInt;
+        }
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -3264,6 +3407,7 @@ $(document).ready(function(){
                 "allresidshbInt":resultHBSB["all_resids_inter"],
                 "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
+                "fpSelInt":fpSelInt_send
         });
     }
     
@@ -3296,7 +3440,7 @@ $(document).ready(function(){
     
     function join_lil(myLil){
          var myLi=[];
-         for (e in myLil){
+         for (e=0 ; e < myLil.length ; e++ ){
              var res_s = myLil[e].join("-");
              myLi[myLi.length]=res_s.slice(0, -1);
          }
@@ -3334,7 +3478,7 @@ $(document).ready(function(){
              }
         }
         var layers_li=[];
-        for (layN in layers_lil){
+        for (layN=0 ; layN < layers_lil.length ;layN++){
             layer_l =layers_lil[layN];
             layer_l=layer_l.join("-,,-");
             layers_li.push(layer_l);
@@ -3434,9 +3578,11 @@ $(document).ready(function(){
         $("#seq_input_all").find(".seq_input").val("");
         $("#seq_input_all").find(".input_dd_color").val("");
         $("#addToSel").css("display","none");
+        firstsel=true;
         $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");
         $("#analysis_salt").find(".showsb.active").removeClass("active");
         $("#analysis_bonds").find(".showhb.active").removeClass("active");
+        $("#FPdisplay").removeClass("active");
     }); 
 });
 
