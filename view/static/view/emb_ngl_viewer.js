@@ -82,10 +82,7 @@ $(document).ready(function(){
         }
     });
     
-    /*$(".settingsB").click(function(){
-        $(this).css("color","green");
-        setTimeout(function(){ $(this).css("color","#585858"); }, 1000);
-    });*/
+
     
 
 //-------- Obtain important data from template --------
@@ -118,7 +115,8 @@ $(document).ready(function(){
                     plot = createFlareplot(600, jsonData, "#flare-container");
                     allEdges= plot.getEdges();
                     numfr = plot.getNumFrames();
-                    $(".summarizeFP").css("display","inline");
+                    $(".showIfTrajFP").css("display","inline");
+                    $(".showIfTrajFPBlock").css("display","block");
                 });
                 
             } else {
@@ -126,7 +124,8 @@ $(document).ready(function(){
                             There is no flare plot available for this trajectory yet.\
                           </div>';
                 $("#flare-container").html(alert_msg);
-                $(".summarizeFP").css("display","none");
+                $(".showIfTrajFP").css("display","none");
+                $(".showIfTrajFPBlock").css("display","none");
             }
             fpSelInt={};
             $("#selectionDiv").trigger("click");
@@ -170,116 +169,8 @@ $(document).ready(function(){
         num_gpcrs =dicts_results[1];
     }
     
-//-------- Flare Plots --------
 
-    var fpdir=$("#fpdiv").data("fpdir");
-    var fpfile = $("#selectedTraj").data("fplot_file");
-    //fpfile="10140_trj_4_hbonds.json";//
-
-    var plot, allEdges, numfr;
-    var fpSelInt={};
-    if (fpdir){
-        d3.json(fpdir+fpfile, function(jsonData){
-            plot = createFlareplot(600, jsonData, "#flare-container");
-            allEdges= plot.getEdges()
-            numfr = plot.getNumFrames();
-        });
-    };    
-    
-    
-    
-    var updateFlarePlotFrame = function(framenum){
-        if (plot){
-            if (! $(".summarizeFP").hasClass("active")){
-                plot.setFrame(Number(framenum));
-                updateFPInt();
-            }
-        }
-        if ($("#FPdisplay").hasClass("active")){
-            return(fpSelInt);
-        } else {
-            return({});
-        }
-    }
-    window.updateFlarePlotFrame=updateFlarePlotFrame;
-    
-    
-    
-    var fpgpcrdb_dict;
-    for (gpcr_id in all_gpcr_dicts){
-        fpgpcrdb_dict=all_gpcr_dicts[gpcr_id]["gpcrDB_num"];
-    }
-    
-    $("#flare-container").on("click" , "g.node" , function(){
-        if (allEdges){
-            var nodename=$(this).attr("id");
-            if (nodename.indexOf("node-") !== -1){
-                var nodenum=nodename.split("-")[1];
-                var nodeclass=$(this).attr("class");
-                var nodepos=fpgpcrdb_dict[nodenum].join(":");
-                if (nodeclass.indexOf("toggledNode") == -1){
-                    delete fpSelInt[nodepos];
-                } else {
-                    var edges=[];
-                    allEdges.forEach(function(e){
-                        if (e.edge.name1==nodenum){
-                            var othernum=e.edge.name2;
-                            edges.push(fpgpcrdb_dict[othernum].join(":"));
-                        } else if (e.edge.name2==nodenum){
-                            var othernum=e.edge.name1;
-                            edges.push(fpgpcrdb_dict[othernum].join(":"));
-                        }
-                    });
-                    if (edges.length > 0){
-                        fpSelInt[nodepos]=edges;
-                    }
-                }
-                $("#selectionDiv").trigger("click");
-            }
-        }
-    });
-
-    function updateFPInt(){
-        allEdges= plot.getEdges()
-        var updFpSelInt={}
-        $("#flare-container").find("g.node.toggledNode").each(function(){
-            var nodename=$(this).attr("id");
-            if (nodename.indexOf("node-") !== -1){
-                var nodenum=nodename.split("-")[1];
-                var nodepos=fpgpcrdb_dict[nodenum].join(":");
-                
-                var edges=[];
-                allEdges.forEach(function(e){
-                    if (e.edge.name1==nodenum){
-                        var othernum=e.edge.name2;
-                        edges.push(fpgpcrdb_dict[othernum].join(":"));
-                    } else if (e.edge.name2==nodenum){
-                        var othernum=e.edge.name1;
-                        edges.push(fpgpcrdb_dict[othernum].join(":"));
-                    }
-                });
-                if (edges.length > 0){
-                    updFpSelInt[nodepos]=edges;
-                }
-            }
-        })
-        fpSelInt = updFpSelInt;
-    }
-
-
-
-    $("#fpdiv").on("click",".summarizeFP",function(){
-        if ($(this).hasClass("active")){
-            $(this).removeClass("active");
-            plot.setFrame(0);
-        } else{
-            $(this).addClass("active");
-            plot.framesSum(0, numfr);
-        }
-        updateFPInt();
-        $("#selectionDiv").trigger("click");
-    });
-
+   
     
 //-------- AJAX --------
 
@@ -488,6 +379,12 @@ $(document).ready(function(){
     var ti_i=1;
     $("#text_input_all").on("click",".ti_add_btn",function(){ 
         if ($("#text_input_all").children().length < 20){
+            var fpsegStr=$("#fpdiv").data("fpseg_li");
+            var addFPschOpt="";
+            if (fpsegStr){
+                addFPschOpt='<option value="FPscheme">GPCR Helices</option>';
+            }
+        
             $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
             var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
                            <div  class="row">\
@@ -514,8 +411,8 @@ $(document).ready(function(){
                                            <option value="sstruc">Structure</option>\
                                            <option value="resname">Residue name</option>\
                                            <option value="residueindex">Residue index</option>\
-                                           <option value="hydrophobicity">Hydrophobicity</option>\
-                                        </select>\
+                                           <option value="hydrophobicity">Hydrophobicity</option>'+addFPschOpt+
+                                        '</select>\
                                       </div>\
                                       <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
                                         <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> \
@@ -579,6 +476,12 @@ $(document).ready(function(){
     var si_i=1;
     $("#seq_input_all").on("click",".si_add_btn",function(){ 
         if ($("#seq_input_all").children().length < 20){
+            var fpsegStr=$("#fpdiv").data("fpseg_li");
+            var addFPschOpt="";
+            if (fpsegStr){
+                addFPschOpt='<option value="FPscheme">GPCR Helices</option>';
+            }
+        
             $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
             var row='<div  class="seq_input_row" id="si_row'+si_i+'" style="margin-bottom:5px">\
                            <div  class="row">\
@@ -605,8 +508,8 @@ $(document).ready(function(){
                                            <option value="sstruc">Structure</option>\
                                            <option value="resname">Residue name</option>\
                                            <option value="residueindex">Residue index</option>\
-                                           <option value="hydrophobicity">Hydrophobicity</option>\
-                                        </select>\
+                                           <option value="hydrophobicity">Hydrophobicity</option>'+addFPschOpt+
+                                        '</select>\
                                       </div>\
                                       <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">\
                                         <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> \
@@ -1360,7 +1263,7 @@ $(document).ready(function(){
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"'></div>\
                                         <div class='checkbox' style='font-size:12px;margin-bottom:0'>\
-		                                    <label><input type='checkbox' name='view_int' class='display_int'>Display interacting residues</label>\
+		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                         </div>\
                                         <div class='int_settings'>\
                                             <div style='display:inline-block;margin:5px 5px 5px 0;cursor:pointer;'>\
@@ -2649,16 +2552,29 @@ $(document).ready(function(){
                             if (hbonds_np.hasOwnProperty(property)) {
                                 var string =property;
                                 var string2 =hbonds_np[property][0][0];
+                                if (/^\d/.test(string2)){
+                                    var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
+                                    acceptorballes="-";
+                                } else {
+                                    var acceptor = string2.match(regex)[0];  // creates array from matches
+                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5]) 
+                                }
+                                
                                 var donor = string.match(regex)[0];  // creates array from matches
-                                var acceptor = string2.match(regex)[0];  // creates array from matches
                                 donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
-                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5])
+
 
                                 tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
                                 for (index = 1; index < hbonds_np[property].length; ++index) {
                                     var string2 =hbonds_np[property][index][0];
-                                    var acceptor = string2.match(regex)[0];  // creates array from matches           
-                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                    if (/^\d/.test(string2)){
+                                        var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
+                                        acceptorballes="-";
+                                    } else {
+                                        var acceptor = string2.match(regex)[0];  // creates array from matches
+                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                    }
+                                    
                                     tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
                                 }
                             }
@@ -2944,7 +2860,7 @@ $(document).ready(function(){
             atomshb_inter.push(atoms_pre2);
             var resids=$(this).data('resids').split('$%$');
             all_resids_inter.push(Number(resids[0]));
-            all_resids_inter.push(Number(resids[1]));
+            all_resids_inter.push(resids[1]);
         });
         
         $("#analysis_salt").find(".showsb.active").each(function(){
@@ -3583,7 +3499,137 @@ $(document).ready(function(){
         $("#analysis_salt").find(".showsb.active").removeClass("active");
         $("#analysis_bonds").find(".showhb.active").removeClass("active");
         $("#FPdisplay").removeClass("active");
+        $("#FPdisplay").text("Display interactions");
+        
+        
+        $("#selectionDiv").trigger("click");
     }); 
+    
+//-------- Flare Plots --------
+
+    var fpdir=$("#fpdiv").data("fpdir");
+    var fpfile = $("#selectedTraj").data("fplot_file");
+    //fpfile="10140_trj_4_hbonds.json";//
+
+    var plot, allEdges, numfr;
+    var fpSelInt={};
+    if (fpdir){
+        d3.json(fpdir+fpfile, function(jsonData){
+            plot = createFlareplot(600, jsonData, "#flare-container");
+            allEdges= plot.getEdges()
+            numfr = plot.getNumFrames();
+        });
+    };    
+    
+    
+    
+    var updateFlarePlotFrame = function(framenum){
+        if (plot){
+            if (! $(".summarizeFP").hasClass("active")){
+                plot.setFrame(Number(framenum));
+                updateFPInt();
+            }
+        }
+        if ($("#FPdisplay").hasClass("active")){
+            return(fpSelInt);
+        } else {
+            return({});
+        }
+    }
+    window.updateFlarePlotFrame=updateFlarePlotFrame;
+    
+    
+    
+    var fpgpcrdb_dict;
+    for (gpcr_id in all_gpcr_dicts){
+        fpgpcrdb_dict=all_gpcr_dicts[gpcr_id]["gpcrDB_num"];
+    }
+    
+    $("#flare-container").on("click" , "g.node" , function(){
+        if (allEdges){
+            var nodename=$(this).attr("id");
+            if (nodename.indexOf("node-") !== -1){
+                var nodenum=nodename.split("-")[1];
+                var nodeclass=$(this).attr("class");
+                var nodepos=fpgpcrdb_dict[nodenum].join(":");
+                if (nodeclass.indexOf("toggledNode") == -1){
+                    delete fpSelInt[nodepos];
+                } else {
+                    var edges=[];
+                    allEdges.forEach(function(e){
+                        if (e.edge.name1==nodenum){
+                            var othernum=e.edge.name2;
+                            edges.push(fpgpcrdb_dict[othernum].join(":"));
+                        } else if (e.edge.name2==nodenum){
+                            var othernum=e.edge.name1;
+                            edges.push(fpgpcrdb_dict[othernum].join(":"));
+                        }
+                    });
+                    if (edges.length > 0){
+                        fpSelInt[nodepos]=edges;
+                    }
+                }
+                $("#selectionDiv").trigger("click");
+            }
+        }
+    });
+
+    function updateFPInt(){
+        allEdges= plot.getEdges()
+        var updFpSelInt={}
+        $("#flare-container").find("g.node.toggledNode").each(function(){
+            var nodename=$(this).attr("id");
+            if (nodename.indexOf("node-") !== -1){
+                var nodenum=nodename.split("-")[1];
+                var nodepos=fpgpcrdb_dict[nodenum].join(":");
+                
+                var edges=[];
+                allEdges.forEach(function(e){
+                    if (e.edge.name1==nodenum){
+                        var othernum=e.edge.name2;
+                        edges.push(fpgpcrdb_dict[othernum].join(":"));
+                    } else if (e.edge.name2==nodenum){
+                        var othernum=e.edge.name1;
+                        edges.push(fpgpcrdb_dict[othernum].join(":"));
+                    }
+                });
+                if (edges.length > 0){
+                    updFpSelInt[nodepos]=edges;
+                }
+            }
+        })
+        fpSelInt = updFpSelInt;
+    }
+
+
+
+    $("#fpdiv").on("click",".summarizeFP",function(){
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active");
+            plot.setFrame(0);
+        } else{
+            $(this).addClass("active");
+            plot.framesSum(0, numfr);
+        }
+        updateFPInt();
+        $("#selectionDiv").trigger("click");
+    });
+
+    $("#fpdiv").on("click","#FPdisplay",function(){
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active");
+            $(this).text("Display interactions");
+        } else {
+            $(this).addClass("active");
+            $(this).text("Hide interactions");
+        }
+        $("#selectionDiv").trigger("click");
+    });
+
+
+    $("#selectionDiv").trigger("click");
+    
+    
 });
 
 
