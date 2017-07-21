@@ -91,7 +91,7 @@ $(document).ready(function(){
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var sel = "";
     var sel_enc = sel;
-    
+    var fpsegStr=$("#fpdiv").data("fpseg_li");
     
     $(".traj_element").click(function(){
         var traj_p=$(this).data("tpath");
@@ -379,7 +379,7 @@ $(document).ready(function(){
     var ti_i=1;
     $("#text_input_all").on("click",".ti_add_btn",function(){ 
         if ($("#text_input_all").children().length < 20){
-            var fpsegStr=$("#fpdiv").data("fpseg_li");
+            //var fpsegStr=$("#fpdiv").data("fpseg_li");
             var addFPschOpt="";
             if (fpsegStr){
                 addFPschOpt='<option value="FPscheme">GPCR Helices</option>';
@@ -476,7 +476,7 @@ $(document).ready(function(){
     var si_i=1;
     $("#seq_input_all").on("click",".si_add_btn",function(){ 
         if ($("#seq_input_all").children().length < 20){
-            var fpsegStr=$("#fpdiv").data("fpseg_li");
+            //var fpsegStr=$("#fpdiv").data("fpseg_li");
             var addFPschOpt="";
             if (fpsegStr){
                 addFPschOpt='<option value="FPscheme">GPCR Helices</option>';
@@ -3406,7 +3406,8 @@ $(document).ready(function(){
             projection="o"
         }
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
-        var add_url_var ={"traj":encode(traj) , 
+        var add_url_var ={"traj":encode(traj) ,
+                            "fp":encode(fpsegStr),
                             "ly":encode(layers_li) , 
                             "cp":encode(cp),
                             "la":encode(high_pre["A"]),
@@ -3545,31 +3546,47 @@ $(document).ready(function(){
         fpgpcrdb_dict=all_gpcr_dicts[gpcr_id]["gpcrDB_num"];
     }
     
+    
+    function captureClickedFPInt(nodenum,nodeclass){
+        var nodepos=fpgpcrdb_dict[nodenum].join(":");
+        if (nodeclass.indexOf("toggledNode") == -1){
+            delete fpSelInt[nodepos];
+        } else {
+            var edges=[];
+            allEdges.forEach(function(e){
+                if (e.edge.name1==nodenum){
+                    var othernum=e.edge.name2;
+                    edges.push(fpgpcrdb_dict[othernum].join(":"));
+                } else if (e.edge.name2==nodenum){
+                    var othernum=e.edge.name1;
+                    edges.push(fpgpcrdb_dict[othernum].join(":"));
+                }
+            });
+            if (edges.length > 0){
+                fpSelInt[nodepos]=edges;
+            }
+        }
+        $("#selectionDiv").trigger("click");    
+    }
+    
+    $("#flare-container").on("click" , "g.trackElement" , function(){
+        if (allEdges){
+            var trackname=$(this).attr("id");
+            if (trackname.indexOf("trackElement-") !== -1){
+                var tracknum=trackname.split("-")[1];
+                var nodeclass=$("g#node-"+tracknum).attr("class");
+                captureClickedFPInt(tracknum,nodeclass);
+            }
+        }
+    });
+    
     $("#flare-container").on("click" , "g.node" , function(){
         if (allEdges){
             var nodename=$(this).attr("id");
             if (nodename.indexOf("node-") !== -1){
-                var nodenum=nodename.split("-")[1];
+                var nodenum=nodename.split("-")[1];                
                 var nodeclass=$(this).attr("class");
-                var nodepos=fpgpcrdb_dict[nodenum].join(":");
-                if (nodeclass.indexOf("toggledNode") == -1){
-                    delete fpSelInt[nodepos];
-                } else {
-                    var edges=[];
-                    allEdges.forEach(function(e){
-                        if (e.edge.name1==nodenum){
-                            var othernum=e.edge.name2;
-                            edges.push(fpgpcrdb_dict[othernum].join(":"));
-                        } else if (e.edge.name2==nodenum){
-                            var othernum=e.edge.name1;
-                            edges.push(fpgpcrdb_dict[othernum].join(":"));
-                        }
-                    });
-                    if (edges.length > 0){
-                        fpSelInt[nodepos]=edges;
-                    }
-                }
-                $("#selectionDiv").trigger("click");
+                captureClickedFPInt(nodenum,nodeclass)
             }
         }
     });
