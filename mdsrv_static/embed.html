@@ -449,7 +449,11 @@
             
             
             if (receptorsel.length > 0){
-                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel } );
+                if (fpsegStr){
+                    o.addRepresentation( "cartoon", { colorScheme: FPscheme,  sele: receptorsel } );
+                } else {
+                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel } );
+                }
             } 
             
             if (nonGPCR.length > 0){
@@ -724,7 +728,11 @@
             
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
+                        if (fpsegStr){
+                            o.addRepresentation( "cartoon", { colorScheme: FPscheme,  sele: "protein" } );
+                        } else {
+                            o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
+                        }
                         o.setName("my_comp");
                     if( traj_li_all.length > 0 ) {
                         for (t=0 ; t < traj_li_all.length ; t++){

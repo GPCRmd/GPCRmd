@@ -182,7 +182,7 @@
             return nonGPCR_mod;
         }
 ///////////////
-            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection ="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection =fpsegStr="";
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";
             var t_path = "file://_DB/";
@@ -214,7 +214,23 @@
             var call_resids_sb=all_resids_sb;
             var all_resids_inter=NGL.getQuery("ai");
             var projection=NGL.getQuery("pj");
+            var fpsegStr=NGL.getQuery("fp");
+            console.log(fpsegStr);
             
+
+            if (fpsegStr){
+                var fpsegli=fpsegStr.split(",");
+                var fpcolors=[];
+                var helix_colors =["#78C5D5","#5FB0BF","#459BA8","#5FAF88","#79C268","#9FCD58","#C5D747","#DDD742","#F5D63D","#F3B138","#F18C32","#ED7A6A","#E868A1","#D466A4","#BF63A6"];
+                for (segN=0; segN<fpsegli.length ;segN++ ){
+                    var segsel=fpsegli[segN];
+                    if (segsel){
+                        fpcolors.push([helix_colors[segN] , "protein and ("+ segsel +")" ]);
+                    }
+                }
+                var FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );
+                
+            }
 
              /*var va = "test";             
              for (v in va){ 
@@ -228,7 +244,11 @@
                                 
                                 if (receptorsel){
                                     var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));
-                                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d} );
+                                    if (fpsegStr){
+                                        o.addRepresentation( "cartoon", { colorScheme: FPscheme, sele: receptorsel_d} );
+                                    } else {
+                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d} );
+                                    }
   
                                 }
 
@@ -287,7 +307,7 @@
                                             rep="ball+stick";
                                          }
                                          if (scheme=="FPscheme"){
-                                             o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme: "residueindex"  } ); 
+                                             o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
                                          } else {
                                              o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
                                          }
