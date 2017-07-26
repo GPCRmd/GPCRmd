@@ -92,6 +92,7 @@ $(document).ready(function(){
     var sel = "";
     var sel_enc = sel;
     var fpsegStr=$("#fpdiv").data("fpseg_li");
+    var pg_framenum=0;
     
     $(".traj_element").click(function(){
         var traj_p=$(this).data("tpath");
@@ -109,10 +110,15 @@ $(document).ready(function(){
         */
         
         if (fpfile_new != old_fp){
+            if ($(".summarizeFP").hasClass("active")){
+                $(".summarizeFP").removeClass("active");
+                setFPFrame(pg_framenum)
+            }
             if (fpfile_new){
                 d3.json(fpdir+fpfile_new, function(jsonData){
                     $("#flare-container").html("");
                     plot = createFlareplot(600, jsonData, "#flare-container");
+                    //plot.setFrame(pg_framenum);
                     allEdges= plot.getEdges();
                     numfr = plot.getNumFrames();
                     $(".showIfTrajFP").css("display","inline");
@@ -217,6 +223,11 @@ $(document).ready(function(){
             var arrow=$(this).children(".arrow");
             arrow.removeClass("glyphicon-chevron-down");
             arrow.addClass("glyphicon-chevron-up");
+            if (target=="#analysis_fplot"){
+                if (plot){
+                    setFPFrame(pg_framenum)
+                }
+            }
         }
     });
     
@@ -3394,12 +3405,23 @@ $(document).ready(function(){
              }
         }
         var layers_li=[];
+        var add_fpsegStr=false;
         for (layN=0 ; layN < layers_lil.length ;layN++){
             layer_l =layers_lil[layN];
+            if (layer_l.indexOf("FPscheme") != -1){
+                add_fpsegStr=true;
+            }
             layer_l=layer_l.join("-,,-");
             layers_li.push(layer_l);
         }
         layers_li=layers_li.join("-;;-");
+        if (receptorsel){
+            add_fpsegStr=true;
+        }
+        var fpsegStr_send=[];
+        if (add_fpsegStr){
+            fpsegStr_send = fpsegStr;
+        }
         var dist_of=obtainDistSel(); 
         var projection="";
         if ($("#projOrtho").hasClass("active")){
@@ -3407,7 +3429,7 @@ $(document).ready(function(){
         }
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
         var add_url_var ={"traj":encode(traj) ,
-                            "fp":encode(fpsegStr),
+                            "fp":encode(fpsegStr_send),
                             "ly":encode(layers_li) , 
                             "cp":encode(cp),
                             "la":encode(high_pre["A"]),
@@ -3523,10 +3545,12 @@ $(document).ready(function(){
     };    
     
     
-    
+//////////////    
+/*
     var updateFlarePlotFrame = function(framenum){
         if (plot){
             if (! $(".summarizeFP").hasClass("active")){
+                console.log(framenum)
                 plot.setFrame(Number(framenum));
                 updateFPInt();
             }
@@ -3538,9 +3562,38 @@ $(document).ready(function(){
         }
     }
     window.updateFlarePlotFrame=updateFlarePlotFrame;
-    
-    
-    
+*/
+//////////////    
+    function setFPFrame(framenum){
+        if (!$(".summarizeFP").hasClass("active")){
+            plot.setFrame(Number(framenum));
+            //console.log(framenum)
+            if ($("#FPdisplay").hasClass("active")){
+                updateFPInt();
+                return(fpSelInt)
+            } else {
+                return({});
+            }
+        } else {
+            return(fpSelInt)
+        }
+    }
+
+    var updateFlarePlotFrame = function(framenum){
+        pg_framenum=framenum;
+        var fpSelInt_send=fpSelInt;
+        if (plot){
+            if ($("#analysis_fplot").hasClass("in")){
+                fpSelInt_send=setFPFrame(framenum)
+            } else if (! isEmptyDict(fpSelInt)) {
+                fpSelInt_send=setFPFrame(framenum)
+            }
+        }
+        return(fpSelInt_send)
+    }
+    window.updateFlarePlotFrame=updateFlarePlotFrame; 
+      
+//////////////    
     var fpgpcrdb_dict;
     for (gpcr_id in all_gpcr_dicts){
         fpgpcrdb_dict=all_gpcr_dicts[gpcr_id]["gpcrDB_num"];
@@ -3619,16 +3672,15 @@ $(document).ready(function(){
     }
 
 
-
     $("#fpdiv").on("click",".summarizeFP",function(){
         if ($(this).hasClass("active")){
             $(this).removeClass("active");
-            plot.setFrame(0);
+            setFPFrame(pg_framenum)
         } else{
             $(this).addClass("active");
             plot.framesSum(0, numfr);
+            updateFPInt();
         }
-        updateFPInt();
         $("#selectionDiv").trigger("click");
     });
 
@@ -3639,6 +3691,7 @@ $(document).ready(function(){
         } else {
             $(this).addClass("active");
             $(this).text("Hide interactions");
+            updateFPInt();
         }
         $("#selectionDiv").trigger("click");
     });
