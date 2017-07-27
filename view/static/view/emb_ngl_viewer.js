@@ -88,6 +88,7 @@ $(document).ready(function(){
 //-------- Obtain important data from template --------
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");
+    var delta=$(".str_file").data("delta");
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var sel = "";
     var sel_enc = sel;

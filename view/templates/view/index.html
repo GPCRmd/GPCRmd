@@ -95,7 +95,7 @@
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
 <!--        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>-->
-        <p style="text-align: justify;">Visualization powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>
+        <p style="text-align: justify;">Visualization technology powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
 	    <p class="falselist">Left button click: pick atom or distance.</p>
@@ -139,7 +139,7 @@
 
 
 <!-- ============= IFRAME =========== -->
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}">
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}">
                 <div class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
