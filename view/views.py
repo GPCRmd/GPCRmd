@@ -238,7 +238,7 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gpcr_pdb[this_gnum]=[pos[0][1],chain_name]
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
-                rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1])
+                rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1]) #Chain!!
             seq_pos[seq_pos_n][2]=gnum_or_nth
             seq_pos_n+=1
     #######
@@ -954,6 +954,7 @@ def index(request, dyn_id):
                         "all_prot_names" : ", ".join(all_prot_names),
                         "seg_li":",".join(["-".join(seg) for seg in seg_li]),
                         "fpdir" : fpdir,
+                        "delta":delta
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -974,7 +975,8 @@ def index(request, dyn_id):
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
-                        "seg_li":""
+                        "seg_li":"",
+                        "delta":delta
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -993,7 +995,8 @@ def index(request, dyn_id):
                         "gpcr_pdb": "no",
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
-                        "seg_li":""
+                        "seg_li":"",
+                        "delta":delta
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1011,7 +1014,8 @@ def index(request, dyn_id):
                     "chains" : "",            
                     "gpcr_pdb": "no",
                     "fpdir" : fpdir,
-                    "seg_li":""
+                    "seg_li":"",
+                    "delta":delta
                     }
             return render(request, 'view/index.html', context)
 
