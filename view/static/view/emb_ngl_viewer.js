@@ -95,6 +95,41 @@ $(document).ready(function(){
     var fpsegStr=$("#fpdiv").data("fpseg_li");
     var pg_framenum=0;
     
+    if (fpsegStr && (fpsegStr.indexOf(":") != -1) ){
+        var fpsegli=fpsegStr.split(",");
+        var fpsegStrTmpLi=[];
+        for (segN=0; segN<fpsegli.length ;segN++ ){
+            var segsel=fpsegli[segN];
+            if (segsel){
+                var segselPosChLi=segsel.split(/-|:/);
+                var segFromPos= segselPosChLi[0];
+                var segFromCh= segselPosChLi[1];
+                var segToPos= segselPosChLi[2];
+                var segToCh= segselPosChLi[3];
+                if (segFromCh==segToCh){
+                    var pos_range=segFromPos + "-" +segToPos+":"+segFromCh;
+                    fpsegStrTmpLi.push(pos_range);
+                } else {
+                    var start=all_chains.indexOf(segFromCh);
+                    var end=all_chains.indexOf(segToCh);
+                    var middle_str="";
+                    var considered_chains=all_chains.slice(start+1,end);
+                    for (chain=0 ; chain < considered_chains.length ; chain++){
+                        middle_str += "+:"+ considered_chains[chain];// "+" = " or "
+                    }
+                    var pos_range=segFromPos + "-:"+segFromCh + middle_str+ "+1-"+segToPos+":" +segToCh;
+                    fpsegStrTmpLi.push(pos_range);
+                }
+                
+            }
+            else {
+                fpsegStrTmpLi.push("");
+            }
+        }        
+        fpsegStr=fpsegStrTmpLi.join(",");
+    }
+    window.fpsegStr=fpsegStr;
+    
     $(".traj_element").click(function(){
         var traj_p=$(this).data("tpath");
         var traj_n=$(this).text();
@@ -370,6 +405,7 @@ $(document).ready(function(){
     maxInputLength(".sel_within", ".user_sel_input",40);
     maxInputLength(".maxinp8","",8);
     maxInputLength("#trajStep","",3);
+    maxInputLength("#trajTimeOut","",6);
 
 
 
