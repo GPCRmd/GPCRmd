@@ -257,6 +257,7 @@ class Command(BaseCommand):
                     dbobj = dbobj.annotate(file_type=F(path_to_file_type))
                 dbobj = dbobj.values('object_id','id_files','file_type','filepath','ext')
                 newdir = get_file_paths(obj,url=False,submission_id=None)
+                newurlroot = get_file_paths(obj,url=True,submission_id=None)
                 for fileobj in  dbobj:
                     subtype = file_subtypes_dict[obj][fileobj['file_type']]['subtype']
                     imgsize = file_subtypes_dict[obj][fileobj['file_type']]['imgsize']
