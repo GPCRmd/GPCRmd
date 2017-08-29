@@ -2727,7 +2727,12 @@ def search_molecule(molecule_id):
     molec_dic['inchikey']=molobj.inchikey
     molec_dic['inchicol']=molobj.inchicol
     molec_dic['imagelink']=get_imagepath(molecule_id, 'molecule')
-    molec_dic['sdfile']=DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0)[0].id_files.filename
+
+    filesmol_li=DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0)
+    if filesmol_li:
+        molec_dic['sdfile']=filesmol_li[0].id_files.filename
+    else:
+        molec_dic['sdfile']=[]
     for match in DyndbModelComponents.objects.filter(id_molecule=molecule_id):
         molec_dic['inmodels'].append(match.id_model.id)
     for molfile in DyndbFilesMolecule.objects.select_related('id_files').filter(id_molecule=molecule_id).filter(type=0):

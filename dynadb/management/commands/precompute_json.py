@@ -66,7 +66,7 @@ class Command(BaseCommand):
                 trajfiles=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
                 if options['traj_id']:
                     trajfiles=trajfiles.filter(id__in=options['traj_id'])
-                pdbfile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")
+                pdbfile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types=2)
                 if pdbfile:
                     pdbpath=pdbfile[0].filepath
                 else:

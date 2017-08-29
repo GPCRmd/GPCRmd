@@ -2631,6 +2631,7 @@ $(document).ready(function(){
                         $('#ShowAllHbInter').show();
                         $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
                         $('#hbondsnp').html(tablenp);
+                        $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
@@ -2731,6 +2732,7 @@ $(document).ready(function(){
                         $('#ShowAllSb').show();
                         $('#saltbridges').html(salt);
                         $("#saltresult_par").attr("style","border:1px solid #F3F3F3;padding-top:5px;display:block;margin-top:10px");
+                        $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
@@ -3298,8 +3300,8 @@ $(document).ready(function(){
 
     
 //-------- Pass data to MDsrv --------
-
-    function gpcr_selection(){
+    var gpcr_selection = function(){
+    //function gpcr_selection(){
         if (chains_str == ""){
             receptorsel="protein";
         } else {
@@ -3313,6 +3315,7 @@ $(document).ready(function(){
         }
         return (receptorsel);
     }
+    window.gpcr_selection=gpcr_selection;
 
     function gpcr_selection_active(){
         if ($("#receptor").hasClass("active")){
