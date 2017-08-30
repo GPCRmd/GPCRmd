@@ -3315,7 +3315,7 @@ $(document).ready(function(){
         }
         return (receptorsel);
     }
-    window.gpcr_selection=gpcr_selection;
+    //window.gpcr_selection=gpcr_selection;
 
     function gpcr_selection_active(){
         if ($("#receptor").hasClass("active")){

@@ -784,7 +784,7 @@
             //o.centerView();
             if ($("#FPdisplay",window.parent.document).hasClass("active")){
                 if ($("g.node.toggledNode", window.parent.document).length >0){
-                    setSelTemp.push(gpcrSelExp);
+                    setSelTemp.push("protein");
                 } 
             } 
             setSelStr="";
@@ -837,8 +837,7 @@
             var setSelLi=[];
             var setSelStr="protein";
             
-            var gpcrSelExp= parent.gpcr_selection()
-
+            //var gpcrSelExp= parent.gpcr_selection()
             //!
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
             var fpsegStr=parent.fpsegStr;
