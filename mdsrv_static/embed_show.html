@@ -96,6 +96,7 @@
 
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
+                    o.setSelection("protein");
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Pastel1",  sele: "protein" } );
                     o.setName("my_comp");
                     if (traj){
