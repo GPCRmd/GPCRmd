@@ -68,80 +68,37 @@
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
             return([sele, sele2]);
         }
-        
-        function trajButtons(o){
-            $(".ui-slider").css({"margin-left":"25px"});
-            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
-            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});
-            $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
-            parent.passinfoToPlayTraj();
-            var bs_info = parent.bs_info;
-            var dist_within_li=parent.dist_of;  
+
+        function updateRepsFrameChanged(o,stage,trajComp,bs_info,dist_within_li){
             $("#selectionDiv", window.parent.document).on("click" , function(){
                 parent.passinfoToPlayTraj();
                 bs_info = parent.bs_info;
                 dist_within_li=parent.dist_of;  
             });
-            $(".traj_btn").click( function(){
+            $(".traj_btn").click( function(){//[!]Is this necessary?
                 parent.passinfoToPlayTraj();
                 bs_info = parent.bs_info;
                 dist_within_li=parent.dist_of;  
-            
-                var btn_traj_Bid=$(this).attr("id");
-                var tPatt = /\d*$/g;
-                var btn_traj_id = tPatt.exec(btn_traj_Bid);
-                var isact = $(this).hasClass("active");
-                //var pos_class=$(this).attr("class");
-                if(isact){
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                    player.step=stepsize;
-                    player.timeout=trajtimeout;
-                    $(this).removeClass("active");
-                    $(this).children().attr("class","glyphicon glyphicon-play");
-                    player.play();
-                    player.pause();
-                } else {
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                    player.step=stepsize;
-                    player.timeout=trajtimeout;
-                    //$("#toiframe").find("#trajRangeDiv").css("visibility","visible");
-                    player.play();
-                    $(this).addClass("active");
-                    $(this).siblings().removeClass("active");
-                    $(this).children().attr("class","glyphicon glyphicon-pause");
-                    var patt = new RegExp("/(.*)$");
-                    var res = patt.exec(traj_li_all[btn_traj_id]);
-                    var mytraj_nm=res[1];
-                    $("#last_played").text(mytraj_nm);
-
-                }
             });
-            $("#trajRange").change(function(){
-                if (trajComp){
-                    numfr=trajComp.trajectory.numframes;
-                    if ($("#trajRange").attr("max") != numfr){
-                        $("#trajRange").attr("max",numfr);
-                    }
-                    var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
-                    parent.passinfoToPlayTraj();
-                    bs_info = parent.bs_info;
-                    dist_within_li=parent.dist_of;  
-                    trajComp.setFrame(toframe);
-                }
+            $("#trajRange").change(function(){//[!]Is this necessary?
+                parent.passinfoToPlayTraj();
+                bs_info = parent.bs_info;
+                dist_within_li=parent.dist_of;  
             });
             trajComp.signals.frameChanged.add(function(){
                 var fnum=trajComp.trajectory.currentFrame;
-                var fpSelInt= parent.updateFlarePlotFrame(fnum);                    
+                if (trajchange){
+                    parent.emptyFPsels();
+                    trajchange=false;
+                }
+                var fpSelInt= parent.updateFlarePlotFrame(fnum);
                 $("#trajRange").val(fnum);
                 $("#trajRange").slider("refresh");
                 $("#traj_time_val").html((fnum*delta).toFixed(2));
+                traj_fnum[traj_lastPlayedID]=fnum;
                 //setSelTemp=[];//
                 /////////
-                if (! $.isEmptyObject(fpSelInt)){
+                if (! $.isEmptyObject(fpSelInt)){ 
                     var uplinksli=[];
                     var uplinkres="";
                     for (posfrom in fpSelInt){
@@ -155,10 +112,21 @@
                             uplinksli.push([atom_from,atom_to])
                         }
                     }
-                    stage.getRepresentationsByName('FP int').setParameters({atomPair: uplinksli});
-                    stage.getRepresentationsByName('FP res').setSelection( uplinkres.slice(0, -4));
+                    var previousFPintReps=stage.getRepresentationsByName('FP int');//.list.length;
+                    if (previousFPintReps.list.length > 0){
+                        previousFPintReps.setParameters({atomPair: uplinksli});
+                        stage.getRepresentationsByName('FP res').setSelection( uplinkres.slice(0, -4));
+                    } else {
+                        o.addRepresentation( "distance", { atomPair: uplinksli, colorValue: "#000000", colorScheme:"uniform", labelVisible:false   ,fontWeight: "normal" ,name : 'FP int' } );            
+                        o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: uplinkres.slice(0, -4) , name:"FP res" } );
+                    }
                     //setSelTemp.push(uplinkres.slice(0, -4));
+                } else if (stage.getRepresentationsByName('FP int').list.length > 0){
+                    //var aa=stage.getRepresentationsByName('FP res').list[0]//.repr.removeRepresentation();
+                    o.removeRepresentation(stage.getRepresentationsByName('FP res').list[0]);
+                    o.removeRepresentation(stage.getRepresentationsByName('FP int').list[0]);
                 }
+                
                 /////////
                 if (bs_info.length > 0){
                     var bs_info_li=bs_info.split("-");
@@ -205,16 +173,68 @@
                         //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
                     }
                 }
-                /*var setSelTempAtms="";
-                if (setSelTemp.length>0){
-                    setSelTempAtms="("+setSelTemp.join(") or (")+")";
-                    if (setSelStr){
-                        setSelTempAtms=" or "+setSelTempAtms;
-                    }
-                }
-                var setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelStr+setSelTempAtms )).toSeleString();
-                o.setSelection(setSelFIN);*/
             });
+        }
+
+        function trajButtons(o){
+            $(".ui-slider").css({"margin-left":"25px"});
+            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});
+            $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
+            parent.passinfoToPlayTraj();
+            var bs_info = parent.bs_info;
+            var dist_within_li=parent.dist_of;  
+            $(".traj_btn").click( function(){
+                var btn_traj_Bid=$(this).attr("id");
+                var tPatt = /\d*$/g;
+                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var isact = $(this).hasClass("active");
+                //var pos_class=$(this).attr("class");
+                if(isact){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.step=stepsize;
+                    player.timeout=trajtimeout;
+                    $(this).removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.play();
+                    player.pause();
+                    //var lastfr=trajComp.trajectory.currentFrame;
+                    //traj_fnum[traj_lastPlayedID]=lastfr+stepsize;
+                } else {
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    //$("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.step=stepsize;
+                    player.timeout=trajtimeout;
+                    player.play();
+                    $(this).addClass("active");
+                    $(this).siblings().removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-pause");
+                    /*var patt = new RegExp("/(.*)$");
+                    var res = patt.exec(traj_li_all[btn_traj_id]);
+                    var mytraj_nm=res[1];
+                    $("#last_played").text(mytraj_nm);*/
+
+                }
+            });
+            $("#trajRange").change(function(){
+                if (trajComp){
+                    numfr=trajComp.trajectory.numframes;
+                    if ($("#trajRange").attr("max") != numfr){
+                        $("#trajRange").attr("max",numfr);
+                    }
+                    var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
+                    trajComp.setFrame(toframe);
+                }
+            });
+
+            var allTrajCompli=stage.getComponentsByName("my_comp").list[0].trajList;
+            for (tcN=0; tcN< allTrajCompli.length;tcN++){
+                updateRepsFrameChanged(o,stage,allTrajCompli[tcN],bs_info,dist_within_li);
+            }
+
         }
 
         function fromChainLiToNGL(nonGPCR){ 
@@ -797,7 +817,8 @@
             if (setSelAll.length > 0){
                 setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelStr+setSelTempAtms )).toSeleString();
             }
-            var framenum=$(".ui-slider-handle").attr("aria-valuenow"); 
+            //var framenum=$(".ui-slider-handle").attr("aria-valuenow"); 
+            var framenum=traj_fnum[traj_lastPlayedID];
             o.setSelection(setSelFIN);
             if (trajComp){
                 trajComp.setFrame(framenum);
@@ -818,10 +839,13 @@
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var delta=Number($(".str_file", window.parent.document).data("delta"));
             var traj_li_all = [];
+            var traj_fnum = {};
+            var traj_lastPlayedID=0;
             var  path= "/mdsrv/file/_DB/";
             var  traj_path= "_DB/";
-            $(".traj_element",window.parent.document).each(function(){
+            $(".traj_element",window.parent.document).each(function(i,el){
                 traj_li_all[traj_li_all.length]=$(this).data("tpath");
+                traj_fnum[i]=0;
             });
             var trajComp, player, ori ;
             var clickedRep={};
@@ -836,6 +860,7 @@
             //var setSelDict={};
             var setSelLi=[];
             var setSelStr="protein";
+            var trajchange=false;
             
             //var gpcrSelExp= parent.gpcr_selection()
             //!
@@ -885,6 +910,17 @@
                             $(".traj_btn").removeClass("active");
                             $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
                         }
+                        traj_lastPlayedID=traj_id;
+                        parent.changeTrajFlarePlot(this,traj_fnum[traj_id]);
+                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[traj_id];
+                        trajchange=true;
+                        trajComp.setFrame(traj_fnum[traj_id]);
+                        //$("#selectionDiv" , window.parent.document).trigger("click");                        
+                        $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                        var patt = new RegExp("/(.*)$");
+                        var res = patt.exec(traj_li_all[traj_id]);
+                        var mytraj_nm=res[1];
+                        $("#last_played").text(mytraj_nm);
                     });
                     trajButtons(o);
                     //createReps();
@@ -1003,6 +1039,8 @@
                         player.pause();
                         $(".traj_btn").removeClass("active");
                         $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                        //var lastfr=trajComp.trajectory.currentFrame;
+                        //traj_fnum[traj_lastPlayedID]=lastfr;
                     }
                     stepsize = tajstep;
                 });
@@ -1027,6 +1065,8 @@
                         player.pause();
                         $(".traj_btn").removeClass("active");
                         $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                        //var lastfr=trajComp.trajectory.currentFrame;
+                        //traj_fnum[traj_lastPlayedID]=lastfr+stepsize;
                     }
                     trajtimeout = timeout;
                 });

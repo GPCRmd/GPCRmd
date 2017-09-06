@@ -130,7 +130,7 @@ $(document).ready(function(){
     }
     window.fpsegStr=fpsegStr;
     
-    $(".traj_element").click(function(){
+/*   $(".traj_element").click(function(){
         var traj_p=$(this).data("tpath");
         var traj_n=$(this).text();
         var fpfile_new=$(this).data("fplot_file");
@@ -138,13 +138,13 @@ $(document).ready(function(){
         $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
         $(this).css("background-color","#FFF7F7").addClass("tsel");
         $(this).siblings().css("background-color","#FFFFFF").removeClass("tsel");
-        
+*/        
         /* [!] Link to big FP with slide
         var oldhref = $("#gotofplot").attr("href");
         newhref=oldhref.replace(/\w+.json/i,fpfile_new);
         $("#gotofplot").attr("href",newhref);
         */
-        
+/*        
         if (fpfile_new != old_fp){
             if ($(".summarizeFP").hasClass("active")){
                 $(".summarizeFP").removeClass("active");
@@ -171,9 +171,67 @@ $(document).ready(function(){
             }
             fpSelInt={};
             $("#selectionDiv").trigger("click");
-        }        
+        }
     });
+  */
     
+    changeTrajFlarePlot = function(traj_el_sel,new_fnum){
+
+        var traj_p=$(traj_el_sel).data("tpath");
+        var traj_n=$(traj_el_sel).text();
+        var fpfile_new=$(traj_el_sel).data("fplot_file");
+        var old_fp=$("#selectedTraj").data("fplot_file");
+        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
+        $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
+        $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
+        
+        /* [!] Link to big FP with slide
+        var oldhref = $("#gotofplot").attr("href");
+        newhref=oldhref.replace(/\w+.json/i,fpfile_new);
+        $("#gotofplot").attr("href",newhref);
+        */
+        pg_framenum=new_fnum
+        if (fpfile_new != old_fp){
+            if ($(".summarizeFP").hasClass("active")){
+                $(".summarizeFP").removeClass("active");
+                setFPFrame(pg_framenum)
+            }
+            if (fpfile_new){
+                d3.json(fpdir+fpfile_new, function(jsonData){
+                    $("#flare-container").html("");
+                    plot = createFlareplot(600, jsonData, "#flare-container");
+                    plot.setFrame(pg_framenum);
+                    //setFPFrame(pg_framenum)
+                    allEdges= plot.getEdges();
+                    numfr = plot.getNumFrames();
+                    $(".showIfTrajFP").css("display","inline");
+                    $(".showIfTrajFPBlock").css("display","block");
+                });
+                
+            } else {
+                alert_msg='<div class="alert alert-info">\
+                            There is no flare plot available for this trajectory yet.\
+                          </div>';
+                $("#flare-container").html(alert_msg);
+                $(".showIfTrajFP").css("display","none");
+                $(".showIfTrajFPBlock").css("display","none");
+            }
+            fpSelInt={};
+        }
+    }
+    window.changeTrajFlarePlot=changeTrajFlarePlot;
+    
+    function emptyFPsels(){
+        $("#flare-container").find("g.node.toggledNode").each(function(){
+            if (plot){
+                var nodename = $(this).attr("id");
+                var nodenum=nodename.split("-")[1];
+                plot.toggleNode(nodenum)
+            }
+        });
+    }
+    window.emptyFPsels=emptyFPsels;
+   
     
     function obtainDicts(gpcr_pdb_dict){
         all_gpcr_dicts={};
@@ -3607,7 +3665,6 @@ $(document).ready(function(){
     function setFPFrame(framenum){
         if (!$(".summarizeFP").hasClass("active")){
             plot.setFrame(Number(framenum));
-            //console.log(framenum)
             if ($("#FPdisplay").hasClass("active")){
                 updateFPInt();
                 return(fpSelInt)

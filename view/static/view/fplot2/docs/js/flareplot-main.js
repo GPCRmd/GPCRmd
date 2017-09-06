@@ -930,7 +930,8 @@ function createFlareplot(width, inputGraph, containerSelector){
             addEdgeToggleListener: addEdgeToggleListener,
             addEdgeHoverListener: addEdgeHoverListener,
             addFrameListener: addFrameListener,
-            graph: graph//, for debugging purposes
+            graph: graph,// for debugging purposes
+            toggleNode: toggleNode //[!] Added to allow automatic selection / de-selection
         }
     }) ();
 }
