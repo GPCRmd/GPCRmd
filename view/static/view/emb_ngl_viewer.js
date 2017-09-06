@@ -230,6 +230,7 @@ $(document).ready(function(){
                 var nodename = $(this).attr("id");
                 var nodenum=nodename.split("-")[1];
                 plot.toggleNode(nodenum)
+                fpSelInt={};
             }
         });
     }
@@ -3622,9 +3623,10 @@ $(document).ready(function(){
         $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");
         $("#analysis_salt").find(".showsb.active").removeClass("active");
         $("#analysis_bonds").find(".showhb.active").removeClass("active");
-        $("#FPdisplay").removeClass("active");
-        $("#FPdisplay").text("Display interactions");
-        
+        //$("#FPdisplay").removeClass("active");
+        //$("#FPdisplay").text("Display interactions");
+        emptyFPsels();
+        fpSelInt={};
         
         $("#selectionDiv").trigger("click");
     }); 
@@ -3795,7 +3797,12 @@ $(document).ready(function(){
         }
         $("#selectionDiv").trigger("click");
     });
-
+    
+    $("#fpdiv").on("click","#FPclearSel",function(){
+        emptyFPsels();
+        fpSelInt={};
+        $("#selectionDiv").trigger("click");
+    });
 
     $("#selectionDiv").trigger("click");
     
