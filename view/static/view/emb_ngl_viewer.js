@@ -191,7 +191,9 @@ $(document).ready(function(){
         $("#gotofplot").attr("href",newhref);
         */
         pg_framenum=new_fnum
+        var trajchange=false;
         if (fpfile_new != old_fp){
+            trajchange=true;
             if ($(".summarizeFP").hasClass("active")){
                 $(".summarizeFP").removeClass("active");
                 setFPFrame(pg_framenum)
@@ -218,6 +220,7 @@ $(document).ready(function(){
             }
             fpSelInt={};
         }
+        return trajchange;
     }
     window.changeTrajFlarePlot=changeTrajFlarePlot;
     

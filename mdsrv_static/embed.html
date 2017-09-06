@@ -911,9 +911,9 @@
                             $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
                         }
                         traj_lastPlayedID=traj_id;
-                        parent.changeTrajFlarePlot(this,traj_fnum[traj_id]);
+                        var trajchange_f=parent.changeTrajFlarePlot(this,traj_fnum[traj_id]);
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[traj_id];
-                        trajchange=true;
+                        trajchange=trajchange_f;
                         trajComp.setFrame(traj_fnum[traj_id]);
                         //$("#selectionDiv" , window.parent.document).trigger("click");                        
                         $("#trajRange").attr("max",trajComp.trajectory.numframes);
