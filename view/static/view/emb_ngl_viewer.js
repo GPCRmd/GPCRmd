@@ -3361,6 +3361,15 @@ $(document).ready(function(){
     });
 
     
+    
+    $(".showHSet").click(function(){
+        if (! $(this).hasClass("active")){
+            $(this).addClass("active");
+            $(this).siblings(".showHSet").removeClass("active");
+        }
+        $("#selectionDiv").trigger("click");
+    });
+
 //-------- Pass data to MDsrv --------
     var gpcr_selection = function(){
     //function gpcr_selection(){
@@ -3419,6 +3428,10 @@ $(document).ready(function(){
         if ($("#FPdisplay").hasClass("active")){
             fpSelInt_send=fpSelInt;
         }
+        var showH = false;
+        if ($("#showHOn.active").length >0){
+            showH=true;
+        } 
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "dist_groups_li":dist_groups_li,
@@ -3436,7 +3449,8 @@ $(document).ready(function(){
                 "allresidshbInt":resultHBSB["all_resids_inter"],
                 "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
-                "fpSelInt":fpSelInt_send
+                "fpSelInt":fpSelInt_send,
+                "showH":showH
         });
     }
     
@@ -3496,6 +3510,9 @@ $(document).ready(function(){
          var all_resids=results["allresidshb"];
          var all_resids_sb=results["allresidssb"];
          var all_resids_inter=results[ "allresidshbInt"];
+         var showH=results["showH"];
+         var showHShort="f";
+         if (showH){showHShort="t"};
 
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);
@@ -3552,6 +3569,7 @@ $(document).ready(function(){
                             "as":encode(all_resids_sb),
                             "ai" : encode(all_resids_inter),
                             "pj": projection,
+                            "h": showHShort
                             }        
   
         for (varn in add_url_var){

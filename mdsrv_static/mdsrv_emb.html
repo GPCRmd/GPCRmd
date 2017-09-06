@@ -215,7 +215,8 @@
             var all_resids_inter=NGL.getQuery("ai");
             var projection=NGL.getQuery("pj");
             var fpsegStr=NGL.getQuery("fp");
-            
+            var showH=NGL.getQuery("h");
+
 
             if (fpsegStr){
                 fpsegStr=fpsegStr.replace("+"," or ");
@@ -241,6 +242,11 @@
 
                         stage.loadFile( s_path + struc, {sele:"*", visible: true}  ).then( function( o ){  
                                 o.setName("my_comp");
+                                
+            
+                                if (showH == "f"){
+                                    o.setSelection("not #h");
+                                }
                                 
                                 if (receptorsel){
                                     var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));

@@ -481,6 +481,8 @@
             //var setSelDict={};
             var setSelLi=[];
             var setSelTemp=[];
+            var showH = false;
+            showH =results["showH"];
 
             
             var o=stage.getComponentsByName("my_comp").list[0];
@@ -807,15 +809,22 @@
                     setSelTemp.push("protein");
                 } 
             } 
+            
+                       
             setSelStr="";
             if (setSelLi.length > 0){
                 setSelStr="("+setSelLi.join(") or (")+")";
             }
             var setSelTempAtms=obtainSetSelTempAtms(o,setSelTemp,setSelStr)
             var setSelAll=setSelStr+setSelTempAtms;
+            
+            if ((! showH) &&  setSelAll.length > 0){
+                setSelAll="("+setSelAll+") and not #h"
+            }
+            
             var setSelFIN="";
             if (setSelAll.length > 0){
-                setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelStr+setSelTempAtms )).toSeleString();
+                setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelAll )).toSeleString();
             }
             //var framenum=$(".ui-slider-handle").attr("aria-valuenow"); 
             var framenum=traj_fnum[traj_lastPlayedID];
