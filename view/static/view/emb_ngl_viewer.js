@@ -82,10 +82,15 @@ $(document).ready(function(){
         }
     });
     
-
-    
+    function arrayMin(arr) {
+      return arr.reduce(function (p, v) {
+        return ( p < v ? p : v );
+      });
+    }    
 
 //-------- Obtain important data from template --------
+
+
     var struc = $(".str_file").data("struc_file");
     var dyn_id=$(".str_file").data("dyn_id");
     var delta=$(".str_file").data("delta");
@@ -201,7 +206,8 @@ $(document).ready(function(){
             if (fpfile_new){
                 d3.json(fpdir+fpfile_new, function(jsonData){
                     $("#flare-container").html("");
-                    plot = createFlareplot(600, jsonData, "#flare-container");
+                    var fpsize=setFPsize();
+                    plot = createFlareplot(fpsize, jsonData, "#flare-container");
                     plot.setFrame(pg_framenum);
                     //setFPFrame(pg_framenum)
                     allEdges= plot.getEdges();
@@ -3651,6 +3657,48 @@ $(document).ready(function(){
     
 //-------- Flare Plots --------
 
+    function setFPsize(){    
+        var screen_h=screen.height;
+        var min_size=550;
+        var fpcont_w_str=$("#flare-container").css("width");
+        var fpcont_w=Number(fpcont_w_str.match(/^\d*/g)[0])
+        var final_size = fpcont_w;
+        if (screen_h){
+            var max_h=screen_h*0.5;
+            var maxR_h=Math.round(max_h);
+            if (fpcont_w > maxR_h){
+                final_size = maxR_h;
+            }
+            console.log("min: " +min_size + " width: "+fpcont_w+" max height: "+maxR_h)
+        } else {
+            console.log("min: " +min_size + " width: "+fpcont_w)
+        }
+        
+        if (final_size < min_size){
+            final_size = min_size;
+        }
+        
+/*        
+        if (screen_h){
+            //max_h=screen_h*0.6;
+            max_h=screen_h*0.5;
+            maxR_h=Math.round(max_h)
+            if (fpcont_w < maxR_h){
+                var final_size=fpcont_w;
+                console.log("final size WIDTH: "+final_size);
+            } else{
+                var final_size=maxR_h;
+                console.log("final size HEIGHT: "+final_size);
+            }
+        } else {
+            var final_size=fpcont_w;
+        }
+*/ 
+        console.log("final size: "+final_size);
+        console.log("-------------")
+        return (final_size)
+    }
+
     var fpdir=$("#fpdiv").data("fpdir");
     var fpfile = $("#selectedTraj").data("fplot_file");
     //fpfile="10140_trj_4_hbonds.json";//
@@ -3658,8 +3706,10 @@ $(document).ready(function(){
     var plot, allEdges, numfr;
     var fpSelInt={};
     if (fpdir){
+        var fpsize=setFPsize();        
         d3.json(fpdir+fpfile, function(jsonData){
-            plot = createFlareplot(600, jsonData, "#flare-container");
+            //plot = createFlareplot(600, jsonData, "#flare-container");
+            plot = createFlareplot(fpsize, jsonData, "#flare-container");
             allEdges= plot.getEdges()
             numfr = plot.getNumFrames();
         });
