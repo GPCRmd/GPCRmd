@@ -3,7 +3,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence,DyndbReferences
 from protein.models import Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
@@ -930,7 +930,7 @@ def index(request, dyn_id):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
+                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, ""])#'10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1905,3 +1905,39 @@ def fplot_gpcr_slide(request, dyn_id, filename,seg_li):
              "dyn_id":dyn_id
             }
     return render(request, 'view/flare_plot_slide.html', context)
+    
+    
+def view_reference(request, dyn_id ):
+    """
+    Now only opens structure & traj of adenosine receptor with colesterol.
+    """
+    mdsrv_url=obtain_domain_url(request)
+    refobj=DyndbReferences.objects.get(dyndbreferencesdynamics__id_dynamics=dyn_id)
+    doi=refobj.doi
+    authors=refobj.authors
+    title=refobj.title
+    pmid=refobj.pmid
+    journal=refobj.journal_press
+    issue=refobj.issue
+    vol=refobj.volume
+    pgs=refobj.pages
+    pub_year=refobj.pub_year
+    dbname=refobj.dbname
+    url=refobj.url
+
+    context={
+         "mdsrv_url":mdsrv_url,
+         "doi":doi,
+         "authors": authors,
+         "title":title,
+         "pmid":pmid,
+         "journal":journal,
+         "issue":issue,
+         "vol":vol,
+         "pgs":pgs,
+         "pub_year":pub_year,
+         "dbname":dbname,
+         "url":url
+    }
+    return render(request, 'view/reference.html', context )
+    

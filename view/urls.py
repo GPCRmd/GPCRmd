@@ -16,7 +16,8 @@ urlpatterns = [
     url(r'^saltbridges/$', views.saltbridges, name='saltbridges'),
     url(r'^grid/$', views.sasa, name='sasa'),
     url(r'^fplot/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/(?P<seg_li>(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),((|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),){13}(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?))/$', views.fplot_gpcr, name='fplot_gpcr'),
-    url(r'^fplot2/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/(?P<seg_li>(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),((|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),){13}(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?))/$', views.fplot_gpcr_slide, name='fplot_gpcr_slide')
+    url(r'^fplot2/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/(?P<seg_li>(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),((|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),){13}(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?))/$', views.fplot_gpcr_slide, name='fplot_gpcr_slide'),
+    url(r'^ref/(?P<dyn_id>[0-9]+)/$', views.view_reference, name='reference'),
 ]
 
 if settings.DEBUG:

@@ -43,12 +43,15 @@
         NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
         document.addEventListener( "DOMContentLoaded", function(){
-            stage = new NGL.Stage( "viewport" );
+            //stage = new NGL.Stage( "viewport" );
 
 ////////////////// Functions
         $(document).ready(function(){
+                
         document.domain=document.domain;
-        stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
+        //stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
+
+
         
         function atomFromPosSel(o,posSel){
             var res_sele =  new NGL.Selection( posSel );
@@ -842,9 +845,32 @@
             o.setSelection(setSelStr+setSelTempAtms);*/
 
         }
+        
+
+        function set_ngl_size(cont_w , cont_w_in ,cont_h_num ){
+/*
+        toiframe w 
+        viewport w
+        buttons w - 4
+        trajRangeDiv w - 4
+        infoPannel w - 4     
+        
+        toiframe cont_h
+        viewport cont_h - 25
+ 
+*/
+           var cont_h=(cont_h_num).toString() +"px";
+           var cont_h_viewport=(cont_h_num-30).toString() +"px";
+           var cont_h_range=(cont_h_num-190).toString() +"px";
+           var cont_h_info=(cont_h_num-135).toString() +"px";
+           $("#toiframe").css({"width":cont_w , "height" : cont_h});
+           $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
+           $("#buttons").css("width", cont_w_in);
+           $("#trajRangeDiv").css({"width" : cont_w_in  , "margin-top" : cont_h_range });
+           $("#infoPannel").css({"width" : cont_w_in , "margin-top" :cont_h_info });
+        }
 
 /////////// Set variables: ///////////////////////////////////////////////////////////////
-
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var delta=Number($(".str_file", window.parent.document).data("delta"));
             var traj_li_all = [];
@@ -874,7 +900,16 @@
             //var gpcrSelExp= parent.gpcr_selection()
             //!
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
-            var fpsegStr=parent.fpsegStr;
+            
+            var fpsegStr , FPscheme;
+            
+        $(document.body).bind('createNGL', function(e, cont_w , cont_w_in , cont_h_num) {
+            set_ngl_size(cont_w , cont_w_in , cont_h_num);
+            
+            stage = new NGL.Stage( "viewport" );
+            stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
+            
+            fpsegStr=parent.fpsegStr;
             if (fpsegStr){
                 fpsegStr=fpsegStr.replace("+"," or ");
                 var fpsegli=fpsegStr.split(",");
@@ -886,7 +921,7 @@
                         fpcolors.push([helix_colors[segN] , "protein and ("+ segsel +")" ]);
                     }
                 }
-                var FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );                
+                FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );                
             }
             
             if (struc) {
@@ -898,6 +933,7 @@
                             o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
                         }
                         o.setName("my_comp");
+                        //$("#loading", window.parent.document).html("");
                     if( traj_li_all.length > 0 ) {
                         for (t=0 ; t < traj_li_all.length ; t++){
                             o.addTrajectory( traj_path + traj_li_all[t] );                        
@@ -1082,8 +1118,22 @@
                 
             }
         });
+
+        
+        
+        var myStopVar = setInterval(callParent, 1000);
+        function callParent(){
+            parent.$('body').trigger('iframeSet');
+        }
+        
+        $(document.body).bind('iframeSetOk', function(e) {
+            clearInterval(myStopVar);
+        });
+        
+        });
         });
     </script>
+
     <div id="toiframe" style="width:620px;height:445px">
         <div id="viewport" style="width:620px; height:420px;"></div><!--395 -> 445 -->
         <div style="height:80px">
@@ -1100,7 +1150,7 @@
           
           <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
         </div>
-        <div style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
+        <div id="infoPannel" style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>
