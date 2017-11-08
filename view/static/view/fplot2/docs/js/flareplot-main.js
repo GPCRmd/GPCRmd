@@ -177,7 +177,8 @@ function createFlareplot(width, inputGraph, containerSelector){
                     nodes.filter(function(n){ return n.name==d.nodeName; })
                         .forEach(function(n){ toggleNode(n.name); });
 
-                });
+                })
+                .attr("title",function(d){ return d.nodeName; });
 
             setFrame(0);
         }
@@ -279,6 +280,7 @@ function createFlareplot(width, inputGraph, containerSelector){
                 t.allEdges = [];
                 graph.edges.forEach(function (e) {
                     //Set source and target of edge
+
                     var edge = {
                         source: t.tree[e.name1],
                         target: t.tree[e.name2],

@@ -63,7 +63,7 @@ $(document).ready(function(){
     });
     
  /*   $("#addToSel").hover(function(){
-        $(this).children().css("color","#449C44");
+        .css("color","#449C44");
     },
     function(){
         $(this).children().css("color","#5CB85C");
@@ -180,6 +180,8 @@ $(document).ready(function(){
     });
   */
     
+
+    
     changeTrajFlarePlot = function(traj_el_sel,new_fnum){
 
         var traj_p=$(traj_el_sel).data("tpath");
@@ -206,8 +208,8 @@ $(document).ready(function(){
             if (fpfile_new){
                 d3.json(fpdir+fpfile_new, function(jsonData){
                     $("#flare-container").html("");
-                    var fpsize=setFPsize();
-                    plot = createFlareplot(fpsize, jsonData, "#flare-container");
+                    var fpsize=setFpNglSize(true);
+                    plot = createFlareplotCustom(fpsize, jsonData, "#flare-container");
                     plot.setFrame(pg_framenum);
                     //setFPFrame(pg_framenum)
                     allEdges= plot.getEdges();
@@ -215,9 +217,8 @@ $(document).ready(function(){
                     $(".showIfTrajFP").css("display","inline");
                     $(".showIfTrajFPBlock").css("display","block");
                 });
-                
             } else {
-                alert_msg='<div class="alert alert-info">\
+                alert_msg='<div class="alert alert-info" style="margin-bottom:10px">\
                             There is no flare plot available for this trajectory yet.\
                           </div>';
                 $("#flare-container").html(alert_msg);
@@ -3657,7 +3658,39 @@ $(document).ready(function(){
     
 //-------- Flare Plots --------
 
-    function setFPsize(){    
+
+    $(".fpShowResSet").on("click",function(){
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active");
+        } else {
+            $(this).addClass("active");
+        }
+        
+        //create new FP but saving the selected contacts
+        
+        $("#selectionDiv").trigger("click");
+    });
+
+
+    function createFlareplotCustom(fpsize, jsonData, fpdiv){
+        var fpjson=jsonData;
+        var interH=true;
+        if ((fpjson.edges[0].helixpos != undefined) || !interH){
+            var edges=fpjson.edges;
+            var newedges=[];
+            for (eN=0; eN < edges.length ; eN++ ){
+                var edge = edges[eN];
+                if (edge.helixpos == "Inter"){
+                    newedges.push(edge);
+                }
+            }
+            fpjson.edges=newedges;
+        }
+        plot=createFlareplot(fpsize, fpjson, fpdiv);
+        return(plot);
+    }
+
+    function setFpNglSize(applyMinSize){
         var screen_h=screen.height;
         var min_size=550;
         var fpcont_w_str=$("#flare-container").css("width");
@@ -3671,27 +3704,11 @@ $(document).ready(function(){
             }
         } 
         
-        if (final_size < min_size){
-            final_size = min_size;
-        }
-        
-/*        
-        if (screen_h){
-            //max_h=screen_h*0.6;
-            max_h=screen_h*0.5;
-            maxR_h=Math.round(max_h)
-            if (fpcont_w < maxR_h){
-                var final_size=fpcont_w;
-                console.log("final size WIDTH: "+final_size);
-            } else{
-                var final_size=maxR_h;
-                console.log("final size HEIGHT: "+final_size);
+        if (applyMinSize){
+            if (final_size < min_size){
+                final_size = min_size;
             }
-        } else {
-            var final_size=fpcont_w;
         }
-*/ 
-
         return (final_size)
     }
 
@@ -3702,7 +3719,7 @@ $(document).ready(function(){
     var plot, allEdges, numfr;
     var fpSelInt={};
     if (fpdir){
-        var fpsize=setFPsize();        
+        var fpsize=setFpNglSize(true);        
         d3.json(fpdir+fpfile, function(jsonData){
             //plot = createFlareplot(600, jsonData, "#flare-container");
             plot = createFlareplot(fpsize, jsonData, "#flare-container");
@@ -3868,13 +3885,18 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
 
-    //$("#selectionDiv").trigger("click");
-    
+    $("#analysisDiv").click(function(){
+        $("#flare-container").find("g.trackElement").each(function(){
+            var nodeid=$(this).attr("id");
+            var nodenum=nodeid.split("-")[1];
+            $(this).attr("title",nodenum);
+        });
+    })
 
-/*    $("#analysisDiv").click(function(){
-        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL');
-    });*/
-    
+
+//-------- Trigger NGL comp creation --------
+
+
     var isTriggered=true;
     window.isTriggered=isTriggered;
     
@@ -3887,8 +3909,14 @@ $(document).ready(function(){
         var cont_w = cont_w_num.toString() + "px";
         var cont_w_in= (cont_w_num - 2).toString() + "px";
         
-        var screen_h=screen.height;
-        var cont_h_num=Math.round(screen_h*0.37);
+        if ($("#flare-container").length){
+            var cont_h_num_pre=setFpNglSize(false);
+//            var cont_h_num = cont_h_num_pre - 44;
+            var cont_h_num = cont_h_num_pre - 8;
+        } else {
+            var screen_h=screen.height;
+            var cont_h_num=Math.round(screen_h*0.40);
+        }
         var cont_h=(cont_h_num).toString() +"px";
         var cont_h_iframe=(cont_h_num+30).toString() +"px";
         //var cont_h_viewport=(cont_h_num-25).toString() +"px";

@@ -930,7 +930,8 @@ def index(request, dyn_id):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, ""])#'10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
+                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10166_trj_7_hbonds_str100.json'])#[!] REMOVE! only for Flare Plot tests
+                    #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1859,41 +1860,47 @@ def grid(request):
 #    context={"json_name":filename+".json"}
 #    return render(request, 'view/flare_plot_test.html', context)
     
-def fplot_gpcr(request, dyn_id, filename,seg_li):
-    nameToResiTable={}
-    if request.session.get('gpcr_pdb', False):
-        gpcr_pdb=request.session['gpcr_pdb']
-        nameToResiTable={}
-        for (gnum,posChain) in gpcr_pdb.items():
-            gnumOk=gnum[:gnum.find(".")]+gnum[gnum.find("x"):]
-            nameToResiTable[gnumOk]=[posChain[1]+"."+posChain[0],""]
-    #seg_li_ok=[seg.split("-") for seg in seg_li.split(",")]
-    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
-    pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
-    pdbpath=pdbpath.replace("/protwis/sites", "/dynadb")
-    prot_names=obtain_protein_names(dyn_id)
-    traj_id=int(re.match("^\d+",filename).group())
-    traj_name=DyndbFiles.objects.get(id=traj_id).filename
-    
-    comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
-    lig_li=[]
-    for c in comp:
-        if c.type ==1:
-            lig_li.append(c.resname)
-
-    context={"json_path":fpdir + filename,
-             "pdb_path": pdbpath,
-             "prot_names": prot_names,
-             "traj_name" :traj_name,
-             "lig_li" : lig_li,
-             "seg_li":seg_li,
-             "nameToResiTable":json.dumps(nameToResiTable),
-             "dyn_id":dyn_id
-            }
-    return render(request, 'view/flare_plot.html', context)
+#def fplot_gpcr(request, dyn_id, filename,seg_li):
+#    """
+#    View of flare plot with pv representation of the pdb
+#    """
+#    nameToResiTable={}
+#    if request.session.get('gpcr_pdb', False):
+#        gpcr_pdb=request.session['gpcr_pdb']
+#        nameToResiTable={}
+#        for (gnum,posChain) in gpcr_pdb.items():
+#            gnumOk=gnum[:gnum.find(".")]+gnum[gnum.find("x"):]
+#            nameToResiTable[gnumOk]=[posChain[1]+"."+posChain[0],""]
+#    #seg_li_ok=[seg.split("-") for seg in seg_li.split(",")]
+#    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+#    pdbpath=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__extension="pdb")[0].filepath
+#    pdbpath=pdbpath.replace("/protwis/sites", "/dynadb")
+#    prot_names=obtain_protein_names(dyn_id)
+#    traj_id=int(re.match("^\d+",filename).group())
+#    traj_name=DyndbFiles.objects.get(id=traj_id).filename
+#    
+#    comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
+#    lig_li=[]
+#    for c in comp:
+#        if c.type ==1:
+#            lig_li.append(c.resname)
+#
+#    context={"json_path":fpdir + filename,
+#             "pdb_path": pdbpath,
+#             "prot_names": prot_names,
+#             "traj_name" :traj_name,
+#             "lig_li" : lig_li,
+#             "seg_li":seg_li,
+#             "nameToResiTable":json.dumps(nameToResiTable),
+#             "dyn_id":dyn_id
+#            }
+#    return render(request, 'view/flare_plot.html', context)
     
     
 def fplot_gpcr_slide(request, dyn_id, filename,seg_li):
+    """
+    View of flare plot with the new slide but without representation of the pdb
+    """
     fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
     prot_names=obtain_protein_names(dyn_id)
     traj_id=int(re.match("^\d+",filename).group())
@@ -1941,3 +1948,17 @@ def view_reference(request, dyn_id ):
     }
     return render(request, 'view/reference.html', context )
     
+############ TEST #############
+def fplot_test(request, dyn_id, filename):
+    fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+    prot_names=obtain_protein_names(dyn_id)
+    traj_id=int(re.match("^\d+",filename).group())
+    traj_name=DyndbFiles.objects.get(id=traj_id).filename
+    
+    context={"json_path":fpdir + filename,
+             "prot_names": prot_names,
+             "traj_name" :traj_name,
+             "dyn_id":dyn_id
+            }
+    return render(request, 'view/fplot_test.html', context)
+

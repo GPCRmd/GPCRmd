@@ -43,7 +43,7 @@
         NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
         document.addEventListener( "DOMContentLoaded", function(){
-            stage = new NGL.Stage( "viewport" );
+            //stage = new NGL.Stage( "viewport" );
 
 ////////////////// Functions
         function trajButtons(o,trajComp){
@@ -53,9 +53,8 @@
             $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});
 
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
-            
             $(".traj_btn").click( function(){
-                //$("#trajRange").attr("max",trajComp.trajectory.numframes);
+                $("#trajRange").attr("max",trajComp.trajectory.numframes);
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
@@ -65,12 +64,13 @@
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.timeout=200;
                     player.play();
                     player.pause();
 
                 } else {
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    //$("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     player.play();
                     $(this).addClass("active");
@@ -93,12 +93,22 @@
                 $("#traj_time_val").html((fnum*delta).toFixed(2));
             });
         }
+        
+        function set_ngl_size(cont_w , cont_w_in ,cont_h_num ){
+           var cont_h=(cont_h_num).toString() +"px";
+           var cont_h_viewport=(cont_h_num).toString() +"px";
+           var cont_h_range=(cont_h_num-60).toString() +"px";
+           $("#toiframe").css({"width":cont_w , "height" : cont_h});
+           $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
+           //$("#buttons").css("width", cont_w_in);
+           $("#trajRangeDiv").css({"width" : cont_w_in  , "margin-top" : cont_h_range });
+        }
 //////////////////
 
 
         $(document).ready(function(){
-        document.domain=document.domain;
-        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+            document.domain=document.domain;
+
 
             var struc="Dynamics/10168_dyn_7.pdb";
             var traj="Dynamics/10166_trj_7.dcd";
@@ -106,23 +116,40 @@
             var  traj_path= "_DB/";
             var  path= "/mdsrv/file/_DB/";
             var trajComp;
-            if (struc) {
-                stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                    o.setSelection("protein or (CHL1 and 59 and not _h)");
-                    o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
-                    o.addRepresentation( "hyperball", {  sele: "CHL1 and 59 and not hydrogen", colorValue: "#ff3900", colorScheme: "element"} );
-                    o.setName("my_comp");
+            
+            $(document.body).bind('createNGLRef', function(e, cont_w , cont_w_in , cont_h_num) {
+            
+                set_ngl_size(cont_w , cont_w_in , cont_h_num);
+                stage = new NGL.Stage( "viewport" );
+                stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+                if (struc) {
+                    stage.loadFile( path + struc , {visible: true}).then( function( o ){
+                        o.setSelection("protein or (CHL1 and 59 and not _h)");
+                        o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
+                        o.addRepresentation( "hyperball", {  sele: "CHL1 and 59 and not hydrogen", colorValue: "#ff3900", colorScheme: "element"} );
+                        o.setName("my_comp");
 
-                    o.addTrajectory( traj_path + traj );
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
+                        o.addTrajectory( traj_path + traj );
+                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
 
-                    trajButtons(o,trajComp);
-                    
+                        trajButtons(o,trajComp);
+                        
 
-                });
+                    });
+                }
+            });
+
+
+
+            var myStopVar = setInterval(callParent, 1000);
+            function callParent(){
+                parent.$('body').trigger('iframeSetRef');
             }
-
-
+            
+            $(document.body).bind('iframeSetRefOk', function(e) {
+                clearInterval(myStopVar);
+            });
+        
         });
         });
 

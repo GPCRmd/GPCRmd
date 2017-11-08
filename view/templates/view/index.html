@@ -57,6 +57,12 @@
     width:100%;
 }
 
+.fpShowResSet{
+    margin-top:15px;
+    font-size:12px;    
+    padding-right:3px;
+    padding-left:3px;
+}
 </style>
 {% endblock %}
 </head>
@@ -96,7 +102,10 @@
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
 <!--        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>-->
-        <p style="text-align: justify;">Visualization technology powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>
+        <p style="text-align: justify;">Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>        
+        
+        <p style="text-align: justify;"><a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.</p>
+        
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
 	    <p class="falselist">Left button click: pick atom or distance.</p>
@@ -170,11 +179,11 @@
 
 <!-- ============= Apply buttonss =========== -->
             <div style="margin-bottom:5px">
-                <div class="row" style="margin-top:5px;margin-bottom:10px;" >
+<!--                <div class="row" style="margin-top:5px;margin-bottom:10px;" >
                      <div style="padding-right:3px;padding-left:3px">
                      <p style='text-align:right;color:#808080'>Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" rel="noreferrer" target="_blank">NGL viewer</a> and <a href="http://nglviewer.org/mdsrv/" rel="noreferrer" target="_blank">MDSrv</a></p>
                     </div>
-                 </div>
+                 </div>-->
                  <div class="row" style="margin-top:5px;margin-bottom:10px;" >
                    <div style="padding-right:3px;padding-left:3px"> 
                       <!--<button  class="btn btn-success" id="submit" >Apply</button> -->
@@ -505,7 +514,7 @@
            {% if gpcr_pdb != "no" %}
             <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
             <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
                 <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
             </div>
             <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
@@ -742,10 +751,10 @@
            <div id="analysis_fplot" class="collapse in" >
                 <div style="height:15px;margin:0;padding:0">
                     <span class="showIfTrajFPBlock" style="color:#808080;"><!--margin-bottom:10px;margin-top:10px;-->
-                        Intra-protein hydrogen bonding network
+                        Hydrogen bonding network
                     </span>
                 </div>
-                <div id="fpdiv" data-fpdir="{{fpdir}}" data-fpseg_li="{{seg_li}}" style="margin-top:0px;overflow:auto">
+                <div id="fpdiv" data-fpdir="{{fpdir}}" data-fpseg_li="{{seg_li}}" style="margin-top:0px;overflow:auto;margin-bottom:5px">
 
     <!-- 
                    <div class="row" style="margin-top:10px;margin-bottom:15px" >
@@ -767,27 +776,32 @@
     <!-- Link to big FP with slide  -->
      <!--           {% if seg_li %}    
                     <div class="row"> 
-                            <a id="gotofplot" href="{% url 'view:fplot_gpcr' dyn_id=dyn_id filename=traj_list.0.3 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
+                            <a id="gotofplot" href="{% url 'view:fplot_gpcr_slide' dyn_id=dyn_id filename=traj_list.0.3 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
                     </div>
                     {% endif %}-->
                     
                <center>
                  <div id="flare-container"></div>
 
-                  <button id="FPdisplay" class="btn btn-info active showIfTrajFP" type="button" style="margin-top:10px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                  <button id="FPdisplay" class="btn btn-info active showIfTrajFP" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
                     Hide interactions
                   </button>
                
-                  <button class="summarizeFP showIfTrajFP btn btn-info" type="button" style="margin-top:10px;width:115px;font-size:12px;">
+                  <button class="summarizeFP showIfTrajFP btn btn-info" type="button" style="margin-top:15px;width:115px;font-size:12px;">
                     Summarize
                   </button>
-                  <button id="FPclearSel" class="showIfTrajFP btn btn-danger" type="button" style="margin-top:10px;width:115px;font-size:12px;">
+                 <div class="btn-group showIfTrajFP">
+                  <button type="button" id="intraHel" class="btn btn-info active fpShowResSet">Intra-helix</button>
+                  <button type="button" id="interHel" class="btn btn-info active fpShowResSet">Inter-helix</button>
+                </div> 
+
+                  <button id="FPclearSel" class="showIfTrajFP btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;">
                     Clear selections
                   </button>
                </center>
-               <div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
+               <!--<div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
                     <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.
-                </div>
+                </div>-->
                </div><!-- End fpdiv -->
            </div> 
         {% endif %}
