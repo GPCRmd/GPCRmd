@@ -48,12 +48,12 @@ class Command(BaseCommand):
         )
 
         parser.add_argument(
-           '-traj',
-            dest='traj_id',
+           '-dyn',
+            dest='dyn_id',
             nargs='*',
             action='store',
             default=False,
-            help='Specify id(s) of trajectories for which a json file will be modified'
+            help='Specify id(s) of dynamics for which a json file will be modified'
         )
 
     def handle(self, *args, **options):
@@ -65,12 +65,11 @@ class Command(BaseCommand):
             isjsonfile=re.match("^\d*_trj_(\d*)_\w*.json$",myfile);
             if isjsonfile:
                 jsonfile=isjsonfile.group(0)
-                trajrestrict=options['traj_id']
-                if trajrestrict:
-                    traj_id=isjsonfile.group(1)
-                    if traj_id not in trajrestrict:
-                        self.stdout.write(self.style.ERROR("No json files found."))
-                        return
+                dynrestrict=options['dyn_id']
+                if dynrestrict:
+                    dyn_id=isjsonfile.group(1)
+                    if dyn_id not in dynrestrict:
+                        continue
                 fp_path=os.path.join(hb_json_path, jsonfile)
                 myfp=fp_dict(fp_path)
                 addContTypetoEdges(self,jsonfile,myfp)
