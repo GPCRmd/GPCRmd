@@ -84,7 +84,6 @@ class Command(BaseCommand):
                     ###########
                     
                     newpath = path.join(newdir,newfilename)
-                    print("\n\n",newpath)
                     exists=path.isfile(newpath)
                     if not exists:
                         self.stdout.write(self.style.NOTICE("Creating flareplot "+newfilename+"..."))

@@ -783,21 +783,23 @@
                <center>
                  <div id="flare-container"></div>
 
-                  <button id="FPdisplay" class="btn btn-info active showIfTrajFP" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
-                    Hide interactions
-                  </button>
-               
-                  <button class="summarizeFP showIfTrajFP btn btn-info" type="button" style="margin-top:15px;width:115px;font-size:12px;">
-                    Summarize
-                  </button>
-                 <div class="btn-group showIfTrajFP">
-                  <button type="button" id="intraHel" class="btn btn-info active fpShowResSet">Intra-helix</button>
-                  <button type="button" id="interHel" class="btn btn-info active fpShowResSet">Inter-helix</button>
-                </div> 
+                  <span id="allFPoptions" class="showIfTrajFP">
+                      <button id="FPdisplay" class="btn btn-info active" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                        Hide interactions
+                      </button>
+                   
+                      <button class="summarizeFP btn btn-info" type="button" style="margin-top:15px;width:115px;font-size:12px;">
+                        Summarize
+                      </button>
+                     <div class="btn-group" id="fpShowResSetBtns">
+                      <button type="button" id="intraHel" class="btn btn-info active fpShowResSet" title="Click to hide intra-helix interactions">Intra-helix</button>
+                      <button type="button" id="interHel" class="btn btn-info active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
+                    </div> 
 
-                  <button id="FPclearSel" class="showIfTrajFP btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;">
-                    Clear selections
-                  </button>
+                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;">
+                        Clear selections
+                      </button>
+                  </span>
                </center>
                <!--<div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
                     <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.

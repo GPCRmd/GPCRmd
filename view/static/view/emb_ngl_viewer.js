@@ -209,13 +209,14 @@ $(document).ready(function(){
                 d3.json(fpdir+fpfile_new, function(jsonData){
                     $("#flare-container").html("");
                     var fpsize=setFpNglSize(true);
-                    plot = createFlareplotCustom(fpsize, jsonData, "#flare-container");
+                    plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "all");
                     plot.setFrame(pg_framenum);
                     //setFPFrame(pg_framenum)
                     allEdges= plot.getEdges();
                     numfr = plot.getNumFrames();
                     $(".showIfTrajFP").css("display","inline");
                     $(".showIfTrajFPBlock").css("display","block");
+                    $(".fpShowResSet").addClass("active")
                 });
             } else {
                 alert_msg='<div class="alert alert-info" style="margin-bottom:10px">\
@@ -3657,38 +3658,103 @@ $(document).ready(function(){
     }); 
     
 //-------- Flare Plots --------
-
+    function showHideTitle(titletext,newWord){
+        if (newWord == "display"){
+            var newtitle=titletext.replace("hide", newWord);
+        } else {
+            var newtitle=titletext.replace("display", newWord);
+        }
+        return (newtitle);
+    }
 
     $(".fpShowResSet").on("click",function(){
         if ($(this).hasClass("active")){
-            $(this).removeClass("active");
+            var newtitle=showHideTitle($(this).attr("title"),"display");
+            $(this).removeClass("active").attr("title",newtitle);
+            
+            var siblBtn= $(this).siblings(".fpShowResSet");
+            if (! siblBtn.hasClass("active")){
+                var newtitle=showHideTitle(siblBtn.attr("title"),"hide");
+                siblBtn.addClass("active").attr("title",newtitle);
+            }
         } else {
-            $(this).addClass("active");
+            var newtitle=showHideTitle($(this).attr("title"),"hide");
+            $(this).addClass("active").attr("title",newtitle);
         }
         
         //create new FP but saving the selected contacts
         
-        $("#selectionDiv").trigger("click");
+        //$("#selectionDiv").trigger("click");
+        changeContactsInFplot()
     });
-
-
-    function createFlareplotCustom(fpsize, jsonData, fpdiv){
-        var fpjson=jsonData;
-        var interH=true;
-        if ((fpjson.edges[0].helixpos != undefined) || !interH){
-            var edges=fpjson.edges;
-            var newedges=[];
-            for (eN=0; eN < edges.length ; eN++ ){
-                var edge = edges[eN];
-                if (edge.helixpos == "Inter"){
-                    newedges.push(edge);
-                }
+    
+    changeContactsInFplot = function(){
+        interIsAct=$("#interHel").hasClass("active");
+        intraIsAct=$("#intraHel").hasClass("active");
+        var showContacts="all"; 
+        if (interIsAct && (! intraIsAct)){
+            var showContacts="Inter"; 
+        } else if ((!interIsAct) && intraIsAct){
+            var showContacts="Intra"; 
+        }
+        
+        //pg_framenum=new_fnum //?
+        var pre_resSelected=[];
+        $("#flare-container").find("g.node.toggledNode").each(function(){
+            var nodename=$(this).attr("id");
+            var nodenum=nodename.split("-")[1];
+            pre_resSelected.push(nodenum);
+        })
+        var fpfile_now=$("#selectedTraj").data("fplot_file");
+        d3.json(fpdir+fpfile_now, function(jsonData){
+            $("#flare-container").html("");
+            var fpsize=setFpNglSize(true); // Or just use the size used before?
+            plot = createFlareplotCustom(fpsize, jsonData, "#flare-container",showContacts);
+            plot.setFrame(pg_framenum);
+            allEdges= plot.getEdges();
+            numfr = plot.getNumFrames();
+            
+            if ($(".summarizeFP").hasClass("active")){
+                plot.framesSum(0, numfr);
             }
-            fpjson.edges=newedges;
+            
+            for (nN=0;nN<pre_resSelected.length;nN++){//Select at plot the residues selected before
+                plot.toggleNode(pre_resSelected[nN]);
+            }
+
+            updateFPInt()// //Update fpSelInt depending on what is in the fplot. 
+            $("#selectionDiv").trigger("click");
+
+        });
+        
+
+    }
+
+
+
+    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts){
+        var fpjson=jsonData;
+        if (fpjson.edges[0].helixpos != undefined) {
+            $("#fpShowResSetBtns").css("display","inline-block");
+            if(showContacts!= "all"){
+                var edges=fpjson.edges;
+                var newedges=[];
+                for (eN=0; eN < edges.length ; eN++ ){
+                    var edge = edges[eN];
+                    if (edge.helixpos == showContacts){
+                        newedges.push(edge);
+                    }
+                }
+                fpjson.edges=newedges;
+            }
+        } else {
+            $("#fpShowResSetBtns").css("display","none");
         }
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         return(plot);
     }
+
+
 
     function setFpNglSize(applyMinSize){
         var screen_h=screen.height;
@@ -3721,8 +3787,7 @@ $(document).ready(function(){
     if (fpdir){
         var fpsize=setFpNglSize(true);        
         d3.json(fpdir+fpfile, function(jsonData){
-            //plot = createFlareplot(600, jsonData, "#flare-container");
-            plot = createFlareplot(fpsize, jsonData, "#flare-container");
+            plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "all");
             allEdges= plot.getEdges()
             numfr = plot.getNumFrames();
         });
@@ -3749,6 +3814,7 @@ $(document).ready(function(){
 */
 //////////////    
     function setFPFrame(framenum){
+        //Changes the frame displayed at the FP and updates fpSelInt (dict of FP residues selected) according tot he new frame, by calling updateFPInt().
         if (!$(".summarizeFP").hasClass("active")){
             plot.setFrame(Number(framenum));
             if ($("#FPdisplay").hasClass("active")){
@@ -3763,6 +3829,7 @@ $(document).ready(function(){
     }
 
     var updateFlarePlotFrame = function(framenum){
+        //Calls setFPFrame(), which changes the frame displayed at the FP and updates fpSelInt (dict of FP residues selected) according tot he new frame. This function iscalled from NGL -> the flare plot frame will match the NGL frame. 
         pg_framenum=framenum;
         var fpSelInt_send=fpSelInt;
         if (plot){
@@ -3784,6 +3851,7 @@ $(document).ready(function(){
     
     
     function captureClickedFPInt(nodenum,nodeclass){
+        //If the node was not clicked before: Takes a given node and search for all the residues with which it interacts. If the num of interacting res > 0, adds the info of the node + int. nodes to fpSelInt. If the node was clicked before: removes it from fpSelInt.
         var nodepos=fpgpcrdb_dict[nodenum].join(":");
         if (nodeclass.indexOf("toggledNode") == -1){
             delete fpSelInt[nodepos];
@@ -3828,6 +3896,7 @@ $(document).ready(function(){
     });
 
     function updateFPInt(){
+        //Updates the fpSelInt dict depending on the nodes that are clicked
         allEdges= plot.getEdges()
         var updFpSelInt={}
         $("#flare-container").find("g.node.toggledNode").each(function(){

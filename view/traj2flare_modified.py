@@ -11,6 +11,20 @@ def get_num_frames(trj_file,stride):
     num_frames=np.shape(res[0])[0]
     return num_frames
 
+def get_cont_type(self,jsonfile,n1,n2):
+    if(len(n1.split("x")) != 2):
+        self.stdout.write(self.style.NOTICE("GPCR num %s not understood in %s." % (n1 , jsonfile)))
+        return False
+    chain1=n1.split("x")[0]
+    chain2=n2.split("x")[0]
+    if (chain1==chain2):
+        group="1"
+        info="Intra"
+    else:
+        group="2"
+        info="Inter"
+    return (info)
+
 def create_json(self,isGPCR,trj_file,top_file,resi_to_group,resi_to_name,newpath,stride):
     out_file  = re.search("(\w*)(\.\w*)$" , newpath).group()
     self.stdout.write(self.style.NOTICE("Reading MD trajectory..."))
@@ -47,7 +61,11 @@ def create_json(self,isGPCR,trj_file,top_file,resi_to_group,resi_to_name,newpath
         if resn1=="None" or resn2=="None": continue
 
         framelist = sorted(list(hbond_frames[(resi1,resi2)]))
-        edge_entries.append("    {\"name1\":\"%s\", \"name2\":\"%s\", \"frames\":%s}"%(resn1,resn2,str(framelist)))
+        helixinfo=get_cont_type(self,trj_file,resn1,resn2)
+        if (helixinfo):
+            edge_entries.append("    {\"name1\":\"%s\", \"name2\":\"%s\", \"frames\":%s, \"helixpos\":%s}"%(resn1,resn2,str(framelist),helixinfo))
+        else:
+            edge_entries.append("    {\"name1\":\"%s\", \"name2\":\"%s\", \"frames\":%s}"%(resn1,resn2,str(framelist)))
 
         tree_paths.add(resi_to_group[resi1]+"."+resn1)
         tree_paths.add(resi_to_group[resi2]+"."+resn2)
