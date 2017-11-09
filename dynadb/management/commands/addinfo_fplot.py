@@ -49,11 +49,11 @@ class Command(BaseCommand):
 
         parser.add_argument(
            '-traj',
-            dest='dyn_id',
+            dest='traj_id',
             nargs='*',
             action='store',
             default=False,
-            help='Specify id(s) of dynamics for which a json file will be modified'
+            help='Specify id(s) of trajectories for which a json file will be modified'
         )
 
     def handle(self, *args, **options):
