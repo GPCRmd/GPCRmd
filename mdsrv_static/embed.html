@@ -31,18 +31,19 @@
     <script src="mdsrv/webapp/js/gui.js"></script>
 
     <!-- MDSRV -->
-    <script src="mdsrv/webapp/js/mdsrv.js"></script>
+    <!--<script src="mdsrv/webapp/js/mdsrv.js"></script>-->
     <script>
         NGL.cssDirectory = "mdsrv/webapp/css/";
-        NGL.documentationUrl = "http://arose.github.io/ngl/api/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
 
         // Datasources
         NGL.DatasourceRegistry.add(
-            "file", new MdsrvDatasource( window.location.origin + "/mdsrv/" )
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
         );
         NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
         document.addEventListener( "DOMContentLoaded", function(){
+        
             //stage = new NGL.Stage( "viewport" );
 
 ////////////////// Functions
@@ -178,6 +179,18 @@
                 }
             });
         }
+        
+        function setTrajRangeMax(){
+            var btn_traj_Bid =$(".traj_btn").attr("id");
+            var tPatt = /\d*$/g;
+            var btn_traj_id = tPatt.exec(btn_traj_Bid);
+            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+            numfr=trajComp.trajectory._frameCount;
+            if ( numfr && ($("#trajRange").attr("max") != numfr)){
+                $("#trajRange").attr("max",numfr);
+            }
+
+        }
 
         function trajButtons(o){
             $(".ui-slider").css({"margin-left":"25px"});
@@ -221,10 +234,14 @@
                     $("#last_played").text(mytraj_nm);*/
 
                 }
+                numfr=trajComp.trajectory._frameCount;
+                if ($("#trajRange").attr("max") != numfr){
+                    $("#trajRange").attr("max",numfr);
+                }
             });
             $("#trajRange").change(function(){
                 if (trajComp){
-                    numfr=trajComp.trajectory.numframes;
+                    numfr=trajComp.trajectory._frameCount;
                     if ($("#trajRange").attr("max") != numfr){
                         $("#trajRange").attr("max",numfr);
                     }
@@ -237,6 +254,14 @@
             for (tcN=0; tcN< allTrajCompli.length;tcN++){
                 updateRepsFrameChanged(o,stage,allTrajCompli[tcN],bs_info,dist_within_li);
             }
+            
+            $("#trajRangeDiv").on("mousedown" , ".ui-slider-handle" , function(){
+                setTrajRangeMax();
+            })
+            
+            $("#trajRangeDiv").on("click" , ".ui-slider-track" , function(){
+                setTrajRangeMax();
+            })
 
         }
 
@@ -275,6 +300,24 @@
         }
         
         function clickDists(){
+            ////////////
+            // create new tooltip
+            var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+/////////////////
+    
             var clicktrue = true;
             $("#selectionDiv", window.parent.document).click(function(){
                 if (! clicktrue && lbl_name1){
@@ -290,21 +333,32 @@
             });            
             var o=stage.getComponentsByName("my_comp").list[0];
             var hovrep;
+            
+            // listen to `hovered` signal to move tooltip around and change its text
             stage.signals.hovered.add( function( d ){
-                if (d.atom){
+                if (d && (d.atom)){
                     var hatom = d.atom;
                     var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
                     $("#atomInfo").text(info);
-                } 
-                $("#viewport").mousemove(function(){$("#atomInfo").text("")});
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                    
+                } else {
+                    tooltip.style.display = 'none';
+                    $("#viewport").mousemove(function(){$("#atomInfo").text("")});
+                }
             });
+
             var atom1 , atom2 , res2 , res2, myrepr;
             var lbl_id=0;
             var dist_id=0;
             var lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 , labsele1;
             stage.signals.clicked.add( function( d ){
                 if (clicktrue){
-                    if (d.atom){
+                    if (d && d.atom){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         $("#atomClicked").text(info);
                         lbl_name1="label_"+lbl_id.toString();
@@ -319,7 +373,7 @@
                         $("#atomClicked").text("");
                     }
                 }else{
-                    if (d.atom){
+                    if (d && d.atom){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         $("#atomClicked").text(info);                                            
                         atom2 = d.atom.index.toString();
@@ -496,7 +550,7 @@
                 }
             });
             
-            o.clearRepresentations();
+            o.removeAllRepresentations();
             for (lname in clickedLabData){
                 var lsele=clickedLabData[lname];
                 o.addRepresentation( "label", {
@@ -822,7 +876,7 @@
             var setSelAll=setSelStr+setSelTempAtms;
             
             if ((! showH) &&  setSelAll.length > 0){
-                setSelAll="("+setSelAll+") and not #h"
+                setSelAll="("+setSelAll+") and not _h"
             }
             
             var setSelFIN="";
@@ -921,7 +975,7 @@
                         fpcolors.push([helix_colors[segN] , "protein and ("+ segsel +")" ]);
                     }
                 }
-                FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );                
+                FPscheme = NGL.ColormakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );                
             }
             
             if (struc) {
@@ -943,6 +997,7 @@
                         var res = patt.exec(traj_li_all[0]);
                         var mytraj_nm=res[1];
                         $("#last_played").text(mytraj_nm);
+                        //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
                         //traj_li=[mytraj];
                         //$("#buttons").html("<div style='width:586px;height:30px;overflow: auto;'><button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton0'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1])+'</button></div>'; 
                     }
@@ -961,21 +1016,16 @@
                         trajchange=trajchange_f;
                         trajComp.setFrame(traj_fnum[traj_id]);
                         //$("#selectionDiv" , window.parent.document).trigger("click");                        
-                        $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                        $("#trajRange").attr("max",trajComp.trajectory._frameCount);
                         var patt = new RegExp("/(.*)$");
                         var res = patt.exec(traj_li_all[traj_id]);
                         var mytraj_nm=res[1];
                         $("#last_played").text(mytraj_nm);
                     });
                     trajButtons(o);
-                    //createReps();
-                    stage.centerView("protein");
-                    ori= stage.getOrientation();
-
-                    /*$("#clearAll", window.parent.document).click(function(){
-                        createReps();
-                    });*/
                     
+                    stage.autoView();
+                    ori= stage.viewerControls.getOrientation();
                     
                     $("#selectionDiv", window.parent.document).on("click" , function(){
                         createReps();
@@ -984,7 +1034,8 @@
                     //selChange();      
 
                     clickDists();
-
+                    
+                    createReps()
 
                 });
 ////////////SETTINGS:
@@ -1036,10 +1087,10 @@
                 });*/
                 $("#center", window.parent.document).click(function(){
                     //stage.setOrientation([[-1.504730224609375, 2.6254119873046875, 1.9448356628417969], [-1.504730224609375, 2.6254119873046875, -117.27891736575096], [0, 1, 0]])
-                    stage.centerView();
+                    stage.autoView(1000);
                 });
                 $("#restartPos", window.parent.document).click(function(){
-                    stage.setOrientation(ori);
+                    stage.animationControls.orient(ori);
                 });
                 
                 $(".projectionOP", window.parent.document).click(function(){
