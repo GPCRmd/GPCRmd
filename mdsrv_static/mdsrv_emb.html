@@ -31,11 +31,12 @@
 
     <script>
         NGL.cssDirectory = "mdsrv/webapp/css/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
         NGL.documentationUrl = "http://arose.github.io/ngl/api/";
 
         // Datasources
         NGL.DatasourceRegistry.add(
-            "file", new MdsrvDatasource( window.location.origin + "/mdsrv/" )
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
         );
         NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
@@ -80,7 +81,7 @@
             stage.signals.clicked.add( function( d ){
                // hovrep.repr.clear()
                 if (clicktrue){
-                    if (d.atom){
+                    if (d && (d.atom)){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         lbl_name1="label_"+lbl_id.toString();
                         lbl_id+=1;
@@ -95,7 +96,7 @@
                         clicktrue = false;
                     }
                 }else{
-                    if (d.atom){
+                    if (d && (d.atom)){
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         atom2 = d.atom.index.toString();
                         //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
@@ -181,6 +182,38 @@
             nonGPCR_mod=nonGPCR_mod.slice(0,-3);
             return nonGPCR_mod;
         }
+        
+        function modTooltip(){
+            // create new tooltip
+            var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+            // listen to `hovered` signal to move tooltip around and change its text
+            stage.signals.hovered.add( function( d ){
+                if (d && (d.atom)){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+        }        
 ///////////////
             var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection =fpsegStr="";
             var struc = NGL.getQuery( "struc" );
@@ -229,7 +262,7 @@
                         fpcolors.push([helix_colors[segN] , "protein and ("+ segsel +")" ]);
                     }
                 }
-                var FPscheme = NGL.ColorMakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );
+                var FPscheme = NGL.ColormakerRegistry.addSelectionScheme( fpcolors, "FPscheme" );
                 
             }
 
@@ -245,7 +278,7 @@
                                 
             
                                 if (showH == "f"){
-                                    o.setSelection("not #h");
+                                    o.setSelection("not _h");
                                 }
                                 
                                 if (receptorsel){
@@ -512,7 +545,7 @@
                                 }
                                 
                                 clickDists(o);
-                                o.centerView("protein");
+                                o.autoView("protein");
                                 var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
                                 for (trajN = 0; trajN < trajCompT.length; trajN++) {
                                     trajCompT[trajN].signals.frameChanged.add(function(){
@@ -562,6 +595,7 @@
                                         }
                                     });
                                 }
+                                modTooltip()
                           } );
                     }
 

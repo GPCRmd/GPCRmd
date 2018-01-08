@@ -34,16 +34,16 @@
     <script src="mdsrv/webapp/js/mdsrv.js"></script>
     <script>
         NGL.cssDirectory = "mdsrv/webapp/css/";
-        NGL.documentationUrl = "http://arose.github.io/ngl/api/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
 
         // Datasources
         NGL.DatasourceRegistry.add(
-            "file", new MdsrvDatasource( window.location.origin + "/mdsrv/" )
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
         );
         NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
         document.addEventListener( "DOMContentLoaded", function(){
-            //stage = new NGL.Stage( "viewport" );
+
 
 ////////////////// Functions
         function trajButtons(o,trajComp){
@@ -54,7 +54,7 @@
 
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
             $(".traj_btn").click( function(){
-                $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                $("#trajRange").attr("max",trajComp.trajectory._frameCount);
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
@@ -70,7 +70,7 @@
 
                 } else {
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    $("#trajRange").attr("max",trajComp.trajectory.numframes);
+                    $("#trajRange").attr("max",trajComp.trajectory._frameCount);
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     player.play();
                     $(this).addClass("active");
@@ -103,6 +103,38 @@
            //$("#buttons").css("width", cont_w_in);
            $("#trajRangeDiv").css({"width" : cont_w_in  , "margin-top" : cont_h_range });
         }
+        
+        function modTooltip(){
+            // create new tooltip
+            var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+            // listen to `hovered` signal to move tooltip around and change its text
+            stage.signals.hovered.add( function( d ){
+                if (d && (d.atom)){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname;
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+        }
 //////////////////
 
 
@@ -134,6 +166,7 @@
 
                         trajButtons(o,trajComp);
                         
+                        modTooltip();
 
                     });
                 }
