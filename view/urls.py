@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^fplot2/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/(?P<seg_li>(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),((|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?),){13}(|\d+(:[A-Z])?|\d+(:[A-Z])?\-\d+(:[A-Z])?))/$', views.fplot_gpcr_slide, name='fplot_gpcr_slide'),
    url(r'^fplot_test/(?P<dyn_id>[0-9]+)/(?P<filename>\w+\.json)/$', views.fplot_test, name='fplot_test'),
     url(r'^ref/(?P<dyn_id>[0-9]+)/$', views.view_reference, name='reference'),
+    url(r'^session/(?P<session_name>\w*)/$', views.view_session, name='view_session'),
 ]
 
 if settings.DEBUG:

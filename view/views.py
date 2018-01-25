@@ -21,6 +21,8 @@ import pickle
 import math
 from os import path
 from dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
+from django.shortcuts import redirect
+import os
 
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
@@ -1947,6 +1949,22 @@ def view_reference(request, dyn_id ):
          "url":url
     }
     return render(request, 'view/reference.html', context )
+
+
+def view_session(request , session_name):
+    """
+    Now only opens structure & traj of adenosine receptor with colesterol.
+    """
+    sessions_path="/protwis/sites/files/Sessions"
+    s_li=os.listdir(sessions_path)
+    if session_name+".ngl" in s_li:
+    
+        mdsrv_url=obtain_domain_url(request)
+        redirect_url='/html/session.html?load=file://_DB/Sessions/pufa.ngl'
+
+        return redirect(mdsrv_url+redirect_url)
+
+    
     
 ############ TEST #############
 def fplot_test(request, dyn_id, filename):
