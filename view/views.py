@@ -1960,7 +1960,7 @@ def view_session(request , session_name):
     if session_name+".ngl" in s_li:
     
         mdsrv_url=obtain_domain_url(request)
-        redirect_url='/html/session.html?load=file://_DB/Sessions/pufa.ngl'
+        redirect_url='/html/session.html?load=pufa.ngl'
 
         return redirect(mdsrv_url+redirect_url)
 

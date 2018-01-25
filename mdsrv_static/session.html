@@ -46,7 +46,10 @@
 
             var load = NGL.getQuery( "load" );
 
-            if( load ) stage.loadFile( load, { defaultRepresentation: true } );
+            if( load ) {
+                loadfin="file://_DB/Sessions/" + load ;
+                stage.loadFile( loadfin, { defaultRepresentation: true } );
+            }
 
             var struc = NGL.getQuery( "struc" );
             var traj = NGL.getQuery( "traj" );
