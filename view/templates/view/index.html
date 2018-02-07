@@ -236,11 +236,18 @@
                                     <div style="margin-bottom:10px;">
                                         Trajectory step size: <input class="form-control input-sm rvSpaces" id="trajStep"  type="number" placeholder=3 style="width:50px;padding-left:7px;padding-right:2px;">
                                     </div>
-                                    <div >
+                                    <div style="margin-bottom:10px;">
                                         Trajectory timeout: <input class="form-control input-sm rvSpaces" id="trajTimeOut"  type="number" placeholder=50 style="width:50px;padding-left:7px;padding-right:2px;"> ms
                                     </div>
                                     
-
+                                    <div >
+                                        Interpolation type: 
+                                            <select id="trajIntType" name="trajIntTypeNm">
+                                                <option  selected value="spline">spline</option> 
+                                                <option   value="linear">linear</option>
+                                                <option   value="">none</option>
+                                            </select>    
+                                    </div>
 
                                   
                             </div>

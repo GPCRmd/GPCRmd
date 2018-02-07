@@ -210,6 +210,7 @@
                 if(isact){
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.interpolateType=trajIntType;
                     player.step=stepsize;
                     player.timeout=trajtimeout;
                     $(this).removeClass("active");
@@ -222,6 +223,7 @@
                     trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     //$("#trajRange").attr("max",trajComp.trajectory.numframes);
                     player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.interpolateType=trajIntType;
                     player.step=stepsize;
                     player.timeout=trajtimeout;
                     player.play();
@@ -876,7 +878,7 @@
             var setSelAll=setSelStr+setSelTempAtms;
             
             if ((! showH) &&  setSelAll.length > 0){
-                setSelAll="("+setSelAll+") and not _h"
+                setSelAll="not _h and ("+setSelAll+")"
             }
             
             var setSelFIN="";
@@ -950,6 +952,7 @@
             var setSelLi=[];
             var setSelStr="protein";
             var trajchange=false;
+            var trajIntType="spline";
             
             //var gpcrSelExp= parent.gpcr_selection()
             //!
@@ -990,7 +993,7 @@
                         //$("#loading", window.parent.document).html("");
                     if( traj_li_all.length > 0 ) {
                         for (t=0 ; t < traj_li_all.length ; t++){
-                            o.addTrajectory( traj_path + traj_li_all[t] );                        
+                            o.addTrajectory( traj_path + traj_li_all[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
                         var patt = new RegExp("/(.*)$");
@@ -1166,6 +1169,18 @@
                     }
                     trajtimeout = timeout;
                 });
+                
+                $("#trajIntType", window.parent.document).on("change" , function(){
+                    var intType=$(this).val();
+                    if (player && $(".traj_btn").hasClass("active")){
+                        player.pause();
+                        $(".traj_btn").removeClass("active");
+                        $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                        //var lastfr=trajComp.trajectory.currentFrame;
+                        //traj_fnum[traj_lastPlayedID]=lastfr+stepsize;
+                    }
+                    trajIntType=intType;
+                })
                 
             }
         });

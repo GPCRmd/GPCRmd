@@ -3499,6 +3499,23 @@ $(document).ready(function(){
          return (my_str);
     }
     
+    function getCorrectSettingVal(settingsVal,defaultVal){
+        if (settingsVal && settingsVal != defaultVal){// If it's the default we don't need to sent it to MDsrv
+            settingsVal = Number(settingsVal);
+            var pos = Math.abs(settingsVal)
+            var rounded= Math.round(pos);
+            if (rounded <= 0){
+                var rounded = 1;
+            } 
+            if (settingsVal != rounded){
+                settingsVal = rounded;
+            }
+            return (settingsVal.toString());
+        } else {
+            return ("");
+        }
+    }
+    
     $("#to_mdsrv").click(function(){
          var results = obtainURLinfo(gpcr_pdb_dict);
          var cp = results["cp"];
@@ -3554,6 +3571,20 @@ $(document).ready(function(){
         if ($("#projOrtho").hasClass("active")){
             projection="o"
         }
+        ////////// [!] CHECK IF IS OK AND CONTINUE!!! : 
+        
+        var spin="";
+        if ($("#spinOn").hasClass("active")){ spin="y"}
+        var intType="";
+        if ($("#trajIntType").val() == ""){
+            intType="n";
+        } else if ($("#trajIntType").val() == "linear"){
+            intType="l";
+        }
+        var trajStepSend=getCorrectSettingVal($("#trajStep").val(),"3");
+        var trajTimeOutSend=getCorrectSettingVal($("#trajTimeOut").val(),"50");
+        
+        /////////
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
         var add_url_var ={"traj":encode(traj) ,
                             "fp":encode(fpsegStr_send),
@@ -3563,7 +3594,7 @@ $(document).ready(function(){
                             "lb":encode(high_pre["B"]),
                             "lc":encode(high_pre["C"]),
                             "lf":encode(high_pre["F"]), 
-                            "wth":encode(dist_of) , 
+                            "wtn":encode(dist_of) , 
                             "in":encode(int_res_s),
                             "ih":encode(int_res_s_ch),
                             "ng":encode(nonGPCR) , 
@@ -3577,7 +3608,11 @@ $(document).ready(function(){
                             "as":encode(all_resids_sb),
                             "ai" : encode(all_resids_inter),
                             "pj": projection,
-                            "h": showHShort
+                            "ha": showHShort,
+                            "sp":spin,
+                            "ti":intType,
+                            "ts":trajStepSend,
+                            "tt":trajTimeOutSend
                             }        
   
         for (varn in add_url_var){

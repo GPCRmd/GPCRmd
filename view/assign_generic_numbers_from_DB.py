@@ -128,7 +128,7 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
         successful_classes=0
         for (gpcr_cl, seq_num) in all_num_schemes.items():
             if seq_num:
-                result=align_wt_mut(wt_seq,seq_db)
+                result=align_wt_mut_viewer(wt_seq,seq_db)
                 res_wt=result[0]
                 res_mut=result[1]
                 seq_n=0
