@@ -749,7 +749,7 @@ $(document).ready(function(){
                 if (num_gpcrs >1){
                     subst_pos_all=subst_pos_all.slice(0,-4);
                 } 
-                subst_pos_all="protein and ("+subst_pos_all+")";
+                subst_pos_all="(protein and ("+subst_pos_all+"))";
                 sel = sel.replace(my_gpcr ,subst_pos_all );
             } else {
                 sel="";
