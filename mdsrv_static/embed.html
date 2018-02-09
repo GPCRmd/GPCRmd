@@ -644,12 +644,17 @@
                     var rep = layer_all[1];
                     var color = layer_all[2];
                     var scheme = layer_all[3];
-                    if (scheme=="FPscheme"){
-                        o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
-                    } else {
-                        o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
-                    }
-                    selAll.push(sel);
+                    var selectionTest = new NGL.Selection( sel ).selection[ "error" ];
+                    if (!selectionTest){
+                        if (scheme=="FPscheme"){
+                            o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
+                        } else {
+                            o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                        }
+                        selAll.push(sel);
+                    } /*else {
+                        
+                    }*/
                 }
                 selAllStr="("+selAll.join(") or (")+")";
                 //setSelDict=addToSel(o,selAllStr,setSelDict);  

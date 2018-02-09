@@ -407,8 +407,9 @@ $(document).ready(function(){
         var layer=[];
         $("#text_input_all").find(".text_input").each(function(){
             $(this).find(".span_morecolors").removeClass("has-error");
+            var rownum=$(this).attr("id");
             var pre_sel = $(this).find(".sel_input").val();
-            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main",".ti_alert");
+            sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ti_alert");
             if (sel_enc.length > 0){
                 var ltype = $(this).find(".high_type").val();
                 var lscheme = $(this).find(".high_scheme").val();
@@ -431,7 +432,8 @@ $(document).ready(function(){
         $("#seq_input_all").find(".seq_input_row").each(function(){
             $(this).find(".span_morecolors").removeClass("has-error");
             var pre_sel = $(this).find(".seq_input").val();
-            sel_enc =inputText(gpcr_pdb_dict,pre_sel,false,"main",".si_alert");
+            var rownum=$(this).attr("id");
+            sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".si_alert");
             if (sel_enc.length > 0){
                 var ltype = $(this).find(".high_type").val();
                 var lscheme = $(this).find(".high_scheme").val();
@@ -550,7 +552,7 @@ $(document).ready(function(){
                                     <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
                               </div>\
                           </div>\
-                          <div class="ti_alert"> </div>      \
+                          <div class="ti_alert"><div class="ti_alert_gnum"></div><div class="ti_alert_ngl"></div></div>      \
                       </div>';
 
             $("#text_input_all").append(row);
@@ -563,6 +565,8 @@ $(document).ready(function(){
         var inpval= $(this).closest(".text_input").find(".sel_input").val();
         if(numTiRows==1){
             $("#text_input_all").find(".sel_input").val("");
+            $("#text_input_all").find(".ti_alert_gnum").html("");
+            $("#text_input_all").find(".ti_alert_ngl").html("");
         }else{
             var wBlock =$(this).closest(".text_input");
             if (wBlock.is(':last-child')){
@@ -647,7 +651,7 @@ $(document).ready(function(){
                                     <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0;visibility:hidden"><span class="glyphicon glyphicon-plus-sign"></span></button>\
                               </div>\
                           </div>\
-                          <div class="si_alert"> </div>\
+                          <div class="si_alert"><div class="si_alert_gnum"></div><div class="si_alert_ngl"></div></div>\
                       </div>';
 
             $("#seq_input_all").append(row);
@@ -708,6 +712,7 @@ $(document).ready(function(){
         var res = pre_sel.match(re); 
         return(res);
     }
+
     
     function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel){
         var add_or ="";
@@ -733,11 +738,13 @@ $(document).ready(function(){
                 } else {
                     res_chain=undefined;
                     if (inpSource=="main"){
-                        to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $(alertSel).append(to_add);
+                        var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                        var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
+
+                        $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").append(to_add);
                     } else {
                         to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                        $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").append(to_add);
                     }
                 }
                 if (res_chain){
@@ -787,11 +794,13 @@ $(document).ready(function(){
                         res_chain=undefined;
                         chain_pair=false;
                         if (inpSource=="main"){
-                            to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                            $(alertSel).append(to_add);
+                            var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                            var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
+                            $("#"+rownum).find(alertSel+" > "+alertSel+"_gnum").append(to_add);
                         } else {
-                            to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                            $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                            var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                            var to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
+                            $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").append(to_add);
                         }
                         break;
                     }
@@ -832,6 +841,9 @@ $(document).ready(function(){
     
 
     function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource,alertSel){
+        if (pre_sel.length > 0){
+            $("#"+rownum).find(alertSel +" "+alertSel+"_gnum").html("");
+        }
         var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
@@ -839,10 +851,10 @@ $(document).ready(function(){
             sel = "";
             if (inpSource=="main"){
                 to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                $(alertSel).attr("class","alert alert-danger row").append(to_add);
+                $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").attr("class","alert alert-danger row").append(to_add);
             } else {
                 to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
-                $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").html(to_add);
             }
         } else {
             sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource,alertSel);
@@ -853,10 +865,10 @@ $(document).ready(function(){
                 sel = "";
                 if (inpSource=="main"){
                     to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                    $(alertSel).attr("class","alert alert-danger row").append(to_add);
+                    $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").attr("class","alert alert-danger row").append(to_add);
                 } else {
                     to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
-                    $("#"+rownum).find(".alert_sel_wth").html(to_add);
+                    $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").html(to_add);
                 }
             } else {
                 sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel);
@@ -1094,7 +1106,7 @@ $(document).ready(function(){
                             <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>\
                             <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>\
                         </span>\
-                        <div class="alert_sel_wth"></div>\
+                        <div class="alert_sel_wth"><div class="alert_sel_wth_gnum"></div><div class="alert_sel_wth_ngl"></div></div>\
                       </div>';
             $(".sel_within").append(row);
             wth_i+=1;
@@ -1108,7 +1120,8 @@ $(document).ready(function(){
         if(numWthRows==1){
             $(".sel_within").find(".inputdist").val("");
             $(".sel_within").find(".user_sel_input").val("");
-            $(".sel_within").find(".alert_sel_wth").html("");
+            $(".sel_within").find(".alert_sel_wth_gnum").html("");
+            $(".sel_within").find(".alert_sel_wth_ngl").html("");
             inactivate_row(row);
         }else{
             var wBlock =$(this).closest(".dist_sel");
@@ -1135,7 +1148,7 @@ $(document).ready(function(){
                 if (comp=="user_sel"){
                     pre_sel=$(this).find(".user_sel_input").val();
                     var rownum = $(this).attr("id");
-                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth",false);
+                    var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth",".alert_sel_wth");
                     if (def_sel ==""){
                         comp="none";
                         $(this).find(".user_sel_input").val("");
@@ -1341,21 +1354,28 @@ $(document).ready(function(){
                                     for (lig in int_data){
                                         res_int=int_data[lig];
                                         var num_res_int=res_int.length;
+                                        //1) Inside the table body, the 1st tr has the "rowspan" td. We create it:
                                         table_html+='<tr><td rowspan='+num_res_int+'>'+lig+'</td>';
                                         var res_int_1st=res_int[0];
                                         var res_int_1st_ok=[res_int_1st[2]+" "+res_int_1st[0].toString(),res_int_1st[1],gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1]),res_int_1st[3]+"%"];
-                                        //
+
                                         gnum_mylist=gnumFromPosChain(res_int_1st[0].toString(), res_int_1st[1])
                                         if (gnum_mylist == "-"){
                                             gnum_mylist=res_int_1st[2]+res_int_1st[0].toString()+":"+res_int_1st[1];
                                         }
                                         mylist.push([res_int_1st[0],gnum_mylist ,res_int_1st[3] ]);
-                                        //
-                                        for (info=0 ; info < res_int_1st_ok.length ; info++){
+
+                                        //2) And then we create the rest of td inside this tr.
+                                        table_html+='<td class="AA_td" style="cursor:pointer;">'+res_int_1st_ok[0]+'</td>\
+                                                     <td class="chain_td">'+res_int_1st_ok[1]+'</td>\
+                                                     <td class="gnum_td">'+res_int_1st_ok[2]+'</td>\
+                                                     <td class="freq_td">'+res_int_1st_ok[3]+'</td>';
+                                        /*for (info=1 ; info < res_int_1st_ok.length ; info++){
                                             table_html+='<td>'+res_int_1st_ok[info]+'</td>';
-                                        }
+                                        }*/
                                         table_html+='</tr>';
                                         var res_int_rest=res_int.slice(1,res_int.length);
+                                        //3) The rest of td of the table body do ot have rowspan:
                                         for (res_infoN=0; res_infoN < res_int_rest.length ; res_infoN++){
                                             var res_info=res_int_rest[res_infoN];
                                             var res_info_ok=[res_info[2]+" "+res_info[0].toString(),res_info[1],gnumFromPosChain(res_info[0].toString(), res_info[1]),res_info[3]+"%"];
@@ -1367,10 +1387,14 @@ $(document).ready(function(){
                                             mylist.push([res_info[0],gnum_mylist ,res_info[3] ]);
                                             //
                                             table_html+='<tr>';
-                                            for (infoN=0 ; infoN < res_info_ok.length ; infoN++){
+                                            table_html+='<td class="AA_td" style="cursor:pointer;">'+res_info_ok[0]+'</td>\
+                                                         <td class="chain_td">'+res_info_ok[1]+'</td>\
+                                                         <td class="gnum_td">'+res_info_ok[2]+'</td>\
+                                                         <td class="freq_td">'+res_info_ok[3]+'</td>';
+                                            /*for (infoN=1 ; infoN < res_info_ok.length ; infoN++){
                                                 var info=res_info_ok[infoN];
                                                 table_html+='<td>'+info+'</td>';
-                                            }
+                                            }*/
                                             table_html+='</tr>';
                                         }                              
                                     }
@@ -1516,102 +1540,68 @@ $(document).ready(function(){
         }
     });
     
-
-    
-    function displayCheckedIntResids(){
-        var int_res_li=[];
-        $(".int_tbl").each(function(){
-            if ($(this).find(".display_int").is(":checked")){
-                $(this).find(".int_results_tbl > tbody > tr").each(function(){
-                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
-                    var td_list= $(this).children();
-                    var isChecked=td_list.last().hasClass("showInP");
-                    if (isChecked){
-                        if(td_list.length > 4){
-                            var pos = $(this).find("td:nth-child(2)").html();
-                            var chain =$(this).find("td:nth-child(3)").html();
-                            var freq =$(this).find("td:nth-child(5)").html();
-                        } else{
-                            var pos =$(this).find("td:first-child").html();
-                            var chain =$(this).find("td:nth-child(2)").html();
-                            var freq =$(this).find("td:nth-child(4)").html();
-                        }
-                        var pos_aa = /\d*$/.exec(pos)[0];
-                        int_res_li.push([pos_aa, chain,freq]);
-                    }
-                });
-            }  
-        });
-        int_res_li=uniq(int_res_li);
-        return (int_res_li);
-    }
-    
-    
     
     function displayIntResids(){
         var int_res_li=[];
+        var int_res_li_check=[];
         $(".int_tbl").each(function(){
             if ($(this).find(".display_int").is(":checked")){
                 $(this).find(".int_results_tbl > tbody > tr").each(function(){
-                    //If td last child has class showInP, pass; that will go in another list (when building it, take only when showInP class is present!!)
-                    var td_list= $(this).children();
-                    var isChecked=td_list.last().hasClass("showInP");
-                    if (! isChecked){
-                        if(td_list.length > 4){
-                            var pos = $(this).find("td:nth-child(2)").html();
-                            var chain =$(this).find("td:nth-child(3)").html();
-                            var freq =$(this).find("td:nth-child(5)").html();
-                        } else{
-                            var pos =$(this).find("td:first-child").html();
-                            var chain =$(this).find("td:nth-child(2)").html();
-                            var freq =$(this).find("td:nth-child(4)").html();
-                        }
-                        var pos_aa = /\d*$/.exec(pos)[0];
+                    var pos_sel=$(this).children(".AA_td");
+                    var pos = pos_sel.html();
+                    var chain=$(this).children(".chain_td").html();
+                    var freq=$(this).children(".freq_td").html();
+                    var isChecked=pos_sel.hasClass("showInP");
+                    var pos_aa = /\d*$/.exec(pos)[0];
+                    if (isChecked){
+                        int_res_li_check.push([pos_aa, chain,freq]);
+                    } else {
                         int_res_li.push([pos_aa, chain,freq]);
                     }
+
                 });
             }  
         });
         int_res_li=uniq(int_res_li);
-        return (int_res_li);
+        int_res_li_check=uniq(int_res_li_check);
+        return ([int_res_li,int_res_li_check]);
     }
+
     
     $("#int_info").on("change" ,".display_int" , function(){
         $("#selectionDiv").trigger("click");
     });
     
-    $("#int_info").on("click","td",function(){
+
+    $("#int_info").on("mouseenter", ".AA_td", function() {
+        if ($(this).hasClass("showInP")){
+            $(this).css("background-color","#9dd0e1");
+        } else {
+            $(this).css("background-color","#f2f2f2");
+        }
+    });
+    $("#int_info").on("mouseleave", ".AA_td", function() {
+        if ($(this).hasClass("showInP")){
+            $(this).css("background-color","#c5e3ed");
+        } else {
+            $(this).css("background-color","transparent");
+        }
+    });
+
+
+    $("#int_info").on("click",".AA_td",function(){
         var isclicked = $(this).hasClass("showInP");
         if (isclicked) {
-            var sibl = $(this).siblings().length;
-            if (sibl == 4) {
-                var hasrowspan= $(this).attr("rowspan");
-                if (! hasrowspan){
-                    $(this).siblings(":not([rowspan])").css("background-color","transparent").removeClass("showInP");
-                    $(this).css("background-color","transparent").removeClass("showInP");
-                } 
-            } else {
-                $(this).siblings().css("background-color","transparent").removeClass("showInP");
-                $(this).css("background-color","transparent").removeClass("showInP");
-            }
+            $(this).css("background-color","transparent").removeClass("showInP");
         } else {
-            var sibl = $(this).siblings().length;
-            if (sibl == 4) {
-                var hasrowspan= $(this).attr("rowspan");
-                if (! hasrowspan){
-                    $(this).siblings(":not([rowspan])").css("background-color","#ecf6f9").addClass("showInP");
-                    $(this).css("background-color","#ecf6f9").addClass("showInP");
-                } 
-            } else {
-                $(this).siblings().css("background-color","#ecf6f9").addClass("showInP");
-                $(this).css("background-color","#ecf6f9").addClass("showInP");
-            }
+            $(this).css("background-color","#ecf6f9").addClass("showInP");
         }
         if ($(this).closest(".int_tbl").find(".display_int").is(":checked")){
             $("#selectionDiv").trigger("click");
         }
     });
-    
+
+      
 //-------- Dist between residues --------
 
     var i_dist=1;
@@ -3419,8 +3409,9 @@ $(document).ready(function(){
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_li =obtainTextInput();
         var dist_groups_li=displayCheckedDists();
-        var int_res_li=displayIntResids();
-        var int_res_li_ch = displayCheckedIntResids();
+        var int_res_li_res=displayIntResids();
+        var int_res_li=int_res_li_res[0];
+        var int_res_li_ch = int_res_li_res[1];
         cp = obtainCompounds();
         nonGPCR=obtainNonGPCRchains(".nonGPCR.active");// list of strings, each string contains the chains of a non-GPCR prot selected.
         if (gpcr_pdb_dict=="no"){
