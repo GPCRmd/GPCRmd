@@ -405,6 +405,7 @@ $(document).ready(function(){
 //-------- Text Input --------
     function obtainTextInput(){
         var layer=[];
+        var layer_row=[];
         $("#text_input_all").find(".text_input").each(function(){
             $(this).find(".span_morecolors").removeClass("has-error");
             var rownum=$(this).attr("id");
@@ -426,6 +427,7 @@ $(document).ready(function(){
                     var lcolor = dBtn.data("color");
                 }
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
+                layer_row[layer_row.length]=[sel_enc, ltype, lcolor,lscheme,rownum];
             }
         });
         
@@ -450,9 +452,10 @@ $(document).ready(function(){
                     var lcolor = dBtn.data("color");
                 }
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
+                layer_row[layer_row.length]=[sel_enc, ltype, lcolor,lscheme,rownum];
             }
         });
-        return(layer);
+        return([layer,layer_row]);
     }
     
 
@@ -567,6 +570,7 @@ $(document).ready(function(){
             $("#text_input_all").find(".sel_input").val("");
             $("#text_input_all").find(".ti_alert_gnum").html("");
             $("#text_input_all").find(".ti_alert_ngl").html("");
+            $("#text_input_all").find(".sel_input").css("border-color","");
         }else{
             var wBlock =$(this).closest(".text_input");
             if (wBlock.is(':last-child')){
@@ -665,6 +669,10 @@ $(document).ready(function(){
         if(numSiRows==1){
             $("#seq_input_all").css("display","none");
             $("#seq_input_all").find(".seq_input").val("");
+
+            $("#seq_input_all").find(".si_alert_gnum").html("");
+            $("#seq_input_all").find(".si_alert_ngl").html("");
+            $("#seq_input_all").find(".seq_input").css("border-color","");
         }else{
             var wBlock =$(this).closest(".seq_input_row");
             if (wBlock.is(':last-child')){
@@ -713,6 +721,29 @@ $(document).ready(function(){
         return(res);
     }
 
+    function addErrorToInput(rowIndex,inpSource,alertComp,appOrSubst,text){
+        if (inpSource == "main"){
+            var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+text+'</span></div>';
+            var textrow=$(rowIndex);
+            textrow.find("input").css("border-color","#A94442");
+        } else {
+            to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a><span class="error_text">'+text+'</span></div>';
+            var textrow=$(".sel_within").find(rowIndex);
+            inactivate_row(textrow,false);
+            textrow.find(".user_sel_input").css("border-color","#A94442");
+        }
+        if (appOrSubst=="append"){
+            textrow.find(alertComp).append(to_add);
+        } else {
+            textrow.find(alertComp).html(to_add);      
+        }
+    }
+    
+    var NGL_addErrorToInput=function(rowIndex){
+        var to_add="Invalid selection.";
+        addErrorToInput(rowIndex,"inp_wth",".alert_sel_wth_ngl","html",to_add);
+    }
+    window.NGL_addErrorToInput=NGL_addErrorToInput;
     
     function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel){
         var add_or ="";
@@ -739,12 +770,10 @@ $(document).ready(function(){
                     res_chain=undefined;
                     if (inpSource=="main"){
                         var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
-                        var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
-
-                        $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").append(to_add);
+                        addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                     } else {
-                        to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>'+my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.</div>';
-                        $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").append(to_add);
+                        var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
+                        addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                     }
                 }
                 if (res_chain){
@@ -795,12 +824,11 @@ $(document).ready(function(){
                         chain_pair=false;
                         if (inpSource=="main"){
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
-                            var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
-                            $("#"+rownum).find(alertSel+" > "+alertSel+"_gnum").append(to_add);
+                            addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
+
                         } else {
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
-                            var to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
-                            $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").append(to_add);
+                            addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                         }
                         break;
                     }
@@ -841,20 +869,22 @@ $(document).ready(function(){
     
 
     function inputText(gpcr_pdb_dict,pre_sel,rownum,inpSource,alertSel){
-        if (pre_sel.length > 0){
-            $("#"+rownum).find(alertSel +" "+alertSel+"_gnum").html("");
-        }
+        if (inpSource=="main"){
+            $("#"+rownum).find(alertSel+"_gnum").html("");
+            $("#"+rownum).find(alertSel+"_ngl").html("");
+            $("#"+rownum).find("input").css("border-color","");
+        } 
         var gpcr_ranges=obtainInputedGPCRrange(pre_sel);
         if (gpcr_ranges == null){
             sel = pre_sel ;
         } else if (gpcr_pdb_dict=="no"){
             sel = "";
             if (inpSource=="main"){
-                to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").attr("class","alert alert-danger row").append(to_add);
+                var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
+                addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
             } else {
-                to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
-                $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").html(to_add);
+                var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
+                addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","html",to_add_inside);
             }
         } else {
             sel=parseGPCRrange(pre_sel,gpcr_ranges,rownum,inpSource,alertSel);
@@ -864,11 +894,11 @@ $(document).ready(function(){
             if (gpcr_pdb_dict=="no"){
                 sel = "";
                 if (inpSource=="main"){
-                    to_add='<a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>GPCR generic residue numbering is not supported for this stricture.';
-                    $("#"+rownum).find(alertSel +" > "+alertSel+"_gnum").attr("class","alert alert-danger row").append(to_add);
+                    var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
+                    addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                 } else {
-                    to_add='<div class="alert alert-danger row" style = "padding:5px;font-size:12px;margin-top:3px;margin-bottom:10px;margin-left:14px;width:430px" ><a href="#" class="close" data-dismiss="alert" aria-label="close" style = "font-size:15px" >&times;</a>GPCR generic residue numbering is not supported for this stricture.</div>';
-                    $("#"+rownum).find(alertSel+" "+alertSel+"_gnum").html(to_add);
+                    var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
+                    addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","html",to_add_inside);                    
                 }
             } else {
                 sel=parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel);
@@ -887,6 +917,10 @@ $(document).ready(function(){
 //-------- Text input modified signal --------
 
     $("#text_input_all").on("change" , ".sel_input", function(){
+        /*var inp_row=$(this).parents(".text_input");
+        var inp_row_alert=inp_row.find(".ti_alert")
+        inp_row_alert.find(".ti_alert_gnum").html("");
+        inp_row_alert.find(".ti_alert_ngl").html("");*/
         $("#selectionDiv").trigger("click");
     });
 
@@ -1122,7 +1156,8 @@ $(document).ready(function(){
             $(".sel_within").find(".user_sel_input").val("");
             $(".sel_within").find(".alert_sel_wth_gnum").html("");
             $(".sel_within").find(".alert_sel_wth_ngl").html("");
-            inactivate_row(row);
+            $(".sel_within").find("input").css("border-color","");
+            inactivate_row(row,false);
         }else{
             var wBlock =$(this).closest(".dist_sel");
             if (wBlock.is(':last-child')){
@@ -1145,9 +1180,9 @@ $(document).ready(function(){
             var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
                 var comp=$(this).find(".wthComp").val();
+                var rownum = $(this).attr("id");
                 if (comp=="user_sel"){
                     pre_sel=$(this).find(".user_sel_input").val();
-                    var rownum = $(this).attr("id");
                     var def_sel=inputText(gpcr_pdb_dict,pre_sel,rownum,"inp_wth",".alert_sel_wth");
                     if (def_sel ==""){
                         comp="none";
@@ -1158,7 +1193,7 @@ $(document).ready(function(){
                 }
                 if (comp != "none"){
                     var show = $(this).find(".resWthComp").val();
-                    dist_of[dist_of.length]=show+"-"+inp+"-"+comp;
+                    dist_of[dist_of.length]=show+"-"+inp+"-"+comp+"-"+rownum;
                     /*if (show != "protein"){
                         consider_comp[consider_comp.length]=show;
                     }*/
@@ -1173,39 +1208,50 @@ $(document).ready(function(){
         return (dist_of);
     }
 
-    function activate_row(row){
+    function activate_row(row,triggerNGL){
         row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
         row.find(".always").attr("style","");
         row.addClass("sw_ok");
-        $("#selectionDiv").trigger("click");
+        if (triggerNGL){
+            $("#selectionDiv").trigger("click");
+        }
     }
-    function inactivate_row(row){
+    function inactivate_row(row,triggerNGL){
         var active_before= row.hasClass("sw_ok");
         if (active_before){
             row.find(".tick").html("");
             row.find(".always").attr("style","margin-left:14px");
             row.removeClass("sw_ok");
-            $("#selectionDiv").trigger("click");
+            if (triggerNGL){
+                $("#selectionDiv").trigger("click");
+            }
         }
     }
+    
 
-    function activate_or_inactivate_row(selector){
+
+    function activate_or_inactivate_row(selector){    
         var row = $(selector).closest(".dist_sel");
+        var row_alert=row.find("alert_sel_wth");
+        row_alert=row.find(".alert_sel_wth_gnum").html("");
+        row_alert=row.find(".alert_sel_wth_ngl").html("");
+        row.find("input").css("border-color","");
         var inp=row.find(".inputdist").val().replace(/\s+/g, '');
         row.find(".inputdist").val(inp);
         if (inp && /^[\d.]+$/.test(inp)) {
             if (row.find(".wthComp").val()=="user_sel"){
                 if (row.find(".user_sel_input").val() == ""){
-                    inactivate_row(row);
+                    inactivate_row(row,true);
                 }else {
-                    activate_row(row);
+                    activate_row(row,true);
                 }            
             } else {
-                activate_row(row);
+                activate_row(row,true);
             }
         } else {
+            row.find(".inputdist").css("border-color","#A94442");//Red border to show error
             if (row.attr("class").indexOf("sw_ok") > -1){
-                inactivate_row(row);
+                inactivate_row(row,true);
             }
         }
     }
@@ -1215,17 +1261,13 @@ $(document).ready(function(){
         activate_or_inactivate_row(this);
     });    
 
-  /*  $(".sel_within").on("change", ".inputdist" ,function(){
-        activate_or_inactivate_row(this);
-    });    */
-
 
     $(".sel_within").on('change', ".wthComp" ,function(){
         if ($(this).val()=="user_sel"){
             var sw_input='<input class="form-control input-sm user_sel_input nglCallChangeWth" type="text" style="width:95px;padding-left:7px">';
             $(this).siblings(".user_sel_input_p").html(sw_input);
             var row = $(this).closest(".dist_sel");
-            inactivate_row(row);
+            inactivate_row(row,true);
         } else {
             $(this).siblings(".user_sel_input_p").html("");
             activate_or_inactivate_row(this);
@@ -3407,7 +3449,9 @@ $(document).ready(function(){
     var all_resids_sasa=[];//
     
     function obtainURLinfo(gpcr_pdb_dict){
-        var layers_li =obtainTextInput();
+        var layers_res =obtainTextInput();
+        var layers_li=layers_res[0]
+        var layers_row_li=layers_res[1]
         var dist_groups_li=displayCheckedDists();
         var int_res_li_res=displayIntResids();
         var int_res_li=int_res_li_res[0];
@@ -3433,6 +3477,7 @@ $(document).ready(function(){
         } 
         return ({"cp":cp ,
                 "layers_li":layers_li,
+                "layers_row_li":layers_row_li,
                 "dist_groups_li":dist_groups_li,
                 "int_res_li":int_res_li,
                 "int_res_li_ch":int_res_li_ch,
@@ -3558,6 +3603,11 @@ $(document).ready(function(){
             fpsegStr_send = fpsegStr;
         }
         var dist_of=obtainDistSel(); 
+        for (dN=0 ; dN < dist_of.length ; dN++){
+            dn_pre=dist_of[dN];
+            dn_now=dn_pre.replace(/-\w*$/,"");
+            dist_of[dN]=dn_now
+        }
         var projection="";
         if ($("#projOrtho").hasClass("active")){
             projection="o"
@@ -3567,8 +3617,8 @@ $(document).ready(function(){
         var spin="";
         if ($("#spinOn").hasClass("active")){ spin="y"}
         var intType="";
-        if ($("#trajIntType").val() == ""){
-            intType="n";
+        if ($("#trajIntType").val() == "spline"){
+            intType="s";
         } else if ($("#trajIntType").val() == "linear"){
             intType="l";
         }
@@ -3632,7 +3682,10 @@ $(document).ready(function(){
             $(".sel_within").find(".add_btn:last").css("visibility","visible");            
         });
         var last_selWth_row=$(".sel_within").find(".dist_sel");
-        inactivate_row(last_selWth_row);
+        inactivate_row(last_selWth_row,false);
+        last_selWth_row.find(".alert_sel_wth_gnum").html("");
+        last_selWth_row.find(".alert_sel_wth_ngl").html("");
+        last_selWth_row.find("input").css("border-color","");
         $(".seq_sel.sel").each(function(){
             $(this).css("background-color","#f2f2f2");
             $(this).attr("class", "seq_sel");
@@ -3663,6 +3716,10 @@ $(document).ready(function(){
         });
         $("#text_input_all").find(".ti_add_btn:last").css("visibility","visible");
         $("#text_input_all").find(".input_dd_color").val("");
+        var text_inp_row_alert=$("#text_input_all").find(".ti_alert");
+        text_inp_row_alert.find(".ti_alert_gnum").html("");
+        text_inp_row_alert.find(".ti_alert_ngl").html("");
+        $("#text_input_all").find(".sel_input").css("border-color","");
         $("#seq_input_all").find(".seq_input_row:not(:first-child)").each(function(){
             $(this).remove();            
         });
@@ -3670,6 +3727,11 @@ $(document).ready(function(){
         $("#seq_input_all").find(".si_add_btn").css("visibility","hidden");
         $("#seq_input_all").find(".seq_input").val("");
         $("#seq_input_all").find(".input_dd_color").val("");
+        var seq_inp_row_alert=$("#seq_input_all").find(".si_alert");
+        seq_inp_row_alert.find(".si_alert_gnum").html("");
+        seq_inp_row_alert.find(".si_alert_ngl").html("");
+        $("#seq_input_all").find("input").css("border-color","");
+        
         $("#addToSel").css("display","none");
         firstsel=true;
         $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");

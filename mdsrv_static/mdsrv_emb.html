@@ -229,6 +229,7 @@
             var  pdF= NGL.getQuery("lf");
             var  cp= NGL.getQuery("cp");
             var  dist_within= NGL.getQuery("wtn");
+            var  dist_within_li_fin=[];
             var  cons_comp=NGL.getQuery("cc");
             var  nonGPCR= NGL.getQuery("ng");
             var int_res_s=NGL.getQuery("in");
@@ -352,15 +353,18 @@
                                          var rep = layer_all[1];
                                          var color = layer_all[2];
                                          var scheme = layer_all[3];
-                                         if (rep == "ball stick"){
-                                            rep="ball+stick";
+                                         var selectionTest = new NGL.Selection( sel ).selection[ "error" ];
+                                         if (!selectionTest){
+                                             if (rep == "ball stick"){
+                                                rep="ball+stick";
+                                             }
+                                             if (scheme=="FPscheme"){
+                                                 o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
+                                             } else {
+                                                 o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
+                                             }
+                                             sel_li.push("("+sel+")");
                                          }
-                                         if (scheme=="FPscheme"){
-                                             o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
-                                         } else {
-                                             o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
-                                         }
-                                         sel_li.push("("+sel+")")
                                      }
                                  }
                                     
@@ -368,10 +372,10 @@
                                 if( traj ) {
                                     var traj_str = decodeURIComponent(traj.replace(/\+/g, " "));
                                     var traj_li=traj_str.split(",");
-                                    var setIntType="spline";
+                                    var setIntType="";
                                     if (intType){
-                                        if (intType == "n"){
-                                            setIntType="";
+                                        if (intType == "s"){
+                                            setIntType="spline";
                                         } else {
                                             setIntType="linear";
                                         }
@@ -479,23 +483,27 @@
                                         if (! isNaN(parseInt(ligSele))){
                                             ligSele="["+ligSele+"]";
                                         }
-                                        var WthRepName="sel"+ligSele;
-                                        var restriction="";
-                                        var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
-                                        if (show_sup != "NONE"){
-                                            o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:WthRepName+"0" } );
-                                            restriction="not ("+ligSele+") and ";
-                                        }               
-                                        var result=selWithinComponent(o,show,dist_comp[1],ligSele);
-                                        var sele = result[0];
-                                        var sele2 = result[1];
-                                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
-                                        o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
-                                        if (show =="protein"){
-                                            sel_prot=true;
-                                        } else {
-                                            sel_li.push(show);
-                                        }                                        
+                                        var selectionTest = new NGL.Selection( ligSele ).selection[ "error" ];
+                                        if (!selectionTest){
+                                            var WthRepName="sel"+ligSele;
+                                            var restriction="";
+                                            var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                                            if (show_sup != "NONE"){
+                                                o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:WthRepName+"0" } );
+                                                restriction="not ("+ligSele+") and ";
+                                            }               
+                                            var result=selWithinComponent(o,show,dist_comp[1],ligSele);
+                                            var sele = result[0];
+                                            var sele2 = result[1];
+                                            o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
+                                            o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
+                                            if (show =="protein"){
+                                                sel_prot=true;
+                                            } else {
+                                                sel_li.push(show);
+                                            }  
+                                            dist_within_li_fin.push(dist_within_li[wth_n])
+                                        }                                
                                     }
                                 }
                                 if (dist_groups_s){
@@ -618,7 +626,7 @@
                                             }
                                             
                                         }
-                                        if (dist_within_li){
+                                        if (dist_within_li_fin.length > 0){
                                             for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                                                 var dist_comp=  dist_within_li[wth_n].split("-");
                                                 var show =dist_comp[0];

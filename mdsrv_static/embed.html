@@ -163,18 +163,21 @@
                         if (! isNaN(parseInt(ligSele))){
                             ligSele="["+ligSele+"]";
                         }
-                        var restriction="";
-                        var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
-                        if (show_sup != "NONE"){
-                            restriction="not ("+ligSele+") and ";
-                        } 
-                        var result=selWithinComponent(o,show,dist_comp[1],ligSele);
-                        var sele = result[0];
-                        var sele2 = result[1];
-                        WthRepName="sel"+dist_comp[2];
-                        stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
-                        stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
-                        //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
+                        var selectionTest = new NGL.Selection( ligSele ).selection[ "error" ];
+                        if (!selectionTest){
+                            var restriction="";
+                            var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                            if (show_sup != "NONE"){
+                                restriction="not ("+ligSele+") and ";
+                            } 
+                            var result=selWithinComponent(o,show,dist_comp[1],ligSele);
+                            var sele = result[0];
+                            var sele2 = result[1];
+                            WthRepName="sel"+dist_comp[2];
+                            stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
+                            stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
+                            //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
+                        }
                     }
                 }
             });
@@ -515,7 +518,7 @@
             var results = parent.results;
             var cp = results["cp"];
             var high_pre=results["high_pre"];
-            var layers_li = results["layers_li"];
+            var layers_li = results["layers_row_li"];
             //var traj =results["traj"];
             var nonGPCR =results["nonGPCR"];
             var int_res_li =results["int_res_li"];
@@ -652,9 +655,21 @@
                             o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
                         }
                         selAll.push(sel);
-                    } /*else {
-                        
-                    }*/
+                    } else {
+                        var rownum=layer_all[4];
+                        var to_add_inside='Invalid selection.';
+                        var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
+                        if (rownum.startsWith("ti")){ //atom selection section
+                            var textRowsel=$("#"+rownum,window.parent.document);
+                            textRowsel.find(".ti_alert_ngl").html(to_add);
+                            textRowsel.find("input").css("border-color","#A94442");
+                            
+                        } else { //sequence selection section
+                            var seqRowsel=$("#"+rownum,window.parent.document);
+                            seqRowsel.find(".si_alert_ngl").html(to_add);
+                            seqRowsel.find("input").css("border-color","#A94442");
+                        }
+                    }
                 }
                 selAllStr="("+selAll.join(") or (")+")";
                 //setSelDict=addToSel(o,selAllStr,setSelDict);  
@@ -695,22 +710,30 @@
                     if (! isNaN(parseInt(ligSele))){
                         ligSele="["+ligSele+"]";
                     }
-                    var restriction="";
-                    var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
-                    if (show_sup != "NONE"){
-                        o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:"sel_within_0" } );
-                        restriction="not ("+ligSele+") and ";
-                        //setSelDict=addToSel(o,ligSele,setSelDict);
-                        setSelTemp.push(ligSele);
-                    }   
-                    var result=selWithinComponent(o,show,dist_comp[1],ligSele);
-                    var sele = result[0];
-                    var sele2 = result[1];
-                    WthRepName="sel"+ligSele;
-                    o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
-                    o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
-                    //setSelDict=addToSel(o,show+" and "+restriction + sele2.toSeleString(),setSelDict);
-                    setSelTemp.push(show);
+                    
+                    var selectionTest = new NGL.Selection( ligSele ).selection[ "error" ];
+                    if (!selectionTest){
+                        var restriction="";
+                        var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                        if (show_sup != "NONE"){
+                            o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:"sel_within_0" } );
+                            restriction="not ("+ligSele+") and ";
+                            //setSelDict=addToSel(o,ligSele,setSelDict);
+                            setSelTemp.push(ligSele);
+                        }   
+                        var result=selWithinComponent(o,show,dist_comp[1],ligSele);
+                        var sele = result[0];
+                        var sele2 = result[1];
+                        WthRepName="sel"+ligSele;
+                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
+                        o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
+                        //setSelDict=addToSel(o,show+" and "+restriction + sele2.toSeleString(),setSelDict);
+                        setSelTemp.push(show);
+                    }else {
+                        var rowid=dist_comp[3];
+                        parent.NGL_addErrorToInput("#"+rowid);
+
+                    }
                     
                 }
 
@@ -957,7 +980,7 @@
             var setSelLi=[];
             var setSelStr="protein";
             var trajchange=false;
-            var trajIntType="spline";
+            var trajIntType="";
             
             //var gpcrSelExp= parent.gpcr_selection()
             //!
