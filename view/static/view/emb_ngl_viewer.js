@@ -403,11 +403,27 @@ $(document).ready(function(){
     colorSel("#seq_input_all");
     
 //-------- Text Input --------
+    
+    
+    $("#allSelTools").on("change",".input_dd_color",function(){
+        var lcolor=$(this).val();
+        $(this).parent(".span_morecolors").removeClass("has-error");
+        if (lcolor == ""){
+            $(this).css("background-color","");
+        } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+            $(this).parent(".span_morecolors").addClass("has-error");
+            $(this).css("background-color","");
+        } else {
+            $(this).css("background-color",lcolor);
+        }
+
+    })
+    
     function obtainTextInput(){
         var layer=[];
         var layer_row=[];
         $("#text_input_all").find(".text_input").each(function(){
-            $(this).find(".span_morecolors").removeClass("has-error");
+            //$(this).find(".span_morecolors").removeClass("has-error");
             var rownum=$(this).attr("id");
             var pre_sel = $(this).find(".sel_input").val();
             sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ti_alert");
@@ -421,7 +437,7 @@ $(document).ready(function(){
                         lcolor = "#FFFFFF";
                     } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
                         lcolor = "#FFFFFF";
-                        $(this).find(".span_morecolors").addClass("has-error");
+                        //$(this).find(".span_morecolors").addClass("has-error");
                     }
                 } else {
                     var lcolor = dBtn.data("color");
@@ -571,6 +587,9 @@ $(document).ready(function(){
             $("#text_input_all").find(".ti_alert_gnum").html("");
             $("#text_input_all").find(".ti_alert_ngl").html("");
             $("#text_input_all").find(".sel_input").css("border-color","");
+            $("#text_input_all").find(".input_dd_color").css("background-color","");
+            $("#text_input_all").find(".span_morecolors").removeClass("has-error");
+        
         }else{
             var wBlock =$(this).closest(".text_input");
             if (wBlock.is(':last-child')){
@@ -667,6 +686,10 @@ $(document).ready(function(){
         var inpval= $(this).closest(".seq_input_row").find(".seq_input").val();
         var numSiRows = $("#seq_input_all").children().length;
         if(numSiRows==1){
+            var color_input=$("#seq_input_all").find(".input_dd_color");
+            color_input.val("");
+            color_input.css("background-color","");
+            $("#seq_input_all").find(".span_morecolors").removeClass("has-error");
             $("#seq_input_all").css("display","none");
             $("#seq_input_all").find(".seq_input").val("");
 
@@ -3733,6 +3756,9 @@ $(document).ready(function(){
         seq_inp_row_alert.find(".si_alert_gnum").html("");
         seq_inp_row_alert.find(".si_alert_ngl").html("");
         $("#seq_input_all").find("input").css("border-color","");
+        
+        $("#allSelTools").find(".input_dd_color").css("background-color","");
+        $("#allSelTools").find(".span_morecolors").removeClass("has-error");
         
         $("#addToSel").css("display","none");
         firstsel=true;
