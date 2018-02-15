@@ -279,8 +279,12 @@
                     {% if other_prots%}
                       <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
                     {% endif %}
-                    {% for long_n, short_n in compounds %}
-                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn" title="{{short_n}}" id="{{short_n}}" >{{long_n}}</button>
+                    {% for long_n, short_n, ctype in compounds %}
+                        {% if ctype == "Ligand" %}
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                        {% else %}
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                        {% endif %}
                     {% endfor %}
                     {% if ligands_short %}
                         <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
@@ -312,8 +316,8 @@
                     <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
                       &#8491; of
                         <select class="wthComp" name="comp">
-                           {% for long_n, short_n in compounds %}
-                           <option   value="{{short_n}}">{{long_n}}</option>
+                           {% for long_n, short_n, ctype in compounds %}
+                           <option  value="{{short_n}}">{{long_n}}</option>
                            {% endfor %}
                            {% if other_prots%}
                            <option   value="{{other_prots.0}}">Other proteins</option>
@@ -586,7 +590,7 @@
                                    {% endfor %}
                                   {% endif %}
                             </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear all</button>
+                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                        </div>
                     </div>
                 <!-- Conserved pos for each of the GPCRs -->
@@ -642,7 +646,7 @@
                                    {% endfor %}
                                   {% endif %}
                             </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear all</button>
+                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                        </div>
                     </div>
                {% endfor %}
@@ -699,7 +703,7 @@
                                    {% endfor %}
                                   {% endif %}
                             </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear all</button>
+                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                        </div>
                     </div>
                    {% endfor %}
@@ -791,20 +795,20 @@
                  <div id="flare-container"></div>
 
                   <span id="allFPoptions" class="showIfTrajFP">
-                      <button id="FPdisplay" class="btn btn-info active" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
-                        Hide interactions
+                      <button id="FPdisplay" class="btn btn-default active" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                        Display interactions
                       </button>
                    
-                      <button class="summarizeFP btn btn-info" type="button" style="margin-top:15px;width:115px;font-size:12px;">
+                      <button class="summarizeFP btn btn-default" type="button" style="margin-top:15px;width:115px;font-size:12px;">
                         Summarize
                       </button>
                      <div class="btn-group" id="fpShowResSetBtns">
-                      <button type="button" id="intraHel" class="btn btn-info active fpShowResSet" title="Click to hide intra-helix interactions">Intra-helix</button>
-                      <button type="button" id="interHel" class="btn btn-info active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
+                      <button type="button" id="intraHel" class="btn btn-default active fpShowResSet" title="Click to hide intra-helix interactions">Intra-helix</button>
+                      <button type="button" id="interHel" class="btn btn-default active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
                     </div> 
 
                       <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;">
-                        Clear selections
+                        Clear
                       </button>
                   </span>
                </center>

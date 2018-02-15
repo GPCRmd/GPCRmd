@@ -976,9 +976,11 @@ $(document).ready(function(){
 
 
     function obtainCompounds(){
+        var shortTypeName={'Ligand':'lg','Lipid':'lp','Ions':'i','Water':'w','Other':'o'}
         var comp=[];
         $(".comp.active").each(function(){
-            comp[comp.length]=$(this).attr("id");
+            var ctype=$(this).data("comptype");
+            comp[comp.length]=$(this).attr("id")+"-"+shortTypeName[ctype];
         });
         return comp;
     }
@@ -4027,10 +4029,10 @@ $(document).ready(function(){
     $("#fpdiv").on("click","#FPdisplay",function(){
         if ($(this).hasClass("active")){
             $(this).removeClass("active");
-            $(this).text("Display interactions");
+            //$(this).text("Display interactions");
         } else {
             $(this).addClass("active");
-            $(this).text("Hide interactions");
+            //$(this).text("Hide interactions");
             updateFPInt();
         }
         $("#selectionDiv").trigger("click");

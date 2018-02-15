@@ -336,36 +336,55 @@ def find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_
             motifs_def=find_missing_pos_in_motif_otherclass(motifs, motname_li,dict_class,current_class)
             motifs_dict_def[dict_class] = motifs_def
 
+def sort_by_myorderlist(my_order,word):
+    number=my_order.index(word)
+    return(number)
+
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic"""
+    molecule_type={
+        0:'Ions',
+        1:'Ligand',
+        2:'Lipid',
+        3:'Water',
+        4:'Other'
+    } 
     comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
     comp_dict={}
     lig_li=[]
     lig_li_s=[]
     for c in comp:
-        if c.type == 2:
+        ctype=c.type
+        if ctype == 2:
             dc = c.resname
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbmodelcomponents=c.id).name #Ligands, water (and ions)
-        comp_dict[dc] = c.resname
-        if c.type ==1:
+        if (dyn_id =="7" and c.resname=="CHL1"): #[!] Workaround for cholesterol ligand! Automatize this somehow!
+            comp_dict["Cholesterol lig."] = ["CHL1 and 59","Ligand"]
+            comp_dict[dc] = [c.resname,"Lipid"]
+        else:
+            comp_dict[dc] = [c.resname,molecule_type.get(ctype,"Other")]
+        if ctype ==1:
             lig_li.append([dc,c.resname])
             lig_li_s.append(c.resname)
     ddc=DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id) # Lipids and ions
     for c in ddc:
-        if c.type == 2:
+        ctype=c.type
+        if ctype == 2:
             dc = c.resname
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
         resn=c.resname
         if dc not in comp_dict:
-            comp_dict[dc]=resn
+            comp_dict[dc]=[resn,molecule_type.get(ctype,"Other")]
         else:
-            if resn not in comp_dict.values():
-                new_resn= comp_dict[dc] + " OR " + resn
-                comp_dict[dc]= new_resn 
-    comp_li=list(map(list, comp_dict.items()))
-    comp_li=sorted(comp_li, key=lambda x: x[0])
+            saved_comp=[ sname for (sname,ctype) in comp_dict.values()]
+            if resn not in saved_comp:
+                new_resn= comp_dict[dc][0] + " OR " + resn
+                comp_dict[dc]= [new_resn ,molecule_type.get(ctype,"Other")]
+    comp_li=[[name,sname,ctype] for (name,(sname,ctype)) in comp_dict.items()]
+    comp_li=sorted(comp_li, key=lambda x:x[0].lower())
+    comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):

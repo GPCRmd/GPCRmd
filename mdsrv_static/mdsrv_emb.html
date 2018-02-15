@@ -291,9 +291,9 @@
                                 if (receptorsel){
                                     var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));
                                     if (fpsegStr){
-                                        o.addRepresentation( "cartoon", { colorScheme: FPscheme, sele: receptorsel_d} );
+                                        o.addRepresentation( "cartoon", { colorScheme: FPscheme, sele: receptorsel_d, name: "Receptor"} );
                                     } else {
-                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d} );
+                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d, name: "Receptor"} );
                                     }
                                     sel_prot=true;
   
@@ -309,20 +309,50 @@
                                     }
                                     sel_prot=true;
                                 }             
-                                
+       
                                 if (cp){
                                     var all_cp="";
                                     cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
+                                    var comptype_dict={
+                                        "lg":[],
+                                        "lp":[],
+                                        "i":[],
+                                        "w":[],
+                                        "o":[]
+                                    }
                                     for (comp = 0; comp < cp_li.length; comp++){
-                                        var mycomp=cp_li[comp];
+                                        var mycompinfo=cp_li[comp].split("-");
+                                        var mycomp=mycompinfo[0];
+                                        var mycompType=mycompinfo[1];
                                         if (! isNaN(parseInt(mycomp))){
                                             mycomp="["+mycomp+"]";
                                         }
                                         all_cp += (mycomp + " or ");
-                                        sel_li.push(mycomp)
+                                        sel_li.push(mycomp);
+                                        comptype_dict[mycompType].push(mycomp);
                                     }
                                     all_cp = all_cp.slice(0, -3);
-                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );   
+                                    //o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );
+                                    for (comp_key in comptype_dict){
+                                        var comptype_sel=comptype_dict[comp_key];
+                                        if (comptype_sel.length > 0){
+                                            var comp_sel=comptype_sel.join(" or ");
+                                            if (comp_key == "lg"){
+                                                o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: comp_sel , name: "Ligand" } );
+                                            }
+                                            else if (comp_key == "i"){
+                                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30 , colorValue: "#aeff42" , name: "Ions"} );
+                                            }
+                                            else if (comp_key == "w") {
+                                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30, name: "Water" } );
+                                            }
+                                            else if ("lp") {
+                                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel , name: "Lipids"} );
+                                            } else {
+                                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel} );
+                                            }
+                                        }
+                                    }
                                 }
                                 if (cons_pos == "y"){
                                     var pre_pd_all=[pdA,pdB,pdC,pdF];
@@ -598,7 +628,7 @@
                                 }
                                 
                                 clickDists(o);
-                                o.autoView("protein");
+                                o.autoView();
                                 
                                 if (spin){ stage.setSpin( [ 0, 1, 0 ], 0.01 ) }; 
                                 
