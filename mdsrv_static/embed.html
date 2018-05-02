@@ -940,36 +940,18 @@
             if (setSelAll.length > 0){
                 setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelAll )).toSeleString();
             }
-            //var framenum=$(".ui-slider-handle").attr("aria-valuenow"); 
+
             var framenum=traj_fnum[traj_lastPlayedID];
             o.setSelection(setSelFIN);
             if (trajComp){
                 trajComp.setFrame(framenum);
             }
-            /*setSelStr="@";
-            for (atom_ind in setSelDict){
-                setSelStr+=atom_ind+",";
-            }
-            setSelStr=setSelStr.slice(0,-1);
-            var setSelTempAtms=obtainSetSelTempAtms(o,setSelTemp,setSelStr)
-            setSelTempAtms=" or protein"//[!sel][!!!!]
-            o.setSelection(setSelStr+setSelTempAtms);*/
 
         }
         
 
         function set_ngl_size(cont_w , cont_w_in ,cont_h_num ){
-/*
-        toiframe w 
-        viewport w
-        buttons w - 4
-        trajRangeDiv w - 4
-        infoPannel w - 4     
-        
-        toiframe cont_h
-        viewport cont_h - 25
- 
-*/
+
            var cont_h=(cont_h_num).toString() +"px";
            var cont_h_viewport=(cont_h_num-30).toString() +"px";
            var cont_h_range=(cont_h_num-190).toString() +"px";
@@ -1082,9 +1064,13 @@
                     });
                     trajButtons(o);
                     
+                    /*var m = new NGL.Matrix4().fromArray([1,0,0,0,
+                                                         0,0,-1,0,
+                                                         0,1,0,0,
+                                                         0,0,0,1]);
+                    o.setTransform(m);*/
                     stage.autoView();
                     ori= stage.viewerControls.getOrientation();
-                    
                     $("#selectionDiv", window.parent.document).on("click" , function(){
                         createReps();
                     });

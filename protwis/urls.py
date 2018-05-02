@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^', include('home.urls')),
     url(r'^accounts/', include('accounts.urls')),
     url(r'^view/', include('view.urls')),
+    url(r'^gpcrome/', include('crossreceptor_analysis.urls')),
     url(r'^services/', include('api_' + settings.SITE_NAME + '.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^common/', include('common.urls')),

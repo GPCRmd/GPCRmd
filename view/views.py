@@ -23,7 +23,8 @@ from os import path
 from dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
 from django.shortcuts import redirect
 import os
-
+from pathlib import Path
+import pandas as pd
 
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the residue number."""
@@ -353,20 +354,29 @@ def obtain_compounds(dyn_id):
     comp_dict={}
     lig_li=[]
     lig_li_s=[]
+    changed_res=[]
     for c in comp:
         ctype=c.type
         if ctype == 2:
             dc = c.resname
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbmodelcomponents=c.id).name #Ligands, water (and ions)
-        if (dyn_id =="7" and c.resname=="CHL1"): #[!] Workaround for cholesterol ligand! Automatize this somehow!
-            comp_dict["Cholesterol lig."] = ["CHL1 and 59","Ligand"]
-            comp_dict[dc] = [c.resname,"Lipid"]
+        if (int(dyn_id) in change_lig_name) and (change_lig_name[int(dyn_id)]["orig_resname"]==c.resname):
+            changed_res.append(c.resname)
+            lname=change_lig_name[int(dyn_id)]["longname"]
+            resname=change_lig_name[int(dyn_id)]["resname"]
+            comp_dict[lname] = [resname,"Ligand"]
+            add_twice=change_lig_name[int(dyn_id)]["add_twice"]
+            if (add_twice):
+                comp_dict[dc] = [c.resname,add_twice]
+            if ctype ==1:
+                    lig_li.append([lname,resname])
+                    lig_li_s.append(resname)
         else:
             comp_dict[dc] = [c.resname,molecule_type.get(ctype,"Other")]
-        if ctype ==1:
-            lig_li.append([dc,c.resname])
-            lig_li_s.append(c.resname)
+            if ctype ==1:
+                lig_li.append([dc,c.resname])
+                lig_li_s.append(c.resname)
     ddc=DyndbDynamicsComponents.objects.filter(id_dynamics=dyn_id) # Lipids and ions
     for c in ddc:
         ctype=c.type
@@ -375,7 +385,7 @@ def obtain_compounds(dyn_id):
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
         resn=c.resname
-        if dc not in comp_dict:
+        if (dc not in comp_dict) and (c.resname not in changed_res):
             comp_dict[dc]=[resn,molecule_type.get(ctype,"Other")]
         else:
             saved_comp=[ sname for (sname,ctype) in comp_dict.values()]
@@ -662,13 +672,15 @@ def get_fplot_path(dyn_id,traj_list):
     
 
 @ensure_csrf_cookie
-def index(request, dyn_id):
+def index(request, dyn_id, sel_pos=False,selthresh=False):
 #    if request.session.get('dist_data', False):
 #        dist_data=request.session['dist_data']
 #        dist_dict=dist_data["dist_dict"]
 #        print("\n\n",len(dist_dict))
+
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
+    print(mdsrv_url)
     delta=DyndbDynamics.objects.get(id=dyn_id).delta
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
@@ -838,7 +850,23 @@ def index(request, dyn_id):
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
         (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
-
+        presel_pos=""
+        bind_domain=""
+        print("\n\n\n\n")
+        if sel_pos:
+            cra_path="/protwis/sites/files/Precomputed/crossreceptor_analysis_files"
+            resli_file_path=path.join(cra_path,"ligres_int.csv")
+            resli_file_pathobj = Path(resli_file_path)
+            if resli_file_pathobj.is_file():
+                df = pd.read_csv(resli_file_path,index_col=[0,1])
+                thresh_li=set(df.index.get_level_values("Threshold"))
+                selthresh=float(selthresh)
+                if selthresh in thresh_li:
+                    bind_domain_li=df.loc[selthresh].columns.values                
+                    bind_domain=",".join(bind_domain_li)
+                    presel_pos=sel_pos
+                    
+                
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
@@ -976,7 +1004,9 @@ def index(request, dyn_id):
                         "all_prot_names" : ", ".join(all_prot_names),
                         "seg_li":",".join(["-".join(seg) for seg in seg_li]),
                         "fpdir" : fpdir,
-                        "delta":delta
+                        "delta":delta,
+                        "bind_domain":bind_domain,
+                        "presel_pos":presel_pos
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -998,7 +1028,9 @@ def index(request, dyn_id):
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
                         "seg_li":"",
-                        "delta":delta
+                        "delta":delta,
+                        "bind_domain":bind_domain,
+                        "presel_pos":presel_pos
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1018,7 +1050,9 @@ def index(request, dyn_id):
                         "all_prot_names" : ", ".join(all_prot_names),
                         "fpdir" : fpdir,
                         "seg_li":"",
-                        "delta":delta
+                        "delta":delta,
+                        "bind_domain":bind_domain,
+                        "presel_pos":presel_pos
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1037,7 +1071,9 @@ def index(request, dyn_id):
                     "gpcr_pdb": "no",
                     "fpdir" : fpdir,
                     "seg_li":"",
-                    "delta":delta
+                    "delta":delta,
+                    "bind_domain":bind_domain,
+                    "presel_pos":presel_pos
                     }
             return render(request, 'view/index.html', context)
 
@@ -1096,7 +1132,11 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
         if traj_sel =="all_prot":
             selection=itraj.topology.select("protein")
         elif (traj_sel not in ["bck","noh","min"]):
-            lig_sel="resname "+traj_sel
+            if " and " in traj_sel:
+                (resname,resseqpos)=traj_sel.split(" and ")
+                lig_sel="resname '"+resname+"' and residue "+resseqpos
+            else:
+                lig_sel="resname "+traj_sel
             try:
                 selection=itraj.topology.select(lig_sel)
             except Exception:
@@ -1240,7 +1280,11 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
     all_lig_res=[]
 ###
     for res in res_li:
-        lig_sel=struc.topology.select("resname '"+res+"'")
+        if " and " in res:
+            (resname,resseqpos)=res.split(" and ")
+            lig_sel=struc.topology.select("resname '"+resname+"' and residue "+resseqpos)
+        else:
+            lig_sel=struc.topology.select("resname '"+res+"'")
         if len(lig_sel)>0:
             lig_res=[residue.index for residue in struc.atom_slice(lig_sel).topology.residues]
             all_lig_res.append(lig_res[0])
@@ -1300,7 +1344,16 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
             res_chain_ind=res_topo.chain.index
             res_name=res_topo.name
             res_chain=chain_name_li[res_chain_ind]
-            fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
+            if lig_nm in fin_dict:
+                fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
+            else:
+                lig_topo=struc.topology.residue(lig_ind)
+                lig_pdb=lig_topo.resSeq
+                ligres_sel=lig_nm+" and "+str(lig_pdb)
+                if (ligres_sel in fin_dict):
+                    fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
+                else: 
+                    return (False,None, "Error when parsing results.")
         return(True,fin_dict,None)
     else:
         return (False,None, "Error with ligand selection.")

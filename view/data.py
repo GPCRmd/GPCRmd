@@ -1,6 +1,14 @@
 
 
-
+change_lig_name={7:{"resname":"CHL1 and 59",
+                    "longname":"Cholesterol 59",
+                    "orig_resname":"CHL1",
+                    "add_twice":"Lipid"},
+                10:{"resname":"CAU",
+                    "longname":"Carazolol",
+                    "orig_resname":"CAU",
+                    "add_twice":False}
+                }
 
 cons_classA=[["N1.50", "Allosteric sodium binding site (98%)",""], ["D2.50", "90%",""], ["R3.50", "95%",""],["W4.50", "97%",""],["P5.50", "78%",""], ["P6.50", "99%",""], ["P7.50", "88%",""]]
 mol_swA=[["D3.32","",""],["I3.40","",""],["D3.49","",""],["E6.30","",""],["F6.44","",""],["W6.48","",""],["Y7.53","",""]]

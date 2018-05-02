@@ -281,8 +281,67 @@ $(document).ready(function(){
         num_gpcrs =dicts_results[1];
     }
     
-
-   
+    function changeLastInputColor(colorcode){
+        var selColorCont=$("#text_input_all").find(".text_input:last .dropcolor[data-color='"+colorcode+"']");
+        var clicked_color= selColorCont.data("color");
+        var dBtn=$("#text_input_all").find(".dropbtn:last");
+        var old_color=dBtn.data("color");
+        selColorCont.css("background-color",old_color).data("color",old_color);
+        dBtn.css("background-color",clicked_color).data("color",clicked_color);
+    }
+    
+    function checkPosInGpcrNum(list_of_gnum){
+        ///Given list of positions in GPCRdb num., checks if the GPCR(s) in the dynamics contains it. Returns a list containing the accepted positions.
+        var sel_pos_li=[];
+        for (i = 0; i < list_of_gnum.length; i++) {
+            var gnum_pos = list_of_gnum[i];
+            for (gpcr_id in all_gpcr_dicts){
+                my_gpcr_dicts=all_gpcr_dicts[gpcr_id];
+                gpcrdb_dict=my_gpcr_dicts["gpcrDB_num"];
+                if (gpcrdb_dict[gnum_pos] != undefined){
+                    sel_pos_li.push(gnum_pos);
+                    continue;
+                }
+            }
+        }
+        return sel_pos_li
+    }
+    
+    function createRepFromCrossGPCRpg(){
+        var bind_domain=$("#VisualizationDiv").data("bind_domain");
+        var presel_pos=$("#VisualizationDiv").data("presel_pos");
+        var presel_pos_here=false;
+        if (bind_domain  && presel_pos){
+            var dom_pos_li=bind_domain.split(",");
+            var sel_dom_pos_li=checkPosInGpcrNum(dom_pos_li)
+            var sel_dom_pos_s="";
+            for (dpi=0; dpi<sel_dom_pos_li.length;dpi++){
+                sdom_pos=sel_dom_pos_li[dpi];
+                if ((sel_dom_pos_s.length + sdom_pos.length)<100){
+                    sel_dom_pos_s+=sdom_pos+",";
+                } else {
+                    sel_dom_pos_fin=sel_dom_pos_s.slice(0,-1);
+                    $("#text_input_all").find(".sel_input:last").val(sel_dom_pos_fin);
+                    changeLastInputColor("#3193ff");
+                    $("#text_input_all").find(".ti_add_btn:last").trigger("click");
+                    sel_dom_pos_s=sdom_pos+",";
+                }
+            }
+            sel_dom_pos_fin=sel_dom_pos_s.slice(0,-1);
+            $("#text_input_all").find(".sel_input:last").val(sel_dom_pos_fin);
+            changeLastInputColor("#3193ff");
+            //Selected pos:
+            var presel_ok_li=checkPosInGpcrNum([presel_pos])
+            if (presel_ok_li.length > 0){
+                $("#text_input_all").find(".ti_add_btn:last").trigger("click");
+                $("#text_input_all").find(".sel_input:last").val(presel_pos);
+                $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
+                changeLastInputColor("#ff4c00");
+            }
+            //$("#selectionDiv").trigger("click");
+        }
+    }
     
 //-------- AJAX --------
 
@@ -767,7 +826,7 @@ $(document).ready(function(){
         addErrorToInput(rowIndex,"inp_wth",".alert_sel_wth_ngl","html",to_add);
     }
     window.NGL_addErrorToInput=NGL_addErrorToInput;
-    
+
     function parseGPCRnum(sel,lonely_gpcrs,rownum,inpSource,alertSel){
         var add_or ="";
         if (num_gpcrs >1){
@@ -4114,12 +4173,9 @@ $(document).ready(function(){
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
     });
     
-/*    $("#VisualizationDiv").click(function(){
-        var window_w=$(window).width();
-        var screen_w = screen.width;
-        console.log("screen: "+screen_w+" window: "+window_w);
-    })
-*/
+
+//-------- Call when everything has run --------    
+    createRepFromCrossGPCRpg();
     
 });
 
