@@ -6,7 +6,6 @@ from bokeh.embed import components
 from bokeh.models import HoverTool, TapTool, CustomJS
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
-#import colorcet
 from os import path
 import pandas as pd
 import re
