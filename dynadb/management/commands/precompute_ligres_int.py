@@ -17,7 +17,15 @@ import copy
 
 class Command(BaseCommand):
     help = "Creates precomputed datafiles of ligand-residue interactons in the GPCRs stored at the database for posterior creation of comparaive plots. Only considers published data."
-#    def add_arguments(self, parser):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--overwrite',
+            action='store_true',
+            dest='overwrite',
+            default=False,
+            help='Overwrites already stored data, calculating again the interactions for all the public dynamics stored at the DB.',
+        )
+
 #        parser.add_argument(
 #           '-dyn_id',
 #            dest='dyn_id',
@@ -147,15 +155,20 @@ class Command(BaseCommand):
             """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
             dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
             traj_list=[]
+            traj_name_list=[]
             p=re.compile("(/protwis/sites/files/)(.*)")
+            p2=re.compile("[\.\w]*$")
             for fileobj in dynfiles:
                 path=fileobj.id_files.filepath
                 myfile=p.search(path).group(2)
+                myfile_name=p2.search(myfile).group()
                 if myfile.endswith(".pdb"): 
                     structure_file=myfile
+                    structure_file_name=myfile_name
                 elif myfile.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
                     traj_list.append([myfile,fileobj.id_files.id])
-            return (structure_file,traj_list)
+                    traj_name_list.append(myfile_name)
+            return (structure_file,structure_file_name,traj_list,traj_name_list)
 
         def get_orthostericlig_resname(dyn_id,change_lig_name):
             """Returns a list with the the resname of the orthosteric ligamd(s) of a dynamics"""
@@ -195,15 +208,17 @@ class Command(BaseCommand):
                 prot_id=prot.id 
                 uniprot_id=prot.uniprotkbac
                 uniprot_name=Protein.objects.get(accession=uniprot_id).entry_name
-                (structure_file,traj_list)=obtain_dyn_files(dyn_id)
+                (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
                 (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
                 chain_names=obtain_all_chains(allfiles_path+structure_file)
                 gpcr_chains=obtain_gpcr_cains(model)
                 serial_mdInd=relate_atomSerial_mdtrajIndex(allfiles_path+structure_file)
                 gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
                 pdb_to_gpcr = {tuple(v): k for k, v in gpcr_pdb.items()}
-                
-                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id}
+                delta=DyndbDynamics.objects.get(id=dyn_id).delta
+                #used_gpcr_pdb={}
+                #used_gpcr_pdb_obt=False
+                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta}
                 traj_by_thresh={}
                 for thresh in thresh_li:
                     traj_by_thresh[thresh]={}
@@ -223,6 +238,7 @@ class Command(BaseCommand):
                                     (chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
                                     gnum=chain_num+"x"+gpcrdb
                                     inthrdata_dict[gnum]=intval
+                                    #used_gpcr_pdb[gnum]=(str(pos),chain)
                                 except: 
                                     pass#Do something?
                                 inthrdata_dict[gnum]=intval
@@ -284,31 +300,37 @@ class Command(BaseCommand):
         cra_path="/protwis/sites/files/Precomputed/crossreceptor_analysis_files"
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
-        resli_file_path=path.join(cra_path,"ligres_int.csv")
-        resli_file_pathobj = Path(resli_file_path)
-        try:
-            resli_abs_path = resli_file_pathobj.resolve()
-            df = pd.read_csv(resli_file_path,index_col=[0,1])
-        except FileNotFoundError:
-            df=pd.DataFrame({})
-        compl_file_path=path.join(cra_path,"compl_info.json")
-        compl_file_pathobj = Path(compl_file_path)
-        try:
-            compl_abs_path = compl_file_pathobj.resolve()
-            compl_data = json_dict(compl_file_path)
-        except FileNotFoundError:
-            compl_data={}       
-        upd_file_path=path.join(cra_path,"last_update.json")
-        upd_file_pathobj = Path(upd_file_path)
         upd_now=datetime.datetime.now()
-        try:
-            upd_abs_path = upd_file_pathobj.resolve()
-            upd=json_dict(upd_file_path)
-            last_upd_dt=obtain_datetime(upd)
-            dyn_li=DyndbDynamics.objects.filter(update_timestamp__gte=last_upd_dt, is_published=True)
-        except FileNotFoundError:
+        resli_file_path=path.join(cra_path,"ligres_int.csv")
+        compl_file_path=path.join(cra_path,"compl_info.json")
+        upd_file_path=path.join(cra_path,"last_update.json")
+        if options['overwrite']:
+            df=pd.DataFrame({})
+            compl_data={}
             upd={"ligres_int":{}}
             dyn_li=DyndbDynamics.objects.filter(is_published=True)
+        else: 
+            resli_file_pathobj = Path(resli_file_path)
+            try:
+                resli_abs_path = resli_file_pathobj.resolve()
+                df = pd.read_csv(resli_file_path,index_col=[0,1])
+            except FileNotFoundError:
+                df=pd.DataFrame({})            
+            compl_file_pathobj = Path(compl_file_path)
+            try:
+                compl_abs_path = compl_file_pathobj.resolve()
+                compl_data = json_dict(compl_file_path)
+            except FileNotFoundError:
+                compl_data={}       
+            upd_file_pathobj = Path(upd_file_path)
+            try:
+                upd_abs_path = upd_file_pathobj.resolve()
+                upd=json_dict(upd_file_path)
+                last_upd_dt=obtain_datetime(upd)
+                dyn_li=DyndbDynamics.objects.filter(update_timestamp__gte=last_upd_dt, is_published=True)
+            except FileNotFoundError:
+                upd={"ligres_int":{}}
+                dyn_li=DyndbDynamics.objects.filter(is_published=True)
         if len(dyn_li)==0:
             self.stdout.write(self.style.SUCCESS("No new trajectories to compute."))
             return

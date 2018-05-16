@@ -327,6 +327,9 @@
                                         if (! isNaN(parseInt(mycomp))){
                                             mycomp="["+mycomp+"]";
                                         }
+                                        if (mycomp.indexOf(" and ") > 0){
+                                            mycomp="("+mycomp+")";
+                                        }
                                         all_cp += (mycomp + " or ");
                                         sel_li.push(mycomp);
                                         comptype_dict[mycompType].push(mycomp);
