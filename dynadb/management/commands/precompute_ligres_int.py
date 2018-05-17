@@ -118,7 +118,7 @@ class Command(BaseCommand):
                             gnum_classes_rel={}
                             (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                             for chain_name, result in dprot_chain_li:
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=True)
                                                                 
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
@@ -214,11 +214,9 @@ class Command(BaseCommand):
                 gpcr_chains=obtain_gpcr_cains(model)
                 serial_mdInd=relate_atomSerial_mdtrajIndex(allfiles_path+structure_file)
                 gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
-                pdb_to_gpcr = {tuple(v): k for k, v in gpcr_pdb.items()}
+                pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
                 delta=DyndbDynamics.objects.get(id=dyn_id).delta
-                #used_gpcr_pdb={}
-                #used_gpcr_pdb_obt=False
-                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta}
+                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta,"gpcr_pdb":gpcr_pdb}
                 traj_by_thresh={}
                 for thresh in thresh_li:
                     traj_by_thresh[thresh]={}
@@ -234,11 +232,10 @@ class Command(BaseCommand):
                             for pos,chain,resname,intval in int_dict[res_li[0]]:#[!] For now I only consider 1 orthosteric ligand for each dyn!
                                 #str(pos)+"-"+chain+"-"+resname
                                 try:
-                                    gnum_all=pdb_to_gpcr[(str(pos),chain)]
-                                    (chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
-                                    gnum=chain_num+"x"+gpcrdb
+                                    gnum=pdb_to_gpcr[str(pos)+"-"+chain]
+                                    #(chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
+                                    #gnum=chain_num+"x"+gpcrdb
                                     inthrdata_dict[gnum]=intval
-                                    #used_gpcr_pdb[gnum]=(str(pos),chain)
                                 except: 
                                     pass#Do something?
                                 inthrdata_dict[gnum]=intval

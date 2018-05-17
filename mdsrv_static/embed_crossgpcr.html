@@ -240,13 +240,14 @@
                 $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});                
                 
                 //Change receptor
-                $(document.body).bind('createNewRef', function(e, struc_fname , traj_fnames , lig,delta) { 
+                $(document.body).bind('createNewRef', function(e, struc_fname , traj_fnames , lig,delta , pos, pdb_pos) { 
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
                     $("#toiframe").find("#trajRangeDiv").css("display","none");
                     $("#trajsDropdown", window.parent.document).css("visibility","hidden");
                     $("#add_traj_options").html("");
                     $("#last_played").css("visibility","hidden");
+                    $("#posNotinRec", window.parent.document).css("display","none")
                     //Prepare
                     var my_comp_li=stage.getComponentsByName("my_comp").list;
                     if (my_comp_li.length > 0) {
@@ -305,8 +306,14 @@
                         
                         // Add representations
                         o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
-                        //o.addRepresentation( "hyperball", {  sele: lig, colorValue: "#ff3900", colorScheme: "element"} );
                         o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
+                        if (pdb_pos != "NaN"){
+                            pos_sel=pdb_pos.replace("-"," and :");
+                            o.addRepresentation( "hyperball", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+                        } else {
+                            $("#posNotinRec_text", window.parent.document).text(pos+" not found in this receptor.");
+                            $("#posNotinRec", window.parent.document).css("display","block");
+                        }
 
                     });
                     

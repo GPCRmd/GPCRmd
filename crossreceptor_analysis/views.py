@@ -84,6 +84,7 @@ def improve_receptor_names(df_t,compl_data):
     recept_info_order={"upname":0, "resname":1,"dyn_id":2,"prot_id":3,"comp_id":4,"prot_lname":5,"pdb_id":6,"lig_lname":7,"struc_fname":8,"traj_fnames":9,"delta":10}
     taken_protlig={}
     index_dict={}
+    dyn_gpcr_pdb={}
     for recept_id in df_t.index:
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
@@ -116,8 +117,9 @@ def improve_receptor_names(df_t,compl_data):
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
         recept_info[recept_name]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,traj_fnames,delta]
         index_dict[recept_id]=recept_name
+        dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_t=df_t.rename(index=index_dict)
-    return(recept_info,recept_info_order,df_t)
+    return(recept_info,recept_info_order,df_t,dyn_gpcr_pdb)
     
 
 
@@ -156,7 +158,7 @@ def ligand_receptor_interaction(request,sel_thresh):
     df_t=df_t.loc[df_order]
     
     #Rename dyn identifiers
-    (recept_info,recept_info_order,df_t)=improve_receptor_names(df_t,compl_data)
+    (recept_info,recept_info_order,df_t,dyn_gpcr_pdb)=improve_receptor_names(df_t,compl_data)
     #df_t.sort_index(inplace=True,ascending=False)
     df_ts = df_t.stack().rename("value").reset_index()
     
@@ -165,6 +167,8 @@ def ligand_receptor_interaction(request,sel_thresh):
     ri_source=ColumnDataSource(df_ri)
     df_rio=pd.DataFrame(recept_info_order, index=[0])
     rio_source=ColumnDataSource(df_rio)
+    df_gnum=pd.DataFrame(dyn_gpcr_pdb)
+    gnum_source=ColumnDataSource(df_gnum)
     
 
     extra_source = ColumnDataSource({"thresh":[sel_thresh], "mdsrv_url":[mdsrv_url]})
@@ -237,16 +241,20 @@ def ligand_receptor_interaction(request,sel_thresh):
     ]
     
     #Select tool and callback:
-    mysource.callback = CustomJS(args={"r_info":ri_source,"ro_info":rio_source,"extra_info":extra_source},code="""
+    mysource.callback = CustomJS(args={"r_info":ri_source,"ro_info":rio_source,"extra_info":extra_source,"gnum_info":gnum_source},
+    code=""" 
             var sel_ind = cb_obj.selected["1d"].indices;
             var plot_bclass=$("#plot_col").attr("class");
             if (sel_ind.length != 0){
                 var data = cb_obj.data;
                 var ri_data=r_info.data;
                 var rio_data=ro_info.data;
+                var gnum_data=gnum_info.data;
                 var recept_id=data["Id"][sel_ind];
                 var pos=data["Position"][sel_ind];
                 var freq=data["value"][sel_ind];
+                var pos_ind=gnum_data['index'].indexOf(pos)
+                var pdb_pos=gnum_data[recept_id][pos_ind]
                 var lig=ri_data[recept_id][rio_data['resname']];
                 var lig_lname=ri_data[recept_id][rio_data['lig_lname']];
                 var recept=ri_data[recept_id][rio_data['upname']];
@@ -261,7 +269,7 @@ def ligand_receptor_interaction(request,sel_thresh):
                 var delta=ri_data[recept_id][rio_data['delta']];
 
                 
-                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_fname , traj_fnames ,lig, delta]);
+                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_fname , traj_fnames ,lig, delta ,pos, pdb_pos]);
                 
                 if (plot_bclass != "col-xs-9"){
                     $("#plot_col").attr("class","col-xs-9");

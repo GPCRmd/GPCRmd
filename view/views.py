@@ -225,7 +225,7 @@ def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
             seq_pos_n+=1
     return (seq_pos,seq_pos_n)
 
-def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains):
+def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=False):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
     chain_nm_seq_pos=""
     rs_by_seg={1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 15: [], 16: [], 17: []}
@@ -238,7 +238,13 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
             gnum_or_nth=""
             this_gnum = pos_gnum[db_pos][1]
             if this_gnum: #If exist GPCR num for this position
-                gpcr_pdb[this_gnum]=[pos[0][1],chain_name]
+                if simplified:
+                    (chain_num,bw,gpcrdb)=re.split('\.|x', this_gnum)
+                    this_gnum=chain_num+"x"+gpcrdb
+                    this_pdb=str(pos[0][1])+"-"+chain_name
+                else:
+                    this_pdb=[pos[0][1],chain_name]
+                gpcr_pdb[this_gnum]=this_pdb
                 gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                 gnum_or_nth=this_gnum
                 rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1]+chain_nm_seq_pos) #Chain!!

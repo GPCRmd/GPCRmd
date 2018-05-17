@@ -82,7 +82,7 @@ html, body, #outer {
                     <p><b>Position:</b> <span id="pos_val"></span> 
                     <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
                     <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
-                    <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Visualize this dynamics</b></a>
+                    <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
                     <!-- Traj dropdown -->
                     
                       <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
@@ -100,6 +100,9 @@ html, body, #outer {
                    <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
                         <iframe style="border:none;position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_crossgpcr.html" scrolling="no" height="348px" width="348px"></iframe> 
                     </div>
+                      <div id="posNotinRec" class="alert alert-warning" style="padding:5px 30px 5px 5px;margin:0;font-size:12px;display:none">
+                        <span id="posNotinRec_text"></span>
+                      </div>
                 <div>
             </div>
         </div>
