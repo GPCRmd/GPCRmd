@@ -14,6 +14,17 @@ import json
 from scipy.cluster.hierarchy import  linkage
 from scipy.spatial.distance import pdist, squareform
 from view.views import obtain_domain_url
+from dynadb.models import DyndbFiles, DyndbFilesDynamics
+import numpy as np
+import mdtraj as md
+import molpx
+import pyemma
+import numpy as np
+
+import matplotlib
+from matplotlib import pylab as plt
+#%matplotlib ipympl
+
 
 def seriation(Z,N,cur_index):
     '''
@@ -307,3 +318,78 @@ def ligand_receptor_interaction(request,sel_thresh):
     return render(request, 'crossreceptor_analysis/index_h.html', context)
 
 
+def obtain_dyn_files(dyn_id):
+    """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
+    dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
+    traj_list=[]
+    traj_name_list=[]
+    p=re.compile("(/protwis/sites/files/)(.*)")
+    p2=re.compile("[\.\w]*$")
+    for fileobj in dynfiles:
+        path=fileobj.id_files.filepath
+        myfile=p.search(path).group(2)
+        myfile_name=p2.search(myfile).group()
+        if myfile.endswith(".pdb"): 
+            structure_file=myfile
+            structure_file_name=myfile_name
+        elif myfile.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
+            traj_list.append([myfile,fileobj.id_files.id])
+            traj_name_list.append(myfile_name)
+    return (structure_file,structure_file_name,traj_list,traj_name_list)
+
+def molpx_plots(request,dyn_id):
+#########
+    test_datapath="/protwis/sites/files/tests/molpx/"
+    top = test_datapath+'bpti-c-alpha_centered.pdb'
+    MD_trajfiles = [test_datapath+'c-alpha_centered.stride.1000.xtc',
+                   test_datapath+'c-alpha_centered.stride.1000.reversed.xtc',
+                    test_datapath+'c-alpha_centered.stride.1000.halved.xtc'
+                   ]
+
+    stride=1
+    # This way the user does not have to care where the data are:
+    top = molpx._molpxdir(top)
+    MD_trajfiles = [molpx._molpxdir(ff) for ff in MD_trajfiles]
+
+    # Create a memory representation of the trajectories
+    MD_list = [molpx.generate._md.load(itraj, top=top, stride=stride) for itraj in MD_trajfiles]
+
+
+    feat = pyemma.coordinates.featurizer(top)
+    pairs = feat.pairs(range(feat.topology.n_atoms)[::2])
+    feat.add_distances(pairs)
+    src  = pyemma.coordinates.source(MD_trajfiles, features=feat)
+    Y = src.get_output()        
+
+    if stride > 1:
+        i=0
+        for i in  range(0,len(Y)):
+            Y[i]=Y[i][0::stride]
+
+    proj_idxs = [108,112]
+
+#    mpx_wdg_box = molpx.visualize.FES(MD_list,
+#                                      top,      
+#                                      Y, 
+#                                      nbins=50, 
+#                                      proj_idxs=proj_idxs,
+#                                      #proj_labels=feat,
+#                                      proj_labels='feat',
+#                                      #n_overlays=5,
+#                                      #sticky=True,
+#                                     )
+    #mpx_wdg_box
+
+
+#############
+    (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
+    context={
+            'structure_file' : structure_file ,
+            'traj_list' : traj_list 
+            }
+    return render(request, 'crossreceptor_analysis/molpx.html', context)
+    
+#/home/mariona/gpcrmd_vagrant/shared/sites/files/Dynamics/10140_trj_4.dcd
+#/home/mariona/gpcrmd_vagrant/shared/sites/files/Dynamics/10142_dyn_4.pdb
+    
+    

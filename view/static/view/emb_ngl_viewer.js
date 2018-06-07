@@ -461,6 +461,38 @@ $(document).ready(function(){
     colorSel("#text_input_all");
     colorSel("#seq_input_all");
     
+//-------- Fix visualisaiton column on scroll --------
+/*
+// Problem: with this I can't scroll down through Visualisation column ':)
+
+    function adjustWidth() {
+         var parentwidth = $("#rightPanelID").width();
+         $("#leftPanelID").width(parentwidth);
+         console.log(parentwidth)
+         console.log($("#leftPanelID").width())
+     }
+     
+    function controlSticky() {
+        var visColumn = document.getElementById("leftPanelID");
+        if (window.pageYOffset >= document.getElementById("right_half").offsetTop) {
+            visColumn.setAttribute("style","position: fixed; top: 50px; width: 48%");
+            adjustWidth();
+        } else {
+            visColumn.setAttribute("style","position: relative; top: 0; width: 100%");
+      }
+    } 
+     
+    $(window).resize( function() {
+       adjustWidth();
+     })
+   
+    //Need to do it only when the page is in 2 columns!
+    window.onscroll = function() {controlSticky()};
+
+*/
+
+
+
 //-------- Text Input --------
     
     

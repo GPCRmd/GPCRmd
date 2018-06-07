@@ -8,7 +8,7 @@
 #content{
     width:100%;
 }
-/*
+
 html, body, #outer {
     height: 100%;
     width: 100%;
@@ -28,20 +28,6 @@ html, body, #outer {
     display: table-row;    
     height:100%
 }
-
-*/
-
-
-#inner_remaining{
-position: fixed; 
-top: 150px; /*Set top value to HeightOfTopFrameDiv*/
-margin:auto;
-bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
-width: 100%;
-padding-right:25px
-}
-
-
 </style>
 {% endblock %}
 </head>
@@ -62,7 +48,7 @@ padding-right:25px
 <div class="col-xs-12" style="padding-bottom:10px;height:100%">
     <div class="row">
         <div class="col-xs-12" id="plot_col" style="padding-left:0;padding-right:5px">
-            <div class="panel panel-primary" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+            <div class="panel panel-primary" style="margin-bottom:0;height:100%">
              <div class="panel-body">
                 <div class="row">
                   <div class="dropdown" style="margin-left:15px">
@@ -76,7 +62,7 @@ padding-right:25px
                     </ul>
                   </div>
                 </div>
-                <div class="row" style="">
+                <div class="row" style="position: relative; overflow-y: auto; overflow-x: auto;">
 <!--                   <div style="margin:auto;max-width:{{plotdiv_w}}px">-->
                     <div style="max-width:{{plotdiv_w}}px">
                     {{ div | safe }}
@@ -87,10 +73,9 @@ padding-right:25px
         </div>
 
         <div class="col-xs-3" id="info" style="visibility:hidden;position:absolute;z-index:-1;padding-left:5px;padding-right:5px;">
-            <div class="panel panel-info" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
-<!--
-            <div class="panel-heading" style="">Interaction details</div> -->
-            <div class="panel-body" style="">
+            <div class="panel panel-info" style="margin-bottom:0;height:100%">
+            <div class="panel-heading">Interaction details</div>
+            <div class="panel-body" style="position: relative; overflow-y: auto; overflow-x: auto;">
                 <div style="min-width:350px">
                     <!-- Info on clicked dyn -->
                     <p><b>Frequency:</b> <span id="freq_val"></span>%</p>
