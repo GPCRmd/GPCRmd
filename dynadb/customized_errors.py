@@ -56,6 +56,9 @@ class TooManyFiles(Exception):
         
 class SubmissionValidationError(Exception):
     pass        
+
+class InvalidPNGFileError(Exception):
+    pass
     
 def sizeof_fmt(num, suffix='B'):
     '''Stack Overflow http://stackoverflow.com/questions/1094841/reusable-library-to-get-human-readable-version-of-file-size
