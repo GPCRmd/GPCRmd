@@ -139,13 +139,23 @@
             </div>
         </div>
 
-        {% if all_prot_names %}
         <div style="margin:5px 0 5px 0;">
             <div class="row" style="padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;">
-                {{all_prot_names}}
+
+              {% if all_prot_names %}
+                  {{all_prot_names}}
+                  {% if pdbid %}
+                    ({{pdbid}})
+                  {% endif %}
+              {% else %}
+                {% if pdbid %}
+                    {{pdbid}}
+                {% endif %}
+              {% endif %}
+              <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Dyn info</a>
             </div>
         </div>
-        {% endif %}
+ 
 
 
 <!-- ============= IFRAME =========== -->

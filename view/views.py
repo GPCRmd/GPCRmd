@@ -510,6 +510,7 @@ def distances_notraj(dist_struc,dist_ids):
 def obtain_DyndbProtein_id_list(dyn_id):
     """Given a dynamic id, gets a list of the dyndb_proteins and proteins associated to it that are GPCRs + a list of all proteins (GPCRs or not)"""
     model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    pdbid=model.pdbid
     prot_li_gpcr=[]
     dprot_li_all=[]
     dprot_li_all_info=[]
@@ -532,7 +533,7 @@ def obtain_DyndbProtein_id_list(dyn_id):
                 prot_li_gpcr.append((dprot,gprot))
             dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
             dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
-    return (prot_li_gpcr, dprot_li_all, dprot_li_all_info)
+    return (prot_li_gpcr, dprot_li_all, dprot_li_all_info,pdbid)
 
 def obtain_protein_names(dyn_id):
     """Given a dynamic id, gets a list of the GPCR names"""
@@ -878,7 +879,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             chain_str=""
             if len(chain_name_li) > 1:
                 multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)            
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
             request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False}
             dprot_chains={}
             chains_taken=set()
@@ -1012,7 +1013,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "fpdir" : fpdir,
                         "delta":delta,
                         "bind_domain":bind_domain,
-                        "presel_pos":presel_pos
+                        "presel_pos":presel_pos,
+                        "pdbid":pdbid
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1036,7 +1038,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "seg_li":"",
                         "delta":delta,
                         "bind_domain":bind_domain,
-                        "presel_pos":presel_pos
+                        "presel_pos":presel_pos,
+                        "pdbid":pdbid
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1058,7 +1061,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "seg_li":"",
                         "delta":delta,
                         "bind_domain":bind_domain,
-                        "presel_pos":presel_pos
+                        "presel_pos":presel_pos,
+                        "pdbid":pdbid
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0

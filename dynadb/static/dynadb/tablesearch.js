@@ -38,9 +38,9 @@ function ShowResults(data, restype,is_apoform){
         var dl=data.dynlist;
         for(i=0; i<dl.length; i++){
             if (dl[i].length>2 && (is_apoform=='com'||is_apoform=='both')){ //dl[i].length>2
-                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' target='_blank' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd><br> Ligand:     <kbd>"+ dl[i][2]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' target='_blank' role='button' href=/view/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor: <kbd>"+dl[i][1]+ "</kbd><br> Ligand:     <kbd>"+ dl[i][2]+"</kbd></td></tr>";
             }if (dl[i].length==2 && (is_apoform=='apo'||is_apoform=='both')) {
-                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' target='_blank' role='button' href=/dynadb/dynamics/id/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
+                tablestr=tablestr+"<tr><td>"+ "<a class='btn btn-info' target='_blank' role='button' href=/view/"+dl[i][0]+"> Dynamics ID:"+dl[i][0]+" </a></td><td> Receptor:<kbd> "+dl[i][1]+"</kbd></td></tr>";
             }
         }
     } //endif
