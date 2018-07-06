@@ -53,7 +53,7 @@ class Command(BaseCommand):
             multiple_chains=False
             if len(chain_name_li) > 1:
                 multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)            
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
             dprot_chains={}
             chains_taken=set()
             gpcr_chains=[]
