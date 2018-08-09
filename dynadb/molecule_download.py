@@ -4,7 +4,7 @@ import sys
 import time
 import urllib
 import certifi
-from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError
+from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, InvalidPNGFileError
 from requests.exceptions import HTTPError,ConnectionError,Timeout,TooManyRedirects
 from django.conf import settings
 from django.http import HttpResponseRedirect, HttpResponseNotFound, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseForbidden
@@ -13,6 +13,11 @@ from io import BytesIO
 from .molecule_properties_tools import open_molecule_file
 from html.parser import HTMLParser
 
+from PIL import Image
+import warnings
+warnings.simplefilter('error', Image.DecompressionBombWarning)
+import numpy as np
+from tempfile import TemporaryFile
 
 CIDS_TYPES = {'all', 'active', 'inactive', 'standardized', \
 
@@ -55,6 +60,9 @@ def pubchem_errdata_2_response(errdata,data=None):
             or errdata['ErrorType'] == 'ParsingError':
             response = HttpResponse('Problem downloading from PubChem:'\
                 +'\n'+errdata['reason'],status=502,content_type='text/plain')
+          elif errdata['ErrorType'] == 'InvalidPNGFileError':
+            response = HttpResponse('Problem downloading from PubChem:'\
+                +'\n'+errdata['reason'],status=502,content_type='text/plain') 
           elif errdata['ErrorType'] == 'Internal':
             response = HttpResponse('Unknown internal error.',status=500,content_type='text/plain')
           else:
@@ -221,7 +229,66 @@ def retreive_compound_data_pubchem_txt(searchproperty,searchvalue,outputproperty
 
     response.close()
     return data
-def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,width=300,height=300):
+
+def replace_png_background_color(input_png,input_type='file',replaced_background_color=(245,245,245),replacing_background_color=(255,255,255),outputfile=None):
+    """This function replaces grey background (default) RGB(245,245,245) of a PNG image. 
+    input_file                      an str that can be  "file" or "bytes". Default='file'.
+    input_png                       In the "input_file='file'" case, input can be an str with the path
+                                    to the PNG file or a file-like object.
+                                    In the "input_file='bytes'", input must be a bytes object with PNG file data.
+    outputfile                      String with the path for the output file or a file-like object. If set to
+                                    None, an a bytes object with PNG file data is returned. Default=None.
+    replaced_background_color       iterable with three 0 to 255 RGB values. Default=(245,245,245) (pubchem PNG gray).
+    replacing_background_color      iterable with three 0 to 255 RGB values. Default=(255,255,255) (white). 
+    """       
+    input_type_values = {'file','bytes'}
+    input_type = input_type.lower()    
+
+    if input_type not in input_type_values:
+         raise ValueError('Invalid input_type "".' % (input_type))
+    
+    if input_type == 'bytes':
+         input_png2 = BytesIO(input_png)
+    else:
+         input_png2 = input_png
+    del input_png
+
+    try:
+    	im = Image.open(input_png2)
+    except Exception as e:
+        raise InvalidPNGFileError("Cannot read PNG file.")
+    finally:
+        if input_type == 'bytes':
+            input_png2.close()
+    
+    del input_png2
+    im = im.convert('RGB')
+    data = np.array(im)
+    del im
+    red, green, blue = data.T
+    background = (red == replaced_background_color[0]) & (green == replaced_background_color[1]) & (blue == replaced_background_color[2])
+    del red
+    del green
+    del blue 
+    data[background.T] = replacing_background_color
+    
+    im2 = Image.fromarray(data)
+    del data
+    if outputfile is None:
+        output = BytesIO()
+        im2.save(output,format='PNG')
+        del im2
+        output.flush()
+        output.seek(0)
+        outputdata = output.read()
+        output.close()
+        del output
+        return outputdata
+    
+    im2.save(outputfile,format='PNG') 
+
+
+def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,width=300,height=300,replace_background_color=(255,255,255)):
     URL = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/'
     errdata = dict()
     data = None
@@ -237,7 +304,10 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
         response = requests.get(URL+'/'.join(args)+'/PNG?'+str(width)+'x'+str(height),timeout=30,stream=True,verify=True)
         response.raise_for_status()
         if outputfile:
-            fileh = open(outputfile,'wb')
+            if replace_background_color is None:
+            	fileh = open(outputfile,'wb')
+            else:
+                fileh = TemporaryFile(dir=settings.FILE_UPLOAD_TEMP_DIR)
         else:
             data = b''
         size = 0
@@ -254,9 +324,16 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
             else:
                 data += chunk
         response.close()
+
+        
         if outputfile:
+            if replace_background_color is not None:
+                fileh.seek(0)
+                replace_png_background_color(fileh,input_type='file',outputfile=outputfile)
             fileh.close()
         else:
+            if replace_background_color is not None:
+                data = replace_png_background_color(data,input_type='bytes')
             return data
     except HTTPError:
       errdata['Error'] = True
@@ -283,7 +360,10 @@ def retreive_compound_png_pubchem(searchproperty,searchvalue,outputfile=None,wid
       errdata['Error'] = True
       errdata['ErrorType'] = 'StreamTimeoutError'
       errdata['reason'] = str(e)
-
+    except InvalidPNGFileError as e:
+      errdata['Error'] = True
+      errdata['ErrorType'] = 'InvalidPNGFileError'
+      errdata['reason'] = "Cannot read PubChem downloaded PNG file."
     except:
       errdata['Error'] = True
       errdata['ErrorType'] = 'Internal'

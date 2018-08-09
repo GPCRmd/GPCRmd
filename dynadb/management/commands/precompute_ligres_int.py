@@ -53,7 +53,7 @@ class Command(BaseCommand):
             multiple_chains=False
             if len(chain_name_li) > 1:
                 multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)            
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
             dprot_chains={}
             chains_taken=set()
             gpcr_chains=[]
@@ -173,6 +173,8 @@ class Command(BaseCommand):
         def get_orthostericlig_resname(dyn_id,change_lig_name):
             """Returns a list with the the resname of the orthosteric ligamd(s) of a dynamics"""
             ortholig_li=DyndbSubmissionMolecule.objects.filter(submission_id__dyndbdynamics=dyn_id,type=0)
+            if len(ortholig_li) == 0:
+                return (False,False,False)
             comp_set_all=set()
             for ortholig in ortholig_li:
                 comp_li=DyndbDynamicsComponents.objects.filter(id_molecule=ortholig.molecule_id.id)
@@ -209,55 +211,61 @@ class Command(BaseCommand):
                 uniprot_id=prot.uniprotkbac
                 uniprot_name=Protein.objects.get(accession=uniprot_id).entry_name
                 (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
-                (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
-                chain_names=obtain_all_chains(allfiles_path+structure_file)
-                gpcr_chains=obtain_gpcr_cains(model)
-                serial_mdInd=relate_atomSerial_mdtrajIndex(allfiles_path+structure_file)
-                gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
-                pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
-                delta=DyndbDynamics.objects.get(id=dyn_id).delta
-                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta,"gpcr_pdb":gpcr_pdb}
-                traj_by_thresh={}
-                for thresh in thresh_li:
-                    traj_by_thresh[thresh]={}
-                i=1
-                for traj_file,traj_id in traj_list:
-                    self.stdout.write(self.style.NOTICE("Trajectory %d/%d..."%(i,len(traj_list))))
-                    i+=1
-                    traj_idtag="traj"+str(traj_id)
-                    for thresh in thresh_li:
-                        (success,int_dict,errors)=compute_interaction(res_li,structure_file,traj_file,1,chain_names,thresh, serial_mdInd,gpcr_chains,"closest-heavy", 1)
-                        inthrdata_dict={}
-                        if success:
-                            for pos,chain,resname,intval in int_dict[res_li[0]]:#[!] For now I only consider 1 orthosteric ligand for each dyn!
-                                #str(pos)+"-"+chain+"-"+resname
-                                try:
-                                    gnum=pdb_to_gpcr[str(pos)+"-"+chain]
-                                    #(chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
-                                    #gnum=chain_num+"x"+gpcrdb
-                                    inthrdata_dict[gnum]=intval
-                                except: 
-                                    pass#Do something?
-                                inthrdata_dict[gnum]=intval
-                            traj_by_thresh[thresh][traj_idtag]=inthrdata_dict
-                        else:
-                            self.stdout.write(self.style.NOTICE("An error occurred. Ignoring this trajectory (dyn id %d, traj_id %d). Error message(s):%s."%(dyn_id,traj_id,errors)))
-                
-                if (len(traj_list)>1):
-                    for thresh in thresh_li:
-                        traj_thr=traj_by_thresh[thresh]
-                        df_thr=pd.DataFrame(traj_thr).fillna(value=0)
-                        df_thr=df_thr.apply(pd.to_numeric, errors='ignore')
-                        mean=df_thr.mean(axis=1)
-                        df_mean=mean.to_frame(name=identifier)
-                        updated_data[thresh].append(df_mean)
-                    #pd.concat(updated_data,axis=1)
+                if len(traj_list) == 0:
+                    self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
                 else:
-                    for thresh in thresh_li:
-                        traj_thr=traj_by_thresh[thresh]
-                        df_thr=pd.DataFrame(traj_thr)
-                        df_thr=df_thr.rename(columns={df_thr.columns[0]:identifier})
-                        updated_data[thresh].append(df_thr)
+                    (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
+                    if not res_li : # No ligands in the simulation
+                        self.stdout.write(self.style.NOTICE("No ligand in this simulation. Skipping."))
+                    else:
+                        chain_names=obtain_all_chains(allfiles_path+structure_file)
+                        gpcr_chains=obtain_gpcr_cains(model)
+                        serial_mdInd=relate_atomSerial_mdtrajIndex(allfiles_path+structure_file)
+                        gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
+                        pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
+                        delta=DyndbDynamics.objects.get(id=dyn_id).delta
+                        compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta,"gpcr_pdb":gpcr_pdb}
+                        traj_by_thresh={}
+                        for thresh in thresh_li:
+                            traj_by_thresh[thresh]={}
+                        i=1
+                        for traj_file,traj_id in traj_list:
+                            self.stdout.write(self.style.NOTICE("Trajectory %d/%d..."%(i,len(traj_list))))
+                            i+=1
+                            traj_idtag="traj"+str(traj_id)
+                            for thresh in thresh_li:
+                                (success,int_dict,errors)=compute_interaction(res_li,structure_file,traj_file,1,chain_names,thresh, serial_mdInd,gpcr_chains,"closest-heavy", 1)
+                                inthrdata_dict={}
+                                if success:
+                                    for pos,chain,resname,intval in int_dict[res_li[0]]:#[!] For now I only consider 1 orthosteric ligand for each dyn!
+                                        #str(pos)+"-"+chain+"-"+resname
+                                        try:
+                                            gnum=pdb_to_gpcr[str(pos)+"-"+chain]
+                                            #(chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
+                                            #gnum=chain_num+"x"+gpcrdb
+                                            inthrdata_dict[gnum]=intval
+                                        except: 
+                                            pass#Do something?
+                                        inthrdata_dict[gnum]=intval
+                                    traj_by_thresh[thresh][traj_idtag]=inthrdata_dict
+                                else:
+                                    self.stdout.write(self.style.NOTICE("An error occurred. Ignoring this trajectory (dyn id %d, traj_id %d). Error message(s):%s."%(dyn_id,traj_id,errors)))
+                        
+                        if (len(traj_list)>1):
+                            for thresh in thresh_li:
+                                traj_thr=traj_by_thresh[thresh]
+                                df_thr=pd.DataFrame(traj_thr).fillna(value=0)
+                                df_thr=df_thr.apply(pd.to_numeric, errors='ignore')
+                                mean=df_thr.mean(axis=1)
+                                df_mean=mean.to_frame(name=identifier)
+                                updated_data[thresh].append(df_mean)
+                            #pd.concat(updated_data,axis=1)
+                        else:
+                            for thresh in thresh_li:
+                                traj_thr=traj_by_thresh[thresh]
+                                df_thr=pd.DataFrame(traj_thr)
+                                df_thr=df_thr.rename(columns={df_thr.columns[0]:identifier})
+                                updated_data[thresh].append(df_thr)
     
     
         def update_time(upd,upd_now):
