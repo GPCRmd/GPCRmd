@@ -6,7 +6,7 @@ app_name = "gpcrome"
 
 urlpatterns = [
     url(r'ligres/(?P<sel_thresh>\d\.\d)/$', views.ligand_receptor_interaction, name='ligand_receptor_interaction'),
-    url(r'molpx/(?P<dyn_id>[0-9]+)/$', views.molpx_plots, name='molpx_plots'),
+#    url(r'molpx/(?P<dyn_id>[0-9]+)/$', views.molpx_plots, name='molpx_plots'),
 
 ]
 
