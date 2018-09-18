@@ -859,7 +859,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         presel_pos=""
         bind_domain=""
-        print("\n\n\n\n")
         if sel_pos:
             cra_path="/protwis/sites/files/Precomputed/crossreceptor_analysis_files"
             resli_file_path=path.join(cra_path,"ligres_int.csv")
