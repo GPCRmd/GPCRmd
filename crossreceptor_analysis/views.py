@@ -80,12 +80,13 @@ def json_dict(path):
 
 def improve_receptor_names(df_t,compl_data):
     """Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id"""
+
     recept_info={}
     recept_info_order={"upname":0, "resname":1,"dyn_id":2,"prot_id":3,"comp_id":4,"prot_lname":5,"pdb_id":6,"lig_lname":7,"struc_fname":8,"traj_fnames":9,"delta":10}
     taken_protlig={}
     index_dict={}
     dyn_gpcr_pdb={}
-    for recept_id in df_t.index:
+    for recept_id in df_t.index: 
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
         resname=compl_data[recept_id]["lig_sname"]
@@ -148,6 +149,12 @@ def ligand_receptor_interaction(request,sel_thresh):
     df_t.columns.names=["Position"]
     df_t=df_t.fillna(value=0)
     
+    indexes = df_t.index.values
+    print(indexes)
+    index_f = sorted([idx for idx in indexes if int(idx[3:]) > 29],key=lambda x: int(x[3:]))
+    print(index_f)
+    df_t = df_t.loc[index_f]
+    print(df_t)
     #Compute cluster and order accordingly
     dist_mat_md = squareform(pdist(df_t))
     method="ward"

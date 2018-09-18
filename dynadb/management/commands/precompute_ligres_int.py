@@ -14,6 +14,8 @@ from view.assign_generic_numbers_from_DB import obtain_gen_numbering
 from dynadb.pipe4_6_0 import *
 from view.views import obtain_prot_chains , obtain_DyndbProtein_id_list, obtain_seq_pos_info, findGPCRclass, obtain_rel_dicts, traduce_all_poslists_to_ourclass_numb,obtain_predef_positions_lists,find_missing_positions
 import copy
+import operator
+
 
 class Command(BaseCommand):
     help = "Creates precomputed datafiles of ligand-residue interactons in the GPCRs stored at the database for posterior creation of comparaive plots. Only considers published data."
@@ -241,12 +243,13 @@ class Command(BaseCommand):
                                         #str(pos)+"-"+chain+"-"+resname
                                         try:
                                             gnum=pdb_to_gpcr[str(pos)+"-"+chain]
+                                        except KeyError:
+                                            self.stdout.write(str(pos)+"-"+chain)
+                                            pass
+                                        else:
                                             #(chain_num,bw,gpcrdb)=re.split('\.|x', gnum_all)
                                             #gnum=chain_num+"x"+gpcrdb
-                                            inthrdata_dict[gnum]=intval
-                                        except: 
-                                            pass#Do something?
-                                        inthrdata_dict[gnum]=intval
+                                            inthrdata_dict[gnum]=intval 
                                     traj_by_thresh[thresh][traj_idtag]=inthrdata_dict
                                 else:
                                     self.stdout.write(self.style.NOTICE("An error occurred. Ignoring this trajectory (dyn id %d, traj_id %d). Error message(s):%s."%(dyn_id,traj_id,errors)))
@@ -301,7 +304,8 @@ class Command(BaseCommand):
 
                     
     
-        thresh_li=[2.2,2.5,2.8]
+        #thresh_li=[2.2,2.5,2.8]
+        thresh_li=[2.8,3.2,3.6]
         cra_path="/protwis/sites/files/Precomputed/crossreceptor_analysis_files"
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
@@ -344,6 +348,8 @@ class Command(BaseCommand):
         for thresh in thresh_li:
             updated_data[thresh]=[]
         i=1
+         
+        dyn_li = sorted(dyn_li, key=operator.attrgetter('id'))
         for dyn in dyn_li:
             self.stdout.write(self.style.NOTICE("Computing interactions for dynamics with id %d (%d/%d) ...."%(dyn.id,i , len(dyn_li))))
             retrieve_info(self,df,dyn,updated_data,thresh_li,change_lig_name)
