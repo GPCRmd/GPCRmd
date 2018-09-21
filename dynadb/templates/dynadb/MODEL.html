@@ -324,7 +324,7 @@ font-weight:normal
  
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-numberofmol"  name="formmc-{{o.int_id}}-numberofmol" type="number" style="width:70px" {%if o.resname|length > 0 %} value="{{o.numberofmol}}" readonly {%endif%}  /></td>
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input style="width:70px" id="id_formmc-{{o.int_id}}-molecule"  maxlength="4" name="formmc-{{o.int_id}}-molecule" type="text"  readonly value="{{o.int_id|add:"1"}}"/></td>
-                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{o.int_id}}-id_molecule" name="formmc-{{o.int_id}}-id_molecule" type="text" readonly  value="{{ o.id_molecule_id}}" ></td>
+                                      <td style="text-align:center;padding:5px 5px 5px 5px" hidden><input style="width:70px" id="id_formmc-{{o.int_id}}-id_molecule" name="formmc-{{o.int_id}}-id_molecule" type="text" readonly  value="{{ o.molecule_id_id}}" ></td>
 
 					<td style="text-align:center;padding:5px 5px 5px 5px"><input id="id_formmc-{{o.int_id}}-namemc" maxlength="60" name="formmc-{{o.int_id}}-namemc" type="text" style="width:70px" {%if o.name|length > 0 %} value="{{o.name}}" readonly {%endif%} /></td>                        
 
