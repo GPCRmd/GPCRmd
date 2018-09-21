@@ -3,7 +3,7 @@ import random
 from bokeh.plotting import figure 
 from bokeh.embed import components
 #from bokeh.models.tools import HoverTool
-from bokeh.models import HoverTool, TapTool, CustomJS
+from bokeh.models import HoverTool, TapTool, CustomJS #,PanTool
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
 from os import path
@@ -159,12 +159,11 @@ def ligand_receptor_interaction(request,sel_thresh):
     df_t.columns.names=["Position"]
     df_t=df_t.fillna(value=0)
     
+    # [!] Only in prod
     indexes = df_t.index.values
-    print(indexes)
     index_f = sorted([idx for idx in indexes if int(idx[3:]) > 29],key=lambda x: int(x[3:]))
-    print(index_f)
     df_t = df_t.loc[index_f]
-    print(df_t)
+    
     #Compute cluster and order accordingly
     dist_mat_md = squareform(pdist(df_t))
     method="ward"
@@ -195,12 +194,18 @@ def ligand_receptor_interaction(request,sel_thresh):
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
     # Define a figure
-    #mytools = "hover,tap,save,pan,box_zoom,reset,wheel_zoom"
+
+    #pan=PanTool(dimensions="width")
+    #mytools = ["hover","tap","save","reset","wheel_zoom",pan]
+
     mytools = ["hover","tap","save","reset","wheel_zoom","pan"]
-    w=int(len(df_t.columns)*40,)
+    #w=int(len(df_t.columns)*40,)
     cw=275
     ch=30
-    h=int(((w-cw)*len(df_t.index)/len(df_t.columns))+ch)
+    #h=int(((w-cw)*len(df_t.index)/len(df_t.columns))+ch)
+    w= 760
+    h= 132
+
     p = figure(
         plot_width= w,#len(df_t.columns)*40, 
         plot_height=h,#int(len(df_t.index)*40*0.8),
@@ -252,9 +257,9 @@ def ligand_receptor_interaction(request,sel_thresh):
     
     #Hover tool:
     p.select_one(HoverTool).tooltips = [
-       #  ('Receptor', '@Id'),
-       #  ('Position', '@Position'),
-         ('Ferqueny', '@value{(0.0)}%'),
+         ('Receptor', '@Id'),
+         ('Position', '@Position'),
+         ('Frequency', '@value{(0.0)}%'),
     ]
     
     #Select tool and callback:
