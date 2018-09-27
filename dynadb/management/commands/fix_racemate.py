@@ -105,12 +105,11 @@ class Command(BaseCommand):
                 
             elif options['molecule-id']:
                 ids = options['molecule-id']
+                ids = [int(i) for i in ids]
                 field_name = 'id'
                 q_dup_mol = DyndbMolecule.objects.values('id','id_compound')
                 q_dup_mol = q_dup_mol.filter(pk__in=options['molecule-id'])
                 id_name = 'ID'
-                
-                
         q_ids = [q_id[field_name] for q_id in q_dup_mol] 
         i = 0
         for in_id in ids:
