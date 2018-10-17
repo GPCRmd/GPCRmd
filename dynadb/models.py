@@ -129,7 +129,7 @@ class DyndbComplexProtein(models.Model):
 
 
 class DyndbCompound(models.Model):
-    name = models.CharField(unique=True, max_length=60)
+    name = models.TextField(unique=True)
     iupac_name = models.TextField()
     pubchem_cid = models.IntegerField(unique=True, blank=True, null=True)
     chemblid = models.IntegerField(unique=True, blank=True, null=True)
