@@ -1,0 +1,431 @@
+<head>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+
+<!--Bootstrap things-->
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+<script>
+  //Dropdowns
+  $(document).ready(function(){
+    //Submenus
+    $('.dropdown-submenu a.test').on("click", function(e){
+      $(this).next('ul').toggle();
+      e.stopPropagation();
+      e.preventDefault();
+    });
+    //Avoid dropdown menu to retract at click
+    $('.dropdown-menu').on("click", function(e){
+      e.stopPropagation();
+    });
+  });
+</script>
+
+<script>
+  //Check or uncheck all checkboxes of the selected class (Ex: .option) depending if there are, or not, checkboxes already selected.
+  //Disabled checkboxes are not selected  
+  function checkoruncheckall(checkboxclass,changename){
+    var checkcomand = checkboxclass + ':checked';
+    if (Boolean($(checkcomand).val())) {
+      $(checkboxclass).prop('checked', false);
+      if(Boolean(changename)){
+        document.getElementById("allbutton").innerHTML = "Select all";
+      }
+    }
+    else {
+      $(checkboxclass + ":enabled").prop('checked', true);
+      if(Boolean(changename)){
+        document.getElementById("allbutton").innerHTML = "Unselect all";
+      }
+    }
+  }
+</script>
+
+<script>  
+  $(document).ready(function(){
+    //Detect if Hydrogen bond or water bridge options have been clicked, and select or deselect all its options in consequence
+    $('#allHB').change(function(e){checkoruncheckall('.hb_option',false)});
+    $('#allWB').change(function(e){checkoruncheckall('.wb_option',false)});
+  });
+</script>
+
+<script>
+  $(document).ready(function(){
+
+  //Change button class of apply if any checkbox is selected
+    function changeapplycolor(){
+      var num_checked = $.map($('.option:checked'), function(c){return c.value; }).length;
+      if (Boolean(num_checked)){
+        $('#applybutton').addClass('btn-primary').removeClass('btn-danger');
+      }
+      else{
+        $('#applybutton').addClass('btn-danger').removeClass('btn-primary');        
+      }
+    }
+
+    //I know it's strange to have these two separated, but belive me, it was the only way to make it all work
+    $('.option').change(function(e){changeapplycolor()}); //In case any checkbox is clicked
+    $('#allbutton').click(function(e){changeapplycolor()}); //In cas all options button is clicked
+  });    
+</script>
+
+<script>
+  //Disable non-ligand HB and WB types if ligand only is selected
+  $(document).ready(function(){
+    $('.option_location').change(function(){
+
+      var sel_value = "";
+
+      //Set all to enabled to begin wtih 
+      $(".wb_option, .hb_option, .option").prop('disabled',false)
+
+      //If protein-only selected, disable ligand-only options
+      if (document.getElementById('Intraprotein').checked){
+        $( ".wb_option[value*='l'],.hb_option[value*='l']" ).prop('disabled',true).prop('checked',false);
+      }
+
+      //If ligand-only selected, disable non-ligand options
+      else if (document.getElementById('Protein to ligand').checked) {
+        $( ".wb_option:not([value*='l']),.hb_option:not([value*='l']),.option[value='ts'],.option[value='sb'],.option[value='ps'],.option[value='pc']" ).prop('disabled',true).prop('checked',false);
+      }
+
+      //Change dropdown text by the selected value
+      sel_value = $('.option_location:checked');
+      document.getElementById('loc_dropdown').innerHTML = sel_value.attr('id');
+    });
+  });
+</script>
+
+<script>
+  function printchecked(){
+    //Extract checked values, create an URL with them and refresh page with new URL
+    var checked_loc = []
+    var checked_opts = [];
+    var checked_values = [];
+    var URL_values = "";
+    var value_opt = "";
+
+    //Check location of the interaction options
+    checked_loc = $('.option_location:checked').val();
+
+    checked_opts = $('.option[type = checkbox]:checked');
+    for (var i=0; i < checked_opts.length; i++ ){
+      value_opt = checked_opts[i].value;
+      if (value_opt != "false"){
+        checked_values.push(value_opt);
+      }
+    }
+    if (Boolean(checked_values.length)){
+      URL = '/contplots/' + checked_values.join("_") + "/" + checked_loc;
+      window.location.pathname = URL; 
+    }
+    else {
+      window.alert("please select an interaction type");
+    }
+  }
+</script>
+
+<script>
+  //If no HB or WB remain checked, uncheck main wb/HB option. And if any WB HB suboption is checked, check also the main one
+  $(document).ready(function(){
+    var checkedval = "";
+    
+    $('.hb_option').click(function(){
+      checkedval = $('.hb_option:checked').val();
+      if(Boolean(checkedval)){
+        $('#allHB').prop('checked', true);
+      }
+      else {
+        $('#allHB').prop('checked', false);        
+      }
+    })
+
+    $('.wb_option').click(function(){
+      checkedval = $('.wb_option:checked').val();
+      if(Boolean(checkedval)){
+        $('#allWB').prop('checked', true);
+      }
+      else {
+        $('#allWB').prop('checked', false);        
+      }
+    })
+  });
+
+</script>
+
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+
+<style>
+#content{
+    width:100%;
+}
+/*
+
+html, body, #outer {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+ 
+#outer {
+    display: table;
+}
+ 
+#inner_fixed {
+    height: 69px;
+    display: table-row;
+}
+ 
+#inner_remaining {
+    display: table-row;    
+    height:100%
+}
+
+*/
+
+
+#inner_remaining{
+  position: fixed; 
+  top: 150px; /*Set top value to HeightOfTopFrameDiv*/
+  margin:auto;
+  bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
+  width: 100%;
+  padding-right:25px
+}
+
+.mycheckbox{
+  margin: 0;
+  padding-left: 10%;
+}
+
+.falsebutton{
+  border-width: 0px;
+  width: 100%;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+}
+
+.dropdown {
+  margin: 0.5%;
+}
+
+.HB_WB_row {
+  margin: 0px;
+  width: 100%;
+}
+
+label {
+    font-weight: normal;
+}
+
+a {
+  color:inherit;
+  text-decoration: none;
+
+ }
+
+.optbar {
+  display:inline-block;
+  float: left;
+}
+
+</style>
+{% endblock %}
+</head>
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+<div id="outer">
+  <div class="col-xs-12 panel panel-primary" id="inner_fixed" style="background-color:blue;text-align:center;margin-bottom:10px;color:white">  
+     <div class="panel-body">
+        <h3>Residue interaction</h3>
+     </div> 
+  </div>
+</div>
+
+<div id="inner_remaining" >
+  <div class="col-xs-12" style="padding-bottom:10px;height:100%">
+    <div class="row">
+      <div class="col-xs-12" id="plot_col" style="padding-left:0;padding-right:5px">
+        <div class="panel panel-primary" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+          <div class="panel-body">
+            <div class="row">
+            <!--itypes dropdown-->
+              <div class="dropdown optbar">
+                <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                  Interaction Type 
+                  <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                  {% for code,itype in other_itypes.items %}
+                  <li>
+                    <label class="mycheckbox">
+                    <input type="checkbox" class="option" value={{code}} />
+                      {{itype}}
+                    </label>
+                  </li>
+                  {% endfor %}
+                  <!--Hydrogen bond itypes dropdown-->
+                  <li class="dropdown-submenu">
+                    <div class="HB_WB_row">
+                      <label class="mycheckbox">
+                        <input type="checkbox" class="option" id="allHB" value=false />
+                          Hydrogen bond
+                      </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                        {% for code,itype in hb_itypes.items %}
+                        <li>
+                          <label class="mycheckbox">
+                          <input type="checkbox" class="option hb_option" value={{code}} />
+                            {{itype}}
+                          </label>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  <!--Water bridge itypes dropdown-->
+                  <li class="dropdown-submenu">
+                    <div class="HB_WB_row">
+                      <label class="mycheckbox">
+                        <input type="checkbox" class="option" id="allWB" value=false >
+                          Water bridge
+                      </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
+                      <ul class="dropdown-menu">
+                        {% for code,itype in wb_itypes.items %}
+                        <li>
+                          <label class="mycheckbox">
+                          <input type="checkbox" class="option wb_option" value={{code}} />
+                            {{itype}}
+                          </label>
+                        </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  </li>
+                  <!--Select all button-->
+                  <li>
+                    <button class="mycheckbox falsebutton" id="allbutton" onclick="checkoruncheckall('.option','1')">Select all</a></button>
+                  </li>
+                </ul>
+              </div> 
+              <!--dropdown interacting parts of the simulation -->
+              <div class="dropdown optbar">
+                <button type="button" id="loc_dropdown" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">Interaction locations
+                  <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <label class="mycheckbox">
+                    <input type="radio" id="Intraprotein" name="molec" class="option_location" value="prt"/>
+                      Intraprotein
+                    </label>
+                  </li>
+                  <li>
+                    <label class="mycheckbox">
+                    <input type="radio" id="Protein to ligand" name="molec" class="option_location" value="lg"/>
+                      Protein to ligand
+                    </label>
+                  </li>
+                  <li>
+                    <label class="mycheckbox">
+                    <input type="radio" id="All" name="molec" class="option_location" value="prt_lg" checked="checked"/>
+                      All
+                    </label>
+                  </li>
+                </ul>
+              </div>
+              <!--Apply button -->
+              <div class="dropdown optbar">
+                <button type="button" id="applybutton" class="btn btn-danger btn-sm" onclick="printchecked();" >Apply </button>
+              </div>
+            </div>
+            <!--download button-->
+            <div class="row">
+              <div class="dropdown optbar">
+                <button type="checkbox" onclick="window.location.pathname = '/contplots/download_csv'" >Download results in csv</button>
+              </div>
+            </div>
+            <div class="row" style="">
+              <div style="max-width:{{plotdiv_w}}px">
+                {{ div | safe }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-xs-3" id="info" style="visibility:hidden;position:absolute;z-index:-1;padding-left:5px;padding-right:5px;">
+      <div class="panel panel-info" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+      <div class="panel-heading" style="">Interaction details</div> 
+        <div class="panel-body" style="">
+          <div style="min-width:350px">
+            <!-- Info on clicked dyn -->
+            <p><b>Frequencies:</b></p>
+            {% for code,type in selected_itypes.items %}
+            <ul>
+              <li><p>{{ type }}: <span id="freq_{{code}}" ></span>%</p></li>
+            </ul>
+            {% endfor %}
+            <p><b>Positions:</b> <span id="pos_val"></span> 
+            <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+            <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
+            <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
+
+            <!-- Traj dropdown -->
+            <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
+              <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" >-
+              <span class="caret"></span></button>
+              <ul id="trajsDropdown_options" class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0;cursor:pointer">
+                <span id="add_traj_options"></span>
+              </ul>
+            </div>
+          
+            <!-- Loading div-->
+            <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:150px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
+            <!-- iframe to ngl -->
+            <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
+              <iframe style="border:none;position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contplots.html" scrolling="no" height="348px" width="348px"></iframe> 
+            </div>
+            <div id="posNotinRec" class="alert alert-warning" style="padding:5px 30px 5px 5px;margin:0;font-size:12px;display:none">
+              <span id="posNotinRec_text"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %} 
+
+
+{% block addon_js %} 
+
+<script src="{% static 'gpcrome/emb_crossgpcr.js' %}"></script>
+
+<!-- Bokeh -->
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.css" rel="stylesheet" type="text/css">
+<link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.js"></script>
+<script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-0.13.0.min.js"></script>
+{{ script | safe }}
+{% endblock %}
+
+</body>
+
