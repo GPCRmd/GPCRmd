@@ -1458,14 +1458,16 @@ def autocomplete(request):
 
 
 def count_dynamics(result_id,result_type):
-    '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas.'''
+    '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas. Loads the whole database in memory, probably not a good idea.'''
     dynset=set()
     if result_type=='compound': #we need to count complexcompound too!!!!
         for molecule in DyndbMolecule.objects.filter(id_compound=result_id):
             somenumber,dynsets=count_dynamics(molecule.id,'molecule')
             dynset=dynset.union(dynsets)
-
-    for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
+    simus = DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp')
+    if settings.QUERY_CHECK_PUBLISHED:
+    	simus = simus.filter(is_published=True)
+    for simu in simus.all():
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj is not None:
@@ -7408,7 +7410,7 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,3*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
