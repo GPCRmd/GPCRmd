@@ -1,16 +1,22 @@
+import matplotlib# MANDATORY TO BE IN FIRST PLACE!!
+matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from django.shortcuts import render
 from django.http import HttpResponse
 from math import pi
+from bokeh.palettes import cividis 
 from bokeh.plotting import figure
 from bokeh.embed import components
 from bokeh.models import HoverTool, TapTool, CustomJS,DataRange1d, Range1d, FuncTickFormatter, FixedTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
 import pandas as pd
+import numpy as np
 from bokeh.io import output_notebook, show
 from view.views import obtain_domain_url
 from json import loads
 from re import sub,compile
-from view.views import obtain_domain_url
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
+import mpld3
 
 # Mariona's functions
 
@@ -62,8 +68,7 @@ def improve_receptor_names(df_ts,compl_data):
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
-    return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb)
-
+    return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
 def removing_entries_and_freqsdict(df,itypes):
     """
@@ -76,9 +81,12 @@ def removing_entries_and_freqsdict(df,itypes):
     todelete = set()
     counter = 0
     dict_freqs = {}
+    #This dictionary will be used to filter by a minimum total frequency threshold. Same as dict_freqs, but not separated by type
+    dict_freqs_total = { pos: { dyn: 0.0 for dyn in df if (dyn != "Position") and (dyn != "itype") } for pos in df['Position'] }
+    uplim = 0.0
+    
     #Filtering same-helix contacts
-    print(df)
-    helixpattern = compile(r"""^(\d+)x.*\s+(\1)""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
+    helixpattern = compile(r"""^(..)\w+\s+(\1)""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
     
@@ -97,6 +105,12 @@ def removing_entries_and_freqsdict(df,itypes):
         for entry,freq in row[1].iteritems():
             if type(freq) == str: #Avoid adding itypes and position codes
                 continue
+            
+            #Adding to dict_freqs_by_pos, and checking if its higher than current maximum
+            dict_freqs_total[position][entry] = dict_freqs_total[position][entry] + freq
+            if dict_freqs_total[position][entry] > uplim: 
+                uplim = dict_freqs_total[position][entry]
+            
             if entry not in dict_freqs[position].keys():
                 dict_freqs[position][entry] = {}
             dict_freqs[position][entry][itype] = freq
@@ -106,19 +120,31 @@ def removing_entries_and_freqsdict(df,itypes):
         
         if seen:
             todelete.add(row[0])
+            
+    #Delete marked positions (Repeated-different-type interactions)
+    df = df.loc[~df.index.isin(todelete)]
     
-    #Delete marked positions (Repeated-different-type interactions or same-helix)
-    for rowname in todelete:
-        df = df.drop(labels = [rowname], axis = 0)
+    # Delete positions in which all dyn are below threshold
+    thres = uplim / 10
+    pos_todelete = set(df['Position'])
+    
+    for pos in dict_freqs_total:
+        for dyn in dict_freqs_total[pos]:
+            frq = dict_freqs_total[pos][dyn]
+            if frq >= thres:
+                pos_todelete.discard(pos)
+    
+    df = df[~df['Position'].isin(pos_todelete)]
+    
     
     return(df,dict_freqs)
-    
+
 def adapt_to_marionas(df):
     """
     This function comprises a series of operations to adapt the new tsv format to Mariona's original scripts.
     Also returns a dictionary
     """
-
+    
     #Merging toghether both contacting aminoacid Ids
     df['Position'] = df[['Position1', 'Position2']].apply(lambda x: ' '.join(x), axis=1)
     df = df.drop(df.columns[[0, 1]], axis=1)
@@ -160,6 +186,73 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
     df_ts = df_ts.join(pd.DataFrame(type_freqs))
     
     return(df_ts)
+
+def clustering(df_t):
+    """
+    Clusters simulations by their total accumulated interaction frequencies.
+    Returns the simulation order according to their clustering
+    """
+    dyn_labels = list(df_t.index)
+    
+    # Create dictionary table with position tuple as keys and interaction-by-simulation-freq array as value
+    freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
+        
+    # Convert previous dictionary to numpy array
+    freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
+        
+    # Using scipy to cluster. Copied from get_contacts scripts
+    l = linkage(freq_matrix.T, method='single')
+    
+    col_ordering = leaves_list(l)
+    
+    # New Column labels
+    new_order = [dyn_labels[i] for i in col_ordering]
+        
+    # Reorder according to clustering
+    return (new_order,l)
+
+
+def dendrogram_clustering(dend_matrix, labels, height, width): 
+    """
+    dendrogram time, my dudes
+    """
+    arbitrary_dpi = 50 # Arbitrary. Don't pay attention to it
+    inch_height = height / arbitrary_dpi
+    inch_width = width / arbitrary_dpi
+
+    #Setting matplotlib figure
+    plt.figure(dpi = arbitrary_dpi,figsize = [inch_width, inch_height],facecolor = "white")
+    
+    # Creating dendrogram
+    dn = dendrogram(
+        dend_matrix,
+        orientation = 'left',
+        labels = labels,
+        show_contracted = True
+    )
+    
+    # Setting labels font size and color
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='both', labelsize=15, colors="red", right= False, bottom=False)
+
+    #Hiding dendrogram borders
+    #ax.spines['left'].set_visible(False)
+    #ax.spines['top'].set_visible(False)
+    #ax.spines['right'].set_visible(False)
+
+    # Rendering html figure with mpld3 module from our matplotlib figure
+    html_dendrogram = mpld3.fig_to_html(plt.gcf())
+    
+    return mpld3.fig_to_html(plt.gcf())
+
+def remove_lowfreq(df):
+    """
+    Delete position-pairs which frequency values don't reach a certain threshold in all simulations
+    """
+    lowthres = df['value'].max() /10
+    positions_mantain = set(df[df['value'] >= lowthres]['Position'])    
+    df = df[df['Position'].isin(positions_mantain)]
+    return df
 
 def get_contacts_plots(request, itypes, ligandonly):
 	"""
@@ -248,6 +341,12 @@ def get_contacts_plots(request, itypes, ligandonly):
 	#changing lowbars by withespaces in receptor's name (useless now)
 	df_t.index = list( map(lambda x: x.replace("_"," ") ,df_t.index) )
 
+	#Clustering of simulations 
+	(clust_order,dend_matrix) = clustering(df_t)
+
+	# Labels for dendogram
+	dendlabels = list(df_t.index)
+
 	# Converting to df_ts table, 
 	df_ts = df_t.stack().rename("value").reset_index()
 	df_ts.rename(columns={"level_0": "Id"}, inplace=True)
@@ -256,10 +355,25 @@ def get_contacts_plots(request, itypes, ligandonly):
 	df_ts = add_itype_freqs(df_ts, set_itypes, dict_freqs) 
 
 	#Changing ID names by simulation names
-	(recept_info,recept_info_order,df_t,dyn_gpcr_pdb)=improve_receptor_names(df_ts,compl_data)
+	(recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
-	#Sorting by ballesteros Id's
-	df_ts = df_ts.sort_values("Position")
+	# Changing ID names by simulation names in clust_order list
+	clust_order_names = [ index_dict[dyn] for dyn in clust_order ]
+	# Adding column based in new order recieved from clustering
+	clust_order_num = [  ]
+	for row in df_ts.iterrows():
+	    name = row[1][0]
+	    clust_index = clust_order_names.index(name)
+	    clust_order_num.append(clust_index)
+	df_ts['clust_order'] = clust_order_num
+
+	#Changing denlabels to full name format
+	dendlabels_names = [ index_dict[dyn] for dyn in dendlabels ]
+
+	#Sorting by ballesteros Id's (helixloop column) and clustering order
+	df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
+	df_ts = df_ts.sort_values(["helixloop",'clust_order'])
+
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts
@@ -278,13 +392,14 @@ def get_contacts_plots(request, itypes, ligandonly):
 
 	# Mapper
 	uplim = df_ts['value'].max()
-	colors = colors=["#FFFFFF",'#f7fcfc', '#f6fbfc', '#f5fafc', '#f4fafb', '#f2f9fb', '#f1f8fa', '#f0f8fa', '#eff7fa', '#edf6f9', '#ecf6f9', '#ebf5f8', '#e9f4f8', '#e8f4f7', '#e7f3f7', '#e6f2f7', '#e4f1f6', '#e3f0f6', '#e2f0f5', '#e1eff5', '#dfeef4', '#deedf4', '#ddecf4', '#dbebf3', '#daeaf3', '#d9eaf2', '#d8e9f2', '#d6e8f1', '#d5e7f1', '#d4e6f1', '#d3e5f0', '#d1e4f0', '#d0e3ef', '#cfe2ef', '#cde1ee', '#cce0ee', '#cbdfee', '#cadeed', '#c8dded', '#c7dcec', '#c6daec', '#c5d9ec', '#c3d8eb', '#c2d7eb', '#c1d6ea', '#bfd5ea', '#bed4e9', '#bdd2e9', '#bcd1e9', '#bad0e8', '#b9cfe8', '#b8cee7', '#b7cce7', '#b5cbe6', '#b4cae6', '#b3c9e6', '#b1c7e5', '#b0c6e5', '#afc5e4', '#aec3e4', '#acc2e3', '#abc1e3', '#aabfe3', '#a9bee2', '#a7bce2', '#a6bbe1', '#a5bae1', '#a3b8e0', '#a2b7e0', '#a1b5e0', '#a0b4df', '#9eb2df', '#9db1de', '#9cafde', '#9aaedd', '#99acdd', '#98abdd', '#97a9dc', '#95a8dc', '#94a6db', '#93a4db', '#92a3db', '#90a1da', '#8fa0da', '#8e9ed9', '#8c9cd9', '#8b9bd8', '#8a99d8', '#8997d8', '#8795d7', '#8694d7', '#8592d6', '#8490d6', '#828ed5', '#818dd5', '#808bd5', '#7e89d4', '#7d87d4', '#7c85d3', '#7b84d3', '#7982d2', '#7880d2', '#777ed2', '#767cd1', '#747ad1', '#7378d0', '#7276d0', '#7074cf', '#6f72cf', '#6e70cf', '#6d6fce', '#6b6dce', '#6a6bcd', '#6969cd', '#6968cd', '#6866cc', '#6865cc', '#6764cb', '#6762cb', '#6661ca', '#6660ca', '#655fca', '#655dc9', '#645cc9', '#645bc8', '#645ac8', '#6358c7', '#6357c7', '#6356c7', '#6254c6', '#6253c6', '#6252c5', '#6151c5', '#614fc4', '#614ec4', '#614dc4', '#604bc3', '#604ac3', '#6049c2', '#6048c2', '#6046c1', '#5f45c1', '#5f44c1', '#5f43c0', '#5f41c0', '#5f40bf', '#5f3fbe', '#5f3fbd', '#603fbc', '#603eba', '#603eb9', '#603db8', '#613db7', '#613cb5', '#613cb4', '#613cb3', '#623bb2', '#623bb0', '#623aaf', '#623aae', '#6239ac', '#6239ab', '#6239aa', '#6238a9', '#6338a7', '#6337a6', '#6337a5', '#6336a3', '#6336a2', '#6336a1', '#6335a0', '#63359e', '#63349d', '#63349c', '#63349b', '#633399', '#633398', '#633297', '#623295', '#623194', '#623193', '#623192', '#623090', '#62308f', '#622f8e', '#622f8d', '#612e8b', '#612e8a', '#612e89', '#612d87', '#602d86', '#602c85', '#602c84', '#602b82', '#5f2b81', '#5f2b80', '#5f2a7f', '#5e2a7d', '#5e297c', '#5e297b', '#5d2879', '#5d2878', '#5d2877', '#5c2776', '#5c2774', '#5b2673', '#5b2672', '#5a2671', '#5a256f', '#59256e', '#59246d', '#58246b', '#58236a', '#572369', '#572368', '#562266', '#562265', '#552164', '#552163', '#542061', '#532060', '#53205f', '#521f5d', '#511f5c', '#511e5b', '#501e5a', '#4f1d58', '#4f1d57', '#4e1d56', '#4d1c55', '#4c1c53', '#4c1b52', '#4b1b51', '#4a1a4f', '#491a4e', '#481a4d', '#48194c', '#47194a', '#461849', '#451848', '#441746', '#431745', '#421744', '#411643', '#411641', '#401540', '#3f153f', '#3e153d', '#3c143c', '#3b143a', '#3a1339']
+	colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+	colors.reverse()
 	mapper = LinearColorMapper(palette=colors, low=0, high=uplim)
 
 	# Define a figure
 	mytools = ["hover","tap","save","reset","wheel_zoom","pan"]
-	h=int(df.shape[1]*80)
-	w=int(df.shape[0]*80 + 500) # I use the df dataframe instead of df_ts becauese the last one has acopled itypes columns
+	h=int(df.shape[1]*80 + 20)# I use the df dataframe instead of df_ts because the last one has acopled itypes columns
+	w=16300 if int(df.shape[0]*80 + 80) > 16300 else int(df.shape[0]*80 + 80)  	
 	cw=275
 	p = figure(
 		plot_width= w,#len(df_t.columns)*40, 
@@ -299,9 +414,8 @@ def get_contacts_plots(request, itypes, ligandonly):
 		toolbar_sticky = False,
 		)
 
-	# Rotate angle of legends
+	# Rotate angle of x-axis labels
 	p.xaxis.major_label_orientation = pi/3
-
 
 	# Create rectangle for heatmap
 	mysource = ColumnDataSource(df_ts)
@@ -321,29 +435,39 @@ def get_contacts_plots(request, itypes, ligandonly):
 		nonselection_fill_alpha=1,
 		nonselection_fill_color=transform('value', mapper),
 		nonselection_line_color=None
-
 		)
+
+	#Creating dendrogram
+	dend_width = 160 #Same width as two square column
+	dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, h-20, dend_width) 
 
 	# Add legend
 	ticker = FixedTicker(ticks=[0,uplim])
-	formatter = FuncTickFormatter(args={'uplim':uplim},code="""
-	    var data = {};
-	    data[0] = 'Lower';
-	    data[uplim] = 'Higher';
-	    return data[tick];
-	""")
-	color_bar = ColorBar(color_mapper=mapper, 
-	                     location=(0, 0),
-	                     label_standoff = 12,
-	                     ticker=ticker,
-	                    formatter=formatter,
-	                     major_label_text_font_size="11pt"
-	                    )
-	p.add_layout(color_bar, 'right')
+	formatter = FuncTickFormatter(
+		args={'uplim':uplim},
+		code="""
+		    var data = {};
+		    data[0] = 'Lower';
+		    data[uplim] = 'Higher';
+		    return data[tick];
+			"""
+		)
+	color_bar = ColorBar(
+		color_mapper=mapper, 
+        location=(0, 0),
+        label_standoff = 12,
+        ticker=ticker,
+        formatter=formatter,
+        major_label_text_font_size="11pt"
+    	)
+	p.add_layout(color_bar, 'left')
+
+	# Setting axis
 	p.axis.axis_line_color = None
 	p.axis.major_tick_line_color = None
 	p.xaxis.major_label_text_font_size = "11pt"
 	p.yaxis.major_label_text_font_size = "10pt"
+	p.yaxis.visible = False
 	p.axis.major_label_standoff = 0
 	p.xaxis.major_label_orientation = 1#"vertical"
 
@@ -436,6 +560,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 	plotdiv_w=w+cw
 	script, div = components(p)
 	context={
+		'dendrogram' : dendr_figure,
 		'hb_itypes' : hb_itypes,
 		'wb_itypes' : wb_itypes,
 		'other_itypes' : other_itypes,
