@@ -35,7 +35,7 @@ dyntsv=${dynlist//,/ }
 
 # Compute frequencies and fingerprint by itype
 mkdir -p contact_tables
-for inter in wb lwb wb2 lwb2 sb pc ps ts vdw hbbb hbsb hbss hbls hblb;
+for inter in wb lwb wb2 lwb2 sb hb pc ps ts vdw hbbb hbsb hbss hbls hblb;
 do {
 
 	#Getting frequencies
@@ -79,6 +79,7 @@ do {
 	fi;
 }; done;
 
-# Merge toghether in one file, preserving header
-grep -vh "dyn" contact_tables/* > contact_tables/compare_all.tsv
-sed -i '1i Position1    Position2       $dyntsv	itype' ./contact_tables/compare_all.tsv
+# Merge toghether in one file, deleting all headers except first and adding Position to headers
+cat contact_tables/* > contact_tables/compare_all.tsv
+sed -i '1!{/itype/d;}' contact_tables/compare_all.tsv
+sed -i '1s/^/Position1    Position2/' contact_tables/compare_all.tsv 

@@ -30,6 +30,14 @@
   };
 </script>
 
+<script type="text/javascript">
+  function closeSideWindow() {
+    //Close the side window which appears upon clicking bokeh plot
+    $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
+    $("#plot_col").attr("class","col-xs-12");
+  }
+</script>
+
 <!--Personal styles-->
 <link rel="stylesheet" type="text/css" href="../../static/contplots_menu.css">
 
@@ -53,13 +61,13 @@
   </div>
 </div>
 
-<div id="inner_remaining" >
+<div id="inner_remaining">
   <div class="col-xs-12" style="padding-bottom:10px;height:100%">
     <div class="row">
       <div class="col-xs-12" id="plot_col">
         <div class="panel panel-primary" id="main_plot_body">
           <div class="panel-body">
-            <div id="menus">
+            <div id="menus" class="container" style="width: 600px">
             <div class="row">
             <!--itypes dropdown-->
               <div class="dropdown optbar">
@@ -158,7 +166,11 @@
       </div>
       <div class="col-xs-3" id="info" style="visibility:hidden;position:absolute;z-index:-1;padding-left:5px;padding-right:5px;">
         <div class="panel panel-info" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
-        <div class="panel-heading" style="">Interaction details</div> 
+          <div class="panel-heading" style="">Interaction details
+            <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
           <div class="panel-body" style="">
             <div style="min-width:350px">
               <!-- Info on clicked dyn -->

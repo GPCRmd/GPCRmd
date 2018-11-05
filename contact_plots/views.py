@@ -149,10 +149,6 @@ def adapt_to_marionas(df):
     df['Position'] = df[['Position1', 'Position2']].apply(lambda x: ' '.join(x), axis=1)
     df = df.drop(df.columns[[0, 1]], axis=1)
 
-    #Changing ballesteros format from X-XXxXX to XxXX
-    pattern = compile("-\d+")
-    df['Position'] =df['Position'].apply(lambda x: sub(pattern,"",x))
-
     # Passing frequencies from decimal to percentage
     nocols = (("Position1","Position2","itype","Position"))
     for colname in df:
@@ -199,7 +195,7 @@ def clustering(df_t):
         
     # Convert previous dictionary to numpy array
     freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
-        
+
     # Using scipy to cluster. Copied from get_contacts scripts
     l = linkage(freq_matrix.T, method='single')
     
@@ -266,6 +262,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 		"pc" : 'pi-cation',
 		"ps" : 'pi-stacking',
 		'ts' : 't-stacking',
+		'hp' : 'hydrophobic',
 		"vdw" : 'Van der Waals',
 		"hbbb" : 'backbone to backbone HB',
 		"hbsb" : 'sidechain to backbone HB',
@@ -291,6 +288,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 		"lwb2" : 'extended ligand to protein'    	
 	}
 	other_itypes = {
+		'hp' : 'hydrophobic',
 		'sb' : 'salt bridge',
 		"pc" : 'pi-cation',
 		"ps" : 'pi-stacking',
@@ -302,7 +300,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 	if not itypes == "all":
 		set_itypes = set(itypes.split("_"))
 	else: 
-		set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "lwb", "lwb2"))
+		set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hbbb", "hbsb", "hp", "hbss", "wb", "wb2", "hbls", "hblb", "lwb", "lwb2"))
 
 	#Creating itypes dictionary for selected types
 	selected_itypes = { x:typelist[x] for x in set_itypes }
@@ -358,14 +356,9 @@ def get_contacts_plots(request, itypes, ligandonly):
 	(recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
 	# Changing ID names by simulation names in clust_order list
-	clust_order_names = [ index_dict[dyn] for dyn in clust_order ]
+	clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
 	# Adding column based in new order recieved from clustering
-	clust_order_num = [  ]
-	for row in df_ts.iterrows():
-	    name = row[1][0]
-	    clust_index = clust_order_names.index(name)
-	    clust_order_num.append(clust_index)
-	df_ts['clust_order'] = clust_order_num
+	df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
 
 	#Changing denlabels to full name format
 	dendlabels_names = [ index_dict[dyn] for dyn in dendlabels ]
@@ -377,6 +370,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts
+
 	################
 	##Mariona's part
 	################
@@ -531,7 +525,7 @@ def get_contacts_plots(request, itypes, ligandonly):
                 var freq = "";
                 var typeid = "";
                 for (type in selected_itypes){
-                	freq = dict_freqs[pos]['dyn' + dyn_id][type];
+                	freq = Math.round(dict_freqs[pos]['dyn' + dyn_id][type]);
                 	typeid = "#freq_" + type;
 					if(Boolean(freq)){
 						$(typeid).html(freq);
