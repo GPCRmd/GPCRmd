@@ -3215,9 +3215,13 @@ def protein_get_data_upkb(request, uniprotkbac=None):
           lqPROT=list(qPROT.values_list('uniprotkbac','isoform','name','dyndbproteinsequence__sequence','id_uniprot_species__scientific_name','id_uniprot_species','id_uniprot_species__code'))[0]
           data={}
           data['GPCRmd']=True
+          #Django uses LEFT JOIN, so it always exists. We alo have to check is result is not NULL.
           if qPROT.values('dyndbotherproteinnames__other_names').exists():
-            data['Aliases']=(";").join(list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True)));
-          else:
+            aliases = list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True))
+            if len(aliases) > 0:
+              if aliases[0] is not None:
+                data['Aliases']=(";").join(aliases)
+          if 'Aliases' not in data:
             data['Aliases']=""
           data['Entry'],data['Isoform'],data['Name'],data['Sequence'],data['Org'],data['speciesid'],data['code']=lqPROT  
           data['Organism']=('').join([data['Org'],data['code']])
