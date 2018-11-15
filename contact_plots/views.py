@@ -6,7 +6,7 @@ from math import pi
 from bokeh.palettes import cividis 
 from bokeh.plotting import figure
 from bokeh.embed import components
-from bokeh.models import HoverTool, TapTool, CustomJS,DataRange1d, Range1d, FuncTickFormatter, FixedTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
+from bokeh.models import HoverTool, TapTool, CustomJS, DataRange1d, Range1d, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
 import pandas as pd
 import numpy as np
@@ -21,11 +21,11 @@ import mpld3
 # Mariona's functions
 
 def json_dict(path):
-	"""Converts json file to pyhton dict."""
-	json_file=open(path)
-	json_str = json_file.read()
-	json_data = loads(json_str)
-	return json_data
+    """Converts json file to pyhton dict."""
+    json_file=open(path)
+    json_str = json_file.read()
+    json_data = loads(json_str)
+    return json_data
 
 def improve_receptor_names(df_ts,compl_data):
     """Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id"""
@@ -72,81 +72,50 @@ def improve_receptor_names(df_ts,compl_data):
 
 def removing_entries_and_freqsdict(df,itypes):
     """
-    This function removes same-helix interactions from the dataframe, and merges toghether frequencies from same pair of 
-    residues.
-    It also returns a dictionary with the frequency data separated by type, for future uses
-    """
-    
+    Create dict_freqs dictionary, filter same-helix interaction, filter low-frequency interactions
+    """    
+
     positions = dict()
-    todelete = set()
     counter = 0
     dict_freqs = {}
-    #This dictionary will be used to filter by a minimum total frequency threshold. Same as dict_freqs, but not separated by type
-    dict_freqs_total = { pos: { dyn: 0.0 for dyn in df if (dyn != "Position") and (dyn != "itype") } for pos in df['Position'] }
-    uplim = 0.0
     
     #Filtering same-helix contacts
     helixpattern = compile(r"""^(..)\w+\s+(\1)""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
     
-    for row in df.iterrows():
-        seen = True
-        position = row[1]["Position"]
-        itype = row[1]["itype"]
-        
-        # Checking if that position is already seen
-        if row[1]["Position"] not in positions.keys(): #If column doesn't has been seen yet
-            positions[position] = row[0]
-            dict_freqs[position] = {}
-            seen = False
-        
-        #Iterating over Position,dyns and itype
-        for entry,freq in row[1].iteritems():
-            if type(freq) == str: #Avoid adding itypes and position codes
-                continue
-            
-            #Adding to dict_freqs_by_pos, and checking if its higher than current maximum
-            dict_freqs_total[position][entry] = dict_freqs_total[position][entry] + freq
-            if dict_freqs_total[position][entry] > uplim: 
-                uplim = dict_freqs_total[position][entry]
-            
-            if entry not in dict_freqs[position].keys():
-                dict_freqs[position][entry] = {}
-            dict_freqs[position][entry][itype] = freq
-            if seen:
-                freqtosum = df.at[positions[position], entry]
-                df.at[positions[position], entry] = freqtosum + freq
-        
-        if seen:
-            todelete.add(row[0])
-            
-    #Delete marked positions (Repeated-different-type interactions)
-    df = df.loc[~df.index.isin(todelete)]
-    
-    # Delete positions in which all dyn are below threshold
-    thres = uplim / 10
-    pos_todelete = set(df['Position'])
-    
-    for pos in dict_freqs_total:
-        for dyn in dict_freqs_total[pos]:
-            frq = dict_freqs_total[pos][dyn]
-            if frq >= thres:
-                pos_todelete.discard(pos)
-    
-    df = df[~df['Position'].isin(pos_todelete)]
-    
-    
-    return(df,dict_freqs)
+    # Storing interaction-specific frequencies in a dictionary
+    for itype in itypes:
+        df_type = df[df["itype"] == itype]
+        df_type = df_type.drop('itype', 1)
+        df_type = df_type.set_index('Position')
+        dict_freqs[itype] = df_type.to_dict()
 
+    # Preserve positions which interaction frequency for this type reach, at mean, 0.1 (or 10 if working on percentages)
+    df['mean_row'] = df.mean(axis = 1, numeric_only = True)
+    pos_topreserve = set(df['Position'][ (df['mean_row'] > 10) & (df['itype'].isin(itypes)) ])
+    df.drop('mean_row', 1, inplace = True)
+    df = df[df['Position'].isin(pos_topreserve)]
+
+    # Once type-specific frequencies are stored apart, delete them from the dataframe
+    df = df[df['itype'] == 'all']
+    
+    #Dropping away interaction type colum
+    df.drop('itype', 1, inplace = True)
+    
+    # Set position as row index of the dataframe
+    df = df.set_index('Position')
+
+    return(df,dict_freqs)
+        
 def adapt_to_marionas(df):
     """
     This function comprises a series of operations to adapt the new tsv format to Mariona's original scripts.
     Also returns a dictionary
     """
-    
+
     #Merging toghether both contacting aminoacid Ids
-    df['Position'] = df[['Position1', 'Position2']].apply(lambda x: ' '.join(x), axis=1)
+    df['Position'] = df.Position1.str.cat(df.Position2, sep = " ")
     df = df.drop(df.columns[[0, 1]], axis=1)
 
     # Passing frequencies from decimal to percentage
@@ -172,9 +141,8 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
         dyn = row[1]['Id']
         position = row[1]['Position']
         for itype in set_itypes:
-            itype
-            if itype in dict_freqs[position][dyn]:
-                type_freqs[itype].append(dict_freqs[position][dyn][itype])
+            if position in dict_freqs[itype][dyn]:
+                type_freqs[itype].append(dict_freqs[itype][dyn][position])
             else:
                 type_freqs[itype].append(0.0)
                 
@@ -182,6 +150,7 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
     df_ts = df_ts.join(pd.DataFrame(type_freqs))
     
     return(df_ts)
+
 
 def clustering(df_t):
     """
@@ -231,24 +200,10 @@ def dendrogram_clustering(dend_matrix, labels, height, width):
     ax = plt.gca()
     ax.tick_params(axis='both', which='both', labelsize=15, colors="red", right= False, bottom=False)
 
-    #Hiding dendrogram borders
-    #ax.spines['left'].set_visible(False)
-    #ax.spines['top'].set_visible(False)
-    #ax.spines['right'].set_visible(False)
-
     # Rendering html figure with mpld3 module from our matplotlib figure
     html_dendrogram = mpld3.fig_to_html(plt.gcf())
     
     return mpld3.fig_to_html(plt.gcf())
-
-def remove_lowfreq(df):
-    """
-    Delete position-pairs which frequency values don't reach a certain threshold in all simulations
-    """
-    lowthres = df['value'].max() /10
-    positions_mantain = set(df[df['value'] >= lowthres]['Position'])    
-    df = df[df['Position'].isin(positions_mantain)]
-    return df
 
 def get_contacts_plots(request, itypes, ligandonly):
 	"""
@@ -306,12 +261,12 @@ def get_contacts_plots(request, itypes, ligandonly):
 	selected_itypes = { x:typelist[x] for x in set_itypes }
 
 	#Loading files
-	df_raw = pd.read_csv("/protwis/sites/files/get_contacts_files/contact_tables/compare_all.tsv",sep="\s+")
+	df_raw = pd.read_csv("/protwis/sites/files/get_contacts_files/contact_tables/compare_summary.tsv",sep="\s+")
 	compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
-
+	print(df_raw)
 	# Filtering out non-desired interaction types
 	if itypes != "all":
-	    df = df_raw[df_raw['itype'].isin(set_itypes)]
+	    df = df_raw[(df_raw['itype'].isin(set_itypes)) | (df_raw['itype'] == 'all') ]
 	else:
 	    df = df_raw
 
@@ -324,22 +279,15 @@ def get_contacts_plots(request, itypes, ligandonly):
 	    df = df[ligandfilter]
 	elif ligandonly == "prt":
 	    ligandfilter = ~df['Position'].str.contains('Ligand')
-	    df = df[ligandfilter]		
-
-	#Removing helix-to-helix and merging same residue-pair interaction frequencies
-	df,dict_freqs = removing_entries_and_freqsdict(df,set_itypes)
+	    df = df[ligandfilter]
+	    
+	#Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
+	df,dict_freqs = removing_entries_and_freqsdict(df, set_itypes)
 
 	#Transposing dataframe
-	df = df.set_index('Position')
 	df_t = df.transpose()
 
-	#Dropping away interaction type column
-	df_t = df_t.drop('itype')
-
-	#changing lowbars by withespaces in receptor's name (useless now)
-	df_t.index = list( map(lambda x: x.replace("_"," ") ,df_t.index) )
-
-	#Clustering of simulations 
+	#Clustering of simulations
 	(clust_order,dend_matrix) = clustering(df_t)
 
 	# Labels for dendogram
@@ -350,13 +298,14 @@ def get_contacts_plots(request, itypes, ligandonly):
 	df_ts.rename(columns={"level_0": "Id"}, inplace=True)
 
 	# Appending to the data-frame type-specific frequencies (will be needed for the hovertool)
-	df_ts = add_itype_freqs(df_ts, set_itypes, dict_freqs) 
+	df_ts = add_itype_freqs(df_ts, set_itypes, dict_freqs)
 
 	#Changing ID names by simulation names
 	(recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
 	# Changing ID names by simulation names in clust_order list
 	clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
+
 	# Adding column based in new order recieved from clustering
 	df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
 
@@ -367,13 +316,11 @@ def get_contacts_plots(request, itypes, ligandonly):
 	df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
 	df_ts = df_ts.sort_values(["helixloop",'clust_order'])
 
+	#Drop sort columns once used
+	df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts
-
-	################
-	##Mariona's part
-	################
 
 	#Create data source
 	df_ri=pd.DataFrame(recept_info)
@@ -385,10 +332,9 @@ def get_contacts_plots(request, itypes, ligandonly):
 	extra_source = ColumnDataSource({"mdsrv_url":[mdsrv_url]})
 
 	# Mapper
-	uplim = df_ts['value'].max()
 	colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
 	colors.reverse()
-	mapper = LinearColorMapper(palette=colors, low=0, high=uplim)
+	mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
 	# Define a figure
 	mytools = ["hover","tap","save","reset","wheel_zoom","pan"]
@@ -419,16 +365,17 @@ def get_contacts_plots(request, itypes, ligandonly):
 		width=1, 
 		height=1, 
 		source=mysource,
-		line_color=None, 
+		line_color="white", 
 		fill_color=transform('value', mapper),
 
 		# set visual properties for selected glyphs
 		selection_line_color="crimson",
 		selection_fill_color=transform('value', mapper),
 		# set visual properties for non-selected glyphs
-		nonselection_fill_alpha=1,
 		nonselection_fill_color=transform('value', mapper),
-		nonselection_line_color=None
+		nonselection_fill_alpha=1,
+		nonselection_line_alpha=1,
+		nonselection_line_color="white"
 		)
 
 	#Creating dendrogram
@@ -436,22 +383,12 @@ def get_contacts_plots(request, itypes, ligandonly):
 	dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, h-20, dend_width) 
 
 	# Add legend
-	ticker = FixedTicker(ticks=[0,uplim])
-	formatter = FuncTickFormatter(
-		args={'uplim':uplim},
-		code="""
-		    var data = {};
-		    data[0] = 'Lower';
-		    data[uplim] = 'Higher';
-		    return data[tick];
-			"""
-		)
 	color_bar = ColorBar(
 		color_mapper=mapper, 
         location=(0, 0),
         label_standoff = 12,
-        ticker=ticker,
-        formatter=formatter,
+        ticker=BasicTicker(desired_num_ticks=2),
+        formatter=PrintfTickFormatter(format="%d%%"),
         major_label_text_font_size="11pt"
     	)
 	p.add_layout(color_bar, 'left')
@@ -459,7 +396,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 	# Setting axis
 	p.axis.axis_line_color = None
 	p.axis.major_tick_line_color = None
-	p.xaxis.major_label_text_font_size = "11pt"
+	p.xaxis.major_label_text_font_size = "10pt"
 	p.yaxis.major_label_text_font_size = "10pt"
 	p.yaxis.visible = False
 	p.axis.major_label_standoff = 0
@@ -473,11 +410,11 @@ def get_contacts_plots(request, itypes, ligandonly):
 	        hoverlist.append((itype, "@{" + col + '}{0.00}%'))
 
 	    elif col == "value":#Total frequencies are only needed for color intensity, must not appear in the hovertool
-	        continue
-	        
+	        hoverlist.append(('Total frequency', "@{" + col + '}{0.00}%'))
+
 	    else:
 	        hoverlist.append((col, "@" + col))
-
+	print(hoverlist)
 	#Hover tool:
 	hover = HoverTool(
 	    tooltips=hoverlist
@@ -497,6 +434,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 				var gnum_data=gnum_info.data;
 				var recept_id=data["Id"][sel_ind];
 				var pos=data["Position"][sel_ind];
+                var freq_total=data["value"][sel_ind];
 				var pos_array = pos.split(" ");
 				var pos_string = pos_array.join("_")
 				var pos_ind_array = pos_array.map(value => { return gnum_data['index'].indexOf(value); });
@@ -525,7 +463,7 @@ def get_contacts_plots(request, itypes, ligandonly):
                 var freq = "";
                 var typeid = "";
                 for (type in selected_itypes){
-                	freq = Math.round(dict_freqs[pos]['dyn' + dyn_id][type]);
+                	freq = Math.round(dict_freqs[type]['dyn' + dyn_id][pos]);
                 	typeid = "#freq_" + type;
 					if(Boolean(freq)){
 						$(typeid).html(freq);
@@ -535,7 +473,7 @@ def get_contacts_plots(request, itypes, ligandonly):
 						$(typeid).html(freq);
 					}
                 }
-                $("#freq_val").html(freq);
+                $("#freqtotal_val").html(freq_total + "%");
                 $("#recept_val").html(prot_lname + " ("+recept+")");
                 $("#pos_val").html(pos);
                 $("#lig_val").html(lig_lname + " ("+lig+")");

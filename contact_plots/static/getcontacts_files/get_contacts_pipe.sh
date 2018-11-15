@@ -35,7 +35,7 @@ dyntsv=${dynlist//,/ }
 
 # Compute frequencies and fingerprint by itype
 mkdir -p contact_tables
-for inter in wb lwb wb2 lwb2 sb hb pc ps ts vdw hbbb hbsb hbss hbls hblb;
+for inter in wb lwb wb2 lwb2 sb hb pc ps ts vdw hbbb hbsb hbss hbls hblb all;
 do {
 
 	#Getting frequencies
@@ -59,7 +59,7 @@ do {
 		#Getting fingerprint info by type
 		get_contact_fingerprints.py \
 				--input_frequencies $infreqs \
-	            --frequency_cutoff 0.0 \
+	            --frequency_cutoff 0.00 \
 	            --column_headers $dyntsv\
 	            --cluster_columns True\
 	            --table_output contact_tables/compare_${inter}_provi.tsv 
@@ -80,6 +80,6 @@ do {
 }; done;
 
 # Merge toghether in one file, deleting all headers except first and adding Position to headers
-cat contact_tables/* > contact_tables/compare_all.tsv
-sed -i '1!{/itype/d;}' contact_tables/compare_all.tsv
-sed -i '1s/^/Position1    Position2/' contact_tables/compare_all.tsv 
+cat contact_tables/* > contact_tables/compare_summary.tsv
+sed -i '1!{/itype/d;}' contact_tables/compare_summary.tsv
+sed -i '1s/^/Position1    Position2/' contact_tables/compare_summary.tsv 

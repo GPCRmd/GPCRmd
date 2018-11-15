@@ -56,7 +56,7 @@
 <div id="outer">
   <div class="col-xs-12 panel panel-primary" id="inner_fixed" style="background-color:blue;text-align:center;margin-bottom:10px;color:white">  
      <div class="panel-body">
-        <h3>Residue interaction</h3>
+        <h3>Residue interaction frequency</h3>
      </div> 
   </div>
 </div>
@@ -174,13 +174,14 @@
           <div class="panel-body" style="">
             <div style="min-width:350px">
               <!-- Info on clicked dyn -->
-              <p><b>Frequencies:</b></p>
+              <p><b>Total interaction frequency:</b> <span id="freqtotal_val">%</span></p>
+              <p><b>Frequencies by type:</b></p>
               {% for code,type in selected_itypes.items %}
               <ul>
                 <li><p>{{ type }}: <span id="freq_{{code}}" ></span>%</p></li>
               </ul>
               {% endfor %}
-              <p><b>Positions:</b> <span id="pos_val"></span> 
+              <p><b>Positions:</b> <span id="pos_val"></span></p>
               <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
               <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
               <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
