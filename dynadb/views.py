@@ -7757,28 +7757,28 @@ def DYNAMICSview(request, submission_id, model_id=None):
                  fdbFobj[key]=fdbF[key].save()
                  dicfdyn['id_dynamics']=DFpk
                  dicfdyn['id_files']=fdbFobj[key].pk
-             else:
+             elif DyndbFiles.objects.filter(filename=initFiles['filename']).exists():
                  prev_entryFile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics__submission_id=submission_id,id_file_types=initFiles['id_file_types'])
                  dicfdyn['id_files']=prev_entryFile.values_list('id',flat=True)[0]
                  dicfdyn['id_dynamics']=DFpk
                  prev_entryFile.update(update_timestamp=timezone.now(), filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
-          #  else:
-          #      print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
-          #      error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-          #      return response
+             else:
+                 #print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
+                 error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                 return response
              fdbFM[key]=dyndb_Files_Dynamics(dicfdyn)
              if fdbFM[key].is_valid():
                  fdbFM[key].save()
-             else:
+             elif DyndbFilesDynamics.objects.filter(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],type=dicfdyn['type']).exists():
                  prev_entryFileM=DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files__id_file_types=initFiles['id_file_types'])
                  prev_entryFileM.update(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],framenum=dicfdyn['framenum'])
 
-          #  else:
-          #      error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
-          #      print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-          #      return response
+             else:
+                 error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
+                 #print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                 return response
 
     def handle_uploaded_file(f,p,name):
         print("file name = ", f.name , "path =", p)
