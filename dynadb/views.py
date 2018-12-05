@@ -1458,14 +1458,16 @@ def autocomplete(request):
 
 
 def count_dynamics(result_id,result_type):
-    '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas.'''
+    '''Counts how many times a given result_id appears in a simulation and saves its id. Returns the names list and the number of times it appeas. Loads the whole database in memory, probably not a good idea.'''
     dynset=set()
     if result_type=='compound': #we need to count complexcompound too!!!!
         for molecule in DyndbMolecule.objects.filter(id_compound=result_id):
             somenumber,dynsets=count_dynamics(molecule.id,'molecule')
             dynset=dynset.union(dynsets)
-
-    for simu in DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp').all():
+    simus = DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp')
+    if settings.QUERY_CHECK_PUBLISHED:
+    	simus = simus.filter(is_published=True)
+    for simu in simus.all():
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj is not None:
@@ -3213,9 +3215,13 @@ def protein_get_data_upkb(request, uniprotkbac=None):
           lqPROT=list(qPROT.values_list('uniprotkbac','isoform','name','dyndbproteinsequence__sequence','id_uniprot_species__scientific_name','id_uniprot_species','id_uniprot_species__code'))[0]
           data={}
           data['GPCRmd']=True
+          #Django uses LEFT JOIN, so it always exists. We alo have to check is result is not NULL.
           if qPROT.values('dyndbotherproteinnames__other_names').exists():
-            data['Aliases']=(";").join(list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True)));
-          else:
+            aliases = list(qPROT.values_list('dyndbotherproteinnames__other_names',flat=True))
+            if len(aliases) > 0:
+              if aliases[0] is not None:
+                data['Aliases']=(";").join(aliases)
+          if 'Aliases' not in data:
             data['Aliases']=""
           data['Entry'],data['Isoform'],data['Name'],data['Sequence'],data['Org'],data['speciesid'],data['code']=lqPROT  
           data['Organism']=('').join([data['Org'],data['code']])
@@ -7408,7 +7414,7 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,3*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
@@ -7751,28 +7757,28 @@ def DYNAMICSview(request, submission_id, model_id=None):
                  fdbFobj[key]=fdbF[key].save()
                  dicfdyn['id_dynamics']=DFpk
                  dicfdyn['id_files']=fdbFobj[key].pk
-             else:
+             elif DyndbFiles.objects.filter(filename=initFiles['filename']).exists():
                  prev_entryFile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics__submission_id=submission_id,id_file_types=initFiles['id_file_types'])
                  dicfdyn['id_files']=prev_entryFile.values_list('id',flat=True)[0]
                  dicfdyn['id_dynamics']=DFpk
                  prev_entryFile.update(update_timestamp=timezone.now(), filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
-          #  else:
-          #      print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
-          #      error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-          #      return response
+             else:
+                 #print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
+                 error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                 return response
              fdbFM[key]=dyndb_Files_Dynamics(dicfdyn)
              if fdbFM[key].is_valid():
                  fdbFM[key].save()
-             else:
+             elif DyndbFilesDynamics.objects.filter(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],type=dicfdyn['type']).exists():
                  prev_entryFileM=DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files__id_file_types=initFiles['id_file_types'])
                  prev_entryFileM.update(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],framenum=dicfdyn['framenum'])
 
-          #  else:
-          #      error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
-          #      print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
-          #      response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-          #      return response
+             else:
+                 error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
+                 #print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                 response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                 return response
 
     def handle_uploaded_file(f,p,name):
         print("file name = ", f.name , "path =", p)
