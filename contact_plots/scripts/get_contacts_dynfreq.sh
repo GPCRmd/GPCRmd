@@ -20,7 +20,7 @@ ligand_sel=`awk '{ printf "or (resname %s and resid %s) ",$3,$1 }' $ligandfile`;
 
 #Precalculating labelfile
 echo "computing labelfile"
-python ${scripts_path}create_labelfile.py $dictfile $dynname $ligandfile
+python ${scripts_path}create_labelfile.py $dictfile $dynname $files_path $ligandfile
 
 #Getting dynamic contacts
 echo "computing dynamic contacts"

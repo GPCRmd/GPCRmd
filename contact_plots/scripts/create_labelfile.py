@@ -3,7 +3,7 @@ import string
 from os.path import basename,splitext
 from re import sub,compile
 
-def create_labelfile(info_dictfile, outname, ligand = None):
+def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
 	"""
 	The idea of this function is to create a label file (get_contacts format) with the ballesteros GPCR id's as labels for a certain model.
 	info_dictfile should contain a dictionary-like text file with this format:
@@ -22,7 +22,7 @@ def create_labelfile(info_dictfile, outname, ligand = None):
 	dictfile = eval(open(info_dictfile, 'r').read())
 
 	#open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
-	outfile_name = outname + "_labels.tsv"
+	outfile_name = outfolder + outname + "_labels.tsv"
 	outfile = open(outfile_name,'w')
 	outdict = {}
 
@@ -59,4 +59,4 @@ def create_labelfile(info_dictfile, outname, ligand = None):
 	#Close output file
 	outfile.close()
 
-create_labelfile(argv[1], argv[2], argv[3])
+create_labelfile(argv[1], argv[2], argv[3], argv[4])

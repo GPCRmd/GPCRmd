@@ -62,6 +62,9 @@ class Command(BaseCommand):
     ## Trajectory and PDB files
     ###########################
 
+
+    sys.argv[2] = str(sys.argv[2])
+
     # Obtain filenames
     structure_file,structure_file_name,traj_list,traj_name_list = obtain_dyn_files_from_id(sys.argv[2])
 
@@ -73,7 +76,7 @@ class Command(BaseCommand):
     #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
     basepath = "/protwis/sites/files/"
     pdbpath = basepath + structure_file
-    mypdbpath =  directory + "/dyn" + sys.argv[2] + ".pdb"
+    mypdbpath =  directory + "/dyn" + str(sys.argv[2]) + ".pdb"
     if os.path.exists(mypdbpath):
         os.remove(mypdbpath)       
     os.symlink(pdbpath, mypdbpath)
@@ -129,9 +132,9 @@ class Command(BaseCommand):
     ##############################
     for i in range(0,len(traj_list)):
         mytrajpath = directory + "/dyn" + sys.argv[2] + "_" + str(i) + ".dcd"
-        os.system("bash /protwis/sites/protwis/contact_plots/scripts/get_contacts_pipe.sh " +  
+        os.system("bash /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.sh " +  
             mypdbpath + " " +
             mytrajpath + " " +
             dictfile_name + " " + 
             ligfile_name + 
-            " dyn" + sys.argv[2] + i)
+            " dyn" + sys.argv[2] )
