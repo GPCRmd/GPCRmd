@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.views import redirect_to_login
 from django.shortcuts import resolve_url
 from django.db.models import F
 from django.http import Http404
@@ -45,7 +46,6 @@ def user_passes_test_args(test_func, login_url=None, access_denied_response=None
                 redirect_field_name_final = None
             else:
                 redirect_field_name_final = redirect_field_name
-            from django.contrib.auth.views import redirect_to_login
             return redirect_to_login(
                 path, resolved_login_url, redirect_field_name_final)
         return _wrapped_view
@@ -55,10 +55,12 @@ def is_submission_owner(user,submission_id,*args,**kwargs):
     entry = DyndbSubmission.objects.filter(pk=submission_id,user_id=user)
     return entry.exists()
     
-def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**kwargs):
+def is_published_or_submission_owner(user,object_type=None,incall=False,redirect=False,*args,**kwargs):
     ''' Returns True or False if the object is published or if the user is 
     owner of a submission linked to the object [object_type]_id keyword 
     when the object ID is an integer or a string that can be converted to an integer.
+    If redirect keyword is False, None is returned instead of False and
+    user_passes_test_args will not redirect to login page.
     
     If '[object_type]_id' is a list or tuple object with object IDs as integers, a set with the IDs
     the user have access to is returned.'''    
@@ -87,7 +89,6 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
             object_type = object_types[0][:-3]
         else:
             raise TypeError('Missing object_type argument or a valid [object_type]_id keyword argument.')
-        
     # check if argument keys are correct
     if object_type not in object_type_dict:
         raise ValueError('Unknown object type: "'+str(object_type)+'".')
@@ -102,16 +103,20 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
     dbobject_dict = object_type_dict[object_type]
     dbobject = dbobject_dict['dbobject']
     path_to_submission_id = dbobject_dict['path_to_submission_id']
-    
     # check if object_id is a number or a list of numbers
     if isinstance(object_id, int):
         object_id_is_list_like = False
+        if redirect:
+            integer_case_return_value = False
+        else:
+            integer_case_return_value = None
         # check if it is published
         try:
             if dbobject.objects.values_list('is_published',flat=True).get(pk=object_id):
-                return True
+                integer_case_return_value = True
+
         except ObjectDoesNotExist:
-            return None
+            integer_case_return_value = None
         except:
             raise
     else:
@@ -119,7 +124,6 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
         object_id = set(object_id)
         # check if it is published
         published_ids = set(dbobject.objects.values_list('id',flat=True).filter(pk__in=object_id))
-        
     if user.is_authenticated():
         if object_id_is_list_like:
             object_id_to_check = object_id.difference(published_ids)
@@ -127,11 +131,13 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,*args,**
             return published_ids.union(allowed_object_ids)
         else:
             if dbobject.objects.filter(**{'pk':object_id,path_to_submission_id+'__user_id':user.id}).exists():
-                return True
-            else:
-                redirect_field_name = None
-           
+                integer_case_return_value = True
+            elif object_type == 'molecule':
+                std_mol_rel = 'dyndbcompound'
+                compound_path_to_submission_id = object_type_dict['compound']['path_to_submission_id']
+                if dbobject.objects.filter(**{'pk':object_id,std_mol_rel+'__'+compound_path_to_submission_id+'__user_id':user.id}).exists():
+                    integer_case_return_value = True
     elif object_id_is_list_like:
         return published_ids
-    else:    
-        return False
+    
+    return integer_case_return_value
