@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MDsrv/NGL - embedded</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+    <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/light.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
+</head>
+<body >
+    <!-- NGL -->
+    <script src="mdsrv/webapp/js/ngl.js"></script>
+
+    <!-- UI -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.extra.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
+    <script src="mdsrv/webapp/js/gui.js"></script>
+
+    <!-- MDSRV -->
+<!--    <script src="mdsrv/webapp/js/mdsrv.js"></script>-->
+    <script>
+        NGL.cssDirectory = "mdsrv/webapp/css/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
+
+        // Datasources
+        NGL.DatasourceRegistry.add(
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
+        );
+        NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
+        NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
+        document.addEventListener( "DOMContentLoaded", function(){
+        $(document).ready(function(){
+            document.domain=document.domain;
+
+
+
+
+
+
+////////////////// Functions
+        function setTrajRangeMax(){
+            var btn_traj_Bid =$(".traj_btn").attr("id");
+            var tPatt = /\d*$/g;
+            var btn_traj_id = tPatt.exec(btn_traj_Bid);
+            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+            numfr=trajComp.trajectory._frameCount;
+            if ( numfr && ($("#trajRange").attr("max") != numfr)){
+                $("#trajRange").attr("max",numfr);
+            }
+
+        }
+
+        function trajButtons(stage){
+
+            $(".traj_btn").click( function(){
+                //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
+                var btn_traj_Bid=$(this).attr("id");
+                var tPatt = /\d*$/g;
+                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var isact = $(this).hasClass("active");
+                if(isact){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $(this).removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.timeout=200;
+                    player.play();
+                    player.pause();
+
+                } else {
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.play();
+                    $(this).addClass("active");
+                    $(this).siblings().removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-pause");
+                    
+                }
+                numfr=trajComp.trajectory._frameCount;
+                if ($("#trajRange").attr("max") != numfr){
+                    $("#trajRange").attr("max",numfr);
+                }
+            });
+            $("#trajRange").change(function(){
+                if (trajComp){
+                    numfr=trajComp.trajectory._frameCount;
+                    if ($("#trajRange").attr("max") != numfr){
+                        $("#trajRange").attr("max",numfr);
+                    }
+                    var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
+                    trajComp.setFrame(toframe);
+                }
+            });
+
+            $("#trajRangeDiv").on("mousedown" , ".ui-slider-handle" , function(){
+                setTrajRangeMax();
+            })
+            
+            $("#trajRangeDiv").on("click" , ".ui-slider-track" , function(){
+                setTrajRangeMax();
+            })
+            return
+        }
+        
+        function set_ngl_size(cont_w , cont_w_in ,cont_h_num ){
+           var cont_h=(cont_h_num).toString() +"px";
+           var cont_h_viewport=(cont_h_num).toString() +"px";
+           var cont_h_range=(cont_h_num-60).toString() +"px";
+           $("#toiframe").css({"width":cont_w , "height" : cont_h});
+           $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
+           //$("#buttons").css("width", cont_w_in);
+           $("#trajRangeDiv").css({"width" : cont_w_in  , "margin-top" : cont_h_range });
+        }
+        
+        function modTooltip(){
+            // create new tooltip
+            var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+            // listen to `hovered` signal to move tooltip around and change its text
+            stage.signals.hovered.add( function( d ){
+                if (d && (d.atom)){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname;
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+        }
+        
+        function updateRepsFrameChanged(trajComp,delta){
+                trajComp.signals.frameChanged.add(function(){
+                    var fnum=trajComp.trajectory.currentFrame;
+                    $("#trajRange").val(fnum);
+                    $("#trajRange").slider("refresh");
+                    $("#traj_time_val").html((fnum*delta).toFixed(2));
+                });
+            };
+            
+            
+        function create_traj_dropdown(traj_li,sel_traj){
+            $("#selectedTraj", window.parent.document).text(sel_traj);
+
+            add_html='<li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
+            for(i=1; i<traj_li.length; i++ ){
+                var add_element='<li class="traj_element" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
+                add_html+=add_element;
+            }
+            $("#add_traj_options", window.parent.document).html(add_html);
+            $("#trajsDropdown", window.parent.document).css("visibility","visible");
+            $("#last_played").css("visibility","visible");
+            
+            
+            $(".traj_element", window.parent.document).hover(function(){
+                $(this).css("background-color","#f2f2f2");
+            },
+            function(){
+                var selected=$(this).hasClass("tsel");
+                if (selected){
+                    $(this).css("background-color","#FFF7F7");
+                } else {
+                    $(this).css("background-color","#FFFFFF");
+                }
+            });
+
+        }
+    
+        function manageTrajChange(stage,traj_el_sel,mytraj,traj_fnames){
+            traj_id=traj_fnames.indexOf(mytraj);
+            $(".traj_btn").attr("id","playerButton"+traj_id.toString());
+            
+            $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
+            $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
+            
+            if (player && $(".traj_btn").hasClass("active")){
+                player.pause();
+                $(".traj_btn").removeClass("active");
+                $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+            }
+            //traj_lastPlayedID=traj_id;
+
+            trajComp.setFrame(-1);
+              
+            $("#trajRange").attr("max",trajComp.trajectory._frameCount);
+            $("#last_played").text(mytraj);
+        
+        }
+        
+////////////////// Main: 
+           
+            var  traj_path= "_DB/";
+            var  path= "/mdsrv/file/_DB/";
+            var trajComp,traj_fnames,player;
+            
+            $(document.body).bind('createNGLRef', function(e) {
+            
+                //set_ngl_size(cont_w , cont_w_in , cont_h_num);
+                stage = new NGL.Stage( "viewport" );
+                stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+                $("#loading", window.parent.document).css("display","none");
+                
+                trajButtons(stage);//Control of play/pause and change of frame 
+
+                
+                //Slider settings
+                $(".ui-slider").css({"margin-left":"25px"});
+                $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+                $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+                $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});                
+                
+                //Change receptor
+                $(document.body).bind('createNewRef', function(e, struc_fname , traj_fnames , lig,delta , pos, pdb_pos) { 
+                    //Hide/show some html elements
+                    $("#loading", window.parent.document).css("display","inline");
+                    $("#toiframe").find("#trajRangeDiv").css("display","none");
+                    $("#trajsDropdown", window.parent.document).css("visibility","hidden");
+                    $("#add_traj_options").html("");
+                    $("#last_played").css("visibility","hidden");
+                    $("#posNotinRec", window.parent.document).css("display","none")
+                    //Prepare
+                    var my_comp_li=stage.getComponentsByName("my_comp").list;
+                    if (my_comp_li.length > 0) {
+                        stage.removeAllComponents();
+                    }
+                    struc_file="Dynamics/"+struc_fname;
+                    var traj_li=[];
+                    for (idn=0; idn < traj_fnames.length ; idn++){
+                        traj_file="Dynamics/"+traj_fnames[idn];
+                        traj_li[traj_li.length]=traj_file;
+                    }
+                    if (! isNaN(parseInt(lig))){
+                        lig="["+lig+"]";
+                    }
+                    if (lig.indexOf(" and ") > 0){
+                        lig="("+lig+")";
+                    }
+  
+                    if ($(".traj_btn").hasClass("active")){
+                        $(".traj_btn").removeClass("active");
+                        $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+                    }
+                    
+                    //Trajctory selection
+                    sel_traj=traj_li[0];
+                    if (traj_li.length >= 1){
+                        create_traj_dropdown(traj_fnames,traj_fnames[0])
+                    }
+                    $("#last_played").text(traj_fnames[0]);
+                    
+                    stage.loadFile( path + struc_file , {visible: true}).then( function( o ){
+                        o.setName("my_comp");
+                        o.setSelection("not _h and ("+lig+" or protein)");
+
+                        for (t=0 ; t < traj_li.length ; t++){
+                            o.addTrajectory( traj_path + traj_li[t] );
+                        }
+                        trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
+                        
+                        //Set slider to frame -1 (pdb)
+                        var fnum=-1;
+                        $("#trajRange").val(fnum);
+                        $("#trajRange").slider("refresh");
+                        $("#traj_time_val").html((0).toFixed(2));
+                        $("#loading", window.parent.document).css("display","none");
+                        $("#toiframe").find("#trajRangeDiv").css("display","inline");
+                        
+                        //Capture frame changed event
+                         var allTrajCompli=o.trajList;
+                         for (tcN=0; tcN< allTrajCompli.length;tcN++){
+                            trajComp=allTrajCompli[tcN];
+                            updateRepsFrameChanged(trajComp,delta);
+                         }
+                        
+                        modTooltip();
+                        
+                        // Add representations
+                        o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
+                        o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
+                        if (pdb_pos != "NaN"){
+                            console.log("from embed",pdb_pos);
+                            if (Array.isArray(pdb_pos)){
+                                for (index in pdb_pos){
+                                    position = pdb_pos[index];
+                                    if (position == null){
+                                        console.log("undef");
+                                        continue // Skip undefined parts
+                                    }
+                                    pos_sel=position.replace("-"," and :");
+                                    o.addRepresentation( "hyperball", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+                                }
+                            }
+                            else {
+                                pos_sel=pdb_pos.replace("-"," and :");
+                                o.addRepresentation( "hyperball", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+                            }
+                        } else {
+                            $("#posNotinRec_text", window.parent.document).text(pos+" not found in this receptor.");
+                            $("#posNotinRec", window.parent.document).css("display","block");
+                        }
+
+                    });
+                    
+                    //Control of change of trajectory
+                    $("#trajsDropdown" , window.parent.document).find(".traj_element").click(function(){
+                        mytraj=$(this).text();
+                        manageTrajChange(stage,this,mytraj,traj_fnames);
+                    }) 
+
+                });
+
+            });
+            
+
+            var myStopVar = setInterval(callParent, 1000);
+            function callParent(){
+                parent.$('body').trigger('iframeSetRef');
+            }
+            
+            $(document.body).bind('iframeSetRefOk', function(e) {
+                clearInterval(myStopVar);
+            });
+        
+        });
+        });
+
+    </script>
+    <div id="toiframe" style="width:348px;height:348px"><!-- w: 590 = 348 ; h: 370 = 348 -->
+        <div id="viewport" style="width:348px; height:348px;margin-top:-30px;"></div>
+        <div id="trajRangeDiv" style="position:absolute;width:348px;height:30px;margin-top:310px;margin-left:2px;display:none">
+        
+            <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:5px" class="pull-right" id="last_played"></p>
+        
+            <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
+
+              <input title="Frame" id="trajRange" type="range" name="points" id="points" value="-1" min="-1" max="977">
+              <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-20px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
+        </div>
+        
+<!--
+        <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">
+            <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
+            <div id="atomInfo" style="color:green;"></div>
+        </div>
+-->
+    </div>
+</body>
+</html>
