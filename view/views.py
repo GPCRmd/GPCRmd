@@ -353,6 +353,10 @@ def find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_
 def sort_by_myorderlist(my_order,word):
     number=my_order.index(word)
     return(number)
+def str_len_limit(mystr):
+    if len(mystr)>50:
+        mystr=mystr[:47]+"..."
+    return mystr
 
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic"""
@@ -408,6 +412,8 @@ def obtain_compounds(dyn_id):
     comp_li=[[name,sname,ctype] for (name,(sname,ctype)) in comp_dict.items()]
     comp_li=sorted(comp_li, key=lambda x:x[0].lower())
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
+    comp_li=[[str_len_limit(lname),sname,mtype]  for lname,sname,mtype in comp_li]
+    lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
@@ -992,7 +998,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
-                    #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
+                    traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
                     context={
                         "dyn_id":dyn_id,

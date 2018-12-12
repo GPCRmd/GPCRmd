@@ -8,6 +8,16 @@
 {% load staticfiles %} 
 {% block addon_css %}
 <style>
+
+
+.btn-default.changefocus:focus:not(.active):not(:hover){
+    background-color:#FFFFFF !important;
+}
+
+/*.btn-danger.changefocus:focus:hover{
+    background-color:#C9302C !important;
+}*/
+
 .falselist{
     margin-bottom:4px;
     padding-left:15px;
@@ -198,6 +208,7 @@
                    <div style="padding-right:3px;padding-left:3px"> 
                       <!--<button  class="btn btn-success" id="submit" >Apply</button> -->
                       <button  class="btn btn-danger btn-xs" id="clearAll" style="margin-top:5px">Clear All</button>
+                                           
                       <div class="pull-right">
                           <!--
                           <button id="center" class="btn btn-default" type="button" style="padding-right:7px;padding-left:7px;height:35px" >Center</button>
@@ -285,19 +296,19 @@
 
 
                 <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
-                    <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn"  id="receptor">Receptor</button>
+                    <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn changefocus"  id="receptor">Receptor</button>
                     {% if other_prots%}
-                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
                     {% endif %}
                     {% for long_n, short_n, ctype in compounds %}
                         {% if ctype == "Ligand" %}
-                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                         {% else %}
-                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                         {% endif %}
                     {% endfor %}
                     {% if ligands_short %}
-                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
+                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements changefocus" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
                     {% endif %}
                     {% if compounds|length > 1%}
                     <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
@@ -562,16 +573,16 @@
                                     {% if cons_pos_all_info.0.A.1 %}
                                         <p>Highly conserved residues and motifs</p>
 	                                        {% for pos in cons_pos_all_info.0.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_all_info.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_pos_all_info.0.A.0 %}
                                         <p>Most conserved residues</p>
 	                                        {% for pos in cons_pos_all_info.0.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -580,7 +591,7 @@
                                   {% if cons_pos_all_info.0.B.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -588,7 +599,7 @@
                                   {% if cons_pos_all_info.0.C.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -596,7 +607,7 @@
                                   {% if cons_pos_all_info.0.F.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_pos_all_info.0.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -618,16 +629,16 @@
                                     {% if cons_class.A.1 %}
                                         <p>Highly conserved residues and motifs</p>
 	                                        {% for pos in cons_class.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
                                         <p>Most conserved residues</p>
 	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus"  data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -636,7 +647,7 @@
                                   {% if cons_class.B.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -644,7 +655,7 @@
                                   {% if cons_class.C.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -652,7 +663,7 @@
                                   {% if cons_class.F.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -678,13 +689,13 @@
                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
 	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                     {% if cons_class.A.0 %}
                                         <p>Most conserved residues</p>
 	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                           {% endfor %}
                                     {% endif %}
                                 {% endif %}
@@ -693,7 +704,7 @@
                                   {% if cons_class.B.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                     {% endfor %}   
                                   {% endif %}                         
                             </div>  
@@ -701,7 +712,7 @@
                                   {% if cons_class.C.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>  
@@ -709,7 +720,7 @@
                                   {% if cons_class.F.0 %}
                                     <p>Most conserved residues</p>
                                     {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                    {% endfor %}
                                   {% endif %}
                             </div>
@@ -805,20 +816,40 @@
                  <div id="flare-container"></div>
 
                   <span id="allFPoptions" class="showIfTrajFP">
-                      <button id="FPdisplay" class="btn btn-default active" type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
-                        Display interactions
+                      <button id="FPdisplay" class="btn btn-default active changefocus"  title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                        Show in structure
                       </button>
-                   
-                      <button class="summarizeFP btn btn-default" type="button" style="margin-top:15px;width:115px;font-size:12px;">
-                        Summarize
-                      </button>
-                     <div class="btn-group" id="fpShowResSetBtns">
-                      <button type="button" id="intraHel" class="btn btn-default active fpShowResSet" title="Click to hide intra-helix interactions">Intra-helix</button>
-                      <button type="button" id="interHel" class="btn btn-default active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
-                    </div> 
 
-                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;">
-                        Clear
+                      <div class="dropup" style="display:inline-block;position: relative;" >
+                        <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the flare plot.">Display
+                        <span class="caret"></span></button>
+                        <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
+                          <li style="padding:5px 15px 5px 15px;" class="dropdown-header">Interaction type</li>
+                          <li id="fp_display_inter" class="fp_display_element fp_display_element_type is_active" data-tag="Inter" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display only inter-helix interactions.">Inter-helix</li>
+                          <li id="fp_display_intra" class="fp_display_element fp_display_element_type" data-tag="Intra" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display only intra-helix interactions.">Intra-helix</li>
+                          <li id="fp_display_all" class="fp_display_element fp_display_element_type" data-tag="all" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display all interactions.">All</li>
+                          <li style="margin-left:5px;margin-right:5px;" class="divider"></li>
+                          <li style="padding:5px 15px 5px 15px;" class="dropdown-header">Simulation</li>
+                          <li id="fp_display_frame" class="fp_display_element is_active" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display a summary of the itneractions formed during the simulation.">Current frame</li>
+                          <li id="fp_display_summary" class="fp_display_element" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display interactions formed at each simulation frame.">Summary</li>
+                        </ul>
+                      </div>
+
+    <!-- Substitute ids and classes:
+         .fpShowResSet
+    -->
+                   
+                      <!--<button class="summarizeFP btn btn-default" type="button" style="margin-top:15px;width:115px;font-size:12px;">
+                        Summarize
+                      </button>-->
+                     <!--<div class="btn-group" id="fpShowResSetBtns">
+                      <button type="button" id="intraHel" class="btn btn-default fpShowResSet" title="Click to display intra-helix interactions">Intra-helix</button>
+                      <button type="button" id="interHel" class="btn btn-default active fpShowResSet" title="Click to hide inter-helix interactions">Inter-helix</button>
+                     </div> -->
+                     
+                     
+                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the flare plot.">
+                        Clear plot
                       </button>
                   </span>
                </center>
