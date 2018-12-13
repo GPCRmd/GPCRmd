@@ -35,7 +35,6 @@ def write_frequencytable(freq_table, col_labels, fname, cluster_columns=True, cl
     freq_matrix = freq_matrix[:, col_ordering]
     row_labels = [row_labels[i] for i in row_ordering]
     col_labels = [col_labels[i] for i in col_ordering]
-    print(col_labels)
     with open(fname, "w") as out_file:
         out_file.write("\t".join(["", ""] + col_labels) + "\n")
         for i in range(m):
