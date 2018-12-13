@@ -120,8 +120,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '-dynid',
             dest='dynid',
-            type=str,
-            nargs='?',
+            nargs='*',
             action='store',
             default=False,
         )
@@ -130,15 +129,15 @@ class Command(BaseCommand):
         ###########################
         ## Trajectory and PDB files
         ###########################
-
-        dynid = str(options['dynid'])
+        print(parser)
 
         # Obtain filenames
         structure_file,structure_file_name,traj_list,traj_name_list = obtain_dyn_files_from_id(dynid)
 
         #Create directory for dynamic simulation id if it doesn't exists yet
         directory = "/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/dyn" + dynid
-        mkdir_p(directory)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
         #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
         basepath = "/protwis/sites/files/"
@@ -155,6 +154,7 @@ class Command(BaseCommand):
             if os.path.exists(mytrajpath):
                 os.remove(mytrajpath)
             os.symlink(trajpath, mytrajpath)
+
 
         ############
         #Ligand file
@@ -197,21 +197,62 @@ class Command(BaseCommand):
         ## Compute frequencies and dynamic contacts
         ###########################################
 
-        # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        comands_file = "/protwis/sites/protwis/contact_plots/scripts/dyn_freq_commands.sh"
-        if os.path.exists(comands_file):
-            commands_file = open(comands_file,"a")
-        else: 
-            commands_file = open(comands_file,"w")
+        # for each trajectory file
+        for i in range(0,len(traj_list)):
 
-        # for each trajectory file, write a run-in-ORI command
-        for i in range(0, len(traj_list)):
-
-            comands_file.write("bash /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.sh " +  
+            print("bash /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.sh " +  
                 mypdbpath + " " +
                 mytrajpath + " " +
                 dictfile_name + " " + 
                 ligfile_name + 
                 " dyn" + dynid )
 
-        comands_file.close()
+            # Set paths
+            dynname = "dyn" + dynid 
+            mytrajpath = directory + "/" + dynname + "_" + str(i) + ".dcd"
+            get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
+            scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
+            files_basepath="/protwis/sites/files/Precomputed/get_contacts_files/"
+            files_path="/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
+
+            # Set folder
+            mkdir_p("/protwis/sites/files/Precomputed/get_contacts_files")
+
+            #Interaction multi-types dictionary
+            multi_itypes = {
+                'hb' : "hbbb hbsb hbss hbls hblb", # A general category for HB is required
+                'wb' : 'wb lwb', # lwb and lwb2 are not needed. I make a posterior division between ligand-residue and residue-residue interactions
+                'wb2':'wb2 lwb2',
+            }
+
+            #Ligand information extracting
+            print("parsing ligand file")
+            ligfile = open(ligfile_name, 'r')
+            ligand_sel = ""
+            first_line = True
+            for line in ligfile:
+                linetab = line.split("\s+")
+                if first_line: 
+                    ligand_sel += str("(resname %s and resid %s)" % (linetab[2],linetab[0]))
+                    first_line = False
+                else:
+                    ligand_sel += str(" or (resname %s and resid %s)" % (linetab[2],linetab[0]))
+            ligfile.close()
+
+
+            #Creating labelfile
+            print("computing labelfile")
+            create_labelfile(dictfile_name, dynname, files_path, ligfile_name)
+
+            #Computing dynamic contacts
+            print("computing dynamic contacts")
+            os.system(str("python %sget_dynamic_contacts.py         \
+            --topology %s  \
+            --trajectory %s       \
+            --sele \"protein or %s\"  \
+            --itypes all    \
+            --ligand %s \
+            --output %s%s_dynamic.tsv" % (get_contacts_path, mypdbpath, mytrajpath, ligand_sel, ligand_sel, files_path, dynname))
+
+            #Adding new dynname to list of dynnames if doesnt already exists, and getting dynlist;
+

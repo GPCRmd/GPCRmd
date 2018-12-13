@@ -29,13 +29,13 @@ python ${scripts_path}create_labelfile.py $dictfile $dynname $files_path $ligand
 
 #Getting dynamic contacts
 echo "computing dynamic contacts"
-#python ${get_contacts_path}get_dynamic_contacts.py         \
- #       --topology $topologyfile  \
-  #      --trajectory $trajectoryfile       \
-   #     --sele "protein or $ligand_sel"  \
-    #    --itypes all    \
-     #   --ligand "$ligand_sel" \
-      #  --output ${files_path}${dynname}_dynamic.tsv
+python ${get_contacts_path}get_dynamic_contacts.py         \
+        --topology $topologyfile  \
+        --trajectory $trajectoryfile       \
+        --sele "protein or $ligand_sel"  \
+        --itypes all    \
+        --ligand "$ligand_sel" \
+        --output ${files_path}${dynname}_dynamic.tsv
 
 #Adding new dynname to list of dynnames if doesnt already exists, and getting dynlist
 echo "reading dyn lists"
