@@ -68,8 +68,26 @@ $(document).ready(function(){
         $(this).children().css("color","#5CB85C");
     });*/
     
+
+    function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
+        $(myselector).hover(function(){
+            $(this).css("background-color",colorhov);
+        },
+        function(){
+            var selected=$(this).hasClass(activeclass);
+            if (selected){
+                $(this).css("background-color",colorNohobAct);
+            } else {
+                $(this).css("background-color",colorNohobInact);
+            }
+        });
+    };
     
-    $(".traj_element").hover(function(){
+    colorsHoverActiveInactive(".traj_element","tsel","#f2f2f2","#FFF7F7","#FFFFFF");
+    colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
+    colorsHoverActiveInactive(".onclickshow","is_active","#f2f2f2","#FFF7F7","#FFFFFF");
+    
+/*    $(".traj_element").hover(function(){
         $(this).css("background-color","#f2f2f2");
     },
     function(){
@@ -92,7 +110,8 @@ $(document).ready(function(){
         } else {
             $(this).css("background-color","#FFFFFF");
         }
-    });    
+    });   */ 
+    
     
     
     function arrayMin(arr) {

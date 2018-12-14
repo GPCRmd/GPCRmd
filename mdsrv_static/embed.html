@@ -295,6 +295,7 @@
                 }
             }
             $("#clear_dists_btn").html("");
+            $("#varinfo").html("");
             clickedRep={};
             clickedRepLi=[];
             clickedDistData={};
@@ -302,6 +303,34 @@
             clickedDist={};
             clicktrue = true;
             return(clicktrue);
+        }
+        
+        function createVarDiv(x_pos, y_pos, divid) {
+            var max_h_s=$("#viewport").css("height");
+            var max_h=Number(max_h_s.replace("px",""))
+            //console.log(max_h+"  "+y_pos)
+            var y_pos_mod=max_h - y_pos //Improve
+            //$("#"+divid).html("") 
+            
+            var var_pos= "Val 1.58 (56:P)";
+            myhtml="<div id='testintest' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:"+x_pos+"px;top:"+y_pos_mod+"px'>\
+              <table class='table table-condensed' style='font-size:11px;margin:0;text-align:center;width:60px'>\
+                <thead>\
+                  <tr>\
+                    <th style='text-align:center;'>"+var_pos+" variants</th>\
+                  </tr>\
+                </thead>\
+                <tbody>\
+                  <tr>\
+                    <td>V <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> A </td>\
+                  </tr>\
+                  <tr>\
+                    <td>V <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> S </td>\
+                  </tr>\
+                </tbody>\
+              </table>\
+            </div>";
+            $(divid).html(myhtml);          
         }
         
         function clickDists(){
@@ -321,8 +350,7 @@
             document.body.appendChild(tooltip)
             // remove default hoverPick mouse action
             stage.mouseControls.remove('hoverPick')
-/////////////////
-    
+/////////////////    
             var clicktrue = true;
             $("#selectionDiv", window.parent.document).click(function(){
                 if (! clicktrue && lbl_name1){
@@ -337,7 +365,6 @@
                 clicktrue=clearDists(clicktrue,lbl_name1);
             });            
             var o=stage.getComponentsByName("my_comp").list[0];
-            var hovrep;
             
             // listen to `hovered` signal to move tooltip around and change its text
             stage.signals.hovered.add( function( d ){
@@ -364,6 +391,8 @@
             stage.signals.clicked.add( function( d ){
                 if (clicktrue){
                     if (d && d.atom){
+                        var mouse_pos=d.canvasPosition;
+                        createVarDiv(mouse_pos["x"],mouse_pos["y"],"#varinfo")
                         var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                         $("#atomClicked").text(info);
                         lbl_name1="label_"+lbl_id.toString();
@@ -990,6 +1019,7 @@
             var setSelStr="protein";
             var trajchange=false;
             var trajIntType="";
+            var onclickshow="vars";
             
             //var gpcrSelExp= parent.gpcr_selection()
             //!
@@ -1223,6 +1253,25 @@
                     trajIntType=intType;
                 })
                 
+                $("#viewport:not(#varinfo)").on("mousedown" , function(){
+                    $("#varinfo").html("");
+                });
+                
+                $(".onclickshow" , window.parent.document).click(function(){
+                    if (! $(this).hasClass("is_active")){
+                        $(this).css("background-color","#FFF7F7").addClass("is_active");
+                        $(this).siblings().css("background-color","#FFFFFF").removeClass("is_active");
+                        if ($(this).text().indexOf("distances") > -1){
+                            $("#onclickbtntext", window.parent.document).text("Show dists.")
+                            onclickshow="dists";
+                        } else {
+                            $("#onclickbtntext", window.parent.document).text("Show vars.")
+                            onclickshow="vars";
+                        }
+                    };
+                });
+                
+                
             }
         });
 
@@ -1257,6 +1306,7 @@
           
           <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
         </div>
+        <span id="varinfo"></span>
         <div id="infoPannel" style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>

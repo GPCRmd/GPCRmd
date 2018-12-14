@@ -180,14 +180,23 @@
 
         <h5 class=subsect>Flare plots</h5>
         <p class=ptext>If a flare plot is available for the simulation being displayed at the viewer, the option to obtain it will be available at the analysis section. Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. 
-Applied to the study of GPCRs, Flare plots are capable to generate networks which group protein residues according to the helix in which they belong and differentiate interactions between residues of the same helix from inter-helix interactions. For the moment, flare plots are available for the representation of <span class=highlight>hydrogen bonds</span> formed between residues of the GPCR through a given simulation trajectory. Hydrogen bonds interactions are represented as lines connecting residue pairs.</p>
-        <p class=ptext style="margin-bottom:10px">Once the flare plot page is accessed, there are a series of control options available: </p>
+Applied to the study of GPCRs, Flare plots are capable to generate networks which group protein residues according to the helix in which they belong and differentiate interactions between residues of the same helix from inter-helix interactions. For the moment, flare plots are available for the representation of <span class=highlight>hydrogen bonds</span> formed between residues of the GPCR through a given simulation trajectory. Hydrogen bonds interactions are represented as lines connecting residue pairs. Hover or click a residue to highligh the lines representing the interactions in which it participates.</p>
+        <p class=ptext style="margin-bottom:10px">There are several options available </p>
         <ul>
-            <li>It is possible to <span class=highlight>summarize</span> the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
+            <li><span class=highlight>Show in structure:</span> Click to display structural representations of the residues selected (clicked) at the flare plot plot. Unclick to hyde them. If there are no residues selected at the flare plot, nothing will happen.</li>
+            <li><span class=highlight>Display:</span>
+                <ul>
+                    <li><span class=highlight>Interaction type:</span>Show only a subset of interactions (intra- or inter-helix) or all of them.</li>
+                    <li><span class=highlight>Simulation:</span> It is possible to summarize the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
+                </ul>
+            </li>
+            
+            
+<!--            <li>It is possible to <span class=highlight>summarize</span> the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
             <li>The <span class=highlight>Track HB freq.</span> button indicates the frequency in which each residue takes part in an interaction. Such frequency is indicated by the height of a coloured box adjacent to each residue.</li>
             <li>The <span class=highlight>Sort within helix</span> button sorts the residues belonging to the same helix according to the frequency in which they take part in an interaction. Note that the "Track HB freq." option needs to be activated.</li>
-        </ul>
-        <p class=ptext>Hover or click a residue to highligh the lines representing the interactions in which it participates. Clicked interactions will appear at the GPCR representation displayed at the left of the flare plot.</p>
+        </ul>-->
+    <!--    <p class=ptext>Hover or click a residue to highligh the lines representing the interactions in which it participates. Clicked interactions will appear at the GPCR representation displayed at the left of the flare plot.</p>-->
 
 
 <!--    <h4 class=myheader>Trajectory display</h4>
