@@ -3,7 +3,6 @@ matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from math import pi
 from sys import argv,exit
 import pandas as pd
-pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
 from json import loads
 from re import sub,compile
@@ -11,6 +10,10 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
 import mpld3
 import os
+
+# Be careful with this!!! Put here only because some false-positive warnings from pandas
+import warnings
+warnings.filterwarnings('ignore')
 
 # Mariona's functions
 
@@ -74,7 +77,7 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
     pos_topreserve = set()
     
     #Filtering same-helix contacts
-    helixpattern = compile(r"""^(..)\w+\s+(\1)""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
+    helixpattern = compile(r"""^(..)\w+\s+\1""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
     
@@ -277,7 +280,7 @@ def get_contacts_plots(itype, ligandonly):
 
     # If there are no interactions with this ligandonly-itype combination
     if df.empty:
-        exit("No interactions avalible for this molecular partners and ineteraction type")
+        exit("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
 
     #Transposing dataframe
     df_t = df.transpose()
@@ -374,5 +377,4 @@ table_to_dataframe.py <INTERACTION_TYPE> <INTERACTION_PARTNERS> <NUM_SIMULATIONS
     - INTERACTION PARTNERS: lg, prt or prt_lg
 
 """))
-
 get_contacts_plots(argv[1], argv[2])
