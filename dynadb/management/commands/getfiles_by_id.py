@@ -118,7 +118,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '-dynid',
+            '--dynid',
             dest='dynid',
             type=str,
             nargs='?',
@@ -198,20 +198,20 @@ class Command(BaseCommand):
         ###########################################
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        comands_file = "/protwis/sites/protwis/contact_plots/scripts/dyn_freq_commands.sh"
-        if os.path.exists(comands_file):
-            commands_file = open(comands_file,"a")
+        commands_path = "/protwis/sites/protwis/contact_plots/scripts/dyn_freq_commands.sh"
+        if os.path.exists(commands_path):
+            commands_file = open(commands_path,"a")
         else: 
-            commands_file = open(comands_file,"w")
+            commands_file = open(commands_path,"w")
 
         # for each trajectory file, write a run-in-ORI command
         for i in range(0, len(traj_list)):
 
-            comands_file.write("bash /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.sh " +  
-                mypdbpath + " " +
-                mytrajpath + " " +
-                dictfile_name + " " + 
-                ligfile_name + 
-                " dyn" + dynid )
-
-        comands_file.close()
+            commands_file.write(str("python /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.py \
+                --dynid %s \
+                --traj %s \
+                --topology %s \
+                --dict %s \
+                --ligandfile %s " % (dynid, mytrajpath, mypdbpath, dictfile_name, ligfile_name))
+            )  
+        commands_file.close()
