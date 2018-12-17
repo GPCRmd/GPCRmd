@@ -137,6 +137,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             # insert your TEMPLATE_DIRS here
+            '/protwis/sites/protwis/dynadb/templates/search/'
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -229,8 +230,6 @@ CACHES = {
     }
 }
 
-QUERY_CHECK_PUBLISHED = False
-
 
 MDSRV_UPSTREAM='http://localhost:8081'
 
@@ -238,35 +237,6 @@ AUTH_USER_MODEL = 'accounts.User'
 LOGIN_URL = 'accounts:login'
 LOGIN_REDIRECT_URL = 'accounts:memberpage'
 LOGOUT_REDIRECT_URL = 'accounts:memberpage'
-
-# Configure this so that it works with real mail, not terminal
-#TEST
-#EMAIL_USE_SSL = True
-#EMAIL_USE_TLS = False
-#EMAIL_HOST = '***REMOVED***'
-#EMAIL_PORT = 465
-#EMAIL_HOST_USER = '***REMOVED***'
-#EMAIL_HOST_PASSWORD = '***REMOVED***'
-#EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-
-#DEFAULT_FROM_EMAIL = 'info@gpcrmd.org'
-#EMAIL_USE_SSL = True
-#EMAIL_USE_TLS = False
-#EMAIL_HOST = '***REMOVED***'
-#EMAIL_PORT = 465
-#EMAIL_HOST_USER = '***REMOVED***'
-#EMAIL_HOST_PASSWORD = '***REMOVED***'
-
-DEFAULT_FROM_EMAIL = '***REMOVED***'
-EMAIL_USE_SSL = True
-EMAIL_USE_TLS = False
-EMAIL_HOST = '***REMOVED***'
-EMAIL_PORT = 465
-EMAIL_HOST_USER = '***REMOVED***'
-EMAIL_HOST_PASSWORD = '***REMOVED***'
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_TRANSACTIONAL_HEADERS = {'isTransactional':True}
 
 import mimetypes
 mimetypes.add_type('text/plain; charset=UTF-8', '.log', strict=True)
