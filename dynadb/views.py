@@ -12847,7 +12847,7 @@ def reset_permissions(request):
         from django.core.cache import cache
         cache.clear()
         import os
-        os.system("chmod -R 777 /protwis/sites/files/")
+        os.system("chmod -R 660 /protwis/sites/files/")
         #os.system("rm -fr /tmp/django_cache")
     except Exception as e:
         print(str(e))
