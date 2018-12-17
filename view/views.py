@@ -877,12 +877,13 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     bind_domain_li=df.loc[selthresh].columns.values                
                     bind_domain=",".join(bind_domain_li)
                     presel_pos=sel_pos
+            #Checking if call corresponds to contplots call (containts a selpos of format 12x50_2x40)
+            contplots_pat = re.compile("\d+x\d+")
+            if re.match(contplots_pat,sel_pos):
+                presel_pos=sel_pos
+                bind_domain = "none"
+
         print(type(bind_domain))
-        #Checking if call corresponds to contplots call (containts a selpos of format 12x50_2x40)
-        contplots_pat = re.compile("\d+x\d+")
-        if re.match(contplots_pat,sel_pos):
-            presel_pos=sel_pos
-            bind_domain = "none"
 
         if len(chain_name_li) > 0:
             multiple_chains=False
