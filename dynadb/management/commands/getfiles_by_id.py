@@ -145,7 +145,8 @@ class Command(BaseCommand):
         pdbpath = basepath + structure_file
         mypdbpath =  directory + "/dyn" + str(dynid) + ".pdb"
         if os.path.exists(mypdbpath):
-            os.remove(mypdbpath)       
+            os.remove(mypdbpath)
+        print(pdbpath, mypdbpath)
         os.symlink(pdbpath, mypdbpath)
 
         #Create symbolic links also for trajectory file list
@@ -212,6 +213,6 @@ class Command(BaseCommand):
                 --traj %s \
                 --topology %s \
                 --dict %s \
-                --ligandfile %s " % (dynid, mytrajpath, mypdbpath, dictfile_name, ligfile_name))
+                --ligandfile %s \n" % (dynid, mytrajpath, mypdbpath, dictfile_name, ligfile_name))
             )  
         commands_file.close()

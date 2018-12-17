@@ -35,7 +35,7 @@ def prepare_tables(original_table, new_table, itype, table_summary, firstline_su
 			line_reverse = "\t".join(line_tab)
 			table_file.write(line_regular)
 			table_file.write(line_reverse)
-			table_summary.write(line)
+			table_summary.write(line_regular)
 			table_summary.write(line_reverse)
 
 	table_file_provi.close()
@@ -90,6 +90,9 @@ for itype in itypes:
 
 	#Modifying tables to prepare them for table-to-dataframe script
 	prepare_tables(table_output_provi, table_output, itype, table_summary, firstline_summary)
+
+	#Only a header is needed for summary
+	firstline_summary = False
 
 table_summary.close()
 

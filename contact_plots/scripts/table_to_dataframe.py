@@ -120,7 +120,7 @@ def adapt_to_marionas(df):
     for colname in df:
         if colname not in nocols:
             df[colname] = df[[colname]].apply(lambda x: x*100)
-    
+
     return(df)
 
 def add_itype_freqs(df_ts, set_itypes, dict_freqs):
@@ -254,7 +254,7 @@ def get_contacts_plots(itype, ligandonly):
     selected_itypes = { x:typelist[x] for x in set_itypes }
 
     #Loading files
-    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_summary.tsv",sep="\s+")
+    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_summary.tsv", sep="\s+")
     compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
 
     # Filtering out non-desired interaction types
@@ -273,7 +273,6 @@ def get_contacts_plots(itype, ligandonly):
     elif ligandonly == "prt":
         ligandfilter = ~df['Position'].str.contains('Ligand')
         df = df[ligandfilter]
-
 
     #Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
     df,dict_freqs = removing_entries_and_freqsdict(df, set_itypes, itype)
