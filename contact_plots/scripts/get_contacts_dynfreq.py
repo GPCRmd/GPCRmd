@@ -180,14 +180,20 @@ create_labelfile(dictfile, dynname, files_path, ligfile)
 
 #Computing dynamic contacts
 print("computing dynamic contacts")
+if ligand_sel:
+    ligand_text1 = " or %s" % (ligand_sel)
+    ligand_text2 = "--ligand \"%s\" " % (ligand_sel)
+else:
+    ligand_text1 = ""
+    ligand_text2 = ""
 dyn_contacts_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
 os.system(str("python %sget_dynamic_contacts.py         \
 --topology %s  \
 --trajectory %s       \
---sele \"protein or %s\"  \
---itypes all    \
---ligand \"%s\" \
---output %s" % (get_contacts_path, mypdbpath, mytrajpath, ligand_sel, ligand_sel, dyn_contacts_file)
+--sele \"protein%s\"  \
+--itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, ligand_text1) 
++ligand_text2+
+"--output %s" % (dyn_contacts_file)
 ))
 
 # Create files_path for freqeuncy files
