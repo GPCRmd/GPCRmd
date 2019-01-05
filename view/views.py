@@ -355,14 +355,20 @@ def sort_by_myorderlist(my_order,word):
     return(number)
 
 def obtain_compounds(dyn_id):
-    """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic"""
-    molecule_type={
-        0:'Ions',
-        1:'Ligand',
-        2:'Lipid',
-        3:'Water',
-        4:'Other'
-    } 
+    """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
+    Arguments:
+    
+    dyn_id      Dynamics ID to query.
+    
+    Returns:
+    
+    comp_li     list of [component_name,component_residue_name,component_type_str].
+    lig_li      list of ligand [component_name,component_residue_name].
+    lig_li_s    list of ligands residue names.
+    
+    """
+    molecule_type = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+    
     comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
     comp_dict={}
     lig_li=[]
