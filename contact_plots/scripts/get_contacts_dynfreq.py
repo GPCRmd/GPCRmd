@@ -202,7 +202,7 @@ mkdir_p(str(files_path + "frequency_tables"))
 no_ligand = set(("sb", "pc", "ts", "ps", "hp"))
 
 # Calculate frequencies for each type
-for itype in set(("sb","hp","pc","ps","ts","vdw","hbbb","hbsb","hbss","hbls","hblb","all")):
+for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbsb","hbss","hbls","hblb","all")):
 
     print(str("computing %s frequencies") % (itype))
     labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
