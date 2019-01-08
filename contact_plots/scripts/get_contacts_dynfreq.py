@@ -187,14 +187,14 @@ else:
     ligand_text1 = ""
     ligand_text2 = ""
 dyn_contacts_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
-os.system(str("python %sget_dynamic_contacts.py         \
+"""os.system(str("python %sget_dynamic_contacts.py         \
 --topology %s  \
 --trajectory %s       \
 --sele \"protein%s\"  \
 --itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, ligand_text1) 
 +ligand_text2+
 "--output %s" % (dyn_contacts_file)
-))
+))"""
 
 # Create files_path for freqeuncy files
 mkdir_p(str(files_path + "frequency_tables"))
