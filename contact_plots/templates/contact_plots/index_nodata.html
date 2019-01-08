@@ -43,66 +43,78 @@
             <div id="first_col" class="col-xs-5" ><!--To avoid overlaping of fixed-->
               <div id="menus" class="container-fluid">
                 <div class="row">
-                <!--itypes dropdown-->
-                  <div class="dropdown optbar">
-                    <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
-                      Interaction Type 
-                      <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu">
-                      {% for code,itype in other_itypes.items %}
-                      <li>
-                        <label class="mycheckbox">
-                        <input type="radio" name="itypes" class="option" value={{code}} />
-                          {{itype}}
-                        </label>
-                      </li>
-                      {% endfor %}
-                      <!--Hydrogen bond itypes dropdown-->
-                      <li class="dropdown-submenu">
-                        <div class="HB_row">
+                  <!--itypes dropdown-->
+                    <div class="dropdown optbar">
+                      <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                        Interaction Type 
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu">
+                      {% for group, types_tuple in itypes_order %}
+                        <li>
+                          <label class="macrotype">
+                            {{group}}
+                          </label>
+                        </li>
+                        <hr>
+                        {% for typecode,typename in types_tuple  %}
+                        {% if typecode == "hb" %}
+                        <!--Hydrogen bond itypes dropdown-->
+                        <li class="dropdown-submenu">
+                          <div class="HB_row">
+                            <label class="mycheckbox">
+                              <input type="radio" name="itypes" class="option" value="hb" />
+                                hydrogen bond
+                            </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
+                            <ul class="dropdown-menu" id="HB">
+                              {% for code,itype in hb_itypes %}
+                              <li>
+                                <label class="mycheckbox">
+                                <input type="radio" name="itypes" class="option hb_option" value={{code}} />
+                                  {{itype}}
+                                </label>
+                              </li>
+                              {% endfor %}
+                            </ul>
+                          </div>
+                        </li>
+                        {% else %}
+                        <li>
                           <label class="mycheckbox">
-                            <input type="radio" name="itypes" class="option" value="hb" />
-                              hydrogen bond
-                          </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
-                          <ul class="dropdown-menu">
-                            {% for code,itype in hb_itypes.items %}
-                            <li>
-                              <label class="mycheckbox">
-                              <input type="radio" name="itypes" class="option hb_option" value={{code}} />
-                                {{itype}}
-                              </label>
-                            </li>
-                            {% endfor %}
-                          </ul>
-                        </div>
-                      </li>
-                      <!--All option-->
-                      <li>
-                        <label class="mycheckbox">
-                        <input type="radio" name="itypes" class="option" value="all" />
-                          all types
-                        </label>
-                      </li>
-                    </ul>
-                  </div> 
-                  <!--dropdown interacting parts of the simulation -->
-                  <div class="optbar">
-                    <label>
-                    <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
-                      Protein-Protein
-                    </label>
-                    <br>
-                    <label>
-                    <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
-                      Protein-Ligand
-                    </label>
+                          <input type="radio" name="itypes" class="option" value={{typecode}} />
+                            {{typename}}
+                          </label>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        {% endfor %}
+                        <!--All option-->
+                        <br>
+                        <li id="all-li">
+                          <label id="all" class="mycheckbox">
+                          <input type="radio" name="itypes" class="option" value="all" />
+                            Total interaction frequency
+                          </label>
+                        </li>
+                      </ul>
+                    </div> 
+                    <!--dropdown interacting parts of the simulation -->
+                    <div class="optbar">
+                      <label class="partners_checkbox">
+                      <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+                        Protein-Protein
+                      </label>
+                      <br>
+                      <label class="partners_checkbox">
+                      <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
+                        Protein-Ligand
+                      </label>
+                    </div>
+                    <!--Apply button -->
+                    <div class="dropdown optbar">
+                      <button type="button" id="applybutton" class="btn btn-danger btn-sm" onclick="printchecked();" >Apply </button>
+                    </div>
                   </div>
-                  <!--Apply button -->
-                  <div class="dropdown optbar">
-                    <button type="button" id="applybutton" class="btn btn-danger btn-sm" onclick="printchecked();" >Apply </button>
-                  </div>
-                </div>
                 <!--download button-->
                 <div class="row">
                   <div class="dropdown optbar">
@@ -113,7 +125,7 @@
                 </div>
               </div>
             </div>
-            <div class="container">
+            <div class="container" style="min-height: 70%">
             <div id="second_col" class="col-xs-12">
               <h1 id="not_avalible_text"><center>No {{itype_name}} interactions avalible for these simulations</scenter></h1>
             </div>

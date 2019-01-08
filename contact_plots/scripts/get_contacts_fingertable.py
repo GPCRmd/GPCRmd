@@ -63,14 +63,12 @@ table_summary = open(str("%scontact_tables/compare_%s.tsv" % (files_path, "summa
 itypes = set(("wb", "wb2", "sb","hp","pc","ps","ts","vdw", "hb", "hbbb","hbsb","hbss","hbls","hblb","all"))
 nolg_itypes = set(("sb","pc","ts","ps","hbbb","hbsb","hbss","hp"))
 noprt_itypes = set(("hbls","hblb"))
-ipartners = set(("lg","prt","lg_prt"))
+ipartners = set(("lg","prt","prt_lg"))
 
 
 #Get fingerprint table by interaction type (itype)
 for itype in itypes:
 
-	print("processing "+itype)
-	
 	#Creating list of frequency files for calculating fingerprint
 	infreqs = ""
 	for dynid in dynlist:
@@ -84,8 +82,7 @@ for itype in itypes:
 	os.system(str("python %sget_contact_fingerprints.py \
 				--input_frequencies %s \
 	            --frequency_cutoff 0.00 \
-	            --column_headers %s\
-	            --cluster_columns True\
+	            --column_headers %s \
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
 	#Modifying tables to prepare them for table-to-dataframe script
