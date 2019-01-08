@@ -266,8 +266,8 @@ def dendrogram_clustering(dend_matrix, labels, height, width, clusters):
         link_color_func = lambda x: link_cols[x] 
     )
         
-    # Annotate cluster nodes in dendrogram
-    annotate_cluster_nodes(dn, T, colors)
+    # Annotate cluster nodes in dendrogram (not yet)
+    # annotate_cluster_nodes(dn, T, colors)
         
     # Setting labels font size and color
     ax = plt.gca()
