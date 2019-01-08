@@ -7,7 +7,7 @@ import numpy as np
 from json import loads
 from re import sub,compile
 import matplotlib.pyplot as plt
-from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
+from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram, fcluster
 import mpld3
 import os
 
@@ -80,7 +80,7 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
     helixpattern = compile(r"""^(..)\w+\s+\1""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
-    
+
     # Storing interaction-specific frequencies in a dictionary
     for itype in itypes:
         df_type = df[df["itype"] == itype]
@@ -102,7 +102,7 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
      
     # Set position as row index of the dataframe
     df = df.set_index('Position')
-        
+
     return(df,dict_freqs)
         
 def adapt_to_marionas(df):
@@ -149,7 +149,7 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
 def clustering(df_t):
     """
     Clusters simulations by their total accumulated interaction frequencies.
-    Returns the simulation order according to their clustering, as well as the matrix used for dendrogram
+    Returns the simulation order according to their clustering
     """
     dyn_labels = list(df_t.index)
     
@@ -170,6 +170,7 @@ def clustering(df_t):
     # Reorder according to clustering
     return (new_order,l)
 
+
 def flat_clusters(labels, colors, clusters, dflt_col, dend_matrix):
     """
     Returns an array with the cluster number to which every element belongs to 
@@ -189,7 +190,7 @@ def anotate_cluster(x, y, cluster_num, color):
     a small circle of color (color) 
     """
     plt.plot(x, y, 'ro', c = color)
-    plt.text(x,y,"_Cluster %d" % (cluster_num),fontsize=16) 
+    plt.text(int(x-20),(y+1),cluster_num,fontsize=14) # Note the minus five is for not having the text directly over the node, but at its side
 
 def annotate_cluster_nodes(dn, T, colors):
     """
@@ -271,11 +272,11 @@ def dendrogram_clustering(dend_matrix, labels, height, width, clusters):
         
     # Setting labels font size and color
     ax = plt.gca()
-    ax.tick_params(axis='both', which='both', labelsize=20, colors="black", right= False, bottom=False)
+    ax.tick_params(axis='both', which='both', labelsize=16, colors="black", right= False, bottom=False)
     
     # Rendering html figure with mpld3 module from our matplotlib figure
     html_dendrogram = mpld3.fig_to_html(plt.gcf())
-    return html_dendrogram
+    return html_dendrogram    
 
 def get_contacts_plots(itype, ligandonly):
     """
@@ -326,7 +327,7 @@ def get_contacts_plots(itype, ligandonly):
         set_itypes = set(itype.split("_"))
         set_itypes.add('all')
     else: 
-        set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
+        set_itypes = (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
 
     #Creating itypes dictionary for selected types
     selected_itypes = { x:typelist[x] for x in set_itypes }
@@ -396,8 +397,8 @@ def get_contacts_plots(itype, ligandonly):
 
     #Creating dendrogram
     dend_height = int( int(df.shape[1]) * 80 + 20)
-    dend_width = 160 #Same width as two square column
-    dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width) 
+    dend_width = 180 #Same width as two square column
+    dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width, 2) 
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     sim_num = df.shape[1] 
