@@ -5,6 +5,8 @@ $(document).ready(function(){
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
     
+    //$('[data-toggle="popover"]').popover(); 
+    
     function drawBasic(rows,xlabel,ylabel) {
         var data = new google.visualization.DataTable();
         data.addColumn('number', xlabel);
@@ -3683,6 +3685,15 @@ $(document).ready(function(){
          var showH=results["showH"];
          var showHShort="f";
          if (showH){showHShort="t"};
+/*
+         var show_dots= $(".onclickshow.is_active").data("short");
+         if (show_dots=="vars"){
+            var pdb_vars= $("#view_screen").data("pdb_vars");
+         } else if (show_dots=="muts"){
+            var pdb_muts= $("#view_screen").data("pdb_muts");
+            var pos_li=Object.keys(pdb_muts);
+            var sel=".CA and ("+pos_li.join(" or ")+")";
+         }*/
 
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);

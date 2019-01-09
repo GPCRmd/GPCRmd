@@ -176,7 +176,7 @@
 
 <!-- ============= IFRAME =========== -->
             <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" >
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}">
                 <div id="legend_row" class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
@@ -199,11 +199,20 @@
                          
                          <!-- [!] Contructing / test -->
                         <div class="dropdown" style=" float:right; clear:both;z-index:10">
-                            <button id="onclicksel" class="btn btn-info btn-xs dropdown-toggle pull-right" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-right:3px;margin-top:7px"><b>On click:</b> <span id="onclickbtntext">show vars.</span>
+                            <button id="onclicksel" class="btn btn-info btn-xs dropdown-toggle pull-right" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-right:3px;margin-top:7px"><b>On click:</b> <span id="onclickbtntext">Show dists.</span>
                             <span class="caret"></span></button>
                             <ul id="onclickshowdropd" class="dropdown-menu" style="height: auto;padding:0">
-                              <li id="showvars" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Display information of the residue clicked." class="onclickshow is_active" >Show variants</li>
-                              <li id="showdists" style="padding:5px 10px 5px 10px;" title="Click a pair of residues to show the distance betweent them."  class="onclickshow" >Show distances</li>
+                              <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Click a pair of residues to show the distance betweent them."  class="onclickshow is_active" data-short="dists" >Show distances</li>
+                              {% if pdb_vars|length > 2 %}
+                                <li id="showvars" style="padding:5px 10px 5px 10px;" data-short="vars" title="Display known variants of the residue clicked." class="onclickshow" >Show variants</li>
+                              {% else %}
+                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No variants found."  >Show variants</li>
+                              {% endif %}
+                              {% if pdb_muts|length > 2 %}
+                                <li id="showmuts" style="padding:5px 10px 5px 10px;" data-short="muts" title="Display mutational information of the residue clicked." class="onclickshow" >Show mutations</li>
+                              {% else %}
+                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No mutations found."  >Show mutations</li>
+                              {% endif %}
                             </ul>
                           </div>
                          

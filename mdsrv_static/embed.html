@@ -5,13 +5,19 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
-    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
     <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
     <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
     <link rel="subresource" href="mdsrv/webapp/css/light.css" />
     <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+    <style>
+      .popover {
+        background-color: rgba(242, 242, 242, 0.75);
+      }
+        
+    </style>
 
 </head>
 <body >
@@ -29,6 +35,7 @@
     <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
     <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
     <script src="mdsrv/webapp/js/gui.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
     <!-- MDSRV -->
     <!--<script src="mdsrv/webapp/js/mdsrv.js"></script>-->
@@ -305,36 +312,7 @@
             return(clicktrue);
         }
         
-        function createVarDiv(x_pos, y_pos, divid) {
-            var max_h_s=$("#viewport").css("height");
-            var max_h=Number(max_h_s.replace("px",""))
-            //console.log(max_h+"  "+y_pos)
-            var y_pos_mod=max_h - y_pos //Improve
-            //$("#"+divid).html("") 
-            
-            var var_pos= "Val 1.58 (56:P)";
-            myhtml="<div id='testintest' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:"+x_pos+"px;top:"+y_pos_mod+"px'>\
-              <table class='table table-condensed' style='font-size:11px;margin:0;text-align:center;width:60px'>\
-                <thead>\
-                  <tr>\
-                    <th style='text-align:center;'>"+var_pos+" variants</th>\
-                  </tr>\
-                </thead>\
-                <tbody>\
-                  <tr>\
-                    <td>V <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> A </td>\
-                  </tr>\
-                  <tr>\
-                    <td>V <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> S </td>\
-                  </tr>\
-                </tbody>\
-              </table>\
-            </div>";
-            $(divid).html(myhtml);          
-        }
-        
-        function clickDists(){
-            ////////////
+        function hoverStruc(){
             // create new tooltip
             var tooltip = document.createElement('div')
             Object.assign(tooltip.style, {
@@ -350,23 +328,8 @@
             document.body.appendChild(tooltip)
             // remove default hoverPick mouse action
             stage.mouseControls.remove('hoverPick')
-/////////////////    
-            var clicktrue = true;
-            $("#selectionDiv", window.parent.document).click(function(){
-                if (! clicktrue && lbl_name1){
-                    clicktrue = true;
-                }
-            });
-            //$("#clear_dist_reps", window.parent.document).click(function(){
-            $("#clear_dists_btn").on("click","#clear_dist_reps",function(){
-                clicktrue=clearDists(clicktrue,lbl_name1);
-            });
-            $("#clearAll", window.parent.document).click(function(){
-                clicktrue=clearDists(clicktrue,lbl_name1);
-            });            
-            var o=stage.getComponentsByName("my_comp").list[0];
-            
             // listen to `hovered` signal to move tooltip around and change its text
+            var o=stage.getComponentsByName("my_comp").list[0];
             stage.signals.hovered.add( function( d ){
                 if (d && (d.atom)){
                     var hatom = d.atom;
@@ -383,122 +346,367 @@
                     $("#viewport").mousemove(function(){$("#atomInfo").text("")});
                 }
             });
-
-            var atom1 , atom2 , res2 , res2, myrepr;
-            var lbl_id=0;
-            var dist_id=0;
-            var lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 , labsele1;
-            stage.signals.clicked.add( function( d ){
-                if (clicktrue){
-                    if (d && d.atom){
-                        var mouse_pos=d.canvasPosition;
-                        createVarDiv(mouse_pos["x"],mouse_pos["y"],"#varinfo")
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
-                        $("#atomClicked").text(info);
-                        lbl_name1="label_"+lbl_id.toString();
+            
+        }
+        
+        function clickDists(d,o,clicktrue,atom1 , atom2 , res2 , myrepr,lbl_id,dist_id,lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 ){
+            if (clicktrue){
+                if (d && d.atom){
+                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    $("#atomClicked").text(info);
+                    lbl_name1="label_"+lbl_id.toString();
+                    lbl_id+=1;
+                    labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
+                    myrepr = o.addRepresentation( "label", {
+                        sele: labsele1,
+                        color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                    atom1 = d.atom.index.toString();
+                    clicktrue = false;
+                }else {
+                    $("#atomClicked").text("");
+                }
+            }else{
+                if (d && d.atom){
+                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    $("#atomClicked").text(info);                                            
+                    atom2 = d.atom.index.toString();
+                    //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
+                    clicktrue = true;
+                    if (atom1 != atom2){
+                        lbl_name2="label_"+lbl_id.toString();
                         lbl_id+=1;
-                        labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
-                        myrepr = o.addRepresentation( "label", {
-                            sele: labsele1,
-                            color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
-                        atom1 = d.atom.index.toString();
-                        clicktrue = false;
-                    }else {
-                        $("#atomClicked").text("");
-                    }
-                }else{
-                    if (d && d.atom){
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
-                        $("#atomClicked").text(info);                                            
-                        atom2 = d.atom.index.toString();
-                        //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
-                        clicktrue = true;
-                        if (atom1 != atom2){
-                            lbl_name2="label_"+lbl_id.toString();
-                            lbl_id+=1;
-                            dist_name="dist_"+dist_id.toString();
-                            clickedDist[dist_name]=[atom1,atom2];
-                            dist_id+=1;
-                            var add1=[lbl_name1, lbl_name2 , dist_name];
-                            var add2 = [lbl_name1, lbl_name2 , dist_name];
+                        dist_name="dist_"+dist_id.toString();
+                        clickedDist[dist_name]=[atom1,atom2];
+                        dist_id+=1;
+                        var add1=[lbl_name1, lbl_name2 , dist_name];
+                        var add2 = [lbl_name1, lbl_name2 , dist_name];
+                        if (! clickedRep[atom1]){
+                            clickedRep[atom1]=[];
+                        }
+                        if (! clickedRep[atom2]){
+                            clickedRep[atom2]=[];
+                        }
+                        for (an =0 ; an < add1.length ; an++){
+                            var repNm=add1[an];
+                            clickedRep[atom1][clickedRep[atom1].length]=repNm;
+                            if (!(repNm in clickedRepLi)){
+                                clickedRepLi.push(repNm);
+                            }
+                        }
+                        for (an =0 ; an < add2.length ; an++){
+                            clickedRep[atom2][clickedRep[atom2].length]=add2[an];
+                        }
+                        labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
+                        o.addRepresentation( "label", {
+                            sele: labsele2,
+                            color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                        var atomPair = [[ Number(atom1), Number(atom2) ]];
+                        o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
+                        clickedDistData[dist_name]=atomPair;
+                        clickedLabData[lbl_name1]=labsele1;
+                        clickedLabData[lbl_name2]=labsele2; 
+
+                    } else {
+                        if (atom1 in clickedRep){
+                            var toRv=clickedRep[atom1];
+                            for (rvN=0 ; rvN < toRv.length ; rvN++){
+                                var repName=toRv[rvN];
+                                stage.getRepresentationsByName(repName).list[0].repr.clear();
+                                stage.getRepresentationsByName(repName).setVisibility(false);
+                                if (repName.substr(0, 4)=="dist"){
+                                    if (repName in clickedDist){
+                                        delete clickedDist[repName];
+                                    }
+                                    if (repName in clickedDistData){
+                                        delete clickedDistData[repName];
+                                    }
+                                } else {
+                                    if (repName in clickedLabData){
+                                        delete clickedLabData[repName];
+                                    }
+                                }
+                                var rvIndex = clickedRepLi.indexOf(repName);
+                                if (rvIndex > -1){
+                                    clickedRepLi.splice(rvIndex, 1);
+                                }
+                            }
+                            if (clickedRepLi.length ==0){
+                                $("#clear_dists_btn").html("");
+                            }
+                            
+                            stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                            stage.getRepresentationsByName(lbl_name1).setVisibility(false);
+                            delete clickedRep[atom1];
+                        } else {
                             if (! clickedRep[atom1]){
                                 clickedRep[atom1]=[];
                             }
-                            if (! clickedRep[atom2]){
-                                clickedRep[atom2]=[];
+                            clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
+                            if (!(lbl_name1 in clickedRepLi)){
+                                clickedRepLi.push(lbl_name1);
                             }
-                            for (an =0 ; an < add1.length ; an++){
-                                var repNm=add1[an];
-                                clickedRep[atom1][clickedRep[atom1].length]=repNm;
-                                if (!(repNm in clickedRepLi)){
-                                    clickedRepLi.push(repNm);
-                                }
-                            }
-                            for (an =0 ; an < add2.length ; an++){
-                                clickedRep[atom2][clickedRep[atom2].length]=add2[an];
-                            }
-                            labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
-                            o.addRepresentation( "label", {
-                                sele: labsele2,
-                                color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
-                            var atomPair = [[ Number(atom1), Number(atom2) ]];
-                            o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
-                            clickedDistData[dist_name]=atomPair;
                             clickedLabData[lbl_name1]=labsele1;
-                            clickedLabData[lbl_name2]=labsele2; 
-
-                        } else {
-                            if (atom1 in clickedRep){
-                                var toRv=clickedRep[atom1];
-                                for (rvN=0 ; rvN < toRv.length ; rvN++){
-                                    var repName=toRv[rvN];
-                                    stage.getRepresentationsByName(repName).list[0].repr.clear();
-                                    stage.getRepresentationsByName(repName).setVisibility(false);
-                                    if (repName.substr(0, 4)=="dist"){
-                                        if (repName in clickedDist){
-                                            delete clickedDist[repName];
-                                        }
-                                        if (repName in clickedDistData){
-                                            delete clickedDistData[repName];
-                                        }
-                                    } else {
-                                        if (repName in clickedLabData){
-                                            delete clickedLabData[repName];
-                                        }
-                                    }
-                                    var rvIndex = clickedRepLi.indexOf(repName);
-                                    if (rvIndex > -1){
-                                        clickedRepLi.splice(rvIndex, 1);
-                                    }
-                                }
-                                if (clickedRepLi.length ==0){
-                                    $("#clear_dists_btn").html("");
-                                }
-                                
-                                stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                                stage.getRepresentationsByName(lbl_name1).setVisibility(false);
-                                delete clickedRep[atom1];
-                            } else {
-                                if (! clickedRep[atom1]){
-                                    clickedRep[atom1]=[];
-                                }
-                                clickedRep[atom1][clickedRep[atom1].length]=lbl_name1;
-                                if (!(lbl_name1 in clickedRepLi)){
-                                    clickedRepLi.push(lbl_name1);
-                                }
-                                clickedLabData[lbl_name1]=labsele1;
-                            }
                         }
-                        if (clickedRepLi.length > 0){
-                            $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear labels/dists.</button>');
-                        }
-                    } else {
-                        $("#atomClicked").text("");
-                        clicktrue = true;
-                        stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
-                        stage.getRepresentationsByName(lbl_name1).setVisibility(false);
                     }
-                 }
+                    if (clickedRepLi.length > 0){
+                        $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear labels/dists.</button>');
+                    }
+                } else {
+                    $("#atomClicked").text("");
+                    clicktrue = true;
+                    stage.getRepresentationsByName(lbl_name1).list[0].repr.clear();
+                    stage.getRepresentationsByName(lbl_name1).setVisibility(false);
+                }
+            };
+            return {
+                clicktrue:clicktrue,
+                atom1:atom1 , 
+                atom2:atom2 , 
+                res2:res2, 
+                myrepr:myrepr,
+                lbl_id:lbl_id,
+                dist_id:dist_id,
+                lbl_name1:lbl_name1,
+                lbl_name2: lbl_name2,
+                dist_name:dist_name,
+                labsele1:labsele1,
+                labsele2:labsele2
+            };
+        
+        };
+        
+        function createDivAtStrClick(d, divid, myhtml) {
+            var mouse_pos=d.canvasPosition;
+            var x_pos= mouse_pos["x"];
+            var y_pos=mouse_pos["y"]
+            var max_h_s=$("#viewport").css("height");
+            var max_h=Number(max_h_s.replace("px",""))
+            var y_pos_mod=max_h - y_pos 
+            myhtml=myhtml.replace(/\*\*x_pos\*\*/,x_pos);
+            myhtml=myhtml.replace(/\*\*y_pos\*\*/,y_pos_mod);
+            $(divid).html(myhtml);          
+        }
+        
+        function clickVars(d){
+            if (d && d.atom){
+            }
+            if (d && d.atom && d.atom.isProtein()){
+                var pdb_pos=d.atom.resno.toString()+":"+d.atom.chainname
+                if (pdb_pos in pdb_vars){
+                    var resname=d.atom.resname.toString()
+                    var var_info=pdb_vars[pdb_pos]
+                    //Define info in the div
+                    var var_pos=  resname.substr(0,1)+resname.substr(1).toLowerCase()+" "+var_info.gnum+" ("+pdb_pos+")";
+                    var table_rows="";
+                    var vars_pos_d=var_info.vars;
+                    for (fromto in vars_pos_d){
+                        var fromto_sp=fromto.split(",");
+                        var from=fromto_sp[0];
+                        var to=fromto_sp[1];
+                        var vars_pos_li=vars_pos_d[fromto];
+                        var extra_info="";
+                        for (var vlN=0; vlN<vars_pos_li.length;vlN++){
+                            var consequence=vars_pos_li[vlN].consequence;
+                            var exac_id=vars_pos_li[vlN].exac_id;
+                            extra_info+="<tr>\
+                                            <td>"+consequence+"</td>\
+                                            <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                        </tr>";
+                        }
+                        table_rows+="<tr>\
+                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
+                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
+                                          <table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
+                                            <thead>\
+                                              <tr>\
+                                                <th style=\"text-align:center;\">Consequence</th>\
+                                                <th style=\"text-align:center;\">DB</th>\
+                                              </tr>\
+                                            </thead>\
+                                            <tbody>\
+                                            "+extra_info+"\
+                                            </tbody>\
+                                          </table>\
+                                          <div>\
+                                        '>\
+                                         <span class='glyphicon glyphicon-plus-sign'></span>\
+                                        </button>\
+                                        </td>\
+                                     </tr>";
+                    }
+
+                    //Define info in the div
+                    var myhtml="<div id='added_html_click' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
+                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;width:65px'>\
+                        <thead>\
+                          <tr>\
+                            <th style='text-align:center;'>"+var_pos+"</th>\
+                          </tr>\
+                        </thead>\
+                        <tbody>\
+                        "+table_rows+"\
+                        </tbody>\
+                      </table>\
+                    </div>";
+
+                    createDivAtStrClick(d,"#varinfo",myhtml);
+                } 
+                
+                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                $("#atomClicked").text(info);
+            }else {
+                $("#atomClicked").text("");
+            }
+        }
+        
+       
+        function clickMuts(d){
+            if (d && d.atom && d.atom.isProtein()){
+                var pdb_pos=d.atom.resno.toString()+":"+d.atom.chainname
+                if (pdb_pos in pdb_muts){
+                    var mut_info=pdb_muts[pdb_pos]
+                    var resname=d.atom.resname.toString()
+                    //Define info in the div
+                    var mut_pos=  resname.substr(0,1)+resname.substr(1).toLowerCase()+" "+mut_info.gnum+" ("+pdb_pos+")";
+                    var table_rows="";
+                    var muts_pos_d=mut_info.vars;
+                    for (fromto in muts_pos_d){
+                        var fromto_sp=fromto.split(",");
+                        var from=fromto_sp[0];
+                        var to=fromto_sp[1];
+                        var muts_pos_li=muts_pos_d[fromto];
+                        var extra_info="";
+                        for (var vlN=0; vlN<muts_pos_li.length;vlN++){
+                            var fchange=muts_pos_li[vlN].fchange;
+                            var qual=muts_pos_li[vlN].qual;
+                            var stud_lig=muts_pos_li[vlN].lig;
+                            var exp=muts_pos_li[vlN].exp;
+                            var unit=muts_pos_li[vlN].unit;
+                            var measure=muts_pos_li[vlN].measure;
+                            if (!fchange){
+                                if (qual){
+                                    fchange=qual;
+                                } else if (!stud_lig) {
+                                    fchange="N/A"
+                                }
+                            }
+                            if (!stud_lig){
+                                stud_lig="-";
+                            }
+                            if (!exp){
+                                exp="-";
+                            }
+                            //<a href=\"#\" id=\"showtooltip\" data-toggle=\"tooltip\" title=\"Hooray!\">Hover over me</a>
+                            if (measure.length>0 && unit.length>0){
+                                tooltip_or_not="<button  style=\"padding:0\" class=\"btn-link showtooltip\" data-toggle=\"tooltip\" title=\"Measure:"+measure+"</br>Unit:"+unit+"\">"+fchange+"</button>";
+                            } else{
+                                tooltip_or_not=fchange;
+                            }
+
+                            extra_info+="<tr>\
+                                            <td>"+tooltip_or_not+"</td>\
+                                            <td>"+exp+"</td>\
+                                            <td>"+stud_lig+"</td>\
+                                            <td><a href=\"https://www.ncbi.nlm.nih.gov/pubmed/"+muts_pos_li[vlN].pub_ref+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                        </tr>";
+
+                        };
+                        table_rows+="<tr>\
+                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
+                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
+                                          <table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
+                                            <thead>\
+                                              <tr>\
+                                                <th style=\"text-align:center;\">Fold change</th>\
+                                                <th style=\"text-align:center;\">Exp. type</th>\
+                                                <th style=\"text-align:center;\">Ligand</th>\
+                                                <th style=\"text-align:center;\">Ref</th>\
+                                              </tr>\
+                                            </thead>\
+                                            <tbody>\
+                                            "+extra_info+"\
+                                            </tbody>\
+                                          </table>\
+                                          <div>\
+                                        '>\
+                                         <span class='glyphicon glyphicon-plus-sign'></span>\
+                                        </button>\
+                                        </td>\
+                                     </tr>";
+                        
+                    }
+
+                    
+                    var myhtml="<div id='added_html_click' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
+                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;width:60px'>\
+                        <thead>\
+                          <tr>\
+                            <th style='text-align:center;'>"+mut_pos+"</th>\
+                          </tr>\
+                        </thead>\
+                        <tbody>\
+                        "+table_rows+"\
+                        </tbody>\
+                      </table>\
+                    </div>";
+                    createDivAtStrClick(d,"#varinfo",myhtml);
+                }
+
+                var info="["+resname+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                $("#atomClicked").text(info);
+            }else {
+                $("#atomClicked").text("");
+            }
+        }
+        
+        
+        function clickStruc(){
+            var clicktrue = true;
+            $("#selectionDiv", window.parent.document).click(function(){
+                if (! clicktrue && lbl_name1){
+                    clicktrue = true;
+                }
+            });
+            $("#clear_dists_btn").on("click","#clear_dist_reps",function(){
+                clicktrue=clearDists(clicktrue,lbl_name1);
+            });
+            $("#clearAll", window.parent.document).click(function(){
+                clicktrue=clearDists(clicktrue,lbl_name1);
+            });  
+            $(".onclickshow", window.parent.document).click(function(){
+                clicktrue=clearDists(clicktrue,lbl_name1);
+            });            
+            var o=stage.getComponentsByName("my_comp").list[0];
+            //Initialize variables necessary for distances
+            var atom1 , atom2 , res2 , myrepr;
+            var lbl_id=0;
+            var dist_id=0;
+            var lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 ;
+            //Obtain data for variants and mutations
+            stage.signals.clicked.add( function( d ){
+                if (onclickshow=="dists"){
+                    distvars=clickDists(d, o,clicktrue,atom1 , atom2 , res2 , myrepr,lbl_id,dist_id,lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 );
+                    clicktrue=distvars.clicktrue
+                    atom1=distvars.atom1
+                    atom2=distvars.atom2
+                    res2=distvars.res2
+                    myrepr=distvars.myrepr
+                    lbl_id=distvars.lbl_id
+                    dist_id=distvars.dist_id
+                    lbl_name1=distvars.lbl_name1
+                    lbl_name2=distvars.lbl_name2
+                    dist_name=distvars.dist_name
+                    labsele1=distvars.labsele1
+                    labsele2=distvars.labsele2
+                    
+                } else if (onclickshow=="vars"){
+                    clickVars(d);
+                } else if (onclickshow=="muts"){
+                    clickMuts(d);
+                }
+
             } );
 
         }
@@ -794,6 +1002,17 @@
                 }
 
             }
+
+            if (onclickshow=="muts"){
+                var pos_li=Object.keys(pdb_muts);
+                var sel=".CA and ("+pos_li.join(" or ")+")";
+                o.addRepresentation( "spacefill", { colorValue:"#0079ff", sele: sel, scale:0.35} );
+            } else if (onclickshow=="vars"){
+                var pos_li=Object.keys(pdb_vars);
+                var sel=".CA and ("+pos_li.join(" or ")+")";
+                o.addRepresentation( "spacefill", { colorValue:"#0079ff", sele: sel, scale:0.35} );
+            }
+
             if ( ! mytraj){
                 $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
             }
@@ -1019,14 +1238,34 @@
             var setSelStr="protein";
             var trajchange=false;
             var trajIntType="";
-            var onclickshow="vars";
-            
+            var onclickshow="dists";
+            var pdb_muts= $("#view_screen", window.parent.document).data("pdb_muts");
+            var pdb_vars= $("#view_screen", window.parent.document).data("pdb_vars");
             //var gpcrSelExp= parent.gpcr_selection()
             //!
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
             
             var fpsegStr , FPscheme;
             
+        var popOverSettings = {
+            placement: 'auto right',
+            trigger:"click",
+            container: 'body',
+            html: true,
+            selector: '.showpopover', //Sepcify the selector here
+            viewport: '#viewport',
+            content: function () {
+                return $('#popover-content').html();
+            }
+        }
+
+        $('body').popover(popOverSettings);   
+        $('body').tooltip({
+            selector: '.showtooltip',
+            trigger:"hover",
+            html:true,
+        });   
+        //$('[data-toggle="popover"]').popover(); 
         $(document.body).bind('createNGL', function(e, cont_w , cont_w_in , cont_h_num) {
             set_ngl_size(cont_w , cont_w_in , cont_h_num);
             
@@ -1106,8 +1345,9 @@
                     });
 
                     //selChange();      
-
-                    clickDists();
+                    
+                    hoverStruc();
+                    clickStruc();
                     
                     createReps()
 
@@ -1219,7 +1459,7 @@
                     var timeout = $(this).val();
                     if (timeout){
                         timeout = Number(timeout);
-                        var pos = Math.abs(timeout)
+                        var pos = Math.abs(timeout);
                         var rounded= Math.round(pos);
                         if (rounded <= 0){
                             var rounded = 1;
@@ -1255,6 +1495,7 @@
                 
                 $("#viewport:not(#varinfo)").on("mousedown" , function(){
                     $("#varinfo").html("");
+                    $('.popover').popover("hide");                    
                 });
                 
                 $(".onclickshow" , window.parent.document).click(function(){
@@ -1264,11 +1505,17 @@
                         if ($(this).text().indexOf("distances") > -1){
                             $("#onclickbtntext", window.parent.document).text("Show dists.")
                             onclickshow="dists";
-                        } else {
+                        } else if ($(this).text().indexOf("variants") > -1) {
                             $("#onclickbtntext", window.parent.document).text("Show vars.")
                             onclickshow="vars";
+                        }else {
+                            $("#onclickbtntext", window.parent.document).text("Show muts.")
+                            onclickshow="muts";
                         }
                     };
+                    if (onclickshow!="dists"){
+                        $("#selectionDiv" , window.parent.document).trigger("click");
+                    }
                 });
                 
                 

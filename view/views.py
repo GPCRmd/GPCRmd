@@ -5,6 +5,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence,DyndbReferences
 from protein.models import Protein
+from mutation.models import Mutation,MutationExperiment
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
 from view.data import *
@@ -225,7 +226,7 @@ def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
             seq_pos_n+=1
     return (seq_pos,seq_pos_n)
 
-def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=False,add_aa=False):
+def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=False,add_aa=False,seq_pdb=False):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
     chain_nm_seq_pos=""
     rs_by_seg={1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 15: [], 16: [], 17: []}
@@ -255,6 +256,8 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                     gpcr_aa[this_gnum]=[pos_gnum[db_pos][0], chain_name]
                     gnum_or_nth=this_gnum
                     rs_by_seg[pos_gnum[db_pos][2]].append(pos[0][1]+chain_nm_seq_pos) #Chain!!
+                if type(seq_pdb)==dict:
+                    seq_pdb[db_pos]={"pdb":[pos[0][1],chain_name],"gnum":gnum_or_nth}
                 seq_pos[seq_pos_n][2]=gnum_or_nth
                 seq_pos_n+=1
     #######
@@ -280,7 +283,11 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
                     gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
-    return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
+    if type(seq_pdb)==dict:
+        return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li,seq_pdb)
+             #(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)
+    else:
+        return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
 
 def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
     """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
@@ -688,7 +695,104 @@ def get_fplot_path(dyn_id,traj_list):
     if fp_exist:
         fpdir_url = get_precomputed_file_path('flare_plot',"hbonds",url=True)
     return (traj_list,fpdir_url)
-        
+
+def extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb):
+    mypath="/protwis/sites/files/Precomputed/muts_vars_info"
+    vars_filepath=os.path.join(mypath,"gpcr_vars.json")
+    filepath_obj = Path(vars_filepath)
+    try:
+        filepath_res = filepath_obj.resolve()
+        json_file=open(vars_filepath)
+        json_str = json_file.read()
+        all_vars=pd.io.json.loads(json_str)
+        entry_name=gpcr_Gprot.entry_name
+        seq_vars_pre=all_vars.get(entry_name)
+        if seq_vars_pre:
+            seq_vars=seq_vars_pre
+        else:
+            seq_vars={}
+    except FileNotFoundError:
+        seq_vars={}
+    for seqN,pos_var_info_li in seq_vars.items():
+        seqN=int(seqN)
+        if seqN in seq_pdb: 
+            pdb_pos_l=seq_pdb[seqN]["pdb"]
+            gnum=seq_pdb[seqN]["gnum"]
+            if gnum:
+                (chain_num,bw,gpcrdb)=re.split('\.|x', gnum)
+                gnum=chain_num+"x"+gpcrdb
+            pdb_pos=pdb_pos_l[0]+":"+pdb_pos_l[1]
+            pos_vars={}
+            for pos_var_info in pos_var_info_li:
+                consequence=pos_var_info["consequence"].replace("_"," ").capitalize()
+                aafrom=pos_var_info["from"]
+                aato=pos_var_info["to"]
+                if consequence=="Frameshift variant":
+                    fs_info=aafrom+str(seqN)+aato
+                    consequence=consequence+" (%s)"%fs_info
+                    aato="FS"
+                fromto=aafrom+","+aato
+                info={"seq_pos":str(seqN),"consequence":consequence,"exac_id":pos_var_info["exac_var_id"]}
+                if fromto in pos_vars:
+                    pos_vars[fromto].append(info)
+                else:
+                    pos_vars[fromto]=[info]
+            pdb_vars[pdb_pos]={}
+            pdb_vars[pdb_pos]["gnum"]=gnum
+            pdb_vars[pdb_pos]["vars"]=pos_vars
+    return pdb_vars
+
+def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
+    muts=Mutation.objects.filter(protein_id=gpcr_Gprot.id)
+    for mut in muts:
+        seqN=mut.residue.sequence_number
+        if seqN in seq_pdb: 
+            pdb_pos_l=seq_pdb[seqN]["pdb"]
+            gnum=seq_pdb[seqN]["gnum"]
+            if gnum:
+                (chain_num,bw,gpcrdb)=re.split('\.|x', gnum)
+                gnum=chain_num+"x"+gpcrdb
+            pdb_pos=pdb_pos_l[0]+":"+pdb_pos_l[1]
+            aafrom=mut.residue.amino_acid
+            aato=mut.amino_acid
+            experiments=MutationExperiment.objects.filter(mutation=mut.id)
+            pdb_muts[pdb_pos]={}
+            pdb_muts[pdb_pos]["gnum"]=gnum
+            pos_muts={}
+            for exp in experiments:
+                #exp_fun
+                exp_fun_obj=exp.exp_func
+                if exp_fun_obj:
+                    exp_fun=exp_fun_obj.func
+                else:
+                    exp_fun=""
+                #ligand
+                lig_obj=exp.ligand
+                if lig_obj:
+                    lig=lig_obj.name
+                else:
+                    lig=""
+                #measure
+                measure_obj=exp.exp_type
+                if measure_obj:
+                    measure=measure_obj.type
+                else:
+                    measure=""
+                #Qualitative res
+                qual_obj=exp.exp_qual
+                if qual_obj:
+                    qual=qual_obj.qual 
+                else:
+                    qual=""
+                info={"exp":exp_fun,"fchange":exp.foldchange,"lig":lig,"unit":exp.wt_unit,"measure":measure,"pub_ref":exp.refs.web_link.index,"qual":qual,"seq_pos":str(seqN)}
+                fromto=aafrom+","+aato
+                if fromto in pos_muts:
+                    pos_muts[fromto].append(info)
+                else:
+                    pos_muts[fromto]=[info]
+            
+            pdb_muts[pdb_pos]["vars"]=pos_muts
+    return pdb_muts
     
 
 @ensure_csrf_cookie
@@ -700,7 +804,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
-    print(mdsrv_url)
     delta=DyndbDynamics.objects.get(id=dyn_id).delta
     if request.is_ajax() and request.POST:
         if request.POST.get("rmsdStr"):
@@ -959,6 +1062,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                 seg_li_all={}
                 gpcr_pdb_all={}
                 gpcr_id_name={}
+                pdb_muts={}
+                pdb_vars={}
                 for gpcr_DprotGprot in prot_li_gpcr:
                     gpcr_Dprot=gpcr_DprotGprot[0]
                     gpcr_Gprot=gpcr_DprotGprot[1]
@@ -978,10 +1083,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             gpcr_pdb={}
                             gpcr_aa={}
                             gnum_classes_rel={}
+                            seq_pdb={}
                             (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                             cons_pos_dict_mod=copy.deepcopy(cons_pos_dict)
                             for chain_name, result in dprot_chain_li:
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains)
+                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,seq_pdb=seq_pdb)
                                 (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
@@ -992,6 +1098,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
                             seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
+                            
+                            #Obtain var and mut data
+                            pdb_muts=extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb)
+                            pdb_vars=extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb)
+                            
                             
 
                 if all_gpcrs_info:
@@ -1026,7 +1137,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "delta":delta,
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
-                        "pdbid":pdbid
+                        "pdbid":pdbid,
+                        "pdb_muts":json.dumps(pdb_muts),
+                        "pdb_vars":json.dumps(pdb_vars),
                          }
                     return render(request, 'view/index.html', context)
                 else:
