@@ -444,7 +444,7 @@ class DyndbFilesDynamics(models.Model):
     id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics',   null=True) 
     id_files = models.ForeignKey('DyndbFiles', models.DO_NOTHING,   db_column='id_files',  null=True)
     type = models.SmallIntegerField( choices=file_types, default=0)
-    framenum = models.PositiveIntegerField(null=True,default=None)
+    framenum = models.PositiveIntegerField(null=True,blank=True,default=None)
 
     class Meta:
         managed = True
@@ -460,6 +460,10 @@ class DyndbSubmissionDynamicsFiles(models.Model):
     url = models.CharField(max_length=520, blank=False, null=True)
     filenum = models.PositiveSmallIntegerField(null=False,default=0)
     framenum = models.PositiveIntegerField(null=True,default=None)
+    id_files = models.ForeignKey('DyndbFiles',models.DO_NOTHING, db_column='id_files',  blank=True, null=True,default=None)
+    files_dynamics_id =  models.ForeignKey('DyndbFilesDynamics',models.DO_NOTHING, db_column='files_dynamics_id',  blank=True, null=True,default=None)
+    to_delete = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     class Meta:
         managed = True
         db_table = 'dyndb_submission_dynamics_files'

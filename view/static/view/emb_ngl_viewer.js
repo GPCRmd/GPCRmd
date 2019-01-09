@@ -305,7 +305,9 @@ $(document).ready(function(){
     function createRepFromCrossGPCRpg(){
         var bind_domain=$("#VisualizationDiv").data("bind_domain");
         var presel_pos=$("#VisualizationDiv").data("presel_pos");
+        var presel_pos_ary = undefined;
         var presel_pos_here=false;
+        console.log("krosis");
         if (bind_domain  && presel_pos){
             var dom_pos_li=bind_domain.split(",");
             var sel_dom_pos_li=checkPosInGpcrNum(dom_pos_li)
@@ -325,14 +327,32 @@ $(document).ready(function(){
             sel_dom_pos_fin=sel_dom_pos_s.slice(0,-1);
             $("#text_input_all").find(".sel_input:last").val(sel_dom_pos_fin);
             changeLastInputColor("#3193ff");
-            //Selected pos:
-            var presel_ok_li=checkPosInGpcrNum([presel_pos])
-            if (presel_ok_li.length > 0){
-                $("#text_input_all").find(".ti_add_btn:last").trigger("click");
-                $("#text_input_all").find(".sel_input:last").val(presel_pos);
-                $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
-                //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
-                changeLastInputColor("#ff4c00");
+
+            //David here: some changes intrudeced to mark more than a residue at time
+            presel_pos_ary = presel_pos.split("_");
+            if (presel_pos_ary.length > 1){
+                for (index in presel_pos_ary){
+                    presel_pos = presel_pos_ary[index];
+                    var presel_ok_li=checkPosInGpcrNum([presel_pos])
+                    if (presel_ok_li.length > 0){
+                        $("#text_input_all").find(".ti_add_btn:last").trigger("click");
+                        $("#text_input_all").find(".sel_input:last").val(presel_pos);
+                        $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                        //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
+                        changeLastInputColor("#ff4c00");
+                    }
+                }
+            }
+            else {
+                //Selected pos:
+                var presel_ok_li=checkPosInGpcrNum([presel_pos])
+                if (presel_ok_li.length > 0){
+                    $("#text_input_all").find(".ti_add_btn:last").trigger("click");
+                    $("#text_input_all").find(".sel_input:last").val(presel_pos);
+                    $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                    //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
+                    changeLastInputColor("#ff4c00");
+                }
             }
             //$("#selectionDiv").trigger("click");
         }
@@ -4215,9 +4235,8 @@ $(document).ready(function(){
     });
     
 
-//-------- Call when everything has run --------    
+//-------- Call when everything has run --------
     createRepFromCrossGPCRpg();
-    
 });
 
 

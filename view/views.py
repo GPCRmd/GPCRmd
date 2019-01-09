@@ -366,14 +366,20 @@ def str_len_limit(mystr):
     return mystr
 
 def obtain_compounds(dyn_id):
-    """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic"""
-    molecule_type={
-        0:'Ions',
-        1:'Ligand',
-        2:'Lipid',
-        3:'Water',
-        4:'Other'
-    } 
+    """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
+    Arguments:
+    
+    dyn_id      Dynamics ID to query.
+    
+    Returns:
+    
+    comp_li     list of [component_name,component_residue_name,component_type_str].
+    lig_li      list of ligand [component_name,component_residue_name].
+    lig_li_s    list of ligands residue names.
+    
+    """
+    molecule_type = dict(DyndbDynamicsComponents.MOLECULE_TYPE)
+    
     comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
     comp_dict={}
     lig_li=[]
@@ -801,7 +807,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 #        dist_data=request.session['dist_data']
 #        dist_dict=dist_data["dist_dict"]
 #        print("\n\n",len(dist_dict))
-
     request.session.set_expiry(0) 
     mdsrv_url=obtain_domain_url(request)
     delta=DyndbDynamics.objects.get(id=dyn_id).delta
@@ -987,8 +992,14 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     bind_domain_li=df.loc[selthresh].columns.values                
                     bind_domain=",".join(bind_domain_li)
                     presel_pos=sel_pos
-                    
-                
+            #Checking if call corresponds to contplots call (containts a selpos of format 12x50_2x40)
+            contplots_pat = re.compile("\d+x\d+")
+            if re.match(contplots_pat,sel_pos):
+                presel_pos=sel_pos
+                bind_domain = "none"
+
+        print(type(bind_domain))
+
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""

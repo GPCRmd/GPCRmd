@@ -159,9 +159,13 @@ def ligand_receptor_interaction(request,sel_thresh):
     df_t=df_t.fillna(value=0)
     
     # [!] Only in prod
-#    indexes = df_t.index.values
-#    index_f = sorted([idx for idx in indexes if int(idx[3:]) > 29],key=lambda x: int(x[3:]))
-#    df_t = df_t.loc[index_f]
+
+    """
+    indexes = df_t.index.values
+    index_f = sorted([idx for idx in indexes if int(idx[3:]) > 29],key=lambda x: int(x[3:]))
+    df_t = df_t.loc[index_f]
+    """
+
     #Compute cluster and order accordingly
     dist_mat_md = squareform(pdist(df_t))
     method="ward"
@@ -286,7 +290,6 @@ def ligand_receptor_interaction(request,sel_thresh):
                 var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
                 var delta=ri_data[recept_id][rio_data['delta']];
 
-                
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_fname , traj_fnames ,lig, delta ,pos, pdb_pos]);
                 
                 if (plot_bclass != "col-xs-9"){

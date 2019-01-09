@@ -7650,7 +7650,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     
                     
                 
-                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url,'framenum':n_frames})
+                (file_entry,created) = DyndbSubmissionDynamicsFiles.objects.update_or_create(submission_id=DyndbSubmission.objects.get(pk=submission_id),type=dbtype,filenum=filenum,defaults={'filename':filename,'filepath':filepath,'url':download_url,'framenum':n_frames,'to_delete':False,'is_deleted':False})
                 
                 data['download_url_file'].append(download_url)
 
@@ -7678,7 +7678,15 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                 finally:
                     uploadedfile.close()
                 filenum += 1
-
+            if file_type == 'traj':
+                file_entries_to_delete = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype,filenum__gte=filenum)
+                filepaths_to_delete = file_entries_to_delete.values_list('filepath',flat=True)
+                for path in filepaths_to_delete:
+                    if os.path.isfile(path):
+                        os.remove(path)
+                #set to delete from DyndbFilesDynamics upon dynamics submission
+                file_entries_to_delete.update(filename="",filepath="",url="",framenum=None,to_delete=True,is_deleted=False)
+                
             data['msg'] = 'File successfully uploaded.'
             response = JsonResponse(data)
             return response
@@ -7733,7 +7741,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
                 dict_ext_id[l.__dict__['extension'].rstrip()]=5
 
             elif l.__dict__['extension'].rstrip() == "prm":
-                dict_ext_id[l.__dict__['extension'].rstrip()]=5
+                dict_ext_id[l.__dict__['extension'].rstrip()]=15
             else:
                 dict_ext_id[l.__dict__['extension'].rstrip()]=l.__dict__['id']
             
@@ -7747,36 +7755,52 @@ def DYNAMICSview(request, submission_id, model_id=None):
              initFiles['filepath']=val['path']
              initFiles['description']=ext_to_descr[fext]
              print("HOLA initFiles", initFiles)
-    
+             if val['id_files'] is not None:
+                 initFiles['id'] = val['id_files']
              fdbF[key]=dyndb_Files(initFiles) #CAmbiar a submissionID Segun las reglas de ISMA
              dicfdyn={}
              dicfdyn['framenum']=val['framenum']
              dicfdyn['type']=val['type']
-             fdbFM={}
+             dicfdyn['id_dynamics']=DFpk
+
              if fdbF[key].is_valid():
                  fdbFobj[key]=fdbF[key].save()
-                 dicfdyn['id_dynamics']=DFpk
                  dicfdyn['id_files']=fdbFobj[key].pk
+                 updates_files_entry_flag = False
+                 update_id_files_flag = True
              elif DyndbFiles.objects.filter(filename=initFiles['filename']).exists():
-                 prev_entryFile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics__submission_id=submission_id,id_file_types=initFiles['id_file_types'])
-                 dicfdyn['id_files']=prev_entryFile.values_list('id',flat=True)[0]
-                 dicfdyn['id_dynamics']=DFpk
-                 prev_entryFile.update(update_timestamp=timezone.now(), filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
+                 prev_entryFile = DyndbFiles.objects.filter(filename=initFiles['filename'])
+                 updates_files_entry_flag = True
+                 update_id_files_flag = True
+             elif DyndbFiles.objects.filter(pk==initFiles['id']).exists():
+                 prev_entryFile = DyndbFiles.objects.filter(pk=initFiles['id'])
+                 updates_files_entry_flag = True
+                 update_id_files_flag = False
              else:
-                 #print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
+                 print("Errores en el form dyndb_Files\n ", fdbF[key].errors.as_text())
                  error=("- ").join(["Error when storing File info",ext_to_descr[fext]])
                  response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                  return response
+             
+             if updates_files_entry_flag:
+                 dicfdyn['id_files']=prev_entryFile.values_list('id',flat=True)[0]
+                 prev_entryFile.update(update_timestamp=timezone.now(), filepath=initFiles['filepath'],url=initFiles['url'],id_file_types=initFiles['id_file_types'],description=initFiles['description'])
+             if update_id_files_flag:
+                 sub_files_dyn_entry = DyndbSubmissionDynamicsFiles.objects.filter(pk=val['id_sub_dyn_f'])
+                 sub_files_dyn_entry.update(id_files=dicfdyn['id_files'])
+
+             fdbFM = {}
              fdbFM[key]=dyndb_Files_Dynamics(dicfdyn)
              if fdbFM[key].is_valid():
                  fdbFM[key].save()
-             elif DyndbFilesDynamics.objects.filter(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],type=dicfdyn['type']).exists():
-                 prev_entryFileM=DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files__id_file_types=initFiles['id_file_types'])
+             elif DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files=dicfdyn['id_files'],type=dicfdyn['type']).exists():
+                 prev_entryFileM=DyndbFilesDynamics.objects.filter(id_dynamics__submission_id=submission_id,id_files=dicfdyn['id_files'],
+                 id_files__id_file_types=initFiles['id_file_types'])
                  prev_entryFileM.update(id_dynamics=dicfdyn['id_dynamics'],id_files=dicfdyn['id_files'],framenum=dicfdyn['framenum'])
 
              else:
                  error=("- ").join(["Error when storing Dynamics file info",ext_to_descr[fext]])
-                 #print("Errores en el form dyndb_Files\n ", fdbFM[key].errors.as_text())
+                 print("Errores en el form dyndb_Files_Dynamics\n ", fdbFM[key].errors.as_text())
                  response = HttpResponse(error,status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                  return response
 
@@ -8314,14 +8338,20 @@ def DYNAMICSview(request, submission_id, model_id=None):
             if not os.path.exists(direct):
                 os.makedirs(direct)
             
-            qSDF=DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id)
-            lfiles=list(qSDF.values('filepath','url','type','framenum'))
+            qSDF=DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,is_deleted=False)
+            lfiles=list(qSDF.values('id','filepath','url','type','framenum','id_files','to_delete'))
             for f in lfiles:
+                if f['to_delete']:
+                    DyndbFilesDynamics.objects.filter(id_files=f['id_files']).update(id_files=None)
+                    DyndbFiles.objects.filter(pk=f['id_files']).delete()
+                    DyndbSubmissionDynamicsFiles.objects.filter(id_files=f['id_files']).update(to_delete=False,is_deleted=True)
+                    continue
                 if not isfile(f['filepath']):
                     response = HttpResponse((" ").join(["There is a simulation file which has not been succesfully saved (",f[filename],") Make the GPCRmd administrator know"]),status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     return response
                 else:
-                    dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type'],'framenum':f['framenum']}}
+                    dname={'file':{'path':f['filepath'],'url':f['url'],'type':f['type'],'framenum':f['framenum'],'id_files':f['id_files'],'id_sub_dyn_f':f['id']}}
+
                     ooofile= dynamics_file_table(dname,DFpk) 
                     if type(ooofile)==HttpResponse:
                         return ooofile 
@@ -8356,7 +8386,7 @@ def DYNAMICSview(request, submission_id, model_id=None):
             for tt in qDYNs.values_list('id',flat=True):
                 print("ESTO ES TT",tt)
                 queryDC=DyndbDynamicsComponents.objects.filter(numberofmol__gte=0,type__gte=0,id_dynamics=tt,id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
-                querySM=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(molecule_id__in=queryDC.values('id_molecule'))
+                querySM=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(Q(molecule_id__in=queryDC.values('id_molecule')|Q(int_id=None)))
                 qDC=queryDC.values('id','resname','numberofmol','id_molecule','id_molecule__dyndbsubmissionmolecule__type','id_molecule__dyndbsubmissionmolecule__int_id','id_molecule__dyndbcompound__name','type').order_by('id_molecule__dyndbsubmissionmolecule__int_id')
                 qSM=querySM.values('id','molecule_id','int_id','molecule_id__dyndbcompound__name','type').order_by('int_id')
                 print("\n MIRA AQUI",qDC,"\n\n")
@@ -10428,24 +10458,26 @@ def SMALL_MOLECULEfunction(postd_single_molecule, number_of_molecule, submission
             iii1=fdbMF[ii].errors.as_text()
             print("Errores en el form dyndb_Molecule\n ", fdbMF[ii].errors.as_text())
             response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-            if NewCompoundEntry[ii]==True:
-                DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
-                DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
-                DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
-                DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
-                DyndbMolecule.objects.filter(id=MFauxpk).delete()
-                DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
-                DyndbCompound.objects.filter(id=CFpk).delete()
-            return response
+            if ii in NewCompoundEntry :
+                if NewCompoundEntry[ii]==True:
+                    DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
+                    DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
+                    DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
+                    DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
+                    DyndbMolecule.objects.filter(id=MFauxpk).delete()
+                    DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
+                    DyndbCompound.objects.filter(id=CFpk).delete()
+                return response
 
         dname={'dnamesdf':{'path':path_namefsdf,'url':url_namefsdf},'dnamepng':{'path':path_namefpng,'url':url_namefpng}}
         print(dname)
         ooo= molec_file_table(dname,MFpk)
        #### the foreign key 'std_id_molecule ' in the DyndbCompound pointing to DyndbMolecule table is properly updated with info from the standard molecule
        # if the Std_id_mol_update flag is set to True the molecule in the form is the standard one and the std_id_molecule field in DyndbCompound should be update with MFpk
-        if Std_id_mol_update[ii]:
-            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFpk) 
-            Std_id_mol_update[ii]=False
+        if ii in Std_id_mol_update: 
+            if Std_id_mol_update[ii]:
+                DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=MFpk) 
+                Std_id_mol_update[ii]=False
        
     #   if 'is_present' in dictPMod[ii]: # is_present = NOT (Not_in_Model)!!!!! table dyndb_submission_molecule!!!!
     #       dictPMod[ii]['not_in_model']=False
@@ -11900,15 +11932,16 @@ def SMALL_MOLECULEview(request, submission_id):
                     DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
                     DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
                     DyndbMolecule.objects.filter(id=MFpk).delete()
-                    if NewCompoundEntry[ii]==True:
-                        DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
-                        DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
-                        DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
-                        DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
-                        DyndbMolecule.objects.filter(id=MFauxpk).delete()
-                        DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
-                        DyndbCompound.objects.filter(id=CFpk).delete()
-                    return response
+                    if ii in NewCompoundEntry:
+                        if NewCompoundEntry[ii]==True:
+                            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
+                            DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
+                            DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
+                            DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
+                            DyndbMolecule.objects.filter(id=MFauxpk).delete()
+                            DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
+                            DyndbCompound.objects.filter(id=CFpk).delete()
+                        return response
         moleculelist=str(indexl)
  
         response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')
@@ -12814,7 +12847,7 @@ def reset_permissions(request):
         from django.core.cache import cache
         cache.clear()
         import os
-        os.system("chmod -R 777 /protwis/sites/files/")
+        os.system("chmod -R 660 /protwis/sites/files/")
         #os.system("rm -fr /tmp/django_cache")
     except Exception as e:
         print(str(e))

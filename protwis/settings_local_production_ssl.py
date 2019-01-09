@@ -3,7 +3,7 @@
 import os
 # Site specific constants
 SITE_NAME = 'gpcr' # used for site specific files
-SITE_TITLE = 'GPCRdb' # for display in templates
+SITE_TITLE = 'GPCRmd' # for display in templates
 DATA_DIR = '/protwis/data/protwis/' + SITE_NAME
 BUILD_CACHE_DIR = DATA_DIR + '/cache'
 DEFAULT_NUMBERING_SCHEME = 'gpcrdb'
@@ -29,8 +29,12 @@ DATABASES = {
 
 # Quick-start development settings - unsuitable for production
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '-eqrx61@n*z3y1mc1w_@x1+yo(@^!k7i-vjaz0tx1$902a!4mu'
+QUERY_CHECK_PUBLISHED = False
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+#Import secrets
+from protwis.SECRETS import *
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
