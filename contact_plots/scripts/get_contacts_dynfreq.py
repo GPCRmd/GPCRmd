@@ -1,6 +1,7 @@
 import re
 import os
 import argparse as ap
+from sys import stdout
 
 def mkdir_p(path):
     if not os.path.exists(path):
@@ -68,6 +69,7 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
 
     # If there's a ligandfile specified, add its content as a label at the end of the labelfile
     if ligand is not None:
+        ligand_names = {}
         ligandfile = open(ligand, "r")
 
         # Iterate over lines. Split by blank, catch second element as label and first as residue name
@@ -76,7 +78,20 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
             number = ligand_splited[0]
             chain = ligand_splited[1]
             type_res = ligand_splited[2]
-            outfile.write("%s:%s:%s\t%s\n" %(chain, type_res,number, "Ligand"))
+
+            # If it doesn't have a name column,put nothing
+            if len(ligand_splited) > 3:
+                ligand_name = ligand_splited[3]
+            else:
+                ligand_name = ""
+
+            # Number of times this ligand name has already appeared
+            if ligand_name not in ligand_names:
+                ligand_names[ligand_name] = 1
+            else:
+                ligand_names[ligand_name] += 1
+
+            outfile.write("%s:%s:%s\tLigand-%s-%d\n" %(chain, type_res,number, ligand_name, ligand_names[ligand_name]))
 
     #Close output file
     outfile.close()
@@ -151,6 +166,12 @@ parser.add_argument(
     dest='ligfile',
     action='store'
 )
+parser.add_argument(
+    '--repeat_dynamics',
+    dest='repeat_dynamics',
+    action='store_true',
+    default=False
+)
 args = parser.parse_args()
 
 # Set paths and files
@@ -159,6 +180,7 @@ mytrajpath = args.trajfile
 mypdbpath = args.topology
 dictfile = args.dictfile
 ligfile = args.ligfile
+repeat_dynamics = args.repeat_dynamics
 get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
 scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
 files_basepath="/protwis/sites/files/Precomputed/get_contacts_files/"
@@ -179,7 +201,7 @@ print("computing labelfile")
 create_labelfile(dictfile, dynname, files_path, ligfile)
 
 #Computing dynamic contacts
-print("computing dynamic contacts")
+print("computing " + dynname + " dynamic contacts")
 if ligand_sel:
     ligand_text1 = " or %s" % (ligand_sel)
     ligand_text2 = "--ligand \"%s\" " % (ligand_sel)
@@ -187,14 +209,16 @@ else:
     ligand_text1 = ""
     ligand_text2 = ""
 dyn_contacts_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
-"""os.system(str("python %sget_dynamic_contacts.py         \
---topology %s  \
---trajectory %s       \
---sele \"protein%s\"  \
---itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, ligand_text1) 
-+ligand_text2+
-"--output %s" % (dyn_contacts_file)
-))"""
+
+if (not os.path.exists(dyn_contacts_file)) or repeat_dynamics:
+    os.system(str("python %sget_dynamic_contacts.py         \
+    --topology %s  \
+    --trajectory %s       \
+    --sele \"protein%s\"  \
+    --itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, ligand_text1) 
+    +ligand_text2+
+    "--output %s" % (dyn_contacts_file)
+    ))
 
 # Create files_path for freqeuncy files
 mkdir_p(str(files_path + "frequency_tables"))
@@ -206,7 +230,7 @@ for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbs
 
     print(str("computing %s frequencies") % (itype))
     labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
-    outfile = str("%sfrequency_tables/%s_freqs_toremove_%s.tsv" % (files_path, dynname, itype))
+    outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
     
     # HB and wb have to be calculated in a special way
     if  itype in multi_itypes:
