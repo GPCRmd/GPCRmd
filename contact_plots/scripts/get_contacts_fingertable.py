@@ -1,5 +1,9 @@
 import os
 
+def mkdir_p(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def prepare_tables(original_table, new_table, itype, table_summary, firstline_summary):
 	"""
 	Adds a reverse-residue version of the interaction for each interaction (row) in the table. Also adds a column with the itype code
@@ -43,10 +47,14 @@ def prepare_tables(original_table, new_table, itype, table_summary, firstline_su
 
 	os.remove(str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype)))
 
+
 # Set paths
 get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
 scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
 files_path="/protwis/sites/files/Precomputed/get_contacts_files/"
+
+# Creating folder, if it doesn't exist
+mkdir_p(str(files_path + "contact_tables"))
 
 #Get dynlist
 dyncsv_path = files_path + "dyn_list.csv"
