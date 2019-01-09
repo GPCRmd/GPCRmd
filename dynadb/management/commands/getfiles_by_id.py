@@ -115,6 +115,7 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
         # If there's a ligandfile specified, add its content as a label at the end of the labelfile
         if ligand is not None:
             ligandfile = open(ligand, "r")
+            ligandnames_count = {}
 
             # Iterate over lines. Split by blank, catch second element as label and first as residue name
             for line in ligandfile:
@@ -122,7 +123,14 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
                 number = ligand_splited[0]
                 chain = ligand_splited[1]
                 type_res = ligand_splited[2]
-                outfile.write("%s:%s:%s\t%s\n" %(chain, type_res,number, "Ligand"))
+                name_ligand = ligand_splitted[3]
+
+                if name_ligand in ligandnames_count:
+                    ligandnames_count[name_ligand] = 1
+                else:
+                    ligandnames_count[name_ligand] += 1
+
+                outfile.write("%s:%s:%s\tLigand_%s_%d\n" %(chain, type_res, number, name_ligand, ligandnames_count[name_ligand]))
 
 class Command(BaseCommand):
 
@@ -202,27 +210,37 @@ class Command(BaseCommand):
                         # Obtain ligand by dynID
                         (comp_li,lig_li,lig_li_s) = obtain_compounds(dynid)
 
+                        """    
+                        comp_li     list of [component_name,component_residue_name,component_type_str].
+                        lig_li      list of ligand [component_name,component_residue_name].
+                        lig_li_s    list of ligands residue names.
+                        """
+
                         # Open out file
                         ligfile_name = os.path.join(directory, "dyn" + str(dynid) + "_ligand.txt")
                         with open(ligfile_name, "w") as ligfile:
                             # Print each ligand in a ligand file, after finding out its chain and residue id in the PDB
-                            for ligand in lig_li_s:
+                            for ligand_info in lig_li:
+
+                                ligand_name = ligand_info[0].replace(" ","_")
+                                ligres = ligand_info[1]
+
                                 # If we have the dyn7 exception of ligand being one cholesterol among others
                                 # isma: this makes no sense
-                                if "and" in ligand: # If its like 'CHL1 and 59'
-                                    ligpos_list = ligand.split(" and ")
+                                # david: it is a very puntual exception for a very puntual case
+                                if "and" in ligres: # If its like 'CHL1 and 59'
+                                    ligpos_list = ligres.split(" and ")
                                     ligres = ligpos_list[0]
                                     lignum_prov = ligpos_list[1]
                                     (ligchain, lignum) = parse_pdb(ligres, mypdbpath, lignum_prov)
-                                    print("%s\t%s\t%s" % (lignum,ligchain,ligres),file=ligfile)
+                                    print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
 
                                 else:
-                                    ligres = ligand
                                     # TO DO: there is the possibility that there is more than one molecule
                                     # of ligand in the same system (but not in our simulations)
                                     (ligchain, lignum) = parse_pdb(ligres, mypdbpath)
-                                    print("%s\t%s\t%s" % (lignum,ligchain,ligres),file=ligfile)
+                                    print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
 
                         ##################
@@ -236,14 +254,9 @@ class Command(BaseCommand):
                         self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
                         shutil.rmtree(directory)
 
-
-
-                        
                     ###########################################
                     ## Compute frequencies and dynamic contacts
                     ###########################################
-
-
 
                     # for each trajectory file, write a run-in-ORI command
                     for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):

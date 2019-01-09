@@ -1,5 +1,9 @@
 import os
 
+def mkdir_p(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+
 def prepare_tables(original_table, new_table, itype, table_summary, firstline_summary):
 	"""
 	Adds a reverse-residue version of the interaction for each interaction (row) in the table. Also adds a column with the itype code
@@ -43,10 +47,14 @@ def prepare_tables(original_table, new_table, itype, table_summary, firstline_su
 
 	os.remove(str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype)))
 
+
 # Set paths
 get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
 scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
 files_path="/protwis/sites/files/Precomputed/get_contacts_files/"
+
+# Creating folder, if it doesn't exist
+mkdir_p(str(files_path + "contact_tables"))
 
 #Get dynlist
 dyncsv_path = files_path + "dyn_list.csv"
@@ -63,14 +71,12 @@ table_summary = open(str("%scontact_tables/compare_%s.tsv" % (files_path, "summa
 itypes = set(("wb", "wb2", "sb","hp","pc","ps","ts","vdw", "hb", "hbbb","hbsb","hbss","hbls","hblb","all"))
 nolg_itypes = set(("sb","pc","ts","ps","hbbb","hbsb","hbss","hp"))
 noprt_itypes = set(("hbls","hblb"))
-ipartners = set(("lg","prt","lg_prt"))
+ipartners = set(("lg","prt","prt_lg"))
 
 
 #Get fingerprint table by interaction type (itype)
 for itype in itypes:
 
-	print("processing "+itype)
-	
 	#Creating list of frequency files for calculating fingerprint
 	infreqs = ""
 	for dynid in dynlist:
@@ -84,8 +90,7 @@ for itype in itypes:
 	os.system(str("python %sget_contact_fingerprints.py \
 				--input_frequencies %s \
 	            --frequency_cutoff 0.00 \
-	            --column_headers %s\
-	            --cluster_columns True\
+	            --column_headers %s \
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
 	#Modifying tables to prepare them for table-to-dataframe script

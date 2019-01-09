@@ -153,13 +153,13 @@ def ligand_receptor_interaction(request,sel_thresh):
     
     compl_file_path=path.join(cra_path,"compl_info.json")
     compl_data = json_dict(compl_file_path)
-    
     #Prepare data        
     df_t=df.loc[sel_thresh]
     df_t.columns.names=["Position"]
     df_t=df_t.fillna(value=0)
     
     # [!] Only in prod
+
     """
     indexes = df_t.index.values
     index_f = sorted([idx for idx in indexes if int(idx[3:]) > 29],key=lambda x: int(x[3:]))
@@ -179,7 +179,6 @@ def ligand_receptor_interaction(request,sel_thresh):
     (recept_info,recept_info_order,df_t,dyn_gpcr_pdb)=improve_receptor_names(df_t,compl_data)
     #df_t.sort_index(inplace=True,ascending=False)
     df_ts = df_t.stack().rename("value").reset_index()
-    
     #DataSource with extra information
     df_ri=pd.DataFrame(recept_info)
     ri_source=ColumnDataSource(df_ri)
@@ -187,7 +186,6 @@ def ligand_receptor_interaction(request,sel_thresh):
     rio_source=ColumnDataSource(df_rio)
     df_gnum=pd.DataFrame(dyn_gpcr_pdb)
     gnum_source=ColumnDataSource(df_gnum)
-    
 
     extra_source = ColumnDataSource({"thresh":[sel_thresh], "mdsrv_url":[mdsrv_url]})
     

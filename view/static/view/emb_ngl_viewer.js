@@ -1,11 +1,12 @@
 $(document).ready(function(){
     
-    
     $(".sel_input, .inputdist, .dist_from, .dist_to").val("");
     //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
-
+    
+    //$('[data-toggle="popover"]').popover(); 
+    
     function drawBasic(rows,xlabel,ylabel) {
         var data = new google.visualization.DataTable();
         data.addColumn('number', xlabel);
@@ -69,8 +70,26 @@ $(document).ready(function(){
         $(this).children().css("color","#5CB85C");
     });*/
     
+
+    function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
+        $(myselector).hover(function(){
+            $(this).css("background-color",colorhov);
+        },
+        function(){
+            var selected=$(this).hasClass(activeclass);
+            if (selected){
+                $(this).css("background-color",colorNohobAct);
+            } else {
+                $(this).css("background-color",colorNohobInact);
+            }
+        });
+    };
     
-    $(".traj_element").hover(function(){
+    colorsHoverActiveInactive(".traj_element","tsel","#f2f2f2","#FFF7F7","#FFFFFF");
+    colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
+    colorsHoverActiveInactive(".onclickshow","is_active","#f2f2f2","#FFF7F7","#FFFFFF");
+    
+/*    $(".traj_element").hover(function(){
         $(this).css("background-color","#f2f2f2");
     },
     function(){
@@ -81,6 +100,21 @@ $(document).ready(function(){
             $(this).css("background-color","#FFFFFF");
         }
     });
+    
+
+    $(".fp_display_element").hover(function(){
+        $(this).css("background-color","#f2f2f2");
+    },
+    function(){
+        var selected=$(this).hasClass("is_active");
+        if (selected){
+            $(this).css("background-color","#bfbfbf");
+        } else {
+            $(this).css("background-color","#FFFFFF");
+        }
+    });   */ 
+    
+    
     
     function arrayMin(arr) {
       return arr.reduce(function (p, v) {
@@ -134,52 +168,7 @@ $(document).ready(function(){
         fpsegStr=fpsegStrTmpLi.join(",");
     }
     window.fpsegStr=fpsegStr;
-    
-/*   $(".traj_element").click(function(){
-        var traj_p=$(this).data("tpath");
-        var traj_n=$(this).text();
-        var fpfile_new=$(this).data("fplot_file");
-        var old_fp=$("#selectedTraj").data("fplot_file");
-        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
-        $(this).css("background-color","#FFF7F7").addClass("tsel");
-        $(this).siblings().css("background-color","#FFFFFF").removeClass("tsel");
-*/        
-        /* [!] Link to big FP with slide
-        var oldhref = $("#gotofplot").attr("href");
-        newhref=oldhref.replace(/\w+.json/i,fpfile_new);
-        $("#gotofplot").attr("href",newhref);
-        */
-/*        
-        if (fpfile_new != old_fp){
-            if ($(".summarizeFP").hasClass("active")){
-                $(".summarizeFP").removeClass("active");
-                setFPFrame(pg_framenum)
-            }
-            if (fpfile_new){
-                d3.json(fpdir+fpfile_new, function(jsonData){
-                    $("#flare-container").html("");
-                    plot = createFlareplot(600, jsonData, "#flare-container");
-                    //plot.setFrame(pg_framenum);
-                    allEdges= plot.getEdges();
-                    numfr = plot.getNumFrames();
-                    $(".showIfTrajFP").css("display","inline");
-                    $(".showIfTrajFPBlock").css("display","block");
-                });
-                
-            } else {
-                alert_msg='<div class="alert alert-info">\
-                            There is no flare plot available for this trajectory yet.\
-                          </div>';
-                $("#flare-container").html(alert_msg);
-                $(".showIfTrajFP").css("display","none");
-                $(".showIfTrajFPBlock").css("display","none");
-            }
-            fpSelInt={};
-            $("#selectionDiv").trigger("click");
-        }
-    });
-  */
-    
+      
 
     
     changeTrajFlarePlot = function(traj_el_sel,new_fnum){
@@ -201,22 +190,28 @@ $(document).ready(function(){
         var trajchange=false;
         if (fpfile_new != old_fp){
             trajchange=true;
-            if ($(".summarizeFP").hasClass("active")){
-                $(".summarizeFP").removeClass("active");
+            if ($("#fp_display_summary").hasClass("is_active")){
+                change_display_sim_option("#fp_display_frame","#fp_display_summary");
                 setFPFrame(pg_framenum)
             }
             if (fpfile_new){
                 d3.json(fpdir+fpfile_new, function(jsonData){
                     $("#flare-container").html("");
                     var fpsize=setFpNglSize(true);
-                    plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "all");
+                    plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "Inter");
                     plot.setFrame(pg_framenum);
                     //setFPFrame(pg_framenum)
                     allEdges= plot.getEdges();
                     numfr = plot.getNumFrames();
                     $(".showIfTrajFP").css("display","inline");
                     $(".showIfTrajFPBlock").css("display","block");
-                    $(".fpShowResSet").addClass("active")
+                    inter_btn=$("#fp_display_inter")
+                    inter_btn.addClass("is_active").css("background-color","#bfbfbf"); 
+                    $(".fp_display_element_type").not(inter_btn).each(function(){
+                       $(this).removeClass("is_active").css("background-color","#FFFFFF"); 
+                    });
+                    
+                    
                 });
             } else {
                 alert_msg='<div class="alert alert-info" style="margin-bottom:10px">\
@@ -3710,6 +3705,15 @@ $(document).ready(function(){
          var showH=results["showH"];
          var showHShort="f";
          if (showH){showHShort="t"};
+/*
+         var show_dots= $(".onclickshow.is_active").data("short");
+         if (show_dots=="vars"){
+            var pdb_vars= $("#view_screen").data("pdb_vars");
+         } else if (show_dots=="muts"){
+            var pdb_muts= $("#view_screen").data("pdb_muts");
+            var pos_li=Object.keys(pdb_muts);
+            var sel=".CA and ("+pos_li.join(" or ")+")";
+         }*/
 
          int_res_s=join_lil(int_res_lil);
          int_res_s_ch=join_lil(int_res_lil_ch);
@@ -3893,8 +3897,22 @@ $(document).ready(function(){
         }
         return (newtitle);
     }
+    
+    //---------------
+    
+    
+    $(".fp_display_element_type").on("click",function(){
+        if (! $(this).hasClass("is_active")){
+             $(this).addClass("is_active").css("background-color","#bfbfbf"); 
+             $(".fp_display_element_type").not($(this)).each(function(){
+                $(this).removeClass("is_active").css("background-color","#FFFFFF"); 
+             });
+        }
+        changeContactsInFplot()
+    });
+    
 
-    $(".fpShowResSet").on("click",function(){
+  /*  $(".fpShowResSet").on("click",function(){
         if ($(this).hasClass("active")){
             var newtitle=showHideTitle($(this).attr("title"),"display");
             $(this).removeClass("active").attr("title",newtitle);
@@ -3913,17 +3931,12 @@ $(document).ready(function(){
         
         //$("#selectionDiv").trigger("click");
         changeContactsInFplot()
-    });
+    });*/
     
+    //-------------------
     changeContactsInFplot = function(){
-        interIsAct=$("#interHel").hasClass("active");
-        intraIsAct=$("#intraHel").hasClass("active");
-        var showContacts="all"; 
-        if (interIsAct && (! intraIsAct)){
-            var showContacts="Inter"; 
-        } else if ((!interIsAct) && intraIsAct){
-            var showContacts="Intra"; 
-        }
+        //create new FP but saving the selected contacts
+        showContacts=$(".fp_display_element_type.is_active").data("tag");
         
         //pg_framenum=new_fnum //?
         var pre_resSelected=[];
@@ -3941,7 +3954,7 @@ $(document).ready(function(){
             allEdges= plot.getEdges();
             numfr = plot.getNumFrames();
             
-            if ($(".summarizeFP").hasClass("active")){
+            if ($("#fp_display_summary").hasClass("is_active")){
                 plot.framesSum(0, numfr);
             }
             
@@ -3962,7 +3975,7 @@ $(document).ready(function(){
     function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts){
         var fpjson=jsonData;
         if (fpjson.edges[0].helixpos != undefined) {
-            $("#fpShowResSetBtns").css("display","inline-block");
+            //$("#fpShowResSetBtns").css("display","inline-block");
             if(showContacts!= "all"){
                 var edges=fpjson.edges;
                 var newedges=[];
@@ -3974,9 +3987,9 @@ $(document).ready(function(){
                 }
                 fpjson.edges=newedges;
             }
-        } else {
+        }/* else {
             $("#fpShowResSetBtns").css("display","none");
-        }
+        }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         return(plot);
     }
@@ -4014,35 +4027,15 @@ $(document).ready(function(){
     if (fpdir){
         var fpsize=setFpNglSize(true);        
         d3.json(fpdir+fpfile, function(jsonData){
-            plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "all");
+            plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "Inter");
             allEdges= plot.getEdges()
             numfr = plot.getNumFrames();
         });
     };    
-    
-    
-//////////////    
-/*
-    var updateFlarePlotFrame = function(framenum){
-        if (plot){
-            if (! $(".summarizeFP").hasClass("active")){
-                console.log(framenum)
-                plot.setFrame(Number(framenum));
-                updateFPInt();
-            }
-        }
-        if ($("#FPdisplay").hasClass("active")){
-            return(fpSelInt);
-        } else {
-            return({});
-        }
-    }
-    window.updateFlarePlotFrame=updateFlarePlotFrame;
-*/
-//////////////    
+      
     function setFPFrame(framenum){
         //Changes the frame displayed at the FP and updates fpSelInt (dict of FP residues selected) according tot he new frame, by calling updateFPInt().
-        if (!$(".summarizeFP").hasClass("active")){
+        if (!$("#fp_display_summary").hasClass("is_active")){
             plot.setFrame(Number(framenum));
             if ($("#FPdisplay").hasClass("active")){
                 updateFPInt();
@@ -4150,18 +4143,34 @@ $(document).ready(function(){
         fpSelInt = updFpSelInt;
     }
 
-
-    $("#fpdiv").on("click",".summarizeFP",function(){
-        if ($(this).hasClass("active")){
-            $(this).removeClass("active");
-            setFPFrame(pg_framenum)
-        } else{
-            $(this).addClass("active");
+    function change_display_sim_option(to_activate,to_inactivate){
+        $(to_activate).addClass("is_active");
+        $(to_activate).css("background-color","#bfbfbf");
+        
+        $(to_inactivate).removeClass("is_active");
+        $(to_inactivate).css("background-color","#FFFFFF");
+    }
+    
+    $("#fpdiv").on("click","#fp_display_summary",function(){
+        if (! $(this).hasClass("is_active")){
+            change_display_sim_option("#fp_display_summary","#fp_display_frame");
+            
             plot.framesSum(0, numfr);
             updateFPInt();
         }
         $("#selectionDiv").trigger("click");
     });
+
+    $("#fpdiv").on("click","#fp_display_frame",function(){
+        if (! $(this).hasClass("is_active")){
+            change_display_sim_option("#fp_display_frame","#fp_display_summary");
+            
+            setFPFrame(pg_framenum);
+        }
+        $("#selectionDiv").trigger("click");
+    });
+
+
 
     $("#fpdiv").on("click","#FPdisplay",function(){
         if ($(this).hasClass("active")){
