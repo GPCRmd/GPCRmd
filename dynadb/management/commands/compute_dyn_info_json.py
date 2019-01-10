@@ -243,7 +243,11 @@ class Command(BaseCommand):
         upd_file_path=path.join(cra_path,"last_update.json")
         if options['overwrite']:
             compl_data={}
+<<<<<<< HEAD
             dyn_li=DyndbDynamics.objects.filter()
+=======
+            dyn_li=DyndbDynamics.objects.filter(is_published=True)
+>>>>>>> 5c9a69a60700485b8733b053c9d561b717119d37
         else: 
             compl_file_pathobj = Path(compl_file_path)
             try:
@@ -256,10 +260,17 @@ class Command(BaseCommand):
                 upd_abs_path = upd_file_pathobj.resolve()
                 upd=json_dict(upd_file_path)
                 last_upd_dt=obtain_datetime(upd)
+<<<<<<< HEAD
                 dyn_li=DyndbDynamics.objects.filter(update_timestamp__gte=last_upd_dt)
             except FileNotFoundError:
                 upd={"ligres_int":{}}
                 dyn_li=DyndbDynamics.objects.filter()
+=======
+                dyn_li=DyndbDynamics.objects.filter(update_timestamp__gte=last_upd_dt, is_published=True)
+            except FileNotFoundError:
+                upd={"ligres_int":{}}
+                dyn_li=DyndbDynamics.objects.filter(is_published=True)
+>>>>>>> 5c9a69a60700485b8733b053c9d561b717119d37
 
         i=1
         dyn_li = sorted(dyn_li, key=operator.attrgetter('id'))
