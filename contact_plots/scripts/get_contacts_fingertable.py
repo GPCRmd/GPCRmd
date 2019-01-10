@@ -89,11 +89,12 @@ for itype in itypes:
 	table_output = str("%scontact_tables/compare_%s.tsv" % (files_path, itype))
 	os.system(str("python %sget_contact_fingerprints.py \
 				--input_frequencies %s \
-	            --frequency_cutoff 0.00 \
+	            --frequency_cutoff 0.01 \
 	            --column_headers %s \
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
 	#Modifying tables to prepare them for table-to-dataframe script
+	print("Preparing summary table")
 	prepare_tables(table_output_provi, table_output, itype, table_summary, firstline_summary)
 
 	#Only a header is needed for summary

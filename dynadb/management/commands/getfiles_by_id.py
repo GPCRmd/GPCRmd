@@ -53,10 +53,11 @@ def obtain_dyn_files_from_id(dyn_ids,alldyn=False):
 
 def parse_pdb(residue_id, pdbfile, residue_num = None):
     """ 
-    Finds chain number and residue number for a given residue_id
+    Finds chain number/s and residue number/s for a given residue_id, and returns it as a set of tuples chain-residue
     """
     sel_chain_id = ""
     sel_residue_num = ""
+    residues = set()
     with open(pdbfile, "r") as f:
         for line in f:
             if line.startswith("END"): 
@@ -69,7 +70,8 @@ def parse_pdb(residue_id, pdbfile, residue_num = None):
                     if ((residue_num is not None) and (residue_num == line_residue_num)) or residue_num is None:
                         sel_chain_id = line_chain_id
                         sel_residue_num = line_residue_num
-    return(sel_chain_id, sel_residue_num)
+                        residues.add((sel_chain_id, sel_residue_num))
+    return(residues)
 
 def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
     """
@@ -232,16 +234,16 @@ class Command(BaseCommand):
                                     ligpos_list = ligres.split(" and ")
                                     ligres = ligpos_list[0]
                                     lignum_prov = ligpos_list[1]
-                                    (ligchain, lignum) = parse_pdb(ligres, mypdbpath, lignum_prov)
-                                    print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
-
+                                    lig_chains_resnums = parse_pdb(ligres, mypdbpath, lignum_prov)
+                                    for (ligchain,lignum) in lig_chains_resnums:
+                                        print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
                                 else:
                                     # TO DO: there is the possibility that there is more than one molecule
                                     # of ligand in the same system (but not in our simulations)
-                                    (ligchain, lignum) = parse_pdb(ligres, mypdbpath)
-                                    print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
-
+                                    lig_chains_resnums = parse_pdb(ligres, mypdbpath)
+                                    for (ligchain,lignum) in lig_chains_resnums:
+                                        print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
                         ##################
                         ## Dictionary file
