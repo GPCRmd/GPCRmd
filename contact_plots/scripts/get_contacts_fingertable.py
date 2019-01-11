@@ -82,7 +82,8 @@ for itype in itypes:
 	for dynid in dynlist:
 		if not dynid:
 			continue
-		infreqs += str(" %sdynamic_symlinks/%s/frequency_tables/%s_freqs_%s.tsv" % (files_path, dynid, dynid, itype));
+		infreqs += str(" %sdynamic_symlinks/%s/frequency_tables/%s-0_freqs_%s.tsv" % (files_path, dynid, dynid, itype));
+		#TODO: do something with multi-trajectory submissions
 
 	#Getting fingerprint info by type
 	table_output_provi = str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype))

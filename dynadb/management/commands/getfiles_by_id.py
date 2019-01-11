@@ -22,6 +22,7 @@ from dynadb.models import DyndbFilesDynamics
 def obtain_dyn_files_from_id(dyn_ids,alldyn=False):
     """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
     
+    traj_counter = {} 
     dynfiles = DyndbFilesDynamics.objects.select_related("id_files")
     dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"))
     dynfiles = dynfiles.values("id_dynamics","id_files","file_name","file_path")
@@ -46,7 +47,18 @@ def obtain_dyn_files_from_id(dyn_ids,alldyn=False):
         c_dyn_id = dynobj['id_dynamics']
         if c_dyn_id not in dyn_dict:
             continue
-        dyn_dict[c_dyn_id]['trajectory'].append({'name':dynobj['file_name'],'path':dynobj['file_path'],'id_files':dynobj["id_files"]})
+
+        if c_dyn_id in traj_counter:
+            traj_counter[c_dyn_id] += 1  
+        else:
+            traj_counter[c_dyn_id] = 0 
+
+        dyn_dict[c_dyn_id]['trajectory'].append({
+            'name':dynobj['file_name'],
+            'path':dynobj['file_path'],
+            'id_files':dynobj["id_files"],
+            'number':traj_counter[c_dyn_id]
+            })
             
     return dyn_dict
 
@@ -266,7 +278,9 @@ class Command(BaseCommand):
                         commands_file.write(str("python /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.py \
                             --dynid %s \
                             --traj %s \
+                            --traj_id %s \
                             --topology %s \
                             --dict %s \
-                            --ligandfile %s \n" % (dynid, traj_dict['local_path'], mypdbpath, dictfile_name, ligfile_name))
+                            --ligandfile %s \
+                            --cores 4 \n" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath, dictfile_name, ligfile_name))
                         )  
