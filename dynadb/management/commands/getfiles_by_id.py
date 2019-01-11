@@ -165,6 +165,19 @@ class Command(BaseCommand):
             default=False,
             help='Compute all dynamics. Ignores dynid(s).',
         )
+        parser.add_argument(
+            '--ligresid',
+            dest='ligresid',
+            action='store',
+            help='Residue id of the main ligand molecule. Use when more than one ligand'
+        )
+        parser.add_argument(
+            '--ligresname',
+            dest='ligresname',
+            action='store',
+            help='Residue name of the main ligand molecule. Use when more than one ligand'
+        )
+
     def handle(self, *args, **options):
 
         ###########################
@@ -246,16 +259,25 @@ class Command(BaseCommand):
                                     ligpos_list = ligres.split(" and ")
                                     ligres = ligpos_list[0]
                                     lignum_prov = ligpos_list[1]
-                                    lig_chains_resnums = parse_pdb(ligres, mypdbpath, lignum_prov)
-                                    for (ligchain,lignum) in lig_chains_resnums:
-                                        print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
+                                    lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum_prov))
+                                    ligchain = lig_chains_resnums[0][0]
+                                    lignum = lig_chains_resnums[0][1]
 
                                 else:
                                     # TO DO: there is the possibility that there is more than one molecule
                                     # of ligand in the same system (but not in our simulations)
-                                    lig_chains_resnums = parse_pdb(ligres, mypdbpath)
-                                    for (ligchain,lignum) in lig_chains_resnums:
-                                        print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
+                                    if len(lig_li) > 1:
+                                        lignum = options['ligresid']
+                                        ligres = options['ligresname'] 
+                                        lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum))
+                                        ligchain = lig_chains_resnums[0][0]
+
+                                    else:
+                                        lig_chains_resnums = list(parse_pdb(ligres, mypdbpath))
+                                        ligchain = lig_chains_resnums[0][0]
+                                        lignum = lig_chains_resnums[0][1]
+                                    
+                                print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
                         ##################
                         ## Dictionary file
@@ -264,10 +286,16 @@ class Command(BaseCommand):
                         with open(dictfile_name, "w") as dictfile:
                             mydict = generate_gpcr_pdb(dynid, mypdbpath)
                             print(dumps(mydict),file=dictfile)
-                    except Exception:
-                        self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
+                                       
+                    except IndexError:
+                        self.stdout.write(self.style.WARNING("Ligand error: options --ligresname and --ligresid are mandatory when more than one ligand molecule is present on the database. Skipping and cleaning up."))
                         shutil.rmtree(directory)
+                        continue
 
+                    except Exception:
+                         self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
+                         shutil.rmtree(directory)
+                    
                     ###########################################
                     ## Compute frequencies and dynamic contacts
                     ###########################################
