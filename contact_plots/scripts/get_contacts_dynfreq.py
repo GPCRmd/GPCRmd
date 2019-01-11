@@ -147,6 +147,11 @@ parser.add_argument(
     action='store'
 )
 parser.add_argument(
+    '--traj_id',
+    dest = 'traj_id',
+    action='store'
+)
+parser.add_argument(
     '--traj',
     dest='trajfile',
     action='store'
@@ -172,15 +177,23 @@ parser.add_argument(
     action='store_true',
     default=False
 )
+parser.add_argument(
+    '--cores',
+    dest='cores',
+    action='store',
+    default=1
+)
 args = parser.parse_args()
 
 # Set paths and files
 dynname = "dyn" + args.dynid
+mytrajid = args.traj_id
 mytrajpath = args.trajfile
 mypdbpath = args.topology
 dictfile = args.dictfile
 ligfile = args.ligfile
 repeat_dynamics = args.repeat_dynamics
+cores = args.cores
 get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
 scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
 files_basepath="/protwis/sites/files/Precomputed/get_contacts_files/"
@@ -208,14 +221,15 @@ if ligand_sel:
 else:
     ligand_text1 = ""
     ligand_text2 = ""
-dyn_contacts_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
+dyn_contacts_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, mytrajid))
 
 if (not os.path.exists(dyn_contacts_file)) or repeat_dynamics:
     os.system(str("python %sget_dynamic_contacts.py         \
     --topology %s  \
     --trajectory %s       \
+    --cores %s \
     --sele \"protein%s\"  \
-    --itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, ligand_text1) 
+    --itypes all    " % (get_contacts_path, mypdbpath, mytrajpath, cores, ligand_text1) 
     +ligand_text2+
     "--output %s" % (dyn_contacts_file)
     ))
@@ -230,7 +244,7 @@ for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbs
 
     print(str("computing %s frequencies") % (itype))
     labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
-    outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
+    outfile = str("%sfrequency_tables/%s-%s_freqs_%s.tsv" % (files_path, dynname, mytrajid, itype))
     
     # HB and wb have to be calculated in a special way
     if  itype in multi_itypes:
