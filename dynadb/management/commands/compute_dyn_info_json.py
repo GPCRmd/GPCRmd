@@ -244,6 +244,7 @@ class Command(BaseCommand):
         if options['overwrite']:
             compl_data={}
             dyn_li=DyndbDynamics.objects.filter()
+            upd={"ligres_int":{}}
         else: 
             compl_file_pathobj = Path(compl_file_path)
             try:
@@ -264,8 +265,11 @@ class Command(BaseCommand):
         i=1
         dyn_li = sorted(dyn_li, key=operator.attrgetter('id'))
         for dyn in dyn_li:
-            self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id,i , len(dyn_li))))
-            retrieve_info(self,dyn,change_lig_name)
+            try:
+                self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id,i , len(dyn_li))))
+                retrieve_info(self,dyn,change_lig_name)
+            except FileNotFoundError:
+                self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
             i+=1
 
         with open(upd_file_path, 'w') as outfile:
