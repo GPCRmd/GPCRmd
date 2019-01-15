@@ -317,3 +317,6 @@ def get_csv_file(request,foo):
 	response = HttpResponse(csvfile, content_type='text/plain')
 	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactPlots")
 	return response
+
+def get_itype_help(request, foo):
+	return render(request, 'contact_plots/itype_help.html')
