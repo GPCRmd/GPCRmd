@@ -205,13 +205,31 @@ class Command(BaseCommand):
             (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
             (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
 
+            # If there's no ligand
+            if len(res_li) < 1:
+                res_li[0] = ''
+                copm_name = ''
+
             if len(traj_list) == 0:
                 self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
             else:
                 gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
                 pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
                 delta=DyndbDynamics.objects.get(id=dyn_id).delta
-                compl_data[identifier]={"dyn_id": dyn_id, "prot_id": prot_id, "comp_id": comp_id,"lig_lname":comp_name,"lig_sname":res_li[0],"prot_lname":prot.name,"up_name":uniprot_name,"pdb_id":pdb_id,"struc_fname":structure_file_name,"traj_fnames":traj_name_list,"delta":delta,"gpcr_pdb":gpcr_pdb}
+                compl_data[identifier]={
+                    "dyn_id": dyn_id,
+                    "prot_id": prot_id, 
+                    "comp_id": comp_id,
+                    "lig_lname":comp_name,
+                    "lig_sname":res_li[0],
+                    "prot_lname":prot.name,
+                    "up_name":uniprot_name,
+                    "pdb_id":pdb_id,
+                    "struc_fname":structure_file_name,
+                    "traj_fnames":traj_name_list,
+                    "delta":delta,
+                    "gpcr_pdb":gpcr_pdb
+                    }
 
         def update_time(upd,upd_now):
             year=upd_now.year

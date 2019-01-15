@@ -35,9 +35,9 @@ def improve_receptor_names(df_ts,compl_data):
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
         resname=compl_data[recept_id]["lig_sname"]
+        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_id=compl_data[recept_id]["prot_id"]
         comp_id=compl_data[recept_id]["comp_id"]
-        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_lname=compl_data[recept_id]["prot_lname"]
         pdb_id=compl_data[recept_id]["pdb_id"]
         struc_fname=compl_data[recept_id]["struc_fname"]
