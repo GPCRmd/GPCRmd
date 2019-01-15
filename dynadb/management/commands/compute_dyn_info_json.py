@@ -206,7 +206,7 @@ class Command(BaseCommand):
             (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
 
             # If there's no ligand
-            if len(res_li) < 1:
+            if not bool(res_li):
                 res_li[0] = ''
                 copm_name = ''
 
