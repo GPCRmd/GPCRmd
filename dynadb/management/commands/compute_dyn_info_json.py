@@ -207,7 +207,7 @@ class Command(BaseCommand):
 
             # If there's no ligand
             if not bool(res_li):
-                res_li[0] = ''
+                res_li = ['']
                 copm_name = ''
 
             if len(traj_list) == 0:
