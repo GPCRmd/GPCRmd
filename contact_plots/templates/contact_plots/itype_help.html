@@ -1,0 +1,290 @@
+<head>
+
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>document.domain=document.domain;</script>
+
+<!--Bootstrap things-->
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+
+<style type="text/css">
+	.itype_img {
+		width: 200px;
+		float: right;
+	}
+</style>
+
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{{staticfiles}}
+{% block addon_css %}
+{% endblock %}
+
+</head>
+
+<body>
+
+{% block content %} 
+{% csrf_token %}
+
+ <!-- description  -->
+ <div id="outer" class="col-xs-12">
+  <div class=" panel panel-primary" id="inner_fixed" style="background-color:blue;text-align:center;margin-bottom:10px;color:white">  
+     <div class="panel-body">
+        <h3>Interaction types criteria</h3>
+     </div> 
+  </div>
+</div>
+
+
+<div id="inner_remaining">
+  <div class="col-xs-12" id="retracting_parts" style="padding-bottom:10px">
+	<div class="row">
+	  <div class="col-xs-12" id="plot_col">
+	    <div class="panel panel-primary" id="main_plot_body">
+	      <div class="panel-body">
+	      	<p> In this tables are explained the criteria for interactions recognized by <a href="https://github.com/getcontacts/getcontacts" target="_blank">GetContacts</a>, used in this web. Images by Rasmus Fonseca and Anthony Ma (https://getcontacts.github.io/interactions.html). </p>
+	      </div>
+	    </div>  
+		</div>	
+	</div>
+    <div class="row">
+      <div class="col-xs-12" id="plot_col">
+        <div class="panel panel-primary" id="main_plot_body">
+          <div class="panel-body">
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Van der waals
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5
+						        
+						        <p>
+						          A and B are any non-hydrogen atoms
+						        </p>
+						        <p>
+						          Ligands supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_vdw.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Hydrophobic
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5<br>
+						        <br>
+						        <p>
+						          A, B: ALA+CYS+PHE+GLY+ILE+LEU+MET+PRO+VAL+TRP and element C or S
+						        </p>
+						        <p>
+						          Ligands supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_hp.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Hydrogen bond
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        |AD| &lt; 3.5Å<br>
+						        ∠AHD &lt; 70°<br>
+						        <br>
+						        <p>
+						          Where A (acceptor) and D (donor) are any atom except hydrogen, carbon or sulphur. 
+						        </p>
+						        <p>
+						          Ligands supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_hb.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Water bridge
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        <p>
+											Consists of two different residues forming an Hydrogen bond with the same water molecule
+						        </p>
+						        <p>
+						          Ligands supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_wb.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Extended Water bridge
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        <p>
+											Consists of two different residues forming an Hydrogen bond with two different water moleucules which also form an hydrogen bond between them
+						        </p>
+						        <p>
+						          Ligands supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_wb2.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Salt bridge
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						   	   |AC| &lt; 4.0Å<br>
+						        <br>
+						        <p>
+						          A (anion): ASP/OD1+OD2, GLU/OE1+OE2<br>
+						          C (cation): LYS/NZ, ARG/NH1+NH2, HIS+HSD+HSE+HSP+HIE+HIP+HID/ND1+NE2
+						        </p>
+						        <p>
+						          Ligands <strong>not</strong> supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_sb.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Pi-cation
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+						        |AC| &lt; 6.0Å<br>
+						        ∠CAn &lt; 60°<br>
+						        <br>
+						        <p>
+						          A (aromatic): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2)<br>
+						          C (cation): LYS/NZ, ARG/NH1+NH2, HIS/ND1+NE2<br>
+						        </p>
+						        <p>
+						          Ligands <strong>not</strong> supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_pc.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Pi-stacking
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+					        |A1A2| &lt; 7.0Å<br>
+					        ∠(n1, n2) &lt; 30°<br>
+					        ∠(n1, A1A2) &lt; 45°<br>
+					        ∠(n2, A1A2) &lt; 45°<br>
+						        <br>
+						        <p>
+						          A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2)<br>
+						        </p>
+						        <p>
+						          Ligands <strong>not</strong> supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_ps.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+					  <table class="table">
+					    <thead>
+					    	<th>
+					        Ti-stacking
+					    	</th>
+					    </thead>
+
+					    <tbody>
+						    <tr>
+						      <td>
+					        |A1A2| &lt; 5.0Å<br>
+					        60° &lt; ∠(n1, n2) &lt; 90°<br>
+					        ∠(n1, A1A2) &lt; 45°<br>
+					        ∠(n2, A1A2) &lt; 45°<br>
+						        <br>
+						        <p>
+						          A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2)<br>
+						        </p>
+						        <p>
+						          Ligands <strong>not</strong> supported
+						        </p>
+						      </td>
+						      <td><img class="itype_img" src="../../../static/itypes/fig_ts.png" class="interaction-fig"></td>
+						    </tr>
+						  </tbody>
+						</table>
+
+
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock content %} 
+
+</body>
