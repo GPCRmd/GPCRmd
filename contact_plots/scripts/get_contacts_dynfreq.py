@@ -149,7 +149,8 @@ parser.add_argument(
 parser.add_argument(
     '--traj_id',
     dest = 'traj_id',
-    action='store'
+    action='store',
+    default=0
 )
 parser.add_argument(
     '--traj',

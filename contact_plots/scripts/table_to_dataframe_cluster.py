@@ -24,7 +24,7 @@ def json_dict(path):
     json_data = loads(json_str)
     return json_data
 
-def improve_receptor_names(df_ts,compl_data):
+def improve_receptor_names(df_ts,compl_data, clust_order):
     """Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id"""
     recept_info={}
     recept_info_order={"upname":0, "resname":1,"dyn_id":2,"prot_id":3,"comp_id":4,"prot_lname":5,"pdb_id":6,"lig_lname":7,"struc_fname":8,"traj_fnames":9,"delta":10}
@@ -65,6 +65,13 @@ def improve_receptor_names(df_ts,compl_data):
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+
+    # Changing ID names by simulation names in clust_order list
+    clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
+
+    # Adding column based in new order recieved from clustering
+    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
+
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
 def removing_entries_and_freqsdict(df, itypes, main_itype):
@@ -166,9 +173,12 @@ def clustering(df_t):
     
     # New Column labels
     new_order = [dyn_labels[i] for i in col_ordering]
-        
+    
+    # Labels for dendogram
+    dendlabels = list(df_t.index)
+
     # Reorder according to clustering
-    return (new_order,l)
+    return (new_order,l,dendlabels)
 
 
 def flat_clusters(labels, colors, clusters, dflt_col, dend_matrix):
@@ -364,10 +374,7 @@ def get_contacts_plots(itype, ligandonly):
     df_t = df.transpose()
 
     #Clustering of simulations
-    (clust_order,dend_matrix) = clustering(df_t)
-
-    # Labels for dendogram
-    dendlabels = list(df_t.index)
+    (clust_order,dend_matrix,dendlabels) = clustering(df_t)
 
     # Converting to df_ts table, 
     df_ts = df_t.stack().rename("value").reset_index()
@@ -377,13 +384,7 @@ def get_contacts_plots(itype, ligandonly):
     df_ts = add_itype_freqs(df_ts, set_itypes, dict_freqs)
 
     #Changing ID names by simulation names
-    (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
-
-    # Changing ID names by simulation names in clust_order list
-    clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
-
-    # Adding column based in new order recieved from clustering
-    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
+    (recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data,clust_order)
 
     #Changing denlabels to full name format
     dendlabels_names = [ index_dict[dyn] for dyn in dendlabels ]
@@ -395,10 +396,12 @@ def get_contacts_plots(itype, ligandonly):
     #Drop sort columns once used
     df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
 
-    #Creating dendrogram
+    #Creating dendrograms
     dend_height = int( int(df.shape[1]) * 80 + 20)
     dend_width = 180 #Same width as two square column
-    dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width, 2) 
+    dend_dict = {}
+    for clust in ((2,4,6,10)):
+        dend_dict[clust] = (dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width, clust))
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     sim_num = df.shape[1] 
@@ -423,10 +426,11 @@ def get_contacts_plots(itype, ligandonly):
     # Print daraframe and to_import variables in file in file
     df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dataframe.csv")
 
-    # Printing dendrogram in file
-    dendr_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.txt", "w")
-    dendr_file.write(dendr_figure)
-    dendr_file.close()
+    # Printing dendrograms in files
+    for clust in dend_dict:
+        dendr_file = open(str("%sview_input_dataframe/%s_%s_%sclust_dendrogram_figure.txt" % (basepath, itype, ligandonly, clust )), "w")
+        dendr_file.write(dend_dict[clust])
+        dendr_file.close()
 
     # Printing special variables
     var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")

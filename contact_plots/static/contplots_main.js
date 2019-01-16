@@ -82,6 +82,11 @@ $(document).ready(function(){
     document.getElementById("itype_button").innerHTML = sel_label + ' <span class="caret"></span>'
   });
 
+  //-------- Clusters dropdown
+  $('#cluster-dropdown .clust_opt').on('click', function(){    
+    $('#cluster_button').html($(this).html() + ' clusters <span class="caret"></span>');    
+  })
+
   //-------- Info panels
   $(".section_pan").click(function(){
       var target=$(this).attr("data-target");
