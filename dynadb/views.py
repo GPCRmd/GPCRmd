@@ -1467,7 +1467,7 @@ def count_dynamics(result_id,result_type):
     simus = DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp')
     if settings.QUERY_CHECK_PUBLISHED:
     	simus = simus.filter(is_published=True)
-    for simu in simus.all():
+    for simu in simus:
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj is not None:
@@ -1475,6 +1475,11 @@ def count_dynamics(result_id,result_type):
                     dynset.add(simu.id)
                     continue
             else:
+                # workarround for id_complex_molecule
+                id_complex_molecule = simu.id_model.id_complex_molecule
+                if id_complex_molecule is None:
+                    print('Simulation with broken model. DYN=%d MODEL=%d.' % (simu.id,simu.id_model.id))
+                    continue
                 for prot in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=simu.id_model.id_complex_molecule.id_complex_exp.id):
                     if prot.id_protein.id==result_id:
                         dynset.add(simu.id)
@@ -6164,6 +6169,8 @@ def MODELview(request, submission_id):
             qModel=DyndbModel.objects.filter(id=model_id)
             INITsubmission_id=submission_id
             p=qModel
+            for q in p:
+                print(q.__dict__)
             Typeval=p.values()[0]['type']
             Type=p.model.MODEL_TYPE[Typeval][1]
             STypeval=p.values()[0]['source_type']
@@ -6509,17 +6516,13 @@ def _generate_molecule_properties(request,submission_id):
                 del mol
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
-#            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'])
-                print("YOGURT")
+             
                 if qMOL.exists():
                     data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
-                    print("\n QMOL",qMOL.values())
                     data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
                     data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
-                    print("OTHER NAMES",data['other_names'])
                 return JsonResponse(data,safe=False)
             else:
-                print("YOGURT2")
                 data['msg'] = 'Unknown molecule file reference.'
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
         else:
@@ -12861,7 +12864,9 @@ def reset_permissions(request):
         from django.core.cache import cache
         cache.clear()
         import os
-        os.system("chmod -R 660 /protwis/sites/files/")
+        #os.system("chmod -R 660 /protwis/sites/files/")
+        os.system('find /protwis/sites/files/ -type d -exec chmod 770 {} \;')
+        os.system('find /protwis/sites/files/ -type f -exec chmod 660 {} \;')
         #os.system("rm -fr /tmp/django_cache")
     except Exception as e:
         print(str(e))

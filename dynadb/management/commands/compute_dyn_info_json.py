@@ -141,9 +141,18 @@ class Command(BaseCommand):
             """Given a db model obj, gets the GPCR protein object"""
             model_prot=model.id_protein
             if model_prot:
+                if not model_prot.receptor_id_protein:
+                    self.stdout.write(self.style.ERROR("Protein ID:%d UniprotKB AC:%s is not a GPCR or has no GPCRdb ID set.") % (model_prot.id,model_prot.uniprotkbac))
+                    raise CommandError("FATAL: error. There is no GPCR in the simulation. Cannot continue.")
                 prot=model_prot
                 total_num_prot=1
             else:
+                prot = DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+                if not list(prot.values_list("receptor_id_protein",flat=True)):
+                    prot = prot.values('id','uniprotkbac')
+                    prot0 = prot[0]
+                    self.stdout.write(self.style.ERROR("Protein ID:%d UniprotKB AC:%s is not a GPCR or has no GPCRdb ID set.") % (prot0['id'],prot0['uniprotkbac']))
+                    raise CommandError("FATAL: error. There is no GPCR in the simulation. Cannot continue.") 
                 protli=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
                 total_num_prot=len(protli)
                 prot=""
@@ -158,6 +167,8 @@ class Command(BaseCommand):
             dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
             traj_list=[]
             traj_name_list=[]
+            structure_file = None
+            structure_file_name = None
             p=re.compile("(/protwis/sites/files/)(.*)")
             p2=re.compile("[\.\w]*$")
             for fileobj in dynfiles:
@@ -170,6 +181,7 @@ class Command(BaseCommand):
                 elif myfile.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
                     traj_list.append([myfile,fileobj.id_files.id])
                     traj_name_list.append(myfile_name)
+            
             return (structure_file,structure_file_name,traj_list,traj_name_list)
 
         def get_orthostericlig_resname(dyn_id,change_lig_name):
@@ -198,16 +210,21 @@ class Command(BaseCommand):
             model=dyn.id_model
             model_id=model.id
             pdb_id=model.pdbid
+            if not (model.id_protein or model.id_complex_molecule):
+                self.stdout.write(self.style.NOTICE("Model has no protein or complex assigned. Skipping."))
+                return
             (prot,total_num_prot)=prot_from_model(model)
             prot_id=prot.id 
             uniprot_id=prot.uniprotkbac
             uniprot_name=Protein.objects.get(accession=uniprot_id).entry_name
             (structure_file,structure_file_name,traj_list,traj_name_list)=obtain_dyn_files(dyn_id)
+            if not structure_file:
+                self.stdout.write(self.style.NOTICE("No structure file found. Skipping."))
             (comp_id,comp_name,res_li)=get_orthostericlig_resname(dyn_id,change_lig_name) 
 
             # If there's no ligand
-            if len(res_li) < 1:
-                res_li[0] = ''
+            if not bool(res_li):
+                res_li = ['']
                 copm_name = ''
 
             if len(traj_list) == 0:
