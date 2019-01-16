@@ -674,9 +674,9 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
                 Chem.SanitizeMol(pdbmol,catchErrors=True)
             
             nhpdbmol = Chem.RemoveHs(pdbmol,implicitOnly=False, updateExplicitCount=True, sanitize=False)
-              
+            
             Chem.SanitizeMol(nhpdbmol,catchErrors=True)
-
+            
             try:
                 print('Applying bond orders and formal charges from molecule file to PDB molecule ... ')
                 nhpdbmol = AssignBondOrdersFromTemplate(nhmol,nhpdbmol)
@@ -687,11 +687,11 @@ def diff_mol_pdb(mol,pdbfile,logfile=devnull):
             except Exception:
                 print("WARNING: Cannot assign bond orders from molecule file template. Checking only non-hydrogen connectivity.")
                 checkconnect = False
+                newpdbmol = nhpdbmol
                 pass
-
+            
             #Stoichiometric formula check
             impnum = count_implicit_hydrogens(newpdbmol)
-            
             failnum = 0
             result = 'OK'
             unformula = remove_charge_formula(rdMolDescriptors.CalcMolFormula(mol))
