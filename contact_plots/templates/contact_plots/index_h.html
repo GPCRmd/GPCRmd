@@ -100,7 +100,19 @@
                         </li>
                       </ul>
                     </div> 
-                    <!--dropdown interacting parts of the simulation -->
+                    <!--Clusters dropdown-->
+                    <div class="dropdown optbar">
+                      <button type="button" id="cluster_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                        Number of clusters
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" id="cluster-dropdown">
+                        {% for clustnum in "12468" %}
+                        <li><a href="#" class="clust_opt">{{clustnum}}</a></li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                    <!--Checkboxes interacting parts of the simulation -->
                     <div class="optbar">
                       <label class="partners_checkbox">
                       <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
