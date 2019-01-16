@@ -95,7 +95,6 @@ for itype in itypes:
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
 	#Modifying tables to prepare them for table-to-dataframe script
-	print("Preparing summary table")
 	prepare_tables(table_output_provi, table_output, itype, table_summary, firstline_summary)
 
 	#Only a header is needed for summary
