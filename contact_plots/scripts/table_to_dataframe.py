@@ -332,17 +332,16 @@ def get_contacts_plots(itype, ligandonly):
     selected_itypes = { x:typelist[x] for x in set_itypes }
 
     #Loading files
-    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_summary.tsv", sep="\s+")
+    if not itype == "all":
+        df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype + ".tsv", sep="\s+")
+        df_raw_all = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
+        df_raw = pd.concat([df_raw_all, df_raw_itype])
+    else:
+        df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
     compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
 
-    # Filtering out non-desired interaction types
-    if itype != "all":
-        df = df_raw[(df_raw['itype'].isin(set_itypes)) ]
-    else:
-        df = df_raw
-
     # Adapting to Mariona's format
-    df = adapt_to_marionas(df)
+    df = adapt_to_marionas(df_raw)
 
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
