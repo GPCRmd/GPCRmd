@@ -70,12 +70,26 @@ from django.conf import settings
 from django.views.defaults import server_error
 from revproxy.views import ProxyView
 import mdtraj as md
+from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
+
+
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pink"]
 
 # Custom view function wrappers
 from functools import wraps
 from django.utils.decorators import available_attrs
+
+def obtain_prot_chains(pdb_name):
+    chain_name_s=set()
+    fpdb=open(pdb_name,'r')
+    for line in fpdb:
+        if useline2(line):
+            chain_name_s.add(line[21])
+    return list(chain_name_s)
+
+
+
 def default_500_handler(view_func):
     @wraps(view_func, assigned=available_attrs(view_func))
     def _wrapped_view(request,*args, **kwargs):
@@ -3066,6 +3080,58 @@ def obtain_dyn_files(paths_dict):
             traj_list.append((myfile, myfile_name, f_id))
     return (structure_file,structure_file_id,structure_name, traj_list)
 
+
+def asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken):
+    prot_obj=dynprot_obj.receptor_id_protein
+    dynprot_id=dynprot_obj.id
+    seq=DyndbProteinSequence.objects.get(id_protein=dynprot_id).sequence
+
+    gen_num_res=obtain_gen_numbering(dynamics_id, dynprot_obj,prot_obj)
+    gpcr_num_found=False
+    if len(gen_num_res) > 2:
+        (numbers, num_scheme, db_seq, current_class) = gen_num_res
+        pos_gnum = numbers[current_class]
+        gpcr_num_found=True
+    for chain_name in pdb_chain_li:
+        checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
+        if isinstance(checkpdb_res, tuple):
+            tablepdb,pdb_sequence,hexflag=checkpdb_res
+            result=matchpdbfa_ngl(seq,pdb_sequence, tablepdb, hexflag)
+            if isinstance(result, list):
+                if chain_name not in chains_taken:
+                    chains_taken.add(chain_name)
+                    for pos in result:
+                        if pos[0] != "-": #Consider only num in the pdb
+                            db_pos=pos[1][1]
+                            if db_pos:
+                                this_gnum=""
+                                if gpcr_num_found:
+                                    this_gnum = pos_gnum[db_pos][1]
+                                    if this_gnum:
+                                        (chain_num,bw,gpcrdb)=re.split('\.|x', this_gnum)
+                                        this_gnum=chain_num+"x"+gpcrdb
+                                seq_pdb[db_pos]=[pos[0][1],chain_name,this_gnum]
+    return seq_pdb
+
+def get_nonlig_comp_info(match,moltype):
+    mol_id=match.id_molecule.id
+    mol_name=match.id_molecule.id_compound.name
+    if not mol_name.isupper():
+        mol_name=mol_name.capitalize()
+    show_img=True
+    mol_chem_name=""
+    img_path=search_molecule(match.id_molecule.id)['imagelink']
+    if moltype==0: #ions
+        show_img=False
+        mol_chem_smiles=match.id_molecule.smiles
+        mol_chem_name=re.sub("\[|\]","",mol_chem_smiles)
+        mol_chem_name=mol_chem_name.replace("+","<sup>+</sup>").replace("-","<sup>-</sup>")
+    elif moltype==3:#water
+        show_img=False
+        mol_chem_name="H<sub>2</sub>O"
+    candidatecomp=[mol_id,img_path,mol_name,moltype,show_img,mol_chem_name]
+    return candidatecomp
+
     
 @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
@@ -3088,7 +3154,7 @@ def query_dynamics(request,dynamics_id):
         raise
     dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
-    dyna_dic['files']=list()
+    dyna_dic['files']={"struc_files":list(), "param_files":list()}
     dyna_dic['references']=list()
     dyna_dic['related']=list()
     dyna_dic['soft']=dynaobj.software
@@ -3107,6 +3173,9 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['expdatabind']=''
     dyna_dic['expdataeff']=''
     dyna_dic['expdatainhi']=''
+    pdbid=dynaobj.id_model.pdbid
+    dyna_dic["pdbid"]=pdbid
+    dyna_dic["mutation_dict"]={}
     try:
         dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
         expdata=search_complex(dyna_dic['link_2_complex'])
@@ -3120,36 +3189,89 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['traj_file'] = traj_displayed
 
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name,match.type])
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+            dyna_dic['link_2_molecules'].append(candidatecomp)
 
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name,match.type]
-        if candidatecomp not in dyna_dic['link_2_molecules'] : 
-            dyna_dic['link_2_molecules'].append(candidatecomp)
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+            if candidatecomp not in dyna_dic['link_2_molecules'] : 
+                dyna_dic['link_2_molecules'].append(candidatecomp)
     cmolid=dynaobj.id_model.id_complex_molecule
     if cmolid is not None:
         cmol_id=cmolid.id
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
+            molname=match.id_molecule.id_compound.name.capitalize()
+            mol_id=match.id_molecule.id
+            resname=list(set([r.resname for r in DyndbDynamicsComponents.objects.filter(id_molecule=mol_id)]))[0]
             if match.type==0:
-                dyna_dic['ortoligands'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink']])
+                dyna_dic['ortoligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname])
+                i=0
+                while i < len(dyna_dic['link_2_molecules']):
+                    if dyna_dic['link_2_molecules'][i][0]==mol_id:
+                        dyna_dic['link_2_molecules'][i][2]+= " (orthosteric lig.)"
+                    i+=1
             else:
-                dyna_dic['aloligands'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink']])
+                dyna_dic['aloligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname])
+                i=0
+                while i < len(dyna_dic['link_2_molecules']):
+                    if dyna_dic['link_2_molecules'][i][0]==mol_id:
+                        dyna_dic['link_2_molecules'][i][2]+= " (allosteric lig.)"
+                    i+=1
 
     for match in DyndbRelatedDynamicsDynamics.objects.select_related('id_related_dynamics__id_dynamics').filter(id_dynamics=dynamics_id):
         dyna_dic['related'].append(match.id_related_dynamics.id_dynamics.id)
 
-    
-    try: #if it is apomorfic
-        dyn_model_id=dynaobj.id_model.id
-        dyna_dic['link2protein'].append([DyndbModel.objects.get(pk=dyn_model_id).id_protein.id, search_protein(DyndbModel.objects.get(pk=dyn_model_id).id_protein.id)['Protein_name'] ])
+    prot_muts={}
+    prot_li=[]
+    dynmodel_obj=dynaobj.id_model
+    dyn_model_id=dynmodel_obj.id 
 
+    pdb_name="/protwis/sites/files/"+structure_file
+    pdb_chain_li=obtain_prot_chains(pdb_name)
+    seq_pdb={}
+    chains_taken=set()
+    try: #if it is apomorfic
+        dynprot_obj=dynmodel_obj.id_protein
+        dynprot_id=dynprot_obj.id
+        prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
+        search_prot_res=search_protein(dynprot_id)
+        prot_name=search_prot_res['Protein_name']
+        dyna_dic['link2protein'].append([dynprot_id, prot_name ])
+        seq_pdb=asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken)
+        is_mutated=search_prot_res["is_mutated"]
+        if is_mutated:
+            prot_muts[prot_name]=search_prot_res["mutations"]
+        else:
+            prot_muts[prot_name]=[]
     except:
-        q = DyndbModel.objects.filter(pk=dyn_model_id)
-        q = q.annotate(protein_id=F('id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__id'))
-        q = q.values('id', 'protein_id')
-        for row in q:
-            if row['protein_id'] not in dyna_dic['link2protein']:
-                dyna_dic['link2protein'].append([row['protein_id'],search_protein(row['protein_id'])['Protein_name'] ])
+        dynprot_li_all=DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=dynmodel_obj.id_complex_molecule.id)
+        for dynprot_obj in dynprot_li_all:
+            dynprot_id=dynprot_obj.id
+            if dynprot_id not in dyna_dic['link2protein']:
+                prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
+                search_prot_res=search_protein(dynprot_id)
+                prot_name=search_prot_res['Protein_name']
+                dyna_dic['link2protein'].append([dynprot_id,prot_name ])
+                seq_pdb=asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken)
+                is_mutated=search_prot_res["is_mutated"]
+                if is_mutated:
+                    prot_mut_li=[(pos,fromaa,toaa,seq_pdb[pos][2]) if seq_pdb[pos][2] else (pos,fromaa,toaa,"-") for (pos,fromaa,toaa) in search_prot_res["mutations"]]
+                    prot_muts[prot_name]=prot_mut_li
+                else:
+                    prot_muts[prot_name]=[]
+    dyna_dic["mutation_dict"]=prot_muts
+    mut_sel_li=[]
+    for mut_li in prot_muts.values():
+        for (res,fromaa,toaa,gnum) in mut_li:
+            if res in seq_pdb:
+                (pos,chain,gnum)=seq_pdb[res]
+                mut_sel_li.append("(:%s and %s)" % (chain,pos))
+    mut_sel=" or ".join(mut_sel_li)
+    dyna_dic["mut_sel"]=mut_sel
 
     for match in DyndbReferencesDynamics.objects.select_related('id_references').filter(id_dynamics=dynamics_id):
         ref={'doi':match.id_references.doi,'title':match.id_references.title,'authors':match.id_references.authors,'url':match.id_references.url,'journal':match.id_references.journal_press,'issue':match.id_references.issue,'pub_year':match.id_references.pub_year,'volume':match.id_references.volume}
@@ -3161,13 +3283,14 @@ def query_dynamics(request,dynamics_id):
         dyna_dic['references'].append(ref)
     filestraj=dict()
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
-        dyna_dic['files'].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
+        typeobj=match.id_files.id_file_types
+        if typeobj.is_parameter or typeobj.is_anytype:
+            dyna_dic['files']["param_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
+        else:
+            dyna_dic['files']["struc_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
 
     dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
-
-
-
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
 @user_passes_test_args(is_published_or_submission_owner)    
@@ -3185,14 +3308,40 @@ def carousel_dynamics_components(request,dynamics_id):
     dyna_dic['link_2_molecules']=[]
     image_name=[]
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
+        candidatecomp=get_nonlig_comp_info(match,match.type)
+        dyna_dic['link_2_molecules'].append(candidatecomp)
+        #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
         image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
+        candidatecomp=get_nonlig_comp_info(match,match.type)
+#        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
         if candidatecomp not in dyna_dic['link_2_molecules']:
             dyna_dic['link_2_molecules'].append(candidatecomp)
             image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
     dyna_dic['imagetonames']= image_name
+
+
+    ortholig=[]
+    alolig=[]
+    cmolid=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id_complex_molecule
+    if cmolid is not None:
+        cmol_id=cmolid.id
+        for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
+            if match.type==0:
+                ort_mol_id=match.id_molecule.id
+                i=0
+                while i < len(dyna_dic['link_2_molecules']):
+                    if dyna_dic['link_2_molecules'][i][0]==ort_mol_id:
+                        dyna_dic['link_2_molecules'][i][2]+= " (orthosteric lig.)"
+                    i+=1
+            else:
+                al_mol_id=match.id_molecule.id
+                i=0
+                while i < len(dyna_dic['link_2_molecules']):
+                    if dyna_dic['link_2_molecules'][i][0]==al_mol_id:
+                        dyna_dic['link_2_molecules'][i][2]+= " (allosteric lig.)"
+                    i+=1
+
     return render(request, 'dynadb/dynamics_carousel.html',{'answer':dyna_dic})
         
     
