@@ -35,9 +35,9 @@ def improve_receptor_names(df_ts,compl_data):
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
         resname=compl_data[recept_id]["lig_sname"]
+        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_id=compl_data[recept_id]["prot_id"]
         comp_id=compl_data[recept_id]["comp_id"]
-        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_lname=compl_data[recept_id]["prot_lname"]
         pdb_id=compl_data[recept_id]["pdb_id"]
         struc_fname=compl_data[recept_id]["struc_fname"]
@@ -256,14 +256,14 @@ def dendrogram_clustering(dend_matrix, labels, height, width, clusters):
     leaves_nums_list = list(range(0,len(labels)))
     
     # Asigning clusters and colors to each leaf
-    (link_cols,T) = flat_clusters(leaves_nums_list, colors, clusters, 'b', dend_matrix)
+    #(link_cols,T) = flat_clusters(leaves_nums_list, colors, clusters, 'b', dend_matrix)
     
     # Creating dendrogram
     dn = dendrogram(
         dend_matrix,
         labels=labels,
-        orientation = 'left',
-        link_color_func = lambda x: link_cols[x] 
+        orientation = 'left'#,
+     #   link_color_func = lambda x: link_cols[x] 
     )
         
     # Annotate cluster nodes in dendrogram (not yet)
@@ -274,8 +274,8 @@ def dendrogram_clustering(dend_matrix, labels, height, width, clusters):
     ax.tick_params(axis='both', which='both', labelsize=20, colors="black", right= False, bottom=False)
     
     # Rendering html figure with mpld3 module from our matplotlib figure
-    html_dendrogram = mpld3.fig_to_html(plt.gcf())
-    return html_dendrogram
+    #html_dendrogram = mpld3.fig_to_html(plt.gcf())
+    #return html_dendrogram
 
 def get_contacts_plots(itype, ligandonly):
     """
@@ -332,17 +332,16 @@ def get_contacts_plots(itype, ligandonly):
     selected_itypes = { x:typelist[x] for x in set_itypes }
 
     #Loading files
-    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_summary.tsv", sep="\s+")
-    compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
-
-    # Filtering out non-desired interaction types
-    if itype != "all":
-        df = df_raw[(df_raw['itype'].isin(set_itypes)) ]
+    if not itype == "all":
+        df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype + ".tsv", sep="\s+")
+        df_raw_all = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
+        df_raw = pd.concat([df_raw_all, df_raw_itype])
     else:
-        df = df_raw
+        df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
+    compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
 
     # Adapting to Mariona's format
-    df = adapt_to_marionas(df)
+    df = adapt_to_marionas(df_raw)
 
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
@@ -397,7 +396,7 @@ def get_contacts_plots(itype, ligandonly):
     #Creating dendrogram
     dend_height = int( int(df.shape[1]) * 80 + 20)
     dend_width = 160 #Same width as two square column
-    dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width) 
+    #dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, 2, dend_height-20, dend_width)# For the moment, two is arbitrary
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     sim_num = df.shape[1] 
@@ -424,7 +423,7 @@ def get_contacts_plots(itype, ligandonly):
 
     # Printing dendrogram in file
     dendr_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.txt", "w")
-    dendr_file.write(dendr_figure)
+    #dendr_file.write(dendr_figure)
     dendr_file.close()
 
     # Printing special variables

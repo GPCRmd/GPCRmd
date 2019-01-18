@@ -33,7 +33,7 @@ from operator import itemgetter
 from os import listdir
 from os.path import isfile, normpath
 from django.db.models.functions import Concat
-from django.db.models import CharField,TextField, Case, When, Value as V, F, Count
+from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
@@ -1481,7 +1481,7 @@ def count_dynamics(result_id,result_type):
     simus = DyndbDynamics.objects.select_related('id_model__id_complex_molecule__id_complex_exp')
     if settings.QUERY_CHECK_PUBLISHED:
     	simus = simus.filter(is_published=True)
-    for simu in simus.all():
+    for simu in simus:
         if result_type=='protein':
             modelobj=DyndbModel.objects.select_related('id_protein').get(pk=simu.id_model.id).id_protein
             if modelobj is not None:
@@ -1489,6 +1489,11 @@ def count_dynamics(result_id,result_type):
                     dynset.add(simu.id)
                     continue
             else:
+                # workarround for id_complex_molecule
+                id_complex_molecule = simu.id_model.id_complex_molecule
+                if id_complex_molecule is None:
+                    print('Simulation with broken model. DYN=%d MODEL=%d.' % (simu.id,simu.id_model.id))
+                    continue
                 for prot in DyndbComplexProtein.objects.select_related('id_protein').filter(id_complex_exp=simu.id_model.id_complex_molecule.id_complex_exp.id):
                     if prot.id_protein.id==result_id:
                         dynset.add(simu.id)
@@ -4239,7 +4244,19 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 if molintdict[int_id]['id_molecule'] != row['molecule_id']:
                     return JsonResponse({'msg':'Molecule form number "'+str(int_id+1)+'" does not match mol ID.'},status=422,reason='Unprocessable Entity')
                 molintdict[int_id]['molfile'] = row['filepath']
-                
+            
+            for int_id in molintdict:
+                if 'molfile' not in molintdict[int_id]:
+                    missing_sdf = True
+                else:
+                    if not molintdict[int_id]['molfile']:
+                        missing_sdf = True
+                    else:
+                        missing_sdf = False
+                if missing_sdf:
+                    return JsonResponse({'msg':'Cannot find the molecule with form number "'+str(int_id+1)+\
+                    '" or its respective file in the current submission.'},status=422,reason='Unprocessable Entity')
+ 
             os.makedirs(submission_path,exist_ok=True)
             logname = get_file_name_submission(form_type,submission_id,0,ext="log",forceext=False,subtype="log")
             
@@ -4305,6 +4322,7 @@ def pdbcheck_molecule(request,submission_id,form_type):
                 for int_id in sorted(molintdict.keys(),key=int):
                                
                     print("Loading mol #"+str(int_id+1)+", mol ID "+str(molintdict[int_id]['id_molecule'])+'.',file=logfile)
+                    print(molintdict[int_id])
                     try:
                         with open(molintdict[int_id]['molfile'],'rb') as molfile:
                             mol = open_molecule_file(molfile,logfile=logfile,filetype='sdf')
@@ -6300,6 +6318,8 @@ def MODELview(request, submission_id):
             qModel=DyndbModel.objects.filter(id=model_id)
             INITsubmission_id=submission_id
             p=qModel
+            for q in p:
+                print(q.__dict__)
             Typeval=p.values()[0]['type']
             Type=p.model.MODEL_TYPE[Typeval][1]
             STypeval=p.values()[0]['source_type']
@@ -6645,17 +6665,13 @@ def _generate_molecule_properties(request,submission_id):
                 del mol
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
-#            qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'])
-                print("YOGURT")
+             
                 if qMOL.exists():
                     data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
-                    print("\n QMOL",qMOL.values())
                     data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
                     data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
-                    print("OTHER NAMES",data['other_names'])
                 return JsonResponse(data,safe=False)
             else:
-                print("YOGURT2")
                 data['msg'] = 'Unknown molecule file reference.'
                 return JsonResponse(data,safe=False,status=422,reason='Unprocessable Entity')                       
         else:
@@ -8535,7 +8551,8 @@ def DYNAMICSview(request, submission_id, model_id=None):
             for tt in qDYNs.values_list('id',flat=True):
                 print("ESTO ES TT",tt)
                 queryDC=DyndbDynamicsComponents.objects.filter(numberofmol__gte=0,type__gte=0,id_dynamics=tt,id_molecule__dyndbsubmissionmolecule__submission_id=submission_id)
-                querySM=DyndbSubmissionMolecule.objects.filter(submission_id=submission_id).exclude(Q(molecule_id__in=queryDC.values('id_molecule')|Q(int_id=None)))
+                from django.db.models import Q
+                querySM=DyndbSubmissionMolecule.objects.filter(~Q(molecule_id__in=queryDC.values('id_molecule')),~Q(int_id=None),submission_id=submission_id)
                 qDC=queryDC.values('id','resname','numberofmol','id_molecule','id_molecule__dyndbsubmissionmolecule__type','id_molecule__dyndbsubmissionmolecule__int_id','id_molecule__dyndbcompound__name','type').order_by('id_molecule__dyndbsubmissionmolecule__int_id')
                 qSM=querySM.values('id','molecule_id','int_id','molecule_id__dyndbcompound__name','type').order_by('int_id')
                 print("\n MIRA AQUI",qDC,"\n\n")
@@ -12996,7 +13013,9 @@ def reset_permissions(request):
         from django.core.cache import cache
         cache.clear()
         import os
-        os.system("chmod -R 660 /protwis/sites/files/")
+        #os.system("chmod -R 660 /protwis/sites/files/")
+        os.system('find /protwis/sites/files/ -type d -exec chmod 770 {} \;')
+        os.system('find /protwis/sites/files/ -type f -exec chmod 660 {} \;')
         #os.system("rm -fr /tmp/django_cache")
     except Exception as e:
         print(str(e))

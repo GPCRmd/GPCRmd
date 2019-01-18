@@ -100,7 +100,19 @@
                         </li>
                       </ul>
                     </div> 
-                    <!--dropdown interacting parts of the simulation -->
+                    <!--Clusters dropdown-->
+                    <div class="dropdown optbar">
+                      <button type="button" id="cluster_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                        Number of clusters
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" id="cluster-dropdown">
+                        {% for clustnum in "12468" %}
+                        <li><a href="#" class="clust_opt">{{clustnum}}</a></li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                    <!--Checkboxes interacting parts of the simulation -->
                     <div class="optbar">
                       <label class="partners_checkbox">
                       <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
@@ -153,14 +165,13 @@
              <!--<h4 >GPCR VIEWER</h4>-->
             </div>
 
-
             <p class="doc_title">About this plot: </p>
 
             <p style="text-align: justify;">This plots compares residue interaction frequency among several GPCR dynamic simulations.</p>            
 
             <p style="text-align: justify;">Interaction frequencies have been calculated with <a href="https://github.com/getcontacts/getcontacts" target="_blank">GetContacts</a> scripts, created by Rasmus Fonseca (fonseca.rasmus@gmail.com) and Anthony Ma (anthonyma27@gmail.com).</p>
 
-            <p style="text-align: justify;"> This scripts consider the interaction frequency as the proportion of frames in which a residue pair is considered to be interacting, according to <a href="https://getcontacts.github.io/interactions.html" target="blank">GetContacts interaction criteria</a>.</p>
+            <p style="text-align: justify;"> This scripts consider the interaction frequency as the proportion of frames in which a residue pair is considered to be interacting, according to <a href="../interaction_types" target="blank">GetContacts interaction criteria</a>.</p>
 
             <p style="text-align: justify;"> Total interaction frequency reffers to the percentage of frames on which the residue pair is interacting in any of the previous criteria. </p>
 
