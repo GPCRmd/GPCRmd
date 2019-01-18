@@ -31,7 +31,7 @@
     <script src="mdsrv/webapp/js/gui.js"></script>
 
     <!-- MDSRV -->
-    <script src="mdsrv/webapp/js/mdsrv.js"></script>
+    <!--script src="mdsrv/webapp/js/mdsrv.js"></script>-->
     <script>
         NGL.cssDirectory = "mdsrv/webapp/css/";
         NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
@@ -123,13 +123,35 @@
 
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var traj=$(".traj_file", window.parent.document).data("traj_file");
+            var mut_sel=$("#mutations", window.parent.document).data("mut_sel");
             var  traj_path= "_DB/";
             var  path= "/mdsrv/file/_DB/";
 
+            var ligli=[];
+            $(".lig_element", window.parent.document).each(function(){
+                ligli[ligli.length]=$(this).data("resname");
+            });
+            var ligsel=ligli.join(" or ");
+
+
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                    o.setSelection("protein");
+                    if (ligsel){
+                        o.setSelection("not _h and (protein or "+ligsel+")");
+                        o.addRepresentation( "spacefill", {  sele: ligsel  } );
+                        stage.autoView();
+                        stage.animationControls.zoom(-30)
+                    } else {
+                        o.setSelection("protein");
+                        stage.autoView();
+                        stage.animationControls.zoom(-50)
+
+                    }
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
+                    if (mut_sel.length > 0){
+                        o.addRepresentation( "hyperball", { sele: mut_sel, color:"#00ceff", scale:0.3 } );
+                    }
+
                     o.setName("my_comp");
                     if (traj){
                         o.addTrajectory( traj_path + traj );

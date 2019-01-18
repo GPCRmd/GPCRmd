@@ -59,11 +59,15 @@
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
     <script>                
         $(document).ready(function() {
-            var currentimg=$('div.item.active').children('img').attr('alt');
+            var currentimg=$('div.item.active .molinfo').data("molname");
+            var currentid=$('div.item.active .molinfo').data('molid');
             $('#molecule_name').html(currentimg);           
+            $("#linkmol_if").attr("href","/dynadb/molecule/id/"+currentid).text("Molecule ID:"+currentid);
             $('#myCarousel').on('slid.bs.carousel', function(e) {
-                var currentimg2=$('div.item.active').children('img').attr('alt');
+                var currentimg2=$('div.item.active .molinfo').data("molname");
+                var currentid2=$('div.item.active .molinfo').data('molid');
                 $('#molecule_name').html(currentimg2);
+                $("#linkmol_if").attr("href","/dynadb/molecule/id/"+currentid2).text("Molecule ID:"+currentid2);
             });
         });
     </script>
@@ -75,33 +79,46 @@
         <div id='carouselhide'>
         <div class="col-lg-12 text-center"></div>
         <div class="col-lg-12">
-        <div id="myCarousel"  data-interval="1500" class="carousel slide" data-ride="carousel">
+        <div id="myCarousel"  data-interval="2000" class="carousel slide" data-ride="carousel">
 
           <!-- Wrapper for slides -->
           <div class="carousel-inner" role="listbox">
-        {% for url in answer.link_2_molecules %}
+        {% for url in answer.link_2_molecules %} 
+        <!-- [mol_id,img_path,mol_name,moltype,show_img,mol_chem_name] -->
             {% if forloop.counter == 1  %}
-            <div class="item active"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/> </div>
-            {%else%}
-            <div class="item"> <img alt="{{url.2|capfirst}}" src="{{url.1}}" height="400" width="400"/></div>
-            {%endif%}
-
+                <div class="item active"> 
+            {% else %}
+                <div class="item">
+            {% endif %}
+            {% if url.4 %}
+                    <img class="molinfo" alt="{{url.2|capfirst}}" data-molname="{{url.2|capfirst}}" src="{{url.1}}" data-molid={{url.0}} height="400" width="400"/>
+            {% else %}
+                    <center>
+                        <div class="molinfo" data-molname="{{url.2|capfirst}}" data-molid={{url.0}} style="padding-top:180px; background-color:white;height:400px;width: 400px;font-size:40px;text-align:center">
+                            <p>{{url.5 | safe}}</p>
+                        </div>
+                    </center>
+            {% endif %}
+                </div>
         {% endfor %}
           </div></div>
 
           <!-- Left and right controls -->
           <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
-            <span class="glyphicon glyphicon-chevron-left" style="color:black;" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-chevron-left" style="color:black;cursor: default" aria-hidden="true"></span>
             <span class="sr-only">Previous</span>
           </a>
           <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
-            <span class="glyphicon glyphicon-chevron-right" style="color:black;" aria-hidden="true"></span>
+            <span class="glyphicon glyphicon-chevron-right" style="color:black;cursor: default" aria-hidden="true"></span>
             <span class="sr-only">Next</span>
           </a>
         </div></div>
     {% endif %}
     <br>
-    <center> <b><p id='molecule_name'></p></b> </center>
+    <center> <b>
+        <p id='molecule_name'></p>
+        <a id="linkmol_if" target="_blank" role="button" href="#" class="btn btn-primary " style="margin-top:5px"><span class="glyphicon glyphicon-hourglass"></span></a>
+    </b> </center>
     <br>
     </div>
 
