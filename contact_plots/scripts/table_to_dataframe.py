@@ -8,7 +8,9 @@ from json import loads
 from re import sub,compile
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
-import mpld3
+import plotly.plotly as py
+import plotly.figure_factory as ff
+import plotly.offline
 import os
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
@@ -148,27 +150,16 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
 
 def clustering(df_t):
     """
-    Clusters simulations by their total accumulated interaction frequencies.
-    Returns the simulation order according to their clustering, as well as the matrix used for dendrogram
+    Creates an interaction frequency numpy matrix from 
     """
-    dyn_labels = list(df_t.index)
-    
     # Create dictionary table with position tuple as keys and interaction-by-simulation-freq array as value
     freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
         
-    # Convert previous dictionary to numpy array
-    freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
+    # Convert previous dictionary to numpy array, and traspose it
+    freq_matrix = (np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
 
-    # Using scipy to cluster. Copied from get_contacts scripts
-    l = linkage(freq_matrix.T, method='single')
-    
-    col_ordering = leaves_list(l)
-    
-    # New Column labels
-    new_order = [dyn_labels[i] for i in col_ordering]
-        
     # Reorder according to clustering
-    return (new_order,l)
+    return (freq_matrix)
 
 def flat_clusters(labels, colors, clusters, dflt_col, dend_matrix):
     """
@@ -241,9 +232,9 @@ def annotate_cluster_nodes(dn, T, colors):
 
         pos += 1
 
-def dendrogram_clustering(dend_matrix, labels, height, width, clusters): 
+def dendrogram_clustering_matplotlib(dend_matrix, labels, height, width, clusters): 
     """
-    dendrogram time, my dudes
+    Return dendrogram in html format from our data
     """
     arbitrary_dpi = 50 # Arbitrary. Don't pay attention to it
     inch_height = height / arbitrary_dpi
@@ -277,12 +268,56 @@ def dendrogram_clustering(dend_matrix, labels, height, width, clusters):
     #html_dendrogram = mpld3.fig_to_html(plt.gcf())
     #return html_dendrogram
 
+def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
+    """
+    Return dendrogram in html format from our data (new plotly version)
+    """
+
+    # Setting figures
+    fig = ff.create_dendrogram(dend_matrix, orientation='right', labels=labels)
+
+    fig['layout'].update({
+        'width':600, 
+        'height':height
+        })
+    fig['layout']['margin'].update({
+        'r' : 400,
+        't' : 60,
+        'b' : 20
+        })
+    fig['layout']['xaxis'].update({
+        'showline': False,
+        'showticklabels': False,
+        'ticks' : '',
+        })
+
+    fig['layout']['yaxis'].update({
+        'side' : 'right',
+        'showline': False,
+        'ticks' : '',
+        'tickfont' : {
+            'size' : 15,
+            'color' : 'black'
+            }
+        })
+
+    # Taking order for plot rows
+    dendro_leaves = fig['layout']['yaxis']['ticktext']
+
+    # Writing dendrogram on file
+    plotly.offline.plot(fig, filename=filename, auto_open=False)
+
+    return list(dendro_leaves)
+
 def get_contacts_plots(itype, ligandonly):
     """
     Create and save dataframe, dendrogram, and other data necessary for computing get_contacts online plots
         - itype: any of the codes from below typelist.
         - ligandonly: lg (only residue-ligand contacts), prt (only intraprotein contacts), all 
     """
+
+    # Basepath for files
+    basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
 
     #Declaring dictionaries with types
     typelist =  {
@@ -360,12 +395,10 @@ def get_contacts_plots(itype, ligandonly):
 
     #Transposing dataframe
     df_t = df.transpose()
+    dynlist = list(df_t.index)
 
     #Clustering of simulations
-    (clust_order,dend_matrix) = clustering(df_t)
-
-    # Labels for dendogram
-    dendlabels = list(df_t.index)
+    dend_matrix = clustering(df_t)
 
     # Converting to df_ts table, 
     df_ts = df_t.stack().rename("value").reset_index()
@@ -377,14 +410,20 @@ def get_contacts_plots(itype, ligandonly):
     #Changing ID names by simulation names
     (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
-    # Changing ID names by simulation names in clust_order list
-    clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
+    # Labels for dendogram
+    dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
+
+    #Creating dendrogram
+    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
+    dend_height = int( int(df.shape[1]) * 80 + 20)
+    dend_width = 160 #Same width as two square column
+    clust_order_list = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)# TODO: implement cluster number option, 2 is a placeholder
+
+    # Create a dictionary with the order of each simulation row in the plot 
+    clust_order_dict = { dyn_name : clust_order_list.index(dyn_name) for dyn_name in clust_order_list }
 
     # Adding column based in new order recieved from clustering
-    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
-
-    #Changing denlabels to full name format
-    dendlabels_names = [ index_dict[dyn] for dyn in dendlabels ]
+    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_dict[x])
 
     #Sorting by ballesteros Id's (helixloop column) and clustering order
     df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
@@ -393,10 +432,6 @@ def get_contacts_plots(itype, ligandonly):
     #Drop sort columns once used
     df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
 
-    #Creating dendrogram
-    dend_height = int( int(df.shape[1]) * 80 + 20)
-    dend_width = 160 #Same width as two square column
-    #dendr_figure = dendrogram_clustering(dend_matrix, dendlabels_names, 2, dend_height-20, dend_width)# For the moment, two is arbitrary
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     sim_num = df.shape[1] 
@@ -411,20 +446,12 @@ def get_contacts_plots(itype, ligandonly):
     ## Printing outputs
     ###################
 
-    # Basepath for files
-    basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
-
     # Creating directory if it doesn't exist
     if not os.path.exists(basepath + "view_input_dataframe"):
         os.makedirs(basepath + "view_input_dataframe")
 
     # Print daraframe and to_import variables in file in file
     df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dataframe.csv")
-
-    # Printing dendrogram in file
-    dendr_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.txt", "w")
-    #dendr_file.write(dendr_figure)
-    dendr_file.close()
 
     # Printing special variables
     var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")
