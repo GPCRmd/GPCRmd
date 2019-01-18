@@ -116,7 +116,7 @@ def get_contacts_plots(request, itype, ligandonly):
 	figure_shape = variablesmod.figure_shape
 
 	# Loading dendrogram
-	dendr_figure = open(basedir + itype + "_" + ligandonly + "_dendrogram_figure.txt", 'r').read()
+	dendr_figure = open(basedir + itype + "_" + ligandonly + "_dendrogram_figure.html", 'r').read()
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts

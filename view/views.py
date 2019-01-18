@@ -998,8 +998,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                 presel_pos=sel_pos
                 bind_domain = "none"
 
-        print(type(bind_domain))
-
         if len(chain_name_li) > 0:
             multiple_chains=False
             chain_str=""
