@@ -169,7 +169,8 @@ function checkoruncheckall(checkboxclass,changename){
   }
 }
 
-//--------Change button color of apply if any option is selected
+//--------Change button color of apply if any option is selected. Currently inactive since dropdown is a radio now
+/*
 function changeapplycolor(){
   var num_checked = $.map($('.option:checked'), function(c){return c.value; }).length;
   if (Boolean(num_checked)){
@@ -179,7 +180,7 @@ function changeapplycolor(){
     $('#applybutton').addClass('btn-danger').removeClass('btn-primary');        
   }
 }
-
+*/
 //------Extract checked values, create an URL with them and refresh page with new URL
 function printchecked(){
   var checked_loc = []
@@ -211,32 +212,6 @@ function printchecked(){
     window.alert("please select an interaction type and at least one interaction partner");
   }
 }
-
-
-// Readjusting dendrogram
-//I know it's a dirty way to do it, but I didn't know of anything better
-window.onload = function(){
-  //Enlarging dendrogram width to see y-labels, but without enlarging the dendogram itself
-  var dendrogram = document.getElementsByClassName('mpld3-figure')[0];
-  var new_width =600;
-  dendrogram.setAttribute('width',new_width);
-
-  //Set color of dendrogram labels to match bokeh ones 
-  $('text').css("fill",'#444444').css("background-color","white")
-
-  //Hiding Y-axis line and ticks
-  $('.domain:last').hide()
-  $('line[x2="6"][y2="0"]').hide()
-
-  // Hiding X-axis
-  $('.mpld3-xaxis').hide()
-
-  //Modify #empty_div and adapt size to its content
-  var my_heigth = $("#fixed_col").css("height");
-  $("#first_col").css('height',my_heigth);
-
-};
-
 
 function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot

@@ -7,7 +7,6 @@ import numpy as np
 from json import loads
 from re import sub,compile
 import matplotlib.pyplot as plt
-from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram
 import plotly.plotly as py
 import plotly.figure_factory as ff
 import plotly.offline
@@ -184,7 +183,7 @@ def anotate_cluster(x, y, cluster_num, color):
 
 def annotate_cluster_nodes(dn, T, colors):
     """
-    annotates the clusters obtained in T in the dendgrogram (dn) with colors (colors)
+    annotates the clusters obtained in T in the dendgrogram (dn) with colors (colors). Currently not operative
     """
     pos = 0
     len_col_list = len(dn['color_list'])
@@ -232,41 +231,68 @@ def annotate_cluster_nodes(dn, T, colors):
 
         pos += 1
 
-def dendrogram_clustering_matplotlib(dend_matrix, labels, height, width, clusters): 
-    """
-    Return dendrogram in html format from our data
-    """
-    arbitrary_dpi = 50 # Arbitrary. Don't pay attention to it
-    inch_height = height / arbitrary_dpi
-    inch_width = width / arbitrary_dpi
 
-    #Setting matplotlib figure
-    plt.figure(dpi = arbitrary_dpi, figsize = [inch_width, inch_height],facecolor = "white")
-   
-    colors = ['g', 'r', 'k', 'y', 'm', 'c']
-    leaves_nums_list = list(range(0,len(labels)))
-    
-    # Asigning clusters and colors to each leaf
-    #(link_cols,T) = flat_clusters(leaves_nums_list, colors, clusters, 'b', dend_matrix)
-    
-    # Creating dendrogram
-    dn = dendrogram(
-        dend_matrix,
-        labels=labels,
-        orientation = 'left'#,
-     #   link_color_func = lambda x: link_cols[x] 
-    )
-        
-    # Annotate cluster nodes in dendrogram (not yet)
-    # annotate_cluster_nodes(dn, T, colors)
-        
-    # Setting labels font size and color
-    ax = plt.gca()
-    ax.tick_params(axis='both', which='both', labelsize=20, colors="black", right= False, bottom=False)
-    
-    # Rendering html figure with mpld3 module from our matplotlib figure
-    #html_dendrogram = mpld3.fig_to_html(plt.gcf())
-    #return html_dendrogram
+def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
+    """
+    Return dendrogram in html format from our data (new plotly version)
+    """
+
+    # Setting figures
+    fig = ff.create_dendrogram(dend_matrix, orientation='right', labels=labels)
+
+    fig['layout'].update({
+        'width':600, 
+        'height':height
+        })
+    fig['layout']['margin'].update({
+        'r' : 400,
+        't' : 60,
+        'b' : 20,
+        'l' : 20,
+        })
+    fig['layout']['xaxis'].update({
+        'showline': False,
+        'showticklabels': False,
+        'ticks' : '',
+        })
+
+    fig['layout']['yaxis'].update({
+        'side' : 'right',
+        'showline': False,
+        'ticks' : '',
+        'tickfont' : {
+            'size' : 15,
+            'color' : 'black'
+            }
+        })
+
+    # Taking order for plot rows
+    dendro_leaves = fig['layout']['yaxis']['ticktext']
+
+    # Writing dendrogram on file
+    plotly.offline.plot(fig, filename=filename, auto_open=False)
+
+    return list(dendro_leaves)
+
+def sort_simulations(df_ts, dyn_dend_order):
+    """
+    Sorts the simulations in the dataframe according to the order in the list dyn_dend_order
+    """
+
+    # Create a dictionary with the order of each simulation row in the plot 
+    dyn_dend_order_dict = { dyn_name : dyn_dend_order.index(dyn_name) for dyn_name in dyn_dend_order }
+
+    # Adding column based in new order recieved from clustering
+    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: dyn_dend_order_dict[x])
+
+    #Sorting by ballesteros Id's (helixloop column) and clustering order
+    df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
+    df_ts = df_ts.sort_values(["helixloop",'clust_order'])
+
+    #Drop sort columns once used
+    df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
+
+    return df_ts
 
 def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
     """
@@ -413,29 +439,21 @@ def get_contacts_plots(itype, ligandonly):
     # Labels for dendogram
     dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
 
-    #Creating dendrogram
-    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
     dend_height = int( int(df.shape[1]) * 80 + 20)
     dend_width = 160 #Same width as two square column
     clust_order_list = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)# TODO: implement cluster number option, 2 is a placeholder
 
-    # Create a dictionary with the order of each simulation row in the plot 
-    clust_order_dict = { dyn_name : clust_order_list.index(dyn_name) for dyn_name in clust_order_list }
-
     # Adding column based in new order recieved from clustering
     df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_dict[x])
+    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
+    dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)
 
-    #Sorting by ballesteros Id's (helixloop column) and clustering order
-    df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
-    df_ts = df_ts.sort_values(["helixloop",'clust_order'])
-
-    #Drop sort columns once used
-    df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
-
+    df_ts = sort_simulations(df_ts, dyn_dend_order)
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
+    # I use df instead of df_ts because of its structure. I know it's kind of strange
     sim_num = df.shape[1] 
-    h=int(sim_num*80 + 20)# I use the df dataframe instead of df_ts because the last one has acopled itypes columns
+    h=int(sim_num*80 + 20)
     w=16300 if int(df.shape[0]*80 + 80) > 16300 else int(df.shape[0]*80 + 80)   
     figure_shape = {
         'width' : w,

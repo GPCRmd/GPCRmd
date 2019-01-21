@@ -91,7 +91,7 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
             else:
                 ligand_names[ligand_name] += 1
 
-            outfile.write("%s:%s:%s\tLigand-%s-%d\n" %(chain, type_res,number, ligand_name, ligand_names[ligand_name]))
+            outfile.write("%s:%s:%s\tLigand\n" %(chain, type_res,number))
 
     #Close output file
     outfile.close()
