@@ -3228,7 +3228,6 @@ def query_dynamics(request,dynamics_id):
     prot_muts={}
     prot_li=[]
     dynmodel_obj=dynaobj.id_model
-    dyn_model_id=dynmodel_obj.id 
 
     pdb_name="/protwis/sites/files/"+structure_file
     pdb_chain_li=obtain_prot_chains(pdb_name)
@@ -3245,8 +3244,6 @@ def query_dynamics(request,dynamics_id):
         is_mutated=search_prot_res["is_mutated"]
         if is_mutated:
             prot_muts[prot_name]=search_prot_res["mutations"]
-        else:
-            prot_muts[prot_name]=[]
     except:
         dynprot_li_all=DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=dynmodel_obj.id_complex_molecule.id)
         for dynprot_obj in dynprot_li_all:
@@ -3261,8 +3258,6 @@ def query_dynamics(request,dynamics_id):
                 if is_mutated:
                     prot_mut_li=[(pos,fromaa,toaa,seq_pdb[pos][2]) if seq_pdb[pos][2] else (pos,fromaa,toaa,"-") for (pos,fromaa,toaa) in search_prot_res["mutations"]]
                     prot_muts[prot_name]=prot_mut_li
-                else:
-                    prot_muts[prot_name]=[]
     dyna_dic["mutation_dict"]=prot_muts
     mut_sel_li=[]
     for mut_li in prot_muts.values():
@@ -3308,16 +3303,20 @@ def carousel_dynamics_components(request,dynamics_id):
     dyna_dic['link_2_molecules']=[]
     image_name=[]
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        candidatecomp=get_nonlig_comp_info(match,match.type)
-        dyna_dic['link_2_molecules'].append(candidatecomp)
-        #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
-        image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
-    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=get_nonlig_comp_info(match,match.type)
-#        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
-        if candidatecomp not in dyna_dic['link_2_molecules']:
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
             dyna_dic['link_2_molecules'].append(candidatecomp)
-            image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
+            #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
+            image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
+    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+    #        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
+            if candidatecomp not in dyna_dic['link_2_molecules']:
+                dyna_dic['link_2_molecules'].append(candidatecomp)
+                image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
     dyna_dic['imagetonames']= image_name
 
 
