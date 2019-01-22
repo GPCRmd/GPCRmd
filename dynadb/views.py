@@ -2782,16 +2782,14 @@ def query_molecule(request, molecule_id,incall=False):
 @user_passes_test_args(is_published_or_submission_owner)
 def query_molecule_sdf(request, molecule_id):
     '''Gets the sdf file of the given molecule_id '''
-    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
-        intext=open(molfile.id_files.filepath,'r')
-        string=intext.read()
-    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','w') as fh:
-        fh.write(string)
-    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','r') as f:
-        data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')[0])
-        response['Content-Disposition']="attachment;filename=%s" % (str(molecule_id)+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')
+    molfilesurl = DyndbFilesMolecule.objects.filter(id_molecule=molecule_id,type=0).values_list('id_files__url',flat=True) #MAKE SURE ONLY ONE FILE IS POSSIBLE
+    if len(molfilesurl) == 1:
+        molfileurl = molfilesurl[0]
+        return HttpResponseRedirect(molfileurl) 
+    elif len(molfilesurl) > 1:
+        raise RuntimeError("Molecule ID:%d has more than one SDF file." % (molecule_id))
+    else:
+        return HttpResponseNotFound()
     return response
 
 def search_compound(compound_id):
@@ -6664,7 +6662,7 @@ def _generate_molecule_properties(request,submission_id):
                 del mol
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
-             
+                
                 if qMOL.exists():
                     data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
                     data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]

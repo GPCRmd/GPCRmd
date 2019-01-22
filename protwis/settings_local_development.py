@@ -29,7 +29,7 @@ DATABASES = {
 
 # Quick-start development settings - unsuitable for production
 
-QUERY_CHECK_PUBLISHED = True
+QUERY_CHECK_PUBLISHED = False
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_TRANSACTIONAL_HEADERS = {}

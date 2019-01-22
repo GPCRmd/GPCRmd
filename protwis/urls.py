@@ -36,6 +36,7 @@ urlpatterns = [
 #    url(r'^drugs/',include('drugs.urls')),
     url(r'^mdsrv/(?P<path_dir>dir/_DB/[^/\\]+/[^/\\]+)|mdsrv/(?P<path>.*/_DB/[^/\\]+/[^/\\]+/.*)$','dynadb.views.mdsrv_redirect_login',name='mdsrv_redirect_login'),
     url(r'^mdsrv/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
+    url(r'^html/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
     
 ]
 
@@ -45,6 +46,3 @@ handler500 = views.error500
 if settings.DEBUG:
     import debug_toolbar
     urlpatterns.append( url(r'^__debug__/', include(debug_toolbar.urls)) )
-    urlpatterns.append(url(r'^html/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': '/var/www/html',
-    }))

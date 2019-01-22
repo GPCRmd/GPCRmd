@@ -240,7 +240,7 @@ class Command(BaseCommand):
         print("Making symbolic links for files")
         basepath = "/protwis/sites/files/"
         pdbpath = basepath + structure_file
-        mypdbpath =  files_path + "/dyn" + str(dynid) + ".pdb"
+        mypdbpath =  files_path + "dyn" + str(dynid) + ".pdb"
         if os.path.exists(mypdbpath):
             os.remove(mypdbpath)       
         os.symlink(pdbpath, mypdbpath)
@@ -310,7 +310,7 @@ class Command(BaseCommand):
             no_ligand = set(("sb", "pc", "ts", "ps", "hp"))
 
             # Calculate frequencies for each type
-            for itype in set(("sb","hp","pc","ps","ts","vdw","hbbb","hbsb","hbss","hbls","hblb","all")):
+            for itype in set(("wb","hb","wb2","sb","hp","pc","ps","ts","vdw","hbbb","hbsb","hbss","hbls","hblb","all")):
 
                 print(str("computing %s frequencies") % (itype))
                 dyn_contacts_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
