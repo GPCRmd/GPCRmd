@@ -25,9 +25,14 @@ html, body, #outer {
 
 */
 
+#inner_fixed {
+  background-color: #3278B4;
+  text-align: center;
+  margin-bottom: 10px;
+  color: white;
+}
 
 #inner_remaining{
-  position: fixed; 
   top: 150px; /*Set top value to HeightOfTopFrameDiv*/
   margin:auto;
   bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
@@ -36,7 +41,6 @@ html, body, #outer {
 }
 
 #fixed_col {
-  position:fixed;
   padding-left: 15px;
   z-index: 2;
   background-color: white;
@@ -51,10 +55,16 @@ html, body, #outer {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
+  max-height: 50%;
 }
 
 #menus {
   width: 100%; 
+}
+
+#more_info {
+  max-height: 35%;
+  overflow-y: scroll;
 }
 
 .mycheckbox{
@@ -146,7 +156,7 @@ a {
 }
 
 #trajsDropdown_options {
-  "height: auto;
+  height: auto;
   max-height:350px;
   overflow-x: hidden;
   padding:0;

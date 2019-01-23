@@ -22,8 +22,9 @@ $(document).ready(function(){
 
   //Mark options selected
   url_variables = window.location.pathname.split("/");
-  var itype = url_variables[url_variables.length-2];
-  var ligandonly = url_variables[url_variables.length-1];
+  var itype = url_variables[url_variables.length-3];
+  var ligandonly = url_variables[url_variables.length-2];
+  var rev = url_variables[url_variables.length-1];
 
   $('input[value="' + itype + '"]').prop('checked', true);
   if (ligandonly == "lg"){
@@ -34,6 +35,9 @@ $(document).ready(function(){
   }
   else {
     $('input[name="molec"]').prop('checked', true)
+  }
+  if (rev == "rev"){
+    $('#rev_pairs').prop('checked', true)
   }
 
   //-------Dropdowns
@@ -106,16 +110,16 @@ $(document).ready(function(){
           }
       }
   });
-  
+    
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
+          $("#main_plot_body").css("max-height", '85%');
       } else {
           $("#show_hide_info_text").text("Hide info ");
+          $("#main_plot_body").css("max-height", '50%');
       }
   });
-
-
 
   //--------------Setting width of the div as width of the plot image
 
@@ -187,8 +191,15 @@ function printchecked(){
   var locs = [];
   var checked_opts = [];
   var checked_values = [];
+  var rev_value = ""
   var URL_values = "";
   var value_opt = "";
+
+  //Check if reverse contact pairs is selected
+  rev_value = $("#rev_pairs:checked").val();
+  if (!Boolean(rev_value)){
+    rev_value = "norev";
+  }
 
   //Check location of the interaction options
   checked_locs = $('.option_location:checked');
@@ -205,7 +216,7 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contplots/' + check_opt + "/" + locs.join("_");
+    URL = '/contplots/' + check_opt + "/" + locs.join("_") + "/" + rev_value;
     window.location.pathname = URL; 
   }
   else {
