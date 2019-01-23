@@ -32,6 +32,7 @@ import tarfile
 from operator import itemgetter
 from os import listdir
 from os.path import isfile, normpath
+import urllib
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
@@ -7577,7 +7578,7 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,3*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,4*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
@@ -12896,21 +12897,12 @@ def validate_submission(submission_id):
         raise SubmissionValidationError('Modeled residues information missing for proteins #%s. ' + \
         'Please, update your complex structure information.' % ', #'.join([str(i) for i in diff_prot]))
     
-    
+def parse_submission_files_path(url_path=None,obj_folder=None,submission_folder=None,path=None,prefix=None):
+    ''' Function to parse submission file URLs. 
+    Full url is "[VIEW_URL]/obj_folder/submission_folder/path" 
+    Returns (url_path,obj_folder,submission_folder,path,prefix,submission_id,object_type) or None
+    if an invalid path is provided. '''
 
-@login_required
-def serve_submission_files(request,obj_folder,submission_folder,path):
-    ''' Function to serve private files using django-sendfile module.
-    Full url is "[VIEW_URL]/obj_folder/submission_folder/path" '''
-    
-    if is_allowed_directory(request.user,obj_folder=obj_folder,submission_folder=submission_folder,path=path):
-        
-        filepath = file_url_to_file_path(request.path)
-        return sendfile(request,filepath)
-
-    raise PermissionDenied
-
-def is_allowed_directory(user,url_path=None,obj_folder=None,submission_folder=None,path=None,prefix=None,allow_submission_dir=False):
     if url_path is not None:
         if prefix is None:
             url_prefix = r''
@@ -12937,18 +12929,70 @@ def is_allowed_directory(user,url_path=None,obj_folder=None,submission_folder=No
             submission_id = submission_folder.replace(prefix,"")
             if submission_id.isdigit():
                 submission_id = int(submission_id)
-                #check user permissions
-                if is_submission_owner(user,submission_id=submission_id):
-                    allowed_directory = get_file_paths(object_type,submission_id=submission_id,url=False)
-                    filepath = file_url_to_file_path(url_path)
+                return (url_path,obj_folder,submission_folder,path,prefix,submission_id,object_type)
+    return None
+
+
+def url_normalize_path(url,query=False,params=False,fragment=False):
+    up = urllib.parse.urlparse(url)
+    q = ''
+    p = ''
+    f = ''
+    if query:
+        q = up.query
+    if params:
+        p = up.params
+    if fragment:
+        f = up.fragment
+    return urllib.parse.urlunparse((up[0],up[1],os.path.normpath(up[2]),q,p,f))
+
+def url_equal(url1,url2):
+    nu1 = url_normalize_path(url1)
+    nu2 = url_normalize_path(url2)
+    return bool(nu1 == nu2) 
+
+
+@login_required
+def serve_submission_files(request,obj_folder,submission_folder,path):
+    ''' Function to serve private files using django-sendfile module.
+    Full url is "[VIEW_URL]/obj_folder/submission_folder/path" '''
+    filepath = file_url_to_file_path(request.path)
+    if not settings.QUERY_CHECK_PUBLISHED or is_allowed_directory(request.user,obj_folder=obj_folder,
+    submission_folder=submission_folder,path=path,allow_submission_dir=True): 
+        return sendfile(request,filepath)
+    else: 
+        parsed_url = parse_submission_files_path(obj_folder=obj_folder,submission_folder=submission_folder,
+        path=path)
+        if parsed_url:
+            url_path,obj_folder,submission_folder,path,prefix,submission_id,object_type = parsed_url
+            if obj_folder == "Molecule":
+                q_non_published = DyndbSubmission.objects.filter(user_id=request.user,is_published=False,
+                dyndbsubmissionmolecule__molecule_id__is_published=False)
+                shared_molecules_url = q_non_published.values_list('dyndbsubmissionmolecule__molecule_id__'+\
+                'dyndbfilesmolecule__id_files__url',flat=True)
+                n_url_path = url_normalize_path(url_path)    
+                for u in shared_molecules_url:
+                    if n_url_path == url_normalize_path(u):
+                        return sendfile(request,filepath)
+    raise PermissionDenied
+
+def is_allowed_directory(user,url_path=None,obj_folder=None,submission_folder=None,path=None,
+    prefix=None,allow_submission_dir=False):
+    parsed_url = parse_submission_files_path(url_path=url_path,obj_folder=obj_folder,
+    submission_folder=submission_folder,path=path,prefix=prefix)
+    if parsed_url:
+        url_path,obj_folder,submission_folder,path,prefix,submission_id,object_type = parsed_url 
+        #check user permissions
+        if is_submission_owner(user,submission_id=submission_id):
+            allowed_directory = get_file_paths(object_type,submission_id=submission_id,url=False)
+            filepath = file_url_to_file_path(url_path)       
+            if allow_submission_dir:
+                allowed_directory = os.path.realpath(allowed_directory)
+                filepath = os.path.realpath(filepath)
+                if os.path.isdir(filepath) and allowed_directory == filepath:
+                    return True
                     
-                    if allow_submission_dir:
-                        allowed_directory = os.path.realpath(allowed_directory)
-                        test_dir = os.path.realpath(filepath)
-                        if os.path.isdir(test_dir) and allowed_directory == test_dir:
-                            return True
-                    
-                    return in_directory(filepath, allowed_directory)
+                return in_directory(filepath, allowed_directory)
     return False
     
 def in_directory(file, directory):
@@ -12997,12 +13041,12 @@ def mdsrv_redirect(request,path):
 @textonly_500_handler
 def mdsrv_redirect_login(request,path,path_dir):
     if path_dir is None:
-        allow_dir = False
+        allow_dir = True
         url_path = path
     else:
         url_path = path_dir
         allow_dir = True
-    if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir):
+    if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir) and settings.QUERY_CHECK_PUBLISHED:
         return HttpResponseForbidden("Forbidden (403).",content_type='text/plain; charset=UTF-8')
     return mdsrv_redirect(request,url_path)
 
