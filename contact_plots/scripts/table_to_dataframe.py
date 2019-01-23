@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import plotly.plotly as py
 import plotly.figure_factory as ff
 import plotly.offline
+import plotly.graph_objs as go
 import os
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
@@ -60,7 +61,9 @@ def improve_receptor_names(df_ts,compl_data):
                 recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
                 taken_protlig[prot_lig]["id_added"]=True
         else:
-            recept_name=prot_lname+" ("+prot_lig[0]+") + "+prot_lig[1]
+            recept_name=prot_lname+" ("+prot_lig[0]+")"
+            if bool(prot_lig[1]):
+                recept_name = recept_name + " + "+prot_lig[1]
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
         recept_info[recept_name]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,traj_fnames,delta]
         index_dict[recept_id]=recept_name
@@ -151,6 +154,7 @@ def clustering(df_t):
     """
     Creates an interaction frequency numpy matrix from 
     """
+
     # Create dictionary table with position tuple as keys and interaction-by-simulation-freq array as value
     freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
         
@@ -158,7 +162,7 @@ def clustering(df_t):
     freq_matrix = (np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
 
     # Reorder according to clustering
-    return (freq_matrix)
+    return freq_matrix
 
 def flat_clusters(labels, colors, clusters, dflt_col, dend_matrix):
     """
@@ -237,18 +241,50 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename):
     Return dendrogram in html format from our data (new plotly version)
     """
 
+    """
+    # Prepare Layout
+    layout = go.Layout(
+        width=600, 
+        height=height,
+        autosize = False,
+        margin = go.layout.Margin(
+            r = 400,
+            l = 20,
+            t = 0,
+            b = 0,
+        ),
+        yaxis = go.layout.YAxis(
+            side = 'right',
+            showline= False,
+            ticks = '',
+            tickfont = {
+                'size' : 15,
+                'color' : 'black'
+            }
+        ),
+        xaxis = go.layout.XAxis(
+            showline= False,
+            showticklabels= False,
+            ticks = '',
+        )
+    )
+    """
+
     # Setting figures
     fig = ff.create_dendrogram(dend_matrix, orientation='right', labels=labels)
 
     fig['layout'].update({
         'width':600, 
-        'height':height
+        'height':height,
+        'autosize' : False,
         })
+
     fig['layout']['margin'].update({
         'r' : 400,
-        't' : 60,
-        'b' : 20,
         'l' : 20,
+        't' : 0,
+        'b' : 0,
+        'pad' : 0
         })
     fig['layout']['xaxis'].update({
         'showline': False,
@@ -294,7 +330,16 @@ def sort_simulations(df_ts, dyn_dend_order):
 
     return df_ts
 
-def get_contacts_plots(itype, ligandonly):
+def reverse_positions(df):
+    """
+    Appends a copy of the dataframe with the Position pair of the interaction being reversed (5x43-7x89 for 7x89-5x43)
+    """
+    df_rev = df.copy(deep = True)
+    df_rev['Position'] = df_rev['Position'].replace({r'(\w+)\s+(\w+)' : r'\2 \1'}, regex=True)
+    df_double = pd.concat([df, df_rev])
+    return df_double    
+
+def get_contacts_plots(itype, ligandonly, rev):
     """
     Create and save dataframe, dendrogram, and other data necessary for computing get_contacts online plots
         - itype: any of the codes from below typelist.
@@ -341,6 +386,8 @@ def get_contacts_plots(itype, ligandonly):
 
     }
 
+    print(str("computing dataframe and dendrogram for %s-%s-%s") % (itype, ligandonly, rev))
+
     # Creating set_itypes, with all in case it is not still in it
     if not itype == "all":
         set_itypes = set(itype.split("_"))
@@ -362,6 +409,10 @@ def get_contacts_plots(itype, ligandonly):
 
     # Adapting to Mariona's format
     df = adapt_to_marionas(df_raw)
+
+    # If rev option is setted to rev, duplicate all lines with the reversed-position version (4x32-2x54 duplicates to 2x54-4x32)
+    if rev == "rev":
+        df = reverse_positions(df)
 
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
@@ -399,18 +450,17 @@ def get_contacts_plots(itype, ligandonly):
     dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
 
     #Creating dendrogram
-    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
-    dend_height = int( int(df.shape[1]) * 80 + 20)
+    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dendrogram_figure.html"
+    dend_height = int( int(df.shape[1]) * 16 + 20)
     dend_width = 160 #Same width as two square column
-    dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)
+    dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height, dend_width, dendfile)
 
     df_ts = sort_simulations(df_ts, dyn_dend_order)
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     # I use df instead of df_ts because of its structure. I know it's kind of strange
-    sim_num = df.shape[1] 
-    h=int(sim_num*80 + 20)
-    w=16300 if int(df.shape[0]*80 + 80) > 16300 else int(df.shape[0]*80 + 80)   
+    h=dend_height
+    w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)   
     figure_shape = {
         'width' : w,
         'height' : h
@@ -425,10 +475,10 @@ def get_contacts_plots(itype, ligandonly):
         os.makedirs(basepath + "view_input_dataframe")
 
     # Print daraframe and to_import variables in file in file
-    df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dataframe.csv")
+    df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv")
 
     # Printing special variables
-    var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")
+    var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_variables.py", "w")
     var_file.write("recept_info = " + repr(recept_info) + "\n\n")
     var_file.write("recept_info_order = " + repr(recept_info_order) + "\n\n")
     var_file.write("dyn_gpcr_pdb = " + repr(dyn_gpcr_pdb) + "\n\n")
@@ -452,6 +502,7 @@ table_to_dataframe.py <INTERACTION_TYPE> <INTERACTION_PARTNERS> <NUM_SIMULATIONS
 
     - INTERACTION TYPE: any of the interaction types avalible for the web.
     - INTERACTION PARTNERS: lg, prt or prt_lg
+    - REVERSE OPTION: rev or norev
 
 """))
-get_contacts_plots(argv[1], argv[2])
+get_contacts_plots(argv[1], argv[2], argv[3])
