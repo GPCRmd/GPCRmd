@@ -73,7 +73,7 @@ $(document).ready(function(){
 
     //If ligand contacts selected, enable ligand options
     if (document.getElementById('Protein to ligand contacts').checked) {
-      $( ".hb_option[value*='l'], .option[value='vdw'], .option[value='hp'], .option[value='hb'], .option[value='wb'], .option[value='wb2']" ).prop('disabled',false);
+      $( ".hb_option[value*='l'], .option[value='vdw'], .option[value='hp'], .option[value='hb'], .option[value='wb'], .option[value='wb2'], .option[value='all']" ).prop('disabled',false);
     }
 
   });

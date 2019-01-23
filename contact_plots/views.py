@@ -96,7 +96,8 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
 
 	# Loading csv if it exists. If not, load "no interactions" template instead
 	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
-	if  exists(csv_name):
+ 
+	if exists(csv_name):
 		df_ts = pd.read_csv(csv_name, sep=",", index_col = 0)
 	else:
 		context = {
