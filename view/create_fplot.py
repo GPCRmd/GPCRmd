@@ -51,7 +51,7 @@ def create_fplot(self,dyn_id,newpath,pdbpath=None,trajpath=None,traj_id=None,str
         self.stdout.write(self.style.NOTICE(error))
         return
 
-    (prot_li_gpcr, dprot_li_all,dprot_li_all_info)=obtain_DyndbProtein_id_list(dyn_id)
+    prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid=obtain_DyndbProtein_id_list(dyn_id)
     dprot_chains={}
     chains_taken=set()
     prot_seq_pos={}
