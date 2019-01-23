@@ -3,14 +3,11 @@ matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from math import pi
 from sys import argv,exit
 import pandas as pd
-import numpy as np
+from  numpy import array
 from json import loads
 from re import sub,compile
-import matplotlib.pyplot as plt
-import plotly.plotly as py
-import plotly.figure_factory as ff
-import plotly.offline
-import plotly.graph_objs as go
+from  plotly.figure_factory import create_dendrogram
+from  plotly.offline import plot
 import os
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
@@ -104,9 +101,6 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
     #Dropping away interaction type colum
     df.drop('itype', 1, inplace = True)
      
-    # Set position as row index of the dataframe
-    df = df.set_index('Position')
-        
     return(df,dict_freqs)
         
 def adapt_to_marionas(df):
@@ -159,7 +153,7 @@ def clustering(df_t):
     freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
         
     # Convert previous dictionary to numpy array, and traspose it
-    freq_matrix = (np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
+    freq_matrix = (array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
 
     # Reorder according to clustering
     return freq_matrix
@@ -239,7 +233,7 @@ def annotate_cluster_nodes(dn, T, colors):
 def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
 
     # Setting figures
-    fig = ff.create_dendrogram(dend_matrix, orientation='right', labels=labels)
+    fig = create_dendrogram(dend_matrix, orientation='right', labels=labels)
 
     fig['layout'].update({
         'width':600, 
@@ -274,7 +268,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename):
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plotly.offline.plot(fig, filename=filename, auto_open=False)
+    plot(fig, filename=filename, auto_open=False)
 
     return list(dendro_leaves)
 
@@ -358,30 +352,26 @@ def get_contacts_plots(itype, ligandonly, rev):
     print(str("computing dataframe and dendrogram for %s-%s-%s") % (itype, ligandonly, rev))
 
     # Creating set_itypes, with all in case it is not still in it
-    if not itype == "all":
+    if itype == "all":
+        set_itypes =  set(("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
+    else: 
         set_itypes = set(itype.split("_"))
         set_itypes.add('all')
-    else: 
-        set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
 
     #Creating itypes dictionary for selected types
     selected_itypes = { x:typelist[x] for x in set_itypes }
 
     #Loading files
-    if not itype == "all":
+    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
+    for itype in set_itypes:
+        if itype == "all": 
+            continue
         df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype + ".tsv", sep="\s+")
-        df_raw_all = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
-        df_raw = pd.concat([df_raw_all, df_raw_itype])
-    else:
-        df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
+        df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
 
     # Adapting to Mariona's format
     df = adapt_to_marionas(df_raw)
-
-    # If rev option is setted to rev, duplicate all lines with the reversed-position version (4x32-2x54 duplicates to 2x54-4x32)
-    if rev == "rev":
-        df = reverse_positions(df)
 
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
@@ -394,9 +384,16 @@ def get_contacts_plots(itype, ligandonly, rev):
     #Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
     df,dict_freqs = removing_entries_and_freqsdict(df, set_itypes, itype)
 
+    # If rev option is setted to rev, duplicate all lines with the reversed-position version (4x32-2x54 duplicates to 2x54-4x32)
+    if rev == "rev":
+        df = reverse_positions(df)
+
     # If there are no interactions with this ligandonly-itype combination
     if df.empty:
         exit("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
+
+    # Set position as row index of the dataframe
+    df = df.set_index('Position')    
 
     #Transposing dataframe
     df_t = df.transpose()
