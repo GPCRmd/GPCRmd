@@ -363,10 +363,10 @@ def get_contacts_plots(itype, ligandonly, rev):
 
     #Loading files
     df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
-    for itype in set_itypes:
-        if itype == "all": 
+    for itype_df in set_itypes:
+        if itype_df == "all": 
             continue
-        df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype + ".tsv", sep="\s+")
+        df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype_df + ".tsv", sep="\s+")
         df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
 

@@ -83,7 +83,7 @@ for itype in itypes:
 	table_output_provi = str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype))
 	os.system(str("python %sget_contact_fingerprints.py \
 				--input_frequencies %s \
-	            --frequency_cutoff 0.01 \
+	            --frequency_cutoff 0.00 \
 	            --column_headers %s \
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
@@ -104,5 +104,4 @@ for rev in ["rev", "norev"]:
 				continue
 			if (itype in noprt_itypes) and (ipartner == "prt"):
 				continue
-
 			os.system("python %stable_to_dataframe.py %s %s %s" % (scripts_path, itype, ipartner, rev))
