@@ -122,6 +122,7 @@ $(document).ready(function(){
       });
     }    
 
+
 //-------- Obtain important data from template --------
 
 
@@ -131,9 +132,8 @@ $(document).ready(function(){
     var mdsrv_url=$("#embed_mdsrv").data("mdsrv_url");
     var sel = "";
     var sel_enc = sel;
-    var fpsegStr=$("#fpdiv").data("fpseg_li");
+    var fpsegStr=$("#view_screen").data("seg_li");
     var pg_framenum=0;
-    
     if (fpsegStr && (fpsegStr.indexOf(":") != -1) ){
         var fpsegli=fpsegStr.split(",");
         var fpsegStrTmpLi=[];
@@ -307,7 +307,6 @@ $(document).ready(function(){
         var presel_pos=$("#VisualizationDiv").data("presel_pos");
         var presel_pos_ary = undefined;
         var presel_pos_here=false;
-        console.log("krosis");
         if (bind_domain  && presel_pos){
             var dom_pos_li=bind_domain.split(",");
             var sel_dom_pos_li=checkPosInGpcrNum(dom_pos_li)
@@ -624,7 +623,6 @@ $(document).ready(function(){
     var ti_i=1;
     $("#text_input_all").on("click",".ti_add_btn",function(){ 
         if ($("#text_input_all").children().length < 20){
-            //var fpsegStr=$("#fpdiv").data("fpseg_li");
             var addFPschOpt="";
             if (fpsegStr){
                 addFPschOpt='<option value="FPscheme">GPCR Helices</option>';
@@ -727,7 +725,6 @@ $(document).ready(function(){
     var si_i=1;
     $("#seq_input_all").on("click",".si_add_btn",function(){ 
         if ($("#seq_input_all").children().length < 20){
-            //var fpsegStr=$("#fpdiv").data("fpseg_li");
             var addFPschOpt="";
             if (fpsegStr){
                 addFPschOpt='<option value="FPscheme">GPCR Helices</option>';

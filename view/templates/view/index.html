@@ -91,9 +91,9 @@
  <div class="col-md-12" id="page_info">
 
     <!-- <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;margin-bottom:10px">   -->
-     <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;margin-bottom:10px;color:white">  
+     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white">  
          <div class="panel-body">
-        	<h3 >GPCR viewer</h3>
+        	<h2 >GPCRmd Workbench</h2>
          </div> 
      </div>
 
@@ -111,7 +111,7 @@
             <div style="text-align:center"> 
              <!--<h4 >GPCR VIEWER</h4>-->
             </div>
-             <p style="text-align: justify;">Indicate what you want to display in your molecular representation using the selection options.</p>
+             <p style="text-align: justify;">Indicate what you want to display in your molecular representation using the selection options of the GPCRmd Viewer.</p>
 
          <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
         {% if gpcr_pdb != "no" %}
@@ -120,7 +120,7 @@
 <!--        <p style="text-align: justify;">If you wish to use more complex visualization options, you can open your structure in <a href="http://arose.github.io/mdsrv/" target="_blank" >MDsrv</a>.</p>-->
         <p style="text-align: justify;">Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>        
         
-        <p style="text-align: justify;"><a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a> powered by R. Fonseca and A. J. Venkatakrishnan.</p>
+        <p style="text-align: justify;">The hydrogen bonding network has been generated using <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a>, powered by R. Fonseca and A. J. Venkatakrishnan.</p>
         
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
@@ -150,7 +150,7 @@
 
         <div style="text-align:center;margin:5px 0 0 0;">
             <div class="row" id="VisualizationDiv" style="background-color:#F3F3F3; border-radius:2px;padding:5px;" data-bind_domain="{{bind_domain}}"  data-presel_pos="{{presel_pos}}">
-                <h4 style="padding:0;margin:0;">Visualization
+                <h4 style="padding:0;margin:0;">GPCRmd Viewer
                 </h4>
             </div>
         </div>
@@ -176,7 +176,7 @@
 
 <!-- ============= IFRAME =========== -->
             <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}">
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}">
                 <div id="legend_row" class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
@@ -339,7 +339,7 @@
                         <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements changefocus" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
                     {% endif %}
                     {% if compounds|length > 1%}
-                    <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#f2f2f2;padding:5px">All</button>
+                    <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#FFFFFF;padding:5px">All</button>
                     <button  class="btn btn-default nglCallBtn" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
                     {% endif %}
                 </center></div>
@@ -798,7 +798,7 @@
            {% if traj_list %}  
         <div style="text-align:center;margin:0;padding:5px;">
             <div class="row" style="background-color:#F3F3F3; border-radius:2px;">
-                <h4 id="analysisDiv" style="padding:0;margin:0;padding:5px;">Analysis
+                <h4 id="analysisDiv" style="padding:0;margin:0;padding:5px;">GPCRmd Toolkit
                 </h4>
             </div>
         </div>
@@ -806,39 +806,16 @@
 <!-- ======================================== -->
         {% if fpdir %}
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Flare Plots </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hydrogen bonding network </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
            </div>
            <div id="analysis_fplot" class="collapse in" >
-                <div style="height:15px;margin:0;padding:0">
-                    <span class="showIfTrajFPBlock" style="color:#808080;"><!--margin-bottom:10px;margin-top:10px;-->
+<!--                <div style="height:15px;margin:0;padding:0">
+                    <span class="showIfTrajFPBlock" style="color:#808080;">
                         Hydrogen bonding network
                     </span>
-                </div>
-                <div id="fpdiv" data-fpdir="{{fpdir}}" data-fpseg_li="{{seg_li}}" style="margin-top:0px;overflow:auto;margin-bottom:5px">
-
-    <!-- 
-                   <div class="row" style="margin-top:10px;margin-bottom:15px" >
-                       <div style="margin-left:18px;margin-bottom:10px;color:#808080">
-                            Represent a dynamic interaction network of <span style="font-weight:bold">hydrogen bonds</span> in the GPCR.
-                        </div>
-                        <div id="fpinfo" style="margin-left:18px;margin-bottom:10px;" >
-                         Trajectory: 
-                                <select id="fplot_traj" name="fplot_traj">
-                                   {% for fp in fplot_path %}
-                                       <option   value="{{fp.1}}">{{fp.2}}</option>
-                                   {% endfor %}
-                                </select>
-
-                         </div>
-                   </div>
-     -->
-
-    <!-- Link to big FP with slide  -->
-     <!--           {% if seg_li %}    
-                    <div class="row"> 
-                            <a id="gotofplot" href="{% url 'view:fplot_gpcr_slide' dyn_id=dyn_id filename=traj_list.0.3 seg_li=seg_li %}" target="_blank" class="pull-right btn btn-info" role="button" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Accept</a>
-                    </div>
-                    {% endif %}-->
+                </div>-->
+                <!--<span id="fphoverinfo"></span>-->
+                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:15px;overflow:auto;margin-bottom:5px">
                     
                <center>
                  <div id="flare-container"></div>
@@ -849,7 +826,7 @@
                       </button>
 
                       <div class="dropup" style="display:inline-block;position: relative;" >
-                        <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the flare plot.">Display
+                        <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the hydrogen bonding network flare plot.">Display
                         <span class="caret"></span></button>
                         <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
                           <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Interaction type</li>
@@ -876,7 +853,7 @@
                      </div> -->
                      
                      
-                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the flare plot.">
+                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
                   </span>

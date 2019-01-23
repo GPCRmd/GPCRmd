@@ -36,9 +36,10 @@ $( document ).ready(function() {
   show3dmol(counter);
 
   $("#3d").click(function(){
-  if (counter==0){
-    show3dmol(counter);
-  }
+      if (counter==0){
+        console.log("Hi")
+        show3dmol(counter);
+      }
   });
 
 

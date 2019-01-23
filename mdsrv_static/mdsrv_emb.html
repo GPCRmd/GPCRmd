@@ -290,10 +290,14 @@
                                 
                                 if (receptorsel){
                                     var receptorsel_d=decodeURIComponent(receptorsel.replace(/\+/g, " "));
-                                    if (fpsegStr){
-                                        o.addRepresentation( "cartoon", { colorScheme: FPscheme, sele: receptorsel_d, name: "Receptor"} );
-                                    } else {
-                                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d, name: "Receptor"} );
+                                    if (bs_info){
+                                        o.addRepresentation( "cartoon", { colorScheme:"uniform", colorValue: "#FFFFFF",  sele: receptorsel_d, name: "Receptor" } );
+                                    } else {                                        
+                                        if (fpsegStr){
+                                            o.addRepresentation( "cartoon", { colorScheme: FPscheme, sele: receptorsel_d, name: "Receptor"} );
+                                        } else {
+                                            o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: receptorsel_d, name: "Receptor"} );
+                                        }
                                     }
                                     sel_prot=true;
   
@@ -341,7 +345,11 @@
                                         if (comptype_sel.length > 0){
                                             var comp_sel=comptype_sel.join(" or ");
                                             if (comp_key == "lg"){
-                                                o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: comp_sel , name: "Ligand" } );
+                                                if (bs_info){
+                                                    o.addRepresentation( "spacefill", { colorValue: "#f8d5b1", colorScheme: "element", visible: true, sele: comp_sel } );
+                                                } else {
+                                                    o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: comp_sel } );
+                                                }
                                             }
                                             else if (comp_key == "i"){
                                                 o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30 , colorValue: "#aeff42" , name: "Ions"} );
@@ -496,8 +504,10 @@
                                         var sele = result[0];
                                         var sele2 = result[1];
                                         BSRepName="BS"+bsnum.toString();
-                                        o.addRepresentation( "licorice", { colorValue:"#6fffc9", radius: "0.210", sele: recept+" and "+ sele.toSeleString(), name:BSRepName } );
-                                        o.addRepresentation( "licorice", { colorValue:"#6fffc9",opacity:0.5 , radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
+                                        //o.addRepresentation( "licorice", { colorValue:"#6fffc9", radius: "0.210", sele: recept+" and "+ sele.toSeleString(), name:BSRepName } );
+                                        //o.addRepresentation( "licorice", { colorValue:"#6fffc9",opacity:0.5 , radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
+                                        //o.addRepresentation( "licorice", { colorValue:"#6fffc9",opacity:0.5 , radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
+                                        o.addRepresentation( "licorice", { colorValue:"#b6a476", radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
                                         bsnum+=1;
                                     }
                                     sel_prot=true;
@@ -653,7 +663,7 @@
                                                 var sele = result[0];
                                                 var sele2 = result[1];
                                                 BSRepName="BS"+bsnum.toString();
-                                                stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
+                                              //  stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
                                                 stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
                                                 bsnum+=1;
                                             }

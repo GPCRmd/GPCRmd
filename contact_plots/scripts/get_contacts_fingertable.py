@@ -31,22 +31,17 @@ def prepare_tables(original_table, new_table, itype, table_summary, firstline_su
 				table_summary.write(line_joined)
 				firstline_summary = False
 
-		#For rest of lines: print the interaction and also the reverse-residue version of this interaction
+		#For rest of lines: print the interaction and also the reverse-residue version of this interaction (if rev is true)
 		else:
 			line_tab.append(str(itype + "\n"))
 			line_regular = "\t".join(line_tab)
-			line_tab[0], line_tab[1] = line_tab[1], line_tab[0]
-			line_reverse = "\t".join(line_tab)
 			table_file.write(line_regular)
-			table_file.write(line_reverse)
 			table_summary.write(line_regular)
-			table_summary.write(line_reverse)
 
+
+	os.remove(table_output_provi)
 	table_file_provi.close()
 	table_file.close()
-
-	os.remove(str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype)))
-
 
 # Set paths
 get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
@@ -73,7 +68,6 @@ nolg_itypes = set(("sb","pc","ts","ps","hbbb","hbsb","hbss","hp"))
 noprt_itypes = set(("hbls","hblb"))
 ipartners = set(("lg","prt","prt_lg"))
 
-
 #Get fingerprint table by interaction type (itype)
 for itype in itypes:
 
@@ -87,14 +81,14 @@ for itype in itypes:
 
 	#Getting fingerprint info by type
 	table_output_provi = str("%scontact_tables/compare_%s_provi.tsv" % (files_path, itype))
-	table_output = str("%scontact_tables/compare_%s.tsv" % (files_path, itype))
 	os.system(str("python %sget_contact_fingerprints.py \
 				--input_frequencies %s \
-	            --frequency_cutoff 0.01 \
+	            --frequency_cutoff 0.00 \
 	            --column_headers %s \
 	            --table_output %s") % (get_contacts_path, infreqs, dyntsv, table_output_provi))
 
 	#Modifying tables to prepare them for table-to-dataframe script
+	table_output = str("%scontact_tables/compare_%s.tsv" % (files_path, itype))
 	prepare_tables(table_output_provi, table_output, itype, table_summary, firstline_summary)
 
 	#Only a header is needed for summary
@@ -103,11 +97,11 @@ for itype in itypes:
 table_summary.close()
 
 # Activate table_to_dataframe
-for itype in itypes:
-	for ipartner in ipartners:
-		if (itype in nolg_itypes) and (ipartner == "lg"):
-			continue
-		if (itype in noprt_itypes) and (ipartner == "prt"):
-			continue
-
-		os.system("python %stable_to_dataframe.py %s %s" % (scripts_path, itype, ipartner))
+for rev in ["rev", "norev"]:
+	for itype in itypes:
+		for ipartner in ipartners:
+			if (itype in nolg_itypes) and (ipartner == "lg"):
+				continue
+			if (itype in noprt_itypes) and (ipartner == "prt"):
+				continue
+			os.system("python %stable_to_dataframe.py %s %s %s" % (scripts_path, itype, ipartner, rev))

@@ -9,10 +9,10 @@
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
 <!--Load javascripts -->
-<script src="../../static/contplots_main.js"></script>
+<script src="../../../static/contplots_main.js"></script>
 
 <!--Personal styles-->
-<link rel="stylesheet" type="text/css" href="../../static/contplots_main.css">
+<link rel="stylesheet" type="text/css" href="../../../static/contplots_main.css">
 
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
@@ -28,7 +28,7 @@
 
  <!-- description  -->
 <div id="outer" class="col-xs-12">
-  <div class=" panel panel-primary" id="inner_fixed" style="background-color:blue;text-align:center;margin-bottom:10px;color:white">  
+  <div class=" panel panel-primary" id="inner_fixed">  
      <div class="panel-body">
         <h3>Residue interaction frequency: {{itype_name}}</h3>
      </div> 
@@ -41,110 +41,117 @@
       <div class="col-xs-12" id="plot_col">
         <div class="panel panel-primary" id="main_plot_body">
           <div class="panel-body" style="padding-left: 0px">
+            <div id="menus" class="container-fluid">
+              <div class="row">
+                <!--itypes dropdown-->
+                <div class="dropdown optbar">
+                  <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                    Interaction Type 
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                  {% for group, types_tuple in itypes_order %}
+                    <li>
+                      <label class="macrotype">
+                        {{group}}
+                      </label>
+                    </li>
+                    <hr>
+                    {% for typecode,typename in types_tuple  %}
+                    {% if typecode == "hb" %}
+                    <!--Hydrogen bond itypes dropdown-->
+                    <li class="dropdown-submenu">
+                      <div class="HB_row">
+                        <label class="mycheckbox">
+                          <input type="radio" name="itypes" class="option" value="hb" />
+                            hydrogen bond
+                        </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
+                        <ul class="dropdown-menu" id="HB">
+                          {% for code,itype in hb_itypes %}
+                          <li>
+                            <label class="mycheckbox">
+                            <input type="radio" name="itypes" class="option hb_option" value={{code}} />
+                              {{itype}}
+                            </label>
+                          </li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+                    </li>
+                    {% else %}
+                    <li>
+                      <label class="mycheckbox">
+                      <input type="radio" name="itypes" class="option" value={{typecode}} />
+                        {{typename}}
+                      </label>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    {% endfor %}
+                    <!--All option-->
+                    <br>
+                    <li id="all-li">
+                      <label id="all" class="mycheckbox">
+                      <input type="radio" name="itypes" class="option" value="all" />
+                        Total interaction frequency
+                      </label>
+                    </li>
+                  </ul>
+                </div> 
+                <!--Clusters dropdown-->
+                <div class="dropdown optbar">
+                  <button type="button" id="cluster_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+                    Number of clusters
+                    <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu" id="cluster-dropdown">
+                    {% for clustnum in "12468" %}
+                    <li><a href="#" class="clust_opt">{{clustnum}}</a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                <!--Checkboxes interacting parts of the simulation -->
+                <div class="optbar">
+                  <label class="partners_checkbox">
+                  <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+                    Protein-Protein
+                  </label>
+                  <br>
+                  <label class="partners_checkbox">
+                  <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
+                    Protein-Ligand
+                  </label>
+                </div>
+                <!--Repetition checkbox-->
+                <div class="optbar">
+                  <label class="partners_checkbox">
+                  <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
+                    Reversed residue pairs
+                  </label>
+                </div>
+                <!--Apply button -->
+                <div class="dropdown optbar">
+                  <button type="button" id="applybutton"  onclick="printchecked();" class="btn btn-success btn-sm" >Apply </button>
+                </div>
+              </div>
+              <!--download button-->
+              <div class="row">
+                <div class="dropdown optbar">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="window.location.pathname = '/contplots/download_csv'">
+                    <span class="glyphicon glyphicon-download"></span> Download csv
+                  </button> 
+                </div>
+              </div>
+            </div>
             <div id="first_col" class="col-xs-5" style="padding-left: 0px"><!--To avoid overlaping of fixed-->
               <div id="fixed_col" class="left_col">
-                <div id="menus" class="container-fluid">
-                  <div class="row">
-                  <!--itypes dropdown-->
-                    <div class="dropdown optbar">
-                      <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
-                        Interaction Type 
-                        <span class="caret"></span>
-                      </button>
-                      <ul class="dropdown-menu">
-                      {% for group, types_tuple in itypes_order %}
-                        <li>
-                          <label class="macrotype">
-                            {{group}}
-                          </label>
-                        </li>
-                        <hr>
-                        {% for typecode,typename in types_tuple  %}
-                        {% if typecode == "hb" %}
-                        <!--Hydrogen bond itypes dropdown-->
-                        <li class="dropdown-submenu">
-                          <div class="HB_row">
-                            <label class="mycheckbox">
-                              <input type="radio" name="itypes" class="option" value="hb" />
-                                hydrogen bond
-                            </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
-                            <ul class="dropdown-menu" id="HB">
-                              {% for code,itype in hb_itypes %}
-                              <li>
-                                <label class="mycheckbox">
-                                <input type="radio" name="itypes" class="option hb_option" value={{code}} />
-                                  {{itype}}
-                                </label>
-                              </li>
-                              {% endfor %}
-                            </ul>
-                          </div>
-                        </li>
-                        {% else %}
-                        <li>
-                          <label class="mycheckbox">
-                          <input type="radio" name="itypes" class="option" value={{typecode}} />
-                            {{typename}}
-                          </label>
-                        </li>
-                        {% endif %}
-                        {% endfor %}
-                        {% endfor %}
-                        <!--All option-->
-                        <br>
-                        <li id="all-li">
-                          <label id="all" class="mycheckbox">
-                          <input type="radio" name="itypes" class="option" value="all" />
-                            Total interaction frequency
-                          </label>
-                        </li>
-                      </ul>
-                    </div> 
-                    <!--Clusters dropdown-->
-                    <div class="dropdown optbar">
-                      <button type="button" id="cluster_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
-                        Number of clusters
-                        <span class="caret"></span>
-                      </button>
-                      <ul class="dropdown-menu" id="cluster-dropdown">
-                        {% for clustnum in "12468" %}
-                        <li><a href="#" class="clust_opt">{{clustnum}}</a></li>
-                        {% endfor %}
-                      </ul>
-                    </div>
-                    <!--Checkboxes interacting parts of the simulation -->
-                    <div class="optbar">
-                      <label class="partners_checkbox">
-                      <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
-                        Protein-Protein
-                      </label>
-                      <br>
-                      <label class="partners_checkbox">
-                      <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
-                        Protein-Ligand
-                      </label>
-                    </div>
-                    <!--Apply button -->
-                    <div class="dropdown optbar">
-                      <button type="button" id="applybutton" class="btn btn-success btn-sm" >Apply </button>
-                    </div>
-                  </div>
-                  <!--download button-->
-                  <div class="row">
-                    <div class="dropdown optbar">
-                      <button type="button" class="btn btn-sm btn-primary" onclick="window.location.pathname = '/contplots/download_csv'">
-                        <span class="glyphicon glyphicon-download"></span> Download csv
-                      </button> 
-                    </div>
-                  </div>
-                </div>
                 <div class="row" id="dendrogram">
                   {{dendrogram | safe }}
                 </div>
               </div>
             </div>
             <div id="second_col" class="col-xs-6">
-              <div style="max-width:{{plotdiv_w}}px; margin-top: 45px;">
+              <div style="max-width:{{plotdiv_w}}px;">
                {{ div | safe }}
               </div>
             </div>
@@ -179,21 +186,23 @@
 
             <p style="text-align: justify;">Only interactions with an average of 10% frequency across all simulations are displayed in plots. Same-helix interactions are not displayed. </p>
 
-            <p style="text-align: justify;"> Extended water bridges are made by residues binded throught two water molecules</p>
-
             <p class="doc_title">How to use it: </p>
 
-            <p style="text-align: justify;">Select the type of interaction you want to display in the plot, and click apply to load it. </p>
+            <ol>
+              <li style="text-align: justify;">Select the type of interaction you want to display in the plot, and click apply to load it. </li>
 
-            <p style="text-align: justify;">You can also select the interaction partners of the interactions to be displayed by selecting or unselecting the checkboxes</p>
+              <li style="text-align: justify;">Select the interaction partners of the interactions to be displayed by checking the checkboxes</li>
 
+              <li style="text-align: justify;">Check "Reversed residue options" to repeat every residue pair with the positions in reverse order (Eg: 5x43-7x32 and 7x32-5x43)</li><!--TODO: improve this shitty explanation-->
+
+            </ol>
             <p style="text-align: justify;">More information from a selected interaction can be displayed by clicking uppon its cell.</p>
+
+            <p style="text-align: justify;">The "number of clusters" option is still not operative.</p>
 
             <p class="doc_title">About the clustering: </p>
 
-            <p style="text-align: justify;"> The clustering tree displayed is based on euclidean distances between simulations, using selected interaction frequency as values and residue pairs as dimensions. </p>
-
-            <p style="text-align: justify;"> It has been calculated using <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html"> linkage() </a> function, from <a href="https://docs.scipy.org">scipy</a> python package.</p>
+            <p style="text-align: justify;"> The clustering dendrogram displayed has been created with <a href="https://github.com/plotly/plotly.py" target="_blank">plotly</a> python library. </p>
 
             <!-- <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>-->
             </p>

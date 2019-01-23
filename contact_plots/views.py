@@ -24,7 +24,7 @@ def json_dict(path):
     json_data = loads(json_str)
     return json_data
 
-def get_contacts_plots(request, itype, ligandonly):
+def get_contacts_plots(request, itype, ligandonly, rev = False):
 	"""
 	Main view of contact plots
 	"""
@@ -95,8 +95,9 @@ def get_contacts_plots(request, itype, ligandonly):
 	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
 
 	# Loading csv if it exists. If not, load "no interactions" template instead
-	csv_name = basedir + itype + "_" + ligandonly + "_dataframe.csv"
-	if  exists(csv_name):
+	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
+ 
+	if exists(csv_name):
 		df_ts = pd.read_csv(csv_name, sep=",", index_col = 0)
 	else:
 		context = {
@@ -109,14 +110,14 @@ def get_contacts_plots(request, itype, ligandonly):
 		return render(request, 'contact_plots/index_nodata.html', context)
 
 	# Loading variables
-	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_variables.py").load_module()
+	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
 	recept_info = variablesmod.recept_info
 	recept_info_order = variablesmod.recept_info_order
 	dyn_gpcr_pdb = variablesmod.dyn_gpcr_pdb
 	figure_shape = variablesmod.figure_shape
 
 	# Loading dendrogram
-	dendr_figure = open(basedir + itype + "_" + ligandonly + "_dendrogram_figure.html", 'r').read()
+	dendr_figure = open(basedir + itype + "_" + ligandonly + "_" + rev + "_dendrogram_figure.html", 'r').read()
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts
@@ -274,10 +275,17 @@ def get_contacts_plots(request, itype, ligandonly):
                 $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
                 $("#recept_val").html(prot_lname + " ("+recept+")");
                 $("#pos_val").html(pos);
-                $("#lig_val").html(lig_lname + " ("+lig+")");
+                if (Boolean(lig)) {
+                	$("#lig_val").html(lig_lname + " ("+lig+")");
+                	$("#lig_link").show();
+	                $("#lig_link").attr("href","../../../dynadb/compound/id/"+comp_id);
+                }
+                else {
+                	$("#lig_val").html("None");
+                	$("#lig_link").hide();
+                }
                 $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
-                $("#lig_link").attr("href","../../../dynadb/compound/id/"+comp_id);
             } else {
                 if (plot_bclass != "col-xs-12"){
                     $("#retracting_parts").attr("class","col-xs-12");
