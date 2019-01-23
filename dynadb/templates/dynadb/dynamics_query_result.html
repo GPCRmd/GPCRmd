@@ -192,7 +192,7 @@
             {% if answer.ortoligands or answer.aloligands or answer.expdatabind or answer.expdataeff or answer.expdatainhi %}
                 <p class="techinfo_title">Ligands</p>
                 <div class="">
-                    <div style="max-height:400px;overflow:auto;margin-bottom: 10px">
+                    <div style="max-height:480px;overflow:auto;margin-bottom: 10px">
                         <div id='leftleftcol' style="padding: 0; margin: 0;">
                         {% if answer.ortoligands %}
                             <div style="margin-bottom:7px">
@@ -201,7 +201,8 @@
                             {% for url in answer.ortoligands %}
                                <!-- <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>-->
                                <p style="margin: 0"><a title="Specific state id: {{url.0}}"  class="btn btn-primary lig_element"  data-resname="{{url.2}}" role='button' href=/dynadb/molecule/id/{{url.0}}>{{url.3}}</a></p>
-                               <img  src="{{url.1}}" height="270" width="270" style="margin-bottom:15px;padding:7px;"/> </a><br>
+                               <img  src="{{url.1}}" height="270" width="270" style="margin-bottom:15px;padding:7px;margin-top:15px"/> </a><br>
+
                             {% endfor %}
                         {% endif %}
                         </div> 
@@ -213,7 +214,7 @@
                             </div>
                             {% for url in answer.aloligands %}
                                <p  style="margin: 0"><a title="Specific state id: {{url.0}}" class="btn btn-primary lig_element"  data-resname="{{url.2}}" role='button' href=/dynadb/molecule/id/{{url.0}}>{{url.3}}</a></p>
-                               <img   src="{{url.1}}" height="270" width="270" style="margin-bottom: :15px;padding:7px;"/> </a><br>
+                               <img   src="{{url.1}}" height="270" width="270" style="margin-bottom: :15px;padding:7px;margin-top:15px"/> </a><br>
                             {% endfor %}
                         {% endif %}
                         </div>
@@ -363,7 +364,7 @@
                             {% if url.4 %}
                                 <img style="border:solid #e6e6e6 1px;border-radius:6px;margin-top:10px" src="{{url.1}}" height="200" width="200"/>
                             {% else %}
-                                <div style="background-color:white;height:200px;width: 200px;padding-top:70px;font-size:40px;border:solid #e6e6e6 1px;border-radius:6px;margin-top:10px">
+                                <div style="background-color:white;height:200px;width: 200px;padding-top:80px;font-size:20px;border:solid #e6e6e6 1px;border-radius:6px;margin-top:10px">
                                     <p>{{url.5 | safe}}</p>
                                 </div>
                             {% endif %}

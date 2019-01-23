@@ -108,8 +108,9 @@
         <p class=ptext>The GPCR viewer also provides the option to select a protein segment from its sequence. Set your selection by clicking at the desired range or ranges of residues, selected segments will appear at the sequence in green. To deselect a residue range from the sequence, just click on it. Finally, click at <span class=highlight>Confirm selection</span>: the residue range(s) will be added to a text input field, which you can modify to adjust the selection to what you want to display. If you want to add new sequence selections, click at the <span style="color: rgb(87, 200, 87)" class="glyphicon glyphicon-plus-sign"></span> button.</p>
 
         <h5 class=subsect>GPCR conserved positions</h5>
-        <p class=ptext>The <span class=highlight>GPCR conserved positions</span> selection provides the possibility to rapidly select positions or domains conserved in the different GPCR family classes. In this section, the GPCR class of the protein being represented will appear in bold. It is also possible to visualize in your protein the positions that correspond to conserved positions from other GPCR classes. For example, if your protein belongs to class A, you can represent the residue that corresponds to class B <span style="font-style:italic">2.50</span> (<span style="font-style:italic">2.50b</span>). Hover the buttons with your mouse for more information about the conserved positions and motifs, if available. Class A positions are shown in blue, B in orange, C in yellow and F in pink.</p>
-
+        <p class=ptext>The <span class=highlight>GPCR conserved positions</span> selection provides the possibility to rapidly select positions or domains conserved in the different GPCR family classes. The GPCR class of the protein being represented will be selected by default, and therefore the conserved positions/domains corresponding to that GPCR class will be available to visualize.
+        </p>
+        <p class=ptext>It is also possible to visualize the positions that correspond to conserved positions from other GPCR classes. For example, if your protein belongs to class A, you can represent the residue that corresponds to class B <span style="font-style:italic">2.50</span> (<span style="font-style:italic">2.50b</span>). Hover the buttons with your mouse for more information about the conserved positions and motifs, if available. In the GPCRmd viewer, Class A positions are represented in blue, B in orange, C in yellow and F in pink.</p>
 
         <h4 class=myheader>Analysis tools</h4>
         <h5 class=subsect>Distance within 2 atoms</h5>
@@ -155,7 +156,7 @@
         <p class=ptext> This tool allows you to identify the salt bridges formed through a simulation. Salt bridges are defined as any combination between these two sets: {Arg-NH1, Arg-NH2, Lys-NZ, His-NE2, His-ND1} and {Glu-OE1, Glu-OE2, Asp-OD1, Asp-OD2} in which the participating atoms are closer than 4 Angstroms. Histidine atoms are only considered if the residue is protonated. As with hydrogen bond analysis, you can select a percentage threshold, and the results include a "Show Salt Bridge" button and a "Show All" button. Furthermore, you can select an interval of frames, instead of the whole trajectory.
         </p>
 
-        <h5 class=subsect>SASA analysis</h5>
+<!--        <h5 class=subsect>SASA analysis</h5>
         <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the <a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>shrake_rupley</a> function from MDTraj module. Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms belonging to each frame. Then, we plot the obtained value per frame, so you can see how the SASA of that set of atoms fluctuates through time. We have defined a few options to define the atoms that will be considered:</p>
 
         <ol style="margin-bottom:20px;">
@@ -176,9 +177,9 @@
         </ol>
         <p class=ptext>
             Furthermore, you can select an interval of frames, instead of the whole trajectory.
-        </p>
+        </p>-->
 
-        <h5 class=subsect>Flare plots</h5>
+        <h5 class=subsect>Hydrogen bonding network (Flare plots)</h5>
         <p class=ptext>If a flare plot is available for the simulation being displayed at the viewer, the option to obtain it will be available at the analysis section. Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. 
 Applied to the study of GPCRs, Flare plots are capable to generate networks which group protein residues according to the helix in which they belong and differentiate interactions between residues of the same helix from inter-helix interactions. For the moment, flare plots are available for the representation of <span class=highlight>hydrogen bonds</span> formed between residues of the GPCR through a given simulation trajectory. Hydrogen bonds interactions are represented as lines connecting residue pairs. Hover or click a residue to highligh the lines representing the interactions in which it participates.</p>
         <p class=ptext style="margin-bottom:10px">There are several options available </p>

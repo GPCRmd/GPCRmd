@@ -2782,16 +2782,14 @@ def query_molecule(request, molecule_id,incall=False):
 @user_passes_test_args(is_published_or_submission_owner)
 def query_molecule_sdf(request, molecule_id):
     '''Gets the sdf file of the given molecule_id '''
-    for molfile in DyndbFilesMolecule.objects.filter(id_molecule=molecule_id).filter(type=0): #MAKE SURE ONLY ONE FILE IS POSSIBLE
-        intext=open(molfile.id_files.filepath,'r')
-        string=intext.read()
-    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','w') as fh:
-        fh.write(string)
-    with open('/tmp/'+str(molecule_id)+'_gpcrmd.sdf','r') as f:
-        data=f.read()
-        response=HttpResponse(data, content_type=mimetypes.guess_type('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')[0])
-        response['Content-Disposition']="attachment;filename=%s" % (str(molecule_id)+'_gpcrmd.sdf') #"attachment;'/tmp/'+protein_id+'_gpcrmd.fasta'"
-        response['Content-Length']=os.path.getsize('/tmp/'+str(molecule_id)+'_gpcrmd.sdf')
+    molfilesurl = DyndbFilesMolecule.objects.filter(id_molecule=molecule_id,type=0).values_list('id_files__url',flat=True) #MAKE SURE ONLY ONE FILE IS POSSIBLE
+    if len(molfilesurl) == 1:
+        molfileurl = molfilesurl[0]
+        return HttpResponseRedirect(molfileurl) 
+    elif len(molfilesurl) > 1:
+        raise RuntimeError("Molecule ID:%d has more than one SDF file." % (molecule_id))
+    else:
+        return HttpResponseNotFound()
     return response
 
 def search_compound(compound_id):
@@ -3228,7 +3226,6 @@ def query_dynamics(request,dynamics_id):
     prot_muts={}
     prot_li=[]
     dynmodel_obj=dynaobj.id_model
-    dyn_model_id=dynmodel_obj.id 
 
     pdb_name="/protwis/sites/files/"+structure_file
     pdb_chain_li=obtain_prot_chains(pdb_name)
@@ -3245,8 +3242,6 @@ def query_dynamics(request,dynamics_id):
         is_mutated=search_prot_res["is_mutated"]
         if is_mutated:
             prot_muts[prot_name]=search_prot_res["mutations"]
-        else:
-            prot_muts[prot_name]=[]
     except:
         dynprot_li_all=DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=dynmodel_obj.id_complex_molecule.id)
         for dynprot_obj in dynprot_li_all:
@@ -3261,8 +3256,6 @@ def query_dynamics(request,dynamics_id):
                 if is_mutated:
                     prot_mut_li=[(pos,fromaa,toaa,seq_pdb[pos][2]) if seq_pdb[pos][2] else (pos,fromaa,toaa,"-") for (pos,fromaa,toaa) in search_prot_res["mutations"]]
                     prot_muts[prot_name]=prot_mut_li
-                else:
-                    prot_muts[prot_name]=[]
     dyna_dic["mutation_dict"]=prot_muts
     mut_sel_li=[]
     for mut_li in prot_muts.values():
@@ -3308,16 +3301,20 @@ def carousel_dynamics_components(request,dynamics_id):
     dyna_dic['link_2_molecules']=[]
     image_name=[]
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        candidatecomp=get_nonlig_comp_info(match,match.type)
-        dyna_dic['link_2_molecules'].append(candidatecomp)
-        #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
-        image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
-    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        candidatecomp=get_nonlig_comp_info(match,match.type)
-#        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
-        if candidatecomp not in dyna_dic['link_2_molecules']:
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
             dyna_dic['link_2_molecules'].append(candidatecomp)
-            image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
+            #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
+            image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
+    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
+        moltype=match.type
+        if moltype!=1:#we don't take ligands
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+    #        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
+            if candidatecomp not in dyna_dic['link_2_molecules']:
+                dyna_dic['link_2_molecules'].append(candidatecomp)
+                image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
     dyna_dic['imagetonames']= image_name
 
 
@@ -6665,7 +6662,7 @@ def _generate_molecule_properties(request,submission_id):
                 del mol
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
-             
+                
                 if qMOL.exists():
                     data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
                     data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]

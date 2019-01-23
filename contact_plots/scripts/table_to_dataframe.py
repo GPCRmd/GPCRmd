@@ -237,38 +237,6 @@ def annotate_cluster_nodes(dn, T, colors):
 
 
 def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
-    """
-    Return dendrogram in html format from our data (new plotly version)
-    """
-
-    """
-    # Prepare Layout
-    layout = go.Layout(
-        width=600, 
-        height=height,
-        autosize = False,
-        margin = go.layout.Margin(
-            r = 400,
-            l = 20,
-            t = 0,
-            b = 0,
-        ),
-        yaxis = go.layout.YAxis(
-            side = 'right',
-            showline= False,
-            ticks = '',
-            tickfont = {
-                'size' : 15,
-                'color' : 'black'
-            }
-        ),
-        xaxis = go.layout.XAxis(
-            showline= False,
-            showticklabels= False,
-            ticks = '',
-        )
-    )
-    """
 
     # Setting figures
     fig = ff.create_dendrogram(dend_matrix, orientation='right', labels=labels)
@@ -330,6 +298,7 @@ def sort_simulations(df_ts, dyn_dend_order):
 
     return df_ts
 
+<<<<<<< HEAD
 def reverse_positions(df):
     """
     Appends a copy of the dataframe with the Position pair of the interaction being reversed (5x43-7x89 for 7x89-5x43)
@@ -340,6 +309,7 @@ def reverse_positions(df):
     return df_double    
 
 def get_contacts_plots(itype, ligandonly, rev):
+
     """
     Create and save dataframe, dendrogram, and other data necessary for computing get_contacts online plots
         - itype: any of the codes from below typelist.
@@ -449,11 +419,22 @@ def get_contacts_plots(itype, ligandonly, rev):
     # Labels for dendogram
     dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
 
+<<<<<<< HEAD
     #Creating dendrogram
     dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dendrogram_figure.html"
     dend_height = int( int(df.shape[1]) * 16 + 20)
     dend_width = 160 #Same width as two square column
     dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height, dend_width, dendfile)
+=======
+    dend_height = int( int(df.shape[1]) * 80 + 20)
+    dend_width = 160 #Same width as two square column
+    clust_order_list = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)# TODO: implement cluster number option, 2 is a placeholder
+
+    # Adding column based in new order recieved from clustering
+    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_dict[x])
+    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
+    dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-40 , dend_width, dendfile)
+>>>>>>> 0c14b4ac670979fb5f14b08d972486b4eee43adf
 
     df_ts = sort_simulations(df_ts, dyn_dend_order)
 
