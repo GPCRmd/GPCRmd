@@ -268,7 +268,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename):
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plot(fig, filename=filename, auto_open=False)
+    plot(fig, filename=filename, auto_open=False, config={'staticPlot' : True })
 
     return list(dendro_leaves)
 
