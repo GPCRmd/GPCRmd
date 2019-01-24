@@ -3080,7 +3080,8 @@ def obtain_dyn_files(paths_dict):
     return (structure_file,structure_file_id,structure_name, traj_list)
 
 
-def asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken):
+def assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li):
+    chains_taken = set()
     prot_obj=dynprot_obj.receptor_id_protein
     dynprot_id=dynprot_obj.id
     seq=DyndbProteinSequence.objects.get(id_protein=dynprot_id).sequence
@@ -3110,7 +3111,7 @@ def asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_t
                                         (chain_num,bw,gpcrdb)=re.split('\.|x', this_gnum)
                                         this_gnum=chain_num+"x"+gpcrdb
                                 seq_pdb[db_pos]=[pos[0][1],chain_name,this_gnum]
-    return seq_pdb
+    return (seq_pdb,chains_taken)
 
 def get_nonlig_comp_info(match,moltype):
     mol_id=match.id_molecule.id
@@ -3226,37 +3227,37 @@ def query_dynamics(request,dynamics_id):
 
     prot_muts={}
     prot_li=[]
-    dynmodel_obj=dynaobj.id_model
+    dynprot_id_list = []
 
-    pdb_name="/protwis/sites/files/"+structure_file
+    dynmodel_obj=dynaobj.id_model
+    
+    pdb_name=os.path.join(settings.MEDIA_ROOT,structure_file)
     pdb_chain_li=obtain_prot_chains(pdb_name)
     seq_pdb={}
-    chains_taken=set()
-    try: #if it is apomorfic
-        dynprot_obj=dynmodel_obj.id_protein
-        dynprot_id=dynprot_obj.id
-        prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
-        search_prot_res=search_protein(dynprot_id)
-        prot_name=search_prot_res['Protein_name']
-        dyna_dic['link2protein'].append([dynprot_id, prot_name ])
-        seq_pdb=asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken)
-        is_mutated=search_prot_res["is_mutated"]
-        if is_mutated:
-            prot_muts[prot_name]=search_prot_res["mutations"]
-    except:
+    # check if it is apomorfic
+    dynprot_obj=dynmodel_obj.id_protein
+    if dynprot_obj is not None:
+        dynprot_li_all=[dynprot_obj]
+    else:
+        #if it is a complex
         dynprot_li_all=DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=dynmodel_obj.id_complex_molecule.id)
-        for dynprot_obj in dynprot_li_all:
-            dynprot_id=dynprot_obj.id
-            if dynprot_id not in dyna_dic['link2protein']:
-                prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
-                search_prot_res=search_protein(dynprot_id)
-                prot_name=search_prot_res['Protein_name']
-                dyna_dic['link2protein'].append([dynprot_id,prot_name ])
-                seq_pdb=asign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li,chains_taken)
-                is_mutated=search_prot_res["is_mutated"]
-                if is_mutated:
-                    prot_mut_li=[(pos,fromaa,toaa,seq_pdb[pos][2]) if seq_pdb[pos][2] else (pos,fromaa,toaa,"-") for (pos,fromaa,toaa) in search_prot_res["mutations"]]
-                    prot_muts[prot_name]=prot_mut_li
+    
+    for dynprot_obj in dynprot_li_all:
+        dynprot_id=dynprot_obj.id
+        if dynprot_id not in dynprot_id_list:
+            prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
+            search_prot_res=search_protein(dynprot_id)
+            prot_name=search_prot_res['Protein_name']
+            dynprot_id_list.append(dynprot_id)
+            dyna_dic['link2protein'].append([dynprot_id,prot_name ])
+            seq_pdb,chains_taken=assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li)
+            is_mutated=search_prot_res["is_mutated"]
+            if is_mutated:
+                prot_mut_li=[(pos,fromaa,toaa,seq_pdb[pos][2]) if seq_pdb[pos][2] else (pos,fromaa,toaa,"-") for (pos,fromaa,toaa) in search_prot_res["mutations"]]
+                prot_muts[prot_name]=prot_mut_li
+        else:
+            raise RuntimeError("Protein %d in molecular complex %d is duplicated." % (dynprot_id,dynmodel_obj.id_complex_molecule.id))
+
     dyna_dic["mutation_dict"]=prot_muts
     mut_sel_li=[]
     for mut_li in prot_muts.values():
