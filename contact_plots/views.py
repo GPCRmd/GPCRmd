@@ -151,6 +151,7 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
 		active_drag=None,
 		toolbar_location="right",
 		toolbar_sticky = False,
+		min_border_top = round(figure_shape['height'] * 0.045) # The proportion of margin to be left on top of matrix to align with dendrogram
 		)
 
 	# Rotate angle of x-axis labels
