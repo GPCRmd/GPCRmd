@@ -240,4 +240,9 @@ LOGIN_REDIRECT_URL = 'accounts:memberpage'
 LOGOUT_REDIRECT_URL = 'accounts:memberpage'
 
 import mimetypes
-mimetypes.add_type('text/plain; charset=UTF-8', '.log', strict=True)
+mimetypes.add_type('text/x-log; charset=UTF-8', '.log', strict=True)
+mimetypes.add_type('chemical/x-mdl-sdfile; charset=UTF-8', '.sdf', strict=True)
+mimetypes.add_type(' chemical/x-pdb', '.pdb', strict=True)
+mimetypes.add_type('chemical/x-charmm-param', '.prm', strict=True)
+mimetypes.add_type('chemical/x-charmm-psf', '.psf', strict=True)
+
