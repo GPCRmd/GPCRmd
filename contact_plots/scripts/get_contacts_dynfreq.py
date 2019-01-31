@@ -1,7 +1,11 @@
 import re
 import os
+import glob
 import argparse as ap
+import pandas as pd
 from sys import stdout
+from shutil import copyfile,copyfileobj
+
 
 def mkdir_p(path):
     if not os.path.exists(path):
@@ -117,7 +121,7 @@ def add_dyn_to_dynfile(dynname, files_basepath):
     dyn_csv_file.write(col_csv)
     dyn_csv_file.close()
 
-def get_contact_frequencies(get_contacts_path, dyn_contacts_file, itype, labelfile, outfile): 
+def get_contact_frequencies(get_contacts_path, dyn_contacts_file, itype, labelfile, outfile, repeat_dynamics): 
     """
     Execute script get_contact frequencies for the given parameters
     """
@@ -139,54 +143,115 @@ def remove_ligand_lines(filename):
         if not "Ligand" in line:
             freqfile_no_ligand.write(line)
 
+def merge_dynamic_files(dynname, files_path):
+    """
+    Merge the dynamic contacts tabular files of a simulation into a single one, adding them as new frames
+    """
+    print("merging dynamic files")
+    dynfiles = glob.glob(str("%s%s-%s_dynamic.tsv" % (files_path, dynname, "*")))
+    merged_file_noheader = "%s%s_dynamic_noheader.tsv" % (files_path, dynname)
+    outfile = open(merged_file_noheader, 'w')
+    for dynfile in dynfiles:
+        if "0_dynamic.tsv" in dynfile:
+            with open(dynfile, "r") as f:
+                for line in f: 
+                    if line[0] == '#':
+                        continue
+                    outfile.write(line)
+                frame = int(line.split("\t")[0]) + 1
+
+        else:
+            with open(dynfile, "r") as f:
+                for line in f: 
+                    if line[0] == '#':
+                        continue
+                    tabline = line.split("\t")
+                    tabline[0] = str(int(int(tabline[0]) + frame))
+                    outfile.write("\t".join(tabline))
+                frame = int(tabline[0]) + 1
+
+    outfile.close()
+
+    #Paste header
+    header = "# total_frames:%s beg:0 end:%s stride:1 interaction_types:hp,sb,pc,ps,ts,vdw,hb" % (frame, frame-1 )
+    merged_file = "%s%s_dynamic.tsv" % (files_path, dynname)
+    from_file = open(merged_file_noheader, 'r') 
+    to_file = open(merged_file, "w")
+
+    to_file.write(header)
+    copyfileobj(from_file, to_file)
+
+    from_file.close()
+    to_file.close()
+    os.remove(merged_file_noheader)
+
+    return merged_file
+
 # Arguments
 parser = ap.ArgumentParser(description="this calculates interaction frequencies for given simulation")
 parser.add_argument(
     '--dynid',
     dest='dynid',
-    action='store'
+    action='store',
+    help=' (int) dynamic id of the simulation on database'
 )
 parser.add_argument(
     '--traj_id',
     dest = 'traj_id',
     action='store',
-    default=0
+    default=0,
+    help='Id of this trajectory file (over the total trajectory files for this simulation)'
+)
+parser.add_argument(
+    '--merge_dynamics',
+    dest='merge_dynamics',
+    action='store_true',
+    default=False,
+    help=' (bool) merges resulting dynamic file with previous dynamic files of same simulation'
 )
 parser.add_argument(
     '--traj',
     dest='trajfile',
-    action='store'
+    action='store',
+    help='Trajectory file to process'
 )
 parser.add_argument(
     '--topology',
     dest='topology',
-    action='store'
+    action='store',
+    help='Topology file to process'
 )
 parser.add_argument(
     '--dict',
     dest='dictfile',
-    action='store'
+    action='store',
+    help='Dictionary file of this simulation'
 )
 parser.add_argument(
     '--ligandfile',
     dest='ligfile',
-    action='store'
+    action='store',
+    help='Ligand file for this simulation'
 )
 parser.add_argument(
     '--repeat_dynamics',
     dest='repeat_dynamics',
     action='store_true',
-    default=False
+    default=False,
+    help='(bool) repeat get_dynamic_contacts even if there already exists a results file for this files'
 )
 parser.add_argument(
     '--cores',
     dest='cores',
     action='store',
-    default=1
+    default=1,
+    help='number of cores to use in get_dynamic_contacts'
 )
+
 args = parser.parse_args()
 
 # Set paths and files
+merge_dynamics = args.merge_dynamics
 dynname = "dyn" + args.dynid
 mytrajid = args.traj_id
 mytrajpath = args.trajfile
@@ -195,10 +260,10 @@ dictfile = args.dictfile
 ligfile = args.ligfile
 repeat_dynamics = args.repeat_dynamics
 cores = args.cores
-get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
-scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
-files_basepath="/protwis/sites/files/Precomputed/get_contacts_files/"
-files_path="/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
+get_contacts_path = "/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
+scripts_path = "/protwis/sites/protwis/contact_plots/scripts/"
+files_basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+files_path = "/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
 
 #Interaction multi-types dictionary
 multi_itypes = {
@@ -235,31 +300,35 @@ if (not os.path.exists(dyn_contacts_file)) or repeat_dynamics:
     "--output %s" % (dyn_contacts_file)
     ))
 
-# Create files_path for freqeuncy files
-mkdir_p(str(files_path + "frequency_tables"))
+# Merge dynamic files of this dyn if option says so, and calculate frequencies from this merged dynamic file
+if merge_dynamics:
 
-no_ligand = set(("sb", "pc", "ts", "ps", "hp"))
-
-# Calculate frequencies for each type
-for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbsb","hbss","hbls","hblb","all")):
-
-    print(str("computing %s frequencies") % (itype))
-    labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
-    outfile = str("%sfrequency_tables/%s-%s_freqs_%s.tsv" % (files_path, dynname, mytrajid, itype))
+    dyn_contacts_file = merge_dynamic_files(dynname, files_path)
     
-    # HB and wb have to be calculated in a special way
-    if  itype in multi_itypes:
-        get_contact_frequencies(get_contacts_path, dyn_contacts_file, multi_itypes[itype], labelfile, outfile)
+    # Create files_path for freqeuncy files
+    mkdir_p(str(files_path + "frequency_tables"))
 
-    else:
+    no_ligand = set(("sb", "pc", "ts", "ps", "hp"))
 
-        #Obtain contact frequencies
-        get_contact_frequencies(get_contacts_path, dyn_contacts_file, itype, labelfile, outfile)
+    # Calculate frequencies for each type
+    for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbsb","hbss","hbls","hblb","all")):
 
-        # Filter ligand interactions if itype is one of the interaction types unable to deal correctly with ligands
-        if itype in no_ligand:
-            remove_ligand_lines(outfile)
+        print(str("computing %s frequencies") % (itype))
+        labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
+        outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
+        
+        # HB and wb have to be calculated in a special way
+        if  itype in multi_itypes:
+            get_contact_frequencies(get_contacts_path, dyn_contacts_file, multi_itypes[itype], labelfile, outfile, repeat_dynamics)
 
+        else:
 
-#Add dynname to dyn-list-file and get new full list name
-add_dyn_to_dynfile(dynname, files_basepath)
+            #Obtain contact frequencies
+            get_contact_frequencies(get_contacts_path, dyn_contacts_file, itype, labelfile, outfile, repeat_dynamics)
+
+            # Filter ligand interactions if itype is one of the interaction types unable to deal correctly with ligands
+            if itype in no_ligand:
+                remove_ligand_lines(outfile)
+
+    #Add dynname to dyn-list-file and get new full list name
+    add_dyn_to_dynfile(dynname, files_basepath)
