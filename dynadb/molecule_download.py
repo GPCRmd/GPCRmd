@@ -732,24 +732,25 @@ def get_chembl_molecule_ids(datachembl,parents=False):
     return ids
 
 def get_chembl_prefname_synonyms(moljson):
-    if "pref_name" in moljson:
-        prefname = moljson["pref_name"]
-    else:
-        prefname = None
-    if "molecule_synonyms" not in moljson:
-        syn_list = moljson["molecule_synonyms"]
-    else:
-        syn_list = None
     aliases = []
     aliases_lc = set()
-    if prefname is not None:
-        aliases_lc.add(prefname.lower())
-    for syn in syn_list:
-        if syn is not None:
-            lcsyn = syn["synonyms"].lower()
-            if lcsyn not in aliases_lc:
-                aliases.append(syn["synonyms"])
-                aliases_lc.add(lcsyn)
+
+    if "pref_name" in moljson:
+        prefname = moljson["pref_name"]
+        if prefname is not None:
+            aliases_lc.add(prefname.lower())
+    else:
+        prefname = None
+
+    if "molecule_synonyms" in moljson:
+        syn_list = moljson["molecule_synonyms"]
+        for syn in syn_list:
+            if syn is not None:
+                ssyn = syn["synonyms"].strip()
+                lcsyn = ssyn.lower()
+                if lcsyn not in aliases_lc:
+                    aliases.append(ssyn)
+                    aliases_lc.add(lcsyn)
     return prefname,aliases
 
 
