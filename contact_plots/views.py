@@ -110,14 +110,14 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
 		return render(request, 'contact_plots/index_nodata.html', context)
 
 	# Loading variables
-	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
+	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_variables.py").load_module()
 	recept_info = variablesmod.recept_info
 	recept_info_order = variablesmod.recept_info_order
 	dyn_gpcr_pdb = variablesmod.dyn_gpcr_pdb
 	figure_shape = variablesmod.figure_shape
 
 	# Loading dendrogram
-	dendr_figure = open(basedir + itype + "_" + ligandonly + "_" + rev + "_dendrogram_figure.html", 'r').read()
+	dendr_figure = open(basedir + itype + "_" + ligandonly + "_dendrogram_figure.html", 'r').read()
 
 	#Storing main data frame in session (to download as csv file in another view)
 	request.session[0] = df_ts
