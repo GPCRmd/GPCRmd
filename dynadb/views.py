@@ -3085,13 +3085,13 @@ def assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li):
     prot_obj=dynprot_obj.receptor_id_protein
     dynprot_id=dynprot_obj.id
     seq=DyndbProteinSequence.objects.get(id_protein=dynprot_id).sequence
-
-    gen_num_res=obtain_gen_numbering(dynamics_id, dynprot_obj,prot_obj)
     gpcr_num_found=False
-    if len(gen_num_res) > 2:
-        (numbers, num_scheme, db_seq, current_class) = gen_num_res
-        pos_gnum = numbers[current_class]
-        gpcr_num_found=True
+    if prot_obj is not None:
+        gen_num_res=obtain_gen_numbering(dynamics_id, dynprot_obj,prot_obj)
+        if len(gen_num_res) > 2:
+            (numbers, num_scheme, db_seq, current_class) = gen_num_res
+            pos_gnum = numbers[current_class]
+            gpcr_num_found=True
     for chain_name in pdb_chain_li:
         checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
         if isinstance(checkpdb_res, tuple):
