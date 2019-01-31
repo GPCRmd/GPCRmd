@@ -301,7 +301,15 @@ class Command(BaseCommand):
                     ###########################################
 
                     # for each trajectory file, write a run-in-ORI command
+                    numtraj = len(dyn_dict[dynid]['trajectory'])
+                    trafile = 1
                     for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):
+                        
+                        # Put option to merge all dynamics from this simulation, if all trajectories are already computed
+                        if numtraj == trajfile:
+                            tail_comand = "--cores 4 --merge_dynamics \n"
+                        else:
+                            tail_comand = "--cores 4 --no_freqs \n"
 
                         commands_file.write(str("python /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.py \
                             --dynid %s \

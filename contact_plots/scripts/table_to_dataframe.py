@@ -416,7 +416,7 @@ def get_contacts_plots(itype, ligandonly, rev):
     dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
 
     #Creating dendrogram
-    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dendrogram_figure.html"
+    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
     dend_height = int( int(df.shape[1]) * 16 + 20)
     dend_width = 160 #Same width as two square column
     dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height, dend_width, dendfile)
@@ -426,7 +426,7 @@ def get_contacts_plots(itype, ligandonly, rev):
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     # I use df instead of df_ts because of its structure. I know it's kind of strange
     h=dend_height
-    w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)   
+    w=16300 if int(df.shape[0]*30 + 130) > 16300 else int(df.shape[0]*20 + 130)   
     figure_shape = {
         'width' : w,
         'height' : h
@@ -444,7 +444,7 @@ def get_contacts_plots(itype, ligandonly, rev):
     df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv")
 
     # Printing special variables
-    var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_variables.py", "w")
+    var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")
     var_file.write("recept_info = " + repr(recept_info) + "\n\n")
     var_file.write("recept_info_order = " + repr(recept_info_order) + "\n\n")
     var_file.write("dyn_gpcr_pdb = " + repr(dyn_gpcr_pdb) + "\n\n")
