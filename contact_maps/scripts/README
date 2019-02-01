@@ -29,13 +29,13 @@ SCRIPTS
 	OUPTUTS: 
 		- Summarized tables (one for each interaction type) of interactions in the analyzed simulations. Stored on /protwis/sites/files/Precomputed/get_contacts_files/contact_tables/
 
-4. table_to_dataframe.py: Creates the input dataframes needed by the web application contact_plots. Creates a single dataframe for each combination of "interaction partners" and "interaction type" options. It also performs the clustering. All outputs are contained in /protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/
+4. table_to_dataframe.py: Creates the input dataframes needed by the web application contact_maps. Creates a single dataframe for each combination of "interaction partners" and "interaction type" options. It also performs the clustering. All outputs are contained in /protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/
 	INPUTS:
 		- itype code (sb, hb, wb, ...)
 		- interaction partner code (prt, prt_lg, lg)
 
 	OUPTUTS: 
-		- ITPE_INTERPARTN_dataframe.csv: raw data for contact_plots views. Each row corresoponds to a position pair in a simulation
+		- ITPE_INTERPARTN_dataframe.csv: raw data for contact_maps views. Each row corresoponds to a position pair in a simulation
 		- ITPE_INTERPARTN_dendrogram_figure.txt: html data for rendering the dendrogram in web.
-		- ITPE_INTERPARTN_variables.py: some python variables required by contact_plots views. 
+		- ITPE_INTERPARTN_variables.py: some python variables required by contact_maps views. 
 

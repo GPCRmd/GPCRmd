@@ -7578,7 +7578,7 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,4*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,5*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
@@ -11913,9 +11913,12 @@ def SMALL_MOLECULEview(request, submission_id):
                     dON[ii][on]={}
                     dON[ii][on]["other_names"]=el
                     dON[ii][on]["id_compound"]=CFpk
-                    fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on]) 
+                    fdbON[ii][on]=dyndb_Other_Compound_Names(dON[ii][on])
                     if fdbON[ii][on].is_valid():
                         fdbON[ii][on].save()
+                    elif not fdbON[ii][on].validate_unique():
+                        print('Synonym skipped as duplicated:',el)
+                        continue
                     else:
                         iii1=fdbON[ii][on].errors.as_text()
                         print("Errores en el form dyndb_Other_Compound_Names\n ", fdbON[ii][on].errors.as_text())
@@ -12079,6 +12082,14 @@ def SMALL_MOLECULEview(request, submission_id):
             dictPMod[ii]['int_id']=ii
             dictPMod[ii]['submission_id']=submission_id
             dictPMod[ii]['molecule_id']=MFpk
+            # force an update in case int_id is already in use
+            try:
+                qsubmol_id = DyndbSubmissionMolecule.objects.get(submission_id=int(submission_id),
+                     int_id=int(dictPMod[ii]['int_id'])).id
+                dictPMod[ii]['id']=submol_id
+            except DyndbSubmissionMolecule.DoesNotExist:
+                pass
+                     
             fdbSM[ii]=dyndb_Submission_Molecule(dictPMod[ii])
             if qSubreuse.exists():
                 for rows in qSubreuse.exclude(id__in=lqSubreuse_used):
@@ -12095,18 +12106,23 @@ def SMALL_MOLECULEview(request, submission_id):
                     print("!!!!!!Errores despues del fdbSM[",ii,"]\n",iii1,"\n")
                     response = HttpResponse(iii1,status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                     DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFpk).values_list('id_files',flat=True)).delete()
-                    DyndbFilesMolecule.objects.filter(id_molecule=MFpk).delete()
+                    
                     DyndbMolecule.objects.filter(id=MFpk).delete()
                     if ii in NewCompoundEntry:
                         if NewCompoundEntry[ii]==True:
-                            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=1)#needed for removing the next  DyndbMolecule entry
+                            DyndbCompound.objects.filter(id=CFpk).update(std_id_molecule=None)#needed for removing the next  DyndbMolecule entry
+                            DyndbMolecule.objects.filter(id=MFpk).delete()
                             DyndbFiles.objects.filter(id__in=DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).values_list('id_files',flat=True)).delete()
                             DyndbFilesMolecule.objects.filter(id_molecule=MFauxpk).delete()
                             DyndbSubmissionMolecule.objects.filter(molecule_id=MFauxpk).delete()
                             DyndbMolecule.objects.filter(id=MFauxpk).delete()
                             DyndbOtherCompoundNames.objects.filter(id_compound=CFpk).delete()
                             DyndbCompound.objects.filter(id=CFpk).delete()
-                        return response
+                        else:
+                            DyndbMolecule.objects.filter(id=MFpk).delete()
+                    else:
+                        DyndbMolecule.objects.filter(id=MFpk).delete()
+                    return response
         moleculelist=str(indexl)
  
         response = HttpResponse("Step 2 \"Small Molecule Information\" form has been successfully submitted.",content_type='text/plain; charset=UTF-8')

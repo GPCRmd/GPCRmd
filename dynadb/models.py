@@ -245,7 +245,7 @@ class DyndbDynamicsComponents(models.Model):
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule', null=True)
     id_dynamics = models.ForeignKey('DyndbDynamics', models.DO_NOTHING, db_column='id_dynamics', null=True)
     resname = models.CharField(max_length=4)
-    numberofmol = models.PositiveSmallIntegerField(blank=True, null=True)
+    numberofmol = models.PositiveIntegerField(blank=True, null=True)
     type = models.SmallIntegerField( choices=MOLECULE_TYPE, default=0)
 
     class Meta:
@@ -259,7 +259,7 @@ class DyndbModelComponents(models.Model):
     id_molecule = models.ForeignKey('DyndbMolecule', models.DO_NOTHING, db_column='id_molecule',null=True)
     id_model = models.ForeignKey('DyndbModel', models.DO_NOTHING, db_column='id_model',null=True)
     resname = models.CharField(max_length=4)
-    numberofmol = models.PositiveSmallIntegerField(blank=True, null=True)
+    numberofmol = models.PositiveIntegerField(blank=True, null=True)
     type = models.SmallIntegerField(choices=MOLECULE_TYPE, null=True, default=0)
   
     class Meta:

@@ -3,11 +3,12 @@ matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from math import pi
 from sys import argv,exit
 import pandas as pd
-from  numpy import array
+import numpy as np
 from json import loads
 from re import sub,compile
-from  plotly.figure_factory import create_dendrogram
-from  plotly.offline import plot
+import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import linkage, leaves_list, dendrogram, fcluster
+import mpld3
 import os
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
@@ -23,7 +24,7 @@ def json_dict(path):
     json_data = loads(json_str)
     return json_data
 
-def improve_receptor_names(df_ts,compl_data):
+def improve_receptor_names(df_ts,compl_data, clust_order):
     """Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id"""
     recept_info={}
     recept_info_order={"upname":0, "resname":1,"dyn_id":2,"prot_id":3,"comp_id":4,"prot_lname":5,"pdb_id":6,"lig_lname":7,"struc_fname":8,"traj_fnames":9,"delta":10}
@@ -34,9 +35,9 @@ def improve_receptor_names(df_ts,compl_data):
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
         resname=compl_data[recept_id]["lig_sname"]
-        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_id=compl_data[recept_id]["prot_id"]
         comp_id=compl_data[recept_id]["comp_id"]
+        lig_lname=compl_data[recept_id]["lig_lname"]
         prot_lname=compl_data[recept_id]["prot_lname"]
         pdb_id=compl_data[recept_id]["pdb_id"]
         struc_fname=compl_data[recept_id]["struc_fname"]
@@ -58,14 +59,19 @@ def improve_receptor_names(df_ts,compl_data):
                 recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
                 taken_protlig[prot_lig]["id_added"]=True
         else:
-            recept_name=prot_lname+" ("+prot_lig[0]+")"
-            if bool(prot_lig[1]):
-                recept_name = recept_name + " + "+prot_lig[1]
+            recept_name=prot_lname+" ("+prot_lig[0]+") + "+prot_lig[1]
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
         recept_info[recept_name]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,traj_fnames,delta]
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+
+    # Changing ID names by simulation names in clust_order list
+    clust_order_names = { index_dict[dyn]:clust_order.index(dyn) for dyn in clust_order }
+
+    # Adding column based in new order recieved from clustering
+    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: clust_order_names[x])
+
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
 def removing_entries_and_freqsdict(df, itypes, main_itype):
@@ -81,7 +87,7 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
     helixpattern = compile(r"""^(..)\w+\s+\1""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
-    
+
     # Storing interaction-specific frequencies in a dictionary
     for itype in itypes:
         df_type = df[df["itype"] == itype]
@@ -101,6 +107,9 @@ def removing_entries_and_freqsdict(df, itypes, main_itype):
     #Dropping away interaction type colum
     df.drop('itype', 1, inplace = True)
      
+    # Set position as row index of the dataframe
+    df = df.set_index('Position')
+
     return(df,dict_freqs)
         
 def adapt_to_marionas(df):
@@ -146,17 +155,31 @@ def add_itype_freqs(df_ts, set_itypes, dict_freqs):
 
 def clustering(df_t):
     """
-    Creates an interaction frequency numpy matrix from 
+    Clusters simulations by their total accumulated interaction frequencies.
+    Returns the simulation order according to their clustering
     """
-
+    dyn_labels = list(df_t.index)
+    
     # Create dictionary table with position tuple as keys and interaction-by-simulation-freq array as value
     freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
         
-    # Convert previous dictionary to numpy array, and traspose it
-    freq_matrix = (array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
+    # Convert previous dictionary to numpy array
+    freq_matrix = np.array([freq_table[(r1, r2)] for (r1, r2) in freq_table])
+
+    # Using scipy to cluster. Copied from get_contacts scripts
+    l = linkage(freq_matrix.T, method='single')
+    
+    col_ordering = leaves_list(l)
+    
+    # New Column labels
+    new_order = [dyn_labels[i] for i in col_ordering]
+    
+    # Labels for dendogram
+    dendlabels = list(df_t.index)
 
     # Reorder according to clustering
-    return freq_matrix
+    return (new_order,l,dendlabels)
+
 
 def flat_clusters(labels, colors, clusters, dflt_col, dend_matrix):
     """
@@ -177,11 +200,11 @@ def anotate_cluster(x, y, cluster_num, color):
     a small circle of color (color) 
     """
     plt.plot(x, y, 'ro', c = color)
-    plt.text(x,y,"_Cluster %d" % (cluster_num),fontsize=16) 
+    plt.text(int(x-20),(y+1),cluster_num,fontsize=14) # Note the minus five is for not having the text directly over the node, but at its side
 
 def annotate_cluster_nodes(dn, T, colors):
     """
-    annotates the clusters obtained in T in the dendgrogram (dn) with colors (colors). Currently not operative
+    annotates the clusters obtained in T in the dendgrogram (dn) with colors (colors)
     """
     pos = 0
     len_col_list = len(dn['color_list'])
@@ -229,88 +252,48 @@ def annotate_cluster_nodes(dn, T, colors):
 
         pos += 1
 
-
-def dendrogram_clustering(dend_matrix, labels, height, width, filename): 
-
-    # Setting figures
-    fig = create_dendrogram(dend_matrix, orientation='right', labels=labels)
-
-    fig['layout'].update({
-        'width':600, 
-        'height':height,
-        'autosize' : False,
-        })
-
-    fig['layout']['margin'].update({
-        'r' : 400,
-        'l' : 20,
-        't' : 0,
-        'b' : 0,
-        'pad' : 0
-        })
-    fig['layout']['xaxis'].update({
-        'showline': False,
-        'showticklabels': False,
-        'ticks' : '',
-        })
-
-    fig['layout']['yaxis'].update({
-        'side' : 'right',
-        'showline': False,
-        'ticks' : '',
-        'tickfont' : {
-            'size' : 15,
-            'color' : 'black'
-            }
-        })
-
-    # Taking order for plot rows
-    dendro_leaves = fig['layout']['yaxis']['ticktext']
-
-    # Writing dendrogram on file
-    plot(fig, filename=filename, auto_open=False, config={'staticPlot' : True })
-
-    return list(dendro_leaves)
-
-def sort_simulations(df_ts, dyn_dend_order):
+def dendrogram_clustering(dend_matrix, labels, height, width, clusters): 
     """
-    Sorts the simulations in the dataframe according to the order in the list dyn_dend_order
+    dendrogram time, my dudes
     """
+    arbitrary_dpi = 50 # Arbitrary. Don't pay attention to it
+    inch_height = height / arbitrary_dpi
+    inch_width = width / arbitrary_dpi
 
-    # Create a dictionary with the order of each simulation row in the plot 
-    dyn_dend_order_dict = { dyn_name : dyn_dend_order.index(dyn_name) for dyn_name in dyn_dend_order }
+    #Setting matplotlib figure
+    plt.figure(dpi = arbitrary_dpi, figsize = [inch_width, inch_height],facecolor = "white")
+   
+    colors = ['g', 'r', 'k', 'y', 'm', 'c']
+    leaves_nums_list = list(range(0,len(labels)))
+    
+    # Asigning clusters and colors to each leaf
+    (link_cols,T) = flat_clusters(leaves_nums_list, colors, clusters, 'b', dend_matrix)
+    
+    # Creating dendrogram
+    dn = dendrogram(
+        dend_matrix,
+        labels=labels,
+        orientation = 'left',
+        link_color_func = lambda x: link_cols[x] 
+    )
+        
+    # Annotate cluster nodes in dendrogram
+    annotate_cluster_nodes(dn, T, colors)
+        
+    # Setting labels font size and color
+    ax = plt.gca()
+    ax.tick_params(axis='both', which='both', labelsize=16, colors="black", right= False, bottom=False)
+    
+    # Rendering html figure with mpld3 module from our matplotlib figure
+    html_dendrogram = mpld3.fig_to_html(plt.gcf())
+    return html_dendrogram    
 
-    # Adding column based in new order recieved from clustering
-    df_ts['clust_order'] =  df_ts['Id'].apply(lambda x: dyn_dend_order_dict[x])
-
-    #Sorting by ballesteros Id's (helixloop column) and clustering order
-    df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
-    df_ts = df_ts.sort_values(["helixloop",'clust_order'])
-
-    #Drop sort columns once used
-    df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
-
-    return df_ts
-
-def reverse_positions(df):
-    """
-    Appends a copy of the dataframe with the Position pair of the interaction being reversed (5x43-7x89 for 7x89-5x43)
-    """
-    df_rev = df.copy(deep = True)
-    df_rev['Position'] = df_rev['Position'].replace({r'(\w+)\s+(\w+)' : r'\2 \1'}, regex=True)
-    df_double = pd.concat([df, df_rev])
-    return df_double    
-
-def get_contacts_plots(itype, ligandonly, rev):
-
+def get_contacts_plots(itype, ligandonly):
     """
     Create and save dataframe, dendrogram, and other data necessary for computing get_contacts online plots
         - itype: any of the codes from below typelist.
         - ligandonly: lg (only residue-ligand contacts), prt (only intraprotein contacts), all 
     """
-
-    # Basepath for files
-    basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
 
     #Declaring dictionaries with types
     typelist =  {
@@ -349,29 +332,28 @@ def get_contacts_plots(itype, ligandonly, rev):
 
     }
 
-    print(str("computing dataframe and dendrogram for %s-%s-%s") % (itype, ligandonly, rev))
-
     # Creating set_itypes, with all in case it is not still in it
-    if itype == "all":
-        set_itypes =  set(("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
-    else: 
+    if not itype == "all":
         set_itypes = set(itype.split("_"))
         set_itypes.add('all')
+    else: 
+        set_itypes = (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
 
     #Creating itypes dictionary for selected types
     selected_itypes = { x:typelist[x] for x in set_itypes }
 
     #Loading files
-    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_all.tsv", sep="\s+")
-    for itype_df in set_itypes:
-        if itype_df == "all": 
-            continue
-        df_raw_itype = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_" + itype_df + ".tsv", sep="\s+")
-        df_raw = pd.concat([df_raw, df_raw_itype])
-    compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
+    df_raw = pd.read_csv("/protwis/sites/files/Precomputed/get_contacts_files/contact_tables/compare_summary.tsv", sep="\s+")
+    compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
+
+    # Filtering out non-desired interaction types
+    if itype != "all":
+        df = df_raw[(df_raw['itype'].isin(set_itypes)) ]
+    else:
+        df = df_raw
 
     # Adapting to Mariona's format
-    df = adapt_to_marionas(df_raw)
+    df = adapt_to_marionas(df)
 
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
@@ -384,23 +366,15 @@ def get_contacts_plots(itype, ligandonly, rev):
     #Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
     df,dict_freqs = removing_entries_and_freqsdict(df, set_itypes, itype)
 
-    # If rev option is setted to rev, duplicate all lines with the reversed-position version (4x32-2x54 duplicates to 2x54-4x32)
-    if rev == "rev":
-        df = reverse_positions(df)
-
     # If there are no interactions with this ligandonly-itype combination
     if df.empty:
         exit("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
 
-    # Set position as row index of the dataframe
-    df = df.set_index('Position')    
-
     #Transposing dataframe
     df_t = df.transpose()
-    dynlist = list(df_t.index)
 
     #Clustering of simulations
-    dend_matrix = clustering(df_t)
+    (clust_order,dend_matrix,dendlabels) = clustering(df_t)
 
     # Converting to df_ts table, 
     df_ts = df_t.stack().rename("value").reset_index()
@@ -410,23 +384,29 @@ def get_contacts_plots(itype, ligandonly, rev):
     df_ts = add_itype_freqs(df_ts, set_itypes, dict_freqs)
 
     #Changing ID names by simulation names
-    (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
+    (recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data,clust_order)
 
-    # Labels for dendogram
-    dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
+    #Changing denlabels to full name format
+    dendlabels_names = [ index_dict[dyn] for dyn in dendlabels ]
 
-    #Creating dendrogram
-    dendfile = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dendrogram_figure.html"
-    dend_height = int( int(df.shape[1]) * 16 + 20)
-    dend_width = 160 #Same width as two square column
-    dyn_dend_order = dendrogram_clustering(dend_matrix, dendlabels_names, dend_height, dend_width, dendfile)
+    #Sorting by ballesteros Id's (helixloop column) and clustering order
+    df_ts['helixloop'] = df_ts['Position'].apply(lambda x: sub(r'^(\d)x',r'\g<1>0x',x)) 
+    df_ts = df_ts.sort_values(["helixloop",'clust_order'])
 
-    df_ts = sort_simulations(df_ts, dyn_dend_order)
+    #Drop sort columns once used
+    df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
+
+    #Creating dendrograms
+    dend_height = int( int(df.shape[1]) * 80 + 20)
+    dend_width = 180 #Same width as two square column
+    dend_dict = {}
+    for clust in ((2,4,6,10)):
+        dend_dict[clust] = (dendrogram_clustering(dend_matrix, dendlabels_names, dend_height-20, dend_width, clust))
 
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
-    # I use df instead of df_ts because of its structure. I know it's kind of strange
-    h=dend_height
-    w=16300 if int(df.shape[0]*30 + 130) > 16300 else int(df.shape[0]*20 + 130)   
+    sim_num = df.shape[1] 
+    h=int(sim_num*80 + 20)# I use the df dataframe instead of df_ts because the last one has acopled itypes columns
+    w=16300 if int(df.shape[0]*80 + 80) > 16300 else int(df.shape[0]*80 + 80)   
     figure_shape = {
         'width' : w,
         'height' : h
@@ -436,12 +416,21 @@ def get_contacts_plots(itype, ligandonly, rev):
     ## Printing outputs
     ###################
 
+    # Basepath for files
+    basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+
     # Creating directory if it doesn't exist
     if not os.path.exists(basepath + "view_input_dataframe"):
         os.makedirs(basepath + "view_input_dataframe")
 
     # Print daraframe and to_import variables in file in file
-    df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv")
+    df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_dataframe.csv")
+
+    # Printing dendrograms in files
+    for clust in dend_dict:
+        dendr_file = open(str("%sview_input_dataframe/%s_%s_%sclust_dendrogram_figure.txt" % (basepath, itype, ligandonly, clust )), "w")
+        dendr_file.write(dend_dict[clust])
+        dendr_file.close()
 
     # Printing special variables
     var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")
@@ -461,14 +450,13 @@ if len(argv) == 1:
 ##############table_to_dataframe.py#####################
 
 This script creates dataframes, dendrogram and other
-auxiliary files which serve as main inputs for contact_plots
+auxiliary files which serve as main inputs for contact_maps
 application.
 
 table_to_dataframe.py <INTERACTION_TYPE> <INTERACTION_PARTNERS> <NUM_SIMULATIONS>
 
     - INTERACTION TYPE: any of the interaction types avalible for the web.
     - INTERACTION PARTNERS: lg, prt or prt_lg
-    - REVERSE OPTION: rev or norev
 
 """))
-get_contacts_plots(argv[1], argv[2], argv[3])
+get_contacts_plots(argv[1], argv[2])

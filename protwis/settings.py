@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     'drugs',
     'graphos',
     'revproxy',
-    'contact_plots',
+    'contact_maps',
 ]
 
 if DEBUG_TOOLBAR:
