@@ -1,4 +1,4 @@
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence, DyndbModeledResidues
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from view.traj2flare_modified_wn import * #[!] Now it's the wn version (new version that uses MDtraj wernet_nilsson function)
 from view.views import findGPCRclass, obtain_all_chains, obtain_DyndbProtein_id_list, obtain_seq_pos_info
@@ -15,11 +15,11 @@ import copy
 import csv
 
 
-def obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li):
+def obtain_fplot_input(result,numbers,chain_name,current_class):
     resi_to_group = {}
     resi_to_name = {}
     cluster_dict={}
-    chain_index=str(chain_name_li.index(chain_name))
+    #chain_index=str(chain_name_li.index(chain_name))
     pos_gnum = numbers[current_class]
     for pos in result:
         if pos[0] != "-": #Consider only num in the pdb
@@ -28,11 +28,11 @@ def obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li):
             #gnum_or_nth=""
             this_gnum = pos_gnum[db_pos][1]
             this_segm = pos_gnum[db_pos][2]
-            resi_to_group[(pdb_pos,chain_index)]=str(this_segm)
+            resi_to_group[(pdb_pos,chain_name)]=str(this_segm)
             if this_gnum:#If exist GPCR num for this position
                 this_gnum=this_gnum[:this_gnum.find(".")]+this_gnum[this_gnum.find("x"):]
                 cluster_dict[this_gnum]=[chain_name+"."+pdb_pos,""]
-            resi_to_name[(pdb_pos,chain_index)]=str(this_gnum)
+            resi_to_name[(pdb_pos,chain_name)]=str(this_gnum)
     return(resi_to_group,resi_to_name,cluster_dict)            
    
 
@@ -102,15 +102,17 @@ def create_fplot(self,dyn_id,newpath,pdbpath=None,trajpath=None,traj_id=None,str
 
                 (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                 for chain_name, result in dprot_chain_li:
-                    (resi_to_group,resi_to_name,cluster_dict)=obtain_fplot_input(result,numbers,chain_name,current_class,chain_name_li)
+                    (resi_to_group,resi_to_name,cluster_dict)=obtain_fplot_input(result,numbers,chain_name,current_class)
+                model_res=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics__id=dyn_id)
+                seg_to_chain={mr.segid : mr.chain for mr in model_res}
                 if gpcr_mode:
                     for (pos, gnum) in resi_to_name.items():
                         if gnum != "None":
                             chain=gnum.split("x",1)[0]
                             resi_to_name[pos]=chain+"."+gnum
-                    create_json(self,True,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride)
+                    create_json(self,True,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride,seg_to_chain)
                 else:
-                    create_json(self,False,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride)
+                    create_json(self,False,trajpath,pdbpath,resi_to_group,resi_to_name,newpath,stride,seg_to_chain)
                 out_file  = re.search("(\w*)(\.\w*)$" , newpath).group()
                 self.stdout.write(self.style.SUCCESS('JSON file '+out_file+' successfully created'))
             else:

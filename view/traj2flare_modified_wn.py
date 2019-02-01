@@ -25,7 +25,7 @@ def get_cont_type(self,jsonfile,n1,n2):
         info="Inter"
     return (info)
 
-def create_json(self,isGPCR,trj_file,top_file,resi_to_group,resi_to_name,newpath,stride):
+def create_json(self,isGPCR,trj_file,top_file,resi_to_group,resi_to_name,newpath,stride,seg_to_chain):
     out_file  = re.search("(\w*)(\.\w*)$" , newpath).group()
     self.stdout.write(self.style.NOTICE("Reading MD trajectory..."))
     num_frames=get_num_frames(trj_file,stride)
@@ -44,12 +44,12 @@ def create_json(self,isGPCR,trj_file,top_file,resi_to_group,resi_to_name,newpath
                 resi_2 = t.topology.atom(hbond[2]).residue
                 if ((resi_1 != resi_2) and (resi_1.is_protein) and (resi_2.is_protein)):
                     if (resi_1.index < resi_2.index):
-                        key = ((str(resi_1.resSeq),str(resi_1.chain.index)),(str(resi_2.resSeq),str(resi_2.chain.index)))
+                        key = ((str(resi_1.resSeq),seg_to_chain[resi_1.segment_id]),(str(resi_2.resSeq),seg_to_chain[resi_2.segment_id]))
                     else:
-                        key = ((str(resi_2.resSeq),str(resi_2.chain.index)),(str(resi_1.resSeq),str(resi_1.chain.index)))
+                        key = ((str(resi_2.resSeq),seg_to_chain[resi_2.segment_id]),(str(resi_1.resSeq),seg_to_chain[resi_1.segment_id]))
                     hbond_frames[key].add(f)
             f+=1
-        self.stdout.write(self.style.NOTICE("%d%% completed"%((f/num_frames)*100)))
+        self.stdout.write(self.style.NOTICE("%d%% completed"%((f/(num_frames/stride))*100)))
     
 
     self.stdout.write(self.style.NOTICE("Analyzing network centrality .."))
