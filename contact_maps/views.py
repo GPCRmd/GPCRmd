@@ -24,7 +24,7 @@ def json_dict(path):
     json_data = loads(json_str)
     return json_data
 
-def get_contacts_plots(request, itype, ligandonly, rev = False):
+def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "norev"):
 	"""
 	Main view of contact plots
 	"""
@@ -107,7 +107,7 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
 			'itypes_order' : itypes_order,
 			'selected_itypes' : selected_itypes,
 		}
-		return render(request, 'contact_plots/index_nodata.html', context)
+		return render(request, 'contact_maps/index_nodata.html', context)
 
 	# Loading variables
 	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_variables.py").load_module()
@@ -293,7 +293,6 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
                     $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
                 } 
             }            
-            
         """)
 
 	plotdiv_w= figure_shape['width'] + cw
@@ -311,7 +310,7 @@ def get_contacts_plots(request, itype, ligandonly, rev = False):
 		'plotdiv_w':plotdiv_w,
 		'mdsrv_url':mdsrv_url
 	}
-	return render(request, 'contact_plots/index_h.html', context)
+	return render(request, 'contact_maps/index_h.html', context)
 
 def get_csv_file(request,foo):
 	"""
@@ -328,4 +327,4 @@ def get_csv_file(request,foo):
 	return response
 
 def get_itype_help(request, foo):
-	return render(request, 'contact_plots/itype_help.html')
+	return render(request, 'contact_maps/itype_help.html')

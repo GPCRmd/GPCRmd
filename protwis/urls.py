@@ -5,7 +5,7 @@ from protwis import views
 
 
 urlpatterns = [
-    url(r'^contplots/', include('contact_plots.urls')),
+    url(r'^contmaps/', include('contact_maps.urls')),
 #   url(r'^juanmaapp/', include('juanmaapp.urls')),  #### introducida por mi para  /protwis/sites/protwis/juanmaapp
 #    url(r'^polls/', include('polls.urls')),
 #    url(r'^tutorial/', include('tutorial.urls')),

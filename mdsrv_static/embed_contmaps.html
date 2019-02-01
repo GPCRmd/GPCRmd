@@ -306,14 +306,14 @@
                         
                         // Add representations
                         o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
-                        o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
+                        if (lig) {
+                          o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
+                        }
                         if (pdb_pos != "NaN"){
-                            console.log("from embed",pdb_pos);
                             if (Array.isArray(pdb_pos)){
                                 for (index in pdb_pos){
                                     position = pdb_pos[index];
                                     if (position == null){
-                                        console.log("undef");
                                         continue // Skip undefined parts
                                     }
                                     pos_sel=position.replace("-"," and :");

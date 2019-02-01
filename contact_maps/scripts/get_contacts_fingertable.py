@@ -44,8 +44,8 @@ def prepare_tables(original_table, new_table, itype, table_summary, firstline_su
 	table_file.close()
 
 # Set paths
-get_contacts_path="/protwis/sites/protwis/contact_plots/scripts/get_contacts/"
-scripts_path="/protwis/sites/protwis/contact_plots/scripts/"
+get_contacts_path="/protwis/sites/protwis/contact_maps/scripts/get_contacts/"
+scripts_path="/protwis/sites/protwis/contact_maps/scripts/"
 files_path="/protwis/sites/files/Precomputed/get_contacts_files/"
 
 # Creating folder, if it doesn't exist

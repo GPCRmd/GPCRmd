@@ -216,7 +216,7 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contplots/' + check_opt + "/" + locs.join("_") + "/" + rev_value;
+    URL = '/contmaps/' + check_opt + "/" + locs.join("_") + "/" + rev_value;
     window.location.pathname = URL; 
   }
   else {
