@@ -50,7 +50,7 @@ class Command(BaseCommand):
 
         def generate_gpcr_pdb (dyn_id, structure_file):
             """Code extracted frin view/views index"""
-            pdb_name = "/protwis/sites/files/"+structure_file
+            pdb_name = structure_file
             chain_name_li=obtain_prot_chains(pdb_name)
             multiple_chains=False
             if len(chain_name_li) > 1:
@@ -228,6 +228,7 @@ class Command(BaseCommand):
             if len(traj_list) == 0:
                 self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
             else:
+                traj_files = [ i[0] for i in traj_list ]
                 gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
                 pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
                 delta=DyndbDynamics.objects.get(id=dyn_id).delta
@@ -242,7 +243,7 @@ class Command(BaseCommand):
                     "pdb_id":pdb_id,
                     "struc_f":structure_file,
                     "struc_fname":structure_file_name,
-                    "traj_f":traj_list,
+                    "traj_f":traj_files,
                     "traj_fnames":traj_name_list,
                     "delta":delta,
                     "gpcr_pdb":gpcr_pdb
