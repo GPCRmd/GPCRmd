@@ -198,6 +198,22 @@ def obtain_prot_chains(pdb_name):
             chain_name_s.add(line[21])
     return list(chain_name_s)
 
+def obtain_all_chains(pdb_name):
+    chain_name_l=[]
+    fpdb=open(pdb_name,'r')
+    first=True
+    for line in fpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            chain_name=line[21]
+            if first:
+                first=False
+                chain_name_pre=chain_name
+                chain_name_l.append(line[21])
+            elif (chain_name != chain_name_pre):
+                chain_name_pre=chain_name
+                chain_name_l.append(line[21])
+    return list(chain_name_l)
+
 
 def obtain_wholeModel_seg_to_chain(pdb_name):
     whole_seg_to_chain={}
