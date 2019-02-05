@@ -136,7 +136,6 @@ class Command(BaseCommand):
             json_data = json.loads(json_str)
             return json_data
 
-
         def prot_from_model(model):
             """Given a db model obj, gets the GPCR protein object"""
             model_prot=model.id_protein
@@ -169,13 +168,12 @@ class Command(BaseCommand):
             traj_name_list=[]
             structure_file = None
             structure_file_name = None
-            p=re.compile("(/protwis/sites/files/)(.*)")
             p2=re.compile("[\.\w]*$")
             for fileobj in dynfiles:
                 path=fileobj.id_files.filepath
-                myfile=p.search(path).group(2)
+                myfile=path
                 myfile_name=p2.search(myfile).group()
-                if myfile.endswith(".pdb"): 
+                if myfile.endswith(".pdb"):
                     structure_file=myfile
                     structure_file_name=myfile_name
                 elif myfile.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
@@ -242,7 +240,9 @@ class Command(BaseCommand):
                     "prot_lname":prot.name,
                     "up_name":uniprot_name,
                     "pdb_id":pdb_id,
+                    "struc_f":structure_file,
                     "struc_fname":structure_file_name,
+                    "traj_f":traj_list,
                     "traj_fnames":traj_name_list,
                     "delta":delta,
                     "gpcr_pdb":gpcr_pdb
@@ -292,7 +292,7 @@ class Command(BaseCommand):
                 upd_abs_path = upd_file_pathobj.resolve()
                 upd=json_dict(upd_file_path)
                 last_upd_dt=obtain_datetime(upd)
-                dyn_li=DyndbDynamics.objects.filter(update_timestamp__gte=last_upd_dt)
+                dyn_li=DyndbDynamics.objects.filter()#update_timestamp__gte=last_upd_dt) # TODO: activate option when on development
             except FileNotFoundError:
                 upd={"ligres_int":{}}
                 dyn_li=DyndbDynamics.objects.filter()
@@ -307,6 +307,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
             i+=1
 
+        update_time(upd,upd_now)
         with open(upd_file_path, 'w') as outfile:
             json.dump(upd, outfile)
         with open(compl_file_path, 'w') as outfile:

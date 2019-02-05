@@ -295,6 +295,8 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
             }            
         """)
 
+	# Find path to files 
+
 	plotdiv_w= figure_shape['width'] + cw
 	script, div = components(p)
 	context={
