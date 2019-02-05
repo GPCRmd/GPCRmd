@@ -3,7 +3,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
-from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence,DyndbReferences
+from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence,DyndbReferences,DyndbModeledResidues
 from protein.models import Protein
 from mutation.models import Mutation,MutationExperiment
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
@@ -198,7 +198,6 @@ def obtain_prot_chains(pdb_name):
             chain_name_s.add(line[21])
     return list(chain_name_s)
 
-
 def obtain_all_chains(pdb_name):
     chain_name_l=[]
     fpdb=open(pdb_name,'r')
@@ -214,6 +213,24 @@ def obtain_all_chains(pdb_name):
                 chain_name_pre=chain_name
                 chain_name_l.append(line[21])
     return list(chain_name_l)
+
+
+def obtain_wholeModel_seg_to_chain(pdb_name):
+    whole_seg_to_chain={}
+    fpdb=open(pdb_name,'r')
+    first=True
+    for line in fpdb:
+        if line.startswith('ATOM') or line.startswith('HETATM'):
+            chain_name=line[21]
+            seg_name=line[72:76]
+            if first:
+                first=False
+                seg_name_pre=seg_name
+                whole_seg_to_chain[seg_name]=chain_name
+            elif (seg_name != seg_name_pre):
+                seg_name_pre=seg_name
+                whole_seg_to_chain[seg_name]=chain_name
+    return whole_seg_to_chain
 
 def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
     """Creates a list of all the important info of prot sequence positions"""
@@ -578,11 +595,22 @@ def obtain_protein_names(dyn_id):
     return ",".join(prot_li_names)
 
 
-def res_to_atom(chain_names,struc,res, chain, atm):
+def res_to_atom(seg_to_chain,struc,res, chain, atm):
     chain = chain.upper()
-    if chain in chain_names:
-        chain_ind=chain_names.index(chain)
-        atm_index_arr = struc.topology.select("residue "+str(res)+" and chainid "+str(chain_ind)+" and name "+atm)
+    chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
+    chains_sel_li=[]
+    if chain_segments:
+        structable, bonds=struc.topology.to_dataframe()
+        chainid_li=[]
+        for segname in chain_segments:
+                seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()
+                chainid_li+=list(seg_chainid_li)
+        chainid_li=list(set(chainid_li))
+        for chainid in chainid_li:
+            chains_sel_li.append("chainid "+ str(chainid))
+
+        chain_sel_str=" or ".join(gpcr_chains_sel_li)
+        atm_index_arr = struc.topology.select("residue "+str(res)+" and ("+chain_sel_str+") and name "+atm)
         if atm_index_arr:
             return (str(atm_index_arr[0]))
         else:
@@ -600,8 +628,6 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     axis_lab=[["Frame"]]
     atom_pairs=np.array([]).reshape(0,2)
     small_error=[]
-    # If some dist needs re -> atom traduction:
-    chain_names=obtain_all_chains(struc_path)
     if (":" in dist_str):
         struc=md.load(struc_path)
     dist_pair_new=[]
@@ -613,8 +639,8 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
             (inf_from,inf_to)=dist_pair.split("-")
             (resF, chainF, atmF)= inf_from.split(":")
             (resT, chainT, atmT)= inf_to.split(":")
-            pos_from=res_to_atom(chain_names,struc,resF, chainF, atmF)
-            pos_to=res_to_atom(chain_names,struc,resT, chainT, atmT)
+            pos_from=res_to_atom(seg_to_chain,struc,resF, chainF, atmF)
+            pos_to=res_to_atom(seg_to_chain,struc,resT, chainT, atmT)
             var_lab="dist "+resF +":"+ chainF+"("+atmF+")-"+resT +":"+ chainT+"("+atmT+")"
             skip=False
             if not pos_from:
@@ -925,12 +951,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
                 session_data=request.session["main_strc_data"]
-                #chain_names=session_data["chain_name_li"]
-                chain_names=obtain_all_chains("/protwis/sites/files/"+int_struc_p)
                 num_prots=session_data["prot_num"]
                 serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]
-                
+                seg_to_chain=session_data["seg_to_chain"]
                 
                 if request.session.get('int_data', False):
                     int_data=request.session['int_data']
@@ -948,7 +972,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     int_info={}
                 
                 if len(int_info) < 15:
-                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,chain_names,float(thresh),serial_mdInd,gpcr_chains,dist_scheme, int(strideVal))
+                    # remove chain_names
+                    (success,int_dict,errors)=compute_interaction(res_li,int_struc_p,int_traj_p,num_prots,float(thresh),serial_mdInd,gpcr_chains,dist_scheme, int(strideVal),seg_to_chain)
                     int_id = None
                     if success:
                         p=re.compile("\w*\.\w*$")
@@ -1004,7 +1029,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             if len(chain_name_li) > 1:
                 multiple_chains=True
             (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
-            request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False}
+            model_res=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics__id=dyn_id)
+            seg_to_chain={mr.segid : mr.chain for mr in model_res}
+            request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False,"seg_to_chain":seg_to_chain}
             dprot_chains={}
             chains_taken=set()
             gpcr_chains=[]
@@ -1414,7 +1441,7 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
 
 
 
-def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal):
+def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal,seg_to_chain):
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     try:
@@ -1435,10 +1462,18 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
 ####
     if len(all_lig_res)>0:
         if gpcr_chains:
-            gpcr_chains_sel=""
+            structable, bonds=struc.topology.to_dataframe()
+            gpcr_chains_sel_li=[]
+            chainid_li=[]
             for chain in gpcr_chains:
-                gpcr_chains_sel+="chainid "+ str(chain_name_li.index(chain)) +" or "
-            gpcr_chains_sel="protein and ("+gpcr_chains_sel[:-4]+")"
+                chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
+                for segname in chain_segments:
+                    seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
+                    chainid_li+=list(seg_chainid_li)
+            chainid_li=list(set(chainid_li))
+            for chainid in chainid_li:
+                gpcr_chains_sel_li.append("chainid "+ str(chainid))
+            gpcr_chains_sel="protein and ("+" or ".join(gpcr_chains_sel_li)+")"
             gpcr_sel=struc.topology.select(gpcr_chains_sel)
         else:
             gpcr_sel=struc.topology.select("protein") 
@@ -1485,9 +1520,8 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,chain_name_li,thresh,ser
             lig_nm=struc.topology.residue(lig_ind).name
             res_topo=struc.topology.residue(res_ind)
             res_pdb=res_topo.resSeq
-            res_chain_ind=res_topo.chain.index
             res_name=res_topo.name
-            res_chain=chain_name_li[res_chain_ind]
+            res_chain=seg_to_chain[res_topo.segment_id]
             if lig_nm in fin_dict:
                 fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
             else:
@@ -1562,7 +1596,7 @@ def hbonds(request):
         arrays=request.POST.getlist('frames[]')
         full_results=dict()
         struc_path = "/protwis/sites/files/"+arrays[4]
-        all_chains=obtain_all_chains(struc_path)
+        whole_seg_to_chain=obtain_wholeModel_seg_to_chain(struc_path)
         traj_path = "/protwis/sites/files/"+arrays[3]
         start=int(arrays[0])
         end=int(arrays[1])
@@ -1622,8 +1656,8 @@ def hbonds(request):
         t=md.load_frame(traj_path, index=0, top=struc_path)
 
         for keys in histhbond:
-            chainpair0,chainpair1=[int(t.topology.atom(keys[0]).residue.chain.index),int(t.topology.atom(keys[2]).residue.chain.index)]
-            chain0,chain1=[all_chains[chainpair0],all_chains[chainpair1]]
+            chain0=whole_seg_to_chain[t.topology.atom(keys[0]).segment_id]
+            chain1=whole_seg_to_chain[t.topology.atom(keys[2]).segment_id]
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
             is_not_neighbour=abs(t.topology.atom(keys[0]).residue.index-t.topology.atom(keys[2]).residue.index)>resid_dist
             if backbone:
