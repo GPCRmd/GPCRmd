@@ -240,7 +240,8 @@
                 $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});                
                 
                 //Change receptor
-                $(document.body).bind('createNewRef', function(e, struc_fname , traj_fnames , lig,delta , pos, pdb_pos) { 
+                $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta , pos, pdb_pos) { 
+                    console.log(traj_f)
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
                     $("#toiframe").find("#trajRangeDiv").css("display","none");
@@ -253,12 +254,7 @@
                     if (my_comp_li.length > 0) {
                         stage.removeAllComponents();
                     }
-                    struc_file="Dynamics/"+struc_fname;
-                    var traj_li=[];
-                    for (idn=0; idn < traj_fnames.length ; idn++){
-                        traj_file="Dynamics/"+traj_fnames[idn];
-                        traj_li[traj_li.length]=traj_file;
-                    }
+                    
                     if (! isNaN(parseInt(lig))){
                         lig="["+lig+"]";
                     }
@@ -272,8 +268,9 @@
                     }
                     
                     //Trajctory selection
-                    sel_traj=traj_li[0];
-                    if (traj_li.length >= 1){
+                    console.log(traj_f)
+                    sel_traj=traj_f[0];
+                    if (traj_f.length >= 1){
                         create_traj_dropdown(traj_fnames,traj_fnames[0])
                     }
                     $("#last_played").text(traj_fnames[0]);
@@ -282,8 +279,8 @@
                         o.setName("my_comp");
                         o.setSelection("not _h and ("+lig+" or protein)");
 
-                        for (t=0 ; t < traj_li.length ; t++){
-                            o.addTrajectory( traj_path + traj_li[t] );
+                        for (t=0 ; t < traj_f.length ; t++){
+                            o.addTrajectory( traj_f[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
                         
