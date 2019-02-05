@@ -247,10 +247,11 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 				var comp_id=ri_data[recept_id][rio_data['comp_id']];
 				var sel_thresh=2.8;
                 var struc_fname=ri_data[recept_id][rio_data['struc_fname']];
+                var struc_file=ri_data[recept_id][rio_data['struc_file']];
                 var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
+                var traj_f=ri_data[recept_id][rio_data['traj_f']];
                 var delta=ri_data[recept_id][rio_data['delta']];
-
-                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_fname, traj_fnames ,lig, delta, pos, pdb_pos_array]);
+                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
                 
                 if (plot_bclass != "col-xs-9"){
                     $("#retracting_parts").attr("class","col-xs-9");

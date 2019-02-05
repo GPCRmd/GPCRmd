@@ -24,9 +24,26 @@ def json_dict(path):
     return json_data
 
 def improve_receptor_names(df_ts,compl_data):
-    """Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id"""
+    """
+    Parses the dataframe to create the data source of the plot. When defining a name for each dynamics entry: if there is any other dynamics in the 
+    datadrame that is created fromt he same pdb id and ligand, all these dynamics will indicate the dynamics id
+    """
     recept_info={}
-    recept_info_order={"upname":0, "resname":1,"dyn_id":2,"prot_id":3,"comp_id":4,"prot_lname":5,"pdb_id":6,"lig_lname":7,"struc_fname":8,"traj_fnames":9,"delta":10}
+    recept_info_order={
+        "upname":0,
+        "resname":1,
+        "dyn_id":2,
+        "prot_id":3,
+        "comp_id":4,
+        "prot_lname":5,
+        "pdb_id":6,
+        "lig_lname":7,
+        "struc_fname":8,
+        "struc_f":9,
+        "traj_fnames":10,
+        "traj_f":11,
+        "delta":12
+    }
     taken_protlig={}
     index_dict={}
     dyn_gpcr_pdb={}
@@ -40,7 +57,9 @@ def improve_receptor_names(df_ts,compl_data):
         prot_lname=compl_data[recept_id]["prot_lname"]
         pdb_id=compl_data[recept_id]["pdb_id"]
         struc_fname=compl_data[recept_id]["struc_fname"]
+        struc_f=compl_data[recept_id]["struc_f"]
         traj_fnames=compl_data[recept_id]["traj_fnames"]
+        traj_f=compl_data[recept_id]["traj_f"]
         delta=compl_data[recept_id]["delta"]
         if pdb_id:
             prot_lig=(pdb_id,resname)
@@ -62,7 +81,7 @@ def improve_receptor_names(df_ts,compl_data):
             if bool(prot_lig[1]):
                 recept_name = recept_name + " + "+prot_lig[1]
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
-        recept_info[recept_name]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,traj_fnames,delta]
+        recept_info[recept_name]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta]
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
@@ -464,11 +483,11 @@ This script creates dataframes, dendrogram and other
 auxiliary files which serve as main inputs for contact_maps
 application.
 
-table_to_dataframe.py <INTERACTION_TYPE> <INTERACTION_PARTNERS> <NUM_SIMULATIONS>
+table_to_dataframe.py <INTERACTION_TYPE> <INTERACTION_PARTNERS> <REV_OPTION>
 
     - INTERACTION TYPE: any of the interaction types avalible for the web.
     - INTERACTION PARTNERS: lg, prt or prt_lg
-    - REVERSE OPTION: rev or norev
+    - REVERSE OPTION: rev or norev. Show (or not) reversed residue pairs
 
 """))
 get_contacts_plots(argv[1], argv[2], argv[3])
