@@ -50,7 +50,7 @@ class Command(BaseCommand):
 
         def generate_gpcr_pdb (dyn_id, structure_file):
             """Code extracted frin view/views index"""
-            pdb_name = structure_file
+            pdb_name = "/protwis/sites/files/"+structure_file
             chain_name_li=obtain_prot_chains(pdb_name)
             multiple_chains=False
             if len(chain_name_li) > 1:
@@ -168,10 +168,11 @@ class Command(BaseCommand):
             traj_name_list=[]
             structure_file = None
             structure_file_name = None
+            p=re.compile("(/protwis/sites/files/)(.*)")
             p2=re.compile("[\.\w]*$")
             for fileobj in dynfiles:
                 path=fileobj.id_files.filepath
-                myfile=path
+                myfile=p.search(path).group(2)
                 myfile_name=p2.search(myfile).group()
                 if myfile.endswith(".pdb"):
                     structure_file=myfile
