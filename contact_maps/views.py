@@ -245,9 +245,8 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 				var prot_id=ri_data[recept_id][rio_data['prot_id']];
 				var prot_lname=ri_data[recept_id][rio_data['prot_lname']];
 				var comp_id=ri_data[recept_id][rio_data['comp_id']];
-				var sel_thresh=2.8;
                 var struc_fname=ri_data[recept_id][rio_data['struc_fname']];
-                var struc_file=ri_data[recept_id][rio_data['struc_file']];
+                var struc_file=ri_data[recept_id][rio_data['struc_f']];
                 var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
                 var traj_f=ri_data[recept_id][rio_data['traj_f']];
                 var delta=ri_data[recept_id][rio_data['delta']];
