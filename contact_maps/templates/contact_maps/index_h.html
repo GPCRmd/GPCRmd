@@ -226,15 +226,16 @@
           <ul>
           {% for group, types_tuple in itypes_order %}
             {% for typecode,typename in types_tuple  %}
-            {% if typecode == "hb" %}
-            <ul>
-            {% for hbcode,hbitype in hb_itypes %}
-              <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
-            {% endfor %}
-            </ul>
-            {% else %}
-              <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
-            {% endif %}
+              {% if typecode == "hb" %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>                  
+                <ul>
+                {% for hbcode,hbitype in hb_itypes %}
+                  <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
+                {% endfor %}
+                </ul>
+              {% else %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
+              {% endif %}
             {% endfor %}
           {% endfor %}
           </ul>
