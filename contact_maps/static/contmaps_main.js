@@ -53,8 +53,8 @@ $(document).ready(function(){
 
   //-------change color upon clicking option
   //I know it's strange to have these two separated, but belive me, it was the only way to make it all work
-  $('.option').change(function(e){changeapplycolor()}); //In case any checkbox is clicked
-  $('#allbutton').click(function(e){changeapplycolor()}); //In cas all options button is clicked
+  //$('.option').change(function(e){changeapplycolor()}); //In case any checkbox is clicked
+  //$('#allbutton').click(function(e){changeapplycolor()}); //In cas all options button is clicked
 
   //-------Change active itype options depending of selected molecular intetactions 
   $('.option_location').change(function(){
@@ -114,7 +114,7 @@ $(document).ready(function(){
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
-          $("#main_plot_body").css("max-height", '85%');
+          $("#main_plot_body").css("max-height", '87%');
       } else {
           $("#show_hide_info_text").text("Hide info ");
           $("#main_plot_body").css("max-height", '50%');

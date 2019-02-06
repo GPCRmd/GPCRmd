@@ -89,13 +89,11 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	#Creating itypes dictionary for selected types
 	selected_itypes = { x:typelist[x] for x in set_itypes }
 
-	# Loading json dict
-	compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
-
 	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
 
 	# Loading csv if it exists. If not, load "no interactions" template instead
 	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
+	print(csv_name)
  
 	if exists(csv_name):
 		df_ts = pd.read_csv(csv_name, sep=",", index_col = 0)

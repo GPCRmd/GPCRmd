@@ -260,7 +260,6 @@
                       traj_f[i] = pathpat.exec(traj_f[i])[0];
                     }
 
-
                     if (! isNaN(parseInt(lig))){
                         lig="["+lig+"]";
                     }
@@ -272,7 +271,7 @@
                         $(".traj_btn").removeClass("active");
                         $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
                     }
-                    
+
                     //Trajctory selection
                     sel_traj=traj_f[0];
                     if (traj_f.length >= 1){
@@ -285,7 +284,7 @@
                         o.setSelection("not _h and ("+lig+" or protein)");
 
                         for (t=0 ; t < traj_f.length ; t++){
-                            o.addTrajectory( traj_f[t] );
+                            o.addTrajectory( traj_path + traj_f[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
                         
