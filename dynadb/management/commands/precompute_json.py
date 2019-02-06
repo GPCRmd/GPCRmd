@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Creates precomputed JSON files for posterior creation of flare plots"
     def add_arguments(self, parser):
         parser.add_argument(
-           '-sub',
+           '--sub',
             dest='submission_id',
             nargs='*',
             action='store',
@@ -18,7 +18,7 @@ class Command(BaseCommand):
             help='Submission id(s) for which json file will be precomputed. All submissions whose dynamic is "ready for publication" will be admitted if no id(s) are provided.'
         )
         parser.add_argument(
-           '-traj',
+           '--traj',
             dest='traj_id',
             nargs='*',
             action='store',
@@ -26,7 +26,7 @@ class Command(BaseCommand):
             help='Id(s) of trajectories for which a json file will be precomputed. All trajectories from "ready for publication" dynamics will be admitted if no id(s) are provided.'
         )
         parser.add_argument(
-            '-type',
+            '--type',
             dest='consider_comp_type', 
             nargs='?',
             choices=['hbonds','all'],
@@ -36,7 +36,7 @@ class Command(BaseCommand):
         )
         
         parser.add_argument(
-            '-str',
+            '--str',
             dest='stride', 
             nargs='?',
             action='store',
@@ -44,12 +44,23 @@ class Command(BaseCommand):
             type=int,
             help='Stride the trajectories.'
         )
+
+        parser.add_argument(
+            '--ignore_publication',
+            action='store_true',
+            dest='ignore_publication',
+            default=False,
+            help='Consider both published and unpublished dynamics.',
+        )
         
     def handle(self, *args, **options):
         hb_json_path="/protwis/sites/files/Precomputed/flare_plot/hbonds"
         if not os.path.isdir(hb_json_path):
             os.makedirs(hb_json_path)
-        dynobj=DyndbDynamics.objects.filter(is_published=True)
+        if options['ignore_publication']:
+            dynobj=DyndbDynamics.objects.all()
+        else:
+            dynobj=DyndbDynamics.objects.filter(is_published=True)
         if options['submission_id']:
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
         if options['traj_id']:
