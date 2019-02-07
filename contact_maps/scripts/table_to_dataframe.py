@@ -71,19 +71,21 @@ def improve_receptor_names(df_ts,compl_data):
             prot_lig=(pdb_id,resname)
         else:
             prot_lig=(upname,resname)
-        
+
         if prot_lig in taken_protlig:
             name_base=taken_protlig[prot_lig]["recept_name"]
             recept_name=name_base+" (id:"+str(dyn_id)+")"
+
             #Add the dyn id at recept_info for the original dyn as well, if necessary:
             if not taken_protlig[prot_lig]["id_added"]:
                 orig_recept_name=name_base
                 orig_dyn_id=recept_info[orig_recept_name][recept_info_order["dyn_id"]]
                 orig_recept_name_upd=orig_recept_name+" (id:"+str(orig_dyn_id)+")"
-                recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
+                #recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
                 taken_protlig[prot_lig]["id_added"]=True
         else:
             recept_name=prot_lname+" ("+prot_lig[0]+")"
+
             if bool(prot_lig[1]):
                 recept_name = recept_name + " + "+prot_lig[1]
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
@@ -91,6 +93,7 @@ def improve_receptor_names(df_ts,compl_data):
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
 def removing_entries_and_freqsdict(df, itypes, main_itype):
@@ -338,7 +341,7 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
             for itype_code,itype_name in type_tuple:
                 hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
                 if itype_code == "hb":
-                    for hb_code,hb_name in hb_itypes:
+                    for hb_code,hb_name in hb_itypes.items():
                         hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
     else:
         hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
@@ -676,7 +679,7 @@ def get_contacts_plots(itype, ligandonly, rev):
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     # I use df instead of df_ts because of its structure. I know it's kind of strange
     h=dend_height
-    w=16300 if int(df.shape[0]*30 + 130) > 16300 else int(df.shape[0]*30 + 130)
+    w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)
 
     # Save dataframe in csv (without row indexes)
     csvfile =  basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
