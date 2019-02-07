@@ -241,7 +241,6 @@
                 
                 //Change receptor
                 $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta , pos, pdb_pos) { 
-                    console.log(traj_f)
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
                     $("#toiframe").find("#trajRangeDiv").css("display","none");
@@ -255,6 +254,12 @@
                         stage.removeAllComponents();
                     }
                     
+                    var pathpat = new RegExp("Dynami.*$");
+                    var struc_file = pathpat.exec(struc_file)[0];
+                    for (i=0; i<traj_f.length; i++){
+                      traj_f[i] = pathpat.exec(traj_f[i])[0];
+                    }
+
                     if (! isNaN(parseInt(lig))){
                         lig="["+lig+"]";
                     }
@@ -266,9 +271,8 @@
                         $(".traj_btn").removeClass("active");
                         $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
                     }
-                    
+
                     //Trajctory selection
-                    console.log(traj_f)
                     sel_traj=traj_f[0];
                     if (traj_f.length >= 1){
                         create_traj_dropdown(traj_fnames,traj_fnames[0])
@@ -280,7 +284,7 @@
                         o.setSelection("not _h and ("+lig+" or protein)");
 
                         for (t=0 ; t < traj_f.length ; t++){
-                            o.addTrajectory( traj_f[t] );
+                            o.addTrajectory( traj_path + traj_f[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
                         

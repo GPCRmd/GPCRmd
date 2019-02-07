@@ -37,7 +37,6 @@ html, body, #outer {
   margin:auto;
   bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
   width: 100%;
-  padding-right:25px
 }
 
 #fixed_col {
@@ -63,7 +62,7 @@ html, body, #outer {
 }
 
 #more_info {
-  max-height: 35%;
+  max-height: 36%;
   overflow-y: scroll;
 }
 

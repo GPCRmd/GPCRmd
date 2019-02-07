@@ -212,7 +212,7 @@
     </div>
   </div>
   <div class="col-xs-3" id="info">
-    <div class="panel panel-info" style="margin-bottom:0;height:100%;position: relative; overflow-y: auto; overflow-x: auto;">
+    <div class="panel panel-info" style="margin-bottom:0;height:91%;position: relative; overflow-y: auto; overflow-x: auto;">
       <div class="panel-heading" style="">Interaction details
         <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
           <span aria-hidden="true">&times;</span>
@@ -226,15 +226,16 @@
           <ul>
           {% for group, types_tuple in itypes_order %}
             {% for typecode,typename in types_tuple  %}
-            {% if typecode == "hb" %}
-            <ul>
-            {% for hbcode,hbitype in hb_itypes %}
-              <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
-            {% endfor %}
-            </ul>
-            {% else %}
-              <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
-            {% endif %}
+              {% if typecode == "hb" %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>                  
+                <ul>
+                {% for hbcode,hbitype in hb_itypes %}
+                  <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
+                {% endfor %}
+                </ul>
+              {% else %}
+                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
+              {% endif %}
             {% endfor %}
           {% endfor %}
           </ul>

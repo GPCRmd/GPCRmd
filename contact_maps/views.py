@@ -18,11 +18,11 @@ from json import loads
 from re import sub,compile
 
 def json_dict(path):
-    """Converts json file to pyhton dict."""
-    json_file=open(path)
-    json_str = json_file.read()
-    json_data = loads(json_str)
-    return json_data
+	"""Converts json file to pyhton dict."""
+	json_file=open(path)
+	json_str = json_file.read()
+	json_data = loads(json_str)
+	return json_data
 
 def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "norev"):
 	"""
@@ -32,65 +32,62 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 
 	#Declaring dictionaries with types
 	typelist =  {
-	    'sb' : 'salt bridge',
-	    "pc" : 'pi-cation',
-	    "ps" : 'pi-stacking',
-	    'ts' : 't-stacking',
-	    "vdw" : 'van der waals',
-	    'hp' : 'hydrophobic',
-	    "hbbb" : 'backbone to backbone HB',
-	    "hbsb" : 'sidechain to backbone HB',
-	    "hbss" : 'sidechain to sidechain HB',
-	    "hbls" : 'ligand to sidechain HB',
-	    "hblb" : 'ligand to backbone HB',
-	    "wb" : 'water bridge',
-	    "wb2" : 'extended water bridge',
-	    "hb" : 'hydrogen bond',
-	    'all' : 'all types',
+		'sb' : 'salt bridge',
+		"pc" : 'pi-cation',
+		"ps" : 'pi-stacking',
+		'ts' : 't-stacking',
+		"vdw" : 'van der waals',
+		'hp' : 'hydrophobic',
+		"hbbb" : 'backbone to backbone HB',
+		"hbsb" : 'sidechain to backbone HB',
+		"hbss" : 'sidechain to sidechain HB',
+		"hbls" : 'ligand to sidechain HB',
+		"hblb" : 'ligand to backbone HB',
+		"wb" : 'water bridge',
+		"wb2" : 'extended water bridge',
+		"hb" : 'hydrogen bond',
+		'all' : 'all types',
 	}
 	hb_itypes = [
 		("hbbb", 'backbone to backbone HB'),
-	    ("hbsb" , 'sidechain to backbone HB'),
-	    ("hbss" , 'sidechain to sidechain HB'),
-	    ("hbls" , 'ligand to sidechain HB'),
-	    ("hblb" , 'ligand to backbone HB'),
+		("hbsb" , 'sidechain to backbone HB'),
+		("hbss" , 'sidechain to sidechain HB'),
+		("hbls" , 'ligand to sidechain HB'),
+		("hblb" , 'ligand to backbone HB'),
 	]
 
 	itypes_order = [
-	    ("Non-polar", 
-	    	(
-	    		("vdw","van der waals"),
-	    		('hp', "hydrophobic")
+		("Non-polar", 
+			(
+				("vdw","van der waals"),
+				('hp', "hydrophobic")
 	   		)
 	   	),
-	    ("Polar/Electrostatic", 
-	    	(
-	    		("hb", "hydrogen bond"),
-	    		("wb", "water bridge"),
-	    		("wb2", "extended water bridge"),
-	    		('sb', "salt bridge"),
-	    		("pc", "pi-cation")
-	    	)
-	    ),
-	    ("Stacking",
-	    	(
-	    		("ps", "pi-stacking"),
-	    		('ts', "t-stacking")
-	    	)
-	    )
+		("Polar/Electrostatic", 
+			(
+				("hb", "hydrogen bond"),
+				("wb", "water bridge"),
+				("wb2", "extended water bridge"),
+				('sb', "salt bridge"),
+				("pc", "pi-cation")
+			)
+		),
+		("Stacking",
+			(
+				("ps", "pi-stacking"),
+				('ts', "t-stacking")
+			)
+		)
 	]
 
 	# Creating set_itypes, with all in case it is not still in it
 	if not itype == "all":
-	    set_itypes = set(itype.split("_"))
+		set_itypes = set(itype.split("_"))
 	else: 
-	    set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb"))
+		set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb"))
 
 	#Creating itypes dictionary for selected types
 	selected_itypes = { x:typelist[x] for x in set_itypes }
-
-	# Loading json dict
-	compl_data = json_dict("/protwis/sites/files/Precomputed/crossreceptor_analysis_files/compl_info.json")
 
 	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
 
@@ -181,12 +178,12 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	# Add legend
 	color_bar = ColorBar(
 		color_mapper=mapper, 
-        location=(0, 0),
-        label_standoff = 12,
-        ticker=BasicTicker(desired_num_ticks=2),
-        formatter=PrintfTickFormatter(format="%d%%"),
-        major_label_text_font_size="11pt"
-    	)
+		location=(0, 0),
+		label_standoff = 12,
+		ticker=BasicTicker(desired_num_ticks=2),
+		formatter=PrintfTickFormatter(format="%d%%"),
+		major_label_text_font_size="11pt"
+		)
 	p.add_layout(color_bar, 'left')
 
 	# Setting axis
@@ -201,19 +198,19 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	#Creating hovertool list
 	hoverlist = [('Id', '@Id'), ('Position', '@Position')]
 	if itype == "all":
-	    for group,type_tuple in itypes_order:
-	        for itype_code,itype_name in type_tuple:
-	            hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
-	            if itype_code == "hb":
-	                for hb_code,hb_name in hb_itypes:
-	                    hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
+		for group,type_tuple in itypes_order:
+			for itype_code,itype_name in type_tuple:
+				hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
+				if itype_code == "hb":
+					for hb_code,hb_name in hb_itypes:
+						hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
 	else:
-	    hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
+		hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
 	hoverlist.append(('Total interaction frequency', '@{all}{0.00}%'))
 
 	#Hover tool:
 	hover = HoverTool(
-	    tooltips=hoverlist
+		tooltips=hoverlist
 	)
 	p.add_tools(hover)
 
@@ -231,8 +228,8 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 				var gnum_data=gnum_info.data;
 				var recept_id=data["Id"][sel_ind];
 				var pos=data["Position"][sel_ind];
-                var freq_total=data["all"][sel_ind];
-                var freq_type=data[itype][sel_ind];
+				var freq_total=data["all"][sel_ind];
+				var freq_type=data[itype][sel_ind];
 				var pos_array = pos.split(" ");
 				var pos_string = pos_array.join("_")
 				var pos_ind_array = pos_array.map(value => { return gnum_data['index'].indexOf(value); });
@@ -245,56 +242,55 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 				var prot_id=ri_data[recept_id][rio_data['prot_id']];
 				var prot_lname=ri_data[recept_id][rio_data['prot_lname']];
 				var comp_id=ri_data[recept_id][rio_data['comp_id']];
-				var sel_thresh=2.8;
-                var struc_fname=ri_data[recept_id][rio_data['struc_fname']];
-                var struc_file=ri_data[recept_id][rio_data['struc_file']];
-                var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
-                var traj_f=ri_data[recept_id][rio_data['traj_f']];
-                var delta=ri_data[recept_id][rio_data['delta']];
-                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
-                
-                if (plot_bclass != "col-xs-9"){
-                    $("#retracting_parts").attr("class","col-xs-9");
-                    $("#first_col").attr("class","col-xs-7");
-                    $("#second_col").attr("class","col-xs-5");
-                    $("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
-                }
+				var struc_fname=ri_data[recept_id][rio_data['struc_fname']];
+				var struc_file=ri_data[recept_id][rio_data['struc_f']];
+				var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
+				var traj_f=ri_data[recept_id][rio_data['traj_f']];
+				var delta=ri_data[recept_id][rio_data['delta']];
+				$('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
+				
+				if (plot_bclass != "col-xs-9"){
+					$("#retracting_parts").attr("class","col-xs-9");
+					$("#first_col").attr("class","col-xs-7");
+					$("#second_col").attr("class","col-xs-5");
+					$("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
+				}
 
-                //Setting type specific frequencies
-                if (itype == "all") {
-                	for (my_type in typelist) {
-                		if (my_type == "all"){ // Total frequency shall not be displayed twice
-                			continue;
-                		}
+				//Setting type specific frequencies
+				if (itype == "all") {
+					for (my_type in typelist) {
+						if (my_type == "all"){ // Total frequency shall not be displayed twice
+							continue;
+						}
 						var freq_type = data[my_type][sel_ind];
-		                $( "#freq_" + my_type).html(freq_type.toFixed(2) + "%");
-                	}
-                }
-                else {
-	                $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
-                }
+						$( "#freq_" + my_type).html(freq_type.toFixed(2) + "%");
+					}
+				}
+				else {
+					$( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
+				}
 
-                $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
-                $("#recept_val").html(prot_lname + " ("+recept+")");
-                $("#pos_val").html(pos);
-                if (Boolean(lig)) {
-                	$("#lig_val").html(lig_lname + " ("+lig+")");
-                	$("#lig_link").show();
-	                $("#lig_link").attr("href","../../../dynadb/compound/id/"+comp_id);
-                }
-                else {
-                	$("#lig_val").html("None");
-                	$("#lig_link").hide();
-                }
-                $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
-                $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
-            } else {
-                if (plot_bclass != "col-xs-12"){
-                    $("#retracting_parts").attr("class","col-xs-12");
-                    $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
-                } 
-            }            
-        """)
+				$("#freqtotal_val").html(freq_total.toFixed(2) + "%");
+				$("#recept_val").html(prot_lname + " ("+recept+")");
+				$("#pos_val").html(pos);
+				if (Boolean(lig)) {
+					$("#lig_val").html(lig_lname + " ("+lig+")");
+					$("#lig_link").show();
+					$("#lig_link").attr("href","../../../dynadb/compound/id/"+comp_id);
+				}
+				else {
+					$("#lig_val").html("None");
+					$("#lig_link").hide();
+				}
+				$("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
+				$("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
+			} else {
+				if (plot_bclass != "col-xs-12"){
+					$("#retracting_parts").attr("class","col-xs-12");
+					$("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
+				} 
+			}			
+		""")
 
 	# Find path to files 
 
