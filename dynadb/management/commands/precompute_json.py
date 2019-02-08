@@ -7,7 +7,7 @@ from os import path
 from view.create_fplot import *
 
 class Command(BaseCommand):
-    help = "Creates precomputed JSON files for posterior creation of flare plots"
+    help = "Creates precomputed JSON files for posterior creation of flare plots. By default, all 'ready for publication' dynamics will be considered. If the json file for a given dynamics trajectory altrady exists, it is not overwritten."
     def add_arguments(self, parser):
         parser.add_argument(
            '--sub',
@@ -15,7 +15,15 @@ class Command(BaseCommand):
             nargs='*',
             action='store',
             default=False,
-            help='Submission id(s) for which json file will be precomputed. All submissions whose dynamic is "ready for publication" will be admitted if no id(s) are provided.'
+            help='Specify submission id(s) for which json file will be precomputed.'
+        )
+        parser.add_argument(
+           '--dyn',
+            dest='dynamics_id',
+            nargs='*',
+            action='store',
+            default=False,
+            help='Specify dynamics id(s) for which json file will be precomputed. '
         )
         parser.add_argument(
            '--traj',
@@ -23,7 +31,7 @@ class Command(BaseCommand):
             nargs='*',
             action='store',
             default=False,
-            help='Id(s) of trajectories for which a json file will be precomputed. All trajectories from "ready for publication" dynamics will be admitted if no id(s) are provided.'
+            help='Specify id(s) of trajectories for which a json file will be precomputed. '
         )
         parser.add_argument(
             '--type',
@@ -44,7 +52,6 @@ class Command(BaseCommand):
             type=int,
             help='Stride the trajectories.'
         )
-
         parser.add_argument(
             '--ignore_publication',
             action='store_true',
@@ -52,7 +59,13 @@ class Command(BaseCommand):
             default=False,
             help='Consider both published and unpublished dynamics.',
         )
-        
+        parser.add_argument(
+            '--overwrite',
+            action='store_true',
+            dest='overwrite',
+            default=False,
+            help='Overwrites already generated json files.',
+        )
     def handle(self, *args, **options):
         hb_json_path="/protwis/sites/files/Precomputed/flare_plot/hbonds"
         if not os.path.isdir(hb_json_path):
@@ -63,6 +76,8 @@ class Command(BaseCommand):
             dynobj=DyndbDynamics.objects.filter(is_published=True)
         if options['submission_id']:
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
+        if options['dynamics_id']:
+            dynobj=dynobj.filter(id__in=options['dynamics_id'])
         if options['traj_id']:
             dynobj=dynobj.filter(dyndbfilesdynamics__id_files__id__in=options['traj_id']).distinct()
         if dynobj == []:
@@ -73,7 +88,7 @@ class Command(BaseCommand):
             newdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
             for dyn in dynobj:
                 dyn_id=dyn.id
-                #self.stdout.write(self.style.NOTICE("1) Dynamic id: %d"%dyn_id))
+                self.stdout.write(self.style.NOTICE("\nDynamics id: %d"%dyn_id))
                 trajfiles=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
                 if options['traj_id']:
                     trajfiles=trajfiles.filter(id__in=options['traj_id'])
@@ -85,7 +100,6 @@ class Command(BaseCommand):
                 for traj in trajfiles:
                     newfilename = get_file_name(objecttype="dynamics",fileid=traj.id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory") #suffix="_hbonds" , remove forceext=True
                     
-                    
                     ###########[!] Change get_file_name() to obtain it automatically
                     (pre,post)=newfilename.split(".")
                     add=""
@@ -96,9 +110,19 @@ class Command(BaseCommand):
                     
                     newpath = path.join(newdir,newfilename)
                     exists=path.isfile(newpath)
-                    if not exists:
+                    generate_json=False
+                    if exists:                    
+                        if options['overwrite']:
+                            generate_json=True
+                            self.stdout.write(self.style.NOTICE("Flareplot "+newfilename+" already exists, but will be overwritten."))
+                        else:
+                            self.stdout.write(self.style.NOTICE("Skipping flareplot "+newfilename+": already exists."))
+                    else:
+                        generate_json=True
+                    if generate_json:
                         self.stdout.write(self.style.NOTICE("Creating flareplot "+newfilename+"..."))
-                        create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj.filepath,stride=strideVal)
-                    #else:
-                    #    self.stdout.write(self.style.NOTICE("Flareplot "+newfilename+" already exists"))
+                        try:
+                            create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj.filepath,stride=strideVal)
+                        except Exception as e:
+                            self.stdout.write(self.style.ERROR(e))
                         
