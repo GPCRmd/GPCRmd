@@ -9,6 +9,12 @@ from re import sub,compile
 from  plotly.figure_factory import create_dendrogram
 from  plotly.offline import plot
 import os
+from math import pi
+from bokeh.palettes import cividis
+from bokeh.plotting import figure
+from bokeh.embed import components
+from bokeh.models import HoverTool, TapTool, CustomJS, DataRange1d, Range1d, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
+from bokeh.transform import transform
 
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
 import warnings
@@ -65,19 +71,21 @@ def improve_receptor_names(df_ts,compl_data):
             prot_lig=(pdb_id,resname)
         else:
             prot_lig=(upname,resname)
-        
+
         if prot_lig in taken_protlig:
             name_base=taken_protlig[prot_lig]["recept_name"]
             recept_name=name_base+" (id:"+str(dyn_id)+")"
+
             #Add the dyn id at recept_info for the original dyn as well, if necessary:
             if not taken_protlig[prot_lig]["id_added"]:
                 orig_recept_name=name_base
                 orig_dyn_id=recept_info[orig_recept_name][recept_info_order["dyn_id"]]
                 orig_recept_name_upd=orig_recept_name+" (id:"+str(orig_dyn_id)+")"
-                recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
+                #recept_info[orig_recept_name_upd] = recept_info.pop(orig_recept_name)
                 taken_protlig[prot_lig]["id_added"]=True
         else:
             recept_name=prot_lname+" ("+prot_lig[0]+")"
+
             if bool(prot_lig[1]):
                 recept_name = recept_name + " + "+prot_lig[1]
             taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
@@ -85,6 +93,7 @@ def improve_receptor_names(df_ts,compl_data):
         index_dict[recept_id]=recept_name
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
     df_ts['Id'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
 def removing_entries_and_freqsdict(df, itypes, main_itype):
@@ -320,6 +329,202 @@ def reverse_positions(df):
     df_double = pd.concat([df, df_rev])
     return df_double    
 
+def create_hovertool(itype, itypes_order, hb_itypes, typelist):
+    """
+    Creates a list in hovertool format from the two dictionaries above
+    """
+
+    #Creating hovertool list
+    hoverlist = [('Id', '@Id'), ('PDB id', '@pdb_id'), ('Position', '@Position')]
+    if itype == "all":
+        for group,type_tuple in itypes_order:
+            for itype_code,itype_name in type_tuple:
+                hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
+                if itype_code == "hb":
+                    for hb_code,hb_name in hb_itypes.items():
+                        hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
+    else:
+        hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
+    hoverlist.append(('Total interaction frequency', '@{all}{0.00}%'))
+
+    #Hover tool:
+    hover = HoverTool(
+        tooltips=hoverlist
+    )
+
+    return hover
+
+
+def define_figure(width, height, tool_list, dataframe, hover):
+    """
+    Prepare bokeh figure heatmap as intended
+    """
+
+    # Mapper
+    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    colors.reverse()
+    mapper = LinearColorMapper(palette=colors, low=0, high=100)
+
+    p = figure(
+        plot_width= width, 
+        plot_height=height,
+        #title="Example freq",
+        y_range=list(dataframe.Id.drop_duplicates()),
+        x_range=list(dataframe.Position.drop_duplicates()),
+        tools=tool_list, 
+        x_axis_location="above",
+        active_drag=None,
+        toolbar_location="right",
+        toolbar_sticky = False,
+        min_border_top = round(height * 0.045) # The proportion of margin to be left on top of matrix to align with dendrogram
+        )
+
+    # Rotate angle of x-axis labels
+    p.xaxis.major_label_orientation = pi/3
+
+    # Create rectangle for heatmap
+    mysource = ColumnDataSource(dataframe)
+    p.rect(
+        y="Id", 
+        x="Position", 
+        width=1, 
+        height=1, 
+        source=mysource,
+        line_color="white", 
+        fill_color=transform('value', mapper),
+
+        # set visual properties for selected glyphs
+        selection_line_color="black",
+        selection_fill_color=transform('value', mapper),
+        # set visual properties for non-selected glyphs
+        nonselection_fill_color=transform('value', mapper),
+        nonselection_fill_alpha=1,
+        nonselection_line_alpha=1,
+        nonselection_line_color="white"
+        )
+
+    # Add legend
+    color_bar = ColorBar(
+        color_mapper=mapper,
+        location=(0, 0),
+        label_standoff = 12,
+        ticker=BasicTicker(desired_num_ticks=2),
+        formatter=PrintfTickFormatter(format="%d%%"),
+        major_label_text_font_size="11pt"
+        )
+    p.add_layout(color_bar, 'left')
+
+    # Setting axis
+    p.axis.axis_line_color = None
+    p.axis.major_tick_line_color = None
+    p.xaxis.major_label_text_font_size = "10pt"
+    p.yaxis.major_label_text_font_size = "10pt"
+    p.yaxis.visible = False
+    p.axis.major_label_standoff = 0
+    p.xaxis.major_label_orientation = 1#"vertical"
+
+    # Adding hover
+    p.add_tools(hover)
+
+    # Needed later
+    return(mysource,p)
+
+def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
+    """
+    Prepares the javascript script necessary for the side-window
+    """
+
+    #Create data source
+    df_ri=pd.DataFrame(recept_info)
+    ri_source=ColumnDataSource(df_ri)
+    df_rio=pd.DataFrame(recept_info_order, index=[0])
+    rio_source=ColumnDataSource(df_rio)
+    df_gnum=pd.DataFrame(dyn_gpcr_pdb)
+    gnum_source=ColumnDataSource(df_gnum)
+
+    #Select tool and callback: (SIMPLIFIED)
+    mysource.callback = CustomJS(
+        args={"r_info":ri_source,"ro_info":rio_source,"gnum_info":gnum_source,"itype":itype, "typelist" : typelist},
+        code="""
+            var sel_ind = cb_obj.selected["1d"].indices;
+            var plot_bclass=$("#retracting_parts").attr("class");
+            if (sel_ind.length != 0){
+                var data = cb_obj.data;
+                var ri_data=r_info.data;
+                var rio_data=ro_info.data;
+                var gnum_data=gnum_info.data;
+                var recept_id=data["Id"][sel_ind];
+                var pos=data["Position"][sel_ind];
+                var freq_total=data["all"][sel_ind];
+                var freq_type=data[itype][sel_ind];
+                var pos_array = pos.split(" ");
+                var pos_string = pos_array.join("_")
+                var pos_ind_array = pos_array.map(value => { return gnum_data['index'].indexOf(value); });
+                var pdb_pos_array = pos_ind_array.map(value => { return gnum_data[recept_id][value]; });
+                var lig=ri_data[recept_id][rio_data['resname']];
+                var lig_lname=ri_data[recept_id][rio_data['lig_lname']];
+                var recept=ri_data[recept_id][rio_data['upname']];
+                var dyn_id_pre=ri_data[recept_id][rio_data['dyn_id']];
+                var dyn_id=dyn_id_pre.match(/\d*$/)[0];
+                var prot_id=ri_data[recept_id][rio_data['prot_id']];
+                var prot_lname=ri_data[recept_id][rio_data['prot_lname']];
+                var comp_id=ri_data[recept_id][rio_data['comp_id']];
+                var struc_fname=ri_data[recept_id][rio_data['struc_fname']];
+                var struc_file=ri_data[recept_id][rio_data['struc_f']];
+                var traj_fnames=ri_data[recept_id][rio_data['traj_fnames']];
+                var traj_f=ri_data[recept_id][rio_data['traj_f']];
+                var pdb_id=ri_data[recept_id][rio_data['pdb_id']];
+                var pdb_id_nochain = pdb_id.split(".")[0];
+                var delta=ri_data[recept_id][rio_data['delta']];
+                $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
+                
+                if (plot_bclass != "col-xs-9"){
+                    $("#retracting_parts").attr("class","col-xs-9");
+                    $("#first_col").attr("class","col-xs-7");
+                    $("#second_col").attr("class","col-xs-5");
+                    $("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
+                }
+
+                //Setting type specific frequencies
+                if (itype == "all") {
+                    for (my_type in typelist) {
+                        if (my_type == "all"){ // Total frequency shall not be displayed twice
+                            continue;
+                        }
+                        var freq_type = data[my_type][sel_ind];
+                        $( "#freq_" + my_type).html(freq_type.toFixed(2) + "%");
+                    }
+                }
+                else {
+                    $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
+                }
+
+                $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
+                $("#recept_val").html(prot_lname + " ("+recept+")");
+                $("#pos_val").html(pos);
+                $("#pdb_id").html(pdb_id);
+                $("#pdb_link").attr("href","https://www.rcsb.org/structure/" + pdb_id_nochain)
+                if (Boolean(lig)) {
+                    $("#lig_val").html(lig_lname + " ("+lig+")");
+                    $("#lig_link").show();
+                    $("#lig_link").attr("href","../../../dynadb/compound/id/"+comp_id);
+                }
+                else {
+                    $("#lig_val").html("None");
+                    $("#lig_link").hide();
+                }
+                $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
+                $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
+            } else {
+                if (plot_bclass != "col-xs-12"){
+                    $("#retracting_parts").attr("class","col-xs-12");
+                    $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
+                } 
+            }           
+        """)
+
+    return mysource
+
 def get_contacts_plots(itype, ligandonly, rev):
 
     """
@@ -367,6 +572,31 @@ def get_contacts_plots(itype, ligandonly, rev):
         "wb2" : 'extended water bridge',
 
     }
+
+    itypes_order = [
+        ("Non-polar", 
+            (
+                ("vdw","van der waals"),
+                ('hp', "hydrophobic")
+            )
+        ),
+        ("Polar/Electrostatic", 
+            (
+                ("hb", "hydrogen bond"),
+                ("wb", "water bridge"),
+                ("wb2", "extended water bridge"),
+                ('sb', "salt bridge"),
+                ("pc", "pi-cation")
+            )
+        ),
+        ("Stacking",
+            (
+                ("ps", "pi-stacking"),
+                ('ts', "t-stacking")
+            )
+        )
+    ]
+
 
     print(str("computing dataframe and dendrogram for %s-%s-%s") % (itype, ligandonly, rev))
 
@@ -431,6 +661,10 @@ def get_contacts_plots(itype, ligandonly, rev):
     #Changing ID names by simulation names
     (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
+    # Apending column with PDB ids
+    pdb_id = recept_info_order['pdb_id']
+    df_ts['pdb_id'] = df_ts['Id'].apply(lambda x: recept_info[x][pdb_id])
+
     # Labels for dendogram
     dendlabels_names = [ index_dict[dyn] for dyn in dynlist ]
 
@@ -445,11 +679,23 @@ def get_contacts_plots(itype, ligandonly, rev):
     # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
     # I use df instead of df_ts because of its structure. I know it's kind of strange
     h=dend_height
-    w=16300 if int(df.shape[0]*30 + 130) > 16300 else int(df.shape[0]*20 + 130)   
-    figure_shape = {
-        'width' : w,
-        'height' : h
-    }
+    w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)
+
+    # Save dataframe in csv (without row indexes)
+    csvfile =  basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
+    df_ts.to_csv(path_or_buf = csvfile, index = False)
+
+    # Define a figure
+    hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
+    mytools = ["hover","tap","save","reset","wheel_zoom"]
+    mysource,p = define_figure(w, h, mytools, df_ts, hover)
+
+    # Creating javascript for side-window
+    mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
+
+    # Find path to files 
+    plotdiv_w= w + 275
+    script, div = components(p)
 
     ###################
     ## Printing outputs
@@ -459,16 +705,14 @@ def get_contacts_plots(itype, ligandonly, rev):
     if not os.path.exists(basepath + "view_input_dataframe"):
         os.makedirs(basepath + "view_input_dataframe")
 
-    # Print daraframe and to_import variables in file in file
-    df_ts.to_csv(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv")
+    # Write heatmap on file
+    with open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_heatmap.html", 'w') as heatmap:
+        heatmap.write(script)
 
-    # Printing special variables
-    var_file = open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_variables.py", "w")
-    var_file.write("recept_info = " + repr(recept_info) + "\n\n")
-    var_file.write("recept_info_order = " + repr(recept_info_order) + "\n\n")
-    var_file.write("dyn_gpcr_pdb = " + repr(dyn_gpcr_pdb) + "\n\n")
-    var_file.write("figure_shape = " + repr(figure_shape))
-    var_file.close()
+    # Write div and plotdiv as python variables in a python file
+    with open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_variables.py", 'w') as varfile:
+        varfile.write("div = \'%s\'\n" % div.lstrip())
+        varfile.write("plotdiv_w = " + str(plotdiv_w))
 
 ###################
 ## Calling function
