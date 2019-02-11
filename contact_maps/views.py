@@ -113,6 +113,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 		'itypes_dict' : typelist,
 		'itype_code' : itype,
 		'ligandonly' : ligandonly,
+		'rev' : rev,
 		'itype_name' : typelist[itype],
 		'dendrogram' : dendr_figure,
 		'hb_itypes' : hb_itypes,
@@ -123,7 +124,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	}
 	return render(request, 'contact_maps/index_h.html', context)
 
-def get_csv_file(request,foo):
+def get_csv_file(request,itype, ligandonly, rev):
 	"""
 	Processing informatino from get_contact plots to create and download a csv file
 	"""

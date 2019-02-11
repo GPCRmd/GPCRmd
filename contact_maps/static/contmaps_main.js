@@ -28,7 +28,6 @@ $(document).ready(function(){
   var ligandonly = url_variables_ary[url_variables_ary.length-2];
   var rev = url_variables_ary[url_variables_ary.length-1];
 
-  console.log(itype)
   $('input[value="' + itype + '"]').prop('checked', true);
   if (ligandonly == "lg"){
     $('input[value="' + ligandonly + '"]').prop('checked', true);
@@ -117,10 +116,10 @@ $(document).ready(function(){
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
-          $("#main_plot_body").css("max-height", '87%');
+          $("#plot_col").css("height", '87%');
       } else {
           $("#show_hide_info_text").text("Hide info ");
-          $("#main_plot_body").css("max-height", '50%');
+          $("#plot_col").css("height", '50%');
       }
   });
 
