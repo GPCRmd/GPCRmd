@@ -37,7 +37,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 		"wb" : 'water bridge',
 		"wb2" : 'extended water bridge',
 		"hb" : 'hydrogen bond',
-		'all' : 'all types',
+		'all' : 'total frequency',
 	}
 	hb_itypes = [
 		("hbbb", 'backbone to backbone HB'),
@@ -101,7 +101,6 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 
 	# Loading variables
 	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
-	print(dir(variablesmod))
 	div = variablesmod.div
 	plotdiv_w = variablesmod.plotdiv_w
 
