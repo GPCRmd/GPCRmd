@@ -7,6 +7,8 @@ from django.http import HttpResponse
 import pandas as pd
 from view.views import obtain_domain_url
 from json import loads
+from wsgiref.util import FileWrapper
+
 
 def json_dict(path):
 	"""Converts json file to pyhton dict."""
@@ -133,7 +135,7 @@ def get_csv_file(request,itype, ligandonly, rev):
 	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
 
 	#Creating and downloading CSV file from df
-	csvfile = pd.read_csv(csv_name)#Rownames are undesired
+	csvfile = FileWrapper(open(csv_name, "r"))
 	response = HttpResponse(csvfile, content_type='text/plain')
 	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactPlots")
 	return response
