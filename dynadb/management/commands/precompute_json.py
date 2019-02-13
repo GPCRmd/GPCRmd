@@ -81,7 +81,7 @@ class Command(BaseCommand):
         if options['traj_id']:
             dynobj=dynobj.filter(dyndbfilesdynamics__id_files__id__in=options['traj_id']).distinct()
         if dynobj == []:
-            self.stdout.write(self.style.NOTICE("No published dynamics found."))
+            self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
         #self.stdout.write(self.style.NOTICE("%d published dynamics found."%len(dynobj)))
         strideVal=abs(options["stride"])
         if options['consider_comp_type']=="all" or options['consider_comp_type']=="hbonds":
