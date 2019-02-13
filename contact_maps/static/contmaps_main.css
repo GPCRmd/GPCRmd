@@ -1,6 +1,4 @@
-#content{
-    width:100%;
-}
+
 /*
 
 html, body, #outer {
@@ -24,6 +22,10 @@ html, body, #outer {
 }
 
 */
+
+#content {
+  width: 100%;
+}
 
 #inner_fixed {
   background-color: #3278B4;
@@ -50,19 +52,28 @@ html, body, #outer {
   padding-bottom: 5%;
 }
 
+#plot_col{
+  height: 50%;
+  margin-bottom: 20px;
+}
+
 #main_plot_body {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
-  max-height: 50%;
+  height: 100%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
 }
 
 #menus {
   width: 100%; 
 }
 
+#doc_col{
+  height: 35%;
+}
+
 #more_info {
-  max-height: 36%;
+  max-height: 100%;
   overflow-y: scroll;
 }
 

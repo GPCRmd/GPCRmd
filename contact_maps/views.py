@@ -7,6 +7,8 @@ from django.http import HttpResponse
 import pandas as pd
 from view.views import obtain_domain_url
 from json import loads
+from wsgiref.util import FileWrapper
+
 
 def json_dict(path):
 	"""Converts json file to pyhton dict."""
@@ -37,7 +39,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 		"wb" : 'water bridge',
 		"wb2" : 'extended water bridge',
 		"hb" : 'hydrogen bond',
-		'all' : 'all types',
+		'all' : 'total frequency',
 	}
 	hb_itypes = [
 		("hbbb", 'backbone to backbone HB'),
@@ -101,7 +103,6 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 
 	# Loading variables
 	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
-	print(dir(variablesmod))
 	div = variablesmod.div
 	plotdiv_w = variablesmod.plotdiv_w
 
@@ -114,6 +115,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 		'itypes_dict' : typelist,
 		'itype_code' : itype,
 		'ligandonly' : ligandonly,
+		'rev' : rev,
 		'itype_name' : typelist[itype],
 		'dendrogram' : dendr_figure,
 		'hb_itypes' : hb_itypes,
@@ -124,7 +126,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	}
 	return render(request, 'contact_maps/index_h.html', context)
 
-def get_csv_file(request,foo):
+def get_csv_file(request,itype, ligandonly, rev):
 	"""
 	Processing informatino from get_contact plots to create and download a csv file
 	"""
@@ -133,7 +135,7 @@ def get_csv_file(request,foo):
 	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
 
 	#Creating and downloading CSV file from df
-	csvfile = pd.read_csv(csv_name)#Rownames are undesired
+	csvfile = FileWrapper(open(csv_name, "r"))
 	response = HttpResponse(csvfile, content_type='text/plain')
 	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactPlots")
 	return response

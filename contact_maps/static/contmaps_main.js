@@ -17,18 +17,20 @@ $(document).ready(function(){
     "wb" : 'water bridge',
     "wb2" : 'extended water bridge',
     "hb" : 'hydrogen bonds',
-    'all' : 'all types',
+    'all' : 'total frequency',
   }
 
   //Mark options selected
-  url_variables = window.location.pathname.split("/");
-  var itype = url_variables[url_variables.length-3];
-  var ligandonly = url_variables[url_variables.length-2];
-  var rev = url_variables[url_variables.length-1];
+  url_pathname = window.location.pathname.split("/")
+  url_variables = url_pathname[url_pathname.length-1]
+  url_variables_ary = url_variables.split("&");
+  var itype = url_variables_ary[url_variables_ary.length-3];
+  var ligandonly = url_variables_ary[url_variables_ary.length-2];
+  var rev = url_variables_ary[url_variables_ary.length-1];
 
   $('input[value="' + itype + '"]').prop('checked', true);
   if (ligandonly == "lg"){
-    $('input[value="' + ligandonly + '"]').prop('checked', true);    
+    $('input[value="' + ligandonly + '"]').prop('checked', true);
   }
   else if (ligandonly == "prt"){
    $('input[value="' + ligandonly + '"]').prop('checked', true); 
@@ -114,10 +116,10 @@ $(document).ready(function(){
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
-          $("#main_plot_body").css("max-height", '87%');
+          $("#plot_col").css("height", '87%');
       } else {
           $("#show_hide_info_text").text("Hide info ");
-          $("#main_plot_body").css("max-height", '50%');
+          $("#plot_col").css("height", '50%');
       }
   });
 
@@ -216,7 +218,7 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contmaps/' + check_opt + "/" + locs.join("_") + "/" + rev_value;
+    URL = '/contmaps/' + check_opt + "&" + locs.join("_") + "&" + rev_value;
     window.location.pathname = URL; 
   }
   else {

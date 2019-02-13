@@ -124,5 +124,6 @@ class Command(BaseCommand):
                         try:
                             create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj.filepath,stride=strideVal)
                         except Exception as e:
-                            self.stdout.write(self.style.ERROR(e))
+                            self.stdout.write(self.style.ERROR(type(e).__name__+': '+str(e)))
+                            self.stdout.write(self.style.NOTICE("Skipping flareplot "+newfilename+": error during flareplot generation."))
                         

@@ -9,10 +9,10 @@
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
 <!--Load javascripts -->
-<script src="../../../static/contmaps_main.js"></script>
+<script src="../static/contmaps_main.js"></script>
 
 <!--Personal styles-->
-<link rel="stylesheet" type="text/css" href="../../../static/contmaps_main.css">
+<link rel="stylesheet" type="text/css" href="../static/contmaps_main.css">
 <link rel="stylesheet" href="../mdsrv/webapp/css/main.css" />
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
@@ -137,7 +137,7 @@
               <!--download button-->
               <div class="row">
                 <div class="dropdown optbar">
-                  <button type="button" class="btn btn-sm btn-primary" onclick="window.location.pathname = '/contmaps/download_csv'">
+                  <button type="button" class="btn btn-sm btn-primary" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">
                     <span class="glyphicon glyphicon-download"></span> Download csv
                   </button> 
                 </div>
@@ -178,7 +178,7 @@
 
             <p style="text-align: justify;">Interaction frequencies have been calculated with <a href="https://github.com/getcontacts/getcontacts" target="_blank">GetContacts</a> scripts, created by Rasmus Fonseca (fonseca.rasmus@gmail.com) and Anthony Ma (anthonyma27@gmail.com).</p>
 
-            <p style="text-align: justify;"> This scripts consider the interaction frequency as the proportion of frames in which a residue pair is considered to be interacting, according to <a href="../interaction_types" target="blank">GetContacts interaction criteria</a>.</p>
+            <p style="text-align: justify;"> This scripts consider the interaction frequency as the proportion of frames in which a residue pair is considered to be interacting, according to <a href="./interaction_types" target="blank">GetContacts interaction criteria</a>.</p>
 
             <p style="text-align: justify;"> Total interaction frequency reffers to the percentage of frames on which the residue pair is interacting in any of the previous criteria. </p>
 
