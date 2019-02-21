@@ -825,6 +825,24 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
             
             pdb_muts[pdb_pos]["vars"]=pos_muts
     return pdb_muts
+
+def obtain_ed_align_matrix(dyn_id):
+    if dyn_id=="4":
+        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
+        trans=[  9.21,74.12,-80.74]
+        return(r_angl,trans)
+    else:
+        root = settings.MEDIA_ROOT
+        EDmap_path=os.path.join(root,"Precomputed/ED_map")
+        matrix_file="dyn_%s_transfmatrix.data"%dyn_id
+        matrix_filepath=os.path.join(EDmap_path,matrix_file)
+        exists=os.path.isfile(matrix_filepath)
+        if exists:
+            with open(matrix_filepath, 'rb') as filehandle:  
+                (r_angl,trans) = pickle.load(filehandle)
+            return (list(r_angl),list(trans))
+        else: 
+            return False
     
 
 @ensure_csrf_cookie
@@ -993,6 +1011,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         error="Structure file not found."
         return render(request, 'view/index_error.html', {"error":error} )
     else:
+        ed_align_matrix=obtain_ed_align_matrix(dyn_id)
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         paths_dict={}
         for e in dynfiles:
@@ -1145,6 +1164,18 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
+                    #Fill blanks
+                    print("\n\n\n\n")
+                    print(cons_pos_all_info)
+                    print("\n\n\n\n")
+                    for gclass,consinfo in cons_pos_all_info[0].items():
+                         for consli in consinfo:
+                             for cons in consli:
+                                 if cons[1]=="":
+                                     cons[1]=cons[0]
+                    print("\n\n\n\n")
+                    print(cons_pos_all_info)
+                    print("\n\n\n\n")
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
                     context={
@@ -1176,6 +1207,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdbid":pdbid,
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
+                        "ed_align_matrix":ed_align_matrix
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1200,7 +1232,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "delta":delta,
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
-                        "pdbid":pdbid
+                        "pdbid":pdbid,
+                        "ed_align_matrix":ed_align_matrix
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1223,7 +1256,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "delta":delta,
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
-                        "pdbid":pdbid
+                        "pdbid":pdbid,
+                        "ed_align_matrix":ed_align_matrix
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1244,7 +1278,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "seg_li":"",
                     "delta":delta,
                     "bind_domain":bind_domain,
-                    "presel_pos":presel_pos
+                    "presel_pos":presel_pos,
+                    "ed_align_matrix":ed_align_matrix
                     }
             return render(request, 'view/index.html', context)
 

@@ -8,6 +8,39 @@
 {% load staticfiles %} 
 {% block addon_css %}
 <style>
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #e6e6e6;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+ /* background: #4CAF50;*/
+  cursor: pointer;
+}
 
 #onclickshowdropd{
     min-width:134px !important; 
@@ -36,9 +69,17 @@
     font-weight: bold;
 }
 
-.dropbtn {
+.dropbtn:not(.freedef) {
     border: none;
     background-color: #00d215;
+    width:16px; 
+    height: 16px;
+    cursor: pointer;
+    padding:0;
+}
+
+.dropbtn.freedef {
+    border: none;
     width:16px; 
     height: 16px;
     cursor: pointer;
@@ -161,12 +202,16 @@
               {% if all_prot_names %}
                   {{all_prot_names}}
                   {% if pdbid %}
-                    ({{pdbid}})
+                    (<span id="pdbid">{{pdbid}}</span>)
+                  {% else %}
+                    <span id="pdbid"></span>
                   {% endif %}
               {% else %}
+                <span id="pdbid">
                 {% if pdbid %}
                     {{pdbid}}
                 {% endif %}
+              </span>
               {% endif %}
               <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Dyn info</a>
             </div>
@@ -309,474 +354,691 @@
              
              
         <div style="text-align:center;margin:0;">
-            <div class="row" id="selectionDiv" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
+            <div class="row" style="background-color:#F3F3F3; border-radius:2px;padding:5px;">
                 <h4 style="padding:0;margin:0;">Selection
                 </h4>
+                <span id="selectionDiv"></span><span id="EDselectionDiv"></span>
             </div>
         </div>
         <div id ="allSelTools" style="margin-bottom:30px">
-<!-- ============= Comp buttonss =========== -->
-        <div id="quicksel_all" style="margin-bottom:5px">
+
+          <div id="strucSel" style="margin-bottom:5px">
             <div class="row" style="margin-top:10px;">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#quicksel"><span>Quick selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:3px solid #999999;border-radius:0;text-align:center;font-size:16px" data-toggle="collapse" data-target="#strucSel_opt"><span>Structure selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
             </div>
-            <div id="quicksel" class="collapse" style="padding-right:15px;">
+            <div id="strucSel_opt" class="collapse in" style="padding-left:15px;">
 
 
-                <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
-                    <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn changefocus"  id="receptor">Receptor</button>
-                    {% if other_prots%}
-                      <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
-                    {% endif %}
-                    {% for long_n, short_n, ctype in compounds %}
-                        {% if ctype == "Ligand" %}
-                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
-                        {% else %}
-                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
-                        {% endif %}
-                    {% endfor %}
-                    {% if ligands_short %}
-                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements changefocus" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
-                    {% endif %}
-                    {% if compounds|length > 1%}
-                    <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#FFFFFF;padding:5px">All</button>
-                    <button  class="btn btn-default nglCallBtn" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
-                    {% endif %}
-                </center></div>
-                
-              	<center>
-                  <div style="height:1px;background-color:lightgrey;width:90%"></div>
-                </center>
-                
-               <div class="row" style="margin-top:15px">
-               
-                <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:10px;">
-                  <div class="dist_sel" id="row0" style="margin-bottom:5px">
-                    <span class="tick" ></span>
-                    <span class="always" style="margin-left:14px">
-                     Show 
-                        <select class="resWthComp nglCallChangeWth" name="rescomp">
-                            <option  selected value="protein">residues</option> <!-- This can be improved by considering the case of multiple proteins: add option for each prot at this sel.-->
-                           {% for long_n, short_n in compounds %}
-                                <option   value="{{short_n}}">{{long_n}}</option>
-                           {% endfor %}
-                        </select>                     
-                      within 
-                    <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
-                      &#8491; of
-                        <select class="wthComp" name="comp">
-                           {% for long_n, short_n, ctype in compounds %}
-                           <option  value="{{short_n}}">{{long_n}}</option>
-                           {% endfor %}
-                           {% if other_prots%}
-                           <option   value="{{other_prots.0}}">Other proteins</option>
-                           {% endif %}
-                           <option   value="user_sel">Selection</option>
-                        </select>
-                        <span class="user_sel_input_p"></span>
-                        <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>
-                        <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
-                    </span>
-                    <div class="alert_sel_wth"><div class="alert_sel_wth_gnum"></div><div class="alert_sel_wth_ngl"></div></div>
+      <!-- ============= Comp buttonss =========== -->
+              <div id="quicksel_all" style="margin-bottom:5px">
+                  <div class="row" style="margin-top:5px;">
+                      <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#quicksel"><span>Quick selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
                   </div>
-                  <!--<span id="show_within"></span>-->
-                </div>
-                
-               </div>
-               <!--<div style="margin-left:18px">
-                   <div class="row">
-                     <input class="updateSelOrNot" type="radio" checked value="updateTrue" name="updateSelOrNot"> 
-                      Update selection at each frame
-                   </div>
-                   <div class="row">
-                     <input class="updateSelOrNot" type="radio" value="updateFalse" name="updateSelOrNot"> 
-                      Restrict selection at frame 
-                        <input type="number" style="width:50px;padding-left:7px;padding-right:2px;"  id="distSelFr" class="form-control input-sm rvSpaces">
-                      of trajectory
-                            <select id="" name="distSel_traj">
-                               {% for traj in traj_list %}
-                               <option class="distSel_traj" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
-                               {% endfor %}
-                            </select>
+                  <div id="quicksel" class="collapse" style="padding-right:15px;">
+
+
+                      <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
+                          <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn changefocus"  id="receptor">Receptor</button>
+                          {% if other_prots%}
+                            <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
+                          {% endif %}
+                          {% for long_n, short_n, ctype in compounds %}
+                              {% if ctype == "Ligand" %}
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus {{ctype}}" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                              {% else %}
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                              {% endif %}
+                          {% endfor %}
+                          {% if ligands_short %}
+                              <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements changefocus" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
+                          {% endif %}
+                          {% if compounds|length > 1%}
+                          <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#FFFFFF;padding:5px">All</button>
+                          <button  class="btn btn-default nglCallBtn" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
+                          {% endif %}
+                      </center></div>
                       
+                    	<center>
+                        <div style="height:1px;background-color:lightgrey;width:90%"></div>
+                      </center>
+                      
+                     <div class="row" style="margin-top:15px">
+                     
+                      <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:10px;">
+                        <div class="dist_sel" id="row0" style="margin-bottom:5px">
+                          <span class="tick" ></span>
+                          <span class="always" style="margin-left:14px">
+                           Show 
+                              <select class="resWthComp nglCallChangeWth" name="rescomp">
+                                  <option  selected value="protein">residues</option> <!-- This can be improved by considering the case of multiple proteins: add option for each prot at this sel.-->
+                                 {% for long_n, short_n in compounds %}
+                                      <option   value="{{short_n}}">{{long_n}}</option>
+                                 {% endfor %}
+                              </select>                     
+                            within 
+                          <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
+                            &#8491; of
+                              <select class="wthComp" name="comp">
+                                 {% for long_n, short_n, ctype in compounds %}
+                                 <option  value="{{short_n}}">{{long_n}}</option>
+                                 {% endfor %}
+                                 {% if other_prots%}
+                                 <option   value="{{other_prots.0}}">Other proteins</option>
+                                 {% endif %}
+                                 <option   value="user_sel">Selection</option>
+                              </select>
+                              <span class="user_sel_input_p"></span>
+                              <button class="btn btn-link rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;" ><span class="glyphicon glyphicon-remove-sign"></span></button>
+                              <button class="btn btn-link add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0" ><span class="glyphicon glyphicon-plus-sign"></span></button>
+                          </span>
+                          <div class="alert_sel_wth"><div class="alert_sel_wth_gnum"></div><div class="alert_sel_wth_ngl"></div></div>
+                        </div>
+                        <!--<span id="show_within"></span>-->
+                      </div>
+                      
+                     </div>
+                     <!--<div style="margin-left:18px">
+                         <div class="row">
+                           <input class="updateSelOrNot" type="radio" checked value="updateTrue" name="updateSelOrNot"> 
+                            Update selection at each frame
+                         </div>
+                         <div class="row">
+                           <input class="updateSelOrNot" type="radio" value="updateFalse" name="updateSelOrNot"> 
+                            Restrict selection at frame 
+                              <input type="number" style="width:50px;padding-left:7px;padding-right:2px;"  id="distSelFr" class="form-control input-sm rvSpaces">
+                            of trajectory
+                                  <select id="" name="distSel_traj">
+                                     {% for traj in traj_list %}
+                                     <option class="distSel_traj" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                                     {% endfor %}
+                                  </select>
+                            
+                         </div>
+                     </div>-->
+                     
+                  </div>
+              </div>
+      <!-- ============= Input selection =========== -->
+                  <div id="selection_all" style="margin-bottom:5px;margin-top:5px">
+                  <div class="row">
+                      <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                  </div>
+                  <div id="selection" class="collapse" style="padding-right:15px;">
+
+
+                   <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
+                     <div id="text_input_all"  style="margin-top:10px;">
+                          <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
+                             <div  class="row">
+                                <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
+      	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+      	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+      	                             <div style="float:left;height:27px" >
+                                          <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                             <option value="licorice">Licorice</option>
+                                             <option value="ball+stick">Ball+stick</option>
+                                             <option value="hyperball">Hyperball</option>
+                                             <option value="line">Line</option>
+                                             <option value="spacefill">Spacefill</option>
+                                             <option value="cartoon">Cartoon</option>
+                                             <option value="ribbon">Ribbon</option>
+                                             <option value="rope">Rope</option>
+                                             <option value="tube">Tube</option>
+                                             <!--<option value="axes">Axes</option>-->
+                                          </select>
+                                          <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                             <option value="element">Element</option>
+                                             <option value="uniform">Uniform</option>
+                                             <option value="chainid">Chain</option>
+                                             <option value="moleculetype">Molecule type</option>
+                                             <option value="sstruc">Structure</option>
+                                             <option value="resname">Residue name</option>
+                                             <option value="residueindex">Residue index</option>
+                                             <option value="hydrophobicity">Hydrophobicity</option>
+                                             {% if seg_li %}
+                                             <option value="FPscheme">GPCR Helices</option>
+                                             {% endif %}
+                                          </select>
+                                        </div>
+                                        <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                          <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> 
+                                          <div class="dropdown-content" style="margin-left:3px">
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+                            									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+                            									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                            									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          </div>
+                                        </div>
+                                        <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+       -->
+      	                       </div>
+                                </div>
+                                <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                      <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                      <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                                </div>
+                            </div>
+                            <div class="ti_alert"><div class="ti_alert_gnum"></div><div class="ti_alert_ngl"></div></div>      
+                        </div>
+                    </div>
+
                    </div>
-               </div>-->
-               
-            </div>
-        </div>
-<!-- ============= Input selection =========== -->
-            <div id="selection_all" style="margin-bottom:5px;margin-top:5px">
-            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Atom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
-            </div>
-            <div id="selection" class="collapse" style="padding-right:15px;">
-
-
-             <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
-               <div id="text_input_all"  style="margin-top:10px;">
-                    <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
-                       <div  class="row">
-                          <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
-	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
-	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-	                             <div style="float:left;height:27px" >
-                                    <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
-                                       <option value="licorice">Licorice</option>
-                                       <option value="ball+stick">Ball+stick</option>
-                                       <option value="hyperball">Hyperball</option>
-                                       <option value="line">Line</option>
-                                       <option value="spacefill">Spacefill</option>
-                                       <option value="cartoon">Cartoon</option>
-                                       <option value="ribbon">Ribbon</option>
-                                       <option value="rope">Rope</option>
-                                       <option value="tube">Tube</option>
-                                       <!--<option value="axes">Axes</option>-->
-                                    </select>
-                                    <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
-                                       <option value="element">Element</option>
-                                       <option value="uniform">Uniform</option>
-                                       <option value="chainid">Chain</option>
-                                       <option value="moleculetype">Molecule type</option>
-                                       <option value="sstruc">Structure</option>
-                                       <option value="resname">Residue name</option>
-                                       <option value="residueindex">Residue index</option>
-                                       <option value="hydrophobicity">Hydrophobicity</option>
-                                       {% if seg_li %}
-                                       <option value="FPscheme">GPCR Helices</option>
-                                       {% endif %}
-                                    </select>
-                                  </div>
-                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215"></button> 
-                                    <div class="dropdown-content" style="margin-left:3px">
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
-                                    </div>
-                                  </div>
-                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
- -->
-	                       </div>
-                          </div>
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
-                                <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
-                                <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
-                          </div>
-                      </div>
-                      <div class="ti_alert"><div class="ti_alert_gnum"></div><div class="ti_alert_ngl"></div></div>      
                   </div>
-              </div>
-
-             </div>
-            </div>
-            </div>
-<!-- ============= Sequence selection =========== -->
-{% if prot_seq_pos %}
-            <div id="seqselection_all" style="margin-bottom:5px;margin-top:5px">
-            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#seqselection"><span>Sequence selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
-            </div>
-            <div id="seqselection" class="collapse" style="padding-right:15px;">
-
-
-             <div  style="padding-left:15px;margin-top:10px;" >
-             
-               <div id="seq_input_all"  style="display:none">
-                    <div  class="seq_input_row" id="si_row0" style="margin-bottom:5px">
-                       <div  class="row">
-                          <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> 
-	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
-	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-	                             <div style="float:left;height:27px" >
-                                    <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
-                                       <option value="licorice">Licorice</option>
-                                       <option value="ball+stick">Ball+stick</option>
-                                       <option value="hyperball">Hyperball</option>
-                                       <option value="line">Line</option>
-                                       <option value="spacefill">Spacefill</option>
-                                       <option value="cartoon">Cartoon</option>
-                                       <option value="ribbon">Ribbon</option>
-                                       <option value="rope">Rope</option>
-                                       <option value="tube">Tube</option>
-                                       <!--<option value="axes">Axes</option>-->
-                                    </select>
-                                    <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
-                                       <option value="element">Element</option>
-                                       <option value="uniform">Uniform</option>
-                                       <option value="chainid">Chain</option>
-                                       <option value="moleculetype">Molecule type</option>
-                                       <option value="sstruc">Structure</option>
-                                       <option value="resname">Residue name</option>
-                                       <option value="residueindex">Residue index</option>
-                                       <option value="hydrophobicity">Hydrophobicity</option>
-                                       {% if seg_li %}
-                                       <option value="FPscheme">GPCR Helices</option>
-                                       {% endif %}
-                                    </select>
-                                  </div>
-                                  <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
-                                    <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> 
-                                    <div class="dropdown-content" style="margin-left:3px">
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
-                                          <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
-      									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-      									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
-                                    </div>
-                                  </div>
-                                  <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
- -->
-	                       </div>
-                          </div>
-                          <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
-                                <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
-                                <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
-                          </div>
-                      </div>
-                      <div class="si_alert"><div class="si_alert_gnum"></div><div class="si_alert_ngl"></div></div>      
                   </div>
-              </div>
+      <!-- ============= Sequence selection =========== -->
+      {% if prot_seq_pos %}
+                  <div id="seqselection_all" style="margin-bottom:5px;margin-top:5px">
+                  <div class="row">
+                      <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#seqselection"><span>Sequence selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                  </div>
+                  <div id="seqselection" class="collapse" style="padding-right:15px;">
 
-              
-              <div style="margin-bottom:20px" class="row">
 
-              <div id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                <!--<button  class="btn btn-link" id="addToSel" type="button" style="padding:0 0 0 10px;display:none"><span id="addToSelHov" class="glyphicon glyphicon-ok" style="color:#5CB85C"> Confirm selection</button>-->
-                <button style="display:none" type="button" id="addToSel" class="btn btn-success btn-xs"><span style="font-size: 10px;" class="glyphicon glyphicon-ok" ></span> Confirm selection</button>
-              
-                <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
-                  {% for prot_name, seq_pos in prot_seq_pos %}
-                    <div style="clear: left;padding-bottom:20px">
-                      {% if prot_seq_pos|length > 1 %}
-                         <div>{{prot_name}}</div>
-                      {% endif %}
-                      {% for seq,pos,gnum,chain,index in seq_pos %}
-                      <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
-                        <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
-                        <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
-                      </div>            
-                      {% endfor %}
+                   <div  style="padding-left:15px;margin-top:10px;" >
+                   
+                     <div id="seq_input_all"  style="display:none">
+                          <div  class="seq_input_row" id="si_row0" style="margin-bottom:5px">
+                             <div  class="row">
+                                <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> 
+      	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+      	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+      	                             <div style="float:left;height:27px" >
+                                          <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                             <option value="licorice">Licorice</option>
+                                             <option value="ball+stick">Ball+stick</option>
+                                             <option value="hyperball">Hyperball</option>
+                                             <option value="line">Line</option>
+                                             <option value="spacefill">Spacefill</option>
+                                             <option value="cartoon">Cartoon</option>
+                                             <option value="ribbon">Ribbon</option>
+                                             <option value="rope">Rope</option>
+                                             <option value="tube">Tube</option>
+                                             <!--<option value="axes">Axes</option>-->
+                                          </select>
+                                          <select class="high_scheme nglCallChangeTI" name="high_scheme0" style="padding:0;font-size:12px;width:90px;height:24px;margin: 3px 0 0 0">
+                                             <option value="element">Element</option>
+                                             <option value="uniform">Uniform</option>
+                                             <option value="chainid">Chain</option>
+                                             <option value="moleculetype">Molecule type</option>
+                                             <option value="sstruc">Structure</option>
+                                             <option value="resname">Residue name</option>
+                                             <option value="residueindex">Residue index</option>
+                                             <option value="hydrophobicity">Hydrophobicity</option>
+                                             {% if seg_li %}
+                                             <option value="FPscheme">GPCR Helices</option>
+                                             {% endif %}
+                                          </select>
+                                        </div>
+                                        <div class="dropdown displaydrop" style="float:left;height:27px;margin:3px 0 0 0;padding:0">
+                                          <button class="dropbtn" style="margin-top: 7px; margin-left: 3px;" data-color="#00d215" ></button> 
+                                          <div class="dropdown-content" style="margin-left:3px">
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+            									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+            									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+            									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          </div>
+                                        </div>
+                                        <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
+       -->
+      	                       </div>
+                                </div>
+                                <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                      <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
+                                      <button class="btn btn-link si_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
+                                </div>
+                            </div>
+                            <div class="si_alert"><div class="si_alert_gnum"></div><div class="si_alert_ngl"></div></div>      
+                        </div>
                     </div>
-                  {% endfor %}
-                </div> 
-              </div>
-              </div>
-              
-              
-             </div>
-            </div>
-            </div>
 
-       {% endif %}
-<!-- ============= Predefined views of cons pos =========== -->
-           {% if gpcr_pdb != "no" %}
-            <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
-            <div class="row">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
-                <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
-            </div>
-            <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
-              {% if gpcr_id_name|length > 1 %}
-                <div class="row" style="margin-bottom:10px">
-                      <select class="form-control" style="width:100%;height:32px;" id="gpcr_sel">
-                        <option value="all">All GPCRs</option>
-                        {% for gpcr_id, prot_name in gpcr_id_name.items %}
-                        <option value="{{gpcr_id}}">{{prot_name}}</option>
+                    
+                    <div style="margin-bottom:20px" class="row">
+
+                    <div id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                      <!--<button  class="btn btn-link" id="addToSel" type="button" style="padding:0 0 0 10px;display:none"><span id="addToSelHov" class="glyphicon glyphicon-ok" style="color:#5CB85C"> Confirm selection</button>-->
+                      <button style="display:none" type="button" id="addToSel" class="btn btn-success btn-xs"><span style="font-size: 10px;" class="glyphicon glyphicon-ok" ></span> Confirm selection</button>
+                    
+                      <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                        {% for prot_name, seq_pos in prot_seq_pos %}
+                          <div style="clear: left;padding-bottom:20px">
+                            {% if prot_seq_pos|length > 1 %}
+                               <div>{{prot_name}}</div>
+                            {% endif %}
+                            {% for seq,pos,gnum,chain,index in seq_pos %}
+                            <div id="{{index}}" title="{{gnum}}" class="seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                              <div id="ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
+                              <div id="ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                            </div>            
+                            {% endfor %}
+                          </div>
                         {% endfor %}
-                      </select>
-                </div>
-                <!-- Conserved pos for all GPCRs -->
-                    <div id="gpcr_id_all" class="gpcr_prot_show_cons" style="display:inline">
-                        <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#classA_all">Class A</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#classB_all">Class B</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav" data-TF="{{cons_pos_all_info.1.C}}"><a data-TF="{{cons_pos_all_info.1.C}}" class="cons_nav" data-toggle="tab" href="#classC_all">Class C</a></li>
-                          <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav" data-TF="{{cons_pos_all_info.1..F}}"><a data-TF="{{cons_pos_all_info.1..F}}" class="cons_nav" data-toggle="tab" href="#classF_all">Class F</a></li>
-                        </ul>
-                        <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                            <div style="margin:0;" id="classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
-                                {% if cons_pos_all_info.1.A %}
-                                    {% if cons_pos_all_info.0.A.1 %}
-                                        <p>Highly conserved residues and motifs</p>
-	                                        {% for pos in cons_pos_all_info.0.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-	                                        {% for pos in motifs_all_info.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                    {% if cons_pos_all_info.0.A.0 %}
-                                        <p>Most conserved residues</p>
-	                                        {% for pos in cons_pos_all_info.0.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                            <div id="classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
-                                  {% if cons_pos_all_info.0.B.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_pos_all_info.0.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                    {% endfor %}   
-                                  {% endif %}                         
-                            </div>  
-                            <div id="classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
-                                  {% if cons_pos_all_info.0.C.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_pos_all_info.0.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>  
-                            <div id="classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
-                                  {% if cons_pos_all_info.0.F.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_pos_all_info.0.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
-                       </div>
+                      </div> 
                     </div>
-                <!-- Conserved pos for each of the GPCRs -->
-                {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
-                    <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons" style="display:none">
-                        <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA_{{gpcr_id}}">Class A</a></li>
-                          <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB_{{gpcr_id}}">Class B</a></li>
-                          <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC_{{gpcr_id}}">Class C</a></li>
-                          <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF_{{gpcr_id}}">Class F</a></li>
-                        </ul>
-                        <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                            <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
-                                {% if show_class.A %}
-                                    {% if cons_class.A.1 %}
-                                        <p>Highly conserved residues and motifs</p>
-	                                        {% for pos in cons_class.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                    {% if cons_class.A.0 %}
-                                        <p>Most conserved residues</p>
-	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus"  data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                            <div id="classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
-                                  {% if cons_class.B.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                    {% endfor %}   
-                                  {% endif %}                         
-                            </div>  
-                            <div id="classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
-                                  {% if cons_class.C.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>  
-                            <div id="classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
-                                  {% if cons_class.F.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
-                       </div>
                     </div>
-               {% endfor %}
-               {% else %} <!-- When only 1 gpcr: -->
-                   {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
-                    <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons">
-                        <ul class="nav nav-tabs" id="allclasses">
-                          <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
-                          <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
-                          <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC">Class C</a></li>
-                          <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF">Class F</a></li>
-                        </ul>
-                        <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
-                            <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
-                                {% if show_class.A %}
-                                    {% if cons_class.A.1 %}
-                                        <p>Highly conserved residues and motifs</p>
-	                                        {% for pos in cons_class.A.1 %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-	                                        {% for pos in motifs_def.A %}
-                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                    {% if cons_class.A.0 %}
-                                        <p>Most conserved residues</p>
-	                                        {% for pos in cons_class.A.0 %}
-                                           <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                          {% endfor %}
-                                    {% endif %}
-                                {% endif %}
-                            </div>
-                            <div id="classB" class="tab-pane {{active_class.B.1}}">
-                                  {% if cons_class.B.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.B.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                    {% endfor %}   
-                                  {% endif %}                         
-                            </div>  
-                            <div id="classC" class="tab-pane {{active_class.C.1}}">
-                                  {% if cons_class.C.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.C.0 %}
-                                    <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>  
-                            <div id="classF" class="tab-pane {{active_class.F.1}}">
-                                  {% if cons_class.F.0 %}
-                                    <p>Most conserved residues</p>
-                                    {% for pos in cons_class.F.0 %}
-                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
-                                   {% endfor %}
-                                  {% endif %}
-                            </div>
-                            <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
-                       </div>
-                    </div>
-                   {% endfor %}
-               {% endif %}
-            </div>
-            </div>
-            {% endif %}
+                    
+                    
+                   </div>
+                  </div>
+                  </div>
 
-<!-- ============= Trajectories =========== --> 
- <!--         {% if traj_list %}
-           <div id="trajectories_all" style="margin-top:5px;margin-bottom:5px">
-              <div class="row">
-                 <div class="section_pan" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0" data-toggle="collapse" data-target="#emb_trajectories"><span>Trajectories </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+             {% endif %}
+      <!-- ============= Predefined views of cons pos =========== -->
+                 {% if gpcr_pdb != "no" %}
+                  <div id="cons_pos_box_all" data-gpcr_id_name="{{gpcr_id_name_js}}" style="margin-top:5px;margin-bottom:5px">
+                  <div class="row">
+                      <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
+                      <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
+                  </div>
+                  <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
+                    {% if gpcr_id_name|length > 1 %}
+                      <div class="row" style="margin-bottom:10px">
+                            <select class="form-control" style="width:100%;height:32px;" id="gpcr_sel">
+                              <option value="all">All GPCRs</option>
+                              {% for gpcr_id, prot_name in gpcr_id_name.items %}
+                              <option value="{{gpcr_id}}">{{prot_name}}</option>
+                              {% endfor %}
+                            </select>
+                      </div>
+                      <!-- Conserved pos for all GPCRs -->
+                          <div id="gpcr_id_all" class="gpcr_prot_show_cons" style="display:inline">
+                              <ul class="nav nav-tabs" id="allclasses">
+                                <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#classA_all">Class A</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#classB_all">Class B</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav" data-TF="{{cons_pos_all_info.1.C}}"><a data-TF="{{cons_pos_all_info.1.C}}" class="cons_nav" data-toggle="tab" href="#classC_all">Class C</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav" data-TF="{{cons_pos_all_info.1..F}}"><a data-TF="{{cons_pos_all_info.1..F}}" class="cons_nav" data-toggle="tab" href="#classF_all">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
+                                      {% if cons_pos_all_info.1.A %}
+                                          {% if cons_pos_all_info.0.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+      	                                        {% for pos in cons_pos_all_info.0.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+      	                                        {% for pos in motifs_all_info.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_pos_all_info.0.A.0 %}
+                                              <p>Most conserved residues</p>
+      	                                        {% for pos in cons_pos_all_info.0.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
+                                        {% if cons_pos_all_info.0.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
+                                        {% if cons_pos_all_info.0.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
+                                        {% if cons_pos_all_info.0.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                      <!-- Conserved pos for each of the GPCRs -->
+                      {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
+                          <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons" style="display:none">
+                              <ul class="nav nav-tabs" id="allclasses">
+                                <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA_{{gpcr_id}}">Class A</a></li>
+                                <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB_{{gpcr_id}}">Class B</a></li>
+                                <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC_{{gpcr_id}}">Class C</a></li>
+                                <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF_{{gpcr_id}}">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
+                                      {% if show_class.A %}
+                                          {% if cons_class.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+      	                                        {% for pos in cons_class.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+      	                                        {% for pos in motifs_def.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_class.A.0 %}
+                                              <p>Most conserved residues</p>
+      	                                        {% for pos in cons_class.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus"  data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
+                                        {% if cons_class.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
+                                        {% if cons_class.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
+                                        {% if cons_class.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                     {% endfor %}
+                     {% else %} <!-- When only 1 gpcr: -->
+                         {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
+                          <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons">
+                              <ul class="nav nav-tabs" id="allclasses">
+                                <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
+                                <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
+                                <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#classC">Class C</a></li>
+                                <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#classF">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="classA" class="tab-pane {{active_class.A.1}}">
+                                      {% if show_class.A %}
+                                          {% if cons_class.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+      	                                        {% for pos in cons_class.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+      	                                        {% for pos in motifs_def.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_class.A.0 %}
+                                              <p>Most conserved residues</p>
+      	                                        {% for pos in cons_class.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="classB" class="tab-pane {{active_class.B.1}}">
+                                        {% if cons_class.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdB btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="classC" class="tab-pane {{active_class.C.1}}">
+                                        {% if cons_class.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdC btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="classF" class="tab-pane {{active_class.F.1}}">
+                                        {% if cons_class.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                         {% endfor %}
+                     {% endif %}
+                  </div>
+                  </div>
+                  {% endif %}
               </div>
-              <div id="emb_trajectories" class="collapse" >
-                  <div class="checkbox" >
-			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj_list.0.2}}" value="{{traj_list.0.0}}" checked>{{traj_list.0.1}}</label></span>
-			{% for traj in traj_list|slice:"1:" %}
-			  <span style="margin-right:10px"><label><input  type="checkbox" name="traj" class="traj_element" id="traj_id_{{traj.2}}" value="{{traj.0}}">{{traj.1}}</label></span>
-			{% endfor %}
-		  </div>
-              </div>
-          </div>
-          {% endif %}-->
+          </div> <!-- end strucSel -->
+
+          {% if ed_align_matrix and pdbid %}
+          <div id="edSel" style="margin-bottom:5px" data-r_angl="{{ed_align_matrix.0}}" data-transl="{{ed_align_matrix.1}}">
+            <div class="row" style="margin-top:15px;">
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:3px solid #999999;border-radius:0;text-align:center;font-size:16px" data-toggle="collapse" data-target="#edSel_opt"><span>Electron density map selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
+            </div>
+            <div id="edSel_opt" class="collapse in" style="padding-left:15px;">
+            <!-- ============= ED Comp buttonss (ED quicksel) =========== -->
+              <div id="ed_quicksel_all" style="margin-bottom:5px">
+                <div class="row" style="margin-top:5px;">
+                    <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_quicksel"><span>Quick selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
+
+                  <div id="ed_quicksel" class="collapse" style="padding-right:15px;">
+                    <!--<div style="margin:10px 0;font-size:13px">
+                         <div class="btn-group btn-group-xs">
+                          <button type="button" id="EdrepsOn" class="btn btn-default EdrepsSet active" style="padding:2px 5px 2px 5px;">On</button>
+                          <button type="button" id="EdrepsOff" class="btn btn-default EdrepsSet" style="padding:2px 5px 2px 5px;">Off</button>
+                        </div> 
+                        Apply default representations
+                    </div> -->
+                    <div  style="margin-top:10px;margin-bottom:10px">
+                      <center>
+                        <div id="ed_map_btns"  >
+                          <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default ed_receptor nglCallBtn changefocus  ed_map_el"  id="ed_receptor">Receptor</button>
+
+                          {% for long_n, short_n, ctype in compounds %}
+                              {% if ctype == "Ligand" %}
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default  ed_map_el nglCallBtn changefocus  ed_ligand" title="{{short_n}}" data-shortn="{{short_n}}" >{{long_n}}</button>
+                              {% endif %}
+                          {% endfor %}
+                          <!--<button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default  ed_map_el nglCallBtn changefocus  ed_free" title="Center the electron density map on selection.">Free selection</button>-->
+                        </div>
+                        <!--<div id="ed_map_input" >
+                          <input value="" class="form-control" placeholder="Specify your selection" style="margin-top:10px;width: 100%; background-color: rgb(248, 248, 248);" type="text">
+                        </div>-->
+                    </center>
+                  </div>
+                  </div><!-- end ed_quicksel -->
+                </div>
+              </div><!-- end ed_quicksel_all-->
+
+            <!-- ============= ED controls=========== -->
+              <div id="ed_ctrl_all" style="margin-bottom:5px">
+                <div class="row" style="margin-top:5px;">
+                    <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_ctrl"><span>Selection Settings </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
+
+                  <div id="ed_ctrl" class="collapse" style="padding-right:15px;">
+
+                    <div style="margin:10px" class="row">
+                         Apply default representations
+                         <div class="btn-group btn-group-xs">
+                          <button type="button" id="EdrepsOn" class="btn btn-default EdrepsSet active" style="padding:2px 5px 2px 5px;">On</button>
+                          <button type="button" id="EdrepsOff" class="btn btn-default EdrepsSet" style="padding:2px 5px 2px 5px;">Off</button>
+                        </div> 
+                    </div> 
+                    <div class="table-responsive" style="">
+                      <table class="table" style="font-size:14px">
+                        <thead>
+                          <tr>
+                            <th></th>
+                            <th style="text-align:center">2fo-fc</th>
+                            <th style="text-align:center">fo-fc</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td style="text-align:right;font-weight:bold">Display map</td>
+                            <td style="text-align:center">
+                              <label class="checkbox" style="margin:0">
+                                <input checked type="checkbox" class="EDdisplay" value="2fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                              </label>
+                            </td>
+                            <td style="text-align:center">
+                              <label class="checkbox"  style="margin:0">
+                                <input checked type="checkbox" class="EDdisplay" value="fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                              </label>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="text-align:right;font-weight:bold">Map color</td>
+                            <td style="text-align:center" >
+                                <!-- color dropdown html 2fo-fc-->
+                               <div id="ED2fofcColor" class="EDcolsect" data-map="2fofc" style="display:inline-block;margin:auto;width:16px" data-short="16px" data-long="80px"><!-- to 80-->
+                                        <div class="dropdown displaydrop ed_ddwn" style="float:left;height:16px;padding:0;margin-top:4px">
+                                          <button class="dropbtn freedef" style="background-color:#87ceeb" data-color="#87ceeb"></button> 
+                                          <div class="dropdown-content" >
+                                                <div class="dropcolor EDcolorDef" style="background-color:#3cb371;width:16px; height: 16px;" data-color="#3cb371"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#ff6347;width:16px; height: 16px;" data-color="#ff6347"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                                <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          </div>
+                                        </div>
+                                        <span class="span_morecolors displaydrop" style="float:left" ></span>
+                                        <span style="display:none" data-color="#87ceeb" class="EDselcolvar"></span>
+                                </div>
+                                <!-- end color dropdown 2fo-fc -->
+
+                            </td>
+                            <td style="text-align:center" >
+
+                              <!-- color dropdown html fo-fc Positive-->
+                              <div id="EDfofcColorPos" class="EDcolsect" data-map="fofcpos" style="display:inline-block;margin: 1px 5px 1px 1px;width:45px" data-short="45px" data-long="110px"><!-- to 110-->
+                                        <div class="testtest" style="float:left;margin-top:2px;margin-right:4px;">
+                                          Pos
+                                        </div>
+                                        <div class="dropdown displaydrop ed_ddwn" style="float:left;height:16px;padding:0;margin-top:4px">
+                                          <button class="dropbtn freedef" style="background-color:#3cb371" data-color="#3cb371"></button> 
+                                          <div class="dropdown-content" >
+                                                <div class="dropcolor EDcolorDef" style="background-color:#87ceeb;width:16px; height: 16px;" data-color="#87ceeb"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#ff6347;width:16px; height: 16px;" data-color="#ff6347"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                                <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          </div>
+                                        </div>
+                                        <span class="span_morecolors displaydrop" style="float:left" ></span>
+                                        <span style="display:none" data-color="#3cb371" class="EDselcolvar"></span>
+                                </div>
+                              <!-- end color dropdown fo-fc Pos-->
+                              
+                              <!-- color dropdown html fo-fc Negative-->
+                              <div id="EDfofcColorNeg" class="EDcolsect" data-map="fofcneg" style="display:inline-block;margin:1px;width:47px" data-short="47px" data-long="110px"><!-- to 110-->
+                                        <div style="float:left;margin-top:2px;margin-right:4px">
+                                          Neg
+                                        </div>
+                                        <div class="dropdown displaydrop ed_ddwn" style="float:left;height:16px;padding:0;margin-top:4px">
+                                          <button class="dropbtn freedef" style="background-color:#ff6347" data-color="#ff6347"></button> 
+                                          <div class="dropdown-content" >
+                                                <div class="dropcolor EDcolorDef" style="background-color:#87ceeb;width:16px; height: 16px;" data-color="#87ceeb"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#3cb371;width:16px; height: 16px;" data-color="#3cb371"></div>
+                                                <div class="dropcolor EDcolorDef" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                                <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors EDcolorDef" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                          </div>
+                                        </div>
+                                        <span class="span_morecolors displaydrop" style="float:left" ></span>
+                                        <span style="display:none" data-color="#ff6347" class="EDselcolvar"></span>
+                                </div>
+                              <!-- end color dropdown fo-fc Neg-->
+
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="text-align:right;font-weight:bold">Map style</td>
+                            <td style="text-align:center">
+                              <select class="form-control input-sm EDmapStype" data-map="2fofc" id="EDmapStype2fofc" style="padding:0;font-size:14px;margin:1px">
+                                 <option selected value="contour">Contour</option>
+                                 <option value="wireframe">Wireframe</option>
+                                 <option value="smooth">Smooth</option>
+                                 <option value="flat">Flat</option>
+                              </select>
+                            </td>
+                            <td style="text-align:center">
+                              <select class="form-control input-sm EDmapStype" data-map="fofc" id="EDmapStypefofc" style="padding:0;font-size:14px;margin:1px">
+                                 <option selected value="contour">Contour</option>
+                                 <option value="wireframe">Wireframe</option>
+                                 <option value="smooth">Smooth</option>
+                                 <option value="flat">Flat</option>
+                              </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="text-align:right;font-weight:bold">ISO level</td>
+                            <td style="text-align:center">
+                              <center>
+                                <div class="slider_div" style="max-width:150px;display:inline-block">
+                                  <input class="slider" data-valtype="isolevel" data-map="2fofc" value="1.5" min="0" max="10" step="0.1" type="range">
+                                </div>
+                                <div class="slider_val" style="width:20px;display:inline-block;color:#b3b3b3">1.5</div>
+                              </center>
+                            </td>
+                            <td style="text-align:center">                              
+                              <center>
+                                <div class="slider_div" style="max-width:150px;display:inline-block">
+                                  <input class="slider" data-valtype="isolevel"  data-map="fofc" value="3" min="0" max="10" step="0.1" type="range">
+                                </div>
+                                <div class="slider_val" style="color:#b3b3b3;width:20px;display:inline-block">3</div>
+                              </center>
+                            </td>
+                          </tr>
+<!--                          <tr>
+                            <td style="text-align:right;font-weight:bold">Map size</td>
+                            <td style="text-align:center">
+                              <center>
+                                <div class="slider_div" style="max-width:150px;display:inline-block">
+                                  <input class="slider" data-valtype="mapsize" data-map="2fofc" value="20" min="0" max="100" step="1" type="range">
+                                </div>
+                                <div class="slider_val" style="width:20px;display:inline-block;color:#b3b3b3">20</div>
+                              </center>
+                            </td>
+                            <td style="text-align:center">                              
+                              <center>
+                                <div class="slider_div" style="max-width:150px;display:inline-block">
+                                  <input class="slider" data-map="fofc" data-valtype="mapsize" value="20" min="0" max="100" step="1" type="range">
+                                </div>
+                                <div class="slider_val"  style="color:#b3b3b3;width:20px;display:inline-block">20</div>
+                              </center>
+                            </td>
+                          </tr>-->
+                          <tr>
+                            <td style="text-align:right;font-weight:bold">Zoom</td>
+                            <td style="text-align:center" colspan="2">
+                              <center>
+                                <div class="slider_div" style="width:50%;display:inline-block">
+                                  <input class="slider" id="EDmapzoom" data-valtype="zoom" value="0" min="0" max="100" step="1" type="range">
+                                </div>
+                                <div class="slider_val" id="EDmapzoom_val" style="width:20px;display:inline-block;color:#b3b3b3">0</div>
+                              </center>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                  </div><!-- end ed_ctrl -->
+                </div>
+              </div><!-- end ed_ctrl_all-->
+
+            </div>
+          </div><!-- end edSel -->
+          {% endif %}
+
         </div><!-- End allSelTools -->
 
           

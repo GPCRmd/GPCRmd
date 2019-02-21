@@ -37,6 +37,7 @@
     <script src="mdsrv/webapp/js/gui.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
+
     <!-- MDSRV -->
     <!--<script src="mdsrv/webapp/js/mdsrv.js"></script>-->
     <script>
@@ -748,6 +749,22 @@
             }
             return setSelTempAtms;
         }
+
+
+        function applySele (value) {
+          if (value) {
+            struc=stage.getComponentsByName("my_comp").list[0];
+            struc.autoView(value)
+            var z = stage.viewer.camera.position.z
+            var setval=99 - Math.abs(z / 10);
+            stage.setFocus(setval)
+            $("#EDmapzoom", window.parent.document).val(setval);
+            $("#EDmapzoom_val", window.parent.document).html(setval.toFixed(0));
+            
+            //$("#EDmapzoom")
+          }
+        }
+
         
         function createReps(){
             parent.passInfoToIframe();
@@ -804,27 +821,9 @@
                 o.addRepresentation( "distance", { atomPair: apair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dname} );
             }
 
-            /*//o.clearRepresentations();
-            
-            o.eachRepresentation(function(rep, comp){
-                if (clickedRepLi.indexOf(rep.name) == -1){
-                    //rep.clearRepresentations();
-                    //rep.removeRepresentation();
-                    //rep.stage.tasks.clear(),
-                    rep.repr.clear();
-                    rep.setVisibility(false);
-
-                }
-            }); */
-            //o.updateRepresentations();
-
             $("#buttons").html("");
 
-            //o.setSelection( "*");//[!sel] This should be substituted with the actual selection of the molecules to be displayed
-            //var ex1=o.structure.getAtomSet(new NGL.Selection( "protein and 40-42" )).toSeleString()//[!sel]
-          
-            
-            
+       
             if (receptorsel.length > 0){
                 if (bs_info.length > 0){
                     o.addRepresentation( "cartoon", { colorScheme:"uniform", colorValue: "#FFFFFF",  sele: receptorsel } );
@@ -922,9 +921,17 @@
                     var selectionTest = new NGL.Selection( sel ).selection[ "error" ];
                     if (!selectionTest){
                         if (scheme=="FPscheme"){
-                            o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
+                            if (rep=="line"){
+                                o.addRepresentation( rep, { linewidth: 6,  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme,  } ); 
+                            } else {
+                                o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
+                            }
                         } else {
-                            o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                            if (rep=="line"){
+                                o.addRepresentation( rep, { linewidth: 6,  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                            } else {
+                                o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                            }
                         }
                         selAll.push(sel);
                     } else {
@@ -1026,22 +1033,7 @@
                 $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
             }
             
-            /*if( traj.length > 0) {
-                traj_li=traj;
-                //var playing = false;
-                var traj_html="<div style='width:586px;height:30px;overflow: auto;'>";
-                for (t in traj_li_all) {
-                    var mytraj=traj_li_all[t];
-                    if (traj_li.indexOf(mytraj) > -1){
-                        traj_html+="<button style='margin:1px' type='button' class='btn btn-success btn-xs traj_btn' id='playerButton"+t+"'><span style='vertical-align:0px' class='glyphicon glyphicon-play'></span> "+mytraj.match(/(\w*)(\.\w*)$/)[1]+"</button>"; 
-                    }
-                }
-                traj_html+="</div>";
-                $("#buttons").html(traj_html);
-                trajButtons(o,dist_within_li);
-            } else {
-                $("#toiframe").find("#trajRangeDiv").css("visibility","hidden");
-            }*/
+
             if (dist_groups_li.length>0){
                 var cd_id=0;
                 var plot_colors=["#3366cc","#dc3912","#ff9900","#109618","#990099","#0099c6","#dd4477","#66aa00","#b82e2e","#316395","#994499","#22aa99","#aaaa11","#6633cc","#e67300","#8b0707","#651067","#329262","#5574a6","#3b3eac"]; 
@@ -1204,6 +1196,8 @@
                 trajComp.setFrame(framenum);
             }
 
+
+
         }
         
 
@@ -1220,6 +1214,101 @@
            $("#infoPannel").css({"width" : cont_w_in , "margin-top" :cont_h_info });
         }
 
+/////////Functions for ED map
+        function updateEDmapSel(){
+            parent.passInfoToIframe_ED();
+            var results_ED = parent.results_ED;
+            var loadEd=results_ED["loadEd"];
+            var ed_sel=results_ED["ed_sel"];
+
+            var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
+            var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
+            //ed2fofc.removeAllRepresentations();
+            //edfofc.removeAllRepresentations();
+            if (loadEd){
+                applySele(ed_sel);
+                ed2fofc.setVisibility(true);
+                edfofc.setVisibility(true);
+            } else {
+               ed2fofc.setVisibility(false);
+               edfofc.setVisibility(false);
+               stage.setFocus(0);
+               $("#EDmapzoom", window.parent.document).val(0);
+               $("#EDmapzoom_val", window.parent.document).html(0);
+            }
+        }
+
+        function show_hide_map(is_checked,mapchanged){
+            if (mapchanged=="2fofc"){
+                stage.getRepresentationsByName("2fofc").setVisibility(is_checked);
+            }else{
+                stage.getRepresentationsByName("fofcpos").setVisibility(is_checked);
+                stage.getRepresentationsByName("fofcneg").setVisibility(is_checked);
+            }
+        }
+
+        function change_EDmap_style(v,mapsel,chtype){
+            if (chtype=="general"){
+                if (v === "contour") {
+                  p = {
+                    contour: true,
+                    flatShaded: false,
+                    opacity: 1,
+                    metalness: 0,
+                    wireframe: false
+                  }
+                } else if (v === "wireframe") {
+                  p = {
+                    contour: false,
+                    flatShaded: false,
+                    opacity: 1,
+                    metalness: 0,
+                    wireframe: true
+                  }
+                } else if (v === "smooth") {
+                  p = {
+                    contour: false,
+                    flatShaded: false,
+                    opacity: 0.5,
+                    metalness: 0,
+                    wireframe: false
+                  }
+                } else if (v === "flat") {
+                  p = {
+                    contour: false,
+                    flatShaded: true,
+                    opacity: 0.5,
+                    metalness: 0.2,
+                    wireframe: false
+                  }
+              }
+            } else if (chtype=="color"){
+              p = {
+                colorValue:v
+              }
+            } else if (chtype=="isolevel"){
+                p={isolevel:v}
+            } else if (chtype=="mapsize"){
+                p={boxSize:parseInt(v)}
+            }
+            if (mapsel=="2fofc"){
+                console.log("2fofc",p)
+                stage.getRepresentationsByName("2fofc").setParameters(p);
+            }else if (mapsel=="fofc"){
+                console.log("fofc",p)
+                stage.getRepresentationsByName("fofcpos").setParameters(p);
+                stage.getRepresentationsByName("fofcneg").setParameters(p);
+            }else if (mapsel=="fofcpos"){
+                console.log("fofcpos",p)
+                stage.getRepresentationsByName("fofcpos").setParameters(p);
+            }else if (mapsel=="fofcneg"){
+                console.log("fofcneg",p)
+                stage.getRepresentationsByName("fofcneg").setParameters(p);
+            }
+            //stage.getRepresentationsByName("surface").setParameters(p)
+        }
+//END functions.
+//START main
 /////////// Set variables: ///////////////////////////////////////////////////////////////
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var delta=Number($(".str_file", window.parent.document).data("delta"));
@@ -1361,6 +1450,109 @@
                     createReps()
 
                 });
+
+                var pdbid=$("#pdbid", window.parent.document).text();
+                var edselSel=$("#edSel", window.parent.document);
+                var r_angl=edselSel.data("r_angl");
+                var transl=edselSel.data("transl");
+                if (pdbid && r_angl && transl){
+                    var edmapUrl = "https://edmaps.rcsb.org/maps/";
+                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_2fofc.dsn6", {visible: false}).then(function(edc){
+                        edc.setName("EDmap_comp_2fofc");
+                        edc.setRotation( r_angl);
+                        edc.setPosition(transl);
+
+                        edc.addRepresentation("surface", {
+                          name:"2fofc",
+                          contour: true,
+                          color: "skyblue",
+                          isolevel: 1.5,
+
+                          flatShaded: false,
+                          opacity: 1,
+                          metalness: 0,
+                          wireframe: false
+
+
+                        })
+                    })
+                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: false}).then(function(edc){
+                        edc.setName("EDmap_comp_fofc");
+                        edc.setRotation( r_angl)
+                        edc.setPosition(transl)
+
+
+                        edc.addRepresentation("surface", {
+                          name:"fofcpos",
+                          color: "mediumseagreen",
+                          isolevel: 3,
+                          //boxSize: 10,
+                          contour: true,
+                          flatShaded: false,
+                          opacity: 1,
+                          metalness: 0,
+                          wireframe: false
+                        })
+                        edc.addRepresentation("surface", {
+                          name:"fofcneg",
+                          color: "tomato",
+                          isolevel: 3,
+                          negateIsolevel: true,
+                          //boxSize: 10,
+                          contour: true,
+                          flatShaded: false,
+                          opacity: 1,
+                          metalness: 0,
+                          wireframe: false
+
+                        })
+                    })
+                    $("#EDselectionDiv", window.parent.document).on("click" , function(){
+                        updateEDmapSel();
+                    });
+                    $(".EDmapStype", window.parent.document).on('change' ,function(){
+                        var v=$(this).val()
+                        var mapsel=$(this).data("map");
+                        change_EDmap_style(v,mapsel,"general");
+                    });
+                    $(".EDdisplay", window.parent.document).on("change" , function(){
+                        var is_checked=$(this).is(":checked");
+                        var mapchanged=$(this).val();
+                        show_hide_map(is_checked,mapchanged);
+
+                    });
+                    $(".EDcolsect", window.parent.document).on('change',".EDcolorFree" ,function(){
+                        if ($(this).parent().hasClass("has-error")){
+                            var color ="#FFFFFF"
+                        } else {
+                            var color=$(this).val();
+                        }
+                        var mapsel=$(this).parents(".EDcolsect").data("map");
+                        change_EDmap_style(color,mapsel,"color");
+                    });
+
+                    $(".EDselcolvar", window.parent.document).on("click" , function(){
+                        var color=$(this).attr("data-color");
+                        var mapsel=$(this).parents(".EDcolsect").data("map");
+                        change_EDmap_style(color,mapsel,"color");
+                    });
+
+                    $(".slider", window.parent.document).on('input',function(){
+                        var slider_val=$(this).val();
+                        $(this).parent().siblings(".slider_val").html(slider_val);
+                        var mapsel=$(this).data("map");
+                        var valtype=$(this).data("valtype");
+                        if (valtype=="zoom"){
+                            var loadEd = parent.results_ED["loadEd"];        
+                            if (loadEd){
+                                stage.setFocus(slider_val);
+                            }
+                        }else {
+                            change_EDmap_style(slider_val,mapsel,valtype);
+                        }
+                    })
+
+                }
 ////////////SETTINGS:
 
                 $("#screenshot", window.parent.document).click(function(){

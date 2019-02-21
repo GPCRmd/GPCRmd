@@ -6,6 +6,7 @@ $(document).ready(function(){
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
     
     //$('[data-toggle="popover"]').popover(); 
+
     
     function drawBasic(rows,xlabel,ylabel) {
         var data = new google.visualization.DataTable();
@@ -34,7 +35,11 @@ $(document).ready(function(){
             } else {
                 $(this).addClass("active");
             }
-            $("#selectionDiv").trigger("click");
+            if ($(this).hasClass("ed_map_el")){
+                $("#EDselectionDiv").trigger("click");
+            } else {
+                $("#selectionDiv").trigger("click");
+            }
         });
     }
   
@@ -259,9 +264,7 @@ $(document).ready(function(){
         return [all_gpcr_dicts , num_gpcrs];
     }
     
-    //var traj=obtainCheckedTrajs();
     $("#receptor").addClass("active");
-    //$(".nonGPCR").addClass("active");
 
     var chains_str =$("#receptor").attr("title"); 
     var all_chains = $(".str_file").data("all_chains").split(",");
@@ -276,15 +279,42 @@ $(document).ready(function(){
         num_gpcrs =dicts_results[1];
     }
     
-    function changeLastInputColor(colorcode){
-        var selColorCont=$("#text_input_all").find(".text_input:last .dropcolor[data-color='"+colorcode+"']");
-        var clicked_color= selColorCont.data("color");
-        var dBtn=$("#text_input_all").find(".dropbtn:last");
-        var old_color=dBtn.data("color");
-        selColorCont.css("background-color",old_color).data("color",old_color);
-        dBtn.css("background-color",clicked_color).data("color",clicked_color);
+
+    function changeLastInputColor(colorcode,def_row){
+        if (available_colors.indexOf(colorcode)>-1){//if colorcode in available_colors        
+            var selColorCont=$("#text_input_all").find(".text_input:last .dropcolor[data-color='"+colorcode+"']");
+            var clicked_color= selColorCont.data("color");
+            var dBtn=$("#text_input_all").find(".dropbtn:last");
+            var old_color=dBtn.data("color");
+            selColorCont.css("background-color",old_color).data("color",old_color);
+            dBtn.css("background-color",clicked_color).data("color",clicked_color);
+        } else {
+            if (def_row){
+                selrow=def_row;
+            } else {
+                var selrow=$("#text_input_all").find(".text_input:last");
+            }
+            var dDwn=selrow.find(".displaydrop");
+            var selColorCont=dDwn.find(".dropcolor.morecolors");
+            var dBtn=dDwn.find(".dropbtn");
+
+            //Select "other colors"
+            var clicked_color= selColorCont.data("color");
+            var old_color=dBtn.data("color");
+            selColorCont.css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").data("color",old_color);
+            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",colorcode);
+            var diffcolor_span=dDwn.siblings(".span_morecolors");
+            diffcolor_span.html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color nglCallChangeTI">');
+
+            //Indicate at input the desired color
+            diffcolor_input=diffcolor_span.children(".input_dd_color");
+            diffcolor_input.val(colorcode);
+            input_dd_color_setBackground(diffcolor_input);
+           // diffcolor_input.change();
+        }
     }
-    
+
+
     function checkPosInGpcrNum(list_of_gnum){
         ///Given list of positions in GPCRdb num., checks if the GPCR(s) in the dynamics contains it. Returns a list containing the accepted positions.
         var sel_pos_li=[];
@@ -301,7 +331,7 @@ $(document).ready(function(){
         }
         return sel_pos_li
     }
-    
+
     function createRepFromCrossGPCRpg(){
         var bind_domain=$("#VisualizationDiv").data("bind_domain");
         var presel_pos=$("#VisualizationDiv").data("presel_pos");
@@ -318,14 +348,14 @@ $(document).ready(function(){
                 } else {
                     sel_dom_pos_fin=sel_dom_pos_s.slice(0,-1);
                     $("#text_input_all").find(".sel_input:last").val(sel_dom_pos_fin);
-                    changeLastInputColor("#3193ff");
+                    changeLastInputColor("#3193ff",false);
                     $("#text_input_all").find(".ti_add_btn:last").trigger("click");
                     sel_dom_pos_s=sdom_pos+",";
                 }
             }
             sel_dom_pos_fin=sel_dom_pos_s.slice(0,-1);
             $("#text_input_all").find(".sel_input:last").val(sel_dom_pos_fin);
-            changeLastInputColor("#3193ff");
+            changeLastInputColor("#3193ff",false);
 
             //David here: some changes intrudeced to mark more than a residue at time
             presel_pos_ary = presel_pos.split("_");
@@ -338,7 +368,7 @@ $(document).ready(function(){
                         $("#text_input_all").find(".sel_input:last").val(presel_pos);
                         $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
                         //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
-                        changeLastInputColor("#ff4c00");
+                        changeLastInputColor("#ff4c00",false);
                     }
                 }
             }
@@ -350,13 +380,23 @@ $(document).ready(function(){
                     $("#text_input_all").find(".sel_input:last").val(presel_pos);
                     $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
                     //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
-                    changeLastInputColor("#ff4c00");
+                    changeLastInputColor("#ff4c00",false);
                 }
             }
             //$("#selectionDiv").trigger("click");
         }
     }
     
+    var available_colors=[]
+    var first_textinput=$("#text_input_all").find(".text_input:first");
+    first_textinput.find(".dropcolor:not(.morecolors)").each(function(){
+        var thiscolor=$(this).data("color");
+        available_colors[available_colors.length]=thiscolor;
+    });
+    available_colors[available_colors.length]=first_textinput.find(".dropbtn").data("color");
+
+
+
 //-------- AJAX --------
 
     function csrfSafeMethod(method) {
@@ -436,7 +476,14 @@ $(document).ready(function(){
     displayDropBtn("#seq_input_all",".dropbtn");
     displayDropBtn("#moreSettings",".dropbtn");
     displayDropBtn("#moreSettings_div",".dropbtn_opt");
+    displayDropBtn("#ED2fofcColor",".dropbtn");
+    displayDropBtn("#EDfofcColorPos",".dropbtn");
+    displayDropBtn("#EDfofcColorNeg",".dropbtn");
     
+
+
+
+
     function colorSel(input_select){
         $(input_select).on("click",".dropcolor",function(){
             var dCont=$(this).parent();
@@ -444,15 +491,24 @@ $(document).ready(function(){
             var dDwn=dBtn.parent();
             dCont.css("display","none");
             dBtn.removeClass("opened");
+            //dBtn.trigger("change");
             if ($(this).hasClass("morecolors")){
             
                 var clicked_color= $(this).data("color");
                 var old_color=dBtn.data("color");
-
                 $(this).css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").data("color",old_color);
                 dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",clicked_color);
 
-                dDwn.siblings(".span_morecolors").html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color nglCallChangeTI">');
+                if (dDwn.hasClass("ed_ddwn")){
+                    var ed_colSect=dDwn.parent();
+                    var lw=ed_colSect.data("long");
+                    ed_colSect.css("width",lw);
+                    var html_span='<input type="text" style="font-size:12px;height:24px;margin: 0 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color EDcolorFree">';
+                } else {
+                    var html_span='<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color nglCallChangeTI">';
+                }
+
+                dDwn.siblings(".span_morecolors").html(html_span);
 
                 
             } else {     
@@ -462,6 +518,11 @@ $(document).ready(function(){
                     dBtn.css({"background-color":clicked_color , "border":"none" /*, "vertical-align":"2px"*/}).html("").removeClass("morecolors").data("color",clicked_color);
                     $(this).css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",old_color).appendTo(dCont);
                     dDwn.siblings(".span_morecolors").html('');
+                    if (dDwn.hasClass("ed_ddwn")){
+                        var ed_colSect=dDwn.parent();
+                        var lw=ed_colSect.data("short");
+                        ed_colSect.css("width",lw);
+                    }
 
                 } else {
                     var clicked_color= $(this).data("color");
@@ -470,59 +531,37 @@ $(document).ready(function(){
                     dBtn.css("background-color",clicked_color).data("color",clicked_color);
                 }
             }
+            var selcolel=dDwn.siblings(".EDselcolvar");
+            selcolel.attr("data-color",clicked_color);
+            selcolel.trigger("click")
         });
     }
     colorSel("#text_input_all");
     colorSel("#seq_input_all");
+    colorSel("#ED2fofcColor");
+    colorSel("#EDfofcColorPos");
+    colorSel("#EDfofcColorNeg");
+
     
-//-------- Fix visualisaiton column on scroll --------
-/*
-// Problem: with this I can't scroll down through Visualisation column ':)
 
-    function adjustWidth() {
-         var parentwidth = $("#rightPanelID").width();
-         $("#leftPanelID").width(parentwidth);
-         console.log(parentwidth)
-         console.log($("#leftPanelID").width())
-     }
-     
-    function controlSticky() {
-        var visColumn = document.getElementById("leftPanelID");
-        if (window.pageYOffset >= document.getElementById("right_half").offsetTop) {
-            visColumn.setAttribute("style","position: fixed; top: 50px; width: 48%");
-            adjustWidth();
+    function input_dd_color_setBackground(inputColorObj){
+        var lcolor=inputColorObj.val();
+        inputColorObj.parent(".span_morecolors").removeClass("has-error");
+        if (lcolor == ""){
+            inputColorObj.css("background-color","");
+        } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+            inputColorObj.parent(".span_morecolors").addClass("has-error");
+            inputColorObj.css("background-color","");
         } else {
-            visColumn.setAttribute("style","position: relative; top: 0; width: 100%");
-      }
-    } 
-     
-    $(window).resize( function() {
-       adjustWidth();
-     })
-   
-    //Need to do it only when the page is in 2 columns!
-    window.onscroll = function() {controlSticky()};
+            inputColorObj.css("background-color",lcolor);
+        }
+    }
 
-*/
-
-
-
+    $("#allSelTools").on("change",".input_dd_color",function(){
+        input_dd_color_setBackground($(this));
+    })
 //-------- Text Input --------
     
-    
-    $("#allSelTools").on("change",".input_dd_color",function(){
-        var lcolor=$(this).val();
-        $(this).parent(".span_morecolors").removeClass("has-error");
-        if (lcolor == ""){
-            $(this).css("background-color","");
-        } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
-            $(this).parent(".span_morecolors").addClass("has-error");
-            $(this).css("background-color","");
-        } else {
-            $(this).css("background-color",lcolor);
-        }
-
-    })
     
     function obtainTextInput(){
         var layer=[];
@@ -683,19 +722,18 @@ $(document).ready(function(){
         }
     });
     
-    $("#text_input_all").on("click", ".ti_rm_btn" , function(){
+    function rmTextInputRow(textrowToRv){
         var numTiRows = $("#text_input_all").children().length;
-        var inpval= $(this).closest(".text_input").find(".sel_input").val();
         if(numTiRows==1){
             $("#text_input_all").find(".sel_input").val("");
             $("#text_input_all").find(".ti_alert_gnum").html("");
             $("#text_input_all").find(".ti_alert_ngl").html("");
             $("#text_input_all").find(".sel_input").css("border-color","");
-            $("#text_input_all").find(".input_dd_color").css("background-color","");
+            $("#text_input_all").find(".input_dd_color").css("background-color","").val("");
             $("#text_input_all").find(".span_morecolors").removeClass("has-error");
-        
+            $("#text_input_all").find(".text_input").removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_lig");
         }else{
-            var wBlock =$(this).closest(".text_input");
+            var wBlock =textrowToRv.closest(".text_input");
             if (wBlock.is(':last-child')){
                 wBlock.remove();
                 $("#text_input_all").find(".ti_add_btn:last").css("visibility","visible");
@@ -703,6 +741,11 @@ $(document).ready(function(){
                 wBlock.remove();
             }
         }
+    }
+
+    $("#text_input_all").on("click", ".ti_rm_btn" , function(){
+        var inpval= $(this).closest(".text_input").find(".sel_input").val();
+        rmTextInputRow($(this));
         if (inpval != ""){
             $("#selectionDiv").trigger("click");
         }
@@ -3501,8 +3544,75 @@ $(document).ready(function(){
         }
     });
     
+    function add_row_EDReps(selToAdd,colorVal,inpType){
+        last_input_row=$("#text_input_all").find(".text_input:last");
+        if (! last_input_row.hasClass(inpType)){
+            var last_input_txt=last_input_row.find(".sel_input").val()
+            if (last_input_txt.length>0){
+                last_input_row.find(".ti_add_btn").trigger("click");                
+                last_input_row=$("#text_input_all").find(".text_input:last");
+            }
+            last_input_row.addClass("ed_input_rep "+ inpType);
+            last_input_row.find(".sel_input").val(selToAdd);
+            changeLastInputColor(colorVal,last_input_row);
+            if (inpType!="ed_input_rep_lig"){
+                last_input_row.find(".high_type").val("line")
+            }
+        }
+
+    }
+
+    function createEDReps(add_reps){
+        if ($("#EdrepsOn").hasClass("active")){
+            if (add_reps){
+                //Hide quick reps
+                $("#receptor,.rep_elements").not("#bindingSite").removeClass("active");
+
+                //Add GPCR
+                prot_sel=gpcr_selection();
+                if ($("#text_input_all").find(".ed_input_rep_GPCR").length ==0){
+                    add_row_EDReps(prot_sel,"#b8b8b8","ed_input_rep_GPCR");                
+                }
+
+                //Add other prot
+                if (prot_sel!="protein"){
+                    if ($("#text_input_all").find(".ed_input_rep_otherprot").length ==0){
+                        var otherprot="protein and not ("+prot_sel+")";
+                        add_row_EDReps(otherprot,"#dfdbdb","ed_input_rep_otherprot");
+                    }
+                }
+                if ($("#text_input_all").find(".ed_input_rep_lig").length ==0){
+                    var lig_nm=$(".ed_ligand").data("shortn");
+                    add_row_EDReps(lig_nm,"#797979","ed_input_rep_lig");
+                }
+            } else {
+                $("#text_input_all").find(".ed_input_rep").each(function(){
+                    $("#receptor,.Ligand").addClass("active");
+                    rmTextInputRow($(this));
+                });
+            }
+        } else {
+            var prev_ed_inp=$("#text_input_all").find(".ed_input_rep");
+            if (prev_ed_inp.length >0){
+                prev_ed_inp.each(function(){
+                    $("#receptor,.Ligand").addClass("active");
+                    rmTextInputRow($(this));
+                });
+            }
+        }
+    }
 
 //-------- Buttons --------
+    $("#ed_ctrl").on("click",".EdrepsSet:not(.active)",function(){
+        $(this).addClass("active");
+        $(this).siblings(".EdrepsSet").removeClass("active");
+        if ($(".ed_map_el.active").length>0){
+            createEDReps(true);
+            $("#selectionDiv").trigger("click");
+        }
+    });
+
+
 
     click_unclick(".high_pdA");
     click_unclick(".high_pdB");
@@ -3518,11 +3628,30 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
     
+    $(".ed_map_el").click(function(){
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active");
+            createEDReps(false);
+        }else{
+            $(this).addClass("active");
+            $(this).siblings().removeClass("active");
+            createEDReps(true);
+        }
+        $("#EDselectionDiv").trigger("click");
+        $("#selectionDiv").trigger("click");
+    });
+
+
     function removeCompBtns(){
         $(".rep_elements").removeClass("active");
         $("#receptor").removeClass("active");
     }
     
+    function removeEDCompBtns(){
+        $(".ed_map_el").removeClass("active");
+    }
+
+
     $("#btn_clear").click(function(){
         removeCompBtns();
         $("#selectionDiv").trigger("click");
@@ -3556,14 +3685,20 @@ $(document).ready(function(){
     }
     //window.gpcr_selection=gpcr_selection;
 
-    function gpcr_selection_active(){
-        if ($("#receptor").hasClass("active")){
+    function gpcr_selection_active(edMap){
+        if (! edMap && $("#receptor").hasClass("active")){
+            var receptorsel=gpcr_selection();
+        } else if (edMap && $("#ed_receptor").hasClass("active")) {
             var receptorsel=gpcr_selection();
         } else {
             var receptorsel="";
         }
         return (receptorsel);
     }
+
+
+
+
     var seq_ids=[];
     
     var atomshb=[];//
@@ -3576,6 +3711,23 @@ $(document).ready(function(){
     var atomssb=[];//
     var all_resids_sasa=[];//
     
+    function obtainURLinfo_ED(){
+        var loadEd=false;
+        var receptorsel_ed=gpcr_selection_active(true);
+        var ed_finsel="";
+        var ligsel_ed=$(".ed_ligand.active").data("shortn");
+        if (ligsel_ed){
+            loadEd=true;
+            ed_finsel=ligsel_ed;
+        } else if (receptorsel_ed){
+            loadEd=true;
+            ed_finsel=receptorsel_ed;
+        }
+        //var edAll={"ed_finsel":ed_finsel};
+        return ({"loadEd":loadEd,
+                 "ed_sel":ed_finsel})
+    }
+
     function obtainURLinfo(gpcr_pdb_dict){
         var layers_res =obtainTextInput();
         var layers_li=layers_res[0]
@@ -3592,7 +3744,7 @@ $(document).ready(function(){
             high_pre = obtainPredefPositions();
         }
         var traj = $("#selectedTraj").data("tpath");
-        var receptorsel=gpcr_selection_active();
+        var receptorsel=gpcr_selection_active(false);
         bs_info=obtainBS();
         var resultHBSB=selectionHBSB();
         fpSelInt_send={};
@@ -3626,6 +3778,11 @@ $(document).ready(function(){
         });
     }
     
+    var passInfoToIframe_ED = function(){
+        var results_ED=obtainURLinfo_ED();
+        window.results_ED=results_ED;
+    }
+    window.passInfoToIframe_ED=passInfoToIframe_ED;
 
     var passInfoToIframe = function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
@@ -3644,6 +3801,7 @@ $(document).ready(function(){
         obtainLegend(legend_el);
     }    
     window.passInfoToIframe=passInfoToIframe;
+    
     
     var passinfoToPlayTraj= function(){
         var bs_info=obtainBS();
@@ -3802,7 +3960,7 @@ $(document).ready(function(){
         $(this).attr("href", url_mdsrv);
     });   
     
-    
+
     $("#clearAll").click(function(){
         all_resids_sasa=[];
         atomshb=[];
@@ -3883,6 +4041,14 @@ $(document).ready(function(){
         fpSelInt={};
         
         $("#selectionDiv").trigger("click");
+
+        //Clear ED Reos:
+        removeEDCompBtns();
+        $("#text_input_all").find(".ed_input_rep").each(function(){
+            $("#receptor,.Ligand").addClass("active");
+            rmTextInputRow($(this));
+        });
+        $("#EDselectionDiv").trigger("click");
     }); 
     
 //-------- Flare Plots --------
