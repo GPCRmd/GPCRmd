@@ -634,6 +634,7 @@ $(document).ready(function(){
     maxInputLength('.inputdist',"",6);
     maxInputLength('input.sel_input',"",100);
     maxInputLength('input.seq_input',"",100);
+    maxInputLength('input.ed_input',"",100);
     maxInputLength('#rmsd_my_sel_sel',"",50);
     maxInputLength("#int_thr", "",4);
     maxInputLength(".inp_stride", "",4);
@@ -763,7 +764,7 @@ $(document).ready(function(){
 
 
 
-///////////////
+
 
     var si_i=1;
     $("#seq_input_all").on("click",".si_add_btn",function(){ 
@@ -1083,6 +1084,28 @@ $(document).ready(function(){
         return sel;
     }
 
+    function switchOffOtherEDsel(thisEDel){
+        if (thisEDel=="input"){
+            $(".ed_map_el").removeClass("active");//buttons
+        } else if (thisEDel=="buttons"){
+            $(".ed_input").val("").css("border-color","");
+            $(".ed_alert_inst").html("");
+        }
+
+    }
+
+    $("#ed_sel_input").change(function(){
+        //var rownum=$(this).attr("id");
+        var pre_sel = $(this).val();
+        var rownum=$(this).parents(".ed_input_row").attr("id");
+        sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ed_ti_alert");
+        if (sel_enc.length>0){
+            switchOffOtherEDsel("input");
+            createEDReps(true);
+            $("#EDselectionDiv").trigger("click");
+            $("#selectionDiv").trigger("click");
+        }
+    })
 //-------- Text input modified signal --------
 
     $("#text_input_all").on("change" , ".sel_input", function(){
@@ -1121,6 +1144,8 @@ $(document).ready(function(){
             $("#selectionDiv").trigger("click");
         }
     });
+
+
 //-------- Selected molecules to display --------
     function clickRep (id, newRep, clicked) {
         if ( clicked == 1 ) {
@@ -3606,7 +3631,7 @@ $(document).ready(function(){
     $("#ed_ctrl").on("click",".EdrepsSet:not(.active)",function(){
         $(this).addClass("active");
         $(this).siblings(".EdrepsSet").removeClass("active");
-        if ($(".ed_map_el.active").length>0){
+        if (($(".ed_map_el.active").length>0) || ($("#ed_sel_input").val().length>0)){
             createEDReps(true);
             $("#selectionDiv").trigger("click");
         }
@@ -3635,6 +3660,7 @@ $(document).ready(function(){
         }else{
             $(this).addClass("active");
             $(this).siblings().removeClass("active");
+            switchOffOtherEDsel("buttons");
             createEDReps(true);
         }
         $("#EDselectionDiv").trigger("click");
@@ -4048,6 +4074,8 @@ $(document).ready(function(){
             $("#receptor,.Ligand").addClass("active");
             rmTextInputRow($(this));
         });
+        $(".ed_input").val("").css("border-color","");
+        $(".ed_alert_inst").html("");
         $("#EDselectionDiv").trigger("click");
     }); 
     

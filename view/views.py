@@ -827,6 +827,7 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
     return pdb_muts
 
 def obtain_ed_align_matrix(dyn_id):
+    print("\n\n\n\n",dyn_id,type(dyn_id),"\n\n\n\n")
     if dyn_id=="4":
         r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
         trans=[  9.21,74.12,-80.74]
@@ -1165,17 +1166,14 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
                     #Fill blanks
-                    print("\n\n\n\n")
-                    print(cons_pos_all_info)
-                    print("\n\n\n\n")
+
                     for gclass,consinfo in cons_pos_all_info[0].items():
                          for consli in consinfo:
                              for cons in consli:
                                  if cons[1]=="":
                                      cons[1]=cons[0]
-                    print("\n\n\n\n")
-                    print(cons_pos_all_info)
-                    print("\n\n\n\n")
+                    if dyn_id=="4":
+                        pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
                     context={
