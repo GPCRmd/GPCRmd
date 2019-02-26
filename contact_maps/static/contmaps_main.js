@@ -24,11 +24,13 @@ $(document).ready(function(){
   url_pathname = window.location.pathname.split("/")
   url_variables = url_pathname[url_pathname.length-1]
   url_variables_ary = url_variables.split("&");
-  var itype = url_variables_ary[url_variables_ary.length-3];
+  var itype = url_variables_ary[url_variables_ary.length-4];
+  var clusters = url_variables_ary[url_variables_ary.length-3];
   var ligandonly = url_variables_ary[url_variables_ary.length-2];
   var rev = url_variables_ary[url_variables_ary.length-1];
 
   $('input[value="' + itype + '"]').prop('checked', true);
+  $('.clusteropt[value="' + clusters + '"]').attr("selected", true)
   if (ligandonly == "lg"){
     $('input[value="' + ligandonly + '"]').prop('checked', true);
   }
@@ -86,6 +88,12 @@ $(document).ready(function(){
     var sel_code = $(".option[type=radio]:checked").val();
     var sel_label = typedict[sel_code];
     document.getElementById("itype_button").innerHTML = sel_label + ' <span class="caret"></span>'
+  });
+
+  //--------Show selected number of clusters in button 
+  $(".clustnum").change(function(){
+    var sel_clust = $(".clustnum:checked").val();
+    document.getElementById("cluster_button").innerHTML = sel_clust + ' clusters <span class="caret"></span>'
   });
 
   //-------- Clusters dropdown
@@ -156,8 +164,6 @@ $(document).ready(function(){
   */
 });
 
-
-
 //---------Check all options upon clicking "check all" (currently not used) 
 function checkoruncheckall(checkboxclass,changename){
   var checkcomand = checkboxclass + ':checked';
@@ -196,6 +202,7 @@ function printchecked(){
   var rev_value = ""
   var URL_values = "";
   var value_opt = "";
+  var clusters = $('#clusters_dropdown').val();
 
   //Check if reverse contact pairs is selected
   rev_value = $("#rev_pairs:checked").val();
@@ -218,8 +225,14 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contmaps/' + check_opt + "&" + locs.join("_") + "&" + rev_value;
-    window.location.pathname = URL; 
+    URL = '/contmaps/' + check_opt + "&" + clusters + "&" + locs.join("_") + "&"  + rev_value;
+    console.log(URL);
+    if (window.location.pathname == URL){
+      location.reload()
+    }
+    else {
+      window.location.pathname = URL; 
+    }
   }
   else {
     window.alert("please select an interaction type and at least one interaction partner");
