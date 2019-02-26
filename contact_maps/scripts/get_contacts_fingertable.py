@@ -54,7 +54,7 @@ mkdir_p(str(files_path + "contact_tables"))
 #Get dynlist
 dyncsv_path = files_path + "dyn_list.csv"
 dyncsv_file = open(dyncsv_path, "r")
-dynlist = dyncsv_file.readline().split(",")
+dynlist = dyncsv_file.readline().replace('\n','').split(",")
 dyntsv = "\t".join(dynlist)
 dyncsv_file.close()
 
@@ -97,11 +97,4 @@ for itype in itypes:
 table_summary.close()
 
 # Activate table_to_dataframe
-for rev in ["rev", "norev"]:
-	for itype in itypes:
-		for ipartner in ipartners:
-			if (itype in nolg_itypes) and (ipartner == "lg"):
-				continue
-			if (itype in noprt_itypes) and (ipartner == "prt"):
-				continue
-			os.system("python %stable_to_dataframe.py %s %s %s" % (scripts_path, itype, ipartner, rev))
+os.system("python %stable_to_dataframe.py --all" % (scripts_path))
