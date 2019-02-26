@@ -827,7 +827,6 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
     return pdb_muts
 
 def obtain_ed_align_matrix(dyn_id):
-    print("\n\n\n\n",dyn_id,type(dyn_id),"\n\n\n\n")
     if dyn_id=="4":
         r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
         trans=[  9.21,74.12,-80.74]

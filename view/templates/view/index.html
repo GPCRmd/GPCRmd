@@ -8,6 +8,11 @@
 {% load staticfiles %} 
 {% block addon_css %}
 <style>
+.popover{
+  font-size:12px;
+  width:120px;
+}
+
 .slider {
   -webkit-appearance: none;
   width: 100%;
@@ -858,7 +863,7 @@
               </div><!-- end ed_quicksel_all-->
 
             <!-- ============= ED atom sel =========== -->
-             <!--<div id="ed_atomsel_all" style="margin-bottom:5px">
+             <div id="ed_atomsel_all" style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;">
                     <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_atomsel"><span>Atom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
                   <div id="ed_atomsel" class="collapse" style="padding-right:15px;">
@@ -867,27 +872,37 @@
 
                           <div  class="ed_input_row" id="ed_ti_row0" style="margin-bottom:5px;padding-left: 15px">
                              <div  class="">
-                                <div class="ed_ti_left" style="padding-right:3px;padding-left:3px"> 
-                                  <input type="text" value="" class="form-control  ed_input" id="ed_sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+                                <div class="ed_ti_left " style="padding-right:3px;padding-left:3px;width:90%;float:left"> 
+                                  <input value="" class="form-control  ed_input" id="ed_sel_input" placeholder="Specify your selection." style="width:100%;background-color:#F8F8F8" type="text">
                                 </div>
+                                <button class="btn btn-default ed_map_el changefocus act_input " id="ed_sel_input_btn" style="width:10%;display:inline"  data-toggle="popover" data-placement="right" data-content="Click to apply." data-trigger="manual" >Apply</button>
+
+
+
                             </div>
                             <div class="ed_ti_alert">
                               <div class="ed_ti_alert_gnum ed_alert_inst col-md-12" style="margin-top:5px"></div>
                               <div class="ed_ti_alert_ngl ed_alert_inst col-md-12" style="margin-top:5px"></div>
                             </div>      
                           </div>
+                          <!--<span style="display:none" class="EDselcolvar"></span>-->
 
                     </div>
-                  </div>
+                  </div><!-- end ed_atomsel -->
                 </div>
-              </div>--> 
-              <!-- end ed_atomsel_all-->
+              </div><!-- end ed_atomsel_all-->
             <!-- ============= ED controls=========== -->
               <div id="ed_ctrl_all" style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;">
                     <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_ctrl"><span>Selection Settings </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
 
                   <div id="ed_ctrl" class="collapse" style="padding-right:15px;">
+
+                    
+                    <div id="ed_no_sel_warning" class="alert alert-warning fade in alert-dismissible" style="margin:15px 0 auto;font-weight:bold;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+                        Make a selection to display the map.
+                    </div>
 
                     <div style="margin:10px" class="row">
                          Apply default representations
@@ -910,12 +925,12 @@
                             <td style="text-align:right;font-weight:bold">Display map</td>
                             <td style="text-align:center">
                               <label class="checkbox" style="margin:0">
-                                <input checked type="checkbox" class="EDdisplay" value="2fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                <input checked type="checkbox" disabled class="EDdisplay" value="2fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
                               </label>
                             </td>
                             <td style="text-align:center">
                               <label class="checkbox"  style="margin:0">
-                                <input checked type="checkbox" class="EDdisplay" value="fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                <input checked type="checkbox" disabled class="EDdisplay" value="fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
                               </label>
                             </td>
                           </tr>
