@@ -68,13 +68,6 @@ $(document).ready(function(){
         $(this).css("color","#585858");
     });
     
- /*   $("#addToSel").hover(function(){
-        .css("color","#449C44");
-    },
-    function(){
-        $(this).children().css("color","#5CB85C");
-    });*/
-    
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
         $(myselector).hover(function(){
@@ -2509,59 +2502,96 @@ $(document).ready(function(){
 //-------- Select protein segment to highligh/select from the sequence --------
 
     var firstsel=true;
-    function selectFromSeq(){
+    function selectFromSeq(seqcellClass,sectionSel,prefix,hideApplyBtn,isEDmap){//
+        //seqcellClass: name of class of the cells cotnianing the sequence positions (without the ".")
+        //sectionSel: selector of the section of the Sequence selection. Ex: '#seqselection_all'
+        //hideApplyBtn is true if apply button is hidden when no selection is made. If this is set for more than one sequence selection instance, var firstsel have to be made independent for each of them.
+        var seqcellSel="."+seqcellClass;
         var click_n=1;
         var seq_pos_1;
         var seq_pos_fin;
         var pos_li=[];
-        $(".seq_sel").click(function(){    
+        $(seqcellSel).click(function(){    
             if (click_n==1){
                 var range=$(this).attr("class"); 
                 if(range.indexOf("-") == -1){     //Start a new selection
                     $(this).css("background-color","#337ab7"); 
-                    seq_pos_1 = $(this).attr("id");
+                    var cell1_ind = $(this).attr("id");
+                    seq_pos_1=cell1_ind.replace(prefix,"");
                     click_n=2;
                 } else {      // Remove an old selection
                     var selRange= range.match(/(\d)+/g);
                     i=Number(selRange[0]);
                     end=Number(selRange[1]);
                     while (i <= end) {
-                        var mid_id="#" + String(i);
+                        var mid_id="#" +prefix+ String(i);
                         $(mid_id).css("background-color","#f2f2f2");
-                        $(mid_id).attr("class", "seq_sel");
+                        $(mid_id).attr("class", seqcellClass);
                         i++;
                     }
-                    if ($(".seq_sel.sel").length== 0){
-                        $("#addToSel").css("display","none");
-                        firstsel=true;
+                    if (hideApplyBtn){
+                        if ($( seqcellSel+".sel").length== 0){
+                            $(sectionSel).find(".hideIfNone").css("display","none");
+                            firstsel=true;
+                        }
+                    }
+                    if (isEDmap){
+                        if ($("#ED_addToSel").hasClass("active")){
+                            applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
+                            createEDReps(true);
+                            $("#EDselectionDiv").trigger("click");
+                            $("#selectionDiv").trigger("click");
+                        }
                     }
                 }
             } else  {
                 // Finish a selection
                 click_n=1;
-                seq_pos_fin = Number($(this).attr("id"));
+                var cellfin_ind=$(this).attr("id");
+                seq_pos_fin = Number(cellfin_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_fin){
-                    var mid_id="#" + String(i);
+                    var mid_id="#" +prefix+ String(i);
                     $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
-                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
+                    $(mid_id).attr("class", seqcellClass+" sel " + seq_pos_1+"-"+seq_pos_fin); 
                     i++;
                 }
-                if (firstsel){
-                    $("#addToSel").css("display","inline");
-                    firstsel=false;
+                if (hideApplyBtn){
+                    var applyselbtn=$(sectionSel).find(".hideIfNone");
+                    if (firstsel){
+                        applyselbtn.css("display","inline");
+                        firstsel=false;
+                    }
+                    applyselbtn.popover('show');
+                    setTimeout(function() {
+                        applyselbtn.popover('hide');
+                    }, 1000);
+                }
+                if (isEDmap){
+                    if ($("#ED_addToSel").hasClass("active")){
+                        applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
+                        createEDReps(true);
+                        $("#EDselectionDiv").trigger("click");
+                        $("#selectionDiv").trigger("click");
+                    } else {
+                        $("#ED_addToSel").popover('show');
+                        setTimeout(function() {
+                            $("#ED_addToSel").popover('hide');
+                        }, 1000);
+                    }
                 }
 
             }
         });
    
-        $(".seq_sel").hover(function(){
+        $(seqcellSel).hover(function(){
             if (click_n==2) {
-                var seq_pos_2 = Number($(this).attr("id"));
+                var cell2_ind=$(this).attr("id");
+                var seq_pos_2 =Number(cell2_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i);
+                    var mid_id="#"+prefix + String(i);
                     $(mid_id).children().css("background-color","#337ab7");
                     i++;
                 }
@@ -2572,10 +2602,11 @@ $(document).ready(function(){
             }
         }, function(){
             if (click_n==2) {
-                var seq_pos_2 = Number($(this).attr("id"));
+                var cell2_ind=$(this).attr("id");
+                var seq_pos_2 =Number(cell2_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i);
+                    var mid_id="#"+prefix + String(i);
                     $(mid_id).children().css("background-color","");
                     i++;
                 }
@@ -2586,7 +2617,8 @@ $(document).ready(function(){
             }
         });
     }
-    selectFromSeq();
+    selectFromSeq("seq_sel","#seq_sel_div","",true,false);
+    selectFromSeq("ed_seq_sel","#ed_seq_sel_div","ed_",false,true);
 
     function fromIdsToPositions(id_l, id_r){
         var pos_l=$(id_l).children("#ss_pos").text();
@@ -2659,9 +2691,9 @@ $(document).ready(function(){
     }
 
 
-    function obtainSelectedAtSeq(){
+    function obtainSelectedAtSeq(sectionSel){
         var sel_ranges=[];
-        $(".seq_sel.sel").each(function(){
+        $(sectionSel+".sel").each(function(){
             var class_str=$(this).attr("class");
             var id_range= class_str.match(/(\d)+/g);
 //            var sel_range=clickSelRange($(this).attr("class"));
@@ -2670,27 +2702,31 @@ $(document).ready(function(){
         return(sel_ranges);
     }
 
+    function obtainSelectionFromRanges(sel_ranges_ok){
+        var pos_str="";
+        p=0;
+        while (p < (sel_ranges_ok.length -1)) {
+            pos_str += sel_ranges_ok[p] + " or ";
+            p ++;
+        }
+        pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
+        var fin_val = "protein and ("+ pos_str +")";
+        return (fin_val);
+    };
 
     $("#addToSel").click(function(){ 
         $("#seq_input_all").css("display","inline");
         $("#seq_input_all").find(".si_add_btn:last").css("visibility","visible");
-        sel_ranges=obtainSelectedAtSeq();
+        sel_ranges=obtainSelectedAtSeq(".seq_sel");
         if (sel_ranges.length > 0){
             sel_ranges_ok=joinContiguousRanges(sel_ranges);
-            var pos_str="";
-            p=0;
-            while (p < (sel_ranges_ok.length -1)) {
-                pos_str += sel_ranges_ok[p] + " or ";
-                p ++;
-            }
-            pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
+            var fin_val=obtainSelectionFromRanges(sel_ranges_ok);
+
             var sel_input_cont=$(".seq_input_row:last-child").find(".seq_input");
             var act_val=sel_input_cont.val();
             if (act_val){
-                var fin_val = "("+act_val + ") or protein and ("+ pos_str +")";
-            } else {
-                var fin_val = "protein and ("+ pos_str +")";
-            }
+                var fin_val = "("+act_val + ") or "+fin_val;
+            } 
             sel_input_cont.val(fin_val);
             seq_ids.length = 0
             $('.sel').each(function(){
@@ -3646,15 +3682,12 @@ $(document).ready(function(){
     
 
     function applyEDinput(inputEl){
-        inputEl.removeClass("display");
         var pre_sel = inputEl.val();
         var rownum=inputEl.parents(".ed_input_row").attr("id");
         var sel =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ed_ti_alert");
         if (sel.length>0){
             var is_ok_ngl=$('#embed_mdsrv')[0].contentWindow.checkNGLSel(sel);
-            if (is_ok_ngl){      
-                inputEl.addClass("display");
-            } else {
+            if (! is_ok_ngl){      
                 sel="";
                 addErrorToInput("#"+rownum,"main",".ed_ti_alert_ngl","html","Invalid selection");
             }
@@ -3665,6 +3698,15 @@ $(document).ready(function(){
         inputEl.data("sel",sel)
     }
 
+    function applyEDSeqsel(seqcellSel,applyToSel){
+        var sel_ranges=obtainSelectedAtSeq(seqcellSel);
+        var fin_val="";
+        if (sel_ranges.length > 0){
+            sel_ranges_ok=joinContiguousRanges(sel_ranges);
+            fin_val=obtainSelectionFromRanges(sel_ranges_ok);
+        }
+        $(applyToSel).data("sel",fin_val);
+    }
 
     $(".ed_map_el").click(function(){
         if ($(this).hasClass("active")){
@@ -3679,6 +3721,10 @@ $(document).ready(function(){
                 var inputEl=$("#"+input_id);
                 applyEDinput(inputEl);
             } 
+            if ($(this).hasClass("act_seq_input")){
+                var btn_id=$(this).attr("id");
+                applyEDSeqsel(".ed_seq_sel","#"+btn_id);
+            }
             $(this).addClass("active");
             $(".ed_map_el").not(this).removeClass("active");
             createEDReps(true);
@@ -3798,10 +3844,10 @@ $(document).ready(function(){
             ed_finsel=$("#"+input_id).data("sel");
             loadEd=true;
         }
-        /*} else if ($(".ed_input.display").length>0){
+        if ($(".act_seq_input.active").length>0){ 
+            var ed_finsel=$(".act_seq_input").data("sel");
             loadEd=true;
-            ed_finsel=$(".ed_input.display").val();
-        }*/
+        }
 
         if (loadEd){
             $(".EDdisplay").prop('disabled', false);
@@ -4133,8 +4179,12 @@ $(document).ready(function(){
         $("#text_input_all").find(".ed_input_rep").each(function(){
             rmTextInputRow($(this));
         });
-        $(".ed_input").val("").css("border-color","").removeClass("display");
+        $(".ed_input").val("").css("border-color","");
         $(".ed_alert_inst").html("");
+        $(".ed_seq_sel.sel").each(function(){
+            $(this).css("background-color","#f2f2f2");
+            $(this).attr("class", "ed_seq_sel");
+        });
         $("#EDselectionDiv").trigger("click");
     }); 
     
