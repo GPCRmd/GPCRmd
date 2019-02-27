@@ -636,10 +636,10 @@
                       <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
                       <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
                   </div>
-                  <div id="cons_pos_box" class="collapse" style="padding-right:15px;padding-left:15px;padding-top:10">
+                  <div  class="collapse cons_pos_section" id="cons_pos_box" style="padding-right:15px;padding-left:15px;padding-top:10">
                     {% if gpcr_id_name|length > 1 %}
                       <div class="row" style="margin-bottom:10px">
-                            <select class="form-control" style="width:100%;height:32px;" id="gpcr_sel">
+                            <select class="form-control gpcr_sel" style="width:100%;height:32px;" >
                               <option value="all">All GPCRs</option>
                               {% for gpcr_id, prot_name in gpcr_id_name.items %}
                               <option value="{{gpcr_id}}">{{prot_name}}</option>
@@ -647,7 +647,7 @@
                             </select>
                       </div>
                       <!-- Conserved pos for all GPCRs -->
-                          <div id="gpcr_id_all" class="gpcr_prot_show_cons" style="display:inline">
+                          <div  class="gpcr_prot_show_cons gpcr_id_all" style="display:inline">
                               <ul class="nav nav-tabs" id="allclasses">
                                 <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#classA_all">Class A</a></li>
                                 <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#classB_all">Class B</a></li>
@@ -703,7 +703,7 @@
                           </div>
                       <!-- Conserved pos for each of the GPCRs -->
                       {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
-                          <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons" style="display:none">
+                          <div  class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}" style="display:none">
                               <ul class="nav nav-tabs" id="allclasses">
                                 <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA_{{gpcr_id}}">Class A</a></li>
                                 <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB_{{gpcr_id}}">Class B</a></li>
@@ -757,10 +757,10 @@
                                   <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                              </div>
                           </div>
-                     {% endfor %}
+                      {% endfor %}
                      {% else %} <!-- When only 1 gpcr: -->
                          {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
-                          <div id="gpcr_id_{{gpcr_id}}" class="gpcr_prot_show_cons">
+                          <div  class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}">
                               <ul class="nav nav-tabs" id="allclasses">
                                 <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#classA"> Class A</a></li>
                                 <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#classB">Class B</a></li>
@@ -930,6 +930,201 @@
                 
               </div><!-- end ed_seqselection_all-->
             {% endif %}
+
+      <!-- ============= ED Predefined views of cons pos =========== -->
+            {% if gpcr_pdb != "no" %}
+              <div id="ed_cons_pos_box_all" style="margin-top:5px;margin-bottom:5px">
+                <div class="row">
+                    <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_cons_pos_box"><span>GPCR conserved positions </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div>               
+                    <!--<button style="background-color:#ffffff;text-align:left;border-bottom:2px solid blue;border-radius:0"  type="button" class="btn btn-block" data-toggle="collapse" data-target="#cons_pos_box">GPCR conserved positions</button>-->
+                </div>
+                <div  class="collapse cons_pos_section" id="ed_cons_pos_box" style="padding-right:15px;padding-left:15px;padding-top:10">
+                  {% if gpcr_id_name|length > 1 %}
+                  
+                      <div class="row" style="margin-bottom:10px">
+                            <select class="form-control gpcr_sel" style="width:100%;height:32px;" >
+                              <option value="all">All GPCRs</option>
+                              {% for gpcr_id, prot_name in gpcr_id_name.items %}
+                              <option value="{{gpcr_id}}">{{prot_name}}</option>
+                              {% endfor %}
+                            </select>
+                      </div>
+                      <!-- Conserved pos for all GPCRs -->
+                          <div  class="gpcr_prot_show_cons gpcr_id_all" style="display:inline">
+                              <ul class="nav nav-tabs" id="ed_allclasses">
+                                <li class="GPCRclass {{cons_pos_all_info.2.A.0}} cons_nav" data-TF="{{cons_pos_all_info.1.A}}"><a data-TF="{{cons_pos_all_info.1.A}}" class="cons_nav" data-toggle="tab" href="#ed_classA_all">Class A</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.B.0}} cons_nav" data-TF="{{cons_pos_all_info.1.B}}"><a data-TF="{{cons_pos_all_info.1.B}}" class="cons_nav" data-toggle="tab" href="#ed_classB_all">Class B</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.C.0}} cons_nav" data-TF="{{cons_pos_all_info.1.C}}"><a data-TF="{{cons_pos_all_info.1.C}}" class="cons_nav" data-toggle="tab" href="#ed_classC_all">Class C</a></li>
+                                <li class="GPCRclass {{cons_pos_all_info.2.F.0}} cons_nav" data-TF="{{cons_pos_all_info.1..F}}"><a data-TF="{{cons_pos_all_info.1..F}}" class="cons_nav" data-toggle="tab" href="#ed_classF_all">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="ed_classA_all" class="tab-pane {{cons_pos_all_info.2.A.1}}">
+                                      {% if cons_pos_all_info.1.A %}
+                                          {% if cons_pos_all_info.0.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+                                                {% for pos in cons_pos_all_info.0.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                                {% for pos in motifs_all_info.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_pos_all_info.0.A.0 %}
+                                              <p>Most conserved residues</p>
+                                                {% for pos in cons_pos_all_info.0.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="ed_classB_all" class="tab-pane {{cons_pos_all_info.2.B.1}}">
+                                        {% if cons_pos_all_info.0.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="ed_classC_all" class="tab-pane {{cons_pos_all_info.2.C.1}}">
+                                        {% if cons_pos_all_info.0.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="ed_classF_all" class="tab-pane {{cons_pos_all_info.2.F.1}}">
+                                        {% if cons_pos_all_info.0.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_pos_all_info.0.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos ed_section" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                      <!-- Conserved pos for each of the GPCRs -->
+                      {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
+                          <div  class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}" style="display:none">
+                              <ul class="nav nav-tabs" id="ed_allclasses">
+                                <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#ed_classA_{{gpcr_id}}">Class A</a></li>
+                                <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#ed_classB_{{gpcr_id}}">Class B</a></li>
+                                <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#ed_classC_{{gpcr_id}}">Class C</a></li>
+                                <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#ed_classF_{{gpcr_id}}">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="ed_classA_{{gpcr_id}}" class="tab-pane {{active_class.A.1}}">
+                                      {% if show_class.A %}
+                                          {% if cons_class.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+                                                {% for pos in cons_class.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                                {% for pos in motifs_def.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_class.A.0 %}
+                                              <p>Most conserved residues</p>
+                                                {% for pos in cons_class.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus"  data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="ed_classB_{{gpcr_id}}" class="tab-pane {{active_class.B.1}}">
+                                        {% if cons_class.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="ed_classC_{{gpcr_id}}" class="tab-pane {{active_class.C.1}}">
+                                        {% if cons_class.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="ed_classF_{{gpcr_id}}" class="tab-pane {{active_class.F.1}}">
+                                        {% if cons_class.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos ed_section" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                      {% endfor %}
+                     {% else %} <!-- When only 1 gpcr: -->
+                         {% for gpcr_id, gpcr_name, show_class,active_class, cons_class, motifs_def in all_gpcrs_info %}            
+                          <div  class="gpcr_prot_show_cons gpcr_id_{{gpcr_id}}">
+                              <ul class="nav nav-tabs" id="ed_allclasses">
+                                <li class="GPCRclass {{active_class.A.0}} cons_nav" data-TF="{{show_class.A}}"><a data-TF="{{show_class.A}}" class="cons_nav" data-toggle="tab" href="#ed_classA"> Class A</a></li>
+                                <li class="GPCRclass {{active_class.B.0}} cons_nav" data-TF="{{show_class.B}}"><a data-TF="{{show_class.B}}" class="cons_nav" data-toggle="tab" href="#ed_classB">Class B</a></li>
+                                <li class="GPCRclass {{active_class.C.0}} cons_nav" data-TF="{{show_class.C}}"><a data-TF="{{show_class.C}}" class="cons_nav" data-toggle="tab" href="#ed_classC">Class C</a></li>
+                                <li class="GPCRclass {{active_class.F.0}} cons_nav" data-TF="{{show_class.F}}"><a data-TF="{{show_class.F}}" class="cons_nav" data-toggle="tab" href="#ed_classF">Class F</a></li>
+                              </ul>
+                              <div  class="row tab-content" style="background-color:#F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                                  <div style="margin:0;" id="ed_classA" class="tab-pane {{active_class.A.1}}">
+                                      {% if show_class.A %}
+                                          {% if cons_class.A.1 %}
+                                              <p>Highly conserved residues and motifs</p>
+                                                {% for pos in cons_class.A.1 %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                                {% for pos in motifs_def.A %}
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                          {% if cons_class.A.0 %}
+                                              <p>Most conserved residues</p>
+                                                {% for pos in cons_class.A.0 %}
+                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                                {% endfor %}
+                                          {% endif %}
+                                      {% endif %}
+                                  </div>
+                                  <div id="ed_classB" class="tab-pane {{active_class.B.1}}">
+                                        {% if cons_class.B.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.B.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdB_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                          {% endfor %}   
+                                        {% endif %}                         
+                                  </div>  
+                                  <div id="ed_classC" class="tab-pane {{active_class.C.1}}">
+                                        {% if cons_class.C.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.C.0 %}
+                                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdC_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>  
+                                  <div id="ed_classF" class="tab-pane {{active_class.F.1}}">
+                                        {% if cons_class.F.0 %}
+                                          <p>Most conserved residues</p>
+                                          {% for pos in cons_class.F.0 %}
+                                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd ed_map_el high_pdF_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
+                                         {% endfor %}
+                                        {% endif %}
+                                  </div>
+                                  <button class="btn btn-link pull-right clear_conspos ed_section" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
+                             </div>
+                          </div>
+                         {% endfor %}
+
+                  {% endif %}
+                </div>
+              </div>
+            {% endif %}
+
+
             <!-- ============= ED controls=========== -->
               <div id="ed_ctrl_all" style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;">

@@ -273,14 +273,43 @@ $(document).ready(function(){
     }
     
 
+
     function changeLastInputColor(colorcode,def_row){
-        if (available_colors.indexOf(colorcode)>-1){//if colorcode in available_colors        
-            var selColorCont=$("#text_input_all").find(".text_input:last .dropcolor[data-color='"+colorcode+"']");
-            var clicked_color= selColorCont.data("color");
-            var dBtn=$("#text_input_all").find(".dropbtn:last");
-            var old_color=dBtn.data("color");
-            selColorCont.css("background-color",old_color).data("color",old_color);
-            dBtn.css("background-color",clicked_color).data("color",clicked_color);
+        if (available_colors.indexOf(colorcode)>-1){//if colorcode in available_colors     
+            if (def_row){
+                selrow=def_row;
+            } else {
+                var selrow=$("#text_input_all").find(".text_input:last");
+            }
+            //var selColorCont=selrow.find(".dropcolor[data-color='"+colorcode+"']");
+            dCont=selrow.find(".dropdown-content");
+            var dDwn=selrow.find(".displaydrop");
+            var selColorCont=false;
+            selrow.find(".dropcolor").each(function(){
+                if ($(this).data("color")==colorcode){
+                    selColorCont=$(this);
+                }
+            })
+            if (selColorCont){
+                var clicked_color= selColorCont.data("color");
+                var dBtn=selrow.find(".dropbtn:last");
+                var old_color=dBtn.data("color");
+
+                if (dBtn.hasClass("morecolors")){
+                    dBtn.css({"background-color":clicked_color , "border":"none"}).html("").removeClass("morecolors").data("color",clicked_color);
+                    selColorCont.css({"background-color":old_color , "border":"1px solid #808080"}).html('<span style="color:#696969;padding-left:1px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",old_color).appendTo(dCont);
+                    dDwn.siblings(".span_morecolors").html('');
+                    if (dDwn.hasClass("ed_ddwn")){
+                        var ed_colSect=dDwn.parent();
+                        var lw=ed_colSect.data("short");
+                        ed_colSect.css("width",lw);
+                    }
+                } else {
+                    selColorCont.css("background-color",old_color).data("color",old_color);
+                    dBtn.css("background-color",clicked_color).data("color",clicked_color);
+                }
+
+            }
         } else {
             if (def_row){
                 selrow=def_row;
@@ -725,7 +754,10 @@ $(document).ready(function(){
             $("#text_input_all").find(".sel_input").css("border-color","");
             $("#text_input_all").find(".input_dd_color").css("background-color","").val("");
             $("#text_input_all").find(".span_morecolors").removeClass("has-error");
-            $("#text_input_all").find(".text_input").removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_lig");
+            last_input_row=$("#text_input_all").find(".text_input");
+            last_input_row.removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_lig");
+            changeLastInputColor("#00d215",last_input_row);
+
         }else{
             var wBlock =textrowToRv.closest(".text_input");
             if (wBlock.is(':last-child')){
@@ -1077,15 +1109,6 @@ $(document).ready(function(){
         return sel;
     }
 
-/*    function switchOffOtherEDsel(thisEDel){
-        if (thisEDel=="input"){
-            $(".ed_map_el").removeClass("active");//buttons
-        } else if (thisEDel=="buttons"){
-            $(".ed_input").val("").css("border-color","");
-            $(".ed_alert_inst").html("");
-        }
-
-    }*/
 
 
 //-------- Text input modified signal --------
@@ -1190,11 +1213,12 @@ $(document).ready(function(){
 
 
 //-------- Predefined GPCR positions --------
-    $("#gpcr_sel").change(function(){
+    $(".gpcr_sel").change(function(){
+        var section=$(this).parents(".cons_pos_section");
         var gpcr_id=$(this).children(":selected").val();
-        var chosen_id = "#gpcr_id_"+gpcr_id;
-        $(chosen_id).css("display","inline");
-        $(".gpcr_prot_show_cons:not("+chosen_id+")").css("display","none");
+        var chosen_id = ".gpcr_id_"+gpcr_id;
+        section.find(chosen_id).css("display","inline");
+        section.find(".gpcr_prot_show_cons:not("+chosen_id+")").css("display","none");
     });
 
     $(".high_pd").each(function(){
@@ -1237,7 +1261,13 @@ $(document).ready(function(){
     }
 
     $(".clear_conspos").click(function(){;
-        $(".high_pd.active").each(function(){
+        if ($(this).hasClass("ed_section")){
+            var sectionid="#ed_cons_pos_box";
+        } else {
+            var sectionid="#cons_pos_box";
+        }
+
+        $(sectionid+" .high_pd.active").each(function(){
             $(this).removeClass("active");
         });
         $("#selectionDiv").trigger("click");
@@ -3594,6 +3624,7 @@ $(document).ready(function(){
         }
     });
     
+
     function add_row_EDReps(selToAdd,colorVal,inpType){
         last_input_row=$("#text_input_all").find(".text_input:last");
         if (! last_input_row.hasClass(inpType)){
@@ -3846,6 +3877,12 @@ $(document).ready(function(){
         }
         if ($(".act_seq_input.active").length>0){ 
             var ed_finsel=$(".act_seq_input").data("sel");
+            loadEd=true;
+        }
+
+        var ed_cons_pos=getSelectedPosLists(".high_pd.ed_map_el.active");
+        if (ed_cons_pos.length>0){
+            var ed_finsel="protein and ("+ed_cons_pos.join(",")+")";
             loadEd=true;
         }
 
