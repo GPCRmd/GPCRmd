@@ -47,6 +47,18 @@
         //stage.parameters.cameraType="orthographic";
 //////////////
 
+        function applySele (value) {
+          if (value) {
+            var edstruc=stage.getComponentsByName("my_comp").list[0];
+            edstruc.autoView(value)
+            var z = stage.viewer.camera.position.z
+            var setval=99 - Math.abs(z / 10);
+            stage.setFocus(setval)
+            
+            //$("#EDmapzoom")
+          }
+        }
+
         function listToMatrix(list, elementsPerSubArray) {
             var matrix = [], i, k;
 
@@ -254,6 +266,16 @@
             var intType = NGL.getQuery("ti");
             var trajStep = NGL.getQuery("ts");
             var trajTimeOut = NGL.getQuery("tt");
+            //ED map
+            var ed_sel=NGL.getQuery("eds");
+            var ed_display=NGL.getQuery("edd");
+            var ed_color=NGL.getQuery("edc");
+            var ed_iso=NGL.getQuery("edi");
+            var ed_zoom=NGL.getQuery("edz");
+            var r_angl=NGL.getQuery("edr");
+            var transl=NGL.getQuery("edt");
+            var pdbid=NGL.getQuery("pdb");
+
             
             var sel_li=[];
             var sel_prot=false;
@@ -695,9 +717,110 @@
                                         }
                                     });
                                 }
-                                modTooltip()
-                          } );
+                                // ED map
+                                if (ed_sel && pdbid && r_angl && transl){
+                                    ed_sel=decodeURIComponent(ed_sel.replace(/\+/g, " "));
+                                    var ed2fofc_vis, edfofc_vis =true;
+                                    if (ed_display){
+                                        if (ed_display=="2"){
+                                            edfofc_vis=false;
+                                        } else if (ed_display=="f"){
+                                            ed2fofc_vis=false;
+                                        }
+                                    } 
+                                    var ed2fofc_col="#87ceeb";
+                                    var edfofcPos_col="#3cb371";
+                                    var edfofcNeg_col="#ff6347";
+                                    if (ed_color){
+                                        ed_color=decodeURIComponent(ed_color.replace(/\+/g, " "));
+                                        var ed_color_l=ed_color.split(";");
+                                        if (ed_color_l[0]){
+                                            ed2fofc_col=ed_color_l[0];
+                                        }
+                                        if (ed_color_l[2]){
+                                            edfofcPos_col=ed_color_l[2];
+                                        }
+                                        if (ed_color_l[3]){
+                                            edfofcNeg_col=ed_color_l[3];
+                                        }
+                                    } 
+                                    var ed2fofc_iso=1.5;
+                                    var edfofc_iso=3;
+                                    if (ed_iso){
+                                        ed_iso_l=ed_iso.split(";");
+                                        ed2fofc_iso=Number(ed_iso_l[0]);
+                                        edfofc_iso=Number(ed_iso_l[1]);
+                                    }
+                                    r_angl=decodeURIComponent(r_angl.replace(/\+/g, " "));
+                                    var r_angl_l=r_angl.split(";");
+                                    for (eN = 0; eN < r_angl_l.length;eN++) {
+                                        r_angl_l[eN]=Number(r_angl_l[eN])
+                                    }
+                                    transl=decodeURIComponent(transl.replace(/\+/g, " "));
+                                    var transl_l=transl.split(";");
+                                    for (eN = 0; eN < transl_l.length;eN++) {
+                                        transl_l[eN]=Number(transl_l[eN])
+                                    }
+                                    ed_zoom=Number(ed_zoom);
+                                    stage.setFocus(ed_zoom);
+
+                                    var edmapUrl = "https://edmaps.rcsb.org/maps/";
+                                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_2fofc.dsn6", {visible: ed2fofc_vis}).then(function(edc){
+                                        edc.setName("2fofc");
+                                        edc.setRotation( r_angl_l);
+                                        edc.setPosition(transl_l);
+
+                                        edc.addRepresentation("surface", {
+                                          name:"2fo-fc",
+                                          contour: true,
+                                          colorValue: ed2fofc_col,
+                                          isolevel: ed2fofc_iso,
+                                          flatShaded: false,
+                                          opacity: 1,
+                                          metalness: 0,
+                                          wireframe: false
+
+
+                                        })
+                                    })
+                                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: edfofc_vis}).then(function(edc){
+                                        edc.setName("fofc");
+                                        //edc.setRotation( r_angl)
+                                        //edc.setPosition(transl)
+
+                                        edc.setRotation( r_angl_l);
+                                        edc.setPosition(transl_l);
+                                        edc.addRepresentation("surface", {
+                                          name:"fo-fc Positive",
+                                          colorValue: edfofcPos_col,
+                                          isolevel: edfofc_iso,
+                                          contour: true,
+                                          flatShaded: false,
+                                          opacity: 1,
+                                          metalness: 0,
+                                          wireframe: false
+                                        })
+                                        edc.addRepresentation("surface", {
+                                          name:"fo-fc Negative",
+                                          colorValue: edfofcNeg_col,
+                                          isolevel: edfofc_iso,
+                                          negateIsolevel: true,
+                                          contour: true,
+                                          flatShaded: false,
+                                          opacity: 1,
+                                          metalness: 0,
+                                          wireframe: false
+
+                                        })
+                                    })
+                                    applySele(ed_sel)
+                                }
+                           } );
                     }
+
+
+
+
 
 
         });

@@ -583,7 +583,21 @@ $(document).ready(function(){
         input_dd_color_setBackground($(this));
     })
 //-------- Text Input --------
-    
+    function retrieveRowCol(colSect){
+        var dBtn = colSect.find(".dropbtn");
+        if (dBtn.hasClass("morecolors")){
+            lcolor=colSect.find(".input_dd_color").val();
+            if (lcolor == ""){
+                lcolor = "#FFFFFF";
+            } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
+                lcolor = "#FFFFFF";
+                //$(this).find(".span_morecolors").addClass("has-error");
+            }
+        } else {
+            var lcolor = dBtn.data("color");
+        }
+        return (lcolor);
+    }
     
     function obtainTextInput(){
         var layer=[];
@@ -596,18 +610,7 @@ $(document).ready(function(){
             if (sel_enc.length > 0){
                 var ltype = $(this).find(".high_type").val();
                 var lscheme = $(this).find(".high_scheme").val();
-                var dBtn = $(this).find(".dropbtn");
-                if (dBtn.hasClass("morecolors")){
-                    lcolor=$(this).find(".input_dd_color").val();
-                    if (lcolor == ""){
-                        lcolor = "#FFFFFF";
-                    } else if (! /^#(?:[0-9a-fA-F]{3}){2}$/.test(lcolor)) {
-                        lcolor = "#FFFFFF";
-                        //$(this).find(".span_morecolors").addClass("has-error");
-                    }
-                } else {
-                    var lcolor = dBtn.data("color");
-                }
+                var lcolor=retrieveRowCol($(this));
                 layer[layer.length]=[sel_enc, ltype, lcolor,lscheme];
                 layer_row[layer_row.length]=[sel_enc, ltype, lcolor,lscheme,rownum];
             }
@@ -4008,27 +4011,27 @@ $(document).ready(function(){
     }
     
     $("#to_mdsrv").click(function(){
-         var results = obtainURLinfo(gpcr_pdb_dict);
-         var cp = results["cp"];
-         var high_pre=results["high_pre"];
-         var layers_lil = results["layers_li"];
-         var traj =results["traj"];
-         var nonGPCR =results["nonGPCR"];
-         var nonGPCR = nonGPCR.join("-");
-         var int_res_lil =results["int_res_li"];
-         var int_res_lil_ch =results["int_res_li_ch"];
-         var dist_groups_li=results["dist_groups_li"];
-         var receptorsel = results["receptorsel"]; 
-         var bs_info = results["bs_info"];
-         var hbonds= results["hbondarray"];
-         var atomssb=results["sbondarray"];
-         var atomshb_inter=results[ "hb_inter"];
-         var all_resids=results["allresidshb"];
-         var all_resids_sb=results["allresidssb"];
-         var all_resids_inter=results[ "allresidshbInt"];
-         var showH=results["showH"];
-         var showHShort="f";
-         if (showH){showHShort="t"};
+        var results = obtainURLinfo(gpcr_pdb_dict);
+        var cp = results["cp"];
+        var high_pre=results["high_pre"];
+        var layers_lil = results["layers_li"];
+        var traj =results["traj"];
+        var nonGPCR =results["nonGPCR"];
+        var nonGPCR = nonGPCR.join("-");
+        var int_res_lil =results["int_res_li"];
+        var int_res_lil_ch =results["int_res_li_ch"];
+        var dist_groups_li=results["dist_groups_li"];
+        var receptorsel = results["receptorsel"]; 
+        var bs_info = results["bs_info"];
+        var hbonds= results["hbondarray"];
+        var atomssb=results["sbondarray"];
+        var atomshb_inter=results[ "hb_inter"];
+        var all_resids=results["allresidshb"];
+        var all_resids_sb=results["allresidssb"];
+        var all_resids_inter=results[ "allresidshbInt"];
+        var showH=results["showH"];
+        var showHShort="f";
+        if (showH){showHShort="t"};
 /*
          var show_dots= $(".onclickshow.is_active").data("short");
          if (show_dots=="vars"){
@@ -4039,14 +4042,79 @@ $(document).ready(function(){
             var sel=".CA and ("+pos_li.join(" or ")+")";
          }*/
 
-         int_res_s=join_lil(int_res_lil);
-         int_res_s_ch=join_lil(int_res_lil_ch);
-         var pd = "n";
-         for (key in high_pre){
-             if (high_pre[key].length > 0){
-                 pd = "y";
-                 break;
-             }
+        //ED maps
+        var results_ED=obtainURLinfo_ED();
+        var loadEd=results_ED["loadEd"];
+        if (loadEd){
+            var ed_sel=results_ED["ed_sel"];
+        } else {
+            var ed_sel="";
+        }
+        var ed_Disp=$(".EDdisplay:checked");
+        var ed_DispVs="";
+        if (ed_Disp.length ==0){
+            var ed_sel="";
+        } else if (ed_Disp.length ==1){
+            var ed_DispV=ed_Disp.val();
+            ed_DispVs=ed_DispV[0];//To make it short, will be "2" or "f". If empty, show all
+        }
+        var edcol_li =edSt_li =ediso=edz=pdbid="";
+        if (ed_sel){
+            var pdbid=$("#pdbid").text();
+            pdbid=pdbid.split(".")[0];
+
+            var col2fofc=retrieveRowCol($("#ED2fofcColor"));
+            if (col2fofc=="#87ceeb"){
+                col2fofc="";
+            }
+            var colfofcP=retrieveRowCol($("#EDfofcColorPos"));
+            if (colfofcP=="#3cb371"){
+                colfofcP="";
+            }
+            var colfofcN=retrieveRowCol($("#EDfofcColorNeg"));
+            if (colfofcN=="#ff6347"){
+                colfofcN="";
+            }
+            edcol_li=[col2fofc,colfofcP,colfofcN].join(";");
+            if (edcol_li.length==2){
+                edcol_li="";
+            }
+            var edSt2fofc=$("#EDmapStype2fofc").val();
+            if (edSt2fofc=="contour"){
+                edSt2fofc=""
+            } else{
+                edSt2fofc=edSt2fofc[0]
+            }
+            var edStfofc=$("#EDmapStypefofc").val()
+            if (edStfofc=="contour"){
+                edStfofc=""
+            } else{
+                edStfofc=edStfofc[0]
+            }
+            edSt_li=[edSt2fofc,edStfofc].join(";");
+            if (edSt_li.length==1){
+                edSt_li="";
+            }
+            var ediso2fofc=$("#slider_val_2fofc").html()
+            var edisofofc=$("#slider_val_fofc").html()
+            var ediso=[ediso2fofc,edisofofc].join(";");
+            var edz=$("#EDmapzoom_val").html();
+
+            var edselSel=$("#edSel");
+            var r_angl=edselSel.data("r_angl").join(";");
+            var transl=edselSel.data("transl").join(";");
+
+            
+        }
+
+        int_res_s=join_lil(int_res_lil);
+        int_res_s_ch=join_lil(int_res_lil_ch);
+        var pd = "n";
+        for (key in high_pre){
+            if (high_pre[key].length > 0){
+                pd = "y";
+                break;
+            }
         }
         var layers_li=[];
         var add_fpsegStr=false;
@@ -4090,7 +4158,8 @@ $(document).ready(function(){
         var trajTimeOutSend=getCorrectSettingVal($("#trajTimeOut").val(),"50");
         
         /////////
-        var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;
+        var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;    
+
         var add_url_var ={"traj":encode(traj) ,
                             "fp":encode(fpsegStr_send),
                             "ly":encode(layers_li) , 
@@ -4117,7 +4186,16 @@ $(document).ready(function(){
                             "sp":spin,
                             "ti":intType,
                             "ts":trajStepSend,
-                            "tt":trajTimeOutSend
+                            "tt":trajTimeOutSend,
+                            "eds":encode(ed_sel),
+                            "edd":ed_DispVs,
+                            "edc":encode(edcol_li),
+                            "edi":ediso,
+                            "edz":edz,
+                            "pdb":pdbid,
+                            "edr":encode(r_angl),
+                            "edt":encode(transl)
+
                             }        
   
         for (varn in add_url_var){

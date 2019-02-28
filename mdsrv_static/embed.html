@@ -1298,17 +1298,13 @@
                 p={boxSize:parseInt(v)}
             }
             if (mapsel=="2fofc"){
-                console.log("2fofc",p)
                 stage.getRepresentationsByName("2fofc").setParameters(p);
             }else if (mapsel=="fofc"){
-                console.log("fofc",p)
                 stage.getRepresentationsByName("fofcpos").setParameters(p);
                 stage.getRepresentationsByName("fofcneg").setParameters(p);
             }else if (mapsel=="fofcpos"){
-                console.log("fofcpos",p)
                 stage.getRepresentationsByName("fofcpos").setParameters(p);
             }else if (mapsel=="fofcneg"){
-                console.log("fofcneg",p)
                 stage.getRepresentationsByName("fofcneg").setParameters(p);
             }
             //stage.getRepresentationsByName("surface").setParameters(p)
