@@ -66,7 +66,6 @@ class DyndbComplexCompound(models.Model):
         managed = True
         db_table = 'dyndb_complex_compound'
         unique_together = (('id_complex_exp', 'id_compound'))
- 
 
 class DyndbComplexExp(models.Model):
     update_timestamp = models.DateTimeField()
@@ -76,6 +75,8 @@ class DyndbComplexExp(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
+    proteins = models.ManyToManyField('DyndbProtein',through='DyndbComplexProtein')
+    compounds = models.ManyToManyField('DyndbCompound',through='DyndbComplexCompound')
     class Meta:
         managed = True
         db_table = 'dyndb_complex_exp'
@@ -97,6 +98,7 @@ class DyndbComplexMolecule(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
+    molecules = models.ManyToManyField('DyndbMolecule',through='DyndbComplexMoleculeMolecule')
     class Meta:
         managed = True
         db_table = 'dyndb_complex_molecule'
@@ -126,7 +128,6 @@ class DyndbComplexProtein(models.Model):
         managed = True
         db_table = 'dyndb_complex_protein'
         unique_together = (('id_protein', 'id_complex_exp'),)
-
 
 class DyndbCompound(models.Model):
     name = models.TextField(unique=True)
