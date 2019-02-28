@@ -1215,6 +1215,12 @@
         }
 
 /////////Functions for ED map
+
+        window.checkNGLSel = function(sel_str) {
+          var selection = new NGL.Selection(sel_str)
+          return !selection.selection[ "error" ]
+        }
+
         function updateEDmapSel(){
             parent.passInfoToIframe_ED();
             var results_ED = parent.results_ED;

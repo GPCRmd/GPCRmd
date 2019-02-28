@@ -5,7 +5,7 @@ $(document).ready(function(){
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
     // $("#rad_sel").attr("checked",true).checkboxradio("refresh");// CHECK IF WORKS, AND IF BOTH SEL AND HIGH ARE CHECKED OR ONLY SEL
     
-    //$('[data-toggle="popover"]').popover(); 
+    $('[data-toggle="popover"]').popover(); 
 
     
     function drawBasic(rows,xlabel,ylabel) {
@@ -67,13 +67,6 @@ $(document).ready(function(){
     function(){
         $(this).css("color","#585858");
     });
-    
- /*   $("#addToSel").hover(function(){
-        .css("color","#449C44");
-    },
-    function(){
-        $(this).children().css("color","#5CB85C");
-    });*/
     
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
@@ -1084,7 +1077,7 @@ $(document).ready(function(){
         return sel;
     }
 
-    function switchOffOtherEDsel(thisEDel){
+/*    function switchOffOtherEDsel(thisEDel){
         if (thisEDel=="input"){
             $(".ed_map_el").removeClass("active");//buttons
         } else if (thisEDel=="buttons"){
@@ -1092,20 +1085,9 @@ $(document).ready(function(){
             $(".ed_alert_inst").html("");
         }
 
-    }
+    }*/
 
-    $("#ed_sel_input").change(function(){
-        //var rownum=$(this).attr("id");
-        var pre_sel = $(this).val();
-        var rownum=$(this).parents(".ed_input_row").attr("id");
-        sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ed_ti_alert");
-        if (sel_enc.length>0){
-            switchOffOtherEDsel("input");
-            createEDReps(true);
-            $("#EDselectionDiv").trigger("click");
-            $("#selectionDiv").trigger("click");
-        }
-    })
+
 //-------- Text input modified signal --------
 
     $("#text_input_all").on("change" , ".sel_input", function(){
@@ -2520,59 +2502,96 @@ $(document).ready(function(){
 //-------- Select protein segment to highligh/select from the sequence --------
 
     var firstsel=true;
-    function selectFromSeq(){
+    function selectFromSeq(seqcellClass,sectionSel,prefix,hideApplyBtn,isEDmap){//
+        //seqcellClass: name of class of the cells cotnianing the sequence positions (without the ".")
+        //sectionSel: selector of the section of the Sequence selection. Ex: '#seqselection_all'
+        //hideApplyBtn is true if apply button is hidden when no selection is made. If this is set for more than one sequence selection instance, var firstsel have to be made independent for each of them.
+        var seqcellSel="."+seqcellClass;
         var click_n=1;
         var seq_pos_1;
         var seq_pos_fin;
         var pos_li=[];
-        $(".seq_sel").click(function(){    
+        $(seqcellSel).click(function(){    
             if (click_n==1){
                 var range=$(this).attr("class"); 
                 if(range.indexOf("-") == -1){     //Start a new selection
                     $(this).css("background-color","#337ab7"); 
-                    seq_pos_1 = $(this).attr("id");
+                    var cell1_ind = $(this).attr("id");
+                    seq_pos_1=cell1_ind.replace(prefix,"");
                     click_n=2;
                 } else {      // Remove an old selection
                     var selRange= range.match(/(\d)+/g);
                     i=Number(selRange[0]);
                     end=Number(selRange[1]);
                     while (i <= end) {
-                        var mid_id="#" + String(i);
+                        var mid_id="#" +prefix+ String(i);
                         $(mid_id).css("background-color","#f2f2f2");
-                        $(mid_id).attr("class", "seq_sel");
+                        $(mid_id).attr("class", seqcellClass);
                         i++;
                     }
-                    if ($(".seq_sel.sel").length== 0){
-                        $("#addToSel").css("display","none");
-                        firstsel=true;
+                    if (hideApplyBtn){
+                        if ($( seqcellSel+".sel").length== 0){
+                            $(sectionSel).find(".hideIfNone").css("display","none");
+                            firstsel=true;
+                        }
+                    }
+                    if (isEDmap){
+                        if ($("#ED_addToSel").hasClass("active")){
+                            applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
+                            createEDReps(true);
+                            $("#EDselectionDiv").trigger("click");
+                            $("#selectionDiv").trigger("click");
+                        }
                     }
                 }
             } else  {
                 // Finish a selection
                 click_n=1;
-                seq_pos_fin = Number($(this).attr("id"));
+                var cellfin_ind=$(this).attr("id");
+                seq_pos_fin = Number(cellfin_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_fin){
-                    var mid_id="#" + String(i);
+                    var mid_id="#" +prefix+ String(i);
                     $(mid_id).css("background-color","#34b734");
                     $(mid_id).children().css("background-color","");
-                    $(mid_id).attr("class", "seq_sel sel " + seq_pos_1+"-"+seq_pos_fin); 
+                    $(mid_id).attr("class", seqcellClass+" sel " + seq_pos_1+"-"+seq_pos_fin); 
                     i++;
                 }
-                if (firstsel){
-                    $("#addToSel").css("display","inline");
-                    firstsel=false;
+                if (hideApplyBtn){
+                    var applyselbtn=$(sectionSel).find(".hideIfNone");
+                    if (firstsel){
+                        applyselbtn.css("display","inline");
+                        firstsel=false;
+                    }
+                    applyselbtn.popover('show');
+                    setTimeout(function() {
+                        applyselbtn.popover('hide');
+                    }, 1000);
+                }
+                if (isEDmap){
+                    if ($("#ED_addToSel").hasClass("active")){
+                        applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
+                        createEDReps(true);
+                        $("#EDselectionDiv").trigger("click");
+                        $("#selectionDiv").trigger("click");
+                    } else {
+                        $("#ED_addToSel").popover('show');
+                        setTimeout(function() {
+                            $("#ED_addToSel").popover('hide');
+                        }, 1000);
+                    }
                 }
 
             }
         });
    
-        $(".seq_sel").hover(function(){
+        $(seqcellSel).hover(function(){
             if (click_n==2) {
-                var seq_pos_2 = Number($(this).attr("id"));
+                var cell2_ind=$(this).attr("id");
+                var seq_pos_2 =Number(cell2_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i);
+                    var mid_id="#"+prefix + String(i);
                     $(mid_id).children().css("background-color","#337ab7");
                     i++;
                 }
@@ -2583,10 +2602,11 @@ $(document).ready(function(){
             }
         }, function(){
             if (click_n==2) {
-                var seq_pos_2 = Number($(this).attr("id"));
+                var cell2_ind=$(this).attr("id");
+                var seq_pos_2 =Number(cell2_ind.replace(prefix,""));
                 var i = Number(seq_pos_1);
                 while (i <= seq_pos_2){
-                    var mid_id="#" + String(i);
+                    var mid_id="#"+prefix + String(i);
                     $(mid_id).children().css("background-color","");
                     i++;
                 }
@@ -2597,7 +2617,8 @@ $(document).ready(function(){
             }
         });
     }
-    selectFromSeq();
+    selectFromSeq("seq_sel","#seq_sel_div","",true,false);
+    selectFromSeq("ed_seq_sel","#ed_seq_sel_div","ed_",false,true);
 
     function fromIdsToPositions(id_l, id_r){
         var pos_l=$(id_l).children("#ss_pos").text();
@@ -2670,9 +2691,9 @@ $(document).ready(function(){
     }
 
 
-    function obtainSelectedAtSeq(){
+    function obtainSelectedAtSeq(sectionSel){
         var sel_ranges=[];
-        $(".seq_sel.sel").each(function(){
+        $(sectionSel+".sel").each(function(){
             var class_str=$(this).attr("class");
             var id_range= class_str.match(/(\d)+/g);
 //            var sel_range=clickSelRange($(this).attr("class"));
@@ -2681,27 +2702,31 @@ $(document).ready(function(){
         return(sel_ranges);
     }
 
+    function obtainSelectionFromRanges(sel_ranges_ok){
+        var pos_str="";
+        p=0;
+        while (p < (sel_ranges_ok.length -1)) {
+            pos_str += sel_ranges_ok[p] + " or ";
+            p ++;
+        }
+        pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
+        var fin_val = "protein and ("+ pos_str +")";
+        return (fin_val);
+    };
 
     $("#addToSel").click(function(){ 
         $("#seq_input_all").css("display","inline");
         $("#seq_input_all").find(".si_add_btn:last").css("visibility","visible");
-        sel_ranges=obtainSelectedAtSeq();
+        sel_ranges=obtainSelectedAtSeq(".seq_sel");
         if (sel_ranges.length > 0){
             sel_ranges_ok=joinContiguousRanges(sel_ranges);
-            var pos_str="";
-            p=0;
-            while (p < (sel_ranges_ok.length -1)) {
-                pos_str += sel_ranges_ok[p] + " or ";
-                p ++;
-            }
-            pos_str += sel_ranges_ok[sel_ranges_ok.length-1];
+            var fin_val=obtainSelectionFromRanges(sel_ranges_ok);
+
             var sel_input_cont=$(".seq_input_row:last-child").find(".seq_input");
             var act_val=sel_input_cont.val();
             if (act_val){
-                var fin_val = "("+act_val + ") or protein and ("+ pos_str +")";
-            } else {
-                var fin_val = "protein and ("+ pos_str +")";
-            }
+                var fin_val = "("+act_val + ") or "+fin_val;
+            } 
             sel_input_cont.val(fin_val);
             seq_ids.length = 0
             $('.sel').each(function(){
@@ -3631,7 +3656,9 @@ $(document).ready(function(){
     $("#ed_ctrl").on("click",".EdrepsSet:not(.active)",function(){
         $(this).addClass("active");
         $(this).siblings(".EdrepsSet").removeClass("active");
-        if (($(".ed_map_el.active").length>0) || ($("#ed_sel_input").val().length>0)){
+        var some_input_ok=false;
+
+        if ($(".ed_map_el.active").length>0){
             createEDReps(true);
             $("#selectionDiv").trigger("click");
         }
@@ -3653,19 +3680,79 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
     
+
+    function applyEDinput(inputEl){
+        var pre_sel = inputEl.val();
+        var rownum=inputEl.parents(".ed_input_row").attr("id");
+        var sel =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ed_ti_alert");
+        if (sel.length>0){
+            var is_ok_ngl=$('#embed_mdsrv')[0].contentWindow.checkNGLSel(sel);
+            if (! is_ok_ngl){      
+                sel="";
+                addErrorToInput("#"+rownum,"main",".ed_ti_alert_ngl","html","Invalid selection");
+            }
+
+        } else {
+            sel="";
+        }
+        inputEl.data("sel",sel)
+    }
+
+    function applyEDSeqsel(seqcellSel,applyToSel){
+        var sel_ranges=obtainSelectedAtSeq(seqcellSel);
+        var fin_val="";
+        if (sel_ranges.length > 0){
+            sel_ranges_ok=joinContiguousRanges(sel_ranges);
+            fin_val=obtainSelectionFromRanges(sel_ranges_ok);
+        }
+        $(applyToSel).data("sel",fin_val);
+    }
+
     $(".ed_map_el").click(function(){
         if ($(this).hasClass("active")){
             $(this).removeClass("active");
             createEDReps(false);
+            $("#EDselectionDiv").trigger("click");
+            $("#selectionDiv").trigger("click");
         }else{
+            if ($(this).hasClass("act_input")){
+                var btn_id=$(this).attr("id");
+                var input_id=btn_id.replace("_btn","");
+                var inputEl=$("#"+input_id);
+                applyEDinput(inputEl);
+            } 
+            if ($(this).hasClass("act_seq_input")){
+                var btn_id=$(this).attr("id");
+                applyEDSeqsel(".ed_seq_sel","#"+btn_id);
+            }
             $(this).addClass("active");
-            $(this).siblings().removeClass("active");
-            switchOffOtherEDsel("buttons");
+            $(".ed_map_el").not(this).removeClass("active");
             createEDReps(true);
         }
         $("#EDselectionDiv").trigger("click");
         $("#selectionDiv").trigger("click");
     });
+
+
+
+    $(".ed_input").change(function(){ 
+        var input_id=$(this).attr("id");
+        var input_btn=$("#"+input_id+"_btn");
+        if (input_btn.hasClass("active")){
+            applyEDinput($(this));
+            createEDReps(true);
+            $("#EDselectionDiv").trigger("click");
+            $("#selectionDiv").trigger("click");
+
+        } else {
+            input_btn.popover('show');
+            setTimeout(function() {
+                input_btn.popover('hide');
+            }, 1000);
+        }
+    })
+
+
 
 
     function removeCompBtns(){
@@ -3739,17 +3826,36 @@ $(document).ready(function(){
     
     function obtainURLinfo_ED(){
         var loadEd=false;
-        var receptorsel_ed=gpcr_selection_active(true);
         var ed_finsel="";
         var ligsel_ed=$(".ed_ligand.active").data("shortn");
         if (ligsel_ed){
             loadEd=true;
             ed_finsel=ligsel_ed;
-        } else if (receptorsel_ed){
+        } 
+        var receptorsel_ed=gpcr_selection_active(true);
+        if (receptorsel_ed){
             loadEd=true;
             ed_finsel=receptorsel_ed;
+        } 
+
+        if ($(".act_input.active").length>0){
+            var input_btn_id=$(".act_input.active").attr("id");
+            var input_id=input_btn_id.replace("_btn","");
+            ed_finsel=$("#"+input_id).data("sel");
+            loadEd=true;
         }
-        //var edAll={"ed_finsel":ed_finsel};
+        if ($(".act_seq_input.active").length>0){ 
+            var ed_finsel=$(".act_seq_input").data("sel");
+            loadEd=true;
+        }
+
+        if (loadEd){
+            $(".EDdisplay").prop('disabled', false);
+            $("#ed_no_sel_warning").css("display","none");
+        } else {
+            $(".EDdisplay").prop('disabled', true);
+            $("#ed_no_sel_warning").css("display","block");
+        }
         return ({"loadEd":loadEd,
                  "ed_sel":ed_finsel})
     }
@@ -4071,11 +4177,14 @@ $(document).ready(function(){
         //Clear ED Reos:
         removeEDCompBtns();
         $("#text_input_all").find(".ed_input_rep").each(function(){
-            $("#receptor,.Ligand").addClass("active");
             rmTextInputRow($(this));
         });
         $(".ed_input").val("").css("border-color","");
         $(".ed_alert_inst").html("");
+        $(".ed_seq_sel.sel").each(function(){
+            $(this).css("background-color","#f2f2f2");
+            $(this).attr("class", "ed_seq_sel");
+        });
         $("#EDselectionDiv").trigger("click");
     }); 
     
