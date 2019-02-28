@@ -595,7 +595,6 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 
                 if (plot_bclass != "col-xs-9"){
                     $("#retracting_parts").attr("class","col-xs-9");
-                    $("#first_col").attr("class","col-xs-7");
                     $("#second_col").attr("class","col-xs-5");
                     $("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
                 }
@@ -798,7 +797,7 @@ def get_contacts_plots(itype, ligandonly):
     if not os.path.exists(dendfolder):
         os.makedirs(dendfolder)
     dend_height = int( int(df.shape[1]) * 16 + 20)
-    dend_width = 550
+    dend_width = 500
     for cluster in range(2,21):
         print("\tcomputing dendrogram: " + str(cluster) + " clusters" )
         dendfile = ("%s/%s_%s_%s_dendrogram_figure.html" % (dendfolder, itype, str(cluster), ligandonly))
