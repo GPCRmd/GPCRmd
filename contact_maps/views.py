@@ -17,7 +17,7 @@ def json_dict(path):
 	json_data = loads(json_str)
 	return json_data
 
-def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "norev"):
+def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 3, rev = "norev"):
 	"""
 	Main view of contact plots
 	"""
@@ -97,6 +97,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 			'itype_name' : typelist[itype],
 			'hb_itypes' : hb_itypes,
 			'itypes_order' : itypes_order,
+			'clusrange': list(range(2,21)),
 			'selected_itypes' : selected_itypes,
 		}
 		return render(request, 'contact_maps/index_nodata.html', context)
@@ -107,7 +108,8 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 	plotdiv_w = variablesmod.plotdiv_w
 
 	# Loading dendrogram
-	dendr_figure = open(basedir + itype + "_" + ligandonly + "_dendrogram_figure.html", 'r').read()
+	dendfile = ("%s%s_%s_dendrograms/%s_%s_%s_dendrogram_figure.html" % (basedir, itype, ligandonly, itype, str(cluster), ligandonly))
+	dendr_figure = open(dendfile, 'r').read()
 
 	# Send request 
 	context={
@@ -121,6 +123,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", rev = "nor
 		'hb_itypes' : hb_itypes,
 		'script' : script , 
 		'div' : div,
+		'clusrange': list(range(2,21)),
 		'plotdiv_w':plotdiv_w,
 		'mdsrv_url':mdsrv_url
 	}
@@ -137,7 +140,7 @@ def get_csv_file(request,itype, ligandonly, rev):
 	#Creating and downloading CSV file from df
 	csvfile = FileWrapper(open(csv_name, "r"))
 	response = HttpResponse(csvfile, content_type='text/plain')
-	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactPlots")
+	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactMaps")
 	return response
 
 def get_itype_help(request, foo):

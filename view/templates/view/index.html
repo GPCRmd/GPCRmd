@@ -8,6 +8,11 @@
 {% load staticfiles %} 
 {% block addon_css %}
 <style>
+.popover{
+  font-size:12px;
+  width:120px;
+}
+
 .slider {
   -webkit-appearance: none;
   width: 100%;
@@ -598,7 +603,7 @@
 
                     <div id="seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
                       <!--<button  class="btn btn-link" id="addToSel" type="button" style="padding:0 0 0 10px;display:none"><span id="addToSelHov" class="glyphicon glyphicon-ok" style="color:#5CB85C"> Confirm selection</button>-->
-                      <button style="display:none" type="button" id="addToSel" class="btn btn-success btn-xs"><span style="font-size: 10px;" class="glyphicon glyphicon-ok" ></span> Confirm selection</button>
+                      <button style="display:none" type="button" id="addToSel" class="btn btn-success btn-xs hideIfNone" data-toggle="popover" data-placement="right" data-content="Click to apply." data-trigger="manual"><span style="font-size: 10px;" class="glyphicon glyphicon-ok" ></span> Confirm selection</button>
                     
                       <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
                         {% for prot_name, seq_pos in prot_seq_pos %}
@@ -858,7 +863,7 @@
               </div><!-- end ed_quicksel_all-->
 
             <!-- ============= ED atom sel =========== -->
-             <!--<div id="ed_atomsel_all" style="margin-bottom:5px">
+             <div id="ed_atomsel_all" style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;">
                     <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_atomsel"><span>Atom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
                   <div id="ed_atomsel" class="collapse" style="padding-right:15px;">
@@ -867,9 +872,10 @@
 
                           <div  class="ed_input_row" id="ed_ti_row0" style="margin-bottom:5px;padding-left: 15px">
                              <div  class="">
-                                <div class="ed_ti_left" style="padding-right:3px;padding-left:3px"> 
-                                  <input type="text" value="" class="form-control  ed_input" id="ed_sel_input" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+                                <div class="ed_ti_left " style="padding-right:3px;padding-left:3px;width:90%;float:left"> 
+                                  <input value="" class="form-control  ed_input" id="ed_sel_input" placeholder="Specify your selection." style="width:100%;background-color:#F8F8F8" type="text">
                                 </div>
+                                <button class="btn btn-default ed_map_el changefocus act_input " id="ed_sel_input_btn" style="width:10%;display:inline"  data-toggle="popover" data-placement="right" data-content="Click to apply." data-trigger="manual" >Apply</button>
                             </div>
                             <div class="ed_ti_alert">
                               <div class="ed_ti_alert_gnum ed_alert_inst col-md-12" style="margin-top:5px"></div>
@@ -878,16 +884,64 @@
                           </div>
 
                     </div>
-                  </div>
+                  </div><!-- end ed_atomsel -->
                 </div>
-              </div>--> 
-              <!-- end ed_atomsel_all-->
+              </div><!-- end ed_atomsel_all-->
+
+      <!-- ============= ED Sequence selection =========== -->
+              {% if prot_seq_pos %}
+              <div id="ed_seqselection_all" style="margin-bottom:5px;margin-top:5px">
+                  <div class="row">
+                      <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_seqselection"><span>Sequence selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
+                  </div>
+                  <div id="ed_seqselection" class="collapse" style="padding-right:15px;">
+                    <div style="margin-top:10px;margin-bottom:10px">
+
+
+
+
+                    <div id="ed_seq_sel_div" style="padding:5px;border:1px solid #F3F3F3;margin-bottom:10px; padding:10px; border-radius:10px;">
+                      <button  type="button" id="ED_addToSel" class="btn btn-default changefocus ed_map_el act_seq_input" style="margin-left:10px" data-toggle="popover" data-placement="right" data-content="Click to apply." data-trigger="manual"> Apply</button>
+                    
+                      <div class="row" style="margin:10px;width:auto;height:250px;overflow:auto;">
+                        {% for prot_name, seq_pos in prot_seq_pos %}
+                          <div style="clear: left;padding-bottom:20px">
+                            {% if prot_seq_pos|length > 1 %}
+                               <div>{{prot_name}}</div>
+                            {% endif %}
+                            {% for seq,pos,gnum,chain,index in seq_pos %}
+                            <div id="ed_{{index}}" title="{{gnum}}" class="ed_seq_sel" style="cursor:pointer;float: left;text-align:center;font-size:10px;margin-bottom:5px;background-color:#f2f2f2">
+                              <div id="ed_ss_seq" style="clear: left;border:1px solid #E8E8E8; ;width:25px;height:15px">{{seq}}</div>
+                              <div id="ed_ss_pos" class="{{chain}}" style="clear: left;border:1px solid #E8E8E8 ;width:25px;height:15px">{{pos}}</div>
+                            </div>            
+                            {% endfor %}
+                          </div>
+                        {% endfor %}
+                      </div> 
+                    </div>
+
+
+
+
+
+
+                    </div>
+                  </div><!-- end ed_seqselection -->
+                
+              </div><!-- end ed_seqselection_all-->
+            {% endif %}
             <!-- ============= ED controls=========== -->
               <div id="ed_ctrl_all" style="margin-bottom:5px">
                 <div class="row" style="margin-top:5px;">
                     <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#ed_ctrl"><span>Selection Settings </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
 
                   <div id="ed_ctrl" class="collapse" style="padding-right:15px;">
+
+                    
+                    <div id="ed_no_sel_warning" class="alert alert-warning fade in alert-dismissible" style="margin:15px 0 auto;font-weight:bold;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close" title="close">×</a>
+                        Make a selection to display the map.
+                    </div>
 
                     <div style="margin:10px" class="row">
                          Apply default representations
@@ -910,12 +964,12 @@
                             <td style="text-align:right;font-weight:bold">Display map</td>
                             <td style="text-align:center">
                               <label class="checkbox" style="margin:0">
-                                <input checked type="checkbox" class="EDdisplay" value="2fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                <input checked type="checkbox" disabled class="EDdisplay" value="2fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
                               </label>
                             </td>
                             <td style="text-align:center">
                               <label class="checkbox"  style="margin:0">
-                                <input checked type="checkbox" class="EDdisplay" value="fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
+                                <input checked type="checkbox" disabled class="EDdisplay" value="fofc" style="margin-left:-5px;margin-top:0,margin-bottom:0">
                               </label>
                             </td>
                           </tr>

@@ -197,7 +197,7 @@ class Command(BaseCommand):
 
                 #to open:
 #                    with open('/protwis/sites/files/Precomputed/ED_map/dyn_4_transfmatrix.data', 'rb') as filehandle:  
-#                        (r_angl,trans) = pickle.load(filehandle)
+#                        (r_anglpre,transpre) = pickle.load(filehandle)
 
                 #remove tmp files
                 for filenm in os.listdir(tmp_path):
