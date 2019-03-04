@@ -1021,6 +1021,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
+        #traj_list=sorted(traj_list,key=lambda x: x[2])
         (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         presel_pos=""
         bind_domain=""

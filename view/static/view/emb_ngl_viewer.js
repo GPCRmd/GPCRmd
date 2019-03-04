@@ -292,7 +292,7 @@ $(document).ready(function(){
             })
             if (selColorCont){
                 var clicked_color= selColorCont.data("color");
-                var dBtn=selrow.find(".dropbtn:last");
+                var dBtn=selrow.find(".dropbtn");
                 var old_color=dBtn.data("color");
 
                 if (dBtn.hasClass("morecolors")){
@@ -316,15 +316,16 @@ $(document).ready(function(){
             } else {
                 var selrow=$("#text_input_all").find(".text_input:last");
             }
+
             var dDwn=selrow.find(".displaydrop");
             var selColorCont=dDwn.find(".dropcolor.morecolors");
             var dBtn=dDwn.find(".dropbtn");
 
             //Select "other colors"
-            var clicked_color= selColorCont.data("color");
-            var old_color=dBtn.data("color");
+            var clicked_color= selColorCont.data("color"); //This has to be wwite
+            var old_color=dBtn.data("color"); //This starts being green
             selColorCont.css({"background-color":old_color , "border":"none"}).html("").removeClass("morecolors").data("color",old_color);
-            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",colorcode);
+            dBtn.css({"background-color":clicked_color , "border":"1px solid #808080" /*, "vertical-align":"-3px"*/}).html('<span style="color:#696969;padding-bottom:2px" class="glyphicon glyphicon-plus-sign"></span>').addClass("morecolors").data("color",clicked_color);
             var diffcolor_span=dDwn.siblings(".span_morecolors");
             diffcolor_span.html('<input type="text" style="font-size:12px;height:24px;margin: 3px 0 0 3px;  width:60px;padding-left:3px;padding-right:3px;" placeholder="#FFFFFF" class="form-control input-sm input_dd_color nglCallChangeTI">');
 
@@ -684,9 +685,7 @@ $(document).ready(function(){
     removeSpacesInInput(".inp_stride");
     removeSpacesInInput(".rvSpaces");
 
-
-    var ti_i=1;
-    $("#text_input_all").on("click",".ti_add_btn",function(){ 
+    function createNewTextInput(){
         if ($("#text_input_all").children().length < 20){
             var addFPschOpt="";
             if (fpsegStr){
@@ -697,9 +696,9 @@ $(document).ready(function(){
             var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
                            <div  class="row">\
                               <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
-	                            <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
-	                            <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
-	                                 <div style="float:left;height:27px" >\
+                                <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
+                                <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
+                                     <div style="float:left;height:27px" >\
                                         <select class="high_type nglCallChangeTI" name="high_type'+ti_i+'" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">\
                                            <option value="licorice">Licorice</option>\
                                            <option value="ball+stick">Ball+stick</option>\
@@ -727,13 +726,13 @@ $(document).ready(function(){
                                         <div class="dropdown-content" style="margin-left:3px">\
                                               <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>\
                                               <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>\
-          									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
-          									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
-          									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>\
+                                              <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>\
+                                              <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>\
                                         </div>\
                                       </div>\
                                       <span class="span_morecolors displaydrop" style="float:left" ></span>\
-	                           </div>\
+                               </div>\
                               </div>\
                               <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
                                     <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
@@ -746,6 +745,11 @@ $(document).ready(function(){
             $("#text_input_all").append(row);
             ti_i+=1;
         }
+    }
+
+    var ti_i=1;
+    $("#text_input_all").on("click",".ti_add_btn",function(){ 
+        createNewTextInput();
     });
     
     function rmTextInputRow(textrowToRv){
@@ -758,7 +762,12 @@ $(document).ready(function(){
             $("#text_input_all").find(".input_dd_color").css("background-color","").val("");
             $("#text_input_all").find(".span_morecolors").removeClass("has-error");
             last_input_row=$("#text_input_all").find(".text_input");
-            last_input_row.removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_lig");
+            last_input_row.removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_sel");
+            $(".ed_ligand").each(function(){
+                var lig_nm=$(this).data("shortn");
+                var class_nm="ed_input_rep_lig_"+lig_nm;
+                last_input_row.removeClass(class_nm)
+            });
             changeLastInputColor("#00d215",last_input_row);
 
         }else{
@@ -1412,10 +1421,6 @@ $(document).ready(function(){
             }
 
         });
-        /*var updateSelOrNot= $(".updateSelOrNot:checked").val();
-        if (updateSelOrNot == "updateFalse"){
-            console.log(restrFr)
-        }*/
         return (dist_of);
     }
 
@@ -1651,8 +1656,7 @@ $(document).ready(function(){
                                             table_html+='</tr>';
                                         }                              
                                     }
-                                    //console.log(trajFile+' - Threshold: '+thr_ok+' ('+dist_scheme_name+')');
-                                    //console.log(mylist)
+
                                     table_html+="</tbody></table>";;
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
@@ -1754,7 +1758,6 @@ $(document).ready(function(){
                                 $("#int_alert").html(add_error);    
                             }
                             var t1= performance.now();
-                            //console.log("INT : "+((t1 - t0)/1000));
                         },
                         error: function(){
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
@@ -2302,12 +2305,10 @@ $(document).ready(function(){
                                         var data_t = google.visualization.arrayToDataTable(dist_array_t,false);
                                         var data_f = google.visualization.arrayToDataTable(dist_array_f,false);
                                         /*var widthval = (dist_array_t.length -1)*1.18;
-                                        console.log(widthval);
                                         if (widthval < 640){
                                             widthval = 640;
                                         }
-                                        console.log(widthval);
-                                        console.log("==========");*/
+                                        */
                                         var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
                                             "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
                                             "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
@@ -2431,7 +2432,6 @@ $(document).ready(function(){
                                 $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                             }
                             var t1=performance.now();
-                            //console.log("DIST: "+((t1 - t0)/1000));
                         },
                         error: function() {
                             $("#gotoDistPg").removeClass("disabled");
@@ -2571,9 +2571,9 @@ $(document).ready(function(){
                     if (isEDmap){
                         if ($("#ED_addToSel").hasClass("active")){
                             applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
-                            createEDReps(true);
+                            //createEDReps(true);
                             $("#EDselectionDiv").trigger("click");
-                            $("#selectionDiv").trigger("click");
+                            //$("#selectionDiv").trigger("click");
                         }
                     }
                 }
@@ -2604,9 +2604,9 @@ $(document).ready(function(){
                 if (isEDmap){
                     if ($("#ED_addToSel").hasClass("active")){
                         applyEDSeqsel(".ed_seq_sel","#ED_addToSel");
-                        createEDReps(true);
+                        //createEDReps(true);
                         $("#EDselectionDiv").trigger("click");
-                        $("#selectionDiv").trigger("click");
+                        //$("#selectionDiv").trigger("click");
                     } else {
                         $("#ED_addToSel").popover('show');
                         setTimeout(function() {
@@ -3582,7 +3582,6 @@ $(document).ready(function(){
                             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
                         }
                     var t1= performance.now();
-                    //console.log("RMSD : "+((t1 - t0)/1000));
                     },
                     error: function() {
                         $("#gotoRMSDPg").removeClass("disabled");
@@ -3627,26 +3626,26 @@ $(document).ready(function(){
         }
     });
     
-
     function add_row_EDReps(selToAdd,colorVal,inpType){
         last_input_row=$("#text_input_all").find(".text_input:last");
         if (! last_input_row.hasClass(inpType)){
             var last_input_txt=last_input_row.find(".sel_input").val()
             if (last_input_txt.length>0){
-                last_input_row.find(".ti_add_btn").trigger("click");                
+                //last_input_row.find(".ti_add_btn").trigger("click");                
+                createNewTextInput();
                 last_input_row=$("#text_input_all").find(".text_input:last");
             }
             last_input_row.addClass("ed_input_rep "+ inpType);
             last_input_row.find(".sel_input").val(selToAdd);
             changeLastInputColor(colorVal,last_input_row);
-            if (inpType!="ed_input_rep_lig"){
+            if (inpType.indexOf("ed_input_rep_lig")<0){
                 last_input_row.find(".high_type").val("line")
             }
         }
 
     }
 
-    function createEDReps(add_reps){
+    function createEDReps(add_reps,highlight_sel){
         if ($("#EdrepsOn").hasClass("active")){
             if (add_reps){
                 //Hide quick reps
@@ -3655,7 +3654,9 @@ $(document).ready(function(){
                 //Add GPCR
                 prot_sel=gpcr_selection();
                 if ($("#text_input_all").find(".ed_input_rep_GPCR").length ==0){
-                    add_row_EDReps(prot_sel,"#b8b8b8","ed_input_rep_GPCR");                
+                    if (prot_sel != highlight_sel){
+                        add_row_EDReps(prot_sel,"#b8b8b8","ed_input_rep_GPCR");                
+                    }
                 }
 
                 //Add other prot
@@ -3665,10 +3666,33 @@ $(document).ready(function(){
                         add_row_EDReps(otherprot,"#dfdbdb","ed_input_rep_otherprot");
                     }
                 }
+
+                //Add ligand
+                var lig_li=[]
+                $(".ed_ligand").each(function(){
+                    var lig_nm=$(this).data("shortn");
+                    lig_li[lig_li.length]=lig_nm
+                    var class_nm="ed_input_rep_lig_"+lig_nm;
+                    if ($("#text_input_all").find("."+class_nm).length ==0){
+                        add_row_EDReps(lig_nm,"#797979",class_nm);
+                    }
+                })
+                /*var lig_nm=$(".ed_ligand").data("shortn");
                 if ($("#text_input_all").find(".ed_input_rep_lig").length ==0){
-                    var lig_nm=$(".ed_ligand").data("shortn");
                     add_row_EDReps(lig_nm,"#797979","ed_input_rep_lig");
+                }*/
+
+                //Highlight selection
+                var prev_high=$("#text_input_all").find(".ed_input_rep_sel");
+                if (prev_high.length > 0){
+                    rmTextInputRow(prev_high);
                 }
+                if (highlight_sel){
+                    if (lig_li.indexOf(highlight_sel)<0){
+                        add_row_EDReps(highlight_sel,"#efa816","ed_input_rep_sel");
+                    }
+                }
+
             } else {
                 $("#text_input_all").find(".ed_input_rep").each(function(){
                     $("#receptor,.Ligand").addClass("active");
@@ -3684,6 +3708,7 @@ $(document).ready(function(){
                 });
             }
         }
+        $("#selectionDiv").trigger("click")
     }
 
 //-------- Buttons --------
@@ -3693,8 +3718,9 @@ $(document).ready(function(){
         var some_input_ok=false;
 
         if ($(".ed_map_el.active").length>0){
-            createEDReps(true);
-            $("#selectionDiv").trigger("click");
+            //createEDReps(true);
+            var results_ED=obtainURLinfo_ED(true)
+            //$("#selectionDiv").trigger("click");
         }
     });
 
@@ -3745,9 +3771,9 @@ $(document).ready(function(){
     $(".ed_map_el").click(function(){
         if ($(this).hasClass("active")){
             $(this).removeClass("active");
-            createEDReps(false);
-            $("#EDselectionDiv").trigger("click");
-            $("#selectionDiv").trigger("click");
+            //createEDReps(false);
+            //$("#EDselectionDiv").trigger("click");
+            //$("#selectionDiv").trigger("click");
         }else{
             if ($(this).hasClass("act_input")){
                 var btn_id=$(this).attr("id");
@@ -3761,10 +3787,10 @@ $(document).ready(function(){
             }
             $(this).addClass("active");
             $(".ed_map_el").not(this).removeClass("active");
-            createEDReps(true);
+            //createEDReps(true);
         }
         $("#EDselectionDiv").trigger("click");
-        $("#selectionDiv").trigger("click");
+        //$("#selectionDiv").trigger("click");
     });
 
 
@@ -3774,9 +3800,9 @@ $(document).ready(function(){
         var input_btn=$("#"+input_id+"_btn");
         if (input_btn.hasClass("active")){
             applyEDinput($(this));
-            createEDReps(true);
+            //createEDReps(true);
             $("#EDselectionDiv").trigger("click");
-            $("#selectionDiv").trigger("click");
+            //$("#selectionDiv").trigger("click");
 
         } else {
             input_btn.popover('show');
@@ -3858,7 +3884,7 @@ $(document).ready(function(){
     var atomssb=[];//
     var all_resids_sasa=[];//
     
-    function obtainURLinfo_ED(){
+    function obtainURLinfo_ED(launchCreateEDReps){
         var loadEd=false;
         var ed_finsel="";
         var ligsel_ed=$(".ed_ligand.active").data("shortn");
@@ -3890,9 +3916,15 @@ $(document).ready(function(){
         }
 
         if (loadEd){
+            if (launchCreateEDReps){
+                createEDReps(true,ed_finsel);
+            }
             $(".EDdisplay").prop('disabled', false);
             $("#ed_no_sel_warning").css("display","none");
         } else {
+            if (launchCreateEDReps){
+                createEDReps(false,false);
+            }
             $(".EDdisplay").prop('disabled', true);
             $("#ed_no_sel_warning").css("display","block");
         }
@@ -3951,7 +3983,7 @@ $(document).ready(function(){
     }
     
     var passInfoToIframe_ED = function(){
-        var results_ED=obtainURLinfo_ED();
+        var results_ED=obtainURLinfo_ED(true);
         window.results_ED=results_ED;
     }
     window.passInfoToIframe_ED=passInfoToIframe_ED;
@@ -4043,7 +4075,7 @@ $(document).ready(function(){
          }*/
 
         //ED maps
-        var results_ED=obtainURLinfo_ED();
+        var results_ED=obtainURLinfo_ED(false);
         var loadEd=results_ED["loadEd"];
         if (loadEd){
             var ed_sel=results_ED["ed_sel"];

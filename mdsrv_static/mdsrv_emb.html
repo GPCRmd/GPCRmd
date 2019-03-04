@@ -422,9 +422,17 @@
                                                 rep="ball+stick";
                                              }
                                              if (scheme=="FPscheme"){
-                                                 o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
+                                                 if (rep=="line"){
+                                                     o.addRepresentation( rep, {linewidth: 6, /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
+                                                 }else{
+                                                     o.addRepresentation( rep, { /*radius: "0.210" ,*/ sele: sel , colorScheme:FPscheme } ); 
+                                                 }
                                              } else {
-                                                 o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
+                                                 if (rep=="line"){
+                                                     o.addRepresentation( rep, { linewidth: 6, colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
+                                                 } else{
+                                                     o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme  } ); 
+                                                 }
                                              }
                                              sel_li.push("("+sel+")");
                                          }
