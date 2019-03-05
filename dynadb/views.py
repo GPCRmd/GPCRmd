@@ -34,7 +34,7 @@ from os import listdir
 from os.path import isfile, normpath
 import urllib
 from django.db.models.functions import Concat
-from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count
+from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count, Prefetch
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
 from .uniprotkb_utils import valid_uniprotkbac, retreive_data_uniprot, retreive_protein_names_uniprot, get_other_names, retreive_fasta_seq_uniprot, retreive_isoform_data_uniprot
 from .sequence_tools import get_mutations, check_fasta
@@ -1877,40 +1877,59 @@ def getligrec(idlist,return_type):
     '''For every id in idlist, the ligands and receptors of the dynamics/model/complex of that given id are returned. '''
     if return_type=='complex':
         complex_list_names=[]
-        for cmolid in idlist:
-            exp_id=DyndbComplexMolecule.objects.select_related('id_complex_exp').get(pk=cmolid).id_complex_exp.id
+        cmolq = DyndbComplexMolecule.objects.filter(id__in=idlist).select_related('id_complex_exp')
+        #TODO optimize: change code bellow to use annoate and .values() instead
+        #cmolq = cmolq.annotate(compound_id=F('id_complex_exp__dyndbcomplexcompound__id_compound'))
+        #cmolq = cmolq.annotate(protein_id=F('id_complex_exp__dyndbcomplexprotein__id_protein'))
+        #cmolq = cmolq.annotate(receptor_protein_id=F('id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein'))  
+        cmolq = cmolq.prefetch_related(Prefetch("id_complex_exp__compounds",queryset=DyndbCompound.objects.annotate(type=F('dyndbcomplexcompound__type'))))
+        cmolq = cmolq.prefetch_related("id_complex_exp__proteins")  
+        for cmolobj in cmolq:
+            cmolid = cmolobj.id
+            exp_id=cmolobj.id_complex_exp.id
             liglist=[]
             receptorlist=[]
-
-            for match in DyndbComplexCompound.objects.select_related('id_compound').filter(id_complex_exp=exp_id):
+                        
+            for match in cmolobj.id_complex_exp.compounds.all():
                 if match.type==0 or match.type==1:
-                    liglist.append(match.id_compound.name.rstrip())
+                    liglist.append(match.name.rstrip())
 
-            for rmatch in DyndbComplexProtein.objects.select_related('id_protein__receptor_id_protein','id_protein').filter(id_complex_exp=exp_id):
-                if type(rmatch.id_protein.receptor_id_protein.id)==int:
-                    receptorlist.append(rmatch.id_protein.name.rstrip())
+            for rmatch in cmolobj.id_complex_exp.proteins.all():
+                if rmatch.receptor_id_protein is not None:
+                    receptorlist.append(rmatch.name.rstrip())
+                else:
+                    liglist.append(rmatch.name.rstrip())
 
             complex_list_names.append([exp_id, receptorlist, liglist])
         return complex_list_names
 
     elif return_type=='model':
         modelshowresult=[]
-        for modid in idlist:
-            print(modid)
-            try:
-                cmol_id=DyndbModel.objects.select_related('id_complex_molecule').get(pk=modid).id_complex_molecule.id
-                getligrec([cmol_id],'complex')[1:]
+        modq = DyndbModel.objects.filter(pk__in=idlist).select_related('id_protein')
+        for modobj in modq:
+            modid = modobj.pk
+            cmol_id = None
+            prot_id = None
+            if modobj.id_complex_molecule is not None:            
+                cmol_id= modobj.id_complex_molecule.id
                 modelshowresult.append( [modid] + getligrec([cmol_id],'complex')[0][1:] )
-                print('heeeeere', [modid] + getligrec([cmol_id],'complex')[0][1:] )
-            except AttributeError: #model is an apoform
-                modelshowresult.append([modid]+ [DyndbModel.objects.get(pk=modid).id_protein.name.rstrip()] )
-                print('here',[modid]+ [DyndbModel.objects.get(pk=modid).id_protein.name.rstrip()])
+            if modobj.id_protein is not None:
+                prot_id = modobj.id_protein.id
+                prot_name = modobj.id_protein.name.rstrip() 
+                modelshowresult.append([modid,prot_name] )
+            if (cmol_id is None) == (prot_id is None):
+                if settings.DEBUG:
+                    print('WARNING: Model %d has id_complex_molecule = "%s" and id_protein = "%s".' % (modid, str(cmol_id),str(prot_id)))
+                else:
+                    raise ValueError('Model %d has id_complex_molecule = "%s" and id_protein = "%s".' % (modid, str(cmol_id),str(prot_id)))
         return modelshowresult
 
     else:
         dynresult=[]
-        for dyn_id in idlist:
-            cmol_id=DyndbDynamics.objects.select_related('id_model').get(pk=dyn_id).id_model.id
+        dynq = DyndbDynamics.objects.filter(id__in=idlist).values('id','id_model')
+        for dyn in dynq:
+            dyn_id = dyn['id']
+            cmol_id = dyn['id_model']
             dynresult.append([dyn_id] + getligrec([cmol_id],'model')[0][1:] )
         return dynresult
 ###################################################################################################################################
@@ -2242,6 +2261,7 @@ def dealwithquery(arrays):
 ##########################################################################################################################################
 
 def mainsearcher(arrays,return_type):
+    #TODO optimize: use single query
     rowdict=dealwithquery(arrays)
     results=dict()
     for keys,values in rowdict.items():
@@ -2279,7 +2299,6 @@ def NiceSearcher(request):
         dynlist=list()
         return_type=request.POST.get('restype')
         model_protein=list() #save here the PROTEINS the user has used to search and its boolean. 
-        print(arrays)
         for array in arrays[1:]: #each array is a row in the dynamic "search table". Avoid table header with [1:]
             array=array.split(',') # example [OR, protein, 1,true] [boolean operator, type, id, is receptor/is ligand]
             array[2]=array[2].replace('StandardF','compound').replace('SpecificS','molecule');
@@ -2365,7 +2384,6 @@ def NiceSearcher(request):
 
         if request.POST.get('is_apo')=='apo' or request.POST.get('is_apo')=='both':
             for dyn_id in resultlist:
-                print(dyn_id,'is it NONE')
                 if DyndbDynamics.objects.select_related('id_model__id_protein').get(pk=dyn_id).id_model.id_protein is not None:
                     tmplist.append(dyn_id)
 
@@ -2374,7 +2392,7 @@ def NiceSearcher(request):
                 if DyndbDynamics.objects.select_related('id_model__id_protein').get(pk=dyn_id).id_model.id_protein is None:
                     tmplist.append(dyn_id)
 
-        resultlist=tmplist
+        resultlist=set(tmplist)
 
         if request.POST.get('exactmatch')=='true':
             tmplist=[]
@@ -2421,10 +2439,10 @@ def NiceSearcher(request):
             for dyn in DyndbDynamics.objects.filter(software=request.POST.get('sof')):
                 sofset.add(dyn.id)
             dynlist=dynlist.intersection(sofset)
-
-        resultlist=list(filter(lambda x: len(DyndbDynamics.objects.filter(id=x,is_published=True))>0,resultlist))
+        
+        resultlist=list(DyndbDynamics.objects.filter(id__in=resultlist,is_published=True).values_list('id',flat=True))
+        dynlist=list(DyndbDynamics.objects.filter(id__in=dynlist,is_published=True).values_list('id',flat=True))
         dynresult=getligrec(dynlist,'dynamics')
-
         tojson={'result':resultlist ,'model':model_list,'dynlist':dynresult,'message':''}
         data = json.dumps(tojson)
         return HttpResponse(data, content_type='application/json')
