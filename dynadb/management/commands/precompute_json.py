@@ -66,6 +66,14 @@ class Command(BaseCommand):
             default=False,
             help='Overwrites already generated json files.',
         )
+        parser.add_argument(
+            '--exit-on-error',
+            action='store_true',
+            dest='exit-on-error',
+            default=False,
+            help='Stop execution and display traceback if any error takes place while generating json files.',
+        )
+
     def handle(self, *args, **options):
         hb_json_path="/protwis/sites/files/Precomputed/flare_plot/hbonds"
         if not os.path.isdir(hb_json_path):
@@ -124,6 +132,8 @@ class Command(BaseCommand):
                         try:
                             create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj.filepath,stride=strideVal)
                         except Exception as e:
+                            if options['exit-on-error']:
+                                raise
                             self.stdout.write(self.style.ERROR(type(e).__name__+': '+str(e)))
                             self.stdout.write(self.style.NOTICE("Skipping flareplot "+newfilename+": error during flareplot generation."))
                         
