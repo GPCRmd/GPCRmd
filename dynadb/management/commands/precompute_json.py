@@ -1,9 +1,14 @@
+import re
+from os import path
+import gc
+
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import F
+
 from dynadb.models import DyndbSubmission, DyndbDynamics
 from dynadb.models import DyndbSubmissionProtein, DyndbSubmissionMolecule, DyndbSubmissionModel, DyndbFilesMolecule, DyndbFilesModel , DyndbFilesDynamics, DyndbFiles
 from dynadb.views import  get_precomputed_file_path, get_file_name , get_file_name_dict, get_file_paths
-import re
-from os import path
+
 from view.create_fplot import *
 
 class Command(BaseCommand):
@@ -31,7 +36,7 @@ class Command(BaseCommand):
             nargs='*',
             action='store',
             default=False,
-            help='Specify id(s) of trajectories for which a json file will be precomputed. '
+            help='Specify file id(s) of trajectories for which a json file will be precomputed. '
         )
         parser.add_argument(
             '--type',
@@ -86,27 +91,78 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
         if options['dynamics_id']:
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
+
+        dynobj=dynobj.annotate(traj_id=F('dyndbfilesdynamics__id_files__id'))
         if options['traj_id']:
-            dynobj=dynobj.filter(dyndbfilesdynamics__id_files__id__in=options['traj_id']).distinct()
-        if dynobj == []:
+            dynobj=dynobj.filter(traj_id__in=options['traj_id'])
+            
+        #get trajectory filepaths
+        trajfiles = dynobj.annotate(dyn_id=F('id'))
+        trajfiles = trajfiles.filter(dyndbfilesdynamics__id_files__id_file_types__is_trajectory=True)
+        trajfiles = trajfiles.annotate(filepath=F('dyndbfilesdynamics__id_files__filepath'))
+        trajfiles = trajfiles.values('dyn_id','traj_id','filepath')
+ 
+        #create a dictionary with needed information 
+        dyn_dict = {}
+        for traj in trajfiles:
+            if traj['dyn_id'] not in dyn_dict:
+                dyn_dict[traj['dyn_id']] = dict()
+                dyn_dict[traj['dyn_id']]['dyn_id'] = traj['dyn_id']
+                dyn_dict[traj['dyn_id']]['pdbpath'] = None
+                dyn_dict[traj['dyn_id']]['traj_files'] = dict()
+            if traj['traj_id'] is None:
+                continue
+            dyn_dict[traj['dyn_id']]['traj_files'][traj['traj_id']] = dict()
+            dyn_dict[traj['dyn_id']]['traj_files'][traj['traj_id']]['id'] = traj['traj_id']
+            dyn_dict[traj['dyn_id']]['traj_files'][traj['traj_id']]['filepath'] = traj['filepath']
+        
+        del trajfiles
+        del dynobj
+        
+        gc.collect() # free memory right now!!
+        
+        #get PDB filepaths
+        pdbfiles = DyndbFiles.objects.annotate(dyn_id=F('dyndbfilesdynamics__id_dynamics'))
+        pdbfiles = pdbfiles.filter(dyn_id__in=list(dyn_dict), id_file_types=2)
+        pdbfiles = pdbfiles.values('dyn_id','filepath')
+       
+        #add PDB filepaths to the dictionary
+        for pdbfile in pdbfiles:
+            dyn_dict[pdbfile['dyn_id']]['pdbpath'] = pdbfile['filepath']
+        del pdbfiles
+        gc.collect()
+        
+        if len(dyn_dict.keys()) == 0:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
         #self.stdout.write(self.style.NOTICE("%d published dynamics found."%len(dynobj)))
+
+        #transform dictionaries into sorted lists
+        dyn_list = [dyn_dict[dyn_id] for dyn_id in sorted(list(dyn_dict))]
+        del dyn_dict
+        gc.collect()
+        
+        for dyn in dyn_list:
+            dyn['traj_files'] = [dyn['traj_files'][traj_id] for traj_id in sorted(list(dyn['traj_files']))]
+        gc.collect()
+        
+
+
         strideVal=abs(options["stride"])
         if options['consider_comp_type']=="all" or options['consider_comp_type']=="hbonds":
             newdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
-            for dyn in dynobj:
-                dyn_id=dyn.id
+            for dyn in dyn_list:
+                dyn_id = dyn['dyn_id']
                 self.stdout.write(self.style.NOTICE("\nDynamics id: %d"%dyn_id))
-                trajfiles=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
-                if options['traj_id']:
-                    trajfiles=trajfiles.filter(id__in=options['traj_id'])
-                pdbfile=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types=2)
-                if pdbfile:
-                    pdbpath=pdbfile[0].filepath
-                else:
+                if len(dyn['traj_files']) == 0:
+                    self.stdout.write(self.style.NOTICE("No trajectories found for dynamics ID "+str(dyn_id)+". Skipping..."))
                     continue
-                for traj in trajfiles:
-                    newfilename = get_file_name(objecttype="dynamics",fileid=traj.id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory") #suffix="_hbonds" , remove forceext=True
+                pdbpath = dyn['pdbpath']
+                if not pdbpath:
+                    self.stdout.write(self.style.NOTICE("No PDB file found for dynamics ID "+str(dyn_id)+". Skipping..."))
+                    continue
+                for traj in dyn['traj_files']:
+                    traj_id = traj['id']
+                    newfilename = get_file_name(objecttype="dynamics",fileid=traj_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory") #suffix="_hbonds" , remove forceext=True
                     
                     ###########[!] Change get_file_name() to obtain it automatically
                     (pre,post)=newfilename.split(".")
@@ -130,10 +186,10 @@ class Command(BaseCommand):
                     if generate_json:
                         self.stdout.write(self.style.NOTICE("Creating flareplot "+newfilename+"..."))
                         try:
-                            create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj.filepath,stride=strideVal)
+                            create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj['filepath'],stride=strideVal)
                         except Exception as e:
                             if options['exit-on-error']:
                                 raise
                             self.stdout.write(self.style.ERROR(type(e).__name__+': '+str(e)))
                             self.stdout.write(self.style.NOTICE("Skipping flareplot "+newfilename+": error during flareplot generation."))
-                        
+                        gc.collect()
