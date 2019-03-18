@@ -4583,7 +4583,6 @@ def MODELreuseview(request, submission_id ):
     qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 #    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
-    q0MODRES=qMODRES[0]
     rowsMR=qMODRES
     lmrstype=[]
     for l in qMODRES:
@@ -6345,7 +6344,6 @@ def MODELview(request, submission_id):
             qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 ##           qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
             lformps=list(range(0,len(qMODRES)))
-            q0MODRES=qMODRES[0]
             rowsMR=qMODRES
             lmrstype=[]
             for l in qMODRES:
