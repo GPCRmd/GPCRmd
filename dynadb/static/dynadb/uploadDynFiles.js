@@ -1,11 +1,31 @@
 $(document).ready(function() {
     $.fn.exists = function () {
       return this.length !== 0;
-    };
-    $("[id^=id_][id$=_upload]").click(function(event) {
+    }
+
+
+    function adjust_iframe_height_from_child(iframe_id) {
+        //if compatible or non-cross origin 
+        if ( window.parent.document != null) {
+            var current_iframe = $(window.parent.document).find(iframe_id);
+            if (current_iframe.exists()) {
+                var body_height = $(document).find("body").height();
+                current_iframe.height(body_height);
+            }
+        }                                                                                                                                                      
+    }
+    
+    var upload_button_jquery_selector = "[id^=id_][id$=_upload]";
+    var file_type = $(upload_button_jquery_selector).attr('id').split('_')[1];
+    var iframe_id = "#id_"+file_type+"_iframe";
+    adjust_iframe_height_from_child(iframe_id);
+
+
+    $(upload_button_jquery_selector).click(function(event) {
         var self = $(this);
         event.preventDefault();
-        var file_type = self.attr('id').split('_')[1]
+        var file_type = self.attr('id').split('_')[1];
+        var iframe_id = "#id_"+file_type+"_iframe";
         var dynform = $(this).parents("#upload_dynform");
         var download_file = dynform.find("[id|='id_"+file_type+"_download_url']");
         var no_js = dynform.find("input[name='no_js']");
@@ -87,16 +107,8 @@ $(document).ready(function() {
             },
             complete: function(xhr,status,msg){
                 self.prop('disabled',false);
-                //if compatible or non-cross origin 
-                if ( window.parent.document != null) {
-                    var current_iframe = $(window.parent.document).find("#id_"+file_type+"_iframe");
-                    if (current_iframe.exists()) {
-                        var body_height = self.parents("body").height();
-                        current_iframe.height(body_height);
-                        
-                    }
-                }
-
+                
+                adjust_iframe_height_from_child(iframe_id);
             }
         });
     });   
