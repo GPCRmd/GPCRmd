@@ -318,12 +318,12 @@
                                         continue // Skip undefined parts
                                     }
                                     pos_sel=position.replace("-"," and :");
-                                    o.addRepresentation( "hyperball", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+                                    o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
                                 }
                             }
                             else {
                                 pos_sel=pdb_pos.replace("-"," and :");
-                                o.addRepresentation( "hyperball", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+                                o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
                             }
                         } else {
                             $("#posNotinRec_text", window.parent.document).text(pos+" not found in this receptor.");

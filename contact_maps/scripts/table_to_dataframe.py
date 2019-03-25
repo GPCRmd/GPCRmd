@@ -3,7 +3,7 @@ matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from sys import argv,exit
 import pandas as pd
 from  numpy import array
-from json import loads
+from json import loads, dump
 from  plotly.figure_factory import create_dendrogram
 from  plotly.offline import plot
 import numpy as np
@@ -23,7 +23,6 @@ from scipy.cluster.hierarchy import linkage, fcluster
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
 import warnings
 warnings.filterwarnings('ignore')
-
 def json_dict(path):
     """Converts json file to pyhton dict."""
     json_file=open(path)
@@ -55,6 +54,7 @@ def improve_receptor_names(df_ts,compl_data):
     taken_protlig={}
     index_dict={}
     dyn_gpcr_pdb={}
+
     for recept_id in df_ts['Id']:
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
@@ -84,10 +84,11 @@ def improve_receptor_names(df_ts,compl_data):
 
 #            if bool(prot_lig[1]):
  #               recept_name = recept_name + " + "+prot_lig[1]
-            taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
+            taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}    
         recept_info[dyn_id]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta]
         index_dict[recept_id]=recept_name 
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
+    
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
@@ -124,14 +125,15 @@ def stack_matrix(df, itypes):
         df_type.drop('itype', 1, inplace = True)
         df_type.set_index('Position', inplace = True)
         df_ts_type = df_type.transpose().stack().rename(itype).reset_index()
-
         if type(df_ts) == int:
             df_ts = df_ts_type
         else:
-            df_ts = pd.merge( df_ts, df_ts_type, how ='outer', on=["level_0", 'Position'])
+            df_ts = pd.merge( df_ts, df_ts_type, how ='outer', on=["level_0", 'Position'])        
 
     df_ts = df_ts.fillna(0.0) # Fill posible NaN in file
+
     df_ts.rename(columns={"level_0": "Id"}, inplace=True)
+
     return df_ts
     
 def adapt_to_marionas(df):
@@ -179,7 +181,9 @@ def clustering(clusters, dend_matrix, labels, linkagefun):
     
     # Defining to which cluster belongs to each simulation
     T = fcluster(Z, t=clusters, criterion='maxclust')
-    clustdict = { sim : "cluster" + str(clust) for sim,clust in zip(labels,T) }
+    clustdict = { "cluster" + str(clust) : [] for clust in T }
+    for sim,clust in zip(labels,T):
+         clustdict["cluster" + str(clust)].append(sim)
 
     return(color_threshold, clustdict)
 
@@ -294,7 +298,7 @@ def annotate_clusters(fig, default_color = ""):
     xcords = []
     annotations = []
     for entry in fig['data']:
-
+        
         currentcolor = entry['marker']['color']
         # If new entry is higher (inside the tree) than previous, select as candidate for cluster node
         current_min_x = min(entry['x'])
@@ -413,6 +417,38 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     })
     return (list(dendro_leaves),clustdict)
 
+def flareplot_json(df, clustdict, folderpath, flare_template = False):
+    """
+    Create json entries for significative positions (top10 mean frequency) of each cluster produced
+    """
+    
+    os.makedirs(folderpath,  exist_ok = True)
+    
+    for clust in clustdict.keys():
+        # Mean frequencies and mean threshold
+        df_clust = df.filter(items = clustdict[clust] + ['Position 1', 'Position', 'Position 2'])
+        df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
+        mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
+        
+        # 'Edge' entry for json file
+        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+        df_dict['name1'] = df_clust['Position 1'] 
+        df_dict['name2'] = df_clust['Position 2']
+        df_dict['frames'] = df_clust['mean'].apply(lambda x: list(range(round(x))) if x >= mean_threshold else [])
+        edges = df_dict.to_dict(orient="records")
+        
+        # Appending edges to flare plot template, if any submitted
+        if flare_template:
+            flare_template['edges'] = edges
+            jsondict = flare_template
+        else:
+            jsondict = { 'edges' : edges }
+        
+        #Writing json
+        jsonpath = folderpath + clust + ".json"
+        with open(jsonpath, 'w') as jsonfile:
+            dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
+
 def sort_simulations(df_ts, dyn_dend_order):
     """
     Sorts the simulations in the dataframe according to the order in the list dyn_dend_order
@@ -430,7 +466,7 @@ def sort_simulations(df_ts, dyn_dend_order):
 
     #Drop sort columns once used
     df_ts.drop(['helixloop','clust_order'], axis = 1, inplace = True)
-
+    
     return df_ts
 
 def reverse_positions(df):
@@ -477,7 +513,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
     colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
     colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
-
+    
     p = figure(
         plot_width= width, 
         plot_height=height,
@@ -595,6 +631,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 
                 if (plot_bclass != "col-xs-9"){
                     $("#retracting_parts").attr("class","col-xs-9");
+                    $("#first_col").attr("class","col-xs-7");
                     $("#second_col").attr("class","col-xs-5");
                     $("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
                 }
@@ -745,8 +782,6 @@ def get_contacts_plots(itype, ligandonly):
         df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict(str(basepath + "compl_info.json"))
 
-    
-
     # Adapting to Mariona's format
     df = adapt_to_marionas(df_raw)
 
@@ -792,16 +827,32 @@ def get_contacts_plots(itype, ligandonly):
     # Labels for dendogram
     dendlabels_dyns = [ dyn for dyn in df ]
 
-    #Creating dendrogram for each cluster number
+    # Setting columns 'Position', 'Position1' and 'Position2' in df for jsons files
+    df['Position'] = df.index
+    new = df['Position'].str.split(" ", n = 1, expand = True)
+    df['Position 1'] = new[0] 
+    df['Position 2'] = new[1]
+    df.drop(columns = ['Position'], inplace = True)
+
+    #Preparing dendrogram folders and parameters
     dendfolder = basepath + "view_input_dataframe/" + itype + "_" + ligandonly + "_dendrograms" 
-    if not os.path.exists(dendfolder):
-        os.makedirs(dendfolder)
+    os.makedirs(dendfolder, exist_ok = True)
     dend_height = int( int(df.shape[1]) * 16 + 20)
-    dend_width = 500
-    for cluster in range(2,21):
-        print("\tcomputing dendrogram: " + str(cluster) + " clusters" )
+    dend_width = 550
+
+    # Open json template
+    flare_template = json_dict(basepath + "../flare_plot/contact_maps/template.json")
+
+    # Computing several dendrograms and corresponding json files
+    for cluster in list(range(2,21)):
+        print("\tcomputing dendrogram: " + str(cluster) + " clusters.")
         dendfile = ("%s/%s_%s_%s_dendrogram_figure.html" % (dendfolder, itype, str(cluster), ligandonly))
+        
         (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
+
+        #Jsons for the flareplots of this combinations of clusters
+        jsonpath = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_jsons/" + str(cluster) + "clusters/"
+        flareplot_json(df, clustdict, jsonpath, flare_template)
 
     for rev in ["rev", "norev"]:
 
@@ -813,9 +864,8 @@ def get_contacts_plots(itype, ligandonly):
 
         df_ts_rev = sort_simulations(df_ts_rev, dyn_dend_order)
         
-        
         # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
-        # I use df instead of df_ts because of its structure. I know it's kind of strange
+        # I use df instead of df_ts because of its intrinsec structure. I know it's kind of strange
         h=dend_height
         if rev == "rev":
             w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20*2 + 130)
@@ -837,7 +887,7 @@ def get_contacts_plots(itype, ligandonly):
         # Find path to files 
         plotdiv_w= w + 275
         script, div = components(p)
-        
+
         # Creating directory if it doesn't exist
         if not os.path.exists(basepath + "view_input_dataframe"):
             os.makedirs(basepath + "view_input_dataframe")
