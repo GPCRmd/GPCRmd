@@ -4,20 +4,24 @@
 <script>document.domain=document.domain;</script>
 
 <!--Bootstrap things-->
-<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
 <!--Load javascripts -->
 <script src="../static/contmaps_main.js"></script>
 
-<!--Personal styles-->
-<link rel="stylesheet" type="text/css" href="../static/contmaps_main.css">
-<link rel="stylesheet" href="../mdsrv/webapp/css/main.css" />
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {{staticfiles}}
+
 {% block addon_css %}
+<base href="/">
+<!--Bootstrap -->
+<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<!--Personal styles-->
+<link rel="stylesheet" type="text/css" href="../static/contmaps_main.css">
+<link rel="stylesheet" href="../mdsrv/webapp/css/main.css" />
+
 {% endblock %}
 
 </head>
@@ -35,33 +39,28 @@
   </div>
 </div>
 
-<div id="inner_remaining">
+<div id="inner_remaining" class ="row" >
+  <!--Here be dendrogram and heatmap-->
   <div class="col-xs-12" id="retracting_parts" style="padding-bottom:10px">
-    <div class="row">
-      <div class="col-xs-12" id="plot_col">
-        <div class="panel panel-primary" id="main_plot_body">
-          <div class="panel-body" style="padding-left: 0px">
-            {% include './contact_maps/menus.html' %}
-            <div id="first_col" class="col-xs-4"><!--To avoid overlaping of fixed-->
-              <div id="fixed_col" class="left_col">
-                <div class="row" id="dendrogram">
-                  {{dendrogram | safe }}
-                </div>
-              </div>
-            </div>
-            <div id="second_col" class="col-xs-6">
-              <div style="max-width:{{plotdiv_w}}px;">
-               {{ div | safe }}
-              </div>
-            </div>
+    <div class="panel panel-primary" id="main_plot_body">
+      <div class="panel-body" >
+        {% include './contact_maps/menus.html' %}
+        <div id="dendrogram-heatmap" class="row">
+          <div id="dendrogram" class="col-xs-3">
+            {{dendrogram | safe }}
+          </div>
+          <div id="heatmap" class="col-xs-1" style="max-width:{{plotdiv_w}}px;">
+            <span id="loading"><center ><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></center></span>
+            {{ div | safe }}
           </div>
         </div>
       </div>
     </div>
-    {% include './contact_maps/docs.html' %}
   </div>
+
+  <!--Here be side-window (the thing that opens upon clicking on heatmap)-->
   <div class="col-xs-3" id="info">
-    <div class="panel panel-info" style="margin-bottom:0;height:91%;position: relative; overflow-y: auto; overflow-x: auto;">
+    <div class="panel panel-info" style="height:100%; position: relative; overflow-y: auto; overflow-x: auto;">
       <div class="panel-heading" style="">Interaction details
         <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
           <span aria-hidden="true">&times;</span>
@@ -121,6 +120,91 @@
       </div>
     </div>
   </div>
+
+  <div class="col-xs-12" id="not_retracting_parts">
+    <div class="panel panel-primary" id="flare_col"  data-fpdir="{{fpdir}}">
+      <div class="panel-body">
+        <div style="text-align:center;margin:5px 0 0 0;">
+          <div id="VisualizationDiv" style="background-color:#F3F3F3; border-radius:2px;padding:5px;" data-bind_domain="" data-presel_pos="">
+            <h4 style="padding:0;margin:0;">Representative interactions</h4>
+          </div>
+        </div>
+
+        <div id="fpdiv0" class="col-xs-6 fpdiv">
+          <center>
+            <span>
+              <center id="loading_flare0" class="loading_flare">
+                <img src="/static/view/images/loading-gear.gif">
+              </center>
+            </span>
+            <div id="flare-container0" class="flare-container"></div>
+            
+            <!--Flareplot toolbar-->
+            <span id="allFPoptions" class="showIfTrajFP">
+              <button id="FPdisplay0" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
+              Show in structure
+              </button>
+              
+              <div class="dropup clusters_dropup-div">
+                <button id="clusterbutton0" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown"> 
+                  Cluster 1 <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu clusters_dropup-ul">
+                  {% for clus in clusrange %}                
+                  <li id="fp0_option_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <button id="FPclearSel0" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
+                Clear plot
+              </button>
+            </span>
+
+          </center>
+        </div>
+
+        <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
+          <center>
+
+            <span>
+              <center id="loading_flare1" class="loading_flare">
+                <img src="/static/view/images/loading-gear.gif">
+              </center>
+            </span>
+
+            <div id="flare-container1"></div>
+            
+            <!--Flareplot toolbar-->
+            <span id="allFPoptions" class="showIfTrajFP">
+              <button id="FPdisplay1" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
+              Show in structure
+              </button>
+
+              <div class="dropup clusters_dropup-div">
+                <button id="clusterbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown"> 
+                  Cluster 2 <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu clusters_dropup-ul">
+                  {% for clus in clusrange %}                
+                  <li id="fp1_option_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <button id="FPclearSel1" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
+                Clear plot
+              </button>
+            </span>
+
+          </center>
+        </div>
+
+      </div>
+    </div>
+ 
+    {% include './contact_maps/docs.html' %}
+  </div>
 </div>
 
 
@@ -128,8 +212,13 @@
 
 
 {% block addon_js %} 
-
 <script src="{% static 'gpcrome/emb_crossgpcr.js' %}"></script>
+
+<!--Flareplots -->
+<link rel="stylesheet" type="text/css" href="{% static 'view/fplot2/docs/css/flareplot-main.css' %}" />
+<script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
+<script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
+<script src="../static/emb_ngl_viewer_small.js"></script>
 
 <!-- Bokeh -->
 <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.css" rel="stylesheet" type="text/css">

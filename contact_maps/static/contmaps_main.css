@@ -23,6 +23,10 @@ html, body, #outer {
 
 */
 
+body {
+  overflow-y: scroll !important;
+}
+
 #content {
   width: 100%;
 }
@@ -52,16 +56,12 @@ html, body, #outer {
   padding-bottom: 5%;
 }
 
-#plot_col{
-  height: 50%;
-  margin-bottom: 20px;
-}
 
 #main_plot_body {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
-  height: 100%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
+  height: 89%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
 }
 
 #menus {
@@ -75,6 +75,8 @@ html, body, #outer {
 .clusteropt {
   background-color: white;
   color: black;
+  padding-top: 2px;
+  padding-bottom: 2px; 
 }
 
 #more_info {
@@ -151,14 +153,10 @@ a {
 }
 
 #dendrogram {
-  width: 600px;
+  width: 520px;
   float: left;
   overflow-x: hidden; 
   background-color: white
-}
-
-.col-xs-6 {
-  padding-left: 0px !important;
 }
 
 /*Side-window*/
@@ -168,7 +166,7 @@ a {
   z-index:-1;
   padding-left:5px;
   padding-right:5px;
-  height: 100%;
+  height: 89%;
 }
 
 #trajsDropdown_options {
@@ -202,4 +200,50 @@ hr {
 
 .open>.dropdown-menu {
     display: inline-block !important; 
+}
+
+#loading_heatmap {
+  margin:150px;
+  z-index:-10;
+  }
+
+/*Flareplots*/
+
+.fpdiv {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.FP-button {
+  margin-top:15px;
+  font-size:12px;
+  width:115px;
+  padding-right:2px;
+  padding-left:2px;
+  height: 31px;
+}
+
+.clusters_dropup-div {
+  display:inline-block;
+  position: relative;
+}
+
+.fp_display_element {
+  padding:5px 15px 5px 15px;
+  cursor:pointer;
+}
+
+.clusters_dropup-ul {
+  font-size:12px;
+  margin-bottom:-12px;
+  max-height: 300px;
+  overflow-y: scroll;
+}
+
+.flare_container {
+  background-color: white;
+}
+
+.loading_flare {
+  margin: 20px;
 }

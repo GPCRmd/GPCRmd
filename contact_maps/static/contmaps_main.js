@@ -21,13 +21,22 @@ $(document).ready(function(){
   }
 
   //Mark options selected
+  var itype, clusters, ligandonly, rev;
   url_pathname = window.location.pathname.split("/")
   url_variables = url_pathname[url_pathname.length-1]
-  url_variables_ary = url_variables.split("&");
-  var itype = url_variables_ary[url_variables_ary.length-4];
-  var clusters = url_variables_ary[url_variables_ary.length-3];
-  var ligandonly = url_variables_ary[url_variables_ary.length-2];
-  var rev = url_variables_ary[url_variables_ary.length-1];
+  if (url_variables) {
+    url_variables_ary = url_variables.split("&");
+    itype = url_variables_ary[url_variables_ary.length-4];
+    clusters = url_variables_ary[url_variables_ary.length-3];
+    ligandonly = url_variables_ary[url_variables_ary.length-2];
+    rev = url_variables_ary[url_variables_ary.length-1];
+  }
+  else {
+    itype = "all";
+    clusters = "3";
+    ligandonly = "prt_lg";
+    rev = "norev";
+  }
 
   $('input[value="' + itype + '"]').prop('checked', true);
   $('.clusteropt[value="' + clusters + '"]').attr("selected", true)
@@ -42,6 +51,11 @@ $(document).ready(function(){
   }
   if (rev == "rev"){
     $('#rev_pairs').prop('checked', true)
+  }
+
+  //Remove loading icon once page is loaded
+  window.onload = function(){
+    document.getElementById("loading").remove();
   }
 
   //-------Dropdowns
@@ -124,10 +138,8 @@ $(document).ready(function(){
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
-          $("#plot_col").css("height", '87%');
       } else {
           $("#show_hide_info_text").text("Hide info ");
-          $("#plot_col").css("height", '50%');
       }
   });
 
@@ -242,7 +254,5 @@ function printchecked(){
 function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
-  $("#first_col").attr("class","col-xs-5");
-  $("#second_col").attr("class","col-xs-6");
   $("#retracting_parts").attr("class","col-xs-12");
 }
