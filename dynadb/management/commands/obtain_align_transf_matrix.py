@@ -1,17 +1,23 @@
+import re
+import os
+import gc
+
+
 from django.core.management.base import BaseCommand, CommandError
+from django.db.models import F
+
 import MDAnalysis as mda
 from MDAnalysis.analysis import align
 from MDAnalysis.analysis.rms import rmsd
 from django.conf import settings
-import os
 from dynadb.models import DyndbModel, DyndbDynamics, DyndbFiles, DyndbModelComponents
 import urllib.request
-import re
 import mdtraj as md
 from dynadb.pipe4_6_0 import useline2, d
 import pickle
 import numpy as np
 import transforms3d
+import requests
 
 class Command(BaseCommand):
     help = "Retrieves the transformation matrix corresponding to the alignment between our model PDBs and the x-ray PDBs. This will be used to align the ED map of the x-ray structure to our model and simulation."
@@ -230,6 +236,8 @@ class Command(BaseCommand):
                 '6d35': [ 8.488414631657648 , -39.9125 , 3.681897505191216 ],'6d32': [ 8.409039590320656 , -41.4693359375 , 3.527496297704843 ],
                 '5v56': [ 24.89332673452249 , 48.01339285714287 , 72.91818505082546 ]}
 
+        all_struc=requests.get('http://gpcrdb.org/services/structure/').json()
+        all_struc_info={s["pdb_code"]:s for s in all_struc}
         root = settings.MEDIA_ROOT
         EDmap_path=os.path.join(root,"Precomputed/ED_map")
         if not os.path.isdir(EDmap_path):
@@ -248,6 +256,8 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
         if dynobj == []:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
+        
+        # dyn_id, DyndbFiles, DyndbModel, DyndbModelComponents
         for dyn in dynobj:
             dyn_id=dyn.id
 
@@ -274,154 +284,160 @@ class Command(BaseCommand):
                 obtain_matrix=True
             if obtain_matrix:
                 self.stdout.write(self.style.NOTICE("\nObtaining matrix for dynamics with id %d"%dyn_id))
-                try:
-                    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
-                    pdbid_wchain=model.pdbid
-                    if "." in pdbid_wchain:
-                        (pdbid,pdbchain)=pdbid_wchain.split(".")
-                        pdbchainli=[pdbchain]
-                    else:
-                        pdbid=pdbid_wchain
-                        pdbchain=False
-                        pdbchainli=False
-                    if not pdbid:
-                        self.stdout.write(self.style.ERROR("PDB id not found. Skipping." ))
-                        continue
-                    pdburl="https://files.rcsb.org/download/"+pdbid+".pdb"
-                    mobile_filepath=os.path.join(tmp_path,pdbid+".pdb")
-                    urllib.request.urlretrieve(pdburl,mobile_filepath )
+                #try:
+                model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+                pdbid_wchain=model.pdbid
+                if "." in pdbid_wchain:
+                    (pdbid,pdbchain)=pdbid_wchain.split(".")
+                    pdbchainli=[pdbchain]
+                else:
+                    pdbid=pdbid_wchain
+                    pdbchain=all_struc_info[pdbid]["preferred_chain"]
+                    pdbchainli=[pdbchain]
+                if not pdbid:
+                    self.stdout.write(self.style.ERROR("PDB id not found. Skipping." ))
+                    continue
+                pdburl="https://files.rcsb.org/download/"+pdbid+".pdb"
+                mobile_filepath=os.path.join(tmp_path,pdbid+".pdb")
+                urllib.request.urlretrieve(pdburl,mobile_filepath )
 
-                    mobile = mda.Universe(mobile_filepath)
-                    
-                    #try:
-                    #    ref = mda.Universe(ref_filepath)
-                    #except ValueError:
-                        # For some reason I cannot open that with MDanalysis. So I will open it with MDtraj and save (that can be opened). I will take the oportunity to filter only the protein and ligand
-                    ref_filepath_filt=os.path.join(tmp_path,ref_fileroot+"_filt.pdb")
-                    ref_struc=md.load(ref_filepath)
+                mobile = mda.Universe(mobile_filepath)
+                
+                #try:
+                #    ref = mda.Universe(ref_filepath)
+                #except ValueError:
+                    # For some reason I cannot open that with MDanalysis. So I will open it with MDtraj and save (that can be opened). I will take the oportunity to filter only the protein and ligand
+                ref_filepath_filt=os.path.join(tmp_path,ref_fileroot+"_filt.pdb")
+                ref_struc=md.load(ref_filepath)
 
-                    lig_li=obtain_lig_li(dyn_id)
-                    lig_li=["resname "+lig for lig in lig_li]
-                    res_sel=" or ".join(lig_li)
-                    if res_sel:
-                        fin_sel="protein or "+res_sel
-                    else:
-                        fin_sel="protein"
-                    ref_struc_sel=ref_struc.topology.select(fin_sel)
-                    ref_struc.atom_slice(atom_indices=ref_struc_sel,inplace=True)
-                    ref_struc.save(ref_filepath_filt)
-                    
-                    ref = mda.Universe(ref_filepath_filt)
+                lig_li=obtain_lig_li(dyn_id)
+                lig_li=["resname "+lig for lig in lig_li]
+                res_sel=" or ".join(lig_li)
+                if res_sel:
+                    fin_sel="protein or "+res_sel
+                else:
+                    fin_sel="protein"
+                ref_struc_sel=ref_struc.topology.select(fin_sel)
+                ref_struc.atom_slice(atom_indices=ref_struc_sel,inplace=True)
+                ref_struc.save(ref_filepath_filt)
+                
+                ref = mda.Universe(ref_filepath_filt)
 
-                    # Now I need to generate the fasta needed as input for fasta2select, which gives us the selection of mathing segments of the two structures
-                    ref_chains=[]
-                    ref_segids=[]
-                    for m in model.dyndbmodeledresidues_set.all():
-                        ref_chains.append(m.chain)
-                        ref_segids.append(m.segid)
-                    ref_seq=seq_from_pdb(ref_filepath,ref_chains)
-                    if not ref_seq:
-                        self.stdout.write(self.style.ERROR("Error extracting sequence of reference structure. Skipping." ))
-                        continue
-                    mob_seq=seq_from_pdb(mobile_filepath,pdbchainli)
-                    if not mob_seq:
-                        if pdbchainli:
-                            self.stdout.write(self.style.ERROR("Chain %s not found in mobile structure. Skipping." % pdbchain ))
-                        else:
-                            self.stdout.write(self.style.ERROR("Error extracting sequence of mobile structure. Skipping." ))
-                        continue
-                    fasta_filepath=os.path.join(tmp_path,"dyn_%s.fasta"%dyn_id)
-                    f = open(fasta_filepath, "w+")
-                    f.write("#Ref\n") 
-                    f.write(ref_seq+"\n")
-                    f.write("#Mob\n") 
-                    f.write(mob_seq+"\n")
-                    f.close()
-
-
-                    aln_filepath=os.path.join(tmp_path,"dyn_%s.aln"%dyn_id)
-                    ref_resids=[a.resid for a in ref.select_atoms('name CA and (%s)'%" or ".join(["segid %s"%sid for sid in ref_segids]))] 
+                # Now I need to generate the fasta needed as input for fasta2select, which gives us the selection of mathing segments of the two structures
+                ref_chains=[]
+                ref_segids=[]
+                for m in model.dyndbmodeledresidues_set.all():
+                    ref_chains.append(m.chain)
+                    ref_segids.append(m.segid)
+                ref_seq=seq_from_pdb(ref_filepath,ref_chains)
+                if not ref_seq:
+                    self.stdout.write(self.style.ERROR("Error extracting sequence of reference structure. Skipping." ))
+                    continue
+                mob_seq=seq_from_pdb(mobile_filepath,pdbchainli)
+                if not mob_seq:
                     if pdbchainli:
-                        target_resids= list(mobile.select_atoms('name CA and segid %s'%pdbchain).resids)  # if there are no segid, chain is used as segid
+                        self.stdout.write(self.style.ERROR("Chain %s not found in mobile structure. Skipping." % pdbchain ))
                     else:
-                        target_resids= list(mobile.select_atoms('name CA').resids) 
-                    
-                    # Remove possible repeated residues in mobile/target
-                    (target_resids_filt,rep_res)=remove_repetition(target_resids)
+                        self.stdout.write(self.style.ERROR("Error extracting sequence of mobile structure. Skipping." ))
+                    continue
+                fasta_filepath=os.path.join(tmp_path,"dyn_%s.fasta"%dyn_id)
+                f = open(fasta_filepath, "w+")
+                f.write("#Ref\n") 
+                f.write(ref_seq+"\n")
+                f.write("#Mob\n") 
+                f.write(mob_seq+"\n")
+                f.close()
 
-                    clustalw_path="clustalw"
-                    
-                    equivalent_res= mda.analysis.align.fasta2select(fasta_filepath, ref_resids=ref_resids, target_resids=target_resids_filt,
-                        clustalw=clustalw_path, alnfilename=aln_filepath)
 
-                    eqref_selection=equivalent_res["reference"]
-                    eqmobile_selection=equivalent_res["mobile"]
+                aln_filepath=os.path.join(tmp_path,"dyn_%s.aln"%dyn_id)
+                ref_resids=[a.resid for a in ref.select_atoms('name CA and (%s)'%" or ".join(["segid %s"%sid for sid in ref_segids]))] 
+                if pdbchainli:
+                    target_resids= list(mobile.select_atoms('name CA and segid %s'%pdbchain).resids)  # if there are no segid, chain is used as segid
+                    add_sel='segid %s and '%pdbchain
+                else:
+                    target_resids= list(mobile.select_atoms('name CA').resids) 
+                    add_sel=""
+                
+                # Remove possible repeated residues in mobile/target
+                (target_resids_filt,rep_res)=remove_repetition(target_resids)
 
-                    #Time to obtain the rotation and translation
-                    rep_res_sel=" or ".join(["resid "+str(r) for r in rep_res])
-                    if rep_res_sel:
-                        no_rep_res_sel="not (%s)"%rep_res_sel
-                        mobile_atomsel=mobile.select_atoms(eqmobile_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
-                        ref_atomsel=ref.select_atoms(eqref_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
-                    else:
-                        mobile_atomsel=mobile.select_atoms(eqmobile_selection).select_atoms("name CA")
-                        ref_atomsel=ref.select_atoms(eqref_selection).select_atoms("name CA")
+                clustalw_path="clustalw"
+                
+                equivalent_res= mda.analysis.align.fasta2select(fasta_filepath, ref_resids=ref_resids, target_resids=target_resids_filt,
+                    clustalw=clustalw_path, alnfilename=aln_filepath)
 
-                    mobile0 = mobile_atomsel.positions - mobile_atomsel.center_of_mass()
-                    ref0 = ref_atomsel.positions - ref_atomsel.center_of_mass()
-                    #1) Align mobile to ref.
-                    (mob_post,rmsd)=mda.analysis.align._fit_to(mobile_coordinates=mobile0, ref_coordinates=ref0, 
-                                               mobile_atoms=mobile.atoms, 
-                                               mobile_com=mobile_atomsel.center_of_mass(),
-                                               ref_com=ref.atoms.center_of_mass()
-                                              )
-                    #Fix possible problems with translation
-                    trans0=ref_atomsel.center_of_mass()- mobile_atomsel.center_of_mass()
-                    mobile.atoms.translate(trans0)
+                ref_segments_sel=" or ".join(["segid %s"%sid for sid in set(ref_segids)])
+                eqref_selection= "(%s) and (%s)"%(ref_segments_sel , equivalent_res["reference"])
+                eqmobile_selection= add_sel+"("+ equivalent_res["mobile"]+")"
 
-                    #2) Obtain rotation and translatoin for mobile. I do this by aligning "mobil aligned to ref" to "original mobile". otherwise the fact that mob often have extra prot. segments and thus c.o.m. is at a different point of the protein made the rotation very complex
-                    mobile_orig = mda.Universe(mobile_filepath)
-                    mobile_ref=mobile
-                    mobile0 = mobile_orig.select_atoms("name CA").positions - mobile_orig.atoms.center_of_mass()
-                    ref0 = mobile_ref.select_atoms("name CA").positions - mobile_ref.atoms.center_of_mass()
-                    R, rmsd = align.rotation_matrix(mobile0, ref0)
+                #Time to obtain the rotation and translation
+                rep_res_sel=" or ".join(["resid "+str(r) for r in rep_res])
+                if rep_res_sel:
+                    no_rep_res_sel="not (%s)"%rep_res_sel
+                    mobile_atomsel=mobile.select_atoms(eqmobile_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
+                    ref_atomsel=ref.select_atoms(eqref_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
+                else:
+                    mobile_atomsel=mobile.select_atoms(eqmobile_selection).select_atoms("name CA")
+                    ref_atomsel=ref.select_atoms(eqref_selection).select_atoms("name CA")
 
-                    trans=mobile_ref.select_atoms("name CA").center_of_mass()- mobile_orig.select_atoms("name CA").center_of_mass()
+                mobile0 = mobile_atomsel.positions - mobile_atomsel.center_of_mass()
+                ref0 = ref_atomsel.positions - ref_atomsel.center_of_mass()
+                #1) Align mobile to ref.
+                (mob_post,rmsd)=mda.analysis.align._fit_to(mobile_coordinates=mobile0, ref_coordinates=ref0, 
+                                           mobile_atoms=mobile.atoms, 
+                                           mobile_com=mobile_atomsel.center_of_mass(),
+                                           ref_com=ref.atoms.center_of_mass()
+                                          )
+                #Fix possible problems with translation
+                trans0=ref_atomsel.center_of_mass()- mobile_atomsel.center_of_mass()
+                mobile.atoms.translate(trans0)
 
-                    if dyn_id==4:
-                        r_angl=transforms3d.euler.mat2euler(R)
-                    else:
-                        r_angl=transforms3d.euler.mat2euler(R,"rxyz")
+                #2) Obtain rotation and translatoin for mobile. I do this by aligning "mobil aligned to ref" to "original mobile". otherwise the fact that mob often have extra prot. segments and thus c.o.m. is at a different point of the protein made the rotation very complex
+                mobile_orig = mda.Universe(mobile_filepath)
+                mobile_ref=mobile
+                mobile0 = mobile_orig.select_atoms("name CA").positions - mobile_orig.atoms.center_of_mass()
+                ref0 = mobile_ref.select_atoms("name CA").positions - mobile_ref.atoms.center_of_mass()
+                R, rmsd = align.rotation_matrix(mobile0, ref0)
 
-                    # Fix transl t match the center of map
-                    centre_coord=np.array(cent_d[pdbid.lower()]) #PDB
-                    mobile_orig.atoms.rotate(R,centre_coord)
-                    mobile_orig.atoms.translate(trans)
+                trans=mobile_ref.select_atoms("name CA").center_of_mass()- mobile_orig.select_atoms("name CA").center_of_mass()
 
-                    if rep_res_sel:
-                        mobile_orig_atomsel=mobile_orig.select_atoms(eqmobile_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
-                        mobile_ref_atomsel=mobile_ref.select_atoms(eqref_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
-                    else:
-                        mobile_orig_atomsel=mobile_orig.select_atoms(eqmobile_selection).select_atoms("name CA")
-                        mobile_ref_atomsel=mobile_ref.select_atoms(eqref_selection).select_atoms("name CA")
-                    trans2=mobile_ref_atomsel.center_of_mass()- mobile_orig_atomsel.center_of_mass()
-                    mobile_orig.atoms.translate(trans2)
-                    # Obtain correct transl
-                    final_trans=np.add(trans,trans2)
-                    self.stdout.write(self.style.SUCCESS("Trans: %s"%list(final_trans)))
-                    with open(matrix_datafile, 'wb') as filehandle:  
-                        # store the data as binary data stream
-                        pickle.dump([r_angl,final_trans], filehandle)
+                if dyn_id==4:
+                    r_angl=transforms3d.euler.mat2euler(R)
+                else:
+                    r_angl=transforms3d.euler.mat2euler(R,"rxyz")
 
-                    #to open:
-    #                    with open('/protwis/sites/files/Precomputed/ED_map/dyn_4_transfmatrix.data', 'rb') as filehandle:  
-    #                        (r_anglpre,transpre) = pickle.load(filehandle)
+                # Fix transl t match the center of map
+                centre_coord=np.array(cent_d[pdbid.lower()]) #PDB
+                mobile_orig.atoms.rotate(R,centre_coord)
+                mobile_orig.atoms.translate(trans)
 
-                    #remove tmp files
-                    for filenm in os.listdir(tmp_path):
-                        if filenm.startswith("dyn_%s"%dyn_id) or filenm==pdbid+".pdb":
-                            os.remove(os.path.join(tmp_path,filenm))
+                eqref_selection= "segid %s and (%s)"%(pdbchain , equivalent_res["reference"])
+                if rep_res_sel:
+                    mobile_orig_atomsel=mobile_orig.select_atoms(eqmobile_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
+                    mobile_ref_atomsel=mobile_ref.select_atoms(eqref_selection).select_atoms("name CA").select_atoms(no_rep_res_sel)
+                else:
+                    mobile_orig_atomsel=mobile_orig.select_atoms(eqmobile_selection).select_atoms("name CA")
+                    mobile_ref_atomsel=mobile_ref.select_atoms(eqref_selection).select_atoms("name CA")
+                trans2=mobile_ref_atomsel.center_of_mass()- mobile_orig_atomsel.center_of_mass()
+                mobile_orig.atoms.translate(trans2)
+                # Obtain correct transl
+                final_trans=np.add(trans,trans2)
+                self.stdout.write(self.style.SUCCESS("Trans: %s"%list(final_trans)))
+                with open(matrix_datafile, 'wb') as filehandle:  
+                    # store the data as binary data stream
+                    pickle.dump([r_angl,final_trans], filehandle)
 
-                    self.stdout.write(self.style.SUCCESS("Transformation matrix successfully generated at %s"%matrix_datafile))
-                except Exception as e:
-                    self.stdout.write(self.style.ERROR(e))
+                #to open:
+#                    with open('/protwis/sites/files/Precomputed/ED_map/dyn_4_transfmatrix.data', 'rb') as filehandle:  
+#                        (r_anglpre,transpre) = pickle.load(filehandle)
+
+                #remove tmp files
+#                    for filenm in os.listdir(tmp_path):
+#                        if filenm.startswith("dyn_%s"%dyn_id) or filenm==pdbid+".pdb":
+#                            os.remove(os.path.join(tmp_path,filenm))
+
+                self.stdout.write(self.style.SUCCESS("Transformation matrix successfully generated at %s"%matrix_datafile))
+#                except Exception as e:
+#                    self.stdout.write(self.style.ERROR(e))
+
+                gc.collect()
