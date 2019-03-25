@@ -3,6 +3,10 @@
 Django settings for protwis project.
 """
 
+#Defaults
+QUERY_CHECK_PUBLISHED = True
+FILES_NO_LOGIN = False
+
 # import local settings
 # by default, local settings are in protwis/settings_local_default.py
 # you can override these settings by creating a protwis/settings_local.py file (or copying settings_local_default)

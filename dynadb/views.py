@@ -12998,6 +12998,11 @@ def url_equal(url1,url2):
     return bool(nu1 == nu2) 
 
 
+
+def serve_submission_files_no_login(request,obj_folder,submission_folder,path):
+    filepath = file_url_to_file_path(request.path)
+    return sendfile(request,filepath)
+
 @login_required
 def serve_submission_files(request,obj_folder,submission_folder,path):
     ''' Function to serve private files using django-sendfile module.

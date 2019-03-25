@@ -4,6 +4,7 @@ from django.conf import settings
 from protwis import views
 
 
+
 urlpatterns = [
     url(r'^contmaps/', include('contact_maps.urls')),
 #   url(r'^juanmaapp/', include('juanmaapp.urls')),  #### introducida por mi para  /protwis/sites/protwis/juanmaapp
@@ -34,10 +35,12 @@ urlpatterns = [
 #    url(r'^construct/',include('construct.urls')),
 #    url(r'^sitesearch/',include('sitesearch.urls')),
 #    url(r'^drugs/',include('drugs.urls')),
-    url(r'^mdsrv/(?P<path_dir>dir/_DB/[^/\\]+/[^/\\]+)|mdsrv/(?P<path>.*/_DB/[^/\\]+/[^/\\]+/.*)$','dynadb.views.mdsrv_redirect_login',name='mdsrv_redirect_login'),
-    url(r'^mdsrv/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
+]
+if not settings.FILES_NO_LOGIN:
+    urlpatterns.append(url(r'^mdsrv/(?P<path_dir>dir/_DB/[^/\\]+/[^/\\]+)|mdsrv/(?P<path>.*/_DB/[^/\\]+/[^/\\]+/.*)$',
+    'dynadb.views.mdsrv_redirect_login',name='mdsrv_redirect_login'))
+urlpatterns += [ url(r'^mdsrv/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
     url(r'^html/(?P<path>.*)$','dynadb.views.mdsrv_redirect',name='mdsrv_redirect'),
-    
 ]
 
 handler404 = views.error404

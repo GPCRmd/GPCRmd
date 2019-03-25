@@ -15,12 +15,12 @@ sqs = SearchQuerySet().all()
 
 app_name= 'dynadb'
 urlpatterns = [
-#    url(r'^reset/$', views.reset_permissions, name="reset_permissions"),
+    url(r'^reset/$', views.reset_permissions, name="reset_permissions"),
     #url(r'^prueba_varios/$', TemplateView.as_view(template_name='dynadb/pruebamult_template.html'), name="prueba_varios"),
     #url(r'^profile_setting/$', views.profile_setting, name='profile_setting'),
     #url(r'^sub_sim/$', views.sub_sim, name='sub_sim'),
     #url(r'^name/$', views.get_name, name='name'),
-    url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
+#    url(r'^dyndbfiles/$', views.get_DyndbFiles, name='dyndbfiles'),
     url(r'^db_inputform/(?P<submission_id>[0-9]+)?/?$', views.db_inputformMAIN, name='db_inputform'),
     url(r'^before_db_inputform_prev_moddb_inputform/(?P<submission_id>[0-9]+)?/?$', views.db_inputformMAIN, name='before_db_inputform_prev_mod'),
 #    url(r'^db_author_information/$', views.get_Author_Information, name='db_author_information'),
@@ -127,8 +127,13 @@ if settings.DEBUG:
         }),
     )
 else:
+
+    if settings.FILES_NO_LOGIN:
+        serve_files_func = views.serve_submission_files_no_login
+    else:
+        serve_files_func = views.serve_submission_files
     urlpatterns += patterns('',
-        url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', views.serve_submission_files, name='serve_submission_files'),
+        url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', serve_files_func, name='serve_submission_files'),
 
 )
 

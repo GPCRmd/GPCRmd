@@ -30,6 +30,7 @@ DATABASES = {
 # Quick-start development settings - unsuitable for production
 
 QUERY_CHECK_PUBLISHED = True
+FILES_NO_LOGIN = False
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 #Import secrets
