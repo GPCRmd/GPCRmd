@@ -87,17 +87,21 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	# Setting csv_name
 	scriptfilepath = basedir + itype + "_" + ligandonly + "_" + rev + "_heatmap.html"
 
+	#Path to json
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/%s_%s_jsons/%sclusters/" %  (itype, ligandonly, cluster)
+
 	# Loading heatmap script if it exists. If not, load "no interactions" template instead
 	if exists(scriptfilepath):
 		with open(scriptfilepath, 'r') as scriptfile:
 			script = scriptfile.read()
 	else:
 		context = {
+			'fpdir' : fpdir,
 			'itype_code' : itype,
 			'itype_name' : typelist[itype],
 			'hb_itypes' : hb_itypes,
 			'itypes_order' : itypes_order,
-			'clusrange': list(range(2,21)),
+			'clusrange_all': list(range(2,21)),
 			'selected_itypes' : selected_itypes,
 		}
 		return render(request, 'contact_maps/index_nodata.html', context)
@@ -113,6 +117,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 
 	# Send request 
 	context={
+		'fpdir' : fpdir,
 		'itypes_order' : itypes_order,
 		'itypes_dict' : typelist,
 		'itype_code' : itype,
@@ -123,7 +128,8 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'hb_itypes' : hb_itypes,
 		'script' : script , 
 		'div' : div,
-		'clusrange': list(range(2,21)),
+		'clusrange_all': list(range(2,21)),
+		'clusrange': list(range(1,int(cluster)+1)),
 		'plotdiv_w':plotdiv_w,
 		'mdsrv_url':mdsrv_url
 	}

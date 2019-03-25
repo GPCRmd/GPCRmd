@@ -58,7 +58,7 @@
     <!--Clusters dropdown-->
     <div class="dropdown optbar">
       <select name="clusters" id="clusters_dropdown" class="btn btn-sm btn-primary">
-        {% for clust in clusrange %}
+        {% for clust in clusrange_all %}
         <option class="clusteropt" value={{clust}}> {{clust}} clusters </option>
         {% endfor %}
       </select>

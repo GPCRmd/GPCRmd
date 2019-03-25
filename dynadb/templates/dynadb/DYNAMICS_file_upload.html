@@ -61,6 +61,12 @@
                         <div class="col-md-3" style="height:26px;float:left;width:25%">
                             <button style="" type="submit" id="id_{{file_type}}_upload" name="{{file_type}}_upload"/>Upload</button>
                         </div>
+                        <div class="row" style="width:100%;margin:0px">
+                            {%if download_urls and file_type == "traj"%}
+                            <div class="row" style="width:100%;margin:0px">
+                            <button style="" type="submit" id="id_{{file_type}}_delete_all" name="{{file_type}}_delete_all" value="1"/>Delete trajectories</button>
+                            </div>
+                            {%endif%}
                         <div class="col-md-9" style="float:left;width:75%">
                             {%for download_url in download_urls%}
                             <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px">
@@ -68,7 +74,7 @@
                             </div>
                             {%empty%}
                             <div id="id_{{file_type}}_download_url_div" class="row" style="width:100%;margin:0px;">
-                            <a style="vertical-align:middle;line-height:26px;" href="{{download_url}}" id="id_{{file_type}}_download_url" hidden noreferrer target="_blank">Download uploaded file.</a>
+                            <a style="vertical-align:middle;line-height:26px;" href="" id="id_{{file_type}}_download_url" hidden noreferrer target="_blank">Download uploaded file.</a>
                             </div>
                             {%endfor%}
                         </div>

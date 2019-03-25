@@ -23,7 +23,7 @@ def obtain_dyn_files_from_id(dyn_ids,alldyn=False):
     """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
     
     traj_counter = {} 
-    dynfiles = DyndbFilesDynamics.objects.select_related("id_files")
+    dynfiles = DyndbFilesDynamics.objects.select_related("id_files").filter(id_dynamics__is_published=True)
     dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"))
     dynfiles = dynfiles.values("id_dynamics","id_files","file_name","file_path")
     if not alldyn:

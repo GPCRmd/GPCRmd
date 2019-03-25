@@ -75,8 +75,8 @@ class DyndbComplexExp(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
-    proteins = models.ManyToManyField('DyndbProtein',through='DyndbComplexProtein')
-    compounds = models.ManyToManyField('DyndbCompound',through='DyndbComplexCompound')
+    proteins = models.ManyToManyField('DyndbProtein',through='DyndbComplexProtein',null=True)
+    compounds = models.ManyToManyField('DyndbCompound',through='DyndbComplexCompound',null=True)
     class Meta:
         managed = True
         db_table = 'dyndb_complex_exp'
@@ -98,7 +98,7 @@ class DyndbComplexMolecule(models.Model):
     created_by = models.IntegerField(blank=True, null=True)
     last_update_by = models.IntegerField(blank=True, null=True)
     is_published = models.BooleanField(default=False)
-    molecules = models.ManyToManyField('DyndbMolecule',through='DyndbComplexMoleculeMolecule')
+    molecules = models.ManyToManyField('DyndbMolecule',through='DyndbComplexMoleculeMolecule',null=True)
     class Meta:
         managed = True
         db_table = 'dyndb_complex_molecule'

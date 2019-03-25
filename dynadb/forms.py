@@ -239,6 +239,7 @@ class dyndb_Complex_Exp(ModelForm):
         model = DyndbComplexExp
        # fields = '__all__'
         fields= ['creation_timestamp', 'update_timestamp']
+        exclude = ['proteins','compounds']
 
 class dyndb_Complex_Protein(ModelForm):
     class Meta:
@@ -249,6 +250,7 @@ class dyndb_Complex_Molecule(ModelForm):
     class Meta:
         model = DyndbComplexMolecule
         fields = '__all__'
+        exclude = ['molecules']
         #fields=['id_complex_exp'] 
 
 class dyndb_Complex_Molecule_Molecule(ModelForm):

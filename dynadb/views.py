@@ -4583,7 +4583,6 @@ def MODELreuseview(request, submission_id ):
     qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 #    qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
     lformps=list(range(0,len(qMODRES)))
-    q0MODRES=qMODRES[0]
     rowsMR=qMODRES
     lmrstype=[]
     for l in qMODRES:
@@ -6345,7 +6344,6 @@ def MODELview(request, submission_id):
             qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id,id_protein__dyndbsubmissionprotein__submission_id=INITsubmission_id).annotate(int_id=F('id_protein__dyndbsubmissionprotein__int_id')).order_by('resid_from')
 ##           qMODRES=DyndbModeledResidues.objects.filter(id_model=model_id).order_by('resid_from')
             lformps=list(range(0,len(qMODRES)))
-            q0MODRES=qMODRES[0]
             rowsMR=qMODRES
             lmrstype=[]
             for l in qMODRES:
@@ -7659,6 +7657,18 @@ def get_dynamics_file_types():
       
 file_types = get_dynamics_file_types()
 
+def delete_uploaded_dynamic_files(submission_id,dbtype):
+
+    dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+    dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
+    for row in dyndb_submission_dynamics_files:
+        filepath2 = row['filepath']
+        if os.path.exists(filepath2):
+            os.remove(filepath2)
+            dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+            dyndb_submission_dynamics_files.delete()
+
+
 @csrf_protect
 def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_files=200):
     
@@ -7666,7 +7676,6 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     file_type = None
     new_window = '0'
     no_js = '1'
-    download_url = ''
     error = ''
     filetype_complete_names = {'coor':'coordinate','top':'topology','traj':'trajectory','parm':'parameter','other':'other'}
     filetype_subtypes_dict = {'coor':'pdb','top':'topology','traj':'trajectory','parm':'parameters','other':'other'}
@@ -7701,29 +7710,39 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
     if file_type not in file_types:
         return HttpResponse('Invalid file_type value',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
     
+    if file_type in filetype_subtypes_dict:
+        subtype = filetype_subtypes_dict[file_type]
+    else:
+        response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+        return response
+
+    
+
     accept_string = ',.'.join(file_types[file_type]['extension'])
     accept_string = '.' + accept_string
     action ='./?file_type='+file_type+'&new_window='+str(new_window)+'&no_js='+str(no_js)+'&timestamp='+str(round(time.time()*1000))
     
+    dbtype = type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[file_type],case_sensitive=False,first_match=True)
+    
     if request.method == "POST":
         exceptions = False
         data = dict()
+        print(request.POST)
         data['download_url_file'] = []
-        if file_type in filetype_subtypes_dict:
-            subtype = filetype_subtypes_dict[file_type]
-        else:
-            response = HttpResponse('Unknown file type: '+str(file_type),status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
-            return response
-            
-        if file_type in atomnum_check_file_types:    
-            reffilepath, reffilename, ref_file_type, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
-            prev_numatoms = ref_numatoms
         
-        
-        dbtype = type_inverse_search(DyndbSubmissionDynamicsFiles.file_types,searchkey=filetype_dbtypestext_dict[file_type],case_sensitive=False,first_match=True)
         submission_path = get_file_paths("dynamics",url=False,submission_id=submission_id)
         submission_url = get_file_paths("dynamics",url=True,submission_id=submission_id)    
         try:
+            if file_type+'_delete_all' in request.POST:
+                if int(request.POST[file_type+'_delete_all']):
+                   delete_uploaded_dynamic_files(submission_id,dbtype)
+                   response = HttpResponse("Done!",status=200,reason='OK',content_type='text/plain; charset=UTF-8')
+                   return response
+
+            if file_type in atomnum_check_file_types:
+                reffilepath, reffilename, ref_file_type, ref_numatoms = get_dynamics_files_reference_atomnum(submission_id,file_type)
+                prev_numatoms = ref_numatoms
+
             if 'filekey' in request.POST:
                 filekey = request.POST['filekey']
             else:
@@ -7814,16 +7833,7 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                         if ref_numatoms is not None and ref_numatoms != numatoms:
                             response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from uploaded coordinate file.',status=422,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
-                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
-                        dyndb_submission_dynamics_files = dyndb_submission_dynamics_files.values('filepath')
-                        
-                        for row in dyndb_submission_dynamics_files:
-                            filepath2 = row['filepath']
-                            if os.path.exists(filepath2):
-                                os.remove(filepath2)
-                                
-                        dyndb_submission_dynamics_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
-                        dyndb_submission_dynamics_files.delete()
+                        delete_uploaded_dynamic_files(submission_id,dbtype)
                     elif prev_numatoms != numatoms:
                         response = HttpResponse('Uploaded trajectory file "'+uploadedfile.name+'" number of atoms ('+str(numatoms)+') differs from "'+prev_name+'".',status=432,reason='Partial Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                         return response
@@ -7889,10 +7899,12 @@ def _upload_dynamics_files(request,submission_id,trajectory=None,trajectory_max_
                     'accept_ext':accept_string,'no_js':no_js,'get':False},status=response.status_code)
 
     elif request.method == "GET":
-
+        q_uploaded_files = DyndbSubmissionDynamicsFiles.objects.filter(submission_id=submission_id,type=dbtype)
+        q_uploaded_files = q_uploaded_files.order_by('filenum').values_list('url',flat=True)
+        print(q_uploaded_files) 
         return render(request,'dynadb/DYNAMICS_file_upload.html',{'action':action,'file_type':file_type,
         'long_name':file_types[file_type]['long_name'],'description':file_types[file_type]['description'],
-        'new_window':new_window,'download_url':download_url,'success':None,'error':'','accept_ext':accept_string,'no_js':no_js,'get':True})
+        'new_window':new_window,'success':None,'error':'','download_urls':q_uploaded_files,'accept_ext':accept_string,'no_js':no_js,'get':True})
 
 
 
