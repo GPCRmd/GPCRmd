@@ -297,22 +297,29 @@ def annotate_clusters(fig, default_color = ""):
     clustcoords = []
     xcords = []
     annotations = []
+    
+    # Sorting by y coordenate (needed for later)
+    fig['data'] = sorted(fig['data'], key=lambda x: x['y'][0])
+    
+    #Iterate over all vector forms in the figure and find the ones that are cluster tops
     for entry in fig['data']:
-        
+
         currentcolor = entry['marker']['color']
-        # If new entry is higher (inside the tree) than previous, select as candidate for cluster node
         current_min_x = min(entry['x'])
         current_max_x = max(entry['x'])
-        if (currentcolor == default_color) and (max(entry['x']) != -0.0):
+        # For skipping upper-dendrogram, non-cluster branches
+        if (currentcolor == default_color) and ((max(entry['x']) != -0.0) or (entry['y'][0]%10 == 0)):
             continue
-
-        # If there has been a color change, then a new cluster the iteration has entered
-        if prevcolor != currentcolor:
+            
+        # If there has been a color change ...
+        #... OR it is a single-node cluster
+        if (prevcolor != currentcolor) or ((currentcolor == default_color) and (max(entry['x']) == -0.0) ):
             clustcount += 1
             xcords.append("")
             min_x = 0
             clustcoords.append({})
-        
+            
+        # If new entry is higher (inside the tree) than previous, select as candidate for cluster node        
         if current_min_x <= min_x:
             min_x = current_min_x
             clustcoords[clustcount]['clusnode_x'] = entry['x'][1]
@@ -322,13 +329,25 @@ def annotate_clusters(fig, default_color = ""):
             clustcoords[clustcount]['color'] = currentcolor
             clustcoords[clustcount]['xanchor'] = 'right'
             
-            if (currentcolor == default_color) and (current_max_x == -0): #For single-branch clusters
+            #For single-branch clusters
+            if (currentcolor == default_color) and (current_max_x == -0): 
                 index_x = np.where(entry['x'] == current_max_x) 
                 clustcoords[clustcount]['clusnode_y'] = entry['y'][index_x][0]
-                clustcoords[clustcount]['xanchor'] = 'center' # In those cases is prettier this way
+                #If the branch contains two single-node clusters(very rare case), append another cluster label
+                if (entry['x'][0] == -0) and (entry['x'][3] == -0) and (entry['y'][2]%10 != 0):
+                    clustcount += 1
+                    clustcoords.append({
+                        'clusnode_x' : entry['x'][2],
+                        'clusnode_y' : entry['y'][2],
+                        'clustnumber' : clustcount,
+                        'color' : currentcolor,
+                        'xanchor' : 'right'
+                   })
+                    xcords.append(clustcoords[clustcount]['clusnode_x'])
                 
         prevcolor = currentcolor
 
+    # Annotate with "clusterN" the vector forms found in previous loop
     for clust in clustcoords:
         colorfont = black_or_white(clust['color'])
         annotations.append(dict(
@@ -423,18 +442,24 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
     """
     
     os.makedirs(folderpath,  exist_ok = True)
+    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
     
     for clust in clustdict.keys():
         # Mean frequencies and mean threshold
         df_clust = df.filter(items = clustdict[clust] + ['Position 1', 'Position', 'Position 2'])
         df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
         mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
+        df_clust['color'] = df_clust['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
+
+        #Filter top 5 in df_clust
+        df_clust = df_clust.nlargest(5,'mean')
         
         # 'Edge' entry for json file
         df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
         df_dict['name1'] = df_clust['Position 1'] 
         df_dict['name2'] = df_clust['Position 2']
-        df_dict['frames'] = df_clust['mean'].apply(lambda x: list(range(round(x))) if x >= mean_threshold else [])
+        df_dict['color'] = df_clust['color']
+        df_dict['frames'] = [[1]]*len(df_dict)
         edges = df_dict.to_dict(orient="records")
         
         # Appending edges to flare plot template, if any submitted
@@ -793,7 +818,6 @@ def get_contacts_plots(itype, ligandonly):
         ligandfilter = ~df['Position'].str.contains('Ligand')
         df = df[ligandfilter]
 
-
     #Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
     df = removing_entries(df, set_itypes, itype)
 
@@ -850,6 +874,11 @@ def get_contacts_plots(itype, ligandonly):
         
         (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
 
+        # Write dynamicID-cluster dictionary on a json 
+        with open(str("%sview_input_dataframe/%s_%s_jsons/%sclusters/clustdict.json" % (basepath,itype,ligandonly,str(cluster))), 'w') as clusdictfile:
+            dump(clustdict, clusdictfile, ensure_ascii=False, indent = 4)
+
+
         #Jsons for the flareplots of this combinations of clusters
         jsonpath = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_jsons/" + str(cluster) + "clusters/"
         flareplot_json(df, clustdict, jsonpath, flare_template)
@@ -893,11 +922,11 @@ def get_contacts_plots(itype, ligandonly):
             os.makedirs(basepath + "view_input_dataframe")
 
         # Write heatmap on file
-        with open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_heatmap.html", 'w') as heatmap:
+        with open(str("%sview_input_dataframe/%s_%s_%s_heatmap.html" % (basepath, itype, ligandonly, rev)), 'w') as heatmap:
             heatmap.write(script)
 
         # Write div and plotdiv as python variables in a python file
-        with open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_variables.py", 'w') as varfile:
+        with open(str("%sview_input_dataframe/%s_%s_%s_variables.py" % (basepath, itype, ligandonly, rev)), 'w') as varfile:
             varfile.write("div = \'%s\'\n" % div.lstrip())
             varfile.write("plotdiv_w = " + str(plotdiv_w))
 
