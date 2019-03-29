@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MDsrv/NGL - embedded</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="icon" href="../../mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+  <link rel="stylesheet" href="../../mdsrv/webapp/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="../../mdsrv/webapp/css/main.css" />
+  <link rel="subresource" href="../../mdsrv/webapp/css/light.css" />
+  <link rel="subresource" href="../../mdsrv/webapp/css/dark.css" />
+  <style>
+    .popover {
+      background-color: rgba(242, 242, 242, 0.75);
+    }
+      
+  </style>
+
+</head>
+<body>
+
+  <!-- NGL -->
+  <script src="../../mdsrv/webapp/js/ngl.js"></script>
+
+  <!-- UI -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
+  <script src="../../mdsrv/webapp/js/lib/signals.min.js"></script>
+  <script src="../../mdsrv/webapp/js/lib/tether.min.js"></script>
+  <script src="../../mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+  <script src="../../mdsrv/webapp/js/ui/ui.js"></script>
+  <script src="../../mdsrv/webapp/js/ui/ui.extra.js"></script>
+  <script src="../../mdsrv/webapp/js/ui/ui.ngl.js"></script>
+  <script src="../../mdsrv/webapp/js/ui/ui.helper.js"></script>
+  <script src="../../mdsrv/webapp/js/gui.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  <!--Main NGL -->
+  <script>
+    var basedir = "/dynadb/files/Precomputed/get_contacts_files/";
+    var compl_data = $.getJson(basedir + "compl_info.json")
+    console.log(compl_data)
+  </script>
+
+  <div id="toiframe" style="width:620px;height:445px">
+      <div id="viewport" style="width:620px; height:420px;"></div><!--395 -> 445 -->
+      <div style="height:80px">
+          <div id="buttons" style="width:616px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+          </div>
+          <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:65px">
+          </div>
+      </div>
+      <div id="trajRangeDiv" style="position:absolute;width:616px;height:30px;margin-top:265px;margin-left:2px;visibility:hidden">
+          <p style="margin-right:18px;font-size:12px;color:#B8B8B8" class="pull-right" id="last_played"></p>
+          <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
+
+        <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
+        
+        <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
+      </div>
+      <span id="varinfo"></span>
+      <div id="infoPannel" style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
+          <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
+          <div id="atomInfo" style="color:green;"></div>
+      </div>
+  </div>
+</body>
+</html>

@@ -4,7 +4,7 @@ $(document).ready(function(){
 	// Functions
 	////////////
 
-    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts, plot){
+    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts = false){
         var fpjson=jsonData;
         if (fpjson.edges[0].helixpos != undefined) {
             //$("#fpShowResSetBtns").css("display","inline-block");
@@ -23,6 +23,12 @@ $(document).ready(function(){
             $("#fpShowResSetBtns").css("display","none");
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
+
+        //Wider lines
+        $("path.link").css('stroke-width', 6); 
+        //Thicker lines
+        $("path.link").css('stroke-opacity', 0.5);         
+
         return(plot);
     }
 
@@ -162,13 +168,13 @@ $(document).ready(function(){
         var fpsize=setFpNglSize(true, "#flare-container0");
 
         d3.json(fpdir+"cluster1.json", function(jsonData){
-	        plots[0] = createFlareplot(fpsize, jsonData, "#flare-container0", "Inter");
+	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
            	$('#loading_flare0').css('display', 'none');
             allEdges0 = plots[0].getEdges();
             numfr0 = plots[0].getNumFrames();
         });
         d3.json(fpdir+"cluster2.json", function(jsonData){
-	        plots[1] = createFlareplot(fpsize, jsonData, "#flare-container1", "Inter");
+	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
 	        $('#loading_flare1').css('display', 'none');
             allEdges1 = plots[1].getEdges();
             numfr1 = plots[1].getNumFrames();
@@ -204,4 +210,8 @@ $(document).ready(function(){
 	    }
     });
 
+    ////////////////
+    ////NGL time!!!!
+    ///////////////
+    
 });

@@ -1,5 +1,10 @@
 $(document).ready(function(){
 
+  //Remove loading icon once page is loaded
+  window.onload = function(){
+    document.getElementById("loading").remove();
+  }
+
   //--------Used later for some functions
   var typedict =  {
     'sb' : 'salt bridge',
@@ -51,11 +56,6 @@ $(document).ready(function(){
   }
   if (rev == "rev"){
     $('#rev_pairs').prop('checked', true)
-  }
-
-  //Remove loading icon once page is loaded
-  window.onload = function(){
-    document.getElementById("loading").remove();
   }
 
   //-------Dropdowns

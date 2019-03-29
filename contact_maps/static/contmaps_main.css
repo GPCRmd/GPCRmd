@@ -81,7 +81,7 @@ body {
 
 #more_info {
   max-height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .mycheckbox{
@@ -132,13 +132,6 @@ body {
   padding-top: 5%;
   padding-left: 5%;
 }
-
-
-a {
-  color:inherit;
-  text-decoration: none;
-
- }
 
 .optbar {
   display:inline-block;
@@ -191,11 +184,19 @@ hr {
   margin: 2px !important;
 }
 
+#show_hide_info_text {
+  margin-left:5px;
+  font-size:12px;
+}
+
 .doc_title {
   text-align: justify;
-  margin-bottom:4px;
   font-weight:bold;
   color:#337AB7;
+}
+
+.doc_content {
+  text-align: justify;
 }
 
 .open>.dropdown-menu {
@@ -247,3 +248,34 @@ hr {
 .loading_flare {
   margin: 20px;
 }
+
+.title_div {
+  background-color:#F3F3F3; 
+  border-radius:2px;
+  padding:5px;
+  text-align: center;
+  margin: 5 0 5 0;
+}
+}
+
+.title {
+  padding:0;
+  margin:0;
+}
+
+#loading_NGL {
+  width:50px;
+  height:50px;
+  margin-top:150px;
+  position:absolute;
+  z-index:10;
+  margin-left:-25px;
+}
+
+.loading_cluster_viewer {
+  width:50px;
+  height:50px;
+  margin-top:210px;
+  z-index:10;
+  margin-left:-25px
+} 

@@ -306,14 +306,15 @@
                         modTooltip();
                         
                         // Add representations
+                        var index, position, pos_sel 
                         o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
                         if (lig) {
                           o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
                         }
                         if (pdb_pos != "NaN"){
                             if (Array.isArray(pdb_pos)){
-                                for (index in pdb_pos){
-                                    position = pdb_pos[index];
+                                for (i = 0; i < pdb_pos.length; i++){
+                                    position = pdb_pos[i];
                                     if (position == null){
                                         continue // Skip undefined parts
                                     }
