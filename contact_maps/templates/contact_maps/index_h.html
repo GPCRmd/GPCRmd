@@ -201,58 +201,6 @@
       </div>
     </div>
  
-    <div class="panel panel-primary" id="flare_col"  data-fpdir="{{fpdir}}">
-      <div class="panel-body">
-        <div class="title_div"" data-bind_domain="" data-presel_pos="">
-          <h4 class="title">Cluster Simulation Viewer</h4>
-        </div>
-        <div id="ngldiv0" class="col-xs-6 ngldiv">
-          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_cluster_viewer"/></center></span>
-            <div>
-              <div id="legend_row" class="row" style=max-width:620px;margin:auto>
-                <div id="legend" style="float:left;min-height:20px"> </div>
-                <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
-              </div>  
-              <div >
-                <div id="dropdownAndIframe" style="margin:auto;position:relative;overflow-y:hidden;overflow-x:auto;height:445px;max-width:622px;margin-bottom:5px">
-                
-                     {% if traj_list %}
-                      <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
-                        <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" data-tpath="" data-fplot_file={{traj_list.0.3}} >{{ traj_list.0.1 }}
-                        <span class="caret"></span></button>
-                        <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
-                          <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >{{traj_list.0.1}}</li>
-                        {% for traj in traj_list|slice:"1:" %}
-                          <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3}} >{{traj.1}}</li>
-                        {% endfor %}
-                        </ul>
-                      </div>
-                     {% endif %}
-                     
-                  <div class="dropdown" id="simulation_select" style=" float:right; clear:both;z-index:10">
-                    <button id="simButton" class="btn btn-info btn-xs dropdown-toggle pull-right" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-right:3px;margin-top:7px">{{clustdict.cluster1.0}} <span class="caret"></span></button>
-                    <ul id="simList" class="dropdown-menu" style="height: auto;padding:0">
-                      {% for sim in clustdict.cluster1 %}
-                        <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Click a pair of residues to show the distance betweent them."  class="onclickshow is_active" data-short="dists">{{sim}}</li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-
-                    <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/contmaps/ngl_clus/{{itype_code}}&{{ligandonly}}&cluster1&{{clustdict.cluster1.0}}" scrolling="no" height="1000px" width="620px"></iframe>
-                    </div>
-
-                </div>          
-            </div>            
-           
-        </div>
-
-        <div id="ngldiv1" class="col-xs-6 ngldiv">
-          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}"  class="loading_cluster_viewer"/></center></span>
-        </div>
-
-      </div>
-    </div>
- 
     {% include './contact_maps/docs.html' %}
   </div>
 
