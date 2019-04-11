@@ -113,21 +113,16 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 
 	#Loading dynamics-cluster dictionary
 	clustdict = json_dict(str("%s%s_%s_jsons/%sclusters/clustdict.json" % (basedir, itype, ligandonly, cluster)))
-	print(clustdict)
 
 	# Loading dendrogram
 	dendfile = ("%s%s_%s_dendrograms/%s_%s_%s_dendrogram_figure.html" % (basedir, itype, ligandonly, itype, str(cluster), ligandonly))
 	dendr_figure = open(dendfile, 'r').read()
 
-	# Loading data
-	compl_data = json_dict(str(basedir + "../compl_info.json"))
-	for dynid in compl_data:
-		compl_data[dynid].pop('gpcr_pdb')
+	first_sim = clustdict['cluster1'][0]
 
 	# Send request 
 	context={
 		'clustdict' : clustdict,
-		'compl_data': compl_data,
 		'fpdir' : fpdir,
 		'itypes_order' : itypes_order,
 		'itypes_dict' : typelist,
@@ -141,6 +136,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'div' : div,
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
+		'cluster' : cluster,
 		'plotdiv_w':plotdiv_w,
 		'mdsrv_url':mdsrv_url
 	}
@@ -162,10 +158,3 @@ def get_csv_file(request,itype, ligandonly, rev):
 
 def get_itype_help(request, foo):
 	return render(request, 'contact_maps/itype_help.html')
-
-def get_nglviewer(request, cluster, dynid):
-	context = {
-		'cluster' : cluster,
-		'dynid' : dynid,
-	}
-	return render(request, 'contact_maps/ngl_cluster.html', context)

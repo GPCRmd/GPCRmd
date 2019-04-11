@@ -1,28 +1,3 @@
-
-/*
-
-html, body, #outer {
-    height: 100%;
-    width: 100%;
-    margin: 0;
-}
- 
-#outer {
-    display: table;
-}
- 
-#inner_fixed {
-    height: 69px;
-    display: table-row;
-}
- 
-#inner_remaining {
-    display: table-row;    
-    height:100%
-}
-
-*/
-
 body {
   overflow-y: scroll !important;
 }
@@ -119,10 +94,6 @@ body {
   margin: 0.5%;
 }
 
-.dropdown-menu {
-  width: 204px !important;
-}
-
 .HB_row {
   margin: 0px;
   width: 100%;
@@ -200,13 +171,19 @@ hr {
 }
 
 .open>.dropdown-menu {
-    display: inline-block !important; 
+    display: inline-block !important;
 }
 
+.dropdown-menu {  
+  width: 204px !important;
+}
+
+
 #loading_heatmap {
-  margin:150px;
-  z-index:-10;
-  }
+    left: 65%;
+    position: absolute;
+    top: 45%;
+}
 
 /*Flareplots*/
 
@@ -263,7 +240,7 @@ hr {
   margin:0;
 }
 
-#loading_NGL {
+#loading_NGL_side {
   width:50px;
   height:50px;
   margin-top:150px;
@@ -279,3 +256,86 @@ hr {
   z-index:10;
   margin-left:-25px
 } 
+
+/*NGL viewer*/
+
+#dropdownAndIframe {
+  margin:auto;position:relative;
+  overflow-y:hidden;
+  overflow-x:auto;height:445px;
+  max-width:622px;
+  margin-bottom:5px;
+}
+
+.blueDropdownDiv {
+  z-index:10;
+} 
+
+.blueButton {
+  margin-left:3px;
+  margin-top:7px
+}
+
+.blueList {
+  height: auto;
+  max-height:350px;
+  overflow-x: hidden;
+  padding:0;
+}
+
+.blueElement {
+  padding:5px 10px 5px 10px;
+}
+
+#simulation_select {
+  float: right;
+}
+
+.traj_select {
+  float: left;
+}
+
+#embed_mdsrv {
+  border:none;
+  top:-30px;
+}
+
+.settingsB {
+  padding:7px;
+  color:#585858;
+}
+
+.is_active {
+  background-color: #bfbfbf;
+}
+
+.NGLtoolbar {
+    margin: 10px;
+    position: absolute;
+    width: 93%;
+    height: 20%;
+  }
+
+.NGLclear {
+  margin-top: 15; 
+}
+
+.loading_NGL_bottom {
+  position:absolute;
+  z-index:10;
+  left: 40%;
+  top: 30%;
+}
+
+.posNotinRec {
+  display: none;
+}
+
+.viewer_link_bottom {
+  margin: 6px;
+}
+
+.ngldiv {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}

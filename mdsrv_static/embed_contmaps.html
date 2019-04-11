@@ -47,10 +47,6 @@
             document.domain=document.domain;
 
 
-
-
-
-
 ////////////////// Functions
         function setTrajRangeMax(){
             var btn_traj_Bid =$(".traj_btn").attr("id");
@@ -166,7 +162,7 @@
                     $("#trajRange").slider("refresh");
                     $("#traj_time_val").html((fnum*delta).toFixed(2));
                 });
-            };
+        };
             
             
         function create_traj_dropdown(traj_li,sel_traj){
@@ -193,7 +189,6 @@
                     $(this).css("background-color","#FFFFFF");
                 }
             });
-
         }
     
         function manageTrajChange(stage,traj_el_sel,mytraj,traj_fnames){
@@ -213,8 +208,7 @@
             trajComp.setFrame(-1);
               
             $("#trajRange").attr("max",trajComp.trajectory._frameCount);
-            $("#last_played").text(mytraj);
-        
+            $("#last_played").text(mytraj);       
         }
         
 ////////////////// Main: 
@@ -241,6 +235,7 @@
                 
                 //Change receptor
                 $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta , pos, pdb_pos) { 
+
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
                     $("#toiframe").find("#trajRangeDiv").css("display","none");
@@ -254,19 +249,22 @@
                         stage.removeAllComponents();
                     }
                     
+                    //Removing all parths of path behind "Dynamics"
                     var pathpat = new RegExp("Dynami.*$");
                     var struc_file = pathpat.exec(struc_file)[0];
                     for (i=0; i<traj_f.length; i++){
                       traj_f[i] = pathpat.exec(traj_f[i])[0];
                     }
 
+                    //If there's a ligand, put some []
                     if (! isNaN(parseInt(lig))){
                         lig="["+lig+"]";
                     }
                     if (lig.indexOf(" and ") > 0){
                         lig="("+lig+")";
                     }
-  
+                    
+                    //To play button, remove "active" class and add glyphicon
                     if ($(".traj_btn").hasClass("active")){
                         $(".traj_btn").removeClass("active");
                         $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
@@ -277,12 +275,16 @@
                     if (traj_f.length >= 1){
                         create_traj_dropdown(traj_fnames,traj_fnames[0])
                     }
+
+                    //Put name of the trajectory being run
                     $("#last_played").text(traj_fnames[0]);
                     
+                    //Load structure file
                     stage.loadFile( path + struc_file , {visible: true}).then( function( o ){
                         o.setName("my_comp");
                         o.setSelection("not _h and ("+lig+" or protein)");
 
+                        //Load trajectories
                         for (t=0 ; t < traj_f.length ; t++){
                             o.addTrajectory( traj_path + traj_f[t] );
                         }

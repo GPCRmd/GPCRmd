@@ -1,9 +1,7 @@
 $(document).ready(function(){
 
-  //Remove loading icon once page is loaded
-  window.onload = function(){
-    document.getElementById("loading").remove();
-  }
+  //Remove heatmap loading icon once page is loaded
+  document.getElementById("loading_heatmap").remove();
 
   //--------Used later for some functions
   var typedict =  {
@@ -68,11 +66,6 @@ $(document).ready(function(){
   $('.dropdown-menu').on("click", function(e){
     e.stopPropagation();
   });
-
-  //-------change color upon clicking option
-  //I know it's strange to have these two separated, but belive me, it was the only way to make it all work
-  //$('.option').change(function(e){changeapplycolor()}); //In case any checkbox is clicked
-  //$('#allbutton').click(function(e){changeapplycolor()}); //In cas all options button is clicked
 
   //-------Change active itype options depending of selected molecular intetactions 
   $('.option_location').change(function(){
@@ -143,37 +136,6 @@ $(document).ready(function(){
       }
   });
 
-  //--------------Setting width of the div as width of the plot image
-
-  /* Not used any more
-  //-----------Automatic deselect  or select of HB options 
-  $('#allHB').change(function(e){checkoruncheckall('.hb_option',false)});
-  $('#allWB').change(function(e){checkoruncheckall('.wb_option',false)});
-
-
-  //If no HB or WB remain checked, uncheck main wb/HB option. And if any WB HB suboption is checked, check also the main one
-  var checkedval = "";
-  
-  $('.hb_option').click(function(){
-    checkedval = $('.hb_option:checked').val();
-    if(Boolean(checkedval)){
-      $('#allHB').prop('checked', true);
-    }
-    else {
-      $('#allHB').prop('checked', false);        
-    }
-  })
-
-  $('.wb_option').click(function(){
-    checkedval = $('.wb_option:checked').val();
-    if(Boolean(checkedval)){
-      $('#allWB').prop('checked', true);
-    }
-    else {
-      $('#allWB').prop('checked', false);        
-    }
-  })
-  */
 });
 
 //---------Check all options upon clicking "check all" (currently not used) 
@@ -193,18 +155,6 @@ function checkoruncheckall(checkboxclass,changename){
   }
 }
 
-//--------Change button color of apply if any option is selected. Currently inactive since dropdown is a radio now
-/*
-function changeapplycolor(){
-  var num_checked = $.map($('.option:checked'), function(c){return c.value; }).length;
-  if (Boolean(num_checked)){
-    $('#applybutton').addClass('btn-primary').removeClass('btn-danger');
-  }
-  else{
-    $('#applybutton').addClass('btn-danger').removeClass('btn-primary');        
-  }
-}
-*/
 //------Extract checked values, create an URL with them and refresh page with new URL
 function printchecked(){
   var checked_loc = []
@@ -238,7 +188,6 @@ function printchecked(){
 
   else if (Boolean(check_opt)){
     URL = '/contmaps/' + check_opt + "&" + clusters + "&" + locs.join("_") + "&"  + rev_value;
-    console.log(URL);
     if (window.location.pathname == URL){
       location.reload()
     }
