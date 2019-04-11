@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MDsrv/NGL - embedded</title>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+  <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
+  <link rel="subresource" href="mdsrv/webapp/css/light.css" />
+  <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
+</head>
+<body>
+
+  <!-- NGL -->
+  <script src="../mdsrv/webapp/js/ngl.js"></script>
+
+  <!-- UI -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+  <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
+  <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
+  <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+  <script src="mdsrv/webapp/js/ui/ui.js"></script>
+  <script src="mdsrv/webapp/js/ui/ui.extra.js"></script>
+  <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
+  <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
+  <script src="mdsrv/webapp/js/gui.js"></script>
+
+  <!--Main NGL -->
+   <script>
+
+    NGL.cssDirectory = "mdsrv/webapp/css/";
+    NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
+
+    // Datasources
+    NGL.DatasourceRegistry.add(
+      "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
+    );
+    NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
+    NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
+    
+    document.addEventListener( "DOMContentLoaded", function(){
+      $(document).ready(function(){
+
+        document.domain=document.domain;
+
+////////////////// Functions
+        function setTrajRangeMax(){
+            var btn_traj_Bid =$(".traj_btn").attr("id");
+            var tPatt = /\d*$/g;
+            var btn_traj_id = tPatt.exec(btn_traj_Bid);
+            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+            numfr=trajComp.trajectory._frameCount;
+            if ( numfr && ($("#trajRange").attr("max") != numfr)){
+                $("#trajRange").attr("max",numfr);
+            }
+        }
+
+        function trajButtons(stage){
+
+            $(".traj_btn").click( function(){
+                //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
+                var btn_traj_Bid=$(this).attr("id");
+                var tPatt = /\d*$/g;
+                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var isact = $(this).hasClass("active");
+                if(isact){
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    $(this).removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-play");
+                    player.timeout=200;
+                    player.play();
+                    player.pause();
+
+                } else {
+                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                    //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
+                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                    player.play();
+                    $(this).addClass("active");
+                    $(this).siblings().removeClass("active");
+                    $(this).children().attr("class","glyphicon glyphicon-pause");
+                    
+                }
+                numfr=trajComp.trajectory._frameCount;
+                if ($("#trajRange").attr("max") != numfr){
+                    $("#trajRange").attr("max",numfr);
+                }
+            });
+            $("#trajRange").change(function(){
+                if (trajComp){
+                    numfr=trajComp.trajectory._frameCount;
+                    if ($("#trajRange").attr("max") != numfr){
+                        $("#trajRange").attr("max",numfr);
+                    }
+                    var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
+                    trajComp.setFrame(toframe);
+                }
+            });
+
+            $("#trajRangeDiv").on("mousedown" , ".ui-slider-handle" , function(){
+                setTrajRangeMax();
+            })
+            
+            $("#trajRangeDiv").on("click" , ".ui-slider-track" , function(){
+                setTrajRangeMax();
+            })
+            return
+        }
+        
+        function set_ngl_size(cont_w , cont_w_in ,cont_h_num ){
+           var cont_h=(cont_h_num).toString() +"px";
+           var cont_h_viewport=(cont_h_num).toString() +"px";
+           var cont_h_range=(cont_h_num-60).toString() +"px";
+           $("#toiframe").css({"width":cont_w , "height" : cont_h});
+           $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
+           //$("#buttons").css("width", cont_w_in);
+           $("#trajRangeDiv").css({"width" : cont_w_in  , "margin-top" : cont_h_range });
+        }
+        
+        function modTooltip(stage){
+            // create new tooltip
+            var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+            // listen to `hovered` signal to move tooltip around and change its text
+            stage.signals.hovered.add( function( d ){
+                if (d && (d.atom)){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname;
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+            return(stage);
+        }
+        
+        function updateRepsFrameChanged(trajComp,delta){
+          trajComp.signals.frameChanged.add(function(){
+            var fnum=trajComp.trajectory.currentFrame;
+            $("#trajRange").val(fnum);
+            $("#trajRange").slider("refresh");
+            $("#traj_time_val").html((fnum*delta).toFixed(2));
+          });
+        };
+                        
+        function create_traj_dropdown(traj_li,sel_traj,id){
+
+            $("#trajButton"+id, window.parent.document).text(sel_traj);
+
+            add_html='<li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
+            for(i=1; i<traj_li.length; i++ ){
+              var add_element='<li class="traj_element" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
+              add_html+=add_element;
+            }
+
+            $("#add_traj_bottom"+id, window.parent.document).html(add_html);
+            $("#trajsDropdown"+id, window.parent.document).css("visibility","visible");
+            $("#last_played").css("visibility","visible");
+
+            $(".traj_element", window.parent.document).hover(function(){
+              $(this).css("background-color","#f2f2f2");
+            },
+        
+            function(){
+              var selected=$(this).hasClass("tsel");
+              if (selected){
+                $(this).css("background-color","#FFF7F7");
+              } else {
+                $(this).css("background-color","#FFFFFF");
+              }
+            });
+        }
+    
+        function manageTrajChange(stage,traj_el_sel,mytraj,traj_fnames){
+            traj_id=traj_fnames.indexOf(mytraj);
+            $(".traj_btn").attr("id","playerButton"+traj_id.toString());
+            
+            $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
+            $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
+            
+            if (player && $(".traj_btn").hasClass("active")){
+              player.pause();
+              $(".traj_btn").removeClass("active");
+              $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+            }
+            //traj_lastPlayedID=traj_id;
+
+            trajComp.setFrame(-1);
+              
+            $("#trajRange").attr("max",trajComp.trajectory._frameCount);
+            $("#last_played").text(mytraj);        
+        }
+
+        function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
+            parent.$(myselector).hover(function(){
+                $(this).css("background-color",colorhov);
+            },
+            function(){
+                var selected=$(this).hasClass(activeclass);
+                if (selected){
+                    $(this).css("background-color",colorNohobAct);
+                } else {
+                    $(this).css("background-color",colorNohobInact);
+                }
+            });
+        };
+
+        function change_display_sim_option(to_activate,to_inactivate){
+            parent.$(to_activate).addClass("is_active");
+            parent.$(to_activate).css("background-color","#bfbfbf");
+            
+            parent.$(to_inactivate).removeClass("is_active");
+            parent.$(to_inactivate).css("background-color","#FFFFFF");
+        }
+
+        function set_positions(stage, id, ballesteros_to_pdb, o, pos_rep_array){
+
+          //Hide below window 
+          $("#posNotinRec"+id, window.parent.document).css("display","none");    
+
+          //Delete representations for previous positions
+          stage.compList[0].reprList;
+          for (var i = 0; i < stage.compList[0].reprList.length; i++){
+            if (stage.compList[0].reprList[i]["name"] == "ball+stick"){
+              o.removeRepresentation(stage.compList[0].reprList[i]);
+              i--;
+            }
+          }
+          //If it is allowed, show positions selected in flareplot on NGL viewer 
+          var pos, pos_rep;
+          var notfound = [];
+          var pdb_pos_array = [];
+          if (parent.$("#FPdisplay"+id).hasClass("active")){
+            parent.$("#flare-container"+id).find("g.node.toggledNode text").each(function(){
+              pos = $(this).html();
+              if (pos in ballesteros_to_pdb){//IF position exists in this protein
+                pdb_pos = ballesteros_to_pdb[pos];
+                pdb_pos_array.push(pdb_pos);
+              }
+              else if (pos == "Ligand") {
+                return true; //Skip
+              }
+              else {
+                $("#posNotinRec"+id, window.parent.document).css("display","block");
+                notfound.push(pos);
+              }
+            })
+            $("#posNotinRec_text"+id, window.parent.document).text("Positions "+notfound.join(", ")+" not found on this receptor.");
+
+            for (i = 0; i < pdb_pos_array.length; i++){
+              position = pdb_pos_array[i];
+              pos_sel=position.replace("-"," and :");
+              o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+            }
+          }
+        }
+
+        function change_sim(compl_data, stage = false, id){
+
+          //Set Nglviewr ID (0 or 1)  and dynid selected
+          var dynid = parent.$("#simButton"+id).attr('data-dynid');
+
+          //Set button link to GPCRmd viewer
+          var dyn_num = dynid.match(/\d+/)[0];
+          parent.$("#viewer_link_bottom"+id).attr('href',window.location.origin+"/view/"+dyn_num);
+
+          //Hide/show some html elements
+          $("#loading_ngl"+id, window.parent.document).css("display","inline");
+          $("#toiframe").find("#trajRangeDiv").css("display","none");
+          $("#trajsDropdown"+id, window.parent.document).css("visibility","hidden");
+          $("#add_traj_options").html("");
+          $("#last_played").css("visibility","hidden");
+          $("#posNotinRec"+id, window.parent.document).css("display","none")
+
+          //Extract information from current dyn
+          var struc_file, traj_fnames, traj_f, lig, delta, ballesteros_to_pdb;
+          struc_file = compl_data[dynid]['struc_f'];
+          traj_fnames = compl_data[dynid]['traj_fnames'];
+          traj_f = compl_data[dynid]['traj_f'];
+          lig = compl_data[dynid]['lig_sname'];
+          delta = compl_data[dynid]['delta'];
+          ballesteros_to_pdb = compl_data[dynid]['gpcr_pdb'];
+
+          //If there's a ligand, put some []
+          if (lig) {
+            if (! isNaN(parseInt(lig))){
+                lig="["+lig+"]";
+            }
+            if (lig.indexOf(" and ") > 0){
+                lig="("+lig+")";
+            }
+          }
+            
+          // Remove previous components
+          stage.removeAllComponents();
+
+          //To play button, remove "active" class and add glyphicon
+          if ($(".traj_btn").hasClass("active")){
+              $(".traj_btn").removeClass("active");
+              $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+          }
+
+          //Trajctory selection
+          sel_traj=traj_f[0];
+          if (traj_f.length >= 1){
+              create_traj_dropdown(traj_fnames,traj_fnames[0],id)
+          }
+
+          //Put name of the trajectory being run
+          $("#last_played").text(traj_fnames[0]);
+
+          //End loading icon
+          $("#loading_ngl"+id, window.parent.document).css("display","none");
+
+          // load a PDB structure and consume the returned `Promise` 
+          stage.loadFile(window.location.origin + "/dynadb/files/"+struc_file, {visible: true}).then( function ( o ) {
+
+            o.setName("my_comp");
+            o.setSelection("not _h and ("+lig+" or protein)");
+
+            //Load trajectories
+            for (t=0 ; t < traj_f.length ; t++){
+                o.addTrajectory( traj_path + traj_f[t] );
+            }
+            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
+            
+            //Set slider to frame -1 (pdb)
+            var fnum=-1;
+            $("#trajRange").val(fnum);
+            $("#trajRange").slider("refresh");
+            $("#traj_time_val").html((0).toFixed(2));
+            $("#toiframe").find("#trajRangeDiv").css("display","inline");
+                      
+            //Capture frame changed event
+             var allTrajCompli=o.trajList;
+             for (tcN=0; tcN< allTrajCompli.length;tcN++){
+                trajComp=allTrajCompli[tcN];
+                updateRepsFrameChanged(trajComp,delta);
+             }
+            
+            stage = modTooltip(stage);
+
+            // Add representations
+            var index, position, pos_sel;
+            o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
+            if (lig){
+              o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
+            }
+
+            //Function to Show selected positions from flareplot in NGL
+            var pos_rep_array = [];
+            parent.$("#flare-container"+id+" g text").off('click');
+            parent.$("#flare-container"+id+" g text").on('click', function(){
+              set_positions(stage, id, ballesteros_to_pdb, o);
+            })
+
+            //Show positions previously setted
+            set_positions(stage, id, ballesteros_to_pdb, o);
+
+          });
+
+          //Control of change of trajectory
+          $("#trajsDropdown"+id , window.parent.document).find(".traj_element").click(function(){
+              mytraj=$(this).text();
+              manageTrajChange(stage,this,mytraj,traj_fnames);
+          }) 
+
+
+          return(stage);
+        }
+
+        function create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage){
+            var dyn_list = clustdict[new_clust].sort();
+            var new_dyns, name_simulation, dynid;
+
+            //Set dropdown list
+            for (var i=0; i < dyn_list.length; i++){
+
+                dynid = dyn_list[i];
+                name_simulation = compl_data[dynid]['prot_lname']+" ("+compl_data[dynid]['pdb_id']+")";
+
+                if (i==0){
+                    parent.$("#simButton"+id).html(name_simulation + ' <span class="caret"></span>');
+                    parent.$("#simButton"+id).attr("data-spath", compl_data[dynid]['struc_f']);
+                    parent.$("#simButton"+id).attr("data-dynid", dynid);
+
+                    new_dyns = '<li class="blueElement dyn_element is_active" id="ngl'+id+'_'+dynid+
+                    '" data-dynid="'+dynid+
+                    '">'+name_simulation+'</li>' + "\n";
+                }
+                else {
+                    new_dyns = new_dyns+'<li class="blueElement dyn_element" id="ngl'+id+'_'+dynid+
+                    '" data-dynid="'+dynid+
+                    '">'+name_simulation+'</li>' + "\n";
+                }
+            }
+            parent.$('#ngldiv'+id+' .simList').html(new_dyns);
+
+            //Reset hover options
+            colorsHoverActiveInactive(".dyn_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
+
+            //On click function
+            parent.$("#ngldiv"+id+" .simList li").click(function(){
+                var to_activate = $(this).attr('id');
+                var to_inactivate = parent.$("#ngldiv"+id+" .simList .is_active").attr('id');
+                var new_dynid = $(this).attr('data-dynid');
+                if (to_activate != to_inactivate){
+                    change_display_sim_option("#" + to_activate, "#" + to_inactivate);
+
+                    //Set simulation (dyn) button text and attributes
+                    parent.$("#simButton"+id).html(new_dynid + ' <span class="caret"></span>');
+                    parent.$("#simButton"+id).attr("data-spath", compl_data[new_dynid]['struc_f']);
+                    parent.$("#simButton"+id).attr("data-dynid", new_dynid);
+
+                    //Change simulation
+                    stage = change_sim(compl_data, stage, id);
+                }
+            });
+
+            //Load first simulation of new cluster
+            stage = change_sim(compl_data, stage, id);
+            return(stage);
+        }
+
+
+////////////////// Main: 
+
+        //Variables
+        var traj_path= "_DB/";
+        var path= "/mdsrv/file/_DB/";
+        var trajComp,traj_fnames,player;
+        var id = window.frameElement.getAttribute("data-number");
+        var new_clust, stage;
+
+        //Get path arguments (if any) from parent web
+        var args, itype, ligandonly, cluster, JSONfile;
+        itype = parent.$("#ngl_iframe1").attr('data-itype');
+        clusters = parent.$("#ngl_iframe1").attr('data-cluster');
+        ligandonly = parent.$("#ngl_iframe1").attr('data-ligandonly');
+        JSONfile = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json";
+
+        //Clear button
+        parent.$("#ngldiv"+id+" .NGLclear").click(function(){          
+          parent.$("#FPclearSel"+id).trigger("click");
+        });
+
+        //Prepare Jsons and create NGLviewers
+        $.getJSON(JSONfile, function(clustdict){  
+          $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json", function(compl_data){
+
+            //Upon click of cluster button, set new dynamics dropdown
+            parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
+              new_clust = "cluster"+$(this).attr('data-tag');
+              stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
+            });
+
+            //Slider and page settings
+            $(".ui-slider").css({"margin-left":"25px"});
+            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
+            $(".ui-page").css({"overflow":"hidden"})
+
+            //Initial stage
+            var stage = new NGL.Stage("viewport");
+            stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+            trajButtons(stage);//Control of play/pause and change of frame 
+
+            //Initial dynamics
+            new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
+            stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
+
+          });
+        });
+      });
+    });
+
+    </script>
+
+    <div id="toiframe" style="width:720px;height:500px"><!-- w: 590 = 348 ; h: 370 = 348 -->
+      <div id="viewport" style="width:720px;height:500px;margin-top:-30px;"></div>
+      <div id="trajRangeDiv" style="position:absolute;width:700px;height:30px;margin-top:452px;margin-left:10px;">
+      
+      <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:5px" class="pull-right" id="last_played"></p>
+        
+      <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
+
+        <input title="Frame" id="trajRange" type="range" name="points" id="points" value="-1" min="-1" max="977">
+        <p style="margin-right:18px;font-size:10px;color:#B8B8B8;margin-top:-20px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
+      </div>
+    </div>
+</body>
+</html>

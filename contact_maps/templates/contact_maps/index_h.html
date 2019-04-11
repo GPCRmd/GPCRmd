@@ -4,7 +4,6 @@
 <script>document.domain=document.domain;</script>
 
 <!--Bootstrap things-->
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 
 <!--Load javascripts -->
@@ -41,16 +40,16 @@
 
 <div id="inner_remaining" class ="row" >
   <!--Here be dendrogram and heatmap-->
-  <div class="col-xs-12" id="retracting_parts" style="padding-bottom:10px">
+  <div class="col-xs-12" id="retracting_parts">
     <div class="panel panel-primary" id="main_plot_body">
+      <span><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></span>
       <div class="panel-body" >
         {% include './contact_maps/menus.html' %}
         <div id="dendrogram-heatmap" class="row">
           <div id="dendrogram" class="col-xs-3">
             {{dendrogram | safe }}
           </div>
-          <div id="heatmap" class="col-xs-1" style="max-width:{{plotdiv_w}}px;">
-            <span id="loading"><center ><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></center></span>
+          <div id="heatmap" class="col-xs-1" >
             {{ div | safe }}
           </div>
         </div>
@@ -99,8 +98,8 @@
           <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
 
           <!-- Traj dropdown -->
-          <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
-            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" >-
+          <div class="dropdown blueDropdownDiv">
+            <button  id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
             <span class="caret"></span></button>
             <ul id="trajsDropdown_options" class="dropdown-menu">
               <span id="add_traj_options"></span>
@@ -108,7 +107,7 @@
           </div>
         
           <!-- Loading div-->
-          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL"/></center></span>
+          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
           <!-- iframe to ngl -->
           <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
             <iframe style="border:none; position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no" height="348px" width="348px"></iframe>
@@ -122,6 +121,8 @@
   </div>
 
   <div class="col-xs-12" id="not_retracting_parts">
+
+    <!--Here be flareplots -->
     <div class="panel panel-primary" id="flare_col"  data-fpdir="{{fpdir}}">
       <div class="panel-body">
         <div class="title_div" data-bind_domain="" data-presel_pos="">
@@ -148,8 +149,12 @@
                   Cluster 1 <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu clusters_dropup-ul">
-                  {% for clus in clusrange %}                
-                  <li id="fp0_option_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% for clus in clusrange %}
+                  {% if clus == 1 %}
+                  <li id="fp0_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% else %}
+                  <li id="fp0_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% endif %}
                   {% endfor %}
                 </ul>
               </div>
@@ -184,8 +189,12 @@
                   Cluster 2 <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu clusters_dropup-ul">
-                  {% for clus in clusrange %}                
-                  <li id="fp1_option_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% for clus in clusrange %}
+                  {% if clus == 2 %}
+                  <li id="fp1_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% else %}
+                  <li id="fp1_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  {% endif %}
                   {% endfor %}
                 </ul>
               </div>
@@ -200,7 +209,79 @@
 
       </div>
     </div>
- 
+  
+    <!--Here be NGL viewers-->
+    <div class="panel panel-primary" id="NGL_col"  data-fpdir="{{fpdir}}">
+      <div class="panel-body">
+        <div class="title_div"" data-bind_domain="" data-presel_pos="">
+          <h4 class="title">Cluster Simulation Viewers</h4>
+        </div>
+        
+        <div id="ngldiv0" class="col-xs-6 ngldiv">
+
+          <div class="container-fluid NGLtoolbar" >
+            <div class="row NGLtoolbar_row">
+              <div id="trajsDropdown0" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton0" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
+                <span class="caret"></span></button>
+                <ul class="dropdown-menu blueList trajList">
+                  <span id="add_traj_bottom0"></span>
+                </ul>
+              </div>               
+              <div class="dropdown blueDropdownDiv" id="simulation_select">
+                <button id="simButton0" class="btn btn-info btn-xs dropdown-toggle pull-right blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+            </div>  
+            <div class="row NGLtoolbar_row">
+              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+            </div>  
+          </div>
+
+          <span id="loading_ngl0"><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_NGL_bottom"/></span>
+          <iframe id="ngl_iframe0" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="0" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} scrolling="no" height="500px" width="100%"></iframe>
+          <div id="posNotinRec0" class="alert alert-warning posNotinRec">
+            <span id="posNotinRec_text0"></span>
+          </div>
+          <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+        </div>
+
+        <div id="ngldiv1" class="col-xs-6 ngldiv">
+
+          <div class="container-fluid NGLtoolbar" >
+            <div class="row NGLtoolbar_row">
+              <div id="trajsDropdown1" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton1" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
+                <span class="caret"></span></button>
+                <ul class="dropdown-menu blueList trajList">
+                  <span id="add_traj_bottom1"></span>
+                </ul>
+              </div>               
+              <div class="dropdown blueDropdownDiv" id="simulation_select">
+                <button id="simButton1" class="btn btn-info btn-xs dropdown-toggle pull-right blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster2.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+            </div>  
+            <div class="row NGLtoolbar_row">
+              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+            </div>  
+          </div>
+
+          <span id="loading_ngl1"><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_NGL_bottom"/></span>
+          <iframe id="ngl_iframe1" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="1" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} scrolling="no" height="500px" width="100%"></iframe>
+          <div id="posNotinRec1" class="alert alert-warning posNotinRec">
+            <span id="posNotinRec_text1"></span>
+          </div>
+          <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+        </div>  
+
+      </div>
+    </div>
+    <!--Load documentation div-->
     {% include './contact_maps/docs.html' %}
   </div>
 
@@ -217,7 +298,7 @@
 <link rel="stylesheet" type="text/css" href="{% static 'flareplot-custom.css' %}" />
 <script src="{% static 'view/fplot2/d3.v3.min.js' %}"></script>
 <script src="{% static 'view/fplot2/docs/js/flareplot-main.js' %}"></script><!-- D:< -->
-<script src="../static/emb_ngl_viewer_small.js"></script>
+<script src="../static/flareplots.js"></script>
 
 <!-- Bokeh -->
 <link href="https://cdn.pydata.org/bokeh/release/bokeh-0.13.0.min.css" rel="stylesheet" type="text/css">
