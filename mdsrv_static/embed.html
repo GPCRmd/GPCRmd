@@ -1451,16 +1451,9 @@
                     
                     createReps()
 
-                    console.log("GPCRmd")
-                    console.log(o.getCenter())
-
                 });
 
                 var pdbid=$("#pdbid", window.parent.document).text();
-                if (pdbid.indexOf(".")>-1){
-                    var pdbid_spl=pdbid.split(".");
-                    pdbid=pdbid_spl[0]
-                }
                 var edselSel=$("#edSel", window.parent.document);
                 var r_angl=edselSel.data("r_angl");
                 var transl=edselSel.data("transl");
@@ -1470,6 +1463,7 @@
                         edc.setName("EDmap_comp_2fofc");
                         edc.setRotation( r_angl);
                         edc.setPosition(transl);
+
                         edc.addRepresentation("surface", {
                           name:"2fofc",
                           contour: true,
@@ -1480,10 +1474,9 @@
                           opacity: 1,
                           metalness: 0,
                           wireframe: false
-                        })
-                        console.log("2fofc")
-                        console.log(edc.getCenter())
 
+
+                        })
                     })
                     stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: false}).then(function(edc){
                         edc.setName("EDmap_comp_fofc");
@@ -1515,18 +1508,9 @@
                           wireframe: false
 
                         })
-                        console.log("fofc")
-                        console.log(edc.getCenter())
                     })
                     $("#EDselectionDiv", window.parent.document).on("click" , function(){
                         updateEDmapSel();
-                        console.log("!")
-                        console.log("fofc (upd)")
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenter())
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenterUntransformed())
-                        console.log("GPCRmd (upd)")
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenter())
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenterUntransformed())
                     });
                     $(".EDmapStype", window.parent.document).on('change' ,function(){
                         var v=$(this).val()
