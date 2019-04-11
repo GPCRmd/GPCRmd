@@ -427,11 +427,12 @@
                 var to_activate = $(this).attr('id');
                 var to_inactivate = parent.$("#ngldiv"+id+" .simList .is_active").attr('id');
                 var new_dynid = $(this).attr('data-dynid');
+                var name_simulation = compl_data[new_dynid]['prot_lname']+" ("+compl_data[new_dynid]['pdb_id']+")";
                 if (to_activate != to_inactivate){
                     change_display_sim_option("#" + to_activate, "#" + to_inactivate);
 
                     //Set simulation (dyn) button text and attributes
-                    parent.$("#simButton"+id).html(new_dynid + ' <span class="caret"></span>');
+                    parent.$("#simButton"+id).html(name_simulation + ' <span class="caret"></span>');
                     parent.$("#simButton"+id).attr("data-spath", compl_data[new_dynid]['struc_f']);
                     parent.$("#simButton"+id).attr("data-dynid", new_dynid);
 

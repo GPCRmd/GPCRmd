@@ -339,3 +339,8 @@ hr {
   margin-top: 15px;
   margin-bottom: 15px;
 }
+
+.simList {
+  left: auto;
+  right: 0;
+}
