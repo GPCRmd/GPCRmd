@@ -827,22 +827,22 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
     return pdb_muts
 
 def obtain_ed_align_matrix(dyn_id):
-    if dyn_id=="4":
-        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
-        trans=[  9.21,74.12,-80.74]
-        return(r_angl,trans)
-    else:
-        root = settings.MEDIA_ROOT
-        EDmap_path=os.path.join(root,"Precomputed/ED_map")
-        matrix_file="dyn_%s_transfmatrix.data"%dyn_id
-        matrix_filepath=os.path.join(EDmap_path,matrix_file)
-        exists=os.path.isfile(matrix_filepath)
-        if exists:
-            with open(matrix_filepath, 'rb') as filehandle:  
-                (r_angl,trans) = pickle.load(filehandle)
-            return (list(r_angl),list(trans))
-        else: 
-            return False
+#    if dyn_id=="4":
+#        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
+#        trans=[  9.21,74.12,-80.74]
+#        return(r_angl,trans)
+#    else:
+    root = settings.MEDIA_ROOT
+    EDmap_path=os.path.join(root,"Precomputed/ED_map")
+    matrix_file="dyn_%s_transfmatrix.data"%dyn_id
+    matrix_filepath=os.path.join(EDmap_path,matrix_file)
+    exists=os.path.isfile(matrix_filepath)
+    if exists:
+        with open(matrix_filepath, 'rb') as filehandle:  
+            (r_angl,trans) = pickle.load(filehandle)
+        return (list(r_angl),list(trans))
+    else: 
+        return False
     
 
 @ensure_csrf_cookie

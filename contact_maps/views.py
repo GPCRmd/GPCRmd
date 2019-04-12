@@ -111,12 +111,18 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	div = variablesmod.div
 	plotdiv_w = variablesmod.plotdiv_w
 
+	#Loading dynamics-cluster dictionary
+	clustdict = json_dict(str("%s%s_%s_jsons/%sclusters/clustdict.json" % (basedir, itype, ligandonly, cluster)))
+
 	# Loading dendrogram
 	dendfile = ("%s%s_%s_dendrograms/%s_%s_%s_dendrogram_figure.html" % (basedir, itype, ligandonly, itype, str(cluster), ligandonly))
 	dendr_figure = open(dendfile, 'r').read()
 
+	first_sim = clustdict['cluster1'][0]
+
 	# Send request 
 	context={
+		'clustdict' : clustdict,
 		'fpdir' : fpdir,
 		'itypes_order' : itypes_order,
 		'itypes_dict' : typelist,
@@ -130,6 +136,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'div' : div,
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
+		'cluster' : cluster,
 		'plotdiv_w':plotdiv_w,
 		'mdsrv_url':mdsrv_url
 	}

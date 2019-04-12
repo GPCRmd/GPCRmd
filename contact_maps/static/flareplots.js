@@ -1,10 +1,32 @@
+//Get path arguments (if any)
+var args, itype, ligandonly, cluster, rev;
+args = window.location.pathname.match(/\/(\w+)&(\w+)&(\w+)&(\w+)/);
+if(args){
+    itype = args[1];
+    clusters = args[2];
+    ligandonly = args[3];
+    rev = args[4];
+}
+else {
+    itype = 'all';
+    clusters = '3';
+    ligandonly = 'prt_lg';
+    rev = 'norev';        
+}
+
+//Load GPCR Json data
+var compl_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json")
+var clust_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json")
+
 $(document).ready(function(){
-	
+    
+
+
 	////////////
 	// Functions
 	////////////
 
-    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts, plot){
+    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts = false){
         var fpjson=jsonData;
         if (fpjson.edges[0].helixpos != undefined) {
             //$("#fpShowResSetBtns").css("display","inline-block");
@@ -19,10 +41,15 @@ $(document).ready(function(){
                 }
                 fpjson.edges=newedges;
             }
-        }/* else {
-            $("#fpShowResSetBtns").css("display","none");
-        }*/
+        }
+
         plot=createFlareplot(fpsize, fpjson, fpdiv);
+
+        //Wider lines
+        $("path.link").css('stroke-width', 6); 
+        //Thicker lines
+        $("path.link").css('stroke-opacity', 0.5);         
+
         return(plot);
     }
 
@@ -49,6 +76,7 @@ $(document).ready(function(){
 	}
 
     function emptyFPsels(flare_container, plot){
+        //Clear all selected positions from both NGL and flareplots
         $(flare_container).find("g.node.toggledNode").each(function(){
             if (plot){
                 var nodename = $(this).attr("id");
@@ -57,6 +85,19 @@ $(document).ready(function(){
                 fpSelInt={};
             }
         });
+        //Trigger click on random position to activate embed_contmaps_bottom set_positions function
+        $(flare_container+" #node-5x42 text").trigger("click");        
+    }
+
+    function show_in_structure(flare_container, fp_display){
+        if($(fp_display).hasClass("active")){
+            $(fp_display).removeClass("active");            
+        }
+        else{
+            $(fp_display).addClass("active");            
+        }
+        //Trigger click on random position to activate embed_contmaps_bottom set_positions function
+        $(flare_container+" #node-5x42 text").trigger("click");
     }
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
@@ -76,7 +117,7 @@ $(document).ready(function(){
     function change_display_sim_option(to_activate,to_inactivate){
         $(to_activate).addClass("is_active");
         $(to_activate).css("background-color","#bfbfbf");
-
+        
         $(to_inactivate).removeClass("is_active");
         $(to_inactivate).css("background-color","#FFFFFF");
     }
@@ -146,7 +187,6 @@ $(document).ready(function(){
             $("#selectionDiv").trigger("click");
 
         });
-
     }
 
 	////////////////////
@@ -155,52 +195,68 @@ $(document).ready(function(){
 
     var fpdir = $("#flare_col").data("fpdir");
 
-	//Create initial nitial flareplots
+	//Create initial flareplots
 	if (fpdir) {
 		var allEdges0, numfr0, allEdges1, numfr1;
 		var plots = [];
         var fpsize=setFpNglSize(true, "#flare-container0");
 
         d3.json(fpdir+"cluster1.json", function(jsonData){
-	        plots[0] = createFlareplot(fpsize, jsonData, "#flare-container0", "Inter");
+	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
            	$('#loading_flare0').css('display', 'none');
             allEdges0 = plots[0].getEdges();
             numfr0 = plots[0].getNumFrames();
         });
         d3.json(fpdir+"cluster2.json", function(jsonData){
-	        plots[1] = createFlareplot(fpsize, jsonData, "#flare-container1", "Inter");
+	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
 	        $('#loading_flare1').css('display', 'none');
             allEdges1 = plots[1].getEdges();
             numfr1 = plots[1].getNumFrames();
         });
 	}
 
-	//clear button
-	$("#fpdiv0").on("click","#FPclearSel0", function(){
+	//clear buttons
+	$("#FPclearSel0").click(function(){
 		emptyFPsels("#flare-container0", plots[0]);
 	});
-	$("#fpdiv1").on("click","#FPclearSel1", function(){
+	$("#FPclearSel1").click(function(){
 		emptyFPsels("#flare-container1", plots[1]);
 	});
 
-	//Hover in "cluster" dropup
+    //"Show in structure buttons"
+    $("#FPdisplay0").click(function(){
+        show_in_structure("#flare-container0", "#FPdisplay0");
+    });
+    $("#FPdisplay1").click(function(){
+        show_in_structure("#flare-container1", "#FPdisplay1");
+    });
+
+	//Hover in "cluster" dropups
     colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");	
 
-    //On click of cluster dropup
+    //On click of cluster dropups
     $("#fpdiv0 .clusters_dropup-ul li").click(function(){
     	var to_activate =$(this).attr('id');
     	var to_inactivate = $("#fpdiv0 .clusters_dropup-ul .is_active").attr('id');
     	if (to_activate != to_inactivate){
 	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
     		changeContactsInFplot("0", fpdir, plots);
+
+            //Set new dyn list for dropdown in NGL viewer
+            var new_clust = "cluster"+$(this).attr('data-tag')
     	}
     });
     $("#fpdiv1 .clusters_dropup-ul li").click(function(){
+        console.log("clicked");
     	var to_activate =$(this).attr('id');
     	var to_inactivate = $("#fpdiv1 .clusters_dropup-ul .is_active").attr('id');
+        console.log(to_activate, to_inactivate);
     	if (to_activate != to_inactivate){
 	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
 	    	changeContactsInFplot("1", fpdir, plots);
+
+            //Set new dyn list for dropdown in NGL viewer
+            var new_clust = "cluster"+$(this).attr('data-tag')
 	    }
     });
 

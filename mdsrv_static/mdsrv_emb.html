@@ -724,9 +724,27 @@
                                             }
                                         }
                                     });
+                                    
                                 }
+                                console.log("GPCRmd")
+                                console.log(o.getCenter())
+
+//                              stage.loadFile("rcsb://2ydo").then(function (comp) {
+//                                comp.setName("PDB");
+                                //comp.addRepresentation("cartoon", {  sele: "protein", colorScheme: "uniform", colorValue: "#2c09b8" })
+//                                var s1=stage.getComponentsByName("my_comp").list[0]
+//                                var s2=stage.getComponentsByName("PDB").list[0]
+//                                var aa=comp.superpose(s2,s1)
+//                            });
+
+
+
                                 // ED map
                                 if (ed_sel && pdbid && r_angl && transl){
+                                    if (pdbid.indexOf(".")>-1){
+                                        var pdbid_spl=pdbid.split(".");
+                                        pdbid=pdbid_spl[0]
+                                    }
                                     ed_sel=decodeURIComponent(ed_sel.replace(/\+/g, " "));
                                     var ed2fofc_vis, edfofc_vis =true;
                                     if (ed_display){
@@ -777,7 +795,6 @@
                                         edc.setName("2fofc");
                                         edc.setRotation( r_angl_l);
                                         edc.setPosition(transl_l);
-
                                         edc.addRepresentation("surface", {
                                           name:"2fo-fc",
                                           contour: true,
@@ -787,9 +804,9 @@
                                           opacity: 1,
                                           metalness: 0,
                                           wireframe: false
-
-
                                         })
+                                        console.log("2fofc")
+                                        console.log(edc.getCenter())
                                     })
                                     stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: edfofc_vis}).then(function(edc){
                                         edc.setName("fofc");
@@ -820,10 +837,13 @@
                                           wireframe: false
 
                                         })
+                                        console.log("fofc")
+                                        console.log(edc.getCenter())
                                     })
                                     applySele(ed_sel)
                                 }
                            } );
+
                     }
 
 
