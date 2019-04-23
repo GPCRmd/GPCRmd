@@ -42,19 +42,6 @@ $(document).ready(function(){
   }
 
   $('input[value="' + itype + '"]').prop('checked', true);
-  $('.clusteropt[value="' + clusters + '"]').attr("selected", true)
-  if (ligandonly == "lg"){
-    $('input[value="' + ligandonly + '"]').prop('checked', true);
-  }
-  else if (ligandonly == "prt"){
-   $('input[value="' + ligandonly + '"]').prop('checked', true); 
-  }
-  else {
-    $('input[name="molec"]').prop('checked', true)
-  }
-  if (rev == "rev"){
-    $('#rev_pairs').prop('checked', true)
-  }
 
   //-------Dropdowns
   $('.dropdown-submenu a.test').on("click", function(e){

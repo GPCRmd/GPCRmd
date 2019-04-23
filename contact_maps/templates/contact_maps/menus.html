@@ -59,26 +59,42 @@
     <div class="dropdown optbar">
       <select name="clusters" id="clusters_dropdown" class="btn btn-sm btn-primary">
         {% for clust in clusrange_all %}
+        {% ifequal clust cluster %}
+        <option class="clusteropt" value={{clust}} selected=selected> {{clust}} clusters </option>
+        {% else %}
         <option class="clusteropt" value={{clust}}> {{clust}} clusters </option>
+        {% endifequal %}
         {% endfor %}
       </select>
     </div>
     <!--Checkboxes interacting parts of the simulation -->
     <div class="optbar">
       <label class="partners_checkbox">
+      {% if "prt" in ligandonly %}
+      <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
+      {% else %}
       <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+      {% endif %}
         Protein-Protein
       </label>
       <br>
       <label class="partners_checkbox">
+      {% if "lg" in ligandonly %}
+      <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
+      {% else %}
       <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
+      {% endif %}
         Protein-Ligand
       </label>
     </div>
     <!--Repetition checkbox-->
     <div class="optbar">
       <label class="partners_checkbox">
+      {% if 'rev' == rev %}
+      <input type="checkbox" id="rev_pairs" name="rev" value="rev" checked/>
+      {% else %}
       <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
+      {% endif %}
         Show reversed residue pairs
       </label>
     </div>
