@@ -116,11 +116,15 @@ body {
   padding-right: 10%
 }
 
-#dendrogram {
+.dendrogram {
   width: 520px;
   float: left;
   overflow-x: hidden; 
   background-color: white
+}
+
+#dendrogram {
+  margin-right: 40 !important;
 }
 
 /*Side-window*/

@@ -250,12 +250,29 @@
             }
           }
           //If it is allowed, show positions selected in flareplot on NGL viewer 
-          var pos, pos_rep;
+          var pos, pos_rep, classes, newpos;
+          var int_pos = [];
           var notfound = [];
           var pdb_pos_array = [];
+          var source_pat = /source-(\w+)/;
+          var target_pat = /target-(\w+)/;
           if (parent.$("#FPdisplay"+id).hasClass("active")){
             parent.$("#flare-container"+id).find("g.node.toggledNode text").each(function(){
               pos = $(this).html();
+
+              //Find positions in interactions with selected ones, if any
+              parent.$("#flare-container"+id+" .source-"+pos).each(function(){
+                classes = $(this).attr('class');
+                newpos = classes.match(target_pat)[1];
+                int_pos.push(newpos);
+              });
+              parent.$("#flare-container"+id+" .target-"+pos).each(function(){
+                classes = $(this).attr('class');
+                newpos = classes.match(source_pat)[1];
+                int_pos.push(newpos);
+              });
+
+              //Find PDB position for selected ballesteres positions, if exist
               if (pos in ballesteros_to_pdb){//IF position exists in this protein
                 pdb_pos = ballesteros_to_pdb[pos];
                 pdb_pos_array.push(pdb_pos);
@@ -268,12 +285,29 @@
                 notfound.push(pos);
               }
             })
+
+            //Repeat for interacting positions
+            for (var i=0; i < int_pos.length; i++){
+              pos = int_pos[i];
+              if (pos in ballesteros_to_pdb){//IF position exists in this protein
+                pdb_pos = ballesteros_to_pdb[pos];
+                pdb_pos_array.push(pdb_pos);
+              }
+              else if (pos == "Ligand") {
+                return true; //Skip
+              }
+              else {
+                $("#posNotinRec"+id, window.parent.document).css("display","block");
+                notfound.push(pos);
+              }
+
+            }
             $("#posNotinRec_text"+id, window.parent.document).text("Positions "+notfound.join(", ")+" not found on this receptor.");
 
             for (i = 0; i < pdb_pos_array.length; i++){
               position = pdb_pos_array[i];
               pos_sel=position.replace("-"," and :");
-              o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#ff3900", colorScheme: "element"} );
+              o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
             }
           }
         }
@@ -372,8 +406,8 @@
 
             //Function to Show selected positions from flareplot in NGL
             var pos_rep_array = [];
-            parent.$("#flare-container"+id+" g text").off('click');
-            parent.$("#flare-container"+id+" g text").on('click', function(){
+            parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").off('click');
+            parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").on('click', function(){
               set_positions(stage, id, ballesteros_to_pdb, o);
             })
 
