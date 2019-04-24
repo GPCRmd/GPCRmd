@@ -138,7 +138,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
 		'cluster' : int(cluster),
-		'plotdiv_w':plotdiv_w,
+		'scrolldiv_width':plotdiv_w + 300, #Width of heatmap plus dendrogram
 		'mdsrv_url':mdsrv_url
 	}
 	return render(request, 'contact_maps/index_h.html', context)

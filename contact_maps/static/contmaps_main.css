@@ -123,8 +123,11 @@ body {
   background-color: white
 }
 
-#dendrogram {
-  margin-right: 40 !important;
+#scrolldiv {
+  height: 10px;
+  margin-bottom: 20;
+  margin-top: -20; 
+  overflow-x: scroll;
 }
 
 /*Side-window*/
