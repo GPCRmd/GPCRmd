@@ -1555,7 +1555,7 @@
                         change_EDmap_style(color,mapsel,"color");
                     });
 
-                    $(".slider", window.parent.document).on('input',function(){
+                    $(".edslider", window.parent.document).on('input',function(){
                         var slider_val=$(this).val();
                         $(this).parent().siblings(".slider_val").html(slider_val);
                         var mapsel=$(this).data("map");
