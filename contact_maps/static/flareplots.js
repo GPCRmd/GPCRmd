@@ -20,7 +20,8 @@ var clust_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/g
 
 $(document).ready(function(){
     
-
+    //I don't know what this line does, but Mariona told me to add it and she is wise
+    document.domain=document.domain;
 
 	////////////
 	// Functions
@@ -192,72 +193,79 @@ $(document).ready(function(){
 	////////////////////
 	//Flare plots time!!
 	////////////////////
+    //Make sure NGL viewers are ok before 
+    $('body').on('iframeSet',function(){
+        $('#ngl_iframe0')[0].contentWindow.$('body').trigger('iframeSetOk');
+        $('#ngl_iframe1')[0].contentWindow.$('body').trigger('iframeSetOk');
+        var fpdir = $("#flare_col").data("fpdir");
 
-    var fpdir = $("#flare_col").data("fpdir");
+    	//Create initial flareplots
+    	if (fpdir) {
+    		var allEdges0, numfr0, allEdges1, numfr1;
+    		var plots = [];
+            var fpsize=setFpNglSize(true, "#flare-container0");
 
-	//Create initial flareplots
-	if (fpdir) {
-		var allEdges0, numfr0, allEdges1, numfr1;
-		var plots = [];
-        var fpsize=setFpNglSize(true, "#flare-container0");
-
-        d3.json(fpdir+"cluster1.json", function(jsonData){
-	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
-           	$('#loading_flare0').css('display', 'none');
-            allEdges0 = plots[0].getEdges();
-            numfr0 = plots[0].getNumFrames();
-        });
-        d3.json(fpdir+"cluster2.json", function(jsonData){
-	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
-	        $('#loading_flare1').css('display', 'none');
-            allEdges1 = plots[1].getEdges();
-            numfr1 = plots[1].getNumFrames();
-        });
-	}
-
-	//clear buttons
-	$("#FPclearSel0").click(function(){
-		emptyFPsels("#flare-container0", plots[0]);
-	});
-	$("#FPclearSel1").click(function(){
-		emptyFPsels("#flare-container1", plots[1]);
-	});
-
-    //"Show in structure buttons"
-    $("#FPdisplay0").click(function(){
-        show_in_structure("#flare-container0", "#FPdisplay0");
-    });
-    $("#FPdisplay1").click(function(){
-        show_in_structure("#flare-container1", "#FPdisplay1");
-    });
-
-	//Hover in "cluster" dropups
-    colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");	
-
-    //On click of cluster dropups
-    $("#fpdiv0 .clusters_dropup-ul li").click(function(){
-    	var to_activate =$(this).attr('id');
-    	var to_inactivate = $("#fpdiv0 .clusters_dropup-ul .is_active").attr('id');
-    	if (to_activate != to_inactivate){
-	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
-    		changeContactsInFplot("0", fpdir, plots);
-
-            //Set new dyn list for dropdown in NGL viewer
-            var new_clust = "cluster"+$(this).attr('data-tag')
+            d3.json(fpdir+"cluster1.json", function(jsonData){
+    	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
+               	$('#loading_flare0').css('display', 'none');
+                allEdges0 = plots[0].getEdges();
+                numfr0 = plots[0].getNumFrames();
+            });
+            d3.json(fpdir+"cluster2.json", function(jsonData){
+    	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
+    	        $('#loading_flare1').css('display', 'none');
+                allEdges1 = plots[1].getEdges();
+                numfr1 = plots[1].getNumFrames();
+            });
     	}
-    });
-    $("#fpdiv1 .clusters_dropup-ul li").click(function(){
-        console.log("clicked");
-    	var to_activate =$(this).attr('id');
-    	var to_inactivate = $("#fpdiv1 .clusters_dropup-ul .is_active").attr('id');
-        console.log(to_activate, to_inactivate);
-    	if (to_activate != to_inactivate){
-	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
-	    	changeContactsInFplot("1", fpdir, plots);
 
-            //Set new dyn list for dropdown in NGL viewer
-            var new_clust = "cluster"+$(this).attr('data-tag')
-	    }
-    });
+    	//clear buttons
+    	$("#FPclearSel0").click(function(){
+    		emptyFPsels("#flare-container0", plots[0]);
+    	});
+    	$("#FPclearSel1").click(function(){
+    		emptyFPsels("#flare-container1", plots[1]);
+    	});
 
+        //"Show in structure buttons"
+        $("#FPdisplay0").click(function(){
+            show_in_structure("#flare-container0", "#FPdisplay0");
+        });
+        $("#FPdisplay1").click(function(){
+            show_in_structure("#flare-container1", "#FPdisplay1");
+        });
+
+    	//Hover in "cluster" dropups
+        colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");	
+
+        //On click of cluster dropups
+        $("#fpdiv0 .clusters_dropup-ul li").click(function(){
+        	var to_activate =$(this).attr('id');
+        	var to_inactivate = $("#fpdiv0 .clusters_dropup-ul .is_active").attr('id');
+        	if (to_activate != to_inactivate){
+    	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
+        		changeContactsInFplot("0", fpdir, plots);
+
+                //Set new dyn list for dropdown in NGL viewer
+                var new_clust = "cluster"+$(this).attr('data-tag')
+        	}
+        });
+        $("#fpdiv1 .clusters_dropup-ul li").click(function(){
+        	var to_activate =$(this).attr('id');
+        	var to_inactivate = $("#fpdiv1 .clusters_dropup-ul .is_active").attr('id');
+        	if (to_activate != to_inactivate){
+    	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
+    	    	changeContactsInFplot("1", fpdir, plots);
+
+                //Set new dyn list for dropdown in NGL viewer
+                var new_clust = "cluster"+$(this).attr('data-tag')
+    	    }
+        });
+
+        //Trigger the NGL viewers
+        console.log("trigger0");
+        $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0');
+        console.log("trigger1");
+        $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1');        
+    });
 });

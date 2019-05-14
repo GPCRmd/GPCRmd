@@ -103,6 +103,11 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 			'itypes_order' : itypes_order,
 			'clusrange_all': list(range(2,21)),
 			'selected_itypes' : selected_itypes,
+			'itype_code' : itype,
+			'ligandonly' : ligandonly,
+			'rev' : rev,
+			'itype_name' : typelist[itype],
+			'cluster' : int(cluster),
 		}
 		return render(request, 'contact_maps/index_nodata.html', context)
 

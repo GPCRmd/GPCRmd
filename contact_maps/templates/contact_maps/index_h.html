@@ -60,7 +60,7 @@
     </div>
   </div>
 
-  <!--Here be side-window (the thing that opens upon clicking on heatmap)-->
+  <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
   <div class="col-xs-3" id="info">
     <div class="panel panel-info" style="height:100%; position: relative; overflow-y: auto; overflow-x: auto;">
       <div class="panel-heading" style="">Interaction details
@@ -100,7 +100,7 @@
           <p><b>Total interaction frequency:</b> <span id="freqtotal_val">%</span></p>
           <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
 
-          <!-- Traj dropdown -->
+          <!-- Trajectory dropdown -->
           <div class="dropdown blueDropdownDiv">
             <button  id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
             <span class="caret"></span></button>
@@ -111,7 +111,7 @@
         
           <!-- Loading div-->
           <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
-          <!-- iframe to ngl -->
+          <!-- iframe for the ngl viewer -->
           <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
             <iframe style="border:none; position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no" height="348px" width="348px"></iframe>
           </div>
