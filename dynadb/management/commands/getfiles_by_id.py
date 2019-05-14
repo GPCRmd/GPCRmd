@@ -192,7 +192,7 @@ class Command(BaseCommand):
         dyn_dict = obtain_dyn_files_from_id(dynids,options['alldyn'])
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        commands_path = "/protwis/sites/protwis/contact_plots/scripts/dyn_freq_commands.sh"
+        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands.sh"
 
         if dyn_dict:
             with open(commands_path,"w") as commands_file:
@@ -311,7 +311,7 @@ class Command(BaseCommand):
                         else:
                             tail_comand = "--cores 4 --no_freqs \n"
 
-                        commands_file.write(str("python /protwis/sites/protwis/contact_plots/scripts/get_contacts_dynfreq.py \
+                        commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
                             --dynid %s \
                             --traj %s \
                             --traj_id %s \
