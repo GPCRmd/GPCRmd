@@ -1,5 +1,3 @@
-import matplotlib# MANDATORY TO BE IN FIRST PLACE!!
-matplotlib.use('Agg')# MANDATORY TO BE IN SECOND PLACE!!
 from sys import argv,exit
 import pandas as pd
 from  numpy import array
@@ -23,6 +21,7 @@ from scipy.cluster.hierarchy import linkage, fcluster
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
 import warnings
 warnings.filterwarnings('ignore')
+
 def json_dict(path):
     """Converts json file to pyhton dict."""
     json_file=open(path)
@@ -92,26 +91,39 @@ def improve_receptor_names(df_ts,compl_data):
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
-def removing_entries(df, itypes, main_itype):
+def filter_same_helix(df):
     """
-    Filter same-helix and low-frequency interactions. 
-    """    
-    positions = dict()
-    counter = 0
-    dict_freqs = {}
-    pos_topreserve = set()
-    
-    #Filtering same-helix contacts
+    Remove same-helix interaction pairs from dataframe. Returns same dataframe
+    """
     helixpattern = re.compile(r"""^(..)\w+\s+\1""")#For detecting same-helix contacts, the ones like 1.22x22 1.54x54
     helixfilter = df['Position'].str.contains(helixpattern)
     df = df[~helixfilter]
-            
+    return(df)
+
+def filter_lowfreq_old(df, main_itype):
+    """
+    Filter low-frequency interactions. 
+    """    
+                
     # Preserve positions which interaction frequency for this type reach, at mean, 0.1 (or 10 if working on percentages)
     df['mean_row'] = df.mean(axis = 1, numeric_only = True)
     pos_topreserve = set(df['Position'][ (df['mean_row'] > 10) & (df['itype'] == main_itype) ])
     df.drop('mean_row', 1, inplace = True)
     df = df[df['Position'].isin(pos_topreserve)]
      
+    return(df)
+
+def filter_lowfreq(df, main_itype):
+    """
+    Filter low-frequency interactions. Remove all positions With do not have at least 2 interactions with more than 
+    50% frequency
+    """
+    df_purged = df.drop(['itype','Position'], 1)
+    df['above_50perc'] = (df_purged > 50).sum(1)
+    pos_topreserve = set(df['Position'][ (df['above_50perc'] > 1) & (df['itype'] == main_itype) ])
+    df.drop('above_50perc', 1, inplace = True)
+    df = df[df['Position'].isin(pos_topreserve)]
+    
     return(df)
 
 def stack_matrix(df, itypes):
@@ -139,7 +151,6 @@ def stack_matrix(df, itypes):
 def adapt_to_marionas(df):
     """
     This function comprises a series of operations to adapt the new tsv format to Mariona's original scripts.
-    Also returns a dictionary
     """
 
     #Merging toghether both contacting aminoacid Ids
@@ -204,7 +215,7 @@ def black_or_white(bgcolor):
 
     return colorfont
 
-def hoverlabels_axis(fig, recept_info, recept_info_order, annotations = []):
+def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotations = []):
     """
     Makes hover labels from figure correspond to Y-axis labels, and make Y-axis labels correspond to dendrogram
     colors.
@@ -270,6 +281,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, annotations = []):
     name_index = recept_info_order['prot_lname']
     pdb_index = recept_info_order['pdb_id']
     ligname_index = recept_info_order['resname']
+    occuped_positions = dict()
     for hoverentry in fig['data']:
 
         # Silenciate all default hover entries. 
@@ -277,15 +289,21 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, annotations = []):
         
         # If entry reaches end of plot (not intermediate node)
         if (hoverentry['x'][0] == -0) and (int(hoverentry['y'][0])%10 == 5):
-            (fig, annotations) = prepare_entry(hoverentry, fig, hoverentry['y'][0], name_index, ligname_index, recept_info, pdb_index)
-                
-            #If this entry reaches two labels at the same time (terminal U node), create yet another entry
-            if (hoverentry['x'][3] == -0) and (int(hoverentry['y'][3])%10 == 5): 
-                (fig, annotations) = prepare_entry(hoverentry, fig, hoverentry['y'][3], name_index, ligname_index, recept_info, pdb_index)
+            
+            #If entry Y-corodinate is not already occuped by another one, or if it's wrongly occuped by a middle dendrogram which reaches bottom of plot
+            if (hoverentry['y'][0] not in occuped_positions) or (hoverentry['marker']['color'] != default_color):
+
+                occuped_positions[hoverentry['y'][0]] = hoverentry['marker']['color']
+                (fig, annotations) = prepare_entry(hoverentry, fig, hoverentry['y'][0], name_index, ligname_index, recept_info, pdb_index)
+
+                #If this entry reaches two labels at the same time (terminal U node), create yet another entry
+                if (hoverentry['x'][3] == -0) and (int(hoverentry['y'][3])%10 == 5): 
+                    (fig, annotations) = prepare_entry(hoverentry, fig, hoverentry['y'][3], name_index, ligname_index, recept_info, pdb_index)
 
     fig['layout']['annotations'] = annotations
-                
+
     return fig
+
 
 def annotate_clusters(fig, default_color = ""):
     """
@@ -297,6 +315,7 @@ def annotate_clusters(fig, default_color = ""):
     clustcoords = []
     xcords = []
     annotations = []
+    taken_ycords = set()
     
     # Sorting by y coordenate (needed for later)
     fig['data'] = sorted(fig['data'], key=lambda x: x['y'][0])
@@ -310,6 +329,10 @@ def annotate_clusters(fig, default_color = ""):
         # For skipping upper-dendrogram, non-cluster branches
         if (currentcolor == default_color) and ((max(entry['x']) != -0.0) or (entry['y'][0]%10 == 0)):
             continue
+
+        #Check for false 'single-node, default color' clusters
+        if ((entry['y'][0] in taken_ycords) or (entry['y'][0] in taken_ycords)) and (currentcolor == default_color):
+            continue
             
         # If there has been a color change ...
         #... OR it is a single-node cluster
@@ -321,6 +344,7 @@ def annotate_clusters(fig, default_color = ""):
             
         # If new entry is higher (inside the tree) than previous, select as candidate for cluster node        
         if current_min_x <= min_x:
+
             min_x = current_min_x
             clustcoords[clustcount]['clusnode_x'] = entry['x'][1]
             xcords[clustcount] = (clustcoords[clustcount]['clusnode_x'])
@@ -344,9 +368,14 @@ def annotate_clusters(fig, default_color = ""):
                         'xanchor' : 'right'
                    })
                     xcords.append(clustcoords[clustcount]['clusnode_x'])
-                
-        prevcolor = currentcolor
+        
+        #Add occuped y-coords
+        for ycord in entry['y']:
+            if ycord%10 == 5:
+                taken_ycords.add(ycord)
 
+        prevcolor = currentcolor
+    
     # Annotate with "clusterN" the vector forms found in previous loop
     for clust in clustcoords:
         colorfont = black_or_white(clust['color'])
@@ -364,7 +393,7 @@ def annotate_clusters(fig, default_color = ""):
     return annotations
 
 def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters, recept_info, recept_info_order): 
-
+    
     # Define linkage function (we'll be using the default one for plotly). 
     linkagefun=lambda x: linkage(x, 'complete')
     (thres,clustdict) = clustering(clusters, dend_matrix, labels, linkagefun)
@@ -420,13 +449,13 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     annotations = annotate_clusters(fig, 'rgb(0,116,217)') # Default color for tree
     
     # Correcting hoverlabels
-    fig = hoverlabels_axis(fig, recept_info, recept_info_order, annotations)
+    fig = hoverlabels_axis(fig, recept_info, recept_info_order, 'rgb(0,116,217)', annotations)
     
     # Taking order for plot rows
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plot(fig, filename=filename, auto_open=False, config={
+    plot(fig, filename=filename, config={
         "displayModeBar": "hover",
         "showAxisDragHandles": False,
         "showAxisRangeEntryBoxes": False,
@@ -691,6 +720,11 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 }
                 $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
+
+                //Resize dendrogram and heatmap
+                $("#dendrogram").css("width","50%");
+                $("#heatmap").css("width","50%");
+
             } else {
                 if (plot_bclass != "col-xs-12"){
                     $("#retracting_parts").attr("class","col-xs-12");
@@ -807,7 +841,7 @@ def get_contacts_plots(itype, ligandonly):
         df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict(str(basepath + "compl_info.json"))
 
-    # Adapting to Mariona's format
+    # Adapting to Mariona's format (Single column with both interacting positions names and frequencies in percentage)
     df = adapt_to_marionas(df_raw)
 
     # Filtering out non-ligand interactions if option ligandonly is True
@@ -818,8 +852,11 @@ def get_contacts_plots(itype, ligandonly):
         ligandfilter = ~df['Position'].str.contains('Ligand')
         df = df[ligandfilter]
 
-    #Removing helix-to-helix, low-frequency pairs and merging same residue-pair interaction frequencies
-    df = removing_entries(df, set_itypes, itype)
+    #Removing helix-to-helix pairs
+    df = filter_same_helix(df)
+
+    #Removing low-frequency contacts
+    df = filter_lowfreq(df, itype)
 
     # Stack matrix (one row for each interaction pair and dynamic. Colnames are position, dynid and itypes)
     df_ts = stack_matrix(df, set_itypes)
@@ -830,7 +867,7 @@ def get_contacts_plots(itype, ligandonly):
     #Dropping away interaction type colum
     df.drop('itype', 1, inplace = True)
 
-    # If there are no interactions with this ligandonly-itype combination
+    # If there are no interactions with this ligandonly-itype combination, end iteration
     if df.empty:
         print("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
         return
@@ -914,7 +951,7 @@ def get_contacts_plots(itype, ligandonly):
         mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
 
         # Find path to files 
-        plotdiv_w= w + 275
+        plotdiv_w= w + 575
         script, div = components(p)
 
         # Creating directory if it doesn't exist

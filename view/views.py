@@ -1011,6 +1011,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         error="Structure file not found."
         return render(request, 'view/index_error.html', {"error":error} )
     else:
+##### ---- NATHALIE CODE HERE -------
+
+#### --------------------------------
         ed_align_matrix=obtain_ed_align_matrix(dyn_id)
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         paths_dict={}

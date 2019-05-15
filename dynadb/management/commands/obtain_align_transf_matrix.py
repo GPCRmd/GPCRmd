@@ -256,7 +256,8 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
         if dynobj == []:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
-        
+
+        dynobj=sorted(dynobj,key=lambda x:x.id)   #[!] For testing 
         # dyn_id, DyndbFiles, DyndbModel, DyndbModelComponents
         for dyn in dynobj:
             dyn_id=dyn.id
@@ -287,6 +288,9 @@ class Command(BaseCommand):
                 #try:
                 model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
                 pdbid_wchain=model.pdbid
+                if not pdbid_wchain:
+                    self.stdout.write(self.style.ERROR("PDB id not found. Skipping." ))
+                    continue
                 if "." in pdbid_wchain:
                     (pdbid,pdbchain)=pdbid_wchain.split(".")
                     pdbchainli=[pdbchain]
@@ -294,9 +298,6 @@ class Command(BaseCommand):
                     pdbid=pdbid_wchain
                     pdbchain=all_struc_info[pdbid]["preferred_chain"]
                     pdbchainli=[pdbchain]
-                if not pdbid:
-                    self.stdout.write(self.style.ERROR("PDB id not found. Skipping." ))
-                    continue
                 pdburl="https://files.rcsb.org/download/"+pdbid+".pdb"
                 mobile_filepath=os.path.join(tmp_path,pdbid+".pdb")
                 urllib.request.urlretrieve(pdburl,mobile_filepath )
@@ -352,14 +353,23 @@ class Command(BaseCommand):
                 aln_filepath=os.path.join(tmp_path,"dyn_%s.aln"%dyn_id)
                 ref_resids=[a.resid for a in ref.select_atoms('name CA and (%s)'%" or ".join(["segid %s"%sid for sid in ref_segids]))] 
                 if pdbchainli:
-                    target_resids= list(mobile.select_atoms('name CA and segid %s'%pdbchain).resids)  # if there are no segid, chain is used as segid
+                    target_sel=mobile.select_atoms('segid %s'%pdbchain)
                     add_sel='segid %s and '%pdbchain
                 else:
-                    target_resids= list(mobile.select_atoms('name CA').resids) 
+                    target_sel=mobile.atoms
                     add_sel=""
                 
+                target_resids= list(target_sel.select_atoms('name CA').resids)  
                 # Remove possible repeated residues in mobile/target
                 (target_resids_filt,rep_res)=remove_repetition(target_resids)
+#[!]Problem detected: when the residues to filter are only in ref or only in mob, I create a difference in the number of selected res: I need to filter before obtaining the equivalences). I think the best option is to create a new mobile universe object where repeated elements are removed, after that we don;t need to dilter out repetitions anymore 
+               #remove_ids=set()
+               #for resid in rep_res:
+               #    atoms_extra=[num for num in target_sel.select_atoms('resid %s'%resid).ids if num % 2] #[!]I have seen that repeated atoms are contiguous at list, so I remove fort ex. even atom ids of the selection. I'm not sure if it's always like this
+               #    remove_ids.update(atoms_extra)
+               #remove_ids_str=' '.join([str(i) for i in remove_ids])
+                
+               #mobile=mda.Merge(mobile.select_atoms('not bynum %s'%remove_ids_str))
 
                 clustalw_path="clustalw"
                 

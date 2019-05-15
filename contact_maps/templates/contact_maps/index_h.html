@@ -41,23 +41,26 @@
 <div id="inner_remaining" class ="row" >
   <!--Here be dendrogram and heatmap-->
   <div class="col-xs-12" id="retracting_parts">
-    <div class="panel panel-primary" id="main_plot_body">
+    <div class="panel panel-primary" id="main_plot_body" onscroll="scroller('main_plot_body','heatmap')">
       <span><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></span>
       <div class="panel-body" >
         {% include './contact_maps/menus.html' %}
         <div id="dendrogram-heatmap" class="row">
-          <div id="dendrogram" class="col-xs-5">
+          <div id="dendrogram" class="col-xs-4" style="width: 37%">
             {{dendrogram | safe }}
           </div>
-          <div id="heatmap" class="col-xs-1" >
+          <div id="heatmap" class="col-xs-8" style="width: 63%; overflow-x: scroll;">
             {{ div | safe }}
           </div>
         </div>
       </div>
     </div>
+    <div id="scrolldiv">
+      <div id="scrolldiv_inner" style="width: {{scrolldiv_width}}; height: 10px;"></div>
+    </div>
   </div>
 
-  <!--Here be side-window (the thing that opens upon clicking on heatmap)-->
+  <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
   <div class="col-xs-3" id="info">
     <div class="panel panel-info" style="height:100%; position: relative; overflow-y: auto; overflow-x: auto;">
       <div class="panel-heading" style="">Interaction details
@@ -97,7 +100,7 @@
           <p><b>Total interaction frequency:</b> <span id="freqtotal_val">%</span></p>
           <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
 
-          <!-- Traj dropdown -->
+          <!-- Trajectory dropdown -->
           <div class="dropdown blueDropdownDiv">
             <button  id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
             <span class="caret"></span></button>
@@ -108,7 +111,7 @@
         
           <!-- Loading div-->
           <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
-          <!-- iframe to ngl -->
+          <!-- iframe for the ngl viewer -->
           <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
             <iframe style="border:none; position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no" height="348px" width="348px"></iframe>
           </div>
