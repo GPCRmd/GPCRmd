@@ -235,7 +235,6 @@
                 
                 //Change receptor
                 $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta , pos, pdb_pos) {
-                    console.log(pdb_pos);
 
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
@@ -281,6 +280,7 @@
                     $("#last_played").text(traj_fnames[0]);
                     
                     //Load structure file
+                    stage.removeAllComponents();
                     stage.loadFile( path + struc_file , {visible: true}).then( function( o ){
                         o.setName("my_comp");
                         o.setSelection("not _h and ("+lig+" or protein)");

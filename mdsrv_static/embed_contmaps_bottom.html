@@ -44,7 +44,10 @@
     NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
     NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
     
+    //Which is the NGL viewer we are dealing with
+
     document.addEventListener( "DOMContentLoaded", function(){
+
       $(document).ready(function(){
 
         document.domain=document.domain;
@@ -422,7 +425,6 @@
               manageTrajChange(stage,this,mytraj,traj_fnames);
           }) 
 
-
           return(stage);
         }
 
@@ -484,11 +486,16 @@
 ////////////////// Main: 
 
         //Variables
+        var id = window.frameElement.getAttribute("data-number");
         var traj_path= "_DB/";
         var path= "/mdsrv/file/_DB/";
         var trajComp,traj_fnames,player;
-        var id = window.frameElement.getAttribute("data-number");
         var new_clust, stage;
+
+        //Prevent whole page scrolling inside iframe (not working)
+        $("body").on('mousewheel',function(event){
+          console.log('kk');
+        })
 
         //Get path arguments (if any) from parent web
         var args, itype, ligandonly, cluster, JSONfile;
