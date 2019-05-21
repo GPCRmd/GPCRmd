@@ -223,7 +223,7 @@ class Command(BaseCommand):
                         traj_name = traj_dict['name']
                         trajpath = os.path.join(basepath,traj_dict['path'])
                         mytrajpath = os.path.join(directory,"dyn" + str(dynid) + "_" + str(i) + os.path.splitext(trajpath)[1])
-                        if os.path.exists(mytrajpath):
+                        if os.path.islink(mytrajpath):
                             os.remove(mytrajpath)
                         os.symlink(trajpath, mytrajpath)
                         traj_dict['local_path'] = mytrajpath
