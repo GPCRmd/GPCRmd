@@ -13075,6 +13075,7 @@ def mdsrv_redirect(request,path):
             if content_type is not None:
                 response['Content-Type'] = content_type
             return response
+    
     response = HttpResponse()
     response['Location'] = "/mdsrv_redirect/"+path+request.META['QUERY_STRING']
     response.status_code = 200
@@ -13083,21 +13084,29 @@ def mdsrv_redirect(request,path):
     # mod_wsgi is able to do the internal redirect
     request.get_host = lambda: ''
     request.build_absolute_uri = lambda location: location
-
     return response
 
 @csrf_exempt
-@login_required
 @textonly_404_handler
 @textonly_500_handler
-def mdsrv_redirect_login(request,path,path_dir):
-    if path_dir is None:
-        allow_dir = True
-        url_path = path
-    else:
+def mdsrv_redirect_prelogin(request,path,path_dir):
+    # path is None and path_dir=file_path if the requested file is in the public directory
+    if path is None:
         url_path = path_dir
+        return mdsrv_redirect(request,url_path)
+    # path == file_path if the requested file is not in the public directory
+    else:
+        url_path = path
+        if not settings.QUERY_CHECK_PUBLISHED:
+            return mdsrv_redirect(request,url_path)
+        # Do you allow to see unpublished files in GPCR VIEWER?
         allow_dir = True
-    if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir) and settings.QUERY_CHECK_PUBLISHED:
+        return mdsrv_redirect_login(request,url_path,allow_dir)
+
+
+@login_required
+def mdsrv_redirect_login(request,url_path,allow_dir):
+    if not is_allowed_directory(request.user,url_path=request.path,prefix='_DB',allow_submission_dir=allow_dir):
         return HttpResponseForbidden("Forbidden (403).",content_type='text/plain; charset=UTF-8')
     return mdsrv_redirect(request,url_path)
 
