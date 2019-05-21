@@ -722,8 +722,8 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
 
                 //Resize dendrogram and heatmap
-                $("#dendrogram").css("width","50%");
-                $("#heatmap").css("width","50%");
+                $("#dendrogram").css("width","48%");
+                $("#heatmap").css("width","52%");
 
             } else {
                 if (plot_bclass != "col-xs-12"){

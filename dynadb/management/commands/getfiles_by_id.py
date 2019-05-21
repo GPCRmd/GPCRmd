@@ -213,9 +213,8 @@ class Command(BaseCommand):
                     #TO DO: idenfity structure files with an "struc" suffix, not only by extension
                     #TO DO: add id_files number to the filename
                     mypdbpath =  os.path.join(directory, "dyn" + str(dynid) + os.path.splitext(structure_file)[1])
-                    if os.path.exists(mypdbpath):
-                        os.remove(mypdbpath)
-                    os.symlink(pdbpath, mypdbpath)
+                    if not os.path.lexists(mypdbpath):
+                        os.symlink(pdbpath, mypdbpath)
                     self.stdout.write("Created symlink "+pdbpath+" -> "+mypdbpath)
                     
                     for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):
@@ -302,14 +301,14 @@ class Command(BaseCommand):
 
                     # for each trajectory file, write a run-in-ORI command
                     numtraj = len(dyn_dict[dynid]['trajectory'])
-                    trafile = 1
                     for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):
                         
                         # Put option to merge all dynamics from this simulation, if all trajectories are already computed
-                        if numtraj == trajfile:
-                            tail_comand = "--cores 4 --merge_dynamics \n"
+                        trajcounter = traj_dict['number'] + 1 
+                        if numtraj == trajcounter:
+                            tail_comand = "--merge_dynamics \n"
                         else:
-                            tail_comand = "--cores 4 --no_freqs \n"
+                            tail_comand = "\n"
 
                         commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
                             --dynid %s \
@@ -318,5 +317,5 @@ class Command(BaseCommand):
                             --topology %s \
                             --dict %s \
                             --ligandfile %s \
-                            --cores 4 \n" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath, dictfile_name, ligfile_name))
+                            --cores 4 %s" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath, dictfile_name, ligfile_name, tail_comand))
                         )  

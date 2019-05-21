@@ -210,6 +210,15 @@ $(document).ready(function(){
                	$('#loading_flare0').css('display', 'none');
                 allEdges0 = plots[0].getEdges();
                 numfr0 = plots[0].getNumFrames();
+                
+                //Paint flareplots legend once they are loaded
+                var id_element,color_element;
+                parent.$(".Legend-element").each(function(){
+                    id_element = $(this).attr('id');
+                    color_element = parent.$("g[Id^='"+id_element+"'] path").css('fill');
+                    $(this).css('background-color',color_element);
+                })
+
             });
             d3.json(fpdir+"cluster2.json", function(jsonData){
     	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
@@ -217,6 +226,7 @@ $(document).ready(function(){
                 allEdges1 = plots[1].getEdges();
                 numfr1 = plots[1].getNumFrames();
             });
+
     	}
 
     	//clear buttons
@@ -263,9 +273,9 @@ $(document).ready(function(){
         });
 
         //Trigger the NGL viewers
-        console.log("trigger0");
         $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0');
-        console.log("trigger1");
         $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1');        
+
+
     });
 });

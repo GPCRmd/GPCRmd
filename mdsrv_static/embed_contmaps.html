@@ -44,8 +44,7 @@
         NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
         document.addEventListener( "DOMContentLoaded", function(){
         $(document).ready(function(){
-            document.domain=document.domain;
-
+          document.domain=document.domain;
 
 ////////////////// Functions
         function setTrajRangeMax(){
@@ -210,6 +209,19 @@
             $("#trajRange").attr("max",trajComp.trajectory._frameCount);
             $("#last_played").text(mytraj);       
         }
+      
+        function addwaters(o, pos_sel){
+          //If itype is wb or all, add waters within 4Amostrongs as representation
+          var is_wb, sele, atoms_within, water_sele;
+          is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
+          if (Boolean(is_wb)){
+            sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
+            atoms_within = sele.toSeleString();
+            water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
+            o.addRepresentation("ball+stick", {  sele: water_sele, colorValue: "#828282", colorScheme: "element"});
+          }
+          return(o)
+        }
         
 ////////////////// Main: 
            
@@ -234,8 +246,7 @@
                 $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});                
                 
                 //Change receptor
-                $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta , pos, pdb_pos) {
-                    console.log(pdb_pos);
+                $(document.body).bind('createNewRef', function(e, struc_file , traj_fnames , traj_f, lig,delta, pos, pdb_pos) {
 
                     //Hide/show some html elements
                     $("#loading", window.parent.document).css("display","inline");
@@ -243,7 +254,7 @@
                     $("#trajsDropdown", window.parent.document).css("visibility","hidden");
                     $("#add_traj_options").html("");
                     $("#last_played").css("visibility","hidden");
-                    $("#posNotinRec", window.parent.document).css("display","none")
+                    $("#posNotinRec", window.parent.document).css("display","none");
                     //Prepare
                     var my_comp_li=stage.getComponentsByName("my_comp").list;
                     if (my_comp_li.length > 0) {
@@ -281,9 +292,10 @@
                     $("#last_played").text(traj_fnames[0]);
                     
                     //Load structure file
+                    stage.removeAllComponents();
                     stage.loadFile( path + struc_file , {visible: true}).then( function( o ){
                         o.setName("my_comp");
-                        o.setSelection("not _h and ("+lig+" or protein)");
+                        o.setSelection("not _h and ("+lig+" or protein or water)");
 
                         //Load trajectories
                         for (t=0 ; t < traj_f.length ; t++){
@@ -309,7 +321,7 @@
                         modTooltip();
                         
                         // Add representations
-                        var index, position, pos_sel 
+                        var index, position, pos_sel;
                         o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
                         if (lig) {
                           o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
@@ -323,11 +335,15 @@
                                     }
                                     pos_sel=position.replace("-"," and :");
                                     o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+
+                                    //If interaction is water bridges, add water representation withing 4 amstrongs
+                                    o = addwaters(o, pos_sel);
                                 }
                             }
                             else {
                                 pos_sel=pdb_pos.replace("-"," and :");
                                 o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+                                o = addwaters(o, pos_sel)
                             }
                         } else {
                             $("#posNotinRec_text", window.parent.document).text(pos+" not found in this receptor.");

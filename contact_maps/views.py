@@ -154,7 +154,7 @@ def get_csv_file(request,itype, ligandonly, rev):
 	"""
 
 	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
-	csv_name = basedir + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
+	csv_name = basedir + itype + "_" + ligandonly + "_dataframe.csv"
 
 	#Creating and downloading CSV file from df
 	csvfile = FileWrapper(open(csv_name, "r"))

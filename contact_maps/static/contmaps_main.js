@@ -123,6 +123,13 @@ $(document).ready(function(){
       }
   });
 
+  //---------------Scrollbar to heatmap
+  jQuery(function ($) {
+    $("#scrolldiv").on("scroll", function () {
+        $("#heatmap").scrollLeft($(this).scrollLeft());
+    });
+  });
+
 });
 
 //---------Check all options upon clicking "check all" (currently not used) 
@@ -191,13 +198,6 @@ function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
-  $("#dendrogram").css("width","45%");
-  $("#heatmap").css("width","55%");  
+  $("#dendrogram").css("width","37%");
+  $("#heatmap").css("width","63%");  
 }
-
-//---------------Scrollbar to heatmap
-jQuery(function ($) {
-  $("#scrolldiv").on("scroll", function () {
-      $("#heatmap").scrollLeft($(this).scrollLeft());
-  });
-});
