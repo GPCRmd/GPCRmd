@@ -397,3 +397,7 @@ hr {
 .my-legend a {
   color: #777;
   }
+
+.tooltip {
+  position: fixed;
+}

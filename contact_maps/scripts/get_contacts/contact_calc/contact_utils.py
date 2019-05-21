@@ -189,17 +189,30 @@ def get_atom_selection_properties(selection_id):
         Atom name of each atom ["NZ", "CA", "N", ...]
     indices: list of strings
         VMD based index for each atom ["12304", "1231", ...]
-    """
-    chains = list(map(str, evaltcl("$%s get chain" % selection_id).split(" ")))
-    resnames = list(map(str, evaltcl("$%s get resname" % selection_id).split(" ")))
-    resids = list(map(str, evaltcl("$%s get resid" % selection_id).split(" ")))
-    names = list(map(str, evaltcl("$%s get name" % selection_id).split(" ")))
-    elements = list(map(str, evaltcl("$%s get element" % selection_id).split(" ")))
-    indices = list(map(str, evaltcl("$%s get index" % selection_id).split(" ")))
-    if chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
+    icodes: list of strings
+        insertion code for each atom where present, and '' otherwise
+        ['','','','','A','A','A','','','',...]
+        """
+    chains   = safely_parsed_evaltcl("$%s get chain" % selection_id)
+    resnames = safely_parsed_evaltcl("$%s get resname" % selection_id)
+    resids   = safely_parsed_evaltcl("$%s get resid" % selection_id)
+    names    = safely_parsed_evaltcl("$%s get name" % selection_id)
+    elements = safely_parsed_evaltcl("$%s get element" % selection_id)
+    indices  = safely_parsed_evaltcl("$%s get index" % selection_id)
+    icodes   = safely_parsed_evaltcl("$%s get insertion" % selection_id)
+    if icodes == [''] or chains == [''] or resnames == [''] or resids == [''] or names == [''] or indices == ['']:
         return [], [], [], [], [], []
-    return chains, resnames, resids, names, elements, indices
+    return chains, resnames, resids, names, elements, indices, icodes
 
+def safely_parsed_evaltcl(tclstr):
+    ''' When a value is not found, VMD outputs '{ }', which can throw off a split function.
+    Therefore we define a function here which takes this into account and correctly returns values 
+    from evaltcl. '''
+    nonchar = '{ }'
+    working_string = evaltcl(tclstr).replace(nonchar, '{}')
+    working_list = working_string.split(' ')
+    working_list = [str(i) if i != '{}' else '' for i in working_list]
+    return working_list
 
 def gen_index_to_atom(top, traj):
     """
@@ -220,9 +233,8 @@ def gen_index_to_atom(top, traj):
     trajid = load_traj(top, traj, 0, 1, 1)
     all_atom_sel = "set all_atoms [atomselect %s \" all \" frame %s]" % (trajid, 0)
     evaltcl(all_atom_sel)
-    chains, resnames, resids, names, elements, indices = get_atom_selection_properties("all_atoms")
+    chains, resnames, resids, names, elements, indices, icodes = get_atom_selection_properties("all_atoms")
     evaltcl('$all_atoms delete')
-
     # Generate mapping
     index_to_atom = {}
     for idx, index in enumerate(indices):
@@ -231,10 +243,11 @@ def gen_index_to_atom(top, traj):
         resid = resids[idx]
         name = names[idx]
         element = elements[idx]
+        icode = icodes[idx]
         # atom_label = "%s:%s:%s:%s:%s" % (chain, resname, resid, name, index)
         index_key = int(index)
         # index_to_atom[index_key] = atom_label
-        index_to_atom[index_key] = Atom(int(index_key), chain, resname, int(resid), name, element)
+        index_to_atom[index_key] = Atom(int(index_key), chain, resname, int(resid), name, element, icode=icode)
 
     molecule.delete(trajid)
     return index_to_atom
@@ -433,7 +446,6 @@ def configure_solv(top, traj, solvent_sele):
             molecule.delete(molid)
             return solv_ids
 
-
 def configure_lipid(top, traj, lipid_sele):
     """
     Detects the lipid residue name and creates a corresponding VMD selection macro called 'lipid'.
@@ -540,6 +552,93 @@ def configure_ligand(top, traj, ligand_sele, sele1, sele2):
 
     evaltcl("$ligatoms delete")
     molecule.delete(molid)
+
+def is_sp3(molid, index_to_atom, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+    
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (109.5 - 5) < angle and angle < (109.5 + 5)
+
+def is_sp2(molid, index_to_atom, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (120. - 5) < angle and angle < (120. + 5)
+
+def is_sp(molid, atom1, atom2, atom3):
+    atom1 = index_to_atom[atom1].get_label()
+    atom2 = index_to_atom[atom2].get_label()
+    atom3 = index_to_atom[atom3].get_label()
+    
+    angle = compute_angle(molid, 0, atom1, atom2, atom3)
+    return (180. - 5) < angle and angle < (180. + 5)
+
+def extract_ligand_features(top, traj, index_to_atom):
+    """
+    Extracts lists of cationc and anionic atoms identified in the ligand
+
+    Parameters
+    ----------
+    top: Topology
+        In .pdb or .mae format
+    traj: Trajectory
+        In .nc or .dcd format
+    index_to_atom: dict
+        Maps VMD atom index to Atom
+
+    Returns
+    -------
+    ligand_anions/ligand_cations: list
+        VMD indices of anions/cations, respectively, detected among the ligand atoms
+    """
+    molid = load_traj(top, traj, 0, 1, 1)
+    ligand_indices = get_selection_indices(molid, 0, "ligand")
+
+    ligand_anions = []
+    ligand_cations = []
+
+    metal_cations = ["MG", "MN", "RH", "ZN", "FE", "BI", "AS", "AG"]
+
+    ''' Find all neighbors '''
+    index_to_neighbors = {}
+    for atom_idx in ligand_indices:
+        # print("Atom idx {}, element {}".format(atom_idx, index_to_atom[atom_idx].element))
+        evaltcl("set neighbors [atomselect %s \"within 1.95 of (index %d)\" frame %s]" % (molid, atom_idx, 0))
+        neighbor_indices = [idx for idx in get_atom_selection_indices("neighbors") if idx != atom_idx]
+        evaltcl("$neighbors delete")
+        index_to_neighbors[atom_idx] = neighbor_indices
+
+    ''' Identify ligand cations/anions '''
+    for atom_idx in ligand_indices:
+        neighbors = index_to_neighbors[atom_idx] if atom_idx in index_to_neighbors else []
+        ''' Check if the atom is a metal cation. I.E. one of the metal_cations names appears in its label. '''
+        if any([cation in index_to_atom[atom_idx].get_label() for cation in metal_cations]):
+            ligand_cations += [atom_idx]
+            continue
+
+        ''' Detect carboxylates in ligand. There are two restrictions:
+        - sp2 carbon,
+        - attached to 2 O's and 1 C
+        '''
+        if index_to_atom[atom_idx].element == 'C' and len(neighbor_indices) == 3:
+            # Check hybridization
+            if not is_sp2(molid, index_to_atom, neighbor_indices[0], atom_idx, neighbor_indices[1]): continue
+            # Check bonded atoms
+            neighbor_elements = [index_to_atom[n_idx].element for n_idx in neighbor_indices]
+            from collections import Counter
+            neighbor_elem_counts = Counter(neighbor_elements)
+            if not (neighbor_elem_counts['C'] == 1 and neighbor_elem_counts['O'] == 2):
+                continue
+            # It's a carboxylate (probably)! Add both O's to ligand_anions
+            ligand_anions += [n_idx for n_idx in neighbor_indices if index_to_atom[n_idx].element == 'O']
+
+    molecule.delete(molid)
+    return ligand_anions, ligand_cations
+
 
 
 # def compute_distance(molid, frame_idx, atom1_label, atom2_label):

@@ -494,7 +494,7 @@
 
         //Prevent whole page scrolling inside iframe (not working)
         $("body").on('mousewheel',function(event){
-          console.log('kk');
+          event.preventDefault()
         })
 
         //Get path arguments (if any) from parent web
