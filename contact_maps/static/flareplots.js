@@ -190,6 +190,29 @@ $(document).ready(function(){
         });
     }
 
+    function hoverlabels(id){
+        var pos;
+        //Put hoverlabels (tooltips) in the flareplots
+        $('#flare-container'+id+' .trackElement path').each(function(){
+            $(this).tooltip({
+              html: true,
+              placement: 'top',
+              container: 'body'
+            });
+        });
+
+        //This part not working, but will remain here just in case
+        $('#flare-container'+id+' .node text').each(function(){
+            pos = $(this).html();
+            $(this).tooltip({
+              title: pos,
+              html: true,
+              placement: 'top',
+              container: 'body'
+            });
+        });
+    };
+
 	////////////////////
 	//Flare plots time!!
 	////////////////////
@@ -201,15 +224,12 @@ $(document).ready(function(){
 
     	//Create initial flareplots
     	if (fpdir) {
-    		var allEdges0, numfr0, allEdges1, numfr1;
     		var plots = [];
             var fpsize=setFpNglSize(true, "#flare-container0");
 
             d3.json(fpdir+"cluster1.json", function(jsonData){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
                	$('#loading_flare0').css('display', 'none');
-                allEdges0 = plots[0].getEdges();
-                numfr0 = plots[0].getNumFrames();
                 
                 //Paint flareplots legend once they are loaded
                 var id_element,color_element;
@@ -219,12 +239,15 @@ $(document).ready(function(){
                     $(this).css('background-color',color_element);
                 })
 
+                //Put hoverlabels to flareplot
+                hoverlabels(0)
             });
             d3.json(fpdir+"cluster2.json", function(jsonData){
     	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
     	        $('#loading_flare1').css('display', 'none');
-                allEdges1 = plots[1].getEdges();
-                numfr1 = plots[1].getNumFrames();
+
+                //Put hoverlabels to flareplot
+                hoverlabels(1)
             });
 
     	}
