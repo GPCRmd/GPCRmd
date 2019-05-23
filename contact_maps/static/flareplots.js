@@ -56,7 +56,7 @@ $(document).ready(function(){
 
     function setFpNglSize(applyMinSize, flare_container){
 	    var screen_h=screen.height;
-	    var min_size=550;
+	    var min_size=300;
 	    var fpcont_w_str=$(flare_container).css("width");
 	    var fpcont_w=Number(fpcont_w_str.match(/^\d*/g)[0]);
 	    var final_size = fpcont_w;
@@ -191,8 +191,10 @@ $(document).ready(function(){
     }
 
     function hoverlabels(id){
-        var pos;
-        //Put hoverlabels (tooltips) in the flareplots
+        var pos, source_pos, target_pos;
+        var source_pos_pat = /source-(\w+)/;
+        var target_pos_pat = /target-(\w+)/;
+        //Put hoverlabels (tooltips) in flareplots position rectangles
         $('#flare-container'+id+' .trackElement path').each(function(){
             $(this).tooltip({
               html: true,
@@ -201,13 +203,25 @@ $(document).ready(function(){
             });
         });
 
-        //This part not working, but will remain here just in case
+        //Put hoverlabels (tooltips) in flareplot position texts
         $('#flare-container'+id+' .node text').each(function(){
             pos = $(this).html();
             $(this).tooltip({
               title: pos,
               html: true,
               placement: 'top',
+              container: 'body'
+            });
+        });
+
+        //Put hoverlabels on interaction lines
+        $('#flare-container'+id+' .link').each(function(){
+            source_pos = $(this).attr('class').match(source_pos_pat)[1];
+            target_pos = $(this).attr('class').match(target_pos_pat)[1];
+            $(this).tooltip({
+              title: source_pos+"-"+target_pos,
+              html: true,
+              placement: 'auto',
               container: 'body'
             });
         });
