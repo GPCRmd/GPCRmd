@@ -379,16 +379,25 @@ class Command(BaseCommand):
                 upd={"ligres_int":{}}
 
         if dyn_dict:
+            
+            for dyn in dyn_dict:
+                print(dyn,dyn_dict['dyn'])
+            print()
+
             with open(commands_path,"w") as commands_file:
                 for dynid in dyn_dict:
+                    print("\n###%s###" % (dynid))
                     if not dyn_dict[dynid]['trajectory']:
+                        print("%s has no trajectory file. Skippping..." % dynid)
                         continue
                     structure_file = dyn_dict[dynid]['structure']['path']
                     structure_file_name = dyn_dict[dynid]['structure']['name']
 
                     #Create directory for dynamic simulation id if it doesn't exists yet
                     directory = os.path.join(settings.MEDIA_ROOT,"Precomputed/get_contacts_files/dynamic_symlinks/dyn" + str(dynid))
-                    os.makedirs(directory,exist_ok=True)
+                    if not os.path.exists(directory):
+                        os.makedirs(directory,exist_ok=True)
+                    print("directory created")
 
                     #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
                     basepath = settings.MEDIA_ROOT
@@ -407,9 +416,8 @@ class Command(BaseCommand):
                         traj_name = traj_dict['name']
                         trajpath = os.path.join(basepath,traj_dict['path'])
                         mytrajpath = os.path.join(directory,"dyn" + str(dynid) + "_" + str(i) + os.path.splitext(trajpath)[1])
-                        if os.path.islink(mytrajpath):
-                            os.remove(mytrajpath)
-                        os.symlink(trajpath, mytrajpath)
+                        if not os.path.lexists(mytrajpath):
+                            os.symlink(trajpath, mytrajpath)
                         traj_dict['local_path'] = mytrajpath
                         
                     try:
@@ -469,26 +477,26 @@ class Command(BaseCommand):
                         with open(dictfile_name, "w") as dictfile:
                             mydict = generate_gpcr_pdb(dynid, mypdbpath)
                             print(json.dumps(mydict),file=dictfile)
+                        print("dictionary and ligandfile created")
 
-                        ##################
-                        ## Compl_data file
-                        ##################
-                        try:
-                            dyn = DyndbDynamics.objects.filter(id=dynid)[0]
-                            self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dyn_dict.keys()))))
-                            compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
-                        except FileNotFoundError:
-                            self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
-                                       
                     except IndexError:
                         self.stdout.write(self.style.WARNING("Ligand error: options --ligresname and --ligresid are mandatory when more than one ligand molecule is present on the database. Skipping and cleaning up."))
                         shutil.rmtree(directory)
                         continue
-                    """
                     except Exception:
                          self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
                          shutil.rmtree(directory)
-                    """
+
+                    ##################
+                    ## Compl_data file
+                    ##################
+                    try:
+                        dyn = DyndbDynamics.objects.filter(id=dynid)[0]
+                        self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dyn_dict.keys()))))
+                        compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
+                    except FileNotFoundError:
+                        self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
+                                   
                     ###########################################
                     ## Compute frequencies and dynamic contacts
                     ###########################################
@@ -504,6 +512,8 @@ class Command(BaseCommand):
                         else:
                             tail_comand = "\n"
 
+                        print("printing command line for "+dynid)
+
                         commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
                             --dynid %s \
                             --traj %s \
@@ -514,10 +524,10 @@ class Command(BaseCommand):
                             --cores 4 %s" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath, dictfile_name, ligfile_name, tail_comand))
                         )  
 
-                # Save compl_data.json
-                update_time(upd,upd_now)
-                with open(upd_file_path, 'w') as outfile:
-                    json.dump(upd, outfile)
-                with open(compl_file_path, 'w') as outfile:
-                    json.dump(compl_data, outfile)
+            # Save compl_data.json
+            update_time(upd,upd_now)
+            with open(upd_file_path, 'w') as outfile:
+                json.dump(upd, outfile)
+            with open(compl_file_path, 'w') as outfile:
+                json.dump(compl_data, outfile)
                 

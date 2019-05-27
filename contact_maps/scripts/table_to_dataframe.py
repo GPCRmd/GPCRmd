@@ -415,7 +415,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout'].update({
         'width':width, 
         'height':height,
-        'autosize' : False,
+        'autosize': False,
         'hoverdistance' : 10,
         })
 
@@ -455,7 +455,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plot(fig, filename=filename, config={
+    plot(fig, auto_open = False, filename=filename, config={
         "displayModeBar": "hover",
         "showAxisDragHandles": False,
         "showAxisRangeEntryBoxes": False,
@@ -735,6 +735,25 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
 
     return mysource
 
+def create_csvfile(filename, recept_info,df):
+    """
+    This function creates the CSV file to be donwloaded from web
+    """
+    df_csv = df.copy()
+    df_csv.index.names = ['Interacting positions']
+    
+    #Change dynX by full name of receptor
+    df_csv.columns = df_csv.columns.map(lambda x: str("%s(%s)" %(recept_info[x][5],recept_info[x][6])))
+    
+    #Sorting by ballesteros Id's (helixloop column) and clustering order
+    df_csv['Interacting positions'] = df_csv.index
+    df_csv['helixloop'] = df_csv['Interacting positions'].apply(lambda x: re.sub(r'^(\d)x',r'\g<1>0x',x)) 
+    df_csv = df_csv.sort_values(["helixloop"])
+    df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
+
+    df_csv.to_csv(path_or_buf = csvfile)
+
+
 ############
 ## Variables
 ############
@@ -887,6 +906,10 @@ def get_contacts_plots(itype, ligandonly):
 
     # Labels for dendogram
     dendlabels_dyns = [ dyn for dyn in df ]
+    
+    #Storing dataframe with results in a CSV file, downloadable from web
+    csvfile =  basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly +  "_dataframe.csv"
+    create_csvfile(csvfile, recept_info,df)
 
     # Setting columns 'Position', 'Position1' and 'Position2' in df for jsons files
     df['Position'] = df.index
@@ -937,10 +960,6 @@ def get_contacts_plots(itype, ligandonly):
             w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20*2 + 130)
         else: 
             w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)    
-
-        # Save dataframe in csv (without row indexes)
-        csvfile =  basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_dataframe.csv"
-        df_ts_rev.to_csv(path_or_buf = csvfile, index = False)
 
         # Define a figure
         hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
