@@ -350,7 +350,7 @@ class Command(BaseCommand):
         dyn_dict = obtain_dyn_files_from_id(dynids,options['alldyn'])
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands.sh"
+        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands_krosis.sh"
 
         #Prepare compl_data json file and the "last time modified" upd file
         cra_path="/protwis/sites/files/Precomputed/get_contacts_files"
@@ -381,7 +381,7 @@ class Command(BaseCommand):
         if dyn_dict:
             
             for dyn in dyn_dict:
-                print(dyn,dyn_dict['dyn'])
+                print(dyn,dyn_dict[dyn])
             print()
 
             with open(commands_path,"w") as commands_file:
@@ -512,7 +512,7 @@ class Command(BaseCommand):
                         else:
                             tail_comand = "\n"
 
-                        print("printing command line for "+dynid)
+                        print("printing command line for "+str(dynid))
 
                         commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
                             --dynid %s \
