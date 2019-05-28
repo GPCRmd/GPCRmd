@@ -187,6 +187,9 @@ $(document).ready(function(){
             //updateFPInt(plot, flare_container)//I'm going to skip this for the moment. fpgpcrdb_dict is hard to obtain. //Update fpSelInt depending on what is in the fplot.
             $("#selectionDiv").trigger("click");
 
+            //Add hoverlabels
+            hoverlabels(id)
+
         });
     }
 

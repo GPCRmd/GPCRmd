@@ -1202,7 +1202,8 @@ $(document).ready(function(){
             var receptorsel=gpcr_selection();
             var ligli=$("#bindingSite").data("ligli");
             bs_info=receptorsel+"-"+ligli;
-        } 
+        }
+        console.log(bs_info);
         return (bs_info);
     }
 //-------- Protein chains
