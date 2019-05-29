@@ -175,7 +175,7 @@
                 pos_sel = water_reps[i]['name'];
                 sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
                 atoms_within = sele.toSeleString();
-                water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
+                water_sele = "water and "+atoms_within;
                 stage.getRepresentationsByName(pos_sel).setSelection(water_sele);
               }
             }
@@ -234,7 +234,7 @@
           var sele, atoms_within, water_sele;
           sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
           atoms_within = sele.toSeleString();
-          water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
+          water_sele = "water and "+atoms_within;
           o.addRepresentation("ball+stick", { name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
           return(o)
         }

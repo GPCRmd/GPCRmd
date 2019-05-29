@@ -389,7 +389,7 @@ $(document).ready(function(){
                     if (presel_ok_li.length > 0){
                         $("#text_input_all").find(".ti_add_btn:last").trigger("click");
                         $("#text_input_all").find(".sel_input:last").val(presel_pos);
-                        $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                        $("#text_input_all").find(".text_input:last .high_type").val("ball+stick");
                         //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
                         changeLastInputColor("#ff4c00",false);
                     }
@@ -401,7 +401,7 @@ $(document).ready(function(){
                 if (presel_ok_li.length > 0){
                     $("#text_input_all").find(".ti_add_btn:last").trigger("click");
                     $("#text_input_all").find(".sel_input:last").val(presel_pos);
-                    $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                    $("#text_input_all").find(".text_input:last .high_type").val("ball+stick");
                     //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
                     changeLastInputColor("#ff4c00",false);
                 }

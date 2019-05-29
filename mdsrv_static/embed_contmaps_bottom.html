@@ -178,9 +178,7 @@
               water_reps = stage.getRepresentationsByName(/\d+ and/)['list'];
               for (var i = 0; i < water_reps.length; i++){
                 pos_sel = water_reps[i]['name'];
-                sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
-                atoms_within = sele.toSeleString();
-                water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
+                water_sele = near_waters(o, pos_sel);
                 stage.getRepresentationsByName(pos_sel).setSelection(water_sele);
               }
             }
@@ -325,13 +323,14 @@
             $("#posNotinRec_text"+id, window.parent.document).text("Positions "+notfound.join(", ")+" not found on this receptor.");
 
             //Add ball-stick representations for each position. If itype is "all" or "wb", add also waters within 3.5A
-            var is_wb, sele, atoms_within, water_sele;
+            var is_wb, sele, water_sele, atoms_within, water_sele;
             is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
             for (i = 0; i < pdb_pos_array.length; i++){
               position = pdb_pos_array[i];
               pos_sel=position.replace("-"," and :");
               if (Boolean(is_wb)){
-                o = addwaters(o, pos_sel);
+                water_sele = near_waters(o, pos_sel);
+                o.addRepresentation("ball+stick", {  name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
               }
               o.addRepresentation( "ball+stick", { name: 'pos_rep', sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
             }
@@ -422,6 +421,7 @@
 
             // Add representations
             var index, position, pos_sel;
+            //o.addRepresentation( "licorice", { color:"green",  sele: "water" } );
             o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
             if (lig){
               o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
@@ -505,14 +505,13 @@
             return(stage);
         }
 
-        function addwaters(o, pos_sel){
+        function near_waters(o, pos_sel){
           //If itype is wb or all, add waters within 4Amostrongs as representation
           var sele, atoms_within, water_sele;
-          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
+          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 4 );
           atoms_within = sele.toSeleString();
           water_sele = "water and "+atoms_within;
-          o.addRepresentation("ball+stick", {  name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
-          return(o)
+          return(water_sele)
         }
 
 ////////////////// Main: 
