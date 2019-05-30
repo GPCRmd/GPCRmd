@@ -508,7 +508,7 @@
         function near_waters(o, pos_sel){
           //If itype is wb or all, add waters within 4Amostrongs as representation
           var sele, atoms_within, water_sele;
-          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 4 );
+          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
           atoms_within = sele.toSeleString();
           water_sele = "water and "+atoms_within;
           return(water_sele)
