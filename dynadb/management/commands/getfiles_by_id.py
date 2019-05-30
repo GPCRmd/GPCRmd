@@ -90,67 +90,6 @@ def parse_pdb(residue_id, pdbfile, residue_num = None):
                         residues.add((sel_chain_id, sel_residue_num))
     return(residues)
 
-def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
-    """
-    The idea of this function is to create a label file (get_contacts format) with the ballesteros GPCR id's as labels for a certain model.
-    info_dictfile should contain a dictionary-like text file with this format:
-        {'POSITION-CHAIN-RESIDUE': BALLESTEROS_ID, ... }
-    The optional argument "ligand" corresponds to a file with the PDB identifier of the molecule ligand and its label. Example
-    NUMBER CHAIN RESIDUE Ligand
-    """
-
-    #Dictionary with aminoacid codes (label files require 3-letter code)
-    AAs =  {'C': 'CYS', 'D': 'ASP', 'S': 'SER', 'Q': 'GLN', 'K': 'LYS',
-     'I': 'ILE', 'P': 'PRO', 'T': 'THR', 'F': 'PHE', 'N': 'ASN', 
-     'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
-     'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
-
-    #Reading dictionary file with the Ballesteros numeration for this protein sequence
-    dictfile = eval(open(info_dictfile, 'r').read())
-
-    #open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
-    outfile_name = outfolder + outname + "_labels.tsv"
-    with open(outfile_name,'w') as outfile:
-        outdict = {}
-
-        #Iterate over residues in the dictionary, and extract its corresponding aminoacid type from the PDB
-        pattern = compile("-\d\d")
-        for ballesteros_id in dictfile:
-            AA = dictfile[ballesteros_id]
-            #Split by the dash that separates chainame and AA number
-            AA_splited = AA.split("-")
-            number = AA_splited[0]
-            chain = AA_splited[1]
-            type_res = AAs[AA_splited[2]]
-            ballesteros_id = ballesteros_id.replace(".","-")
-            ballesteros_id_cuted = sub(pattern,"",ballesteros_id)
-            outdict[int(number)] = ("%s:%s:%s\t%s\n" %(chain, type_res,number, ballesteros_id_cuted))
-
-        #Print a new label file with the results
-        for AA in sorted(outdict):
-
-            outfile.write(outdict[AA])
-
-        # If there's a ligandfile specified, add its content as a label at the end of the labelfile
-        if ligand is not None:
-            ligandfile = open(ligand, "r")
-            ligandnames_count = {}
-
-            # Iterate over lines. Split by blank, catch second element as label and first as residue name
-            for line in ligandfile:
-                ligand_splited = line.split()
-                number = ligand_splited[0]
-                chain = ligand_splited[1]
-                type_res = ligand_splited[2]
-                name_ligand = ligand_splitted[3]
-
-                if name_ligand in ligandnames_count:
-                    ligandnames_count[name_ligand] = 1
-                else:
-                    ligandnames_count[name_ligand] += 1
-
-                outfile.write("%s:%s:%s\tLigand_%s_%d\n" %(chain, type_res, number, name_ligand, ligandnames_count[name_ligand]))
-
 def json_dict(path):
     """Converts json file to pyhton dict."""
     json_file=open(path)
@@ -350,7 +289,7 @@ class Command(BaseCommand):
         dyn_dict = obtain_dyn_files_from_id(dynids,options['alldyn'])
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands_krosis.sh"
+        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands.sh"
 
         #Prepare compl_data json file and the "last time modified" upd file
         cra_path="/protwis/sites/files/Precomputed/get_contacts_files"
@@ -470,15 +409,6 @@ class Command(BaseCommand):
                                     
                                 print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
 
-                        ##################
-                        ## Dictionary file
-                        ##################
-                        dictfile_name = os.path.join(directory, "dyn" + str(dynid) + "_dict.txt")
-                        with open(dictfile_name, "w") as dictfile:
-                            mydict = generate_gpcr_pdb(dynid, mypdbpath)
-                            print(json.dumps(mydict),file=dictfile)
-                        print("dictionary and ligandfile created")
-
                     except IndexError:
                         self.stdout.write(self.style.WARNING("Ligand error: options --ligresname and --ligresid are mandatory when more than one ligand molecule is present on the database. Skipping and cleaning up."))
                         shutil.rmtree(directory)
@@ -519,9 +449,8 @@ class Command(BaseCommand):
                             --traj %s \
                             --traj_id %s \
                             --topology %s \
-                            --dict %s \
                             --ligandfile %s \
-                            --cores 4 %s" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath, dictfile_name, ligfile_name, tail_comand))
+                            --cores 4 %s" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath,ligfile_name, tail_comand))
                         )  
 
             # Save compl_data.json
