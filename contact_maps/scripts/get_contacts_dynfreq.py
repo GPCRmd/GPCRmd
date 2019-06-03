@@ -3,9 +3,17 @@ import os
 import glob
 import argparse as ap
 import pandas as pd
+from json import loads, dump
 from sys import stdout
 from shutil import copyfile,copyfileobj
 
+
+def json_dict(path):
+    """Converts json file to pyhton dict."""
+    json_file=open(path)
+    json_str = json_file.read()
+    json_data = loads(json_str)
+    return json_data
 
 def mkdir_p(path):
     if not os.path.exists(path):
@@ -30,11 +38,9 @@ def read_ligandfile(ligfile):
 
     return(ligand_sel)
 
-def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
+def create_labelfile(outname, outfolder = "./", ligand = None):
     """
     The idea of this function is to create a label file (get_contacts format) with the ballesteros GPCR id's as labels for a certain model.
-    info_dictfile should contain a dictionary-like text file with this format:
-        {'POSITION-CHAIN-RESIDUE': BALLESTEROS_ID, ... }
     The optional argument "ligand" corresponds to a file with the PDB identifier of the molecule ligand and its label. Example
     NUMBER CHAIN RESIDUE Ligand
     """
@@ -46,7 +52,8 @@ def create_labelfile(info_dictfile, outname, outfolder = "./", ligand = None):
      'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
 
     #Reading dictionary file with the Ballesteros numeration for this protein sequence
-    dictfile = eval(open(info_dictfile, 'r').read())
+    compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
+    dictfile = compl_data[outname]['gpcr_pdb']
 
     #open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
     outfile_name = outfolder + outname + "_labels.tsv"
@@ -222,12 +229,6 @@ parser.add_argument(
     help='Topology file to process'
 )
 parser.add_argument(
-    '--dict',
-    dest='dictfile',
-    action='store',
-    help='Dictionary file of this simulation'
-)
-parser.add_argument(
     '--ligandfile',
     dest='ligfile',
     action='store',
@@ -256,13 +257,10 @@ dynname = "dyn" + args.dynid
 mytrajid = args.traj_id
 mytrajpath = args.trajfile
 mypdbpath = args.topology
-dictfile = args.dictfile
 ligfile = args.ligfile
 repeat_dynamics = args.repeat_dynamics
 cores = args.cores
 get_contacts_path = "/protwis/sites/protwis/contact_maps/scripts/get_contacts/"
-scripts_path = "/protwis/sites/protwis/contact_maps/scripts/"
-files_basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
 files_path = "/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
 
 #Interaction multi-types dictionary
@@ -277,7 +275,7 @@ ligand_sel = read_ligandfile(ligfile)
 
 #Creating labelfile
 print("computing labelfile")
-create_labelfile(dictfile, dynname, files_path, ligfile)
+create_labelfile(dynname, files_path, ligfile)
 
 #Computing dynamic contacts
 print("computing " + dynname + " dynamic contacts")
