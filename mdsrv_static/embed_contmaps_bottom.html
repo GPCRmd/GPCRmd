@@ -540,36 +540,31 @@
           parent.$("#FPclearSel"+id).trigger("click");
         });
 
-        //Prepare Jsons and create NGLviewers
-        $.getJSON(JSONfile, function(clustdict){  
-          $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json", function(compl_data){
+        //Initial stage. Triggered when flareplots are fully loaded
+        $(document.body).bind('createNGL'+id, function(e, clustdict, compl_data) {  
 
-            //Slider and page settings
-            $(".ui-slider").css({"margin-left":"25px"});
-            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
-            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
-            $(".ui-page").css({"overflow":"hidden"})
+          //Slider and page settings
+          $(".ui-slider").css({"margin-left":"25px"});
+          $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+          $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+          $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
+          $(".ui-page").css({"overflow":"hidden"})
 
-            //Initial stage. Triggered when flareplots are fully loaded
-            $(document.body).bind('createNGL'+id, function(e) {  
-              
-              //Upon click of cluster button, set new dynamics dropdown
-              parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
-                new_clust = "cluster"+$(this).attr('data-tag');
-                stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
-              });
-
-              var stage = new NGL.Stage("viewport");
-              stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
-              trajButtons(stage);//Control of play/pause and change of frame 
-
-              //Initial dynamics
-              new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
-              stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
-            });
-
+            
+          //Upon click of cluster button, set new dynamics dropdown
+          parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
+            new_clust = "cluster"+$(this).attr('data-tag');
+            stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
           });
+
+          var stage = new NGL.Stage("viewport");
+          stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+          trajButtons(stage);//Control of play/pause and change of frame 
+
+          //Initial dynamics
+          new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
+          stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
+
         });
 
         // We define the setInterval function, which will be stopped when 'iframeSetOk' is launched from flareplots.js

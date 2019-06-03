@@ -14,13 +14,9 @@ else {
     rev = 'norev';        
 }
 
-//Load GPCR Json data
-var compl_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json")
-var clust_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json")
-
 $(document).ready(function(){
     
-    //I don't know what this line does, but Mariona told me to add it and she is wise
+    //I don't know what this line does, but Mariona told me to add it and I trust her wisdom
     document.domain=document.domain;
 
 	////////////
@@ -312,10 +308,16 @@ $(document).ready(function(){
     	    }
         });
 
-        //Trigger the NGL viewers
-        $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0');
-        $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1');        
-
-
+        //Load needed Json files and execute NGL bottom viewers
+        var clustdict_file, compl_data_file;
+        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json";
+        compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
+        $.getJSON(clustdict_file, function(clustdict){  
+            $.getJSON(compl_data_file, function(compl_data){
+                //Trigger the NGL viewers
+                $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0', [clustdict, compl_data]);
+                $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1', [clustdict, compl_data]);
+            });
+        });
     });
 });
