@@ -4346,8 +4346,60 @@ $(document).ready(function(){
         return (newtitle);
     }
     
-    //---------------
-    
+   
+
+    function hoverlabelsFP(){
+        var pos, source_pos, target_pos;
+        var source_pos_pat = /source-(\w+)/;
+        var target_pos_pat = /target-(\w+)/;
+        //Put hoverlabels (tooltips) in flareplots position rectangles
+        $('#flare-container .trackElement path').each(function(){
+            $(this).tooltip({
+              html: true,
+              placement: 'auto',
+              container: 'body'
+            });
+            //console.log("....")
+            //console.log($(this).attr('title'))
+            //console.log("....")
+        });
+
+        //Put hoverlabels (tooltips) in flareplot position texts
+        $('#flare-container .node text').each(function(){
+            pos = $(this).html();
+            $(this).tooltip({
+              title: pos,
+              html: true,
+              placement: 'auto',
+              container: 'body'
+            });
+        });
+
+        //Put hoverlabels on interaction lines
+        $('#flare-container .link').each(function(){
+            source_pos = $(this).attr('class').match(source_pos_pat)[1];
+            target_pos = $(this).attr('class').match(target_pos_pat)[1];
+            $(this).tooltip({
+              title: source_pos+"-"+target_pos,
+              html: true,
+              placement: 'auto',
+              container: 'body',
+              delay: {show: 0, hide: 500}
+            });
+        });
+    };
+
+    var mouseX;
+    var mouseY;
+    $(document).mousemove( function(e) {
+       // mouse coordinates
+       mouseX = e.pageX; 
+       mouseY = e.pageY;
+
+    });  
+    $(document).on("mouseenter","path",function(e){
+        $(".tooltip").css({'top':mouseY - 30,'left':mouseX - 30});
+    })
     
     $(".fp_display_element_type").on("click",function(){
         if (! $(this).hasClass("is_active")){
@@ -4439,10 +4491,13 @@ $(document).ready(function(){
             $("#fpShowResSetBtns").css("display","none");
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
+        hoverlabelsFP()
         return(plot);
     }
 
-
+    $("#flare-container svg").mousemove( function(e) {
+        console.log(e.pageY,e.pageX)
+    })
 
     function setFpNglSize(applyMinSize){
         var screen_h=screen.height;
@@ -4481,6 +4536,8 @@ $(document).ready(function(){
         });
     };    
       
+    hoverlabelsFP()
+
     function setFPFrame(framenum){
         //Changes the frame displayed at the FP and updates fpSelInt (dict of FP residues selected) according tot he new frame, by calling updateFPInt().
         if (!$("#fp_display_summary").hasClass("is_active")){

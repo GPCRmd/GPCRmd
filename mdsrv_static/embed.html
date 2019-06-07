@@ -1371,7 +1371,9 @@
             
             stage = new NGL.Stage( "viewport" );
             stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
-            
+            window.addEventListener( "resize", function( event ){
+                stage.handleResize();
+            }, false );
             fpsegStr=parent.fpsegStr;
             if (fpsegStr){
                 fpsegStr=fpsegStr.replace("+"," or ");

@@ -10,8 +10,8 @@
 function createFlareplot(width, inputGraph, containerSelector){
     var w = width;
     var h = w;
-    var rx = w * 0.5;
-    var ry = w * 0.5;
+    var rx = (w * 0.5) - 16;
+    var ry = (w * 0.5) - 16;
     var rotate = 0;
     var discRad = 55;
 
@@ -90,7 +90,7 @@ function createFlareplot(width, inputGraph, containerSelector){
                 .attr("width", w)
                 .attr("height", h)
                 .append("svg:g")
-                .attr("transform", "translate(" + rx + "," + ry + ")");
+                .attr("transform", "translate(" + (w * 0.5) + "," + (w * 0.5) + ")");
 
             //// Find the width of the node-name track. Temporarily add all text, go through them and get max-width
             //var tmpTexts = svg.selectAll("g.node")
@@ -147,7 +147,6 @@ function createFlareplot(width, inputGraph, containerSelector){
                 .on("mouseout", mouseoutNode)
                 .on("click", function(d){ toggleNode(d.name); });
 
-
             var arcW = 250.0/(graph.nodeNames.length)*Math.PI/360;
             var arc = d3.svg.arc()
                 .innerRadius(ry-15)
@@ -181,6 +180,86 @@ function createFlareplot(width, inputGraph, containerSelector){
                 .attr("title",function(d){ return d.nodeName; })
                 .on("mouseover", mouseovertrackEl)
                 .on("mouseout", mouseouttrackEl);
+
+
+
+            var arc_segm = d3.svg.arc()
+                .innerRadius((w * 0.5)-13)
+                .outerRadius((w * 0.5)-13)
+                //.padAngle(2.5)
+                //.padRadius(0.6)
+                .cornerRadius(5)
+              
+              var dxy={};
+              var dcount={};
+              graph.nodeNames.forEach(function (p) {
+                var myhel=p.split("x")[0];
+                var thispos=p.split("x")[1];
+                if (myhel in dxy){
+                    if (thispos < dxy[myhel]["pos_min"]){
+                        dxy[myhel]["pos_min"]=thispos;
+                    } else if (thispos > dxy[myhel]["pos_max"]) {
+                        dxy[myhel]["pos_max"]=thispos;
+                    }
+                    dcount[myhel]++
+                } else{
+                    dxy[myhel]={"pos_min":thispos, "pos_max":thispos}
+                    dcount[myhel]=1
+                }
+              })
+              var seg_li=[]
+              for (seg in dxy){
+                  seg_li[seg_li.length]=seg
+              }
+              seg_li.sort()
+              helix_colors = {1:"#78C5D5",12:"#5FB0BF",2:"#459BA8",23:"#5FAF88",3:"#79C268",34:"#9FCD58",4:"#C5D747",45:"#DDD742",5:"#F5D63D",56:"#F3B138",6:"#F18C32",67:"#ED7A6A",7:"#E868A1",78:"#D466A4",8:"#BF63A6"}
+              var seg_nms={"1":"TM1","2":"TM2","3":"TM3","4":"TM4","5":"TM5","6":"TM6","7":"TM7","8":"TM8","12":"ICL1","23":"ECL1","34":"ICL2","45":"ECL2","56":"ICL3","67":"ECL3","78":""}
+              var accum=0;
+
+
+
+
+              for (sN=0;sN<seg_li.length;sN++){
+                  var gseg=seg_li[sN];
+                  var pos_min=gseg+"x"+dxy[gseg]["pos_min"];
+                  var pos_max=gseg+"x"+dxy[gseg]["pos_max"];
+                  var x_min = graph.trees[selectedTree].tree[pos_min].x;
+                  var x_max = graph.trees[selectedTree].tree[pos_max].x;
+                  var x_min_rad = ((graph.trees[selectedTree].tree[pos_min].x)/180)*Math.PI;
+                  var x_max_rad = ((graph.trees[selectedTree].tree[pos_max].x)/180)*Math.PI;
+                  var myid="classnm"+gseg;
+                  var mystartAngle=x_min_rad - arcW;
+                  var myendAngle=x_max_rad +arcW;
+                  var mycol=helix_colors[gseg]
+                  if (gseg in seg_nms){
+                    if (dcount[gseg]>6){
+                        var text=seg_nms[gseg];
+                    } else {
+                        var text="";
+                    }
+                  } else {
+                    var text="";
+                  }
+                  svg.append('path')
+                   // .attr("transform", "rotate("+x_min+")" )
+                    .attr("id", myid)
+                    .style("fill",mycol)
+                        .style("stroke",mycol)
+                    .attr('d', arc_segm({startAngle: mystartAngle, endAngle:myendAngle}))
+                  svg.append("text")
+                     .attr("dy", -2)
+                     .append("textPath") //append a textPath to the text element
+                      .attr("xlink:href", "#"+myid) //place the ID of the path here
+                      .style("text-anchor","middle") //place the text halfway on the arc
+                      .attr("startOffset", "25%")
+                      .text(text);
+              }
+
+
+
+
+               
+
 
             setFrame(0);
         }
@@ -667,11 +746,13 @@ function createFlareplot(width, inputGraph, containerSelector){
         function mouseoverNode(d) {
             svg.selectAll("path.link.target-" + d.key)
                 .classed("target", true)
-                .each(updateNodes("source", true));
+                //.each(updateNodes("source", true));
+            updateNodes_mod(d.key,"target",true)
 
             svg.selectAll("path.link.source-" + d.key)//!!!
                 .classed("source", true)
-                .each(updateNodes("target", true));
+                //.each(updateNodes("target", true));
+            updateNodes_mod(d.key,"source",true)
         }
 
         function mouseoutNode(d) {
@@ -691,15 +772,41 @@ function createFlareplot(width, inputGraph, containerSelector){
             };
         }
 
+        function updateNodes_mod(mynodeName,mytype,value){
+            if (mytype == "source"){
+                $("path.link.source.source-" + mynodeName).each(function(){
+                    if (Number($(this).css("stroke-width")) > 0){
+                        var pos_pat = /target-(\w+)/;
+                        pos = $(this).attr('class').match(pos_pat)[1];
+                        svg.select("#node-" + pos).classed("target", value);
+                    }
+                })                
+            } else {
+                $("path.link.target.target-" + mynodeName).each(function(){
+                    if (Number($(this).css("stroke-width")) > 0){
+                        var pos_pat = /source-(\w+)/;
+                        pos = $(this).attr('class').match(pos_pat)[1];
+                        svg.select("#node-" + pos).classed("source", value);
+                    }
+                })                
+            }
+
+        }
+
         function mouseovertrackEl(d) {
            svg.selectAll("path.link.target-" + d.nodeName)
                 .classed("target", true)
-                .each(updateNodes("source", true));
+                //.each(updateNodes("source", true));
+            updateNodes_mod(d.nodeName,"target",true)
 
             svg.selectAll("path.link.source-" + d.nodeName)//!!!
                 .classed("source", true)
-                .each(updateNodes("target", true));
-  
+                //.each(updateNodes("target", true));
+            updateNodes_mod(d.nodeName,"source",true)
+
+            svg.select("#node-" + d.nodeName).classed("hovered", true);
+
+
             //var mypos=$( "#trackElement-"+d.nodeName).position();
             //var x_pos= mypos.left - $('#flare-container').offset().left;
             //var y_pos= mypos.top + 80 - $('#flare-container').offset().top;
@@ -719,6 +826,8 @@ function createFlareplot(width, inputGraph, containerSelector){
             svg.selectAll("path.link.target-" + d.nodeName)
                 .classed("target", false)
                 .each(updateNodes("source", false));
+
+            svg.select("#node-" + d.nodeName).classed("hovered", false);
         }
 
         function getTreeNames(){
