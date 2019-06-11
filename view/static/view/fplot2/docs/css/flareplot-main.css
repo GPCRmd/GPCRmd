@@ -44,6 +44,11 @@ path.arc {
     fill: #666666 !important;
 }
 
+.node.other_sel {
+    font-weight: bold;
+    fill: #666666 !important;
+}
+
 .node.source {
     font-weight: bold;
     fill: #666666 !important;

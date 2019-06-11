@@ -1558,7 +1558,7 @@ $(document).ready(function(){
                     ///AJAX!!!
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                     $("#gotoInt").addClass("disabled");
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled");
                     act_int_tbls=[];
                     $("#int_info").children(".int_tbl").each(function(){
                         act_int_tbls.push($(this).data("int_id"));
@@ -1579,7 +1579,7 @@ $(document).ready(function(){
                         },
                         success: function(int_data) {
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
@@ -1764,7 +1764,7 @@ $(document).ready(function(){
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#int_alert").html(add_error); 
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
@@ -2248,7 +2248,7 @@ $(document).ready(function(){
                     var stride = strideVal("#dist_stride");
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled");
                     act_dis_plots=[];
                     $("#dist_chart").children(".dist_plot").each(function(){
                         act_dis_plots.push($(this).data("dist_id"));
@@ -2430,7 +2430,7 @@ $(document).ready(function(){
                                 $("#dist_alert").html(add_error);                
                             }
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             var t1=performance.now();
                         },
@@ -2438,7 +2438,7 @@ $(document).ready(function(){
                             $("#gotoDistPg").removeClass("disabled");
                             $("#wait_dist").remove();
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#dist_alert").html(add_error);                
@@ -2914,7 +2914,7 @@ $(document).ready(function(){
             var msn="Some fields are empty or contain errors";
             showBigError(msn, "#bonds_alert");
         } else {
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing Hbonds...</p>");   
             $.ajax({
                     type: "POST",
@@ -2922,12 +2922,12 @@ $(document).ready(function(){
                     url:"/view/hbonds/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
                         //gnumFromPosChain(pos, chain)
                         for (var property in hbonds) {
                             if (hbonds.hasOwnProperty(property)) {
@@ -2952,7 +2952,7 @@ $(document).ready(function(){
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
                         for (var property in hbonds_np) {
                             if (hbonds_np.hasOwnProperty(property)) {
                                 var string =property;
@@ -2991,7 +2991,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3059,14 +3059,14 @@ $(document).ready(function(){
         }else{
             $('#ShowAllSb').hide();
             $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
                     url:"/view/saltbridges/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
@@ -3092,7 +3092,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3157,14 +3157,14 @@ $(document).ready(function(){
         } else {
             
             $("#sasa_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_sasa'><span class='glyphicon glyphicon-time'></span> Computing SASA. This may take a while...</p>");   
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
                     url:"/view/grid/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_sasa").remove();
                         atomshb=[];
                         all_resids=[];
@@ -3188,7 +3188,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_sasa").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3429,7 +3429,7 @@ $(document).ready(function(){
                 $("#rmsd_chart").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
                 $("#rmsd_alert").html("");
                 $("#gotoRMSDPg").addClass("disabled");
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
                 act_rmsd_plots=[];
                 $("#rmsd_chart").children(".rmsd_plot").each(function(){
                     act_rmsd_plots.push($(this).data("rmsd_id"));
@@ -3580,7 +3580,7 @@ $(document).ready(function(){
                             $("#rmsd_alert").html(add_error);                              
                         }
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                         }
                     var t1= performance.now();
                     },
@@ -3590,7 +3590,7 @@ $(document).ready(function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                         $("#rmsd_alert").html(add_error);  
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                         }
                     },
                     timeout: 600000
@@ -4492,6 +4492,8 @@ $(document).ready(function(){
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         hoverlabelsFP()
+        var fpfile = $("#selectedTraj").data("fplot_file");
+        $("#downl_json_hb").attr("href","/view/files/Precomputed/flare_plot/hbonds/"+fpfile);
         return(plot);
     }
 

@@ -1447,7 +1447,6 @@ def download_int(request, int_id):
     return response
     
 
-
     
 def proper_name(traj_sel):
     if traj_sel == "bck":

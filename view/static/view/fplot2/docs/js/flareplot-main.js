@@ -552,7 +552,7 @@ function createFlareplot(width, inputGraph, containerSelector){
          * @param rangeStart first frame to include (must be less than `rangeEnd`)
          * @param rangeEnd first frame after `rangeStart` that should not be included
          */
-        function rangeSum(rangeStart, rangeEnd){
+        function rangeSum(rangeStart, rangeEnd){//
             //splines = bundle(links);
             //splineDico = buildSplineIndex(splines);
             var path = svg.selectAll("path.link");
@@ -585,6 +585,32 @@ function createFlareplot(width, inputGraph, containerSelector){
                 //.attr("class", function(d) { return "link source-" + d.source.key + " target-" + d.target.key; })
                 .style("stroke",function(d){ return d.color; })
                 .attr("d", function(d, i) { return line(splines[i]); });
+
+
+            svg.selectAll("g.node.other_sel").classed("other_sel",false);
+
+            visibleEdges.forEach(function(e){
+                if (e.toggled){
+                    var found=false;
+                    if (e.edge.name1 in toggledNodes){
+                        var selnode=e.edge.name1;
+                        var targetnode=e.edge.name2;
+                        found=true;
+                    } else if (e.edge.name2 in toggledNodes){
+                        var selnode=e.edge.name2;
+                        var targetnode=e.edge.name1;
+                        found=true;
+                    }
+                    if (found && targetnode){
+                        visibleEdges.forEach(function(e){
+                            if (!(e.toggled && (e.edge.name1==targetnode || e.edge.name2==targetnode))) {
+                                svg.select("#node-" + targetnode).classed("other_sel", true);
+                            } 
+                        });
+                    }
+                }
+            })
+
 
             // fireFrameListeners(visibleEdges);
             fireFrameListeners({type:"sum", start:rangeStart, end:rangeEnd});
@@ -732,13 +758,11 @@ function createFlareplot(width, inputGraph, containerSelector){
                 .classed("toggled", function(d) {
                     return ( d.source.key in toggledNodes || d.target.key in toggledNodes)
                 });
-            
             visibleEdges.forEach(function(e){
                 if(e.edge.name1==nodeName || e.edge.name2==nodeName){
                     e.toggled = toggled;
                 }
             });
-
             fireNodeToggleListeners(nodeName);
         }
 
