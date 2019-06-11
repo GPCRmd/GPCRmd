@@ -395,7 +395,7 @@ def annotate_clusters(fig, default_color = ""):
 def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters, recept_info, recept_info_order): 
     
     # Define linkage function (we'll be using the default one for plotly). 
-    linkagefun=lambda x: linkage(x, 'complete')
+    linkagefun=lambda x: linkage(x, 'average')
     (thres,clustdict) = clustering(clusters, dend_matrix, labels, linkagefun)
 
     # Create color scale from the "category20" color scale. Not working because color_scale plotly option is inoperative
@@ -538,7 +538,7 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
 
     #Creating hovertool list
-    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@Position')]
+    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@Position'), ('Residues', '@restypes')]
     if itype == "all":
         for group,type_tuple in itypes_order:
             for itype_code,itype_name in type_tuple:
@@ -556,7 +556,6 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     )
 
     return hover
-
 
 def define_figure(width, height, tool_list, dataframe, hover, itype):
     """
@@ -633,6 +632,36 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
     # Needed later
     return(mysource,p)
 
+def add_restypes(df, compl_data):
+    """
+    Add a new column with the residue type (ARG, CYS, TRP) of each position in each simulation
+    """
+    AAs =  {'C': 'CYS', 'D': 'ASP', 'S': 'SER', 'Q': 'GLN', 'K': 'LYS',
+     'I': 'ILE', 'P': 'PRO', 'T': 'THR', 'F': 'PHE', 'N': 'ASN', 
+     'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
+     'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
+    
+    def get_restype(dynid, pos):
+        """
+        Return residue type of position according to compl_data dictionary
+        """
+        try:
+            return AAs[compl_data[dynid]['gpcr_pdb'][pos][-1]]
+        except KeyError:
+            print("Position %s not found in %s" %(pos, dynid))
+            return "NaN"
+        
+    #Split Position column
+    new = df['Position'].str.split(" ", n = 1, expand = True)
+    df['Position_1'] = new[0] 
+    df['Position_2'] = new[1]
+    df['restypes'] = df.apply(lambda x: get_restype(x['Id'], x['Position_1']) +" "+ get_restype(x['Id'], x['Position_2']), axis = 1)
+
+    #Drop Position columns once they are not needed
+    df.drop(columns = ['Position_1','Position_2'], inplace = True)
+
+    return df
+
 def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
     """
     Prepares the javascript script necessary for the side-window
@@ -659,7 +688,8 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var gnum_data=gnum_info.data;
                 var recept_name=data["Name"][sel_ind];
                 var recept_id=data["Id"][sel_ind];
-                var pos=data["Position"][sel_ind];
+                var pos = data["Position"][sel_ind];
+                var restypes = data["restypes"][sel_ind];
                 var freq_total=data["all"][sel_ind];
                 var freq_type=data[itype][sel_ind];
                 var pos_array = pos.split(" ");
@@ -706,6 +736,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
 
                 $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
                 $("#recept_val").html(prot_lname + " ("+recept+")");
+                $("#restypes_val").html(restypes);
                 $("#pos_val").html(pos);
                 $("#pdb_id").html(pdb_id);
                 $("#pdb_link").attr("href","https://www.rcsb.org/structure/" + pdb_id_nochain)
@@ -720,7 +751,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 }
                 $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
-
+                
                 //Resize dendrogram and heatmap
                 $("#dendrogram").css("width","48%");
                 $("#heatmap").css("width","52%");
@@ -751,8 +782,7 @@ def create_csvfile(filename, recept_info,df):
     df_csv = df_csv.sort_values(["helixloop"])
     df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
 
-    df_csv.to_csv(path_or_buf = csvfile)
-
+    df_csv.to_csv(path_or_buf = filename)
 
 ############
 ## Variables
@@ -765,7 +795,7 @@ noprt_itypes = set(("hbls","hblb"))
 ipartners = set(("lg","prt","prt_lg"))
 
 # Basepath for files
-basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+basepath = "/protwis/sites/files/Precomputed/get_contacts_files_21_05_2019_old/"
 
 typelist =  {
     'sb' : 'salt bridge',
@@ -910,6 +940,9 @@ def get_contacts_plots(itype, ligandonly):
     #Storing dataframe with results in a CSV file, downloadable from web
     csvfile =  basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly +  "_dataframe.csv"
     create_csvfile(csvfile, recept_info,df)
+
+    # Add residue types to dataframe
+    df_ts = add_restypes(df_ts, compl_data)
 
     # Setting columns 'Position', 'Position1' and 'Position2' in df for jsons files
     df['Position'] = df.index
