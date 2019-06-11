@@ -248,7 +248,7 @@ $(document).ready(function(){
                 var id_element,color_element;
                 parent.$(".Legend-element").each(function(){
                     id_element = $(this).attr('id');
-                    color_element = parent.$("g[Id^='"+id_element+"'] path").css('fill');
+                    color_element = parent.$("g[id^='"+id_element+"'] path").css('fill');
                     $(this).css('background-color',color_element);
                 })
 
