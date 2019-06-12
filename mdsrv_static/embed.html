@@ -61,7 +61,19 @@
         //stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
 
 
-        
+//        window.setFrameNGL = function(fr_num) {
+//            var btn_traj_Bid =$(".traj_btn").attr("id");
+//            var tPatt = /\d*$/g;
+//            var btn_traj_id = tPatt.exec(btn_traj_Bid);
+//            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+//            if (trajComp){
+//                var fr_now=trajComp.trajectory.currentFrame;
+//                if (fr_num != fr_now){
+//                    trajComp.setFrame(fr_num);
+//                }
+//            }
+//        }  
+
         function atomFromPosSel(o,posSel){
             var res_sele =  new NGL.Selection( posSel );
             var atom_pos="";
@@ -275,6 +287,16 @@
             $("#trajRangeDiv").on("click" , ".ui-slider-track" , function(){
                 setTrajRangeMax();
             })
+
+            $(document.body).bind('changeframeNGL', function(e, frame_num) {
+                if (trajComp){
+                    numfr=trajComp.trajectory._frameCount;
+                    if ($("#trajRange").attr("max") != numfr){
+                        $("#trajRange").attr("max",numfr);
+                    }
+                    trajComp.setFrame(frame_num);
+                }
+            });
 
         }
 
@@ -1214,7 +1236,8 @@
            $("#infoPannel").css({"width" : cont_w_in , "margin-top" :cont_h_info });
         }
 
-/////////Functions for ED map
+/////////Functions for ED map  
+
 
         window.checkNGLSel = function(sel_str) {
           var selection = new NGL.Selection(sel_str)
