@@ -356,7 +356,12 @@
             stage.signals.hovered.add( function( d ){
                 if (d && (d.atom)){
                     var hatom = d.atom;
-                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
+                    var res_sel=hatom.resno.toString()+":"+hatom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info=gnum+"["+hatom.resname.toString()+"]"+res_sel+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
                     $("#atomInfo").text(info);
                     var mp = d.mouse.position
                     tooltip.innerText = info;
@@ -375,22 +380,43 @@
         function clickDists(d,o,clicktrue,atom1 , atom2 , res2 , myrepr,lbl_id,dist_id,lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 ){
             if (clicktrue){
                 if (d && d.atom){
-                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info_label=gnum+"["+d.atom.resname.toString()+"]"+res_sel+"."+d.atom.atomname;
+                    var info=info_label+" (atom ind: "+d.atom.index+") - ";
                     $("#atomClicked").text(info);
                     lbl_name1="label_"+lbl_id.toString();
                     lbl_id+=1;
                     labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
+                    labeltext_d={};
+                    labeltext_d[d.atom.index]=info_label;
                     myrepr = o.addRepresentation( "label", {
                         sele: labsele1,
-                        color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '20px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                        scale: 1.7, labelType: "text", labelText:labeltext_d,fontWeight: "normal", name :lbl_name1 } );
                     atom1 = d.atom.index.toString();
                     clicktrue = false;
+                    console.log(stage.getRepresentationsByName(lbl_name1).list[0].getParameters())
                 }else {
                     $("#atomClicked").text("");
                 }
             }else{
                 if (d && d.atom){
-                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info_label=gnum+"["+d.atom.resname.toString()+"]"+res_sel+"."+d.atom.atomname;
+                    var info=info_label+" (atom ind: "+d.atom.index+") - ";
                     $("#atomClicked").text(info);                                            
                     atom2 = d.atom.index.toString();
                     //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
@@ -419,10 +445,18 @@
                         for (an =0 ; an < add2.length ; an++){
                             clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                         }
+                        labeltext_d={};
+                        labeltext_d[d.atom.index]=info_label;
                         labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
                         o.addRepresentation( "label", {
                             sele: labsele2,
-                            color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                            backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                            color: 'lightgrey',
+                            padding: '20px',
+                            backgroundOpacity:0.5,
+                            backgroundMargin: 1,
+                            showBackground: true,
+                            scale: 1.7, labelType: "text", labelText:labeltext_d ,fontWeight: "normal" , name:lbl_name2 } );
                         var atomPair = [[ Number(atom1), Number(atom2) ]];
                         o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
                         clickedDistData[dist_name]=atomPair;
@@ -574,9 +608,13 @@
                     </div>";
 
                     createDivAtStrClick(d,"#varinfo",myhtml);
-                } 
-                
-                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                }                 
+                var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                var gnum=""
+                if (res_sel in parent.pdb_gpcrdb){
+                    gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                }
+                var info=gnum+"["+d.atom.resname.toString()+"]"+res_sel+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                 $("#atomClicked").text(info);
             }else {
                 $("#atomClicked").text("");
@@ -676,8 +714,12 @@
                     </div>";
                     createDivAtStrClick(d,"#varinfo",myhtml);
                 }
-
-                var info="["+resname+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                var gnum=""
+                if (res_sel in parent.pdb_gpcrdb){
+                    gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                }
+                var info=gnum+"["+resname+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                 $("#atomClicked").text(info);
             }else {
                 $("#atomClicked").text("");

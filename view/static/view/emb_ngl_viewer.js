@@ -239,8 +239,9 @@ $(document).ready(function(){
    
     
     function obtainDicts(gpcr_pdb_dict){
-        all_gpcr_dicts={};
+        var all_gpcr_dicts={};
         var num_gpcrs=0;
+        pdb_gpcrdb={}
         for (gpcr_id in gpcr_pdb_dict){
             var bw_dict={};
             var gpcrdb_dict={};
@@ -248,13 +249,16 @@ $(document).ready(function(){
                 split=gen_num.split(new RegExp('[\.x]','g'));
                 bw = split[0]+"."+ split[1];
                 db = split[0]+"x"+ split[2];
-                bw_dict[bw]=gpcr_pdb_dict[gpcr_id][gen_num];
-                gpcrdb_dict[db]=gpcr_pdb_dict[gpcr_id][gen_num];
+                var pdbppos=gpcr_pdb_dict[gpcr_id][gen_num];
+                var pdbppos_s=pdbppos[0]+":"+pdbppos[1]
+                bw_dict[bw]=pdbppos
+                gpcrdb_dict[db]=pdbppos
+                pdb_gpcrdb[pdbppos_s]=db
             }
             num_gpcrs++;
             all_gpcr_dicts[gpcr_id]={"combined_num":gpcr_pdb_dict[gpcr_id], "bw_num": bw_dict, "gpcrDB_num":gpcrdb_dict};
         }
-        return [all_gpcr_dicts , num_gpcrs];
+        return [all_gpcr_dicts , num_gpcrs,pdb_gpcrdb];
     }
     
     $("#receptor").addClass("active");
@@ -263,14 +267,16 @@ $(document).ready(function(){
     var all_chains = $(".str_file").data("all_chains").split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
-    var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
+    var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
     if (gpcr_pdb_dict !="no"){
         gpcr_id_name=$("#cons_pos_box_all").data("gpcr_id_name");
         //gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
         dicts_results=obtainDicts(gpcr_pdb_dict);
-        all_gpcr_dicts=dicts_results[0];
+        all_gpcr_dicts=dicts_results[0];  
         num_gpcrs =dicts_results[1];
+        pdb_gpcrdb=dicts_results[2];
     }
+    window.pdb_gpcrdb=pdb_gpcrdb;
     
 
 
