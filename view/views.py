@@ -1123,6 +1123,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                 gpcr_id_name={}
                 pdb_muts={}
                 pdb_vars={}
+                TMsel_all={}
+                i=1
+                while i <=8:
+                    TMsel_all[i]={}
+                    i+=1
                 for gpcr_DprotGprot in prot_li_gpcr:
                     gpcr_Dprot=gpcr_DprotGprot[0]
                     gpcr_Gprot=gpcr_DprotGprot[1]
@@ -1157,14 +1162,27 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name
                             seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
-                            
                             #Obtain var and mut data
                             pdb_muts=extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb)
                             pdb_vars=extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb)
-                            
-                            
+                            #TM extremes
+                            last_tm=False
+                            for pos in sorted(gpcr_pdb.keys()):
+                                pos=pos.split("x")[0]
+                                tm=int(pos.split(".")[0])
+                                if tm in TMsel_all:
+                                    if tm != last_tm:
+                                        TMsel_all[tm][dprot_id]={"first":pos}
+                                        last_tm=tm
+                                    TMsel_all[tm][dprot_id]["last"]=pos
 
                 if all_gpcrs_info:
+                    TMsel_all_ok={}
+                    for tm,extdict in TMsel_all.items():
+                        tmname="TM"+str(tm)
+                        for gpcrid,posdict in extdict.items():
+                            extdict[gpcrid]=posdict["first"]+"-"+posdict["last"]
+                        TMsel_all_ok[tmname]=json.dumps(extdict)
                     request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
@@ -1208,7 +1226,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdbid":pdbid,
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
-                        "ed_align_matrix":ed_align_matrix
+                        "ed_align_matrix":ed_align_matrix,
+                        "TMsel_all":sorted(TMsel_all_ok.items())
                          }
                     return render(request, 'view/index.html', context)
                 else:

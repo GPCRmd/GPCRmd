@@ -391,8 +391,8 @@
                     lbl_name1="label_"+lbl_id.toString();
                     lbl_id+=1;
                     labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
-                    labeltext_d={};
-                    labeltext_d[d.atom.index]=info_label;
+                    labeltext_d1={};
+                    labeltext_d1[d.atom.index]=info_label;
                     myrepr = o.addRepresentation( "label", {
                         sele: labsele1,
                         backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
@@ -401,10 +401,9 @@
                         backgroundOpacity:0.5,
                         backgroundMargin: 1,
                         showBackground: true,
-                        scale: 1.7, labelType: "text", labelText:labeltext_d,fontWeight: "normal", name :lbl_name1 } );
+                        scale: 1.7, labelType: "text", labelText:labeltext_d1,fontWeight: "normal", name :lbl_name1 } );
                     atom1 = d.atom.index.toString();
                     clicktrue = false;
-                    console.log(stage.getRepresentationsByName(lbl_name1).list[0].getParameters())
                 }else {
                     $("#atomClicked").text("");
                 }
@@ -445,8 +444,8 @@
                         for (an =0 ; an < add2.length ; an++){
                             clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                         }
-                        labeltext_d={};
-                        labeltext_d[d.atom.index]=info_label;
+                        labeltext_d2={};
+                        labeltext_d2[d.atom.index]=info_label;
                         labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
                         o.addRepresentation( "label", {
                             sele: labsele2,
@@ -456,12 +455,12 @@
                             backgroundOpacity:0.5,
                             backgroundMargin: 1,
                             showBackground: true,
-                            scale: 1.7, labelType: "text", labelText:labeltext_d ,fontWeight: "normal" , name:lbl_name2 } );
+                            scale: 1.7, labelType: "text", labelText:labeltext_d2 ,fontWeight: "normal" , name:lbl_name2 } );
                         var atomPair = [[ Number(atom1), Number(atom2) ]];
                         o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
                         clickedDistData[dist_name]=atomPair;
-                        clickedLabData[lbl_name1]=labsele1;
-                        clickedLabData[lbl_name2]=labsele2; 
+                        clickedLabData[lbl_name1]={"sele":labsele1,"text":labeltext_d1};
+                        clickedLabData[lbl_name2]={"sele":labsele2,"text":labeltext_d2};
 
                     } else {
                         if (atom1 in clickedRep){
@@ -502,7 +501,7 @@
                             if (!(lbl_name1 in clickedRepLi)){
                                 clickedRepLi.push(lbl_name1);
                             }
-                            clickedLabData[lbl_name1]=labsele1;
+                            clickedLabData[lbl_name1]={"sele":labsele1,"text":labeltext_d1};//labsele1;[!]
                         }
                     }
                     if (clickedRepLi.length > 0){
@@ -875,10 +874,17 @@
             
             o.removeAllRepresentations();
             for (lname in clickedLabData){
-                var lsele=clickedLabData[lname];
+                var lsele=clickedLabData[lname]["sele"];
+                var ltext=clickedLabData[lname]["text"];
                 o.addRepresentation( "label", {
                     sele: lsele,
-                    color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lname } );
+                    backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                    color: 'lightgrey',
+                    padding: '20px',
+                    backgroundOpacity:0.5,
+                    backgroundMargin: 1,
+                    showBackground: true,
+                    scale: 1.7, labelType: "text", labelText:ltext ,fontWeight: "normal" , name:lname } );
             }
             for (dname in clickedDistData){
                 var apair=clickedDistData[dname];
@@ -913,25 +919,26 @@
                 }
             }
             if (cp.length > 0){
-                var all_cp="";
                 var comptype_dict={
                     "lg":[],
                     "lp":[],
                     "i":[],
                     "w":[],
+                    "t":[],
                     "o":[]
                 }
+                var all_cp_li=[];
                 for (comp=0 ; comp < cp.length ; comp++){
-                    var mycompinfo=cp[comp].split("-");
+                    var mycompinfo=cp[comp].split("_");
                     var mycomp=mycompinfo[0];
                     var mycompType=mycompinfo[1];
                     if (! isNaN(parseInt(mycomp))){
                         mycomp="["+mycomp+"]";
                     }
-                    all_cp += (mycomp + " or ");
+                    all_cp_li[all_cp_li.length]=mycomp;
                     comptype_dict[mycompType].push(mycomp);
                 }
-                all_cp = all_cp.slice(0, -3);
+                var all_cp = all_cp_li.join(" or ");
                 //o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );
                 setSelLi.push(all_cp);
                 for (comp_key in comptype_dict){
@@ -951,7 +958,14 @@
                         else if (comp_key == "w") {
                             o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30 } );
                         }
-                        else {
+                        else if (comp_key == "t") {
+                            if (fpsegStr){
+                                o.addRepresentation( "licorice", { colorScheme: FPscheme, visible: true, sele: comp_sel } );
+                            } else {
+                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel } );
+                            }
+                        }
+                        else  {
                             o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel } );
                         }
                     }
@@ -1177,7 +1191,14 @@
                             label_pos=a.index;
                         }
                     },res_sele);
-                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label},
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '20px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                    });
                 }
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
@@ -1200,7 +1221,14 @@
                             label_pos=a.index;
                         }
                     },res_sele);
-                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label},
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '20px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                    });
                 }
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue:"#f2e14e"/*"#461bff"*/ } );// colorValue: "#00d215"
@@ -1518,9 +1546,6 @@
                     
                     createReps()
 
-                    console.log("GPCRmd")
-                    console.log(o.getCenter())
-
                 });
 
                 var pdbid=$("#pdbid", window.parent.document).text();
@@ -1548,8 +1573,6 @@
                           metalness: 0,
                           wireframe: false
                         })
-                        console.log("2fofc")
-                        console.log(edc.getCenter())
 
                     })
                     stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: false}).then(function(edc){
@@ -1582,18 +1605,10 @@
                           wireframe: false
 
                         })
-                        console.log("fofc")
-                        console.log(edc.getCenter())
+
                     })
                     $("#EDselectionDiv", window.parent.document).on("click" , function(){
                         updateEDmapSel();
-                        console.log("!")
-                        console.log("fofc (upd)")
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenter())
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenterUntransformed())
-                        console.log("GPCRmd (upd)")
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenter())
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenterUntransformed())
                     });
                     $(".EDmapStype", window.parent.document).on('change' ,function(){
                         var v=$(this).val()

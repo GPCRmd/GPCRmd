@@ -984,7 +984,7 @@ $(document).ready(function(){
                     if (inpSource=="main"){
                         var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
                         addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
-                    } else {
+                    } else if (inpSource=="inp_wth") {
                         var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
                         addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                     }
@@ -1039,7 +1039,7 @@ $(document).ready(function(){
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
                             addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
 
-                        } else {
+                        } else if (inpSource=="inp_wth") {
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
                             addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                         }
@@ -1095,7 +1095,7 @@ $(document).ready(function(){
             if (inpSource=="main"){
                 var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
                 addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
-            } else {
+            } else if (inpSource=="inp_wth"){
                 var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
                 addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","html",to_add_inside);
             }
@@ -1191,14 +1191,42 @@ $(document).ready(function(){
     }
 
 
+    function obtainTMs(tmsel_section){
+        var tm_show_li=[]
+        if (tmsel_section=="em"){
+            var tmcjqsel=".ed_tmsel.active";
+        } else {
+            var tmcjqsel=".tmsel.active";
+        }
+        $(tmcjqsel).each(function(){
+            var sel_li=[];
+            var tmsel=$(this).data("tmsel");
+            for (id in tmsel){
+                sel_li[sel_li.length]=tmsel[id];
+            }
+            var tm_show=sel_li.join(" or ");
+            tm_show_li[tm_show_li.length]="("+tm_show+")";
+        }); 
+        if (tm_show_li){
+            var tm_show_all=tm_show_li.join(" or ");
+            tm_show_ok=inputText(gpcr_pdb_dict,tm_show_all,false,false,false);
+        } else{
+            tm_show_ok="";
+        }    
+        return tm_show_ok;
+    }
 
     function obtainCompounds(){
         var shortTypeName={'Ligand':'lg','Lipid':'lp','Ions':'i','Water':'w','Other':'o'}
         var comp=[];
         $(".comp.active").each(function(){
             var ctype=$(this).data("comptype");
-            comp[comp.length]=$(this).attr("id")+"-"+shortTypeName[ctype];
+            comp[comp.length]=$(this).attr("id")+"_"+shortTypeName[ctype];
         });
+        var tms_selstr=obtainTMs("qs");
+        if (tms_selstr){
+            comp[comp.length]=tms_selstr+"_"+"t" //T for TM
+        }
         return comp;
     }
     
@@ -3739,6 +3767,7 @@ $(document).ready(function(){
             last_input_row.addClass("ed_input_rep "+ inpType);
             last_input_row.find(".sel_input").val(selToAdd);
             changeLastInputColor(colorVal,last_input_row);
+            console.log(last_input_row)
             if (inpType.indexOf("ed_input_rep_lig")<0){
                 last_input_row.find(".high_type").val("line")
             }
@@ -3750,7 +3779,7 @@ $(document).ready(function(){
         if ($("#EdrepsOn").hasClass("active")){
             if (add_reps){
                 //Hide quick reps
-                $("#receptor,.rep_elements").not("#bindingSite").removeClass("active");
+                $("#receptor,.rep_elements,.tmsel").not("#bindingSite").removeClass("active");
 
                 //Add GPCR
                 prot_sel=gpcr_selection();
@@ -3836,7 +3865,7 @@ $(document).ready(function(){
     click_unclick("#receptor");
     click_unclick(".clickUnclick")
     $("#btn_all").click(function(){
-        $(".rep_elements").addClass("active");
+        $(".rep_elements:not(.tmsel)").addClass("active");
         $("#receptor").addClass("active");
         $("#selectionDiv").trigger("click");
     });
@@ -3931,6 +3960,10 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
 
+    $("#btn_clear_tms").click(function(){
+        $(".tmsel").removeClass("active");
+        $("#selectionDiv").trigger("click");
+    });
     
     
     $(".showHSet").click(function(){
@@ -3993,6 +4026,10 @@ $(document).ready(function(){
             loadEd=true;
             ed_finsel=ligsel_ed;
         } 
+        if ($(".ed_tmsel.active").length>0){
+            loadEd=true;
+            ed_finsel=obtainTMs("em");
+        }
         var receptorsel_ed=gpcr_selection_active(true);
         if (receptorsel_ed){
             loadEd=true;
@@ -4263,6 +4300,9 @@ $(document).ready(function(){
         if (receptorsel){
             add_fpsegStr=true;
         }
+        if ($(".tmsel.active").length >0){
+            add_fpsegStr=true;
+        }
         var fpsegStr_send=[];
         if (add_fpsegStr){
             fpsegStr_send = fpsegStr;
@@ -4349,6 +4389,7 @@ $(document).ready(function(){
         atomssb=[];
         all_resids_sb=[];
         removeCompBtns();
+        $(".tmsel").removeClass("active");
         $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride, .dis_res_bth").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
@@ -4459,9 +4500,6 @@ $(document).ready(function(){
               placement: 'auto',
               container: 'body'
             });
-            //console.log("....")
-            //console.log($(this).attr('title'))
-            //console.log("....")
         });
 
         //Put hoverlabels (tooltips) in flareplot position texts
@@ -4597,9 +4635,8 @@ $(document).ready(function(){
         return(plot);
     }
 
-    $("#flare-container svg").mousemove( function(e) {
-        console.log(e.pageY,e.pageX)
-    })
+
+
 
     function setFpNglSize(applyMinSize){
         var screen_h=screen.height;

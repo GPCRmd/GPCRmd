@@ -404,15 +404,30 @@
                               <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements changefocus" title="GPCR residues within 2.5 Angstrom of ligand" id="bindingSite" data-ligli="{{ligands_short}}" >Binding site</button>
                           {% endif %}
                           {% if compounds|length > 1%}
-                          <button  class="btn btn-default nglCallBtn" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#FFFFFF;padding:5px">All</button>
-                          <button  class="btn btn-default nglCallBtn" id="btn_clear" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;background-color:#fde8ec;border-color:#fbd0d8;padding:5px">Clear</button>
+                          <button  class="btn btn-default nglCallBtn changefocus" id="btn_all" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px">All</button>
+                          <button  class="btn btn-link nglCallBtn" id="btn_clear" style="color:#DC143C;margin-bottom:10px;margin-right:3px;margin-left:3px;padding:5px 5px 5px 5px;">Clear</button>
                           {% endif %}
                       </center></div>
                       
-                    	<center>
+                      <center>
                         <div style="height:1px;background-color:lightgrey;width:90%"></div>
                       </center>
                       
+                    <!-- -->
+                    {% if TMsel_all %}
+                    <div class="row" style="margin-top:15px;margin-bottom:10px">
+                      <center >
+                      {% for tmname, tmsel in TMsel_all %} 
+                          <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;padding:5px 10px 5px 10px;" class="btn btn-default changefocus clickUnclick tmsel"  id="quick_{{tmname}}" data-tmsel="{{tmsel}}">{{tmname}}</button>
+                      {% endfor %}
+                      <button id="btn_clear_tms" class="btn btn-link" style="color:#DC143C;margin-bottom:10px;margin-right:3px;margin-left:3px;padding:5px 5px 5px 5px;">Clear</button>
+                      </center>
+                    </div>
+                    <center>
+                      <div style="height:1px;background-color:lightgrey;width:90%"></div>
+                    </center>
+                    {% endif %}
+                    <!-- -->
                      <div class="row" style="margin-top:15px">
                      
                       <div class="sel_within" style="padding-left:5px;margin-right:5px;margin-left:0;margin-bottom:10px;">
@@ -864,6 +879,20 @@
                         </div>-->
                     </center>
                   </div>
+
+                  {% if TMsel_all %}
+                  <center>
+                    <div style="height:1px;background-color:lightgrey;width:90%"></div>
+                  </center>
+                  <div class="row" style="margin-top:15px;margin-bottom:10px">
+                    <center >
+                    {% for tmname, tmsel in TMsel_all %} 
+                        <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;padding:5px 10px 5px 10px;" class="btn btn-default changefocus  ed_tmsel ed_map_el changefocus"  id="ed_quick_{{tmname}}" data-tmsel="{{tmsel}}">{{tmname}}</button>
+                    {% endfor %}
+                    </center>
+                  </div>
+                  {% endif %}
+
                   </div><!-- end ed_quicksel -->
                 </div>
               </div><!-- end ed_quicksel_all-->
