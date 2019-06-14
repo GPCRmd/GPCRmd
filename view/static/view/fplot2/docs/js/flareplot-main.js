@@ -221,8 +221,14 @@ function createFlareplot(width, inputGraph, containerSelector){
 
               for (sN=0;sN<seg_li.length;sN++){
                   var gseg=seg_li[sN];
-                  var pos_min=gseg+"x"+dxy[gseg]["pos_min"];
-                  var pos_max=gseg+"x"+dxy[gseg]["pos_max"];
+                  var pos_min, pos_max;
+                  if (gseg == "Ligand"){
+                    pos_min=gseg;
+                    pos_max=gseg;
+                  } else {
+                    pos_min=gseg+"x"+dxy[gseg]["pos_min"];
+                    pos_max=gseg+"x"+dxy[gseg]["pos_max"];
+                  }
                   var x_min = graph.trees[selectedTree].tree[pos_min].x;
                   var x_max = graph.trees[selectedTree].tree[pos_max].x;
                   var x_min_rad = ((graph.trees[selectedTree].tree[pos_min].x)/180)*Math.PI;

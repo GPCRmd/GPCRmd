@@ -244,13 +244,13 @@ $(document).ready(function(){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
                	$('#loading_flare0').css('display', 'none');
                 
-                //Paint flareplots legend once they are loaded
+                /*//Paint flareplots legend once they are loaded
                 var id_element,color_element;
                 parent.$(".Legend-element").each(function(){
                     id_element = $(this).attr('id');
                     color_element = parent.$("g[id^='"+id_element+"'] path").css('fill');
                     $(this).css('background-color',color_element);
-                })
+                })*/
 
                 //Put hoverlabels to flareplot
                 hoverlabels(0)
