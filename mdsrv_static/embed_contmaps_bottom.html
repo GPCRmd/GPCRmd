@@ -160,14 +160,30 @@
             return(stage);
         }
         
-        function updateRepsFrameChanged(trajComp,delta){
+        function updateRepsFrameChanged(o,stage,trajComp,delta){
+          /*
+          Update slider, frame counter and ns counter when simulation play. 
+          It also updates the water selection around selected residues if itype is wb or all
+          */
+
+          var is_wb, water_reps, water_sele, atoms_within, pos_reps, pos_sel 
+          is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
           trajComp.signals.frameChanged.add(function(){
             var fnum=trajComp.trajectory.currentFrame;
             $("#trajRange").val(fnum);
             $("#trajRange").slider("refresh");
             $("#traj_time_val").html((fnum*delta).toFixed(2));
+            //If there are water bridges, update them
+            if (is_wb){
+              water_reps = stage.getRepresentationsByName(/\d+ and/)['list'];
+              for (var i = 0; i < water_reps.length; i++){
+                pos_sel = water_reps[i]['name'];
+                water_sele = near_waters(o, pos_sel);
+                stage.getRepresentationsByName(pos_sel).setSelection(water_sele);
+              }
+            }
           });
-        };
+        }
                         
         function create_traj_dropdown(traj_li,sel_traj,id){
 
@@ -245,11 +261,10 @@
           $("#posNotinRec"+id, window.parent.document).css("display","none");    
 
           //Delete representations for previous positions
-          stage.compList[0].reprList;
-          for (var i = 0; i < stage.compList[0].reprList.length; i++){
-            if (stage.compList[0].reprList[i]["name"] == "ball+stick"){
-              o.removeRepresentation(stage.compList[0].reprList[i]);
-              i--;
+          var repr_list = stage.getRepresentationsByName()['list'];
+          for (var i = 0; i < repr_list.length; i++){
+            if (repr_list[i].getType() == "ball+stick"){
+              o.removeRepresentation(repr_list[i]);
             }
           }
           //If it is allowed, show positions selected in flareplot on NGL viewer 
@@ -307,11 +322,17 @@
             }
             $("#posNotinRec_text"+id, window.parent.document).text("Positions "+notfound.join(", ")+" not found on this receptor.");
 
+            //Add ball-stick representations for each position. If itype is "all" or "wb", add also waters within 3.5A
+            var is_wb, sele, water_sele, atoms_within, water_sele;
+            is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
             for (i = 0; i < pdb_pos_array.length; i++){
               position = pdb_pos_array[i];
               pos_sel=position.replace("-"," and :");
-              o = addwaters(o, pos_sel);
-              o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+              if (Boolean(is_wb)){
+                water_sele = near_waters(o, pos_sel);
+                o.addRepresentation("ball+stick", {  name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
+              }
+              o.addRepresentation( "ball+stick", { name: 'pos_rep', sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
             }
           }
         }
@@ -393,13 +414,14 @@
              var allTrajCompli=o.trajList;
              for (tcN=0; tcN< allTrajCompli.length;tcN++){
                 trajComp=allTrajCompli[tcN];
-                updateRepsFrameChanged(trajComp,delta);
+                updateRepsFrameChanged(o,stage,trajComp,delta);
              }
             
             stage = modTooltip(stage);
 
             // Add representations
             var index, position, pos_sel;
+            //o.addRepresentation( "licorice", { color:"green",  sele: "water" } );
             o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
             if (lig){
               o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
@@ -483,17 +505,13 @@
             return(stage);
         }
 
-        function addwaters(o, pos_sel){
+        function near_waters(o, pos_sel){
           //If itype is wb or all, add waters within 4Amostrongs as representation
-          var is_wb, sele, atoms_within, water_sele;
-          is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
-          if (Boolean(is_wb)){
-            sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
-            atoms_within = sele.toSeleString();
-            water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
-            o.addRepresentation("ball+stick", {  sele: water_sele, colorValue: "#828282", colorScheme: "element"});
-          }
-          return(o)
+          var sele, atoms_within, water_sele;
+          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
+          atoms_within = sele.toSeleString();
+          water_sele = "water and "+atoms_within;
+          return(water_sele)
         }
 
 ////////////////// Main: 
@@ -522,36 +540,31 @@
           parent.$("#FPclearSel"+id).trigger("click");
         });
 
-        //Prepare Jsons and create NGLviewers
-        $.getJSON(JSONfile, function(clustdict){  
-          $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json", function(compl_data){
+        //Initial stage. Triggered when flareplots are fully loaded
+        $(document.body).bind('createNGL'+id, function(e, clustdict, compl_data) {  
 
-            //Slider and page settings
-            $(".ui-slider").css({"margin-left":"25px"});
-            $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
-            $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
-            $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
-            $(".ui-page").css({"overflow":"hidden"})
+          //Slider and page settings
+          $(".ui-slider").css({"margin-left":"25px"});
+          $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
+          $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
+          $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
+          $(".ui-page").css({"overflow":"hidden"})
 
-            //Initial stage. Triggered when flareplots are fully loaded
-            $(document.body).bind('createNGL'+id, function(e) {  
-              
-              //Upon click of cluster button, set new dynamics dropdown
-              parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
-                new_clust = "cluster"+$(this).attr('data-tag');
-                stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
-              });
-
-              var stage = new NGL.Stage("viewport");
-              stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
-              trajButtons(stage);//Control of play/pause and change of frame 
-
-              //Initial dynamics
-              new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
-              stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
-            });
-
+            
+          //Upon click of cluster button, set new dynamics dropdown
+          parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
+            new_clust = "cluster"+$(this).attr('data-tag');
+            stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
           });
+
+          var stage = new NGL.Stage("viewport");
+          stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+          trajButtons(stage);//Control of play/pause and change of frame 
+
+          //Initial dynamics
+          new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
+          stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
+
         });
 
         // We define the setInterval function, which will be stopped when 'iframeSetOk' is launched from flareplots.js

@@ -8,6 +8,12 @@
 {% load staticfiles %} 
 {% block addon_css %}
 <style>
+
+.tooltip-arrow {
+  display:none;
+
+}
+
 .popover{
   font-size:12px;
   width:120px;
@@ -1392,6 +1398,9 @@
                       <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
+                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB" href="/view/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
+                        <span title="Download data" class="glyphicon glyphicon-download-alt"></span>
+                      </a>
                   </span>
                </center>
                <!--<div class="showIfTrajFPBlock" style="margin-bottom:10px;margin-top:10px;color:#808080;">
@@ -1462,7 +1471,7 @@
                        </span>
                     </div>
                     <div id="dist_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
                         <button id="gotoDistPg" class="pull-right btn btn-info withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
@@ -1514,7 +1523,7 @@
                                  </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
-                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
                           </div>
 
                           <div id="rmsd_sel_frames_error" class="row" >
@@ -1576,7 +1585,7 @@
             {% if ligands|length >= 1 %}
             
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Protein-ligand interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_Int" class="collapse">
              <div class="row" style="margin-top:10px;">
@@ -1606,7 +1615,7 @@
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" placeholder=1 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
@@ -1635,7 +1644,9 @@
 <!-- ============= BONDS Analysis =========== --> 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hbonds</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
+Hydrogen bonding frequency
+</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_bonds" class="collapse">
                  <div class="row" style="margin-top:10px;margin-bottom:15px">

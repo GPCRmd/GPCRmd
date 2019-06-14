@@ -401,3 +401,9 @@ hr {
 .tooltip {
   position: fixed;
 }
+
+#menu_link {
+  font-size: 12;
+  margin-bottom: 15;
+  margin-left: 0;
+}
