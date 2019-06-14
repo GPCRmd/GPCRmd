@@ -27,22 +27,3 @@ urlpatterns = [
 
 
 
-if settings.DEBUG:
-    urlpatterns += patterns('',
-        url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.MEDIA_ROOT,
-        }),
-        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.STATIC_ROOT,
-        }),
-    )
-else:
-
-    if settings.FILES_NO_LOGIN:
-        serve_files_func = views.serve_submission_files_no_login
-    else:
-        serve_files_func = views.serve_submission_files
-    urlpatterns += patterns('',
-        url(r'^files/(?P<obj_folder>[^/\\]+)/(?P<submission_folder>[^/\\]+)/(?P<path>.*)$', serve_files_func, name='serve_submission_files'),
-
-)

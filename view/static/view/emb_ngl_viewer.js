@@ -4587,7 +4587,7 @@ $(document).ready(function(){
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         hoverlabelsFP()
         var fpfile = $("#selectedTraj").data("fplot_file");
-        $("#downl_json_hb").attr("href","/view/files/Precomputed/flare_plot/hbonds/"+fpfile);
+        $("#downl_json_hb").attr("href","/dynadb/files/Precomputed/flare_plot/hbonds/"+fpfile);
         return(plot);
     }
 
