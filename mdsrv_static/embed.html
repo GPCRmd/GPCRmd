@@ -560,44 +560,65 @@
                         var from=fromto_sp[0];
                         var to=fromto_sp[1];
                         var vars_pos_li=vars_pos_d[fromto];
-                        var extra_info="";
-                        for (var vlN=0; vlN<vars_pos_li.length;vlN++){
-                            var consequence=vars_pos_li[vlN].consequence;
-                            var exac_id=vars_pos_li[vlN].exac_id;
-                            extra_info+="<tr>\
+                        var var_exp_len=vars_pos_li.length;
+                        if (var_exp_len == 1){
+                            var consequence=vars_pos_li[0].consequence;
+                            var exac_id=vars_pos_li[0].exac_id;
+                            var var_rows="<tr>\
+                                            <td >"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                            </td>\
                                             <td>"+consequence+"</td>\
-                                            <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\"></span></a></td>\
-                                        </tr>";
+                                            <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span style='padding-bottom:2px' class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                         </tr>";
+                        } else if (var_exp_len >1){
+                            var consequence=vars_pos_li[0].consequence;
+                            var exac_id=vars_pos_li[0].exac_id;
+                            var rowspan=var_exp_len;
+                            var var_rows="<tr>\
+                                            <td rowspan="+rowspan+" >"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                            </td>\
+                                            <td>"+consequence+"</td>\
+                                            <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span  style='padding-bottom:2px' class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                         </tr>";
+                            for (var vlN=1; vlN<vars_pos_li.length;vlN++){
+                                var consequence=vars_pos_li[vlN].consequence;
+                                var exac_id=vars_pos_li[vlN].exac_id;
+                                var_rows+="<tr>\
+                                                <td>"+consequence+"</td>\
+                                                <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span  style='padding-bottom:2px' class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                            </tr>";
+                            }
                         }
-                        table_rows+="<tr>\
-                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
-                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
-                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
-                                          <table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
-                                            <thead>\
-                                              <tr>\
-                                                <th style=\"text-align:center;\">Consequence</th>\
-                                                <th style=\"text-align:center;\">DB</th>\
-                                              </tr>\
-                                            </thead>\
-                                            <tbody>\
-                                            "+extra_info+"\
-                                            </tbody>\
-                                          </table>\
-                                          <div>\
-                                        '>\
-                                         <span class='glyphicon glyphicon-plus-sign'></span>\
-                                        </button>\
-                                        </td>\
-                                     </tr>";
+                        table_rows+=var_rows
+//                        table_rows+="<tr>\
+//                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+//                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
+//                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
+                                          //<table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
+//                                            <thead>\
+//                                              <tr>\
+//                                                <th style=\"text-align:center;\">Consequence</th>\
+//                                                <th style=\"text-align:center;\">DB</th>\
+//                                              </tr>\
+//                                            </thead>\
+//                                            <tbody>\
+//                                            "+extra_info+"\
+//                                            </tbody>\
+//                                          </table>\
+//                                          <div>\
+//                                        '>\
+//                                         <span class='glyphicon glyphicon-plus-sign'></span>\
+//                                        </button>\
+//                                        </td>\
+//                                     </tr>";
                     }
 
                     //Define info in the div
                     var myhtml="<div id='added_html_click' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
-                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;width:65px'>\
+                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;'>\
                         <thead>\
                           <tr>\
-                            <th style='text-align:center;'>"+var_pos+"</th>\
+                            <th style='text-align:center;' colspan=3>"+var_pos+"</th>\
                           </tr>\
                         </thead>\
                         <tbody>\
@@ -1434,6 +1455,7 @@
             var onclickshow="dists";
             var pdb_muts= $("#view_screen", window.parent.document).data("pdb_muts");
             var pdb_vars= $("#view_screen", window.parent.document).data("pdb_vars");
+            console.log(pdb_vars)
             //var gpcrSelExp= parent.gpcr_selection()
             //!
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");

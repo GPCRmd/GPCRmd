@@ -756,10 +756,12 @@ def extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb):
             pdb_pos=pdb_pos_l[0]+":"+pdb_pos_l[1]
             pos_vars={}
             for pos_var_info in pos_var_info_li:
-                consequence=pos_var_info["consequence"].replace("_"," ").capitalize()
+                consequence_nm={"frameshift_variant":"Frameshift","missense_variant":"Missense","stop_gained":"Stop gain","synonymous_variant":"Synonymous"}
+                #consequence=pos_var_info["consequence"].replace("_"," ").capitalize()
+                consequence=consequence_nm[pos_var_info["consequence"]]
                 aafrom=pos_var_info["from"]
                 aato=pos_var_info["to"]
-                if consequence=="Frameshift variant":
+                if consequence=="Frameshift":
                     fs_info=aafrom+str(seqN)+aato
                     consequence=consequence+" (%s)"%fs_info
                     aato="FS"
