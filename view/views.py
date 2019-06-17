@@ -1569,7 +1569,6 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
         fin_dict={}
         for r in res_li:
              fin_dict[r]=[]
-        print(contact_freq)
         for pair in sorted(contact_freq, key=lambda x: contact_freq[x], reverse=True):
             freq=contact_freq[pair]
             res_ind=pair[0]
