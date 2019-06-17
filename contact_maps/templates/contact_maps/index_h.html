@@ -44,7 +44,7 @@
 <div id="inner_remaining" class ="row" >
   <!--Here be dendrogram and heatmap-->
   <div class="col-xs-12" id="retracting_parts">
-    <div class="panel panel-primary" id="main_plot_body" onscroll="scroller('main_plot_body','heatmap')">
+    <div class="panel panel-primary" id="main_plot_body">
       <span><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></span>
       <div class="panel-body" >
         {% include './contact_maps/menus.html' %}
@@ -78,6 +78,7 @@
           <p><b>PDB id:</b> <span id="pdb_id"></span> <a id="pdb_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
           <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
           <p><b>Positions:</b> <span id="pos_val"></span></p>
+          <p><b>Residue types: </b><span id="restypes_val">Not avalible</span></p>
 
           {% if itype_code == "all" %}
           <p><b>Frequencies by type:</b> </p>
@@ -135,7 +136,7 @@
           <h4 class="title">Top5 representative interactions in cluster</h4>
         </div>
 
-        <div id="fpdiv0" class="col-xs-5 fpdiv">
+        <div id="fpdiv0" class="col-xs-6 fpdiv">
           <center>
             <span>
               <center id="loading_flare0" class="loading_flare">
@@ -172,7 +173,7 @@
 
           </center>
         </div>
-
+        <!--
         <div id="fpdivlegend" class="my-legend col-xs-2">
             <div class='legend-title'>Colors for each GPCR structure</div>
             <div class='legend-scale'>
@@ -195,8 +196,8 @@
               </ul>
             </div>
         </div>
-
-        <div id="fpdiv1" class="col-xs-5 fpdiv" data-fpdir="{{fpdir}}">
+        -->
+        <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
           <center>
 
             <span>
@@ -242,7 +243,7 @@
     <!--Here be NGL viewers-->
     <div class="panel panel-primary" id="NGL_col"  data-fpdir="{{fpdir}}">
       <div class="panel-body">
-        <div class="title_div"" data-bind_domain="" data-presel_pos="">
+        <div class="title_div" data-bind_domain="" data-presel_pos="">
           <h4 class="title">Cluster Simulation Viewers</h4>
         </div>
         

@@ -14,13 +14,9 @@ else {
     rev = 'norev';        
 }
 
-//Load GPCR Json data
-var compl_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json")
-var clust_json = $.getJSON(window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json")
-
 $(document).ready(function(){
     
-    //I don't know what this line does, but Mariona told me to add it and she is wise
+    //I don't know what this line does, but Mariona told me to add it and I trust her wisdom
     document.domain=document.domain;
 
 	////////////
@@ -56,7 +52,7 @@ $(document).ready(function(){
 
     function setFpNglSize(applyMinSize, flare_container){
 	    var screen_h=screen.height;
-	    var min_size=550;
+	    var min_size=300;
 	    var fpcont_w_str=$(flare_container).css("width");
 	    var fpcont_w=Number(fpcont_w_str.match(/^\d*/g)[0]);
 	    var final_size = fpcont_w;
@@ -187,12 +183,17 @@ $(document).ready(function(){
             //updateFPInt(plot, flare_container)//I'm going to skip this for the moment. fpgpcrdb_dict is hard to obtain. //Update fpSelInt depending on what is in the fplot.
             $("#selectionDiv").trigger("click");
 
+            //Add hoverlabels
+            hoverlabels(id)
+
         });
     }
 
     function hoverlabels(id){
-        var pos;
-        //Put hoverlabels (tooltips) in the flareplots
+        var pos, source_pos, target_pos;
+        var source_pos_pat = /source-(\w+)/;
+        var target_pos_pat = /target-(\w+)/;
+        //Put hoverlabels (tooltips) in flareplots position rectangles
         $('#flare-container'+id+' .trackElement path').each(function(){
             $(this).tooltip({
               html: true,
@@ -201,13 +202,25 @@ $(document).ready(function(){
             });
         });
 
-        //This part not working, but will remain here just in case
+        //Put hoverlabels (tooltips) in flareplot position texts
         $('#flare-container'+id+' .node text').each(function(){
             pos = $(this).html();
             $(this).tooltip({
               title: pos,
               html: true,
               placement: 'top',
+              container: 'body'
+            });
+        });
+
+        //Put hoverlabels on interaction lines
+        $('#flare-container'+id+' .link').each(function(){
+            source_pos = $(this).attr('class').match(source_pos_pat)[1];
+            target_pos = $(this).attr('class').match(target_pos_pat)[1];
+            $(this).tooltip({
+              title: source_pos+"-"+target_pos,
+              html: true,
+              placement: 'auto',
               container: 'body'
             });
         });
@@ -231,13 +244,13 @@ $(document).ready(function(){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
                	$('#loading_flare0').css('display', 'none');
                 
-                //Paint flareplots legend once they are loaded
+                /*//Paint flareplots legend once they are loaded
                 var id_element,color_element;
                 parent.$(".Legend-element").each(function(){
                     id_element = $(this).attr('id');
-                    color_element = parent.$("g[Id^='"+id_element+"'] path").css('fill');
+                    color_element = parent.$("g[id^='"+id_element+"'] path").css('fill');
                     $(this).css('background-color',color_element);
-                })
+                })*/
 
                 //Put hoverlabels to flareplot
                 hoverlabels(0)
@@ -295,10 +308,16 @@ $(document).ready(function(){
     	    }
         });
 
-        //Trigger the NGL viewers
-        $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0');
-        $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1');        
-
-
+        //Load needed Json files and execute NGL bottom viewers
+        var clustdict_file, compl_data_file;
+        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json";
+        compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
+        $.getJSON(clustdict_file, function(clustdict){  
+            $.getJSON(compl_data_file, function(compl_data){
+                //Trigger the NGL viewers
+                $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0', [clustdict, compl_data]);
+                $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1', [clustdict, compl_data]);
+            });
+        });
     });
 });

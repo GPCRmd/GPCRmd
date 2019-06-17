@@ -389,7 +389,7 @@ $(document).ready(function(){
                     if (presel_ok_li.length > 0){
                         $("#text_input_all").find(".ti_add_btn:last").trigger("click");
                         $("#text_input_all").find(".sel_input:last").val(presel_pos);
-                        $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                        $("#text_input_all").find(".text_input:last .high_type").val("ball+stick");
                         //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
                         changeLastInputColor("#ff4c00",false);
                     }
@@ -401,7 +401,7 @@ $(document).ready(function(){
                 if (presel_ok_li.length > 0){
                     $("#text_input_all").find(".ti_add_btn:last").trigger("click");
                     $("#text_input_all").find(".sel_input:last").val(presel_pos);
-                    $("#text_input_all").find(".text_input:last .high_type").val("hyperball");
+                    $("#text_input_all").find(".text_input:last .high_type").val("ball+stick");
                     //$("#text_input_all").find(".text_input:last .high_scheme").val("uniform");
                     changeLastInputColor("#ff4c00",false);
                 }
@@ -1202,7 +1202,7 @@ $(document).ready(function(){
             var receptorsel=gpcr_selection();
             var ligli=$("#bindingSite").data("ligli");
             bs_info=receptorsel+"-"+ligli;
-        } 
+        }
         return (bs_info);
     }
 //-------- Protein chains
@@ -1578,7 +1578,7 @@ $(document).ready(function(){
                     ///AJAX!!!
                     $("#int_info").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_int'><span class='glyphicon glyphicon-time'></span> Computing interaction...</p>");
                     $("#gotoInt").addClass("disabled");
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled");
                     act_int_tbls=[];
                     $("#int_info").children(".int_tbl").each(function(){
                         act_int_tbls.push($(this).data("int_id"));
@@ -1599,7 +1599,7 @@ $(document).ready(function(){
                         },
                         success: function(int_data) {
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
@@ -1784,7 +1784,7 @@ $(document).ready(function(){
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#int_alert").html(add_error); 
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             $("#wait_int").remove();
                             $("#gotoInt").removeClass("disabled");
@@ -2180,28 +2180,6 @@ $(document).ready(function(){
         }
     }); */
 
-/*    function obtainDistToComp(){
-        var distToCompAtms="";
-        var distToCompRes=[];
-        $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
-            if ($(this).find(".dist_el_sel").val() == "atoms"){
-                var d_from=$(this).find(".dist_from").val();
-                var d_to=$(this).find(".dist_to").val();
-                distToCompAtms += d_from+"-"+d_to+"a";
-            } else {
-                var d_from=$(this).find(".dist_from_res").val();
-                var an_from=$(this).find(".dist_atomNm_from_sel").val();
-                var d_to=$(this).find(".dist_to_res").val();
-                var an_to=$(this).find(".dist_atomNm_to_sel").val();
-                distToCompRes.push(d_from+":"+an_from+"-"+d_to+":"+an_to);
-            }
-        });
-        if (distToCompAtms){
-            distToCompAtms.slice(0, -1);
-        }
-        return [distToCompAtms,distToCompRes.join()];
-
-    }*/
     function obtainDistToComp(){
         var distToComp=[];
         $(".dist_btw").find(".dist_pair.d_ok").each(function(){ 
@@ -2247,9 +2225,19 @@ $(document).ready(function(){
                 $(inp_div).parent().addClass("has-warning");
             }
         } else {
-            stride=1;
+            stride=$(inp_div).data("default");
         }
         return (stride)
+    }
+
+
+    function updateframeFromPlot(mychart,array_f){
+        var mysel = mychart.getSelection()[0];
+        var frame_num=array_f[mysel.row+1][0];
+        //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
+        //frameinput_sel.val(frame_num);
+        //frameinput_sel.slider("refresh");
+        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ frame_num ]);
     }
 
     var chart_img={};
@@ -2258,6 +2246,11 @@ $(document).ready(function(){
         numComputedD = $("#dist_chart").children().length;
         $("#dist_stride_parent").removeClass("has-warning");
         if (numComputedD < 15){
+            $(".dist_btw input").each(function(){ 
+                if (!$(this).val()){
+                    $(this).parent().addClass("has-error");
+                }
+            });
             var res_ids = obtainDistToComp();
             if ($(this).attr("class").indexOf("withTrajs") > -1){
                 var traj_results=obtainTrajUsedInDistComputatiion(res_ids);
@@ -2268,7 +2261,7 @@ $(document).ready(function(){
                     var stride = strideVal("#dist_stride");
                     $("#dist_chart").append("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;' id='wait_dist'><span class='glyphicon glyphicon-time'></span> Computing distances...</p>");
                     $("#gotoDistPg").addClass("disabled");
-                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled");
+                    $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled");
                     act_dis_plots=[];
                     $("#dist_chart").children(".dist_plot").each(function(){
                         act_dis_plots.push($(this).data("dist_id"));
@@ -2405,19 +2398,60 @@ $(document).ready(function(){
                                                         </div>";                            
                                         } 
                                         $("#dist_chart").append(plot_html);
-                                        var chart_cont_li =[[newgraph_sel+"t",data_t,options_t],[newgraph_sel+"f",data_f,options_f]];
-                                        for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
-                                            var chart_cont=chart_cont_li[chartN][0];
-                                            var data=chart_cont_li[chartN][1];
-                                            var options=chart_cont_li[chartN][2];
-                                            var chart_div = document.getElementById(chart_cont);
-                                            var chart = new google.visualization.LineChart(chart_div);                                
-                                            google.visualization.events.addListener(chart, 'ready', function () {
-                                                var img_source =  chart.getImageURI(); 
-                                                $("#"+chart_cont).attr("data-url",img_source);
-                                            });                                
-                                            chart.draw(data, options);                                    
-                                        }
+                                        var chart_cont_li =[[newgraph_sel+"f",data_f,options_f],[newgraph_sel+"t",data_t,options_t]];
+
+                                        var chart_cont=chart_cont_li[0][0];
+                                        var data=chart_cont_li[0][1];
+                                        var options=chart_cont_li[0][2];
+                                        var chart_div = document.getElementById(chart_cont);
+                                        var chart0 = new google.visualization.LineChart(chart_div);                                
+                                        google.visualization.events.addListener(chart0, 'ready', function () {
+                                            var img_source =  chart0.getImageURI(); 
+                                            $("#"+chart_cont).attr("data-url",img_source);
+                                        });                                
+                                        chart0.draw(data, options);                                
+                                        google.visualization.events.addListener(chart0, 'select', function(){  
+                                            updateframeFromPlot(chart0,dist_array_f);
+                                        });
+
+
+                                        var chart_cont=chart_cont_li[1][0];
+                                        var data=chart_cont_li[1][1];
+                                        var options=chart_cont_li[1][2];
+                                        var chart_div = document.getElementById(chart_cont);
+                                        var chart1 = new google.visualization.LineChart(chart_div);                                
+                                        google.visualization.events.addListener(chart1, 'ready', function () {
+                                            var img_source =  chart1.getImageURI(); 
+                                            $("#"+chart_cont).attr("data-url",img_source);
+                                        });                                
+                                        chart1.draw(data, options);                                    
+                                        google.visualization.events.addListener(chart1, 'select', function(){  
+                                            updateframeFromPlot(chart1,dist_array_f);
+                                        });
+
+///////////////////
+//                                        for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
+//                                            var chart_cont=chart_cont_li[chartN][0];
+//                                            var data=chart_cont_li[chartN][1];
+//                                            var options=chart_cont_li[chartN][2];
+//                                            var chart_div = document.getElementById(chart_cont);
+//                                            var chart = new google.visualization.LineChart(chart_div);                                
+//                                            google.visualization.events.addListener(chart, 'ready', function () {
+//                                                var img_source =  chart.getImageURI(); 
+//                                                $("#"+chart_cont).attr("data-url",img_source);
+//                                            });                                
+//                                            chart.draw(data, options);                                    
+//
+//                                            //google.visualization.events.addListener(chart, 'select', function() {
+//                                              //console.log(chart.getSelection());
+//                                            //});
+//
+//                                            google.visualization.events.addListener(chart, 'select', function(){  
+//                                                console.log(chart.getSelection());
+//                                                //chart.setSelection(); //nulls out the selection
+//                                            });
+//                                        }
+///////////////////
                                         $("#"+newgraph_sel+"f").css("display","none");  
                                         var img_source_t=$("#"+newgraph_sel+"t").data("url");
                                         $("#"+newgraph_sel+"t").siblings(".settings").find(".save_img_dist_plot").attr("href",img_source_t);
@@ -2450,7 +2484,7 @@ $(document).ready(function(){
                                 $("#dist_alert").html(add_error);                
                             }
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             var t1=performance.now();
                         },
@@ -2458,7 +2492,7 @@ $(document).ready(function(){
                             $("#gotoDistPg").removeClass("disabled");
                             $("#wait_dist").remove();
                             if ($.active<=1){
-                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                             }
                             add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                             $("#dist_alert").html(add_error);                
@@ -2857,15 +2891,19 @@ $(document).ready(function(){
     
     $(".inp_stride").on("change" , function(){
         var stride = $(this).val();
-        stride = Number(stride);
-        var pos = Math.abs(stride)
-        var rounded= Math.round(pos);
-        if (rounded <= 0){
-            var rounded = 1;
-        } 
-        if (stride != rounded){
-            stride = rounded;
-            $(this).val(stride);
+        if (stride==""){
+            $(this).val("");
+        } else {
+            stride = Number(stride);
+            var pos = Math.abs(stride)
+            var rounded= Math.round(pos);
+            if (rounded <= 0){
+                var rounded = 1;
+            } 
+            if (stride != rounded){
+                stride = rounded;
+                $(this).val(stride);
+            }
         }
     });
     
@@ -2911,7 +2949,16 @@ $(document).ready(function(){
         if (rmsdFrames=="bonds_frames_mine"){
             frameFrom=$("#bonds_frame_1").val();
             frameTo=$("#bonds_frame_2").val();
-            if (frameFrom && frameTo) {
+            var framesOk=true;
+            if (!frameFrom){
+                $("#bonds_frame_1").parent().addClass("has-error");
+                framesOk=false;
+            }
+            if (!frameTo){
+                $("#bonds_frame_2").parent().addClass("has-error");
+                framesOk=false;
+            }
+            if (framesOk) {
                 if (/^[\d]+$/.test(frameFrom + frameTo)){
                     if (Number(frameFrom) < Number(frameTo)){
                         rmsdFrames=frameFrom + "-" + frameTo;
@@ -2934,7 +2981,7 @@ $(document).ready(function(){
             var msn="Some fields are empty or contain errors";
             showBigError(msn, "#bonds_alert");
         } else {
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing Hbonds...</p>");   
             $.ajax({
                     type: "POST",
@@ -2942,12 +2989,12 @@ $(document).ready(function(){
                     url:"/view/hbonds/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-Protein Hydrogen Bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
                         //gnumFromPosChain(pos, chain)
                         for (var property in hbonds) {
                             if (hbonds.hasOwnProperty(property)) {
@@ -2972,7 +3019,7 @@ $(document).ready(function(){
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other Hydrogen Bonds</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
                         for (var property in hbonds_np) {
                             if (hbonds_np.hasOwnProperty(property)) {
                                 var string =property;
@@ -3011,7 +3058,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3049,7 +3096,16 @@ $(document).ready(function(){
         if (rmsdFrames=="salt_frames_mine"){
             frameFrom=$("#salt_frame_1").val();
             frameTo=$("#salt_frame_2").val();
-            if (frameFrom && frameTo) {
+            var framesOk=true;
+            if (!frameFrom){
+                $("#salt_frame_1").parent().addClass("has-error");
+                framesOk=false;
+            }
+            if (!frameTo){
+                $("#salt_frame_2").parent().addClass("has-error");
+                framesOk=false;
+            }
+            if (framesOk) {
                 if (/^[\d]+$/.test(frameFrom + frameTo)){
                  //   if (Number(frameFrom) >= 1){
                     if (Number(frameFrom) < Number(frameTo)){
@@ -3079,14 +3135,14 @@ $(document).ready(function(){
         }else{
             $('#ShowAllSb').hide();
             $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
                     url:"/view/saltbridges/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
@@ -3112,7 +3168,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3177,14 +3233,14 @@ $(document).ready(function(){
         } else {
             
             $("#sasa_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_sasa'><span class='glyphicon glyphicon-time'></span> Computing SASA. This may take a while...</p>");   
-            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,sasa_sel,seq_ids]},
                     url:"/view/grid/", 
                     dataType: "json",
                     success: function(data) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_sasa").remove();
                         atomshb=[];
                         all_resids=[];
@@ -3208,7 +3264,7 @@ $(document).ready(function(){
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
-                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled"); 
+                        $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_sasa").remove();
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
@@ -3410,7 +3466,16 @@ $(document).ready(function(){
             if (rmsdFrames=="rmsd_frames_mine"){
                 frameFrom=$("#rmsd_frame_1").val();
                 frameTo=$("#rmsd_frame_2").val();
-                if (frameFrom && frameTo) {
+                var framesOk=true;
+                if (!frameFrom){
+                    $("#rmsd_frame_1").parent().addClass("has-error");
+                    framesOk=false;
+                }
+                if (!frameTo){
+                    $("#rmsd_frame_2").parent().addClass("has-error");
+                    framesOk=false;
+                }
+                if (framesOk) {
                     if (/^[\d]+$/.test(frameFrom + frameTo)){
                         if (Number(frameFrom) < Number(frameTo)){
                             rmsdFrames=frameFrom + "-" + frameTo;
@@ -3449,7 +3514,7 @@ $(document).ready(function(){
                 $("#rmsd_chart").after("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_rmsd'><span class='glyphicon glyphicon-time'></span> Computing RMSD...</p>");        
                 $("#rmsd_alert").html("");
                 $("#gotoRMSDPg").addClass("disabled");
-                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").addClass("disabled"); 
+                $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
                 act_rmsd_plots=[];
                 $("#rmsd_chart").children(".rmsd_plot").each(function(){
                     act_rmsd_plots.push($(this).data("rmsd_id"));
@@ -3560,18 +3625,48 @@ $(document).ready(function(){
                                 } 
                                 $("#rmsd_chart").append(RMSDplot_html);
                                 var chart_cont_li =[[newRMSDgraph_sel+"t",data_t,options_t],[newRMSDgraph_sel+"f",data_f,options_f]];
-                                for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
-                                    var chart_cont=chart_cont_li[chartN][0];
-                                    var data=chart_cont_li[chartN][1];
-                                    var options=chart_cont_li[chartN][2];
-                                    var rmsd_chart_div = document.getElementById(chart_cont);
-                                    var chart = new google.visualization.LineChart(rmsd_chart_div);    
-                                    google.visualization.events.addListener(chart, 'ready', function () {
-                                        var rmsd_img_source =  chart.getImageURI(); 
-                                        $("#"+chart_cont).attr("data-url",rmsd_img_source);
-                                    });
-                                    chart.draw(data, options);   
-                                }
+
+                                var chart_cont=chart_cont_li[0][0];
+                                var data=chart_cont_li[0][1];
+                                var options=chart_cont_li[0][2];
+                                var rmsd_chart_div = document.getElementById(chart_cont);
+                                var chart0r = new google.visualization.LineChart(rmsd_chart_div);    
+                                google.visualization.events.addListener(chart0r, 'ready', function () {
+                                    var rmsd_img_source =  chart0r.getImageURI(); 
+                                    $("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                });
+                                chart0r.draw(data, options);   
+                                google.visualization.events.addListener(chart0r, 'select', function(){  
+                                    updateframeFromPlot(chart0r,rmsd_array_f);
+                                });
+
+                                var chart_cont=chart_cont_li[1][0];
+                                var data=chart_cont_li[1][1];
+                                var options=chart_cont_li[1][2];
+                                var rmsd_chart_div = document.getElementById(chart_cont);
+                                var chart1r = new google.visualization.LineChart(rmsd_chart_div);    
+                                google.visualization.events.addListener(chart1r, 'ready', function () {
+                                    var rmsd_img_source =  chart1r.getImageURI(); 
+                                    $("#"+chart_cont).attr("data-url",rmsd_img_source);
+                                });
+                                chart1r.draw(data, options);   
+                                google.visualization.events.addListener(chart1r, 'select', function(){  
+                                    updateframeFromPlot(chart1r,rmsd_array_f);
+                                });
+
+
+//                                for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
+//                                    var chart_cont=chart_cont_li[chartN][0];
+//                                    var data=chart_cont_li[chartN][1];
+//                                    var options=chart_cont_li[chartN][2];
+//                                    var rmsd_chart_div = document.getElementById(chart_cont);
+//                                    var chart = new google.visualization.LineChart(rmsd_chart_div);    
+//                                    google.visualization.events.addListener(chart, 'ready', function () {
+//                                        var rmsd_img_source =  chart.getImageURI(); 
+//                                        $("#"+chart_cont).attr("data-url",rmsd_img_source);
+//                                    });
+//                                    chart.draw(data, options);   
+//                                }
                                 $("#"+newRMSDgraph_sel+"f").css("display","none");  
                                 var rmsd_img_source_t=$("#"+newRMSDgraph_sel+"t").data("url");
                                 $("#"+newRMSDgraph_sel+"t").siblings(".rmsd_settings").find(".save_img_rmsd_plot").attr("href",rmsd_img_source_t);
@@ -3600,7 +3695,7 @@ $(document).ready(function(){
                             $("#rmsd_alert").html(add_error);                              
                         }
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                         }
                     var t1= performance.now();
                     },
@@ -3610,7 +3705,7 @@ $(document).ready(function(){
                         add_error='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>An unexpected error occurred.';
                         $("#rmsd_alert").html(add_error);  
                         if ($.active<=1){
-                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int").removeClass("disabled");
+                            $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled");
                         }
                     },
                     timeout: 600000
@@ -4370,8 +4465,60 @@ $(document).ready(function(){
         return (newtitle);
     }
     
-    //---------------
-    
+   
+
+    function hoverlabelsFP(){
+        var pos, source_pos, target_pos;
+        var source_pos_pat = /source-(\w+)/;
+        var target_pos_pat = /target-(\w+)/;
+        //Put hoverlabels (tooltips) in flareplots position rectangles
+        $('#flare-container .trackElement path').each(function(){
+            $(this).tooltip({
+              html: true,
+              placement: 'auto',
+              container: 'body'
+            });
+            //console.log("....")
+            //console.log($(this).attr('title'))
+            //console.log("....")
+        });
+
+        //Put hoverlabels (tooltips) in flareplot position texts
+        $('#flare-container .node text').each(function(){
+            pos = $(this).html();
+            $(this).tooltip({
+              title: pos,
+              html: true,
+              placement: 'auto',
+              container: 'body'
+            });
+        });
+
+        //Put hoverlabels on interaction lines
+        $('#flare-container .link').each(function(){
+            source_pos = $(this).attr('class').match(source_pos_pat)[1];
+            target_pos = $(this).attr('class').match(target_pos_pat)[1];
+            $(this).tooltip({
+              title: source_pos+"-"+target_pos,
+              html: true,
+              placement: 'auto',
+              container: 'body',
+              delay: {show: 0, hide: 500}
+            });
+        });
+    };
+
+    var mouseX;
+    var mouseY;
+    $(document).mousemove( function(e) {
+       // mouse coordinates
+       mouseX = e.pageX; 
+       mouseY = e.pageY;
+
+    });  
+    $(document).on("mouseenter","path",function(e){
+        $(".tooltip").css({'top':mouseY - 30,'left':mouseX - 30});
+    })
     
     $(".fp_display_element_type").on("click",function(){
         if (! $(this).hasClass("is_active")){
@@ -4463,10 +4610,15 @@ $(document).ready(function(){
             $("#fpShowResSetBtns").css("display","none");
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
+        hoverlabelsFP()
+        var fpfile = $("#selectedTraj").data("fplot_file");
+        $("#downl_json_hb").attr("href","/dynadb/files/Precomputed/flare_plot/hbonds/"+fpfile);
         return(plot);
     }
 
-
+    $("#flare-container svg").mousemove( function(e) {
+        console.log(e.pageY,e.pageX)
+    })
 
     function setFpNglSize(applyMinSize){
         var screen_h=screen.height;
@@ -4505,6 +4657,8 @@ $(document).ready(function(){
         });
     };    
       
+    hoverlabelsFP()
+
     function setFPFrame(framenum){
         //Changes the frame displayed at the FP and updates fpSelInt (dict of FP residues selected) according tot he new frame, by calling updateFPInt().
         if (!$("#fp_display_summary").hasClass("is_active")){

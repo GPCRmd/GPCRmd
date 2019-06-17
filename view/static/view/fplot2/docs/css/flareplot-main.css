@@ -17,6 +17,11 @@ path.arc {
     fill: #1f77b4;
 }
 
+.node.hovered {
+    fill: #1f77b4;
+    font-weight: bold;
+}
+
 .toggledNode {
     font-size: 10px;
     fill: black !important;
@@ -36,10 +41,17 @@ path.arc {
 
 .node.target {
     font-weight: bold;
+    fill: #666666 !important;
+}
+
+.node.other_sel {
+    font-weight: bold;
+    fill: #666666 !important;
 }
 
 .node.source {
     font-weight: bold;
+    fill: #666666 !important;
 }
 
 .link.target, .link.source {

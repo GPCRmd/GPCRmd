@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% site_title %}</title>
-
+    <link rel="icon" href="{% static logo_dict.logo_path3 %}">
     <!-- Bootstrap -->
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
 
@@ -54,6 +54,33 @@
     $.widget.bridge('uibutton', $.ui.button);
     </script>
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script>
+    {% get_logos as logo_dict %}
+    $(document).ready(function() {
+      $("#logo_select").change(function(event) {
+        logo_num =  parseInt($(this).val());
+        logo_img = $("#logo");
+        switch(logo_num) {
+        case 1:
+          logo_img.attr('src','{% static logo_dict.logo_path %}');
+          logo_img.css('width','{{ logo_dict.logo_width }}');
+          break;
+        case 2:
+          logo_img.attr('src','{% static logo_dict.logo_path2 %}');
+          logo_img.css('width','{{ logo_dict.logo_width2 }}');
+          break;
+        case 3:
+          logo_img.attr('src','{% static logo_dict.logo_path3 %}');
+          logo_img.css('width','{{ logo_dict.logo_width3 }}');
+          break;
+        default:
+          logo_img.attr('src','{% static logo_dict.logo_path %}');
+          logo_img.css('width','{{ logo_dict.logo_width }}');
+          $(this).val(1);
+        }
+      }); 
+    });
+    </script>
     <!-- Include custom ajax functions -->
     {% block addon_js %}{% endblock %}
   </body>

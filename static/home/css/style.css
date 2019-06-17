@@ -6,7 +6,7 @@ h1, h2, h3, h4 { margin-top: 0px; }
     background: rgba(0,0,0,0.6);
 }
 
-.main-logo { height:20px;width:20px; }
+.main-logo { height:50px;width:75px; }
 
 .dropdown-menu > li.disabled.nav-header > a {
     cursor: default;

@@ -159,7 +159,7 @@ def get_csv_file(request,itype, ligandonly, rev):
 	#Creating and downloading CSV file from df
 	csvfile = FileWrapper(open(csv_name, "r"))
 	response = HttpResponse(csvfile, content_type='text/plain')
-	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactMaps")
+	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactMaps-%s-%s.csv" % (itype, ligandonly))
 	return response
 
 def get_itype_help(request, foo):

@@ -25,12 +25,5 @@ urlpatterns = [
     url(r'^session/(?P<session_name>\w*)/$', views.view_session, name='view_session'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += patterns('',
-        url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.MEDIA_ROOT,
-        }),
-        url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {
-            'document_root': settings.STATIC_ROOT,
-        }),
-)
+
+

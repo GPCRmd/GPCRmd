@@ -154,14 +154,33 @@
             });
         }
         
-        function updateRepsFrameChanged(trajComp,delta){
-                trajComp.signals.frameChanged.add(function(){
-                    var fnum=trajComp.trajectory.currentFrame;
-                    $("#trajRange").val(fnum);
-                    $("#trajRange").slider("refresh");
-                    $("#traj_time_val").html((fnum*delta).toFixed(2));
-                });
-        };
+        function updateRepsFrameChanged(o,stage,trajComp,delta){
+          /*
+          Update slider, frame counter and ns counter when simulation play. 
+          It also updates the water selection around selected residues if itype is wb or all
+          */
+
+          var is_wb, water_reps, water_sele, atoms_within, pos_reps, pos_sel 
+          is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
+          trajComp.signals.frameChanged.add(function(){
+            var fnum=trajComp.trajectory.currentFrame;
+            $("#trajRange").val(fnum);
+            $("#trajRange").slider("refresh");
+            $("#traj_time_val").html((fnum*delta).toFixed(2));
+
+            //If there are water bridges, update them
+            if (is_wb){
+              water_reps = stage.getRepresentationsByName(/\d+ and/)['list'];
+              for (var i = 0; i < water_reps.length; i++){
+                pos_sel = water_reps[i]['name'];
+                sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
+                atoms_within = sele.toSeleString();
+                water_sele = "water and "+atoms_within;
+                stage.getRepresentationsByName(pos_sel).setSelection(water_sele);
+              }
+            }
+          });
+        }
             
             
         function create_traj_dropdown(traj_li,sel_traj){
@@ -212,14 +231,11 @@
       
         function addwaters(o, pos_sel){
           //If itype is wb or all, add waters within 4Amostrongs as representation
-          var is_wb, sele, atoms_within, water_sele;
-          is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
-          if (Boolean(is_wb)){
-            sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
-            atoms_within = sele.toSeleString();
-            water_sele = "water and ("+atoms_within.replace(/,/g," OR @")+")";
-            o.addRepresentation("ball+stick", {  sele: water_sele, colorValue: "#828282", colorScheme: "element"});
-          }
+          var sele, atoms_within, water_sele;
+          sele = o.structure.getAtomSetWithinSelection( new NGL.Selection( pos_sel ), 3.5 );
+          atoms_within = sele.toSeleString();
+          water_sele = "water and "+atoms_within;
+          o.addRepresentation("ball+stick", { name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
           return(o)
         }
         
@@ -315,13 +331,14 @@
                          var allTrajCompli=o.trajList;
                          for (tcN=0; tcN< allTrajCompli.length;tcN++){
                             trajComp=allTrajCompli[tcN];
-                            updateRepsFrameChanged(trajComp,delta);
+                            updateRepsFrameChanged(o,stage,trajComp,delta);
                          }
                         
                         modTooltip();
                         
                         // Add representations
-                        var index, position, pos_sel;
+                        var index, position, pos_sel, is_wb;
+                        is_wb = /all|wb/.test($("#ngl_iframe1",window.parent.document).attr('data-itype'));
                         o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
                         if (lig) {
                           o.addRepresentation( "spacefill", { colorScheme: "element", visible: true, sele: lig } );
@@ -337,7 +354,9 @@
                                     o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
 
                                     //If interaction is water bridges, add water representation withing 4 amstrongs
-                                    o = addwaters(o, pos_sel);
+                                    if (Boolean(is_wb)){
+                                      o = addwaters(o, pos_sel);
+                                    }
                                 }
                             }
                             else {
