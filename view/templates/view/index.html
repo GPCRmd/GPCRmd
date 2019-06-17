@@ -47,6 +47,44 @@
   cursor: pointer;
 }
 
+/*.slide_container_volmap{
+  width:30%;
+}*/
+
+.slider_volmap {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: #e6e6e6;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider_volmap:hover {
+  opacity: 1;
+}
+
+.slider_volmap::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3278B4;
+  cursor: pointer;
+}
+
+.slider_volmap::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #3278B4;
+  cursor: pointer;
+}
+
 #onclickshowdropd{
     min-width:134px !important; 
 }
@@ -125,6 +163,12 @@
     padding-right:3px;
     padding-left:3px;
 }
+
+.button_color_water{
+  height:19;
+  width:35;
+}
+
 </style>
 {% endblock %}
 </head>
@@ -1803,6 +1847,153 @@
 
                 </div>
               </div>
+
+<!-- ============= Water Map Analysis =========== --> 
+            {% if watermaps %}
+
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_watermap" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Water Map</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_watermap" class="collapse" data-occupancy_data="{{occupancy}}">
+                 <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+<!-- 
+                        <div style="margin-left:18px;margin-bottom:10px;">
+                         Trajectory: 
+                                <select id="water_traj" name="water_traj">
+                                   {% for traj in traj_list %}
+                                   <option   value="{{traj.0}}">{{traj.1}}</option>
+                                   {% endfor %}
+                                </select>
+                        </div> --> 
+
+                        <!-- TABLE part -->
+                        <div class="table-responsive" style="">
+                          <table class="table" style="font-size:14px">
+                            <thead>
+                              <tr>
+                            <th></th>
+                            <th style="margin-left:10"> </th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <tr>
+                            <td style="text-align:left">Display map
+                            </td>
+
+                            <td style="text-align:left">
+                              <label class="checkbox" style="margin:0">
+                                <input type="checkbox" value="occupancy" class="WaterDisplay" style="margin-left:40px;margin-top:0,margin-bottom:0">
+                              </label>
+                            </td>
+                          </tr>
+
+<!--                           <tr>
+                            <td style="text-align:left">Slice representation 
+                            </td>
+
+                            <td style="text-align:left">
+                              <label class="checkbox" style="margin:0">
+                                <input type="checkbox" value="slice" class="SliceDisplay" style="margin-left:40px;margin-top:0,margin-bottom:0">
+                              </label>
+                            </td>
+                          </tr> -->
+
+                          <!-- MAPTYPES -->
+                          <tr>
+                            <td style="text-align:left">Map style</td>
+                            <td style="text-align:left">
+                              <select id="WatermapType"data-map="occupancy" style="padding:0;font-size:14px;margin:1px">   
+                                 <option value="smooth">Smooth</option>
+                                 <option value="wireframe">Wireframe</option>
+                                 <option value="flat">Flat</option>
+                                 <option value="contour">Contour</option>
+
+                              </select>
+                            </td>
+
+                          </tr>
+                                                    <!-- COLOR slider -->
+
+<!--                             <tr>
+                            <td style="text-align:left">Color</td>
+                            <td style="text-align:left">
+                              <center>
+                                <div class="color_volmap"  style="max-width:150px;display:inline-block;float:left;margin-left:20px">
+                                  <input type="color" name="favcolor" value="#ff0000" id=choose_color>
+                                  <button class=button_color_water id="select_color_water" style= 'font-size:10px;text-align:center;vertical-align:middle; display:table-cell; margin:auto;padding:0px'> select </button>
+                                </div>
+                              </center>
+                            </td>
+                          </tr> -->
+
+                          <!-- Opacity sliders -->
+                          <tr>
+                            <td style="text-align:left">Opacity</td>
+                            <td style="text-align:left">
+                              <center>
+                                <div class="slider_volmap"  style="max-width:150px;display:inline-block;float:left;margin-left:-30px">
+                                  <input class="slider_volmap" data-valtype="transparency" data-map="occupancy" value="0.5" min="0" max="1" step="0.1" type="range">
+                                </div>
+                                <div class="slider_val" id="slider_val_trans" style="width:20px;display:inline;float:left">1</div>
+                              </center>
+                            </td>
+                          </tr>
+
+ 
+                          <!-- ISOLEVEL sliders -->
+                          <tr>
+                            <td style="text-align:left">ISO level</td>
+                            <td style="text-align:left">
+                              <center>
+                                <div class="slider_volmap"  style="max-width:150px;display:inline-block;float:left;margin-left:-30px">
+                                  <input class="slider_volmap" data-valtype="isolevel" data-map="occupancy" value="0.3" min="0" max="1" step="0.01" type="range">
+                                </div>
+                                <div class="slider_val" id="slider_val_occupancy" style="width:20px;display:inline;float:left">1</div>
+                              </center>
+                            </td>
+                          </tr>
+
+                          <tr>
+                            <td style="text-align:left">Show Polar residues</td>
+
+                            <td style="text-align:left">
+                              <label class="checkbox" style="margin:0">
+                                <input type="checkbox" value="polar" class="PolarDisplay" style="margin-left:40px;margin-top:0,margin-bottom:0">
+                              </label>
+                            </td>
+                          </tr>
+
+                          
+
+                            <tr>
+                            <span class='waterdistance'>
+                            <td style="text-align:left;margin-left:200px">
+                            <label class="checkbox" style="margin:0px">
+                                <input type="checkbox" value="showwaterdist" class="WaterDistDisplay" style="margin-left:0px;margin-top:0,margin-bottom:0">
+                            </label>
+                              <div style="margin-left:30px" > Show waters within </div>
+                          </td>
+                        </span>
+
+                              <td style="text-align:left">
+                                <input class="form-control waterswithin" id='waterswithin'type="text" style="width:40px;height:25px;padding-left:15px;margin-left:25px">
+                                Å of protein
+
+                            </td>
+<!--                             </span> -->
+                            </tr>
+
+
+
+                        
+              
+              </div>
+
+            {% endif %}
+
 
 <!-- ============= SASA Analysis =========== --> 
 
