@@ -93,21 +93,25 @@
             return([sele, sele2]);
         }
 
-        function updateRepsFrameChanged(o,stage,trajComp,bs_info,dist_within_li){
+        function updateRepsFrameChanged(o,stage,trajComp,bs_info,dist_within_li, water_dist){
             $("#selectionDiv", window.parent.document).on("click" , function(){
                 parent.passinfoToPlayTraj();
                 bs_info = parent.bs_info;
                 dist_within_li=parent.dist_of;  
+                water_dist=parent.water_dist;
             });
             $(".traj_btn").click( function(){//[!]Is this necessary?
                 parent.passinfoToPlayTraj();
                 bs_info = parent.bs_info;
                 dist_within_li=parent.dist_of;  
+                water_dist=parent.water_dist;  
+
             });
             $("#trajRange").change(function(){//[!]Is this necessary?
                 parent.passinfoToPlayTraj();
                 bs_info = parent.bs_info;
-                dist_within_li=parent.dist_of;  
+                dist_within_li=parent.dist_of; 
+                water_dist=parent.water_dist; 
             });
             trajComp.signals.frameChanged.add(function(){
                 var fnum=trajComp.trajectory.currentFrame;
@@ -195,10 +199,24 @@
                             var sele2 = result[1];
                             WthRepName="sel"+dist_comp[2];
                             stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
-                            stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
+                            //stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
                             //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
                         }
                     }
+                }
+
+                if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
+                    console.log("YEAH" + water_dist);  //this works, so the radius is updated when changing the frame. 
+                    var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
+                    // console.log(water_sele_tostring)
+                    atoms_within = sele.toSeleString();
+                    water_sele = "water and ("+ atoms_within+")";
+                    water_sele2 = "TIP3 and ("+ atoms_within+")";
+                    stage.getRepresentationsByName("waterselection").setSelection(water_sele);
+                    stage.getRepresentationsByName("waterselection2").setSelection(water_sele2);
+
+
+                    
                 }
             });
         }
@@ -223,7 +241,10 @@
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
             parent.passinfoToPlayTraj();
             var bs_info = parent.bs_info;
-            var dist_within_li=parent.dist_of;  
+            var dist_within_li=parent.dist_of; 
+            var water_dist=parent.water_dist; 
+            console.log("help"+ water_dist)       //this is loaded when structure is loaded, but obviously it is empty then. 
+
             $(".traj_btn").click( function(){
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
@@ -277,8 +298,9 @@
 
             var allTrajCompli=stage.getComponentsByName("my_comp").list[0].trajList;
             for (tcN=0; tcN< allTrajCompli.length;tcN++){
-                updateRepsFrameChanged(o,stage,allTrajCompli[tcN],bs_info,dist_within_li);
+                updateRepsFrameChanged(o,stage,allTrajCompli[tcN],bs_info,dist_within_li, water_dist);
             }
+
             
             $("#trajRangeDiv").on("mousedown" , ".ui-slider-handle" , function(){
                 setTrajRangeMax();
@@ -802,6 +824,7 @@
             var dist_groups_li=results["dist_groups_li"];
             var receptorsel = results["receptorsel"]; 
             var bs_info= results["bs_info"]; 
+            var water_dist=results["water_dist"];
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
@@ -821,7 +844,6 @@
             var setSelTemp=[];
             var showH = false;
             showH =results["showH"];
-
             
             var o=stage.getComponentsByName("my_comp").list[0];
             var saveRepLi=[];
@@ -1028,7 +1050,7 @@
                         var sele2 = result[1];
                         WthRepName="sel"+ligSele;
                         o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
-                        o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
+                        //o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
                         //setSelDict=addToSel(o,show+" and "+restriction + sele2.toSeleString(),setSelDict);
                         setSelTemp.push(show);
                     }else {
@@ -1038,6 +1060,29 @@
                     }
                     
                 }
+
+            }
+
+            if(typeof(water_dist) =='number'){  //CAREFUL if we would change the elses function ObtainWaterDist() in emb_ngl.viewer.js 
+                console.log("waterdist " + water_dist)
+                setSelTemp.push("water");
+                setSelLi.push("water");
+
+                var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
+                // console.log(water_sele_tostring)
+                atoms_within = sele.toSeleString();
+                water_sele = "water and ("+ atoms_within+")";
+                // water_sele2 ="TIP3 and (" + atoms_within+")";
+                o.addRepresentation("ball+stick", {name:"waterselection", sele: water_sele}); 
+                // o.addRepresentation("ball+stick", {name:"waterselection2", sele: water_sele2}); 
+
+                //MY WAY
+                // var water_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
+                // var show_water_sele = ".OH2 " + water_sele.toSeleString();
+                // o.addRepresentation("ball+stick", {name:"waterselection", sele: show_water_sele  }); 
+
+                // var water_li_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("(( not polymer or hetero ) and not ( water or ion ))"), water_dist)
+
 
             }
 
@@ -1187,7 +1232,14 @@
                 o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: linkresOk , name:"FP res" } );
                 //setSelDict=addToSel(o,linkresOk,setSelDict);
 
-            }            
+            }  
+
+            if ($(".PolarDisplay", window.parent.document).is(':checked')) {
+                polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
+                o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues})
+            }
+
+
 
             if ($("#FPdisplay",window.parent.document).hasClass("active")){
                 if ($("g.node.toggledNode", window.parent.document).length >0){
@@ -1217,6 +1269,7 @@
             if (trajComp){
                 trajComp.setFrame(framenum);
             }
+
 
 
 
@@ -1332,6 +1385,99 @@
             }
             //stage.getRepresentationsByName("surface").setParameters(p)
         }
+
+/////////Functions for Water Map
+        function change_watermap_style(val,mapname, slider_val ){
+            if (val == 'smooth'){
+                p = {
+                    contour: false,
+                    flatShaded: false,
+                    opacity: 0.4,
+                    metalness: 0,
+                    wireframe: false
+                }
+            }else if (val == 'contour'){
+                p = {
+                    contour: true,
+                    flatShaded: false,
+                    opacity: 0.4,
+                    metalness: 0,
+                    wireframe: false                    
+                }
+            }else if (val == 'wireframe'){
+                p = {
+                    contour: false,
+                    flatShaded: false,
+                    opacity: 0.4,
+                    metalness: 0,
+                    wireframe: true                    
+                }
+            }else if (val == 'flat'){
+                p = {
+                    contour: false,
+                    flatShaded: true,
+                    opacity: 0.4,
+                    metalness: 0,
+                    wireframe: false
+
+                }
+
+            }
+
+
+            if (val == 'isolevel'){
+                console.log("this is: " + (Number(slider_val)))
+                p = {
+                    isolevel: Number(slider_val)
+                }
+
+            }
+            if (val == 'transparency'){
+                console.log('transcheck' + (Number(slider_val)))
+                p = {
+                    opacity: Number(slider_val)
+                }
+            }
+            stage.getRepresentationsByName("occupancy").setParameters(p);   //we change all the maps, so that if trajectory is changed, the same settings are applied 
+
+        }
+
+        function show_hide_watermap(is_checked,slice_checked, mapname,stage){
+            ///This function 
+            stage.getComponentsByName(mapname).setVisibility(is_checked);
+            // stage.getRepresentationsByName('slice').setVisibility(slice_checked);
+
+            
+            return(stage)
+
+            // console.log("the function show_hide_watermap takes as arguments " + mapname + ' ' + is_checked);
+            // stage.getComponentsByName(mapname).setVisibility(is_checked);
+            // return(stage);
+            // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
+            
+        }
+
+        function show_polar_res(is_checked){
+            var o=stage.getComponentsByName("my_comp").list[0]; //"my comp is the name of the pdb structure loaded on NGL " //////  Place this to CreateReps. 
+            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
+            o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
+            stage.getRepresentationsByName("polar_res").setVisibility(is_checked)
+            
+        }
+
+        // function show_hide_slice(is_checked, water_check, mapname, stage){
+        //     ///This function shows or hide the slice representation 
+
+        //     stage.getComponentsByName(mapname).setVisibility(is_checked)
+        //     stage.getRepresentationsByName('slice').setVisibility(is_checked)
+        //     stage.getRepresentationsByName('occupancy').setVisibility(water_check)
+        //     // stage.getRepresentationsByName('occupancy').setVisibility(water_check);
+        //     // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
+        //     return(stage)
+            
+        // }
+
+
 //END functions.
 //START main
 /////////// Set variables: ///////////////////////////////////////////////////////////////
@@ -1388,7 +1534,7 @@
             trigger:"hover",
             html:true,
         });   
-        //$('[data-toggle="popover"]').popover(); 
+        //$('[data-toggle="popover"]').popover(); //created JS event which triggers when flareplots is already loaded. It is a trick of Mariona 
         $(document.body).bind('createNGL', function(e, cont_w , cont_w_in , cont_h_num) {
             set_ngl_size(cont_w , cont_w_in , cont_h_num);
             
@@ -1455,9 +1601,52 @@
                         var res = patt.exec(traj_li_all[traj_id]);
                         var mytraj_nm=res[1];
                         $("#last_played").text(mytraj_nm);
+
+                        //WATERMAP CODE 
+                        var selected_traj=$(this).attr("id").replace("traj_id_", "");
+                        var watermap_checked= $(".WaterDisplay", window.parent.document).is(":checked")  
+
+                        
+                        if (watermap_checked){
+                            var hide_list=[]
+                            for (var i = 0; i <trajnames_list.length; i++){
+                                if (trajnames_list[i].includes(selected_traj)){
+                                    var selected_filename=trajnames_list[i]
+                                    var watermap_loaded= stage.getComponentsByName(selected_filename)
+                                    //
+                                    if($.isEmptyObject(watermap_loaded) == false){            //if the array is not empty, then we know that the watermap for the selected trajectory is loaded. 
+                                    var watermap=watermap_loaded.list[0]
+                                    console.log(watermap)
+                                    watermap.setVisibility(true)
+
+                                    }else{
+                                        console.log("the map is not loaded, load it with visibility true")
+                                    }
+                                    //
+                    
+                                }else{
+                                    var hide=trajnames_list[i]
+                                    hide_list.push(hide)
+                                    // stage.getComponentsByName(hide).list[0].setVisibility[false]
+                                }
+                            }
+                            console.log('we check the selected_filename that will be set to visibility true' + selected_filename)
+                            // var test=stage.getComponentsByName(selected_filename).list[0]
+                            // test.setVisibility(true)
+
+                            for (var j=0; j<hide_list.length; j++){
+                                var hide_name=hide_list[j]
+                                var hide_map=stage.getComponentsByName(hide_name).list[0]
+                                hide_map.setVisibility(false)
+
+                            }
+
+                        }
+
                     });
                     trajButtons(o);
-                    
+
+
                     /*var m = new NGL.Matrix4().fromArray([1,0,0,0,
                                                          0,0,-1,0,
                                                          0,1,0,0,
@@ -1476,10 +1665,136 @@
                     
                     createReps()
 
-                    console.log("GPCRmd")
-                    console.log(o.getCenter())
 
                 });
+
+
+                // this part is after stage.load. 
+                var dict_occupancy=$("#analysis_watermap", window.parent.document).data("occupancy_data")
+                console.log("the dictionary is: " + dict_occupancy)
+                var pattern="/protwis/sites/files/"  //replace this when Ismael gives permission
+
+                var traj_list_md=[]
+                $(".traj_element",window.parent.document).each(function(){
+                traj_list_md[traj_list_md.length]=$(this).data("tpath").match(/[0-9]{5,25}/g).toString();   //matches the trajid of all the trajectories loaded in the server 
+                });
+                console.log(traj_list_md)
+
+
+                // loop over dictionary with trajid and filepath, change path with serverpath and load the maps  load all the maps in one time 
+                if (dict_occupancy){
+                    var trajnames_list=[]      //["10350_occupancy_31.dx", "10351_occupancy_31.dx", "10356_occupancy_31.dx"] to create this list with trajfilenames, these are coupled to the stage.loadFile 
+                    for (var traj_key in dict_occupancy){
+                        if (traj_list_md.includes(traj_key)){  //This is to check if the trajectories in dict and on server are equal
+
+                            var trajPath=dict_occupancy[traj_key].replace(pattern, path)  //change this when Ismael gives permission 
+                            var trajName=trajPath.match(/[A-Za-z0-9]+_occupancy_[0-9]+.dx/g).toString()
+                            trajnames_list.push(trajName)
+                            console.log(trajName, trajPath)
+
+                            stage.loadFile(trajPath, {visible:false}).then(function(watermap){
+                                watermap.addRepresentation("surface", {
+                                    name: "occupancy",
+                                    color: "lightblue", 
+                                    isolevelType: "value",
+                                    isolevel: 0.3,
+
+                                    // contour: false,
+                                    flatShaded: false,
+                                    opacity: 0.5,
+                                    metalness: 0,
+                                    wireframe: false 
+
+                                });
+
+                                // watermap.addRepresentation("slice", {
+                                // name:"slice",
+                                // dimension: "x",
+                                // })
+
+                            });                           
+
+
+                        };     
+                    };
+
+                    console.log(trajnames_list) 
+
+
+                    // ACTION with Jquery select button. check which map is selected from dropdown. 
+                    $(".WaterDisplay", window.parent.document).on("change", function(){
+                        var is_checked=$(this).is(":checked");
+                        var slice_checked=$(".SliceDisplay", window.parent.document).is(":checked");
+                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            if (trajnames_list[i].includes(selected_traj)){
+                                var selected_filename=trajnames_list[i]
+                            }
+                        }
+
+                        stage = show_hide_watermap(is_checked,slice_checked, selected_filename, stage)
+                    })
+
+
+                    $("#WatermapType", window.parent.document).on("click",function(){
+                        var v=$(this).val()
+                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
+                        
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            if (trajnames_list[i].includes(selected_traj)){
+                                var selected_filename=trajnames_list[i]
+                            }
+                        }
+                        change_watermap_style(v, selected_filename)
+
+
+                    })
+
+                    $(".slider_volmap", window.parent.document).on('input',function(){
+                        var slider_val=$(this).val();
+
+                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
+                        
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            if (trajnames_list[i].includes(selected_traj)){
+                                var selected_filename=trajnames_list[i]
+                            }
+                        }
+                        var slidetest=$(this).parent().siblings(".slider_val").html(slider_val);
+                        var v=$(this).data("valtype");
+                        change_watermap_style(v, selected_filename, slider_val)
+
+                    })
+
+                    $(".PolarDisplay", window.parent.document).on("click", function(){
+                        var is_checked=$(this).is(":checked");
+                        console.log(is_checked)
+
+                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            if (trajnames_list[i].includes(selected_traj)){
+                                var selected_filename=trajnames_list[i]
+                            }
+                        }
+                        show_polar_res(is_checked)
+                    })
+
+                    $(".SliceDisplay", window.parent.document).on("click", function(){
+                        var is_checked=$(this).is(":checked");
+                        var water_check= $(".WaterDisplay", window.parent.document).is(":checked"); //check if slicedisplay checkbox is checked 
+                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            if (trajnames_list[i].includes(selected_traj)){
+                                var selected_filename=trajnames_list[i]
+                            }
+                        }
+                        stage = show_hide_slice(is_checked,water_check, selected_filename, stage)
+
+                    })
+
+
+                }; 
+ 
 
                 var pdbid=$("#pdbid", window.parent.document).text();
                 if (pdbid.indexOf(".")>-1){
@@ -1543,6 +1858,7 @@
                         console.log("fofc")
                         console.log(edc.getCenter())
                     })
+
                     $("#EDselectionDiv", window.parent.document).on("click" , function(){
                         updateEDmapSel();
                         console.log("!")
@@ -1594,6 +1910,9 @@
                             change_EDmap_style(slider_val,mapsel,valtype);
                         }
                     })
+    
+
+
 
                 }
 ////////////SETTINGS:
