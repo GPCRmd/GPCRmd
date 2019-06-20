@@ -123,13 +123,18 @@ for pos in allpos:
     tracks[0]['trackProperties'].append(trackprop)
 
     if str(pos).startswith('Ligand'):
-        trees[0]['treePaths'].append('L' + '.' + pos)
+        trees[0]['treePaths'].append([1, pos])
     elif len(helix) == 2:
-        newhelix = str(int(helix[0]) + int(helix[1]))
-        trees[0]['treePaths'].append(newhelix + '.' + pos)
+        newhelix = int(helix[0]) + int(helix[1])
+        trees[0]['treePaths'].append([newhelix, pos])
     else:
-        newhelix = str(int(helix)*2)
-        trees[0]['treePaths'].append(newhelix + '.' + pos)
+        newhelix = int(helix)*2
+        trees[0]['treePaths'].append([newhelix, pos])
+
+#Sort trees
+treePaths_sorted = sorted(trees[0]['treePaths'], key=lambda l: (l[0],l[1]))
+treePaths_sorted = [ str(x[0])+"."+x[1] for x in treePaths_sorted ]
+trees[0]['treePaths'] = treePaths_sorted
 
 #Output jsondict to store
 jsondict = { 'trees' : trees, 'tracks' : tracks }
