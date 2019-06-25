@@ -172,14 +172,16 @@ def find_missing_pos_in_motif_otherclass(motifs, motname_li,dict_class,current_c
     return motifs_def
 
 
-def obtain_dyn_files(paths_dict):
+def obtain_dyn_files(dynfiles):
     """Given a list of files related to a dynamic, separates them in structure files and trajectory files."""
     structure_file=""
     structure_name=""
     traj_list=[]
     p=re.compile("(/protwis/sites/files/)(.*)")
     p2=re.compile("[\.\w]*$")
-    for f_id , path in paths_dict.items():
+    for e in dynfiles:
+        f_id=e.id_files.id
+        path=e.id_files.filepath
         myfile=p.search(path).group(2)
         myfile_name=p2.search(path).group()
         if myfile_name.endswith(".pdb"): #, ".ent", ".mmcif", ".cif", ".mcif", ".gro", ".sdf", ".mol2"))
@@ -222,7 +224,7 @@ def obtain_wholeModel_seg_to_chain(pdb_name):
     for line in fpdb:
         if line.startswith('ATOM') or line.startswith('HETATM'):
             chain_name=line[21]
-            seg_name=line[72:76]
+            seg_name=line[72:76].strip()
             if first:
                 first=False
                 seg_name_pre=seg_name
@@ -532,7 +534,7 @@ def distances_notraj(dist_struc,dist_ids):
     try:
         strc=md.load(struc_path)
     except Exception:
-        return (False,None, "Error loading the file.")    
+        return (False,None, "Error loading input files.")    
     dist_li=re.findall("\d+-\d+",dist_ids)
     #serial_mdInd=relate_atomSerial_mdtrajIndex(struc_path)
     dist_result={}
@@ -594,11 +596,14 @@ def obtain_protein_names(dyn_id):
                 prot_li_names.append(dprot.name)
     return ",".join(prot_li_names)
 
-
-def res_to_atom(seg_to_chain,struc,res, chain, atm):
+def pdbChain_to_mdtrajChainid_li(chain,seg_to_chain,struc):
+    """
+    Takes a chain name (1 letter, as defined in PDB), transforms it to the list of segments in tis chain, 
+    and then gives the mdtraj id of each of these segments. Returns them as a list. 
+    We need this because mdtraj chain id is actually segment id.
+    """
     chain = chain.upper()
     chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
-    chains_sel_li=[]
     if chain_segments:
         structable, bonds=struc.topology.to_dataframe()
         chainid_li=[]
@@ -606,20 +611,28 @@ def res_to_atom(seg_to_chain,struc,res, chain, atm):
                 seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()
                 chainid_li+=list(seg_chainid_li)
         chainid_li=list(set(chainid_li))
+        return chainid_li
+    else:
+        return False
+
+
+def res_to_atom(seg_to_chain,struc,res, chain, atm):
+    chainid_li=pdbChain_to_mdtrajChainid_li(chain,seg_to_chain,struc)
+    if chainid_li:
+        chains_sel_li=[]
         for chainid in chainid_li:
             chains_sel_li.append("chainid "+ str(chainid))
 
-        chain_sel_str=" or ".join(gpcr_chains_sel_li)
+        chain_sel_str=" or ".join(chains_sel_li)
         atm_index_arr = struc.topology.select("residue "+str(res)+" and ("+chain_sel_str+") and name "+atm)
         if atm_index_arr:
             return (str(atm_index_arr[0]))
         else:
             return False
-    else:
+    else: 
         return False
 
-
-def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
+def distances_Wtraj(dist_str,struc_path,traj_path,strideVal,seg_to_chain,gpcr_chains):
     struc_path = "/protwis/sites/files/"+struc_path
     traj_path = "/protwis/sites/files/"+traj_path
     dist_li=dist_str.split(",")
@@ -666,7 +679,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal):
     try:
         itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
-        return (False,None, "Error loading the file.",True,"")
+        return (False,None, "Error loading input files.",True,"")
     dist=np.array([]).reshape((0,len(atom_pairs))) 
     for itraj in itertraj:
         try:
@@ -766,7 +779,8 @@ def extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb):
                     consequence=consequence+" (%s)"%fs_info
                     aato="FS"
                 fromto=aafrom+","+aato
-                info={"seq_pos":str(seqN),"consequence":consequence,"exac_id":pos_var_info["exac_var_id"]}
+                allele_freq='{:.3e}'.format(pos_var_info["allele_freq"])
+                info={"seq_pos":str(seqN),"consequence":consequence,"exac_id":pos_var_info["exac_var_id"],"allele_freq":allele_freq}
                 if fromto in pos_vars:
                     pos_vars[fromto].append(info)
                 else:
@@ -919,24 +933,31 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             dist_traj_p=request.POST.get("distTraj")
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
-            if request.session.get('dist_data', False):
-                dist_data=request.session['dist_data']
-                dist_dict=dist_data["dist_dict"]
-                new_id=dist_data["new_id"]
-                no_rv_l=no_rv.split(",")
-                to_rv=[];
-                for d_id in dist_dict.keys():
-                    if (d_id not in no_rv_l):
-                        to_rv.append(d_id)
-                for d_id in to_rv:
-                    del dist_dict[d_id]   
+            if request.session.get('main_strc_data', False):
+                session_data=request.session["main_strc_data"]
+                #num_prots=session_data["prot_num"]
+                #serial_mdInd=session_data["serial_mdInd"]
+                gpcr_chains=session_data["gpcr_chains"]
+                seg_to_chain=session_data["seg_to_chain"]
+                if request.session.get('dist_data', False):
+                    dist_data=request.session['dist_data']
+                    dist_dict=dist_data["dist_dict"]
+                    new_id=dist_data["new_id"]
+                    no_rv_l=no_rv.split(",")
+                    to_rv=[];
+                    for d_id in dist_dict.keys():
+                        if (d_id not in no_rv_l):
+                            to_rv.append(d_id)
+                    for d_id in to_rv:
+                        del dist_dict[d_id]   
+                else:
+                    new_id=1
+                    dist_dict={}
             else:
-                new_id=1
-                dist_dict={}
-                
+                data = {"result":None,"dist_id":None,"success": False, "msg":"Session error.", "strided":strideVal, "isEmpty":True, "dist_pair_new":""}
             if len(dist_dict) < 15:
                 
-                (success,data_fin, msg, isEmpty,dist_pair_new)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal))
+                (success,data_fin, msg, isEmpty,dist_pair_new)=distances_Wtraj(dist_ids,dist_struc_p,dist_traj_p,int(strideVal),seg_to_chain,gpcr_chains)
                 if success and not isEmpty:
                     data_frame=data_fin
                     data_store=copy.deepcopy(data_frame)
@@ -1018,10 +1039,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 #### --------------------------------
         ed_align_matrix=obtain_ed_align_matrix(dyn_id)
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
-        paths_dict={}
-        for e in dynfiles:
-            paths_dict[e.id_files.id]=e.id_files.filepath
-        (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(paths_dict)
+        (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(dynfiles)
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
@@ -1337,7 +1355,7 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
         ref_traj_fr=md.load_frame(ref_traj_path,int(ref_frame),top=struc_path)
         itertraj=md.iterload(filename=traj_path,chunk=50/strideVal, skip =fr_from ,top=struc_path, stride =strideVal)
     except Exception:
-        return (False,None, ["Error loading the file."])
+        return (False,None, ["Error loading input files."])
     if len(ref_traj_fr)==0:
         error_msg="Frame "+str(ref_frame)+" does not exist at refference trajectory."
         return (False,None, error_msg)          
@@ -1503,7 +1521,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
     try:
         struc=md.load(struc_path)
     except Exception:
-        return (False,None, "Error loading the file.")
+        return (False,None, "Error loading input files.")
     all_lig_res=[]
 ###
     for res in res_li:
@@ -1547,7 +1565,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
                 else:
                     alldists=np.append(alldists,dists,axis=0)
         except Exception:
-            return (False,None, "Error loading the file.")
+            return (False,None, "Error loading input files.")
         contact_freq={}
         for pair in allres_p:
             contact_freq[tuple(pair)]=0
@@ -1712,6 +1730,7 @@ def hbonds(request):
         t=md.load_frame(traj_path, index=0, top=struc_path)
 
         for keys in histhbond:
+            print(t.topology.atom(keys[0]).segment_id)
             chain0=whole_seg_to_chain[t.topology.atom(keys[0]).segment_id]
             chain1=whole_seg_to_chain[t.topology.atom(keys[2]).segment_id]
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
@@ -1818,6 +1837,9 @@ def hbonds(request):
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
+        print("\n\n")
+        print(data)
+        print("\n\n")
         return HttpResponse(data, content_type='application/json')
 
 

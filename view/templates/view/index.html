@@ -13,6 +13,9 @@
   display:none;
 
 }
+#view_screen .tooltip-arrow {
+  display:block;
+}
 
 .popover{
   font-size:12px;
@@ -237,26 +240,34 @@
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
                 </div>  
+                <span id="varinfo_par" ></span>
                 <div >
                     <div id="dropdownAndIframe" style="margin:auto;position:relative;overflow-y:hidden;overflow-x:auto;height:445px;max-width:622px;margin-bottom:5px">
                     
                          {% if traj_list %}
-                          <div id="trajsDropdown" class="dropdown" style="position:absolute;z-index:10;visibility:hidden">
-                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >{{ traj_list.0.1 }}
-                            <span class="caret"></span></button>
+                          <div id="trajsDropdown" class="dropdown showWhenNGLLoad" style="z-index:11;visibility:hidden">
+                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} > 
+                              <span class="pull-left">
+                                <b>Trajectory ID:</b> <span id="selectedTraj_id">{{ traj_list.0.2 }}</span>
+                              </span>
+                              <span class="caret pull-right" style="margin-top:7px"></span>
+                            </button>
                             <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
-                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >{{traj_list.0.1}}</li>
+                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >Trajectory {{traj_list.0.2}}</li>
                             {% for traj in traj_list|slice:"1:" %}
-                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3}} >{{traj.1}}</li>
+                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3}} >Trajectory {{traj.2}}</li>
                             {% endfor %}
                             </ul>
                           </div>
                          {% endif %}
                          
-                         <!-- [!] Contructing / test -->
-                        <div class="dropdown" style=" float:right; clear:both;z-index:10">
-                            <button id="onclicksel" class="btn btn-info btn-xs dropdown-toggle pull-right" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-right:3px;margin-top:7px"><b>On click:</b> <span id="onclickbtntext">Show dists.</span>
-                            <span class="caret"></span></button>
+                        <div class="dropdown" style="z-index:10">
+                            <button id="onclicksel" class="btn btn-info btn-xs dropdown-toggle showWhenNGLLoad" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left;visibility:hidden">
+                              <span class="pull-left">
+                                <b>On click:</b> 
+                                <span id="onclickbtntext">Show dists.</span>
+                              </span>
+                              <span class="caret pull-right" style="margin-top:7px"></span></button>
                             <ul id="onclickshowdropd" class="dropdown-menu" style="height: auto;padding:0">
                               <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Click a pair of residues to show the distance betweent them."  class="onclickshow is_active" data-short="dists" >Show distances</li>
                               {% if pdb_vars|length > 2 %}
@@ -272,7 +283,6 @@
                             </ul>
                           </div>
                          
-                         <!-- END Contructing / test -->
                          
                         <iframe style="border:none;position:absolute;top:-30px;" id="embed_mdsrv" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed.html" scrolling="no" height="1000px" width="620px"></iframe>
                     </div>
@@ -1427,7 +1437,7 @@
                       <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
-                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB" href="/view/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
+                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB" href="/dynadb/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
                         <span title="Download data" class="glyphicon glyphicon-download-alt"></span>
                       </a>
                   </span>
@@ -1494,7 +1504,7 @@
                             <select id="" name="dist_traj">
                                <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
                                {% endfor %}
                             </select>
                        </span>
@@ -1527,7 +1537,7 @@
                             <select id="rmsd_traj" name="rmsd_traj">
                                <!--option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
                                {% endfor %}
                             </select>
 
@@ -1566,7 +1576,7 @@
                             <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
                                <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
                                {% endfor %}
                             </select>
                           <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >
@@ -1637,7 +1647,7 @@
                                 <select id="" name="int_traj">
                                    <!--<option disabled selected value> </option>-->
                                    {% for traj in traj_list %}
-                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">{{traj.1}}</option>
+                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
                                    {% endfor %}
                                 </select>
                            </span>
@@ -1685,7 +1695,7 @@ Hydrogen bonding frequency
                          Trajectory: 
                                 <select id="hbonds_traj" name="hbonds_traj">
                                    {% for traj in traj_list %}
-                                   <option   value="{{traj.0}}">{{traj.1}}</option>
+                                   <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
                                    {% endfor %}
                                 </select>
 
@@ -1787,7 +1797,7 @@ Hydrogen bonding frequency
                      Trajectory: 
                             <select id="salt_traj" name="salt_traj">
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">{{traj.1}}</option>
+                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
                                {% endfor %}
                             </select>
 

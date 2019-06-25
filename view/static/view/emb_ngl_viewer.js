@@ -170,12 +170,12 @@ $(document).ready(function(){
 
     
     changeTrajFlarePlot = function(traj_el_sel,new_fnum){
-
         var traj_p=$(traj_el_sel).data("tpath");
-        var traj_n=$(traj_el_sel).text();
+        var traj_id=$(traj_el_sel).attr("id").replace("traj_id_","");
         var fpfile_new=$(traj_el_sel).data("fplot_file");
         var old_fp=$("#selectedTraj").data("fplot_file");
-        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
+        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new);
+        $("#selectedTraj_id").text(traj_id);
         $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
         $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
         
@@ -1631,6 +1631,7 @@ $(document).ready(function(){
                                 //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
                                     <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+strideText+'</div>\
+                                      <div style="overflow-y:auto;overflow-x:hidden;max-height:400px">\
                                       <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
@@ -1691,11 +1692,12 @@ $(document).ready(function(){
                                         }                              
                                     }
 
-                                    table_html+="</tbody></table>";;
+                                    table_html+="</tbody></table></div>\
+                                    <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear all</button>";
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
-                                    var infoAndOpts= "<div id='"+chart_div+"'></div>\
-                                        <div class='checkbox' style='font-size:12px;margin-bottom:0'>\
+                                    var infoAndOpts= "<div id='"+chart_div+"' style='margin-top:30px'></div>\
+                                        <div class='checkbox' style='font-size:12px;margin-bottom:0;display:inline-block'>\
 		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                         </div>\
                                         <div class='int_settings'>\
@@ -1706,7 +1708,7 @@ $(document).ready(function(){
                                             </div>\
                                             <div style='display:inline-block;margin:5px'>\
                                                 <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
+                                                    <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_int'></span>\
                                                 </a>\
                                             </div>\
                                             <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
@@ -1749,6 +1751,17 @@ $(document).ready(function(){
                                             var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
                                             $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source);
                                             
+
+                                            google.visualization.events.addListener(chart, 'select', function(){  
+                                                var mysel = chart.getSelection()[0];
+                                                if (mysel){          
+                                                    var row_to_sel=mysel.row +1
+                                                    console.log("tr:eq("+row_to_sel+")")
+                                                    $("#int_chart_1").siblings("table").find("tr:eq("+row_to_sel+")").children(".AA_td").trigger("click");
+                                                }
+                                            });
+
+
                                             /*var this_tbl_td=$('#int_tbl'+i_id.toString()).find("td");
                                             $("#int_info").on("click", this_tbl_td , function(){
                                                 var this_row=$(this).parent().index();
@@ -1884,14 +1897,25 @@ $(document).ready(function(){
         if (isclicked) {
             $(this).css("background-color","transparent").removeClass("showInP");
         } else {
-            $(this).css("background-color","#ecf6f9").addClass("showInP");
+            $(this).css("background-color","#c5e3ed").addClass("showInP");
         }
         if ($(this).closest(".int_tbl").find(".display_int").is(":checked")){
             $("#selectionDiv").trigger("click");
         }
     });
 
-      
+    $("#int_info").on("click",".clear_int_tbl",function(){
+        var int_tbl_el=$(this).closest(".int_tbl");
+        var found_sel =int_tbl_el.find(".AA_td.showInP");
+        if (found_sel.length >0){
+            found_sel.each(function(){
+                $(this).css("background-color","transparent").removeClass("showInP");
+            })
+            if ((int_tbl_el.).find(".display_int").is(":checked")){
+                $("#selectionDiv").trigger("click");                
+            }
+        }
+    });
 //-------- Dist between residues --------
 
     var i_dist=1;
@@ -1932,6 +1956,9 @@ $(document).ready(function(){
     });
     
     $(".dist_btw").on("change" , ".dist_el_sel" , function(){
+        $("#dist_btw").find(".has-error").each(function(){
+            $(this).removeClass("has-error");
+        });
         var selection=$(this).val();
         var drow = $(this).closest(".dist_pair");
         if (selection == "residues"){
@@ -2246,11 +2273,14 @@ $(document).ready(function(){
 
     function updateframeFromPlot(mychart,array_f){
         var mysel = mychart.getSelection()[0];
-        var frame_num=array_f[mysel.row+1][0];
-        //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
-        //frameinput_sel.val(frame_num);
-        //frameinput_sel.slider("refresh");
-        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ frame_num ]);
+        if (mysel){        
+            var frame_num=array_f[mysel.row+1][0];
+            //console.log(frame_num)
+            //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
+            //frameinput_sel.val(frame_num);
+            //frameinput_sel.slider("refresh");
+            $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ frame_num ]);
+        }
     }
 
     var chart_img={};
@@ -2338,10 +2368,14 @@ $(document).ready(function(){
                                         */
                                         var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
                                             "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'},
+                                            "tooltip": { "trigger": 'selection' }
+                                        };
                                         var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
                                             "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'},
+                                            "tooltip": { "trigger": 'selection' }
+                                        };
                                         newgraph_sel="dist_chart_"+d_id.toString();
                                         var plot_html;
                                         if ($.active<=1){
@@ -2365,7 +2399,7 @@ $(document).ready(function(){
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
                                                                     <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
@@ -2398,7 +2432,7 @@ $(document).ready(function(){
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
                                                                     <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
@@ -2422,10 +2456,17 @@ $(document).ready(function(){
                                             var img_source =  chart0.getImageURI(); 
                                             $("#"+chart_cont).attr("data-url",img_source);
                                         });                                
-                                        chart0.draw(data, options);                                
-                                        google.visualization.events.addListener(chart0, 'select', function(){  
+                                        chart0.setAction({
+                                          id: "c0",
+                                          text: 'Display frame on viewer',
+                                          action: function() {
                                             updateframeFromPlot(chart0,dist_array_f);
+                                          }
                                         });
+                                        chart0.draw(data, options);                                
+//                                        google.visualization.events.addListener(chart0, 'select', function(){  
+//                                            updateframeFromPlot(chart0,dist_array_f);
+//                                        });
 
 
                                         var chart_cont=chart_cont_li[1][0];
@@ -2436,11 +2477,21 @@ $(document).ready(function(){
                                         google.visualization.events.addListener(chart1, 'ready', function () {
                                             var img_source =  chart1.getImageURI(); 
                                             $("#"+chart_cont).attr("data-url",img_source);
-                                        });                                
-                                        chart1.draw(data, options);                                    
-                                        google.visualization.events.addListener(chart1, 'select', function(){  
+                                        }); 
+
+                                        chart1.setAction({
+                                          id: "c1",
+                                          text: 'Display frame on viewer',
+                                          action: function() {
                                             updateframeFromPlot(chart1,dist_array_f);
+                                          }
                                         });
+
+
+                                        chart1.draw(data, options);                                    
+//                                        google.visualization.events.addListener(chart1, 'select', function(){  
+//                                            updateframeFromPlot(chart1,dist_array_f);
+//                                        });
 
 ///////////////////
 //                                        for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
@@ -3571,10 +3622,14 @@ $(document).ready(function(){
                                 var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
                                 var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'},
+                                    "tooltip": { "trigger": 'selection' }
+                                };
                                 var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'},
+                                    "tooltip": { "trigger": 'selection' }
+                                };
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
                                 if ($.active<=1){
@@ -3598,7 +3653,7 @@ $(document).ready(function(){
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
                                                             <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
@@ -3627,7 +3682,7 @@ $(document).ready(function(){
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
                                                             <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
@@ -3648,10 +3703,17 @@ $(document).ready(function(){
                                     var rmsd_img_source =  chart0r.getImageURI(); 
                                     $("#"+chart_cont).attr("data-url",rmsd_img_source);
                                 });
-                                chart0r.draw(data, options);   
-                                google.visualization.events.addListener(chart0r, 'select', function(){  
+                                chart0r.setAction({
+                                  id: "c0r",
+                                  text: 'Display frame on viewer',
+                                  action: function() {
                                     updateframeFromPlot(chart0r,rmsd_array_f);
+                                  }
                                 });
+                                chart0r.draw(data, options);   
+//                                google.visualization.events.addListener(chart0r, 'select', function(){  
+//                                    updateframeFromPlot(chart0r,rmsd_array_f);
+//                                });
 
                                 var chart_cont=chart_cont_li[1][0];
                                 var data=chart_cont_li[1][1];
@@ -3662,10 +3724,17 @@ $(document).ready(function(){
                                     var rmsd_img_source =  chart1r.getImageURI(); 
                                     $("#"+chart_cont).attr("data-url",rmsd_img_source);
                                 });
-                                chart1r.draw(data, options);   
-                                google.visualization.events.addListener(chart1r, 'select', function(){  
+                                chart1r.setAction({
+                                  id: "c0r",
+                                  text: 'Display frame on viewer',
+                                  action: function() {
                                     updateframeFromPlot(chart1r,rmsd_array_f);
+                                  }
                                 });
+                                chart1r.draw(data, options);   
+//                                google.visualization.events.addListener(chart1r, 'select', function(){  
+//                                    updateframeFromPlot(chart1r,rmsd_array_f);
+//                                });
 
 
 //                                for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
@@ -4426,6 +4495,10 @@ $(document).ready(function(){
         $("#int_info").find(".display_int").each(function(){
             $(this).attr("checked",false);
         });
+        $("#int_info").find(".AA_td.showInP").each(function(){
+            $(this).css("background-color","transparent").removeClass("showInP");
+        });
+
         $("#text_input_all").find(".text_input:not(:first-child)").each(function(){
             $(this).remove();            
         });
@@ -4475,7 +4548,31 @@ $(document).ready(function(){
         });
         $("#EDselectionDiv").trigger("click");
     }); 
-    
+
+
+    $('#varinfo_par').tooltip({
+        selector: '.showtooltip',
+        trigger:"hover",
+        html:true,
+        container: "#view_screen"
+
+    });  
+
+    $("#varinfo_par").on("click", ".close_var_mut" , function(){
+        $("#varinfo_par").html("");
+        //$('.popover').popover("hide");                    
+    });
+
+
+
+//    $("#content:not(#varinfo_par)").on("click", function(){
+//        $("#varinfo_par").html("");
+//    });
+
+//    $("body:not(#varinfo_par)").on("mousedown" , function(){
+//        $("#varinfo_par").html("");
+//    });
+
 //-------- Flare Plots --------
     function showHideTitle(titletext,newWord){
         if (newWord == "display"){
@@ -4607,7 +4704,45 @@ $(document).ready(function(){
 
     }
 
+    function fake_hasClass(selector,classnm){
+        return $(selector).attr("class").indexOf(classnm) != -1 ;
+    }
 
+//    function fake_addClass(selector,classnm){
+//        if (! fake_hasClass(selector,classnm)){
+//            var new_class= $(selector).attr("class") +" "+classnm;
+//            $(selector).attr("class",new_class);
+//        }
+//    }
+
+    var clickEdgeSelectNodes = function(d){
+        var name_s=d.source.name;
+        var name_t=d.target.name;
+        var is_sel_s = fake_hasClass("#node-"+name_s,"toggledNode");// $("#node-"+name_s).attr("class").indexOf("toggledNode") != -1 ;
+        var is_sel_t = fake_hasClass("#node-"+name_t,"toggledNode");//$("#node-"+name_t).attr("class").indexOf("toggledNode") != -1;
+        if (is_sel_s == is_sel_t ){
+            plot.toggleNode(name_s);
+            plot.toggleNode(name_t);
+        } else {
+            if (!is_sel_s){
+                plot.toggleNode(name_s);
+            } else if (!is_sel_t){
+                plot.toggleNode(name_t);
+            }
+        }
+        plot.setFrame(pg_framenum);
+        $("#selectionDiv").trigger("click");
+    }
+
+    function hoverLinksFP(){
+        $("path.link").hover(function(){
+           var newclass=$(this).attr("class") + " hoverlink";
+           $(this).attr("class",newclass);
+        }, function(){
+           var newclass=$(this).attr("class").replace("hoverlink","");
+           $(this).attr("class",newclass);            
+        });
+    }
 
     function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts){
         var fpjson=jsonData;
@@ -4629,8 +4764,12 @@ $(document).ready(function(){
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         hoverlabelsFP()
+        hoverLinksFP()
         var fpfile = $("#selectedTraj").data("fplot_file");
         $("#downl_json_hb").attr("href","/dynadb/files/Precomputed/flare_plot/hbonds/"+fpfile);
+        plot.addEdgeToggleListener( function(d){
+            clickEdgeSelectNodes(d);
+        });
         return(plot);
     }
 
@@ -4872,7 +5011,7 @@ $(document).ready(function(){
         $("#dropdownAndIframe").css({"border" : "1px solid #F5F5F5" , "max-width": cont_w_max , "height":cont_h});
         $("#embed_mdsrv").css("width",cont_w).attr("width",cont_w).attr("height",cont_h_iframe);
         $("#legend_row").css("max-width",cont_w_max);
-        $("#trajsDropdown").css("visibility","visible");
+        $(".showWhenNGLLoad").css("visibility","visible");
         $("#loading").html("");
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
     });

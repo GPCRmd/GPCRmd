@@ -21,6 +21,15 @@ class Command(BaseCommand):
             default=False,
             help='Overwrites already stored data.',
         )
+        parser.add_argument(
+            '--sel',
+            dest='sel_mv', 
+            nargs='?',
+            choices=["var_only","mut_only","all"],
+            action='store',
+            default='var_only',
+            help = "Download info for variants only, mutants only, or all. In principle we only need varian info because the mutant info is aleady in our database.")
+
 #        parser.add_argument(
 #            '-r',
 #            dest='restrict', 
@@ -104,6 +113,8 @@ class Command(BaseCommand):
             return muts_dict
         def obtain_var_info(vars_dict,uprot,entry):
             uprot_map=uniprot_mapping('ACC+ID', 'ENSEMBL_ID', uprot)
+            if len(uprot_map)<= 8:
+                return vars_dict
             ens_id= uprot_map.decode().strip("\n").split("\t")[-1]
             exac=requests.get("http://exac.hms.harvard.edu/rest/gene/variants_in_gene/"+ens_id).json()
             if entry not in vars_dict:
@@ -120,6 +131,7 @@ class Command(BaseCommand):
                         fromAA=mymatch.group(1)
                         seqNum=mymatch.group(2)
                         toAA=mymatch.group(3)
+                        allele_freq=exac_var["allele_freq"]
                         if consequence == "missense_variant" or consequence=="synonymous_variant":                            
                             from_sAA=aa_short[fromAA.upper()]
                             to_sAA=aa_short[toAA.upper()]
@@ -138,7 +150,8 @@ class Command(BaseCommand):
                                     "from":from_sAA,
                                     "to":to_sAA,
                                     "consequence":consequence,
-                                    "exac_var_id":exac_var_id
+                                    "exac_var_id":exac_var_id,
+                                    "allele_freq":allele_freq
                                 }
                         if seqNum in vars_dict[entry]:
                             vars_dict[entry][seqNum].append(pos_vars)
@@ -169,14 +182,19 @@ class Command(BaseCommand):
                 data=u.quick_search("id:%s" % uprot)
                 if data:
                     entry=data[uprot]['Entry name'].lower()
-                    muts_dict=obtain_mut_info(muts_dict,uprot,entry)
-                    vars_dict=obtain_var_info(vars_dict,uprot,entry)
+                    if options["sel_mv"] =="var_only" or options["sel_mv"] =="all":
+                        vars_dict=obtain_var_info(vars_dict,uprot,entry)
+                    elif options["sel_mv"] =="mut_only" or options["sel_mv"] =="all":
+                        muts_dict=obtain_mut_info(muts_dict,uprot,entry)
                 else:
                     self.stdout.write(self.style.NOTICE("No uniprot id found for %s (dyn id:%i)." % (uprot,dyn_id)))
-        with open(muts_filepath, 'w') as outfile:
-            json.dump(muts_dict, outfile)
-        with open(vars_filepath, 'w') as outfile:
-            json.dump(vars_dict, outfile)
+        if options["sel_mv"] =="var_only" or options["sel_mv"] =="all":        
+            with open(vars_filepath, 'w') as outfile:
+                json.dump(vars_dict, outfile)
+        elif options["sel_mv"] =="mut_only" or options["sel_mv"] =="all":
+            with open(muts_filepath, 'w') as outfile:
+                json.dump(muts_dict, outfile)
+
 
 
 
