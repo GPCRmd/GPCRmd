@@ -12,7 +12,7 @@ from bokeh.plotting import figure
 from bokeh.embed import components
 from bokeh.models import HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
-from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.cluster.hierarchy import linkage, fcluster, cut_tree
 
 ############
 ## Functions
@@ -182,21 +182,31 @@ def frequencies(df):
     # Reorder according to clustering
     return freq_matrix
 
-def clustering(clusters, dend_matrix, labels, linkagefun):
+def clustering(clusters, dend_matrix, labels, linkagefun, dendro_labels, Z):
     """
-    Find the color threshold needed for the dendrogram to have "clusters" number of clusters. 
-    Also define to which cluster each simulation belongs
+    Returns dictionary in which each simulation is assigned to its corresponding cluster
     """
-    Z = linkagefun(dend_matrix)
-    color_threshold = Z[-1*clusters][2]+0.0000000001 #Cut slightly above the tree node
     
     # Defining to which cluster belongs to each simulation
     T = fcluster(Z, t=clusters, criterion='maxclust')
-    clustdict = { "cluster" + str(clust) : [] for clust in T }
-    for sim,clust in zip(labels,T):
-         clustdict["cluster" + str(clust)].append(sim)
+    sim_to_cluster = { sim : "cluster" + str(clust) for sim,clust in zip(labels,T) }
 
-    return(color_threshold, clustdict)
+    #Make cluster numbering coincide with the one in dendrogram
+    cluster_to_sim = {}
+    auld_to_new = {} 
+    counter = 0
+    for dyn in dendro_labels:
+        auld_cluster = sim_to_cluster[dyn]
+        if auld_cluster not in auld_to_new.keys():
+            counter += 1
+            new_cluster = "cluster" +str(counter)
+            auld_to_new[auld_cluster] = new_cluster
+
+    clustdict = { cluster : [] for cluster in auld_to_new }
+    for dyn,cluster in sim_to_cluster.items():
+        clustdict[auld_to_new[cluster]].append(dyn)
+
+    return clustdict
 
 def black_or_white(bgcolor):
     """
@@ -307,7 +317,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
 
 def annotate_clusters(fig, default_color = ""):
     """
-    Put an annotation the nodes on top of clusters
+    Put an annotation the nodes on top of dendrogram's clusters
     """
     prevcolor = ""
     min_x = 0
@@ -354,7 +364,7 @@ def annotate_clusters(fig, default_color = ""):
             clustcoords[clustcount]['xanchor'] = 'right'
             
             #For single-branch clusters
-            if (currentcolor == default_color) and (current_max_x == -0): 
+            if (currentcolor == default_color) and (current_max_x == -0):
                 index_x = np.where(entry['x'] == current_max_x) 
                 clustcoords[clustcount]['clusnode_y'] = entry['y'][index_x][0]
                 #If the branch contains two single-node clusters(very rare case), append another cluster label
@@ -396,7 +406,10 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     
     # Define linkage function (we'll be using the default one for plotly). 
     linkagefun=lambda x: linkage(x, 'average')
-    (thres,clustdict) = clustering(clusters, dend_matrix, labels, linkagefun)
+
+    #Find the color threshold needed for the dendrogram to have "clusters" number of clusters. 
+    Z = linkagefun(dend_matrix)
+    thres = Z[-1*clusters][2]+0.0000000001 #Cut slightly above the tree node
 
     # Create color scale from the "category20" color scale. Not working because color_scale plotly option is inoperative
     colors_category20 = ['rgb(31, 119, 180)', 'rgb(174, 199, 232)', 'rgb(255, 127, 14)', 'rgb(255, 187, 120)', 'rgb(44, 160, 44)', 'rgb(152, 223, 138)', 'rgb(214, 39, 40)', 'rgb(255, 152, 150)', 'rgb(148, 103, 189)', 'rgb(197, 176, 213)', 'rgb(140, 86, 75)', 'rgb(196, 156, 148)', 'rgb(227, 119, 194)', 'rgb(247, 182, 210)', 'rgb(127, 127, 127)', 'rgb(199, 199, 199)', 'rgb(188, 189, 34)', 'rgb(219, 219, 141)', 'rgb(23, 190, 207)', 'rgb(158, 218, 229)']
@@ -422,7 +435,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout']['margin'].update({
         'r' : 300,
         'l' : 20,
-        't' : 0,
+        't' : 55,
         'b' : 0,
         'pad' : 0
         })
@@ -453,6 +466,9 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     
     # Taking order for plot rows
     dendro_leaves = fig['layout']['yaxis']['ticktext']
+
+    #Sorting simulations by cluster according to 
+    clustdict = clustering(clusters, dend_matrix, labels, linkagefun, dendro_leaves, Z)
 
     # Writing dendrogram on file
     plot(fig, auto_open = False, filename=filename, config={
@@ -497,7 +513,7 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
             jsondict = flare_template
         else:
             jsondict = { 'edges' : edges }
-        
+
         #Writing json
         jsonpath = folderpath + clust + ".json"
         with open(jsonpath, 'w') as jsonfile:
@@ -646,10 +662,12 @@ def add_restypes(df, compl_data):
         Return residue type of position according to compl_data dictionary
         """
         try:
-            return AAs[compl_data[dynid]['gpcr_pdb'][pos][-1]]
+            if pos == "Ligand":
+                return compl_data[dynid]['lig_sname']
+            else:
+                return AAs[compl_data[dynid]['gpcr_pdb'][pos][-1]]
         except KeyError:
-            print("Position %s not found in %s" %(pos, dynid))
-            return "NaN"
+            return "Na residue"
         
     #Split Position column
     new = df['Position'].str.split(" ", n = 1, expand = True)
@@ -795,7 +813,7 @@ noprt_itypes = set(("hbls","hblb"))
 ipartners = set(("lg","prt","prt_lg"))
 
 # Basepath for files
-basepath = "/protwis/sites/files/Precomputed/get_contacts_files_21_05_2019_old/"
+basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
 
 typelist =  {
     'sb' : 'salt bridge',
@@ -890,6 +908,9 @@ def get_contacts_plots(itype, ligandonly):
         df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict(str(basepath + "compl_info.json"))
 
+    # Creating directory if it doesn't exist
+    os.makedirs(basepath + "view_input_dataframe", exist_ok= True)
+
     # Adapting to Mariona's format (Single column with both interacting positions names and frequencies in percentage)
     df = adapt_to_marionas(df_raw)
 
@@ -967,10 +988,11 @@ def get_contacts_plots(itype, ligandonly):
         
         (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
 
-        # Write dynamicID-cluster dictionary on a json 
-        with open(str("%sview_input_dataframe/%s_%s_jsons/%sclusters/clustdict.json" % (basepath,itype,ligandonly,str(cluster))), 'w') as clusdictfile:
+        # Write dynamicID-cluster dictionary on a json
+        clustdir = str("%sview_input_dataframe/%s_%s_jsons/%sclusters" % (basepath,itype,ligandonly,str(cluster)))
+        os.makedirs(clustdir, exist_ok= True)
+        with open(clustdir + "/clustdict.json", 'w') as clusdictfile:
             dump(clustdict, clusdictfile, ensure_ascii=False, indent = 4)
-
 
         #Jsons for the flareplots of this combinations of clusters
         jsonpath = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_jsons/" + str(cluster) + "clusters/"
@@ -1005,10 +1027,6 @@ def get_contacts_plots(itype, ligandonly):
         # Find path to files 
         plotdiv_w= w + 575
         script, div = components(p)
-
-        # Creating directory if it doesn't exist
-        if not os.path.exists(basepath + "view_input_dataframe"):
-            os.makedirs(basepath + "view_input_dataframe")
 
         # Write heatmap on file
         with open(str("%sview_input_dataframe/%s_%s_%s_heatmap.html" % (basepath, itype, ligandonly, rev)), 'w') as heatmap:
