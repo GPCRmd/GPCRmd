@@ -641,47 +641,46 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal,seg_to_chain,gpcr_ch
     axis_lab=[["Frame"]]
     atom_pairs=np.array([]).reshape(0,2)
     small_error=[]
-    if (":" in dist_str):
-        struc=md.load(struc_path)
     dist_pair_new=[]
     if len(dist_li) > 20:
         dist_li =dist_li[:20]
-        small_error.append("Too much distances to compute. Some have been omitted.")
-    for dist_pair in dist_li:
-        if ":" in dist_pair:
-            (inf_from,inf_to)=dist_pair.split("-")
-            (resF, chainF, atmF)= inf_from.split(":")
-            (resT, chainT, atmT)= inf_to.split(":")
-            pos_from=res_to_atom(seg_to_chain,struc,resF, chainF, atmF)
-            pos_to=res_to_atom(seg_to_chain,struc,resT, chainT, atmT)
-            var_lab="dist "+resF +":"+ chainF+"("+atmF+")-"+resT +":"+ chainT+"("+atmT+")"
-            skip=False
-            if not pos_from:
-                small_error.append("Selection "+resF+":"+chainF+" "+atmF+" not found")
-                skip=True
-            if not pos_to:
-                small_error.append("Selection "+resT+":"+chainT+" "+atmT+" not found")
-                skip=True
-            if skip:
-                continue
-            
-        else:
-            pos_from,pos_to=re.findall("\d+",dist_pair)
-            var_lab="dist "+pos_from+"-"+pos_to
-        dist_pair_new.append(dist_pair)
-        axis_lab[0].append(var_lab) 
-        #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]])
-        from_to=np.array([[pos_from,pos_to]])        
-        atom_pairs=np.append(atom_pairs,from_to, axis=0)
-    if (len(atom_pairs) ==0):
-        return (True,[], small_error, True, ",".join(dist_pair_new))
-        
+        small_error.append("Too much distances to compute. Some have been omitted.")        
     try:
         itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
     except Exception:
         return (False,None, "Error loading input files.",True,"")
-    dist=np.array([]).reshape((0,len(atom_pairs))) 
+    count=0
     for itraj in itertraj:
+        if count==0:
+            for dist_pair in dist_li:
+                if ":" in dist_pair:
+                    (inf_from,inf_to)=dist_pair.split("-")
+                    (resF, chainF, atmF)= inf_from.split(":")
+                    (resT, chainT, atmT)= inf_to.split(":")
+                    pos_from=res_to_atom(seg_to_chain,itraj,resF, chainF, atmF)
+                    pos_to=res_to_atom(seg_to_chain,itraj,resT, chainT, atmT)
+                    var_lab="dist "+resF +":"+ chainF+"("+atmF+")-"+resT +":"+ chainT+"("+atmT+")"
+                    skip=False
+                    if not pos_from:
+                        small_error.append("Selection "+resF+":"+chainF+" "+atmF+" not found")
+                        skip=True
+                    if not pos_to:
+                        small_error.append("Selection "+resT+":"+chainT+" "+atmT+" not found")
+                        skip=True
+                    if skip:
+                        continue
+                    
+                else:
+                    pos_from,pos_to=re.findall("\d+",dist_pair)
+                    var_lab="dist "+pos_from+"-"+pos_to
+                dist_pair_new.append(dist_pair)
+                axis_lab[0].append(var_lab) 
+                #from_to=np.array([[serial_mdInd[pos_from],serial_mdInd[pos_to]]])
+                from_to=np.array([[pos_from,pos_to]])        
+                atom_pairs=np.append(atom_pairs,from_to, axis=0)
+            if (len(atom_pairs) ==0):
+                return (True,[], small_error, True, ",".join(dist_pair_new))
+            dist=np.array([]).reshape((0,len(atom_pairs))) 
         try:
             d=md.compute_distances(itraj, atom_pairs)*10
         except Exception:
@@ -689,6 +688,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal,seg_to_chain,gpcr_ch
             error_msg="Atom indices must be between 0 and "+str(num_atoms)
             return (False, None, error_msg,True,"")
         dist=np.append(dist,d,axis=0)
+        count +=1
     frames=np.arange(0,len(dist)*strideVal, strideVal,dtype=np.int32).reshape((len(dist),1))
     data=np.append(frames,dist, axis=1).tolist()
     data_fin=axis_lab + data
@@ -1518,97 +1518,93 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
 def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal,seg_to_chain):
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
+    itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
+    first=True 
     try:
-        struc=md.load(struc_path)
+        for itraj in itertraj:
+            if first:
+                mytop=itraj.topology
+                all_lig_res=[]
+                for res in res_li:
+                    if " and " in res:
+                        (resname,resseqpos)=res.split(" and ")
+                        lig_sel=mytop.select("resname '"+resname+"' and residue "+resseqpos)
+                    else:
+                        lig_sel=mytop.select("resname '"+res+"'")
+                    if len(lig_sel)>0:
+                        lig_res=[residue.index for residue in itraj.atom_slice(lig_sel).topology.residues]
+                        all_lig_res.append(lig_res[0])
+                if len(all_lig_res)==0:
+                    return (False,None, "Error with ligand selection.")
+                if gpcr_chains:
+                    structable, bonds=mytop.to_dataframe()
+                    gpcr_chains_sel_li=[]
+                    chainid_li=[]
+                    for chain in gpcr_chains:
+                        chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
+                        for segname in chain_segments:
+                            seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
+                            chainid_li+=list(seg_chainid_li)
+                    chainid_li=list(set(chainid_li))
+                    for chainid in chainid_li:
+                        gpcr_chains_sel_li.append("chainid "+ str(chainid))
+                    gpcr_chains_sel="protein and ("+" or ".join(gpcr_chains_sel_li)+")"
+                    gpcr_sel=mytop.select(gpcr_chains_sel)
+                else:
+                    gpcr_sel=mytop.select("protein") 
+                gpcr_res=[residue.index for residue in itraj.atom_slice(gpcr_sel).topology.residues]
+                pairs = list(itertools.product(gpcr_res, all_lig_res))
+                
+                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme=dist_scheme)
+                alldists=dists
+                allres_p=res_p
+                first=False
+            else:
+                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme=dist_scheme)
+                alldists=np.append(alldists,dists,axis=0)
     except Exception:
         return (False,None, "Error loading input files.")
-    all_lig_res=[]
-###
-    for res in res_li:
-        if " and " in res:
-            (resname,resseqpos)=res.split(" and ")
-            lig_sel=struc.topology.select("resname '"+resname+"' and residue "+resseqpos)
+    contact_freq={}
+    for pair in allres_p:
+        contact_freq[tuple(pair)]=0
+    for frame_dist in alldists:
+         i=0
+         while i < len(frame_dist):
+             if frame_dist[i]<(thresh/10):
+                 contact_freq[tuple(allres_p[i])]+=1
+             i+=1
+    num_frames=len(alldists)
+    to_delete=[]
+    for allres_p , freq in contact_freq.items():
+         if freq ==0:               
+             to_delete.append(allres_p)
+         else:                    
+             contact_freq[allres_p]=(freq/num_frames)*100
+    for key in to_delete:
+        del contact_freq[key]
+    fin_dict={}
+    for r in res_li:
+         fin_dict[r]=[]
+    for pair in sorted(contact_freq, key=lambda x: contact_freq[x], reverse=True):
+        freq=contact_freq[pair]
+        res_ind=pair[0]
+        lig_ind=pair[1]
+        lig_nm=mytop.residue(lig_ind).name
+        res_topo=mytop.residue(res_ind)
+        res_pdb=res_topo.resSeq
+        res_name=res_topo.name
+        res_chain=seg_to_chain[res_topo.segment_id]
+        if lig_nm in fin_dict:
+            fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
         else:
-            lig_sel=struc.topology.select("resname '"+res+"'")
-        if len(lig_sel)>0:
-            lig_res=[residue.index for residue in struc.atom_slice(lig_sel).topology.residues]
-            all_lig_res.append(lig_res[0])
-####
-    if len(all_lig_res)>0:
-        if gpcr_chains:
-            structable, bonds=struc.topology.to_dataframe()
-            gpcr_chains_sel_li=[]
-            chainid_li=[]
-            for chain in gpcr_chains:
-                chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
-                for segname in chain_segments:
-                    seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
-                    chainid_li+=list(seg_chainid_li)
-            chainid_li=list(set(chainid_li))
-            for chainid in chainid_li:
-                gpcr_chains_sel_li.append("chainid "+ str(chainid))
-            gpcr_chains_sel="protein and ("+" or ".join(gpcr_chains_sel_li)+")"
-            gpcr_sel=struc.topology.select(gpcr_chains_sel)
-        else:
-            gpcr_sel=struc.topology.select("protein") 
-        gpcr_res=[residue.index for residue in struc.atom_slice(gpcr_sel).topology.residues]
-        pairs = list(itertools.product(gpcr_res, all_lig_res))
-        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
-        first=True 
-        try:
-            for itraj in itertraj:
-                (dists,res_p)=md.compute_contacts(itraj, contacts=pairs, scheme=dist_scheme)
-                if first:
-                    alldists=dists
-                    allres_p=res_p
-                    first=False
-                else:
-                    alldists=np.append(alldists,dists,axis=0)
-        except Exception:
-            return (False,None, "Error loading input files.")
-        contact_freq={}
-        for pair in allres_p:
-            contact_freq[tuple(pair)]=0
-        for frame_dist in alldists:
-             i=0
-             while i < len(frame_dist):
-                 if frame_dist[i]<(thresh/10):
-                     contact_freq[tuple(allres_p[i])]+=1
-                 i+=1
-        num_frames=len(alldists)
-        to_delete=[]
-        for allres_p , freq in contact_freq.items():
-             if freq ==0:               
-                 to_delete.append(allres_p)
-             else:                    
-                 contact_freq[allres_p]=(freq/num_frames)*100
-        for key in to_delete:
-            del contact_freq[key]
-        fin_dict={}
-        for r in res_li:
-             fin_dict[r]=[]
-        for pair in sorted(contact_freq, key=lambda x: contact_freq[x], reverse=True):
-            freq=contact_freq[pair]
-            res_ind=pair[0]
-            lig_ind=pair[1]
-            lig_nm=struc.topology.residue(lig_ind).name
-            res_topo=struc.topology.residue(res_ind)
-            res_pdb=res_topo.resSeq
-            res_name=res_topo.name
-            res_chain=seg_to_chain[res_topo.segment_id]
-            if lig_nm in fin_dict:
-                fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
-            else:
-                lig_topo=struc.topology.residue(lig_ind)
-                lig_pdb=lig_topo.resSeq
-                ligres_sel=lig_nm+" and "+str(lig_pdb)
-                if (ligres_sel in fin_dict):
-                    fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
-                else: 
-                    return (False,None, "Error when parsing results.")
-        return(True,fin_dict,None)
-    else:
-        return (False,None, "Error with ligand selection.")
+            lig_topo=mytop.residue(lig_ind)
+            lig_pdb=lig_topo.resSeq
+            ligres_sel=lig_nm+" and "+str(lig_pdb)
+            if (ligres_sel in fin_dict):
+                fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
+            else: 
+                return (False,None, "Error when parsing results.")
+    return(True,fin_dict,None)
 
 def download_rmsd(request, rmsd_id):
     if request.session.get('rmsd_data', False):
@@ -1730,7 +1726,6 @@ def hbonds(request):
         t=md.load_frame(traj_path, index=0, top=struc_path)
 
         for keys in histhbond:
-            print(t.topology.atom(keys[0]).segment_id)
             chain0=whole_seg_to_chain[t.topology.atom(keys[0]).segment_id]
             chain1=whole_seg_to_chain[t.topology.atom(keys[2]).segment_id]
             histhbond[keys]= round(histhbond[keys]/nframes,3)*100
@@ -1837,18 +1832,16 @@ def hbonds(request):
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
-        print("\n\n")
-        print(data)
-        print("\n\n")
         return HttpResponse(data, content_type='application/json')
 
 
-def saltbridges(request):
+def saltbridges(request):#
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
         struc_path = "/protwis/sites/files/"+arrays[4]
         traj_path = "/protwis/sites/files/"+arrays[3]
-        label = lambda hbond : '%s--%s' % (t.topology.atom(hbond[0]), t.topology.atom(hbond[2]))
+        whole_seg_to_chain=obtain_wholeModel_seg_to_chain(struc_path);
+        label = lambda hbond : '%s--%s' % (mytop.atom(hbond[0]), mytop.atom(hbond[2]))
         full_results=dict()
         chunksize=50
         start=int(arrays[0])
@@ -1870,6 +1863,7 @@ def saltbridges(request):
             salt_bridges_residues=[]
             cdis=[]
             if counter==0:
+                mytop=t.topology
                 number_hatoms=0
                 for residue in t.topology.residues:
                     if residue.name=='HIS':
@@ -1940,12 +1934,14 @@ def saltbridges(request):
             acceptor=labelbond[1]
             acceptor_res=acceptor[:acceptor.rfind('-')]
             donor_res=donor[:donor.rfind('-')]
+            chain0=whole_seg_to_chain[mytop.atom(int(bond[2])).segment_id]
+            chain1=whole_seg_to_chain[mytop.atom(int(bond[3])).segment_id]
             if donor_res in bridge_dic:
-                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3])])
+                bridge_dic[donor_res].append([acceptor_res,bond[1],str(bond[2]),str(bond[3]),chain0,chain1])
             elif acceptor_res in bridge_dic:
-                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3])])
+                bridge_dic[acceptor_res].append([donor_res,bond[1],str(bond[2]),str(bond[3]),chain0,chain1])
             else:
-               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3])]]
+               bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3]),chain0,chain1]]
 
         if False: #warning, to implement in future, download csv with results
             struc_path=struc_path[:-4]

@@ -836,6 +836,33 @@
           }
         }
 
+        function avoid_unload_H(hbonds,showH){            
+            if (! showH){
+                new_hbonds=[]
+                for (a=0;a<hbonds.length;a++){
+                    var atom_pair=[];
+                    for (i=0;i<hbonds[a].length;i++){
+                        var this_index=hbonds[a][i];
+                        var seeltest = o.structure.getAtomProxy(this_index);
+                        if (seeltest.element=="H"){
+                            seeltest.residue.eachAtom(function(a){
+                                if (a.hasBondTo(seeltest)){
+                                    //console.log(a)
+                                    //console.log(a.index)
+                                    this_index=a.serial +1;
+                                }
+                            })
+                        }
+                        atom_pair[atom_pair.length]=this_index;
+                    }
+                    new_hbonds[new_hbonds.length]=atom_pair
+                    
+                }
+                hbonds= new_hbonds;
+            }
+            return hbonds;
+        }
+
         
         function createReps(){
             parent.passInfoToIframe();
@@ -1160,6 +1187,7 @@
 
             if (hbonds.length > 0){
                 var resids= 'protein and';
+                hbonds=avoid_unload_H(hbonds,showH);
                 resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
@@ -1168,6 +1196,7 @@
             }
 
             if (hbonds_inter.length > 0){
+                hbonds_inter=avoid_unload_H(hbonds_inter,showH);
                 var resids='not water and';
                 resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
@@ -1177,6 +1206,7 @@
             }
 
             if (sbonds_atoms.length > 0){
+                sbonds_atoms=avoid_unload_H(sbonds_atoms,showH);
                 var resids='protein and ';
                 resids=resids + '( '+ all_resids_sb.join(' or ') + ')';
                 o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
@@ -1318,8 +1348,8 @@
 
            var cont_h=(cont_h_num).toString() +"px";
            var cont_h_viewport=(cont_h_num-30).toString() +"px";
-           var cont_h_range=(cont_h_num-190).toString() +"px";
-           var cont_h_info=(cont_h_num-135).toString() +"px";
+           var cont_h_range=(cont_h_num-222).toString() +"px";
+           var cont_h_info=(cont_h_num-167).toString() +"px";
            $("#toiframe").css({"width":cont_w , "height" : cont_h});
            $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
            $("#buttons").css("width", cont_w_in);
@@ -1876,7 +1906,7 @@
           <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
         </div>
         <span id="varinfo"></span>
-        <div id="infoPannel" style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
+        <div id="infoPannel" style="width:616px;height:30px;margin-top:425;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>

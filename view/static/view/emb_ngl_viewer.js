@@ -1693,7 +1693,7 @@ $(document).ready(function(){
                                     }
 
                                     table_html+="</tbody></table></div>\
-                                    <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear all</button>";
+                                    <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear table</button>";
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"' style='margin-top:30px'></div>\
@@ -1911,7 +1911,7 @@ $(document).ready(function(){
             found_sel.each(function(){
                 $(this).css("background-color","transparent").removeClass("showInP");
             })
-            if ((int_tbl_el.).find(".display_int").is(":checked")){
+            if ((int_tbl_el).find(".display_int").is(":checked")){
                 $("#selectionDiv").trigger("click");                
             }
         }
@@ -1956,7 +1956,7 @@ $(document).ready(function(){
     });
     
     $(".dist_btw").on("change" , ".dist_el_sel" , function(){
-        $("#dist_btw").find(".has-error").each(function(){
+        $(".dist_btw").find(".has-error").each(function(){
             $(this).removeClass("has-error");
         });
         var selection=$(this).val();
@@ -2993,6 +2993,37 @@ $(document).ready(function(){
     });
     
 
+
+    function hbond_dict_to_sorted_li(hbonds){
+        var hbonds_li=[];
+        for (don_res in hbonds){
+            var acc_li=hbonds[don_res];
+            for (aN=0;aN<acc_li.length;aN++){
+                var acc_info=acc_li[aN];
+                var acc_res=acc_info[0];
+                var freq=acc_info[1];
+                var atom0=acc_info[2];
+                var atom1=acc_info[3];
+                var chain0=acc_info[4];
+                var chain1=acc_info[5];
+                hbonds_li[hbonds_li.length]=[don_res,acc_res,freq,atom0,atom1,chain0,chain1];
+            }
+        }
+        hbonds_li.sort(function(a, b){return Number(b[2]) - Number(a[2])});
+        return hbonds_li
+    }
+
+
+    function hb_sb_transfballes(balles){    
+        if (balles=="-"){
+            balles="";
+        } else {
+            balles=' | '+balles;
+        }
+        return balles;
+    }
+
+
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
@@ -3058,64 +3089,164 @@ $(document).ready(function(){
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4>\
+                                    <div class="scrolldowndiv">\
+                                        <table id="intramol" class="table table-condesed" style="font-size:12px;">\
+                                            <thead>\
+                                                <tr>\
+                                                    <th>Donor</th>\
+                                                    <th>Acceptor</th>\
+                                                    <th>Frecuency</th>\
+                                                    <th></th>\
+                                            </thead><tbody>';
                         //gnumFromPosChain(pos, chain)
-                        for (var property in hbonds) {
-                            if (hbonds.hasOwnProperty(property)) {
-                                var string =property;
-                                var string2 =hbonds[property][0][0];
-                                var donor = string.match(regex)[0];  // creates array from matches
-                                var acceptor = string2.match(regex)[0];  // creates array from matches
-                                donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
-                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+                        var sort_by="freq";
+                        if (sort_by=="freq"){
+                            var hbonds_li_sorted=hbond_dict_to_sorted_li(hbonds);
+                            for (hN=0;hN<hbonds_li_sorted.length;hN++){
+                                var donor_str=hbonds_li_sorted[hN][0];
+                                var acceptor_str=hbonds_li_sorted[hN][1];
+                                var freq=hbonds_li_sorted[hN][2];
+                                var atom0=hbonds_li_sorted[hN][3];
+                                var atom1=hbonds_li_sorted[hN][4];
+                                var chain0=hbonds_li_sorted[hN][5];
+                                var chain1=hbonds_li_sorted[hN][6];
 
-                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
-                                for (index = 1; index < hbonds[property].length; ++index) {
-                                    var string2 =hbonds[property][index][0];
+                                var donor = donor_str.match(regex)[0];  // creates array from matches
+                                var acceptor = acceptor_str.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),chain0)
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),chain1)
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
+                                table=table+'<tr> \
+                                                <td>'+ donor_str+donorballes+'</td>\
+                                                <td> '+acceptor_str+acceptorballes+'</td>\
+                                                <td> '+freq+'% </td>\
+                                                <td>\
+                                                    <button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' \
+                                                        data-atomindexes='+atom0+'$%$'+atom1+'>Show Hbond</button>' ;
+                            }
+
+                        } else if (sort_by=="donor-acceptor"){ // I leave it in case in the future I want to add the option to switch between sorting methods
+                            for (var property in hbonds) {
+                                if (hbonds.hasOwnProperty(property)) {
+                                    var string =property;
+                                    var string2 =hbonds[property][0][0];
+                                    var donor = string.match(regex)[0];  // creates array from matches
                                     var acceptor = string2.match(regex)[0];  // creates array from matches
-                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
-                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                    donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
+                                    donorballes=hb_sb_transfballes(donorballes);
+                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+                                    acceptorballes=hb_sb_transfballes(acceptorballes);
+
+                                    table=table+'<tr> \
+                                                    <td rowspan='+ hbonds[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                                    <td> '+hbonds[property][0][0]+acceptorballes+'</td>\
+                                                    <td> '+hbonds[property][0][1]+'% </td>\
+                                                    <td><button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                                    for (index = 1; index < hbonds[property].length; ++index) {
+                                        var string2 =hbonds[property][index][0];
+                                        var acceptor = string2.match(regex)[0];  // creates array from matches
+                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
+                                        acceptorballes=hb_sb_transfballes(acceptorballes);
+                                        table=table+'<tr>\
+                                            <td>'+hbonds[property][index][0]+acceptorballes+' </td>\
+                                            <td>'+hbonds[property][index][1]+'% </td>\
+                                            <td><button class="showhb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button></td>';
+                                    }
                                 }
                             }
                         }
-                        table=table+'</table></center><center>';
+                        table=table+'</table></div><center>';
                         $('#ShowAllHbIntra').show();
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
-                        for (var property in hbonds_np) {
-                            if (hbonds_np.hasOwnProperty(property)) {
-                                var string =property;
-                                var string2 =hbonds_np[property][0][0];
-                                if (/^\d/.test(string2)){
-                                    var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
-                                    acceptorballes="-";
-                                } else {
-                                    var acceptor = string2.match(regex)[0];  // creates array from matches
-                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5]) 
-                                }
-                                
-                                var donor = string.match(regex)[0];  // creates array from matches
-                                donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4>\
+                                        <div class="scrolldowndiv" >\
+                                            <table id="intermol"  class="table table-condesed" style="font-size:12px;">\
+                                                <thead>\
+                                                    <tr>\
+                                                        <th>Residue1</th>\
+                                                        <th>Residue2</th>\
+                                                        <th>Frecuency</th>\
+                                                        <th></th>   \
+                                                    </tr>\
+                                                </thead>\
+                                                <tbody>';
+                        
+                        if (sort_by=="freq"){
+                            var hbonds_li_sorted=hbond_dict_to_sorted_li(hbonds_np);
+                            for (hN=0;hN<hbonds_li_sorted.length;hN++){
+                                var donor_str=hbonds_li_sorted[hN][0];
+                                var acceptor_str=hbonds_li_sorted[hN][1];
+                                var freq=hbonds_li_sorted[hN][2];
+                                var atom0=hbonds_li_sorted[hN][3];
+                                var atom1=hbonds_li_sorted[hN][4];
+                                var chain0=hbonds_li_sorted[hN][5];
+                                var chain1=hbonds_li_sorted[hN][6];
 
+                                var donor = donor_str.match(regex)[0];  // creates array from matches
+                                var acceptor = acceptor_str.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),chain0)
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),chain1)
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
 
-                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
-                                for (index = 1; index < hbonds_np[property].length; ++index) {
-                                    var string2 =hbonds_np[property][index][0];
+                                tablenp=tablenp+'<tr> \
+                                        <td>'+ donor_str+donorballes+'</td>\
+                                        <td> '+acceptor_str+acceptorballes+' </td>\
+                                        <td> '+freq+'% </td>\
+                                        <td>\
+                                            <button class="showhb_inter btn btn-default btn-xs clickUnclick"  \
+                                            data-resids='+ donor + '$%$' + acceptor +' \
+                                            data-atomindexes='+atom0+'$%$'+atom1+'>Show Hbond</button></td>';
+                            }
+
+                        } else if (sort_by=="donor-acceptor"){
+                            for (var property in hbonds_np) {
+                                if (hbonds_np.hasOwnProperty(property)) {
+                                    var string =property;
+                                    var string2 =hbonds_np[property][0][0];
                                     if (/^\d/.test(string2)){
                                         var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
-                                        acceptorballes="-";
+                                        acceptorballes="";
                                     } else {
                                         var acceptor = string2.match(regex)[0];  // creates array from matches
-                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5]) 
+                                        acceptorballes=hb_sb_transfballes(acceptorballes);
                                     }
                                     
-                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                    var donor = string.match(regex)[0];  // creates array from matches
+                                    donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                                    donorballes=hb_sb_transfballes(donorballes);
+
+                                    tablenp=tablenp+'<tr> \
+                                            <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                            <td> '+hbonds_np[property][0][0]+acceptorballes+' </td>\
+                                            <td> '+hbonds_np[property][0][1]+'% </td>\
+                                            <td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button></td>';
+                                    for (index = 1; index < hbonds_np[property].length; ++index) {
+                                        var string2 =hbonds_np[property][index][0];
+                                        if (/^\d/.test(string2)){
+                                            var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
+                                            acceptorballes="-";
+                                        } else {
+                                            var acceptor = string2.match(regex)[0];  // creates array from matches
+                                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                            acceptorballes=hb_sb_transfballes(acceptorballes);
+                                        }
+                                        
+                                        tablenp=tablenp+'<tr>\
+                                            <td>'+hbonds_np[property][index][0]+acceptorballes+' </td>\
+                                            <td>'+hbonds_np[property][index][1]+'% </td>\
+                                            <td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button></td>';
+                                    }
                                 }
                             }
                         }
-                        tablenp=tablenp+'</table></center><center>';
+
+                        tablenp=tablenp+'</table></div><center>';
                         $('#ShowAllHbInter').show();
                         $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
                         $('#hbondsnp').html(tablenp);
@@ -3210,18 +3341,38 @@ $(document).ready(function(){
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
-                        var salt='<center><table class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency%)</th><th></th><tbody>';
+                        var salt='<center>\
+                                    <table class="table table-condesed" style="font-size:12px;">\
+                                        <thead>\
+                                            <tr>\
+                                                <th>Residue1</th>\
+                                                <th>Residue2</th>\
+                                                <th>Frecuency</th>\
+                                                <th></th><tbody>';
                         for (var property in salty) {
                             if (salty.hasOwnProperty(property)) {
                                 var string =property;
                                 var string2 =salty[property][0][0];
                                 var donor = string.match(regex)[0];  // creates array from matches
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
-                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                                donorballes=gnumFromPosChain(String(donor),salty[property][0][4]);
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),salty[property][0][5]);
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
+                                salt=salt+'<tr> \
+                                            <td rowspan='+ salty[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                            <td> '+salty[property][0][0]+acceptorballes+'</td>\
+                                            <td> '+salty[property][0][1]+'% </td>\
+                                            <td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button></td>';
                                 for (index = 1; index < salty[property].length; ++index) {
                                     string2=salty[property][index][0]
                                     acceptor = string2.match(regex)[0];
-                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                                    acceptorballes=gnumFromPosChain(String(acceptor),salty[property][index][5]);
+                                    acceptorballes=hb_sb_transfballes(acceptorballes);
+                                    salt=salt+'<tr>\
+                                                <td>'+salty[property][index][0]+acceptorballes+'</td>\
+                                                <td>'+salty[property][index][1]+'% </td>\
+                                                <td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button></td>';
                                 }
                             }
                         }
