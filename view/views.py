@@ -4,6 +4,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.http import HttpResponse
 from django.conf import settings
 from dynadb.models import DyndbFiles, DyndbFilesDynamics, DyndbModelComponents, DyndbCompound, DyndbDynamicsComponents,DyndbDynamics, DyndbModel, DyndbProtein,DyndbProteinSequence,DyndbReferences,DyndbModeledResidues
+from django.db.models import F
 from protein.models import Protein
 from mutation.models import Mutation,MutationExperiment
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
@@ -859,7 +860,41 @@ def obtain_ed_align_matrix(dyn_id):
         return (list(r_angl),list(trans))
     else: 
         return False
-    
+
+"""This function takes the dyn_id as argument and returns 2 dictionaries with the traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
+def obtain_volmaps(dyn_id):
+
+    root = settings.MEDIA_ROOT
+    occupancy_path = os.path.join(root, "Precomputed/WaterMaps")    #change this if the watermaps are in another folder! 
+    # density_path = os.path.join(root, "Precomputed/WaterMaps")
+
+    trajfiles = DyndbFiles.objects.annotate(dynid=F('dyndbfilesdynamics__id_dynamics'))
+    trajfiles = trajfiles.filter(dynid=dyn_id, id_file_types__is_trajectory=True)
+    trajfiles = trajfiles.annotate(file_id=F('dyndbfilesdynamics__id_files_id'))
+    trajfiles = trajfiles.values('file_id')
+
+    occupancy_files = {}
+    # density_files = {}
+
+    for i in trajfiles:
+        traj_id = i['file_id']
+        if i['file_id'] not in occupancy_files:
+            occupancy_file = os.path.join(occupancy_path, '%s_occupancy_%s.dx' %(traj_id, dyn_id))
+            if os.path.isfile(occupancy_file):
+                occupancy_files[traj_id] = occupancy_file
+            else:
+                #occupancy_files[traj_id] = None
+                continue
+
+        # if i['file_id'] not in density_files:
+        #     density_file = os.path.join(density_path, '%s_density_%s.dx' %(traj_id, dyn_id))
+        #     if os.path.isfile(density_file):
+        #         density_files[traj_id] = density_file
+        #     else:
+        #         #density_files[traj_id] = None
+        #         continue
+
+    return (occupancy_files)
 
 @ensure_csrf_cookie
 def index(request, dyn_id, sel_pos=False,selthresh=False):
@@ -1035,7 +1070,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         return render(request, 'view/index_error.html', {"error":error} )
     else:
 ##### ---- NATHALIE CODE HERE -------
-
+# retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
+        watermaps = False
+        occupancy = obtain_volmaps(dyn_id)   #the variables contain dictionaries with the occupancy and density maps filepaths. CHANGE THIS! only occupancy 
+        if occupancy:
+            watermaps = True 
 #### --------------------------------
         ed_align_matrix=obtain_ed_align_matrix(dyn_id)
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
@@ -1247,7 +1286,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
                         "ed_align_matrix":ed_align_matrix,
-                        "TMsel_all":sorted(TMsel_all_ok.items())
+                        "TMsel_all":sorted(TMsel_all_ok.items()),
+                        "watermaps" : watermaps,
+                        "occupancy" : json.dumps(occupancy)
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1273,7 +1314,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
-                        "ed_align_matrix":ed_align_matrix
+                        "ed_align_matrix":ed_align_matrix,
+                        "watermaps" : watermaps,
+                        "occupancy" : json.dumps(occupancy)
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1297,7 +1340,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
-                        "ed_align_matrix":ed_align_matrix
+                        "ed_align_matrix":ed_align_matrix,
+                        "watermaps" : watermaps,
+                        "occupancy" : json.dumps(occupancy)
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1319,7 +1364,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "delta":delta,
                     "bind_domain":bind_domain,
                     "presel_pos":presel_pos,
-                    "ed_align_matrix":ed_align_matrix
+                    "ed_align_matrix":ed_align_matrix,
+                    "watermaps" : watermaps,
+                    "occupancy" : json.dumps(occupancy)
                     }
             return render(request, 'view/index.html', context)
 

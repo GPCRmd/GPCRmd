@@ -265,6 +265,9 @@ repeat_dynamics = args.repeat_dynamics
 cores = args.cores
 get_contacts_path = "/protwis/sites/protwis/contact_maps/scripts/get_contacts/"
 files_path = "/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
+files_basepath="/protwis/sites/files/Precomputed/get_contacts_files/"
+
+print("\ncomputing " + dynname + " dynamic contacts")
 
 #Interaction multi-types dictionary
 multi_itypes = {
@@ -281,7 +284,6 @@ print("computing labelfile")
 create_labelfile(dynname, files_path, ligfile)
 
 #Computing dynamic contacts
-print("computing " + dynname + " dynamic contacts")
 if ligand_sel:
     ligand_text1 = " or %s" % (ligand_sel)
     ligand_text2 = "--ligand \"%s\" " % (ligand_sel)

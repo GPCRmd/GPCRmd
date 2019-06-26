@@ -41,7 +41,7 @@ def prepare_indices(molid, index_to_atom, sele1, sele2, geom_criteria):
     geom_criteria['sele2_hp_indices'] = " ".join(sele2_hp_indices)
 
 
-def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria):
+def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2, geom_criteria, disulfide_cys):
     """
     Compute hydrophobic interactions in a frame of simulation
 
@@ -59,6 +59,8 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
         If second VMD query is specified, then compute contacts between atom selection 1 and 2 
     geom_criteria: dict
         Container for geometric criteria
+    disulfide_cys: set
+        Set with residue ids of cysteines making disulfide bridges
 
     Returns
     -------
@@ -97,6 +99,11 @@ def compute_hydrophobics(traj_frag_molid, frame_idx, index_to_atom, sele1, sele2
 
         if atom1.chain == atom2.chain and abs(atom1.resid - atom2.resid) < res_diff:
             continue
+
+        #Check and continue if disulphide bond
+        if atom1.resname == atom2.resname == "CYS":
+            if set((atom1.resid, atom2.resid)) in disulfide_cys:
+                continue
 
         # Perform distance cutoff with atom indices
         distance = compute_distance(traj_frag_molid, frame_idx, atom1_index, atom2_index)

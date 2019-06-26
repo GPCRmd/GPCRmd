@@ -1458,6 +1458,27 @@ $(document).ready(function(){
         return (dist_of);
     }
 
+    function obtainWaterDist(){             
+    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?
+    //we are in the parent so no need for window.parent.document                                     
+    var checked=$(".WaterDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
+
+        if (checked == true){
+            var inp=$("#waterswithin").val()
+            if(inp && /^[\d.]+$/.test(inp)) {  
+            // if(inp) {
+                var water_dist=Number(inp)
+
+            }else{
+                water_dist=0      //give an error?? or not? for example if user types a letter 
+            }
+        }else{
+            water_dist=0         // be careful if you change this with function createReps the if statement is now considering a number to be true 
+
+        }
+        return(water_dist)   
+    }
+
     function activate_row(row,triggerNGL){
         row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
         row.find(".always").attr("style","");
@@ -4307,6 +4328,7 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active(false);
         bs_info=obtainBS();
+        var water_dist=obtainWaterDist();
         var resultHBSB=selectionHBSB();
         fpSelInt_send={};
         if ($("#FPdisplay").hasClass("active")){
@@ -4327,6 +4349,7 @@ $(document).ready(function(){
                 "traj":traj,
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
+                "water_dist":water_dist,
                 "hbondarray":resultHBSB["atomshb"],
                 "hb_inter":resultHBSB["atomshb_inter"],
                 "sbondarray":resultHBSB["atomssb"],
@@ -4364,11 +4387,13 @@ $(document).ready(function(){
     window.passInfoToIframe=passInfoToIframe;
     
     
-    var passinfoToPlayTraj= function(){
+    var passinfoToPlayTraj= function(){ //defined in the parent 
         var bs_info=obtainBS();
         window.bs_info=bs_info;
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
+        var water_dist=obtainWaterDist();     //
+        window.water_dist=water_dist;
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
     

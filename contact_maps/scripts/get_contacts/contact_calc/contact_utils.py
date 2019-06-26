@@ -388,6 +388,20 @@ def calc_water_to_residues_map(water_hbonds, solvent_resn):
 
     return frame_idx, water_to_residues, solvent_bridges
 
+def find_disulfide(top, traj):
+    """
+    Find Cysteines making disulfide bridges and return their resids
+    """
+    disulfide_pairs = list()
+    molid = load_traj(top, traj, 0, 1, 1)
+    evaltcl("set cys_all [atomselect %s \" resname CYS  \" frame 0]" % molid)
+    cys_all = set(evaltcl("$cys_all get resid").split())
+    for cys in cys_all:
+        evaltcl("set bridge_cys [atomselect %s \" name SG and within 2.1 of (resid %s and name SG)  \" frame 0]" % (molid, cys))
+        disulfide_pair = set(map(int,evaltcl("$bridge_cys get resid").split()))
+        if len(disulfide_pair) == 2 and disulfide_pair not in disulfide_pairs:
+            disulfide_pairs.append(disulfide_pair)
+    return(disulfide_pairs)
 
 def configure_solv(top, traj, solvent_sele):
     """
@@ -614,7 +628,7 @@ def extract_ligand_features(top, traj, index_to_atom):
 
     ''' Identify ligand cations/anions '''
     for atom_idx in ligand_indices:
-        neighbors = index_to_neighbors[atom_idx] if atom_idx in index_to_neighbors else []
+        neighbor_indices = index_to_neighbors[atom_idx] if atom_idx in index_to_neighbors else []
         ''' Check if the atom is a metal cation. I.E. one of the metal_cations names appears in its label. '''
         if any([cation in index_to_atom[atom_idx].get_label() for cation in metal_cations]):
             ligand_cations += [atom_idx]
