@@ -4354,7 +4354,7 @@ $(document).ready(function(){
                 "hb_inter":resultHBSB["atomshb_inter"],
                 "sbondarray":resultHBSB["atomssb"],
                 "allresidshb":resultHBSB["all_resids"],
-                "allresidshbInt":resultHBSB["all_resids_inter"],
+                //"allresidshbInt":resultHBSB["all_resids_inter"],
                 "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
                 "fpSelInt":fpSelInt_send,
@@ -4442,7 +4442,7 @@ $(document).ready(function(){
         var atomshb_inter=results[ "hb_inter"];
         var all_resids=results["allresidshb"];
         var all_resids_sb=results["allresidssb"];
-        var all_resids_inter=results[ "allresidshbInt"];
+        //var all_resids_inter=results[ "allresidshbInt"];
         var showH=results["showH"];
         var showHShort="f";
         if (showH){showHShort="t"};
@@ -4597,7 +4597,7 @@ $(document).ready(function(){
                             "ib":encode(atomshb_inter),
                             "ar":encode(all_resids),
                             "as":encode(all_resids_sb),
-                            "ai" : encode(all_resids_inter),
+                            //"ai" : encode(all_resids_inter),
                             "pj": projection,
                             "ha": showHShort,
                             "sp":spin,

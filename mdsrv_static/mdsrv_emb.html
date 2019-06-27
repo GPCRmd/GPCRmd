@@ -255,7 +255,42 @@
                     tooltip.style.display = 'none';
                 }
             });
-        }        
+        }  
+
+
+        function avoid_unload_H(o,hbonds,showH){            
+            if (showH=="f"){
+                new_hbonds=[]
+                for (a=0;a<hbonds.length;a++){
+                    var atom_pair=[];
+                    for (i=0;i<hbonds[a].length;i++){
+                        var this_index=hbonds[a][i];
+                        var seeltest = o.structure.getAtomProxy(this_index);
+                        if (seeltest.element=="H"){
+                            sel_atom=false;
+                            seeltest.residue.eachAtom(function(myatom){
+                                var myel=myatom.element;
+                                if (myel=="O" || myel=="N"){
+                                    if (sel_atom){
+                                        if (Math.abs(this_index - myatom.index) < Math.abs(this_index - sel_atom)){
+                                            sel_atom=myatom.index;    
+                                        }
+                                    } else {
+                                        sel_atom=myatom.index;
+                                    }
+                                }
+                            });
+                            this_index= sel_atom;
+                        }
+                        atom_pair[atom_pair.length]=this_index;
+                    }
+                    new_hbonds[new_hbonds.length]=atom_pair
+                    
+                }
+                hbonds= new_hbonds;
+            }
+            return hbonds;
+        }      
 ///////////////
             var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection =fpsegStr="";
             var struc = NGL.getQuery( "struc" );
@@ -288,7 +323,7 @@
             var call_resids=all_resids
             var all_resids_sb=NGL.getQuery("as");
             var call_resids_sb=all_resids_sb;
-            var all_resids_inter=NGL.getQuery("ai");
+            //var all_resids_inter=NGL.getQuery("ai");
             var projection=NGL.getQuery("pj");
             var fpsegStr=NGL.getQuery("fp");
             var showH=NGL.getQuery("ha");
@@ -512,9 +547,11 @@
                                     cbonds2=listToMatrix(cbonds2,2);
                                     resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                                     //cbonds2=[[Number(cbonds2[0]),Number(cbonds2[1])]];
+                                    cbonds2=avoid_unload_H(o,cbonds2,showH)
                                     o.addRepresentation( "distance", { atomPair: cbonds2 , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                                     o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                                     sel_prot=true;
+
                                 }
 
                                 if (catomssb){
@@ -532,27 +569,45 @@
                                     var resids= 'protein and';
                                     resids=resids+' ('+all_resids_sb.join(' or ') + ' )'; //not only proteins! lipids also have SB
                                     //cbonds2=[[Number(cbonds2[0]),Number(cbonds2[1])]];
+                                    atomssb2=avoid_unload_H(o,atomssb2,showH)
                                     o.addRepresentation( "distance", { atomPair:  atomssb2 , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                                     o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                                     sel_prot=true;
                                 }
                                 if (catomshb_inter){
-                                    all_resids_inter=decodeURIComponent(all_resids_inter.replace(/\+/g, " ")).split(',');
+                                    //all_resids_inter=decodeURIComponent(all_resids_inter.replace(/\+/g, " ")).split(',');
                                     var atomssb_inter2=decodeURIComponent(catomshb_inter.replace(/\+/g, " "));
                                     atomssb_inter2=atomssb_inter2.split(',');
                                     for (i=0;i<atomssb_inter2.length;i++){
                                         atomssb_inter2[i]=Number(atomssb_inter2[i]);
                                     }
 
-                                    for (i=0;i<all_resids_inter.length;i++){
-                                        all_resids_inter[i]=all_resids_inter[i];
-                                    }
+                                    //for (i=0;i<all_resids_inter.length;i++){
+                                        //all_resids_inter[i]=all_resids_inter[i];
+                                    //}
                                     atomssb_inter2=listToMatrix( atomssb_inter2,2);
-                                    var resids= 'not water and';
-                                    resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                                    //var resids= 'not water and';
+                                    //resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                                    atomssb_inter2=avoid_unload_H(o,atomssb_inter2,showH)
+
+
+
+                                    var res_sel_li=[];
+                                    for (a=0;a<atomssb_inter2.length;a++){
+                                        for (i=0;i<atomssb_inter2[a].length;i++){
+                                            var resatomindex=Number(atomssb_inter2[a][i]);
+                                            var myresidue=o.structure.getAtomProxy(resatomindex).residue;
+                                            //var isprot = myresidue.isProtein();
+                                            var mychain=myresidue.chainname;
+                                            var myres = myresidue.resno;
+                                            res_sel_li[res_sel_li.length]=myres+":"+mychain;
+                                        }
+                                    }
+                                    var res_sel=res_sel_li.join(" or ");
+                                    //
                                     o.addRepresentation( "distance", { atomPair:  atomssb_inter2, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
-                                    o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
-                                    sel_li.push(resids);
+                                    o.addRepresentation( "licorice", {  radius: "0.210", sele: res_sel , colorValue: "#8e74ff" } );
+                                    sel_li.push(res_sel);
                                 }
 
 
@@ -693,10 +748,12 @@
                                     sel_prot=true;
                                 }
                                 
-                                if (sel_prot){
-                                    sel_li.push("protein");
-                                }
                                 var sel_s = sel_li.join(" or ");
+                                if (sel_prot){
+                                    //sel_li.push("protein");
+                                    sel_s="protein or "+sel_s;
+                                }
+
 
                                 if (showH == "f"){
                                     sel_s = "not _h and ("+sel_s+")";

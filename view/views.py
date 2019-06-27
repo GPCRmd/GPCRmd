@@ -1742,7 +1742,6 @@ def hbonds(request):
         except:
             precomputed=False
 
-        print('Is it precomputed?',precomputed)
 
         if not precomputed:
             precomputed_bonds=[]
@@ -2181,18 +2180,14 @@ def grid(request):
         atom_indices_prot = [a.index for a in trajectory.topology.atoms if a.residue.is_protein]
         atom_indices_ligand = [a.index for a in trajectory.topology.atoms if a.residue.name=='5FW']
         atom_indices= atom_indices_prot+atom_indices_ligand
-        print(atom_indices_ligand)
         t=trajectory
         trajectory=trajectory.atom_slice(atom_indices, inplace=False)
         atomindexes_prot=[atom.index for atom in trajectory.topology.atoms if atom.residue.is_protein]
         trajprot=trajectory.superpose(trajectory,0,atom_indices=atomindexes_prot) #works!
         trajprot=trajprot
         mintop=np.array([0,0,0])
-        print('ck1')
-        print(str(len(trajprot)))
         i=0
         for frame in range(len(trajprot)):
-            print("frame: ",i)
             i+=1
             for atom in trajprot.xyz[frame]:
                 if atom[0]<mintop[0]:
@@ -2225,7 +2220,6 @@ def grid(request):
         shape=grid.shape
         grid=grid.tolist()
         full_results={'grid':grid,'shape':shape,'indexes':atom_indices}
-        print('Analysis done')
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 

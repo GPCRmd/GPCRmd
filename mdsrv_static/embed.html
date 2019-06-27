@@ -206,7 +206,6 @@
                 }
 
                 if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
-                    console.log("YEAH" + water_dist);  //this works, so the radius is updated when changing the frame. 
                     var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                     // console.log(water_sele_tostring)
                     atoms_within = sele.toSeleString();
@@ -243,8 +242,6 @@
             var bs_info = parent.bs_info;
             var dist_within_li=parent.dist_of; 
             var water_dist=parent.water_dist; 
-            console.log("help"+ water_dist)       //this is loaded when structure is loaded, but obviously it is empty then. 
-
             $(".traj_btn").click( function(){
                 var btn_traj_Bid=$(this).attr("id");
                 var tPatt = /\d*$/g;
@@ -858,7 +855,7 @@
           }
         }
 
-        function avoid_unload_H(hbonds,showH){            
+        function avoid_unload_H(o,hbonds,showH){            
             if (! showH){
                 new_hbonds=[]
                 for (a=0;a<hbonds.length;a++){
@@ -867,13 +864,21 @@
                         var this_index=hbonds[a][i];
                         var seeltest = o.structure.getAtomProxy(this_index);
                         if (seeltest.element=="H"){
-                            seeltest.residue.eachAtom(function(a){
-                                if (a.hasBondTo(seeltest)){
-                                    //console.log(a)
-                                    //console.log(a.index)
-                                    this_index=a.serial +1;
+                            sel_atom=false;
+                            seeltest.residue.eachAtom(function(myatom){
+                                var myel=myatom.element;
+                                if (myel=="O" || myel=="N"){
+                                    if (sel_atom){
+                                        if (Math.abs(this_index - myatom.index) < Math.abs(this_index - sel_atom)){
+                                            sel_atom=myatom.index;    
+                                        }
+                                    } else {
+                                        sel_atom=myatom.index;
+                                    }
                                 }
-                            })
+                            });
+                            this_index= sel_atom;
+
                         }
                         atom_pair[atom_pair.length]=this_index;
                     }
@@ -904,7 +909,7 @@
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
-            var all_resids_inter=results["allresidshbInt"];
+            //var all_resids_inter=results["allresidshbInt"];
             var all_resids_sb=results["allresidssb"];
             var hbonds_inter=results["hb_inter"];
             var sasa_resids=results["all_resids_sasa"];
@@ -1155,7 +1160,6 @@
             }
 
             if(typeof(water_dist) =='number'){  //CAREFUL if we would change the elses function ObtainWaterDist() in emb_ngl.viewer.js 
-                console.log("waterdist " + water_dist)
                 setSelTemp.push("water");
                 setSelLi.push("water");
 
@@ -1232,7 +1236,7 @@
 
             if (hbonds.length > 0){
                 var resids= 'protein and';
-                hbonds=avoid_unload_H(hbonds,showH);
+                hbonds=avoid_unload_H(o,hbonds,showH);
                 resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
@@ -1241,17 +1245,30 @@
             }
 
             if (hbonds_inter.length > 0){
-                hbonds_inter=avoid_unload_H(hbonds_inter,showH);
-                var resids='not water and';
-                resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+                hbonds_inter=avoid_unload_H(o,hbonds_inter,showH);
+                //var resids='not water and';
+                //resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
+
+                var res_sel_li=[];
+                for (a=0;a<hbonds_inter.length;a++){
+                    for (i=0;i<hbonds_inter[a].length;i++){
+                        var resatomindex=Number(hbonds_inter[a][i]);
+                        var myresidue=o.structure.getAtomProxy(resatomindex).residue;
+                        //var isprot = myresidue.isProtein();
+                        var mychain=myresidue.chainname;
+                        var myres = myresidue.resno;
+                        res_sel_li[res_sel_li.length]=myres+":"+mychain;
+                    }
+                }
+                var res_sel=res_sel_li.join(" or ");
+
                 o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
-                o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
-                //setSelDict=addToSel(o,resids,setSelDict);
-                setSelLi.push(resids);
+                o.addRepresentation( "licorice", {  radius: "0.210", sele: res_sel , colorValue: "#8e74ff" } );
+                setSelLi.push(res_sel);
             }
 
             if (sbonds_atoms.length > 0){
-                sbonds_atoms=avoid_unload_H(sbonds_atoms,showH);
+                sbonds_atoms=avoid_unload_H(o,sbonds_atoms,showH);
                 var resids='protein and ';
                 resids=resids + '( '+ all_resids_sb.join(' or ') + ')';
                 o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
@@ -1547,14 +1564,12 @@
 
 
             if (val == 'isolevel'){
-                console.log("this is: " + (Number(slider_val)))
                 p = {
                     isolevel: Number(slider_val)
                 }
 
             }
             if (val == 'transparency'){
-                console.log('transcheck' + (Number(slider_val)))
                 p = {
                     opacity: Number(slider_val)
                 }
@@ -1740,7 +1755,6 @@
                                     //
                                     if($.isEmptyObject(watermap_loaded) == false){            //if the array is not empty, then we know that the watermap for the selected trajectory is loaded. 
                                     var watermap=watermap_loaded.list[0]
-                                    console.log(watermap)
                                     watermap.setVisibility(true)
 
                                     }else{
@@ -1795,14 +1809,12 @@
 
                 // this part is after stage.load. 
                 var dict_occupancy=$("#analysis_watermap", window.parent.document).data("occupancy_data")
-                console.log("the dictionary is: " + dict_occupancy)
                 var pattern="/protwis/sites/files/"  //replace this when Ismael gives permission
 
                 var traj_list_md=[]
                 $(".traj_element",window.parent.document).each(function(){
                 traj_list_md[traj_list_md.length]=$(this).data("tpath").match(/[0-9]{5,25}/g).toString();   //matches the trajid of all the trajectories loaded in the server 
                 });
-                console.log(traj_list_md)
 
 
                 // loop over dictionary with trajid and filepath, change path with serverpath and load the maps  load all the maps in one time 
@@ -1814,7 +1826,6 @@
                             var trajPath=dict_occupancy[traj_key].replace(pattern, path)  //change this when Ismael gives permission 
                             var trajName=trajPath.match(/[A-Za-z0-9]+_occupancy_[0-9]+.dx/g).toString()
                             trajnames_list.push(trajName)
-                            console.log(trajName, trajPath)
 
                             stage.loadFile(trajPath, {visible:false}).then(function(watermap){
                                 watermap.addRepresentation("surface", {
@@ -1842,7 +1853,6 @@
                         };     
                     };
 
-                    console.log(trajnames_list) 
 
 
                     // ACTION with Jquery select button. check which map is selected from dropdown. 
@@ -1892,7 +1902,6 @@
 
                     $(".PolarDisplay", window.parent.document).on("click", function(){
                         var is_checked=$(this).is(":checked");
-                        console.log(is_checked)
 
                         var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
                         for (var i = 0; i < trajnames_list.length; i++){
