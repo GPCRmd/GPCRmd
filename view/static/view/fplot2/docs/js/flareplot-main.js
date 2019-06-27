@@ -594,7 +594,6 @@ function createFlareplot(width, inputGraph, containerSelector){
 
 
             svg.selectAll("g.node.other_sel").classed("other_sel",false);
-
             visibleEdges.forEach(function(e){
                 if (e.toggled){
                     var found=false;
@@ -823,6 +822,7 @@ function createFlareplot(width, inputGraph, containerSelector){
 
         }
 
+
         function mouseovertrackEl(d) {
            svg.selectAll("path.link.target-" + d.nodeName)
                 .classed("target", true)
@@ -835,17 +835,6 @@ function createFlareplot(width, inputGraph, containerSelector){
             updateNodes_mod(d.nodeName,"source",true)
 
             svg.select("#node-" + d.nodeName).classed("hovered", true);
-
-
-            //var mypos=$( "#trackElement-"+d.nodeName).position();
-            //var x_pos= mypos.left - $('#flare-container').offset().left;
-            //var y_pos= mypos.top + 80 - $('#flare-container').offset().top;
-            //myhtml="<div id='addedel' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>"+d.nodeName+"</div>";
-            //myhtml=myhtml.replace(/\*\*x_pos\*\*/,x_pos);
-            //myhtml=myhtml.replace(/\*\*y_pos\*\*/,y_pos);
-            //$("#fphoverinfo").html(myhtml);   
-
-
         }
 
         function mouseouttrackEl(d) {

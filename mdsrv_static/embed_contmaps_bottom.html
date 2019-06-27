@@ -255,7 +255,7 @@
             parent.$(to_inactivate).css("background-color","#FFFFFF");
         }
 
-        function set_positions(stage, id, ballesteros_to_pdb, o, pos_rep_array){
+        function set_positions(stage, id, ballesteros_to_pdb, o){
 
           //Hide below window 
           $("#posNotinRec"+id, window.parent.document).css("display","none");    
@@ -431,7 +431,6 @@
             $("#loading_ngl"+id, window.parent.document).css("display","none");
 
             //Function to Show selected positions from flareplot in NGL
-            var pos_rep_array = [];
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").off('click');
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").on('click', function(){
               set_positions(stage, id, ballesteros_to_pdb, o);
@@ -559,6 +558,7 @@
 
           var stage = new NGL.Stage("viewport");
           stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+          //stage.viewer.scene.background = new THREE.Color( 0xffffff );
           trajButtons(stage);//Control of play/pause and change of frame 
 
           //Initial dynamics

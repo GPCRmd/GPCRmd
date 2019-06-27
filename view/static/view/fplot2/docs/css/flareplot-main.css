@@ -32,6 +32,7 @@ path.arc {
 .link {
     stroke: #000;
     stroke-opacity: .15;
+    cursor: pointer;
     /*pointer-events: none;*/
 }
 
@@ -44,7 +45,7 @@ path.arc {
     fill: #666666 !important;
 }
 
-.node.other_sel {
+.node.other_sel:not(.toggledNode) {
     font-weight: bold;
     fill: #666666 !important;
 }
@@ -60,6 +61,10 @@ path.arc {
 
 .link.toggled{
     stroke-opacity: 1;
+}
+
+.link.hoverlink{
+    stroke-opacity: 0.5;
 }
 
 .trackElement{

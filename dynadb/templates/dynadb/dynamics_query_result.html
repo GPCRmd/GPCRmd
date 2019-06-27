@@ -149,12 +149,12 @@
 
 
             <div id='middlecol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
-                <p class="techinfo_title">Simulation files</p>
+                <p class="techinfo_title">Download simulation files</p>
                 <div class="techinfo_content">
                     <div id='allfiles' >
                         {% for dyn in answer.files.struc_files %}
                             <!--<a href=/dynadb/files/Dynamics/dyn{{answer.nglviewer_id}}/{{dyn.1}}><button class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>-->
-                            <a href={{dyn.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">Download {{dyn.1}}</button></a><br>
+                            <a href={{dyn.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{dyn.1}}</button></a><br>
                         {% endfor %}
                     </div> <!--allfiles-->
                 </div>
@@ -162,11 +162,11 @@
 
             <div id='rightcol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
                 {% if answer.files.param_files %}
-                <p class="techinfo_title">Starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign"></span></p>
+                <p class="techinfo_title">Download starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign"></span></p>
                 <div class="techinfo_content">
                     <div  id='paramfiles'>
                         {% for fil in answer.files.param_files %}
-                            <a  href={{fil.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">Download {{fil.1}}</button></a><br>
+                            <a  href={{fil.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{fil.1}}</button></a><br>
                         {% endfor %}
                     </div> 
                 </div>
