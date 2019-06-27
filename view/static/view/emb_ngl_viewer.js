@@ -43,6 +43,22 @@ $(document).ready(function(){
         });
     }
   
+    $(".PolarDisplay").on("click", function(){ 
+        $("#selectionDiv").trigger("click");
+    })
+
+    $(".WaterDistDisplay").on("click", function(){ 
+        $("#selectionDiv").trigger("click");
+    })
+
+    $(".waterswithin").on("change"), function(){
+        $("#selectionDiv").trigger("click");
+    }
+
+
+
+
+
     function uniq(a) {
         var seen = {};
         return a.filter(function(item) {
@@ -1425,25 +1441,34 @@ $(document).ready(function(){
     }
 
     function obtainWaterDist(){             
-    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?
-    //we are in the parent so no need for window.parent.document                                     
+    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?    //we are in the parent so no need for window.parent.document                                     
     var checked=$(".WaterDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
 
-        if (checked == true){
-            var inp=$("#waterswithin").val()
-            if(inp && /^[\d.]+$/.test(inp)) {  
-            // if(inp) {
-                var water_dist=Number(inp)
-
-            }else{
-                water_dist=0      //give an error?? or not? for example if user types a letter 
-            }
+    var inp=$("#waterswithin").val()
+        if(inp && /^[\d.]+$/.test(inp)) {  
+            var water_dist=Number(inp)
         }else{
-            water_dist=0         // be careful if you change this with function createReps the if statement is now considering a number to be true 
+            water_dist=Number(0)      //give an error?? or not? for example if user types a letter 
+            }
 
-        }
-        return(water_dist)   
+        return[checked, water_dist]
     }
+
+    function obtainPolar(){
+        var checked=$(".PolarDisplay").is(":checked");
+        return (checked)
+    }
+
+    function obtainWaterBox(){
+        var inp = $("#waterswithin").val()
+        if(inp && /^[\d.]+$/.test(inp)) {  
+            var water_box=Number(inp)
+        }else{
+            water_box = Number(0)
+        }
+        return(water_box)
+    }
+
 
     function activate_row(row,triggerNGL){
         row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
@@ -4066,7 +4091,10 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active(false);
         bs_info=obtainBS();
-        var water_dist=obtainWaterDist();
+        var water_dist = obtainWaterDist()[1];
+        var water_check = obtainWaterDist()[0]
+        var waterbox = obtainWaterBox();
+        var polar_check = obtainPolar();
         var resultHBSB=selectionHBSB();
         fpSelInt_send={};
         if ($("#FPdisplay").hasClass("active")){
@@ -4088,6 +4116,9 @@ $(document).ready(function(){
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
                 "water_dist":water_dist,
+                "water_check": water_check,
+                "waterbox": waterbox,
+                "polar_check": polar_check,
                 "hbondarray":resultHBSB["atomshb"],
                 "hb_inter":resultHBSB["atomshb_inter"],
                 "sbondarray":resultHBSB["atomssb"],
@@ -4130,8 +4161,10 @@ $(document).ready(function(){
         window.bs_info=bs_info;
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
-        var water_dist=obtainWaterDist();     //
+        var water_dist=obtainWaterDist()[1];     //
         window.water_dist=water_dist;
+        var water_check = obtainWaterDist()[0];
+        window.water_check = water_check; 
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
     

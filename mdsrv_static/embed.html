@@ -206,7 +206,7 @@
                 }
 
                 if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
-                    console.log("YEAH" + water_dist);  //this works, so the radius is updated when changing the frame. 
+                    console.log("waterdist"+ water_dist);  //this works, so the radius is updated when changing the frame. 
                     var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                     // console.log(water_sele_tostring)
                     atoms_within = sele.toSeleString();
@@ -825,6 +825,9 @@
             var receptorsel = results["receptorsel"]; 
             var bs_info= results["bs_info"]; 
             var water_dist=results["water_dist"];
+            var water_check=results["water_check"];
+            var polar_check=results["polar_check"];
+            var waterbox = results["waterbox"];
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
@@ -1062,12 +1065,10 @@
                 }
 
             }
-
-            if(typeof(water_dist) =='number'){  //CAREFUL if we would change the elses function ObtainWaterDist() in emb_ngl.viewer.js 
+            if (water_check == true){
                 console.log("waterdist " + water_dist)
                 setSelTemp.push("water");
                 setSelLi.push("water");
-
                 var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                 // console.log(water_sele_tostring)
                 atoms_within = sele.toSeleString();
@@ -1076,15 +1077,10 @@
                 o.addRepresentation("ball+stick", {name:"waterselection", sele: water_sele}); 
                 // o.addRepresentation("ball+stick", {name:"waterselection2", sele: water_sele2}); 
 
-                //MY WAY
-                // var water_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
-                // var show_water_sele = ".OH2 " + water_sele.toSeleString();
-                // o.addRepresentation("ball+stick", {name:"waterselection", sele: show_water_sele  }); 
-
-                // var water_li_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("(( not polymer or hetero ) and not ( water or ion ))"), water_dist)
-
 
             }
+
+
 
             if (onclickshow=="muts"){
                 var pos_li=Object.keys(pdb_muts);
@@ -1234,9 +1230,11 @@
 
             }  
 
-            if ($(".PolarDisplay", window.parent.document).is(':checked')) {
-                polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
-                o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues})
+            // if ($(".PolarDisplay", window.parent.document).is(':checked')) {
+            if (polar_check == true){
+            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
+            o.addRepresentation("licorice", {name:"polar_res",visible:true, sele:polar_residues})
+            setSelTemp.push(polar_residues)
             }
 
 
@@ -1442,40 +1440,27 @@
 
         }
 
-        function show_hide_watermap(is_checked,slice_checked, mapname,stage){
+        function show_hide_watermap(is_checked, mapname,stage){
             ///This function 
             stage.getComponentsByName(mapname).setVisibility(is_checked);
-            // stage.getRepresentationsByName('slice').setVisibility(slice_checked);
+
 
             
             return(stage)
 
-            // console.log("the function show_hide_watermap takes as arguments " + mapname + ' ' + is_checked);
-            // stage.getComponentsByName(mapname).setVisibility(is_checked);
-            // return(stage);
-            // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
+
             
         }
 
         function show_polar_res(is_checked){
             var o=stage.getComponentsByName("my_comp").list[0]; //"my comp is the name of the pdb structure loaded on NGL " //////  Place this to CreateReps. 
-            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
-            o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
+            // polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
+            // o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
             stage.getRepresentationsByName("polar_res").setVisibility(is_checked)
+            console.log(stage.getRepresentationsByName("polar_res").setVisibility(is_checked))
             
         }
 
-        // function show_hide_slice(is_checked, water_check, mapname, stage){
-        //     ///This function shows or hide the slice representation 
-
-        //     stage.getComponentsByName(mapname).setVisibility(is_checked)
-        //     stage.getRepresentationsByName('slice').setVisibility(is_checked)
-        //     stage.getRepresentationsByName('occupancy').setVisibility(water_check)
-        //     // stage.getRepresentationsByName('occupancy').setVisibility(water_check);
-        //     // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
-        //     return(stage)
-            
-        // }
 
 
 //END functions.
@@ -1732,7 +1717,7 @@
                             }
                         }
 
-                        stage = show_hide_watermap(is_checked,slice_checked, selected_filename, stage)
+                        stage = show_hide_watermap(is_checked,selected_filename, stage)
                     })
 
 
@@ -1766,18 +1751,18 @@
 
                     })
 
-                    $(".PolarDisplay", window.parent.document).on("click", function(){
-                        var is_checked=$(this).is(":checked");
-                        console.log(is_checked)
+                    // $(".PolarDisplay", window.parent.document).on("click", function(){
+                    //     var is_checked=$(this).is(":checked");
+                    //     // console.log(is_checked)
 
-                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
-                        for (var i = 0; i < trajnames_list.length; i++){
-                            if (trajnames_list[i].includes(selected_traj)){
-                                var selected_filename=trajnames_list[i]
-                            }
-                        }
-                        show_polar_res(is_checked)
-                    })
+                    //     var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                    //     for (var i = 0; i < trajnames_list.length; i++){
+                    //         if (trajnames_list[i].includes(selected_traj)){
+                    //             var selected_filename=trajnames_list[i]
+                    //         }
+                    //     }
+                    //     show_polar_res(is_checked)
+                    // })
 
                     $(".SliceDisplay", window.parent.document).on("click", function(){
                         var is_checked=$(this).is(":checked");
