@@ -3301,7 +3301,6 @@ def query_dynamics(request,dynamics_id):
             dyna_dic['files']["param_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
         else:
             dyna_dic['files']["struc_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
-
     dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})

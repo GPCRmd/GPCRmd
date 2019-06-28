@@ -94,12 +94,29 @@
                // hovrep.repr.clear()
                 if (clicktrue){
                     if (d && (d.atom)){
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                        var info_label=d.atom.resname.toString()+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname;
+                        var info=info_label+" (atom ind: "+d.atom.index+") - ";
                         lbl_name1="label_"+lbl_id.toString();
                         lbl_id+=1;
+                        var labeltext_d1={};
+                        labeltext_d1[d.atom.index]=info_label;
                         myrepr = o.addRepresentation( "label", {
                             sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                            color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                            backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                            padding: '20px',
+                            backgroundOpacity:0.5,
+                            backgroundMargin: 1,
+                            showBackground: true,
+                            color: "lightgrey", 
+                            scale: 1.7, 
+                            labelType: "text",
+                            labelText:labeltext_d1,
+                            fontWeight: "normal", 
+                            name :lbl_name1  } 
+                        );
+
+      
+
                         atom1 = d.atom.index.toString();
                         /*if (! clickedRep[atom1]){
                             clickedRep[atom1]=[];
@@ -109,7 +126,8 @@
                     }
                 }else{
                     if (d && (d.atom)){
-                        var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                        var info_label=d.atom.resname.toString()+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname;
+                        var info=info_label+" (atom ind: "+d.atom.index+") - ";
                         atom2 = d.atom.index.toString();
                         //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
                         clicktrue = true;
@@ -132,9 +150,21 @@
                             for (an = 0; an < add2.length;an++) {
                                 clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                             }
+
+                            var labeltext_d1={};
+                            labeltext_d1[d.atom.index]=info_label;
                             o.addRepresentation( "label", {
                                 sele: d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname,
-                                color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                                backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                                padding: '20px',
+                                backgroundOpacity:0.5,
+                                backgroundMargin: 1,
+                                showBackground: true,
+                                color: "lightgrey", 
+                                scale: 1.7, 
+                                labelType: "text",
+                                labelText:labeltext_d1,
+                                fontWeight: "normal", name :lbl_name2  } );
                             var atomPair = [[ Number(atom1), Number(atom2) ]];
                             o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
 
@@ -215,7 +245,7 @@
             stage.signals.hovered.add( function( d ){
                 if (d && (d.atom)){
                     var hatom = d.atom;
-                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
+                    var info=hatom.resname.toString()+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname;
                     var mp = d.mouse.position
                     tooltip.innerText = info;
                     tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
@@ -337,30 +367,31 @@
                                 }             
        
                                 if (cp){
-                                    var all_cp="";
+                                    all_cp_li=[];
                                     cp_li = decodeURIComponent(cp.replace(/\+/g, " ")).split(",");
                                     var comptype_dict={
                                         "lg":[],
                                         "lp":[],
                                         "i":[],
                                         "w":[],
+                                        "t":[],
                                         "o":[]
                                     }
                                     for (comp = 0; comp < cp_li.length; comp++){
-                                        var mycompinfo=cp_li[comp].split("-");
+                                        var mycompinfo=cp_li[comp].split("_");
                                         var mycomp=mycompinfo[0];
                                         var mycompType=mycompinfo[1];
                                         if (! isNaN(parseInt(mycomp))){
                                             mycomp="["+mycomp+"]";
                                         }
-                                        if (mycomp.indexOf(" and ") > 0){
+                                        if ((mycomp.indexOf(" and ") > 0) && (cp_li.length > 1)){
                                             mycomp="("+mycomp+")";
                                         }
-                                        all_cp += (mycomp + " or ");
+                                        all_cp_li[all_cp_li.length]=mycomp;
                                         sel_li.push(mycomp);
                                         comptype_dict[mycompType].push(mycomp);
                                     }
-                                    all_cp = all_cp.slice(0, -3);
+                                    var all_cp = all_cp_li.join(" or ");
                                     //o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );
                                     for (comp_key in comptype_dict){
                                         var comptype_sel=comptype_dict[comp_key];
@@ -378,9 +409,14 @@
                                             }
                                             else if (comp_key == "w") {
                                                 o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30, name: "Water" } );
-                                            }
-                                            else if ("lp") {
+                                            } else if (comp_key=="lp") {
                                                 o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel , name: "Lipids"} );
+                                            } else if (comp_key == "t") {
+                                                if (fpsegStr){
+                                                    o.addRepresentation( "licorice", { colorScheme: FPscheme, visible: true, sele: comp_sel } );
+                                                } else {
+                                                    o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel } );
+                                                }
                                             } else {
                                                 o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel} );
                                             }
@@ -651,7 +687,9 @@
                                         //o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
                                     }
                                     final_sele=final_sele.join(" , ");
-                                    o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#f2e14e"/*"#461bff"*/ } );
+                                    //o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue: "#f2e14e"/*"#461bff"*/ } );
+                                    o.addRepresentation( "spacefill", {   sele: final_sele , colorValue:"#8e74ff"/*"#461bff"*/ } );// colorValue: "#00d215"
+
                                     sel_prot=true;
                                 }
                                 

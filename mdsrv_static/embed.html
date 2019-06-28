@@ -206,7 +206,7 @@
                 }
 
                 if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
-                    console.log("YEAH" + water_dist);  //this works, so the radius is updated when changing the frame. 
+                    console.log("waterdist"+ water_dist);  //this works, so the radius is updated when changing the frame. 
                     var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                     // console.log(water_sele_tostring)
                     atoms_within = sele.toSeleString();
@@ -286,13 +286,19 @@
                 }
             });
             $("#trajRange").change(function(){
-                if (trajComp){
-                    numfr=trajComp.trajectory._frameCount;
-                    if ($("#trajRange").attr("max") != numfr){
-                        $("#trajRange").attr("max",numfr);
+                var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
+                if (toframe=="NaN"){
+                    toframe=$(this).val()
+                }
+                if (toframe){ 
+                    if (trajComp){
+                        numfr=trajComp.trajectory._frameCount;
+                        if ($("#trajRange").attr("max") != numfr){
+                            //$("#trajRange").attr("max",numfr);
+                            setTrajRangeMax();
+                        }
+                        trajComp.setFrame(toframe);
                     }
-                    var toframe=$(".ui-slider-handle").attr("aria-valuenow"); 
-                    trajComp.setFrame(toframe);
                 }
             });
 
@@ -347,7 +353,7 @@
                 }
             }
             $("#clear_dists_btn").html("");
-            $("#varinfo").html("");
+            $("#varinfo_par" , window.parent.document).html("");
             clickedRep={};
             clickedRepLi=[];
             clickedDistData={};
@@ -378,10 +384,16 @@
             stage.signals.hovered.add( function( d ){
                 if (d && (d.atom)){
                     var hatom = d.atom;
-                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname+" (atom ind: "+hatom.index+")";
+                    var res_sel=hatom.resno.toString()+":"+hatom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info_label=gnum+hatom.resname.toString()+res_sel+"."+hatom.atomname
+                    var info=info_label+" (atom ind: "+hatom.index+")";
                     $("#atomInfo").text(info);
                     var mp = d.mouse.position
-                    tooltip.innerText = info;
+                    tooltip.innerText = info_label;
                     tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
                     tooltip.style.left = mp.x + 3 + 'px'
                     tooltip.style.display = 'block'
@@ -397,14 +409,28 @@
         function clickDists(d,o,clicktrue,atom1 , atom2 , res2 , myrepr,lbl_id,dist_id,lbl_name1, lbl_name2, dist_name ,labsele1 , labsele2 ){
             if (clicktrue){
                 if (d && d.atom){
-                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info_label=gnum+d.atom.resname.toString()+res_sel+"."+d.atom.atomname;
+                    var info=info_label+" (atom ind: "+d.atom.index+") - ";
                     $("#atomClicked").text(info);
                     lbl_name1="label_"+lbl_id.toString();
                     lbl_id+=1;
                     labsele1=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
+                    labeltext_d1={};
+                    labeltext_d1[d.atom.index]=info_label;
                     myrepr = o.addRepresentation( "label", {
                         sele: labsele1,
-                        color: "#cccccc", scale: 1.7, labelType: "qualified name",fontWeight: "normal", name :lbl_name1  } );
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '20px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                        scale: 1.7, labelType: "text", labelText:labeltext_d1,fontWeight: "normal", name :lbl_name1 } );
                     atom1 = d.atom.index.toString();
                     clicktrue = false;
                 }else {
@@ -412,7 +438,13 @@
                 }
             }else{
                 if (d && d.atom){
-                    var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                    var gnum=""
+                    if (res_sel in parent.pdb_gpcrdb){
+                        gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                    }
+                    var info_label=gnum+d.atom.resname.toString()+res_sel+"."+d.atom.atomname;
+                    var info=info_label+" (atom ind: "+d.atom.index+") - ";
                     $("#atomClicked").text(info);                                            
                     atom2 = d.atom.index.toString();
                     //res2 =d.atom.resno.toString()+"-"+d.atom.resno.toString()+':'+d.atom.chainname;
@@ -441,15 +473,23 @@
                         for (an =0 ; an < add2.length ; an++){
                             clickedRep[atom2][clickedRep[atom2].length]=add2[an];
                         }
+                        labeltext_d2={};
+                        labeltext_d2[d.atom.index]=info_label;
                         labsele2=d.atom.resno.toString()+':'+d.atom.chainname+'.'+d.atom.atomname;
                         o.addRepresentation( "label", {
                             sele: labsele2,
-                            color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lbl_name2 } );
+                            backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                            color: 'lightgrey',
+                            padding: '20px',
+                            backgroundOpacity:0.5,
+                            backgroundMargin: 1,
+                            showBackground: true,
+                            scale: 1.7, labelType: "text", labelText:labeltext_d2 ,fontWeight: "normal" , name:lbl_name2 } );
                         var atomPair = [[ Number(atom1), Number(atom2) ]];
                         o.addRepresentation( "distance", { atomPair: atomPair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dist_name} );
                         clickedDistData[dist_name]=atomPair;
-                        clickedLabData[lbl_name1]=labsele1;
-                        clickedLabData[lbl_name2]=labsele2; 
+                        clickedLabData[lbl_name1]={"sele":labsele1,"text":labeltext_d1};
+                        clickedLabData[lbl_name2]={"sele":labsele2,"text":labeltext_d2};
 
                     } else {
                         if (atom1 in clickedRep){
@@ -490,11 +530,11 @@
                             if (!(lbl_name1 in clickedRepLi)){
                                 clickedRepLi.push(lbl_name1);
                             }
-                            clickedLabData[lbl_name1]=labsele1;
+                            clickedLabData[lbl_name1]={"sele":labsele1,"text":labeltext_d1};//labsele1;[!]
                         }
                     }
                     if (clickedRepLi.length > 0){
-                        $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps">Clear labels/dists.</button>');
+                        $("#clear_dists_btn").html('<button class="btn btn-danger btn-xs" type="button" id="clear_dist_reps" style="min-width:150px;text-align:left;font-weight:bold">Clear labels/dists.</button>');
                     }
                 } else {
                     $("#atomClicked").text("");
@@ -520,16 +560,24 @@
         
         };
         
-        function createDivAtStrClick(d, divid, myhtml) {
+        function createDivAtStrClick(d, divid, myhtml, isparent) {
             var mouse_pos=d.canvasPosition;
             var x_pos= mouse_pos["x"];
             var y_pos=mouse_pos["y"]
             var max_h_s=$("#viewport").css("height");
             var max_h=Number(max_h_s.replace("px",""))
             var y_pos_mod=max_h - y_pos 
-            myhtml=myhtml.replace(/\*\*x_pos\*\*/,x_pos);
-            myhtml=myhtml.replace(/\*\*y_pos\*\*/,y_pos_mod);
-            $(divid).html(myhtml);          
+            if (isparent){
+                var y_corr=120
+                var x_corr=30
+                myhtml=myhtml.replace(/\*\*x_pos\*\*/,x_pos);
+                myhtml=myhtml.replace(/\*\*y_pos\*\*/,y_pos_mod+120);
+                $(divid, window.parent.document).html(myhtml);          
+            } else {
+                myhtml=myhtml.replace(/\*\*x_pos\*\*/,x_pos);
+                myhtml=myhtml.replace(/\*\*y_pos\*\*/,y_pos_mod);                
+                $(divid).html(myhtml);          
+            }
         }
         
         function clickVars(d){
@@ -549,44 +597,43 @@
                         var from=fromto_sp[0];
                         var to=fromto_sp[1];
                         var vars_pos_li=vars_pos_d[fromto];
-                        var extra_info="";
+                        var var_exp_len=vars_pos_li.length;
+                        var var_rows="";
                         for (var vlN=0; vlN<vars_pos_li.length;vlN++){
                             var consequence=vars_pos_li[vlN].consequence;
+                            var allele_freq=vars_pos_li[vlN].allele_freq;
                             var exac_id=vars_pos_li[vlN].exac_id;
-                            extra_info+="<tr>\
-                                            <td>"+consequence+"</td>\
-                                            <td><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\"></span></a></td>\
-                                        </tr>";
+                            var var_exp_fromto="";
+                            if (vlN == 0){
+                                var rowspan="";
+                                if (var_exp_len >1){
+                                    rowspan="rowspan="+ var_exp_len.toString();
+                                }
+                                var_exp_fromto="<td "+rowspan+" style='border-color:#808080'>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                                </td>"
+                            } 
+                            var_rows+="<tr>"+var_exp_fromto+"\
+                                             <td style='border-color:#808080'>"+consequence+"</td>\
+                                             <td style='border-color:#808080'>"+allele_freq+"</td>\
+                                             <td style='border-color:#808080'><a href=\"http://exac.broadinstitute.org/variant/"+exac_id+"\" target=\"_blank\"><span style='padding-bottom:2px;width:25px;color: #80aaff' class=\"glyphicon glyphicon-book\"></span></a></td>\
+                                           </tr>";
                         }
-                        table_rows+="<tr>\
-                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
-                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
-                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
-                                          <table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
-                                            <thead>\
-                                              <tr>\
-                                                <th style=\"text-align:center;\">Consequence</th>\
-                                                <th style=\"text-align:center;\">DB</th>\
-                                              </tr>\
-                                            </thead>\
-                                            <tbody>\
-                                            "+extra_info+"\
-                                            </tbody>\
-                                          </table>\
-                                          <div>\
-                                        '>\
-                                         <span class='glyphicon glyphicon-plus-sign'></span>\
-                                        </button>\
-                                        </td>\
-                                     </tr>";
+                        table_rows+=var_rows
                     }
 
                     //Define info in the div
-                    var myhtml="<div id='added_html_click' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
-                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;width:65px'>\
+                    var myhtml="<div id='added_html_click' style='background-color:rgba(38, 38, 38, 0.75);border: 1px solid #666666;z-index: 1;position:absolute;overflow:auto;max-width:250px;max-height:200px; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
+                    <span class='glyphicon glyphicon-remove close_var_mut' style='position:absolute;top:5px;right:5px;font-size:10px;color:#a6a6a6;cursor: pointer;'></span>\
+                      <table class='table table-condensed' style='color:white;font-size:12px;margin:0;text-align:center'>\
                         <thead>\
                           <tr>\
-                            <th style='text-align:center;'>"+var_pos+"</th>\
+                            <th style='text-align:center;border-color:#808080' colspan=4>"+var_pos+"</th>\
+                          </tr>\
+                          <tr>\
+                            <th style='text-align:center;border-color:#808080' >Variant</th>\
+                            <th style='text-align:center;border-color:#808080' >Type</th>\
+                            <th style='text-align:center;border-color:#808080' ><button  style=\"padding:0;color:white;font-weight:bold\" class=\"btn-link showtooltip\" data-toggle=\"tooltip\" title=\"EXAC allele frequencies (allele count/allele number)\">Freq</button>\
+                            <th style='text-align:center;border-color:#808080' >Ref</th>\
                           </tr>\
                         </thead>\
                         <tbody>\
@@ -595,10 +642,14 @@
                       </table>\
                     </div>";
 
-                    createDivAtStrClick(d,"#varinfo",myhtml);
-                } 
-                
-                var info="["+d.atom.resname.toString()+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                    createDivAtStrClick(d,"#varinfo_par",myhtml,true);
+                }                 
+                var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                var gnum=""
+                if (res_sel in parent.pdb_gpcrdb){
+                    gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                }
+                var info=gnum+d.atom.resname.toString()+res_sel+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                 $("#atomClicked").text(info);
             }else {
                 $("#atomClicked").text("");
@@ -621,7 +672,8 @@
                         var from=fromto_sp[0];
                         var to=fromto_sp[1];
                         var muts_pos_li=muts_pos_d[fromto];
-                        var extra_info="";
+                        var mut_exp_len=muts_pos_li.length;
+                        var mut_rows="";
                         for (var vlN=0; vlN<muts_pos_li.length;vlN++){
                             var fchange=muts_pos_li[vlN].fchange;
                             var qual=muts_pos_li[vlN].qual;
@@ -642,53 +694,46 @@
                             if (!exp){
                                 exp="-";
                             }
-                            //<a href=\"#\" id=\"showtooltip\" data-toggle=\"tooltip\" title=\"Hooray!\">Hover over me</a>
                             if (measure.length>0 && unit.length>0){
-                                tooltip_or_not="<button  style=\"padding:0\" class=\"btn-link showtooltip\" data-toggle=\"tooltip\" title=\"Measure:"+measure+"</br>Unit:"+unit+"\">"+fchange+"</button>";
+                                tooltip_or_not="<button  style=\"padding:0;color: #80aaff\" class=\"btn-link showtooltip\" data-toggle=\"tooltip\" title=\"Measure:"+measure+"</br>Unit:"+unit+"\">"+fchange+"</button>";
                             } else{
                                 tooltip_or_not=fchange;
                             }
 
-                            extra_info+="<tr>\
-                                            <td>"+tooltip_or_not+"</td>\
-                                            <td>"+exp+"</td>\
-                                            <td>"+stud_lig+"</td>\
-                                            <td><a href=\"https://www.ncbi.nlm.nih.gov/pubmed/"+muts_pos_li[vlN].pub_ref+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\"></span></a></td>\
-                                        </tr>";
+                            var mut_exp_fromto=""
+                            if (vlN==0){
+                                var rowspan="";
+                                if (mut_exp_len >1){
+                                    rowspan="rowspan="+ mut_exp_len.toString();
+                                }
+                                mut_exp_fromto="<td "+rowspan+" style='border-color:#808080;padding:4'>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
+                                                </td>"
+                            }
+                            mut_rows+="<tr>"+mut_exp_fromto+"\
+                                            <td style='border-color:#808080;padding:4'>"+tooltip_or_not+"</td>\
+                                            <td style='border-color:#808080;padding:4'>"+exp+"</td>\
+                                            <td style='border-color:#808080;padding:4'>"+stud_lig+"</td>\
+                                            <td style='border-color:#808080;padding:4'><a href=\"https://www.ncbi.nlm.nih.gov/pubmed/"+muts_pos_li[vlN].pub_ref+"\" target=\"_blank\"><span class=\"glyphicon glyphicon-book\" style=\"width:35px;color: #80aaff\"></span></a></td>\
+                                         </tr>";
 
                         };
-                        table_rows+="<tr>\
-                                        <td>"+from+" <span style='font-size:8px' class='glyphicon glyphicon-arrow-right'></span> "+to+"\
-                                        <button style='padding:0' class='showpopover btn-link'  data-toggle='popover'  data-content='\
-                                        <div style=\"overflow-y:hidden;overflow-x:auto;max-width:150px;\">\
-                                          <table class=\"table table-condensed\" style=\"font-size:10px;margin:0;text-align:center;width:60px\">\
-                                            <thead>\
-                                              <tr>\
-                                                <th style=\"text-align:center;\">Fold change</th>\
-                                                <th style=\"text-align:center;\">Exp. type</th>\
-                                                <th style=\"text-align:center;\">Ligand</th>\
-                                                <th style=\"text-align:center;\">Ref</th>\
-                                              </tr>\
-                                            </thead>\
-                                            <tbody>\
-                                            "+extra_info+"\
-                                            </tbody>\
-                                          </table>\
-                                          <div>\
-                                        '>\
-                                         <span class='glyphicon glyphicon-plus-sign'></span>\
-                                        </button>\
-                                        </td>\
-                                     </tr>";
+                        table_rows+=mut_rows;
                         
                     }
 
-                    
-                    var myhtml="<div id='added_html_click' style='background-color:rgba(242, 242, 242, 0.75) ;position:absolute;border: 1px solid #d9d9d9; border-radius:4px;left:**x_pos**px;top:**y_pos**px'>\
-                      <table class='table table-condensed' style='font-size:10px;margin:0;text-align:center;width:60px'>\
+                    var myhtml="<div id='added_html_click' style='background-color:rgba(38, 38, 38, 0.75);border: 1px solid #666666;z-index: 1; position:absolute; border-radius:4px;overflow:auto;max-height:200px; left:**x_pos**px;top:**y_pos**px'>\
+                    <span class='glyphicon glyphicon-remove close_var_mut' style='position:absolute;top:5px;right:5px;font-size:10px;color:#a6a6a6;cursor: pointer;'></span>\
+                      <table class='table table-condensed' style='color:white;font-size:12px;margin:0;max-width:400px;text-align:center'>\
                         <thead>\
                           <tr>\
-                            <th style='text-align:center;'>"+mut_pos+"</th>\
+                            <th style='text-align:center;border-color:#808080;padding:4' colspan=5 >"+mut_pos+"</th>\
+                          </tr>\
+                          <tr>\
+                            <th style=\"text-align:center;border-color:#808080;padding:4\">Mutation</th>\
+                            <th style=\"text-align:center;border-color:#808080;padding:4\">Fold change</th>\
+                            <th style=\"text-align:center;border-color:#808080;padding:4\">Exp. type</th>\
+                            <th style=\"text-align:center;border-color:#808080;padding:4\">Ligand</th>\
+                            <th style=\"text-align:center;border-color:#808080;padding:4\">Ref</th>\
                           </tr>\
                         </thead>\
                         <tbody>\
@@ -696,10 +741,14 @@
                         </tbody>\
                       </table>\
                     </div>";
-                    createDivAtStrClick(d,"#varinfo",myhtml);
+                    createDivAtStrClick(d,"#varinfo_par",myhtml,true);
                 }
-
-                var info="["+resname+"]"+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
+                var res_sel=d.atom.resno.toString()+":"+d.atom.chainname;
+                var gnum=""
+                if (res_sel in parent.pdb_gpcrdb){
+                    gnum=parent.pdb_gpcrdb[res_sel]+" ";
+                }
+                var info=gnum+resname+d.atom.resno.toString()+":"+d.atom.chainname+"."+d.atom.atomname+" (atom ind: "+d.atom.index+") - ";
                 $("#atomClicked").text(info);
             }else {
                 $("#atomClicked").text("");
@@ -809,6 +858,33 @@
           }
         }
 
+        function avoid_unload_H(hbonds,showH){            
+            if (! showH){
+                new_hbonds=[]
+                for (a=0;a<hbonds.length;a++){
+                    var atom_pair=[];
+                    for (i=0;i<hbonds[a].length;i++){
+                        var this_index=hbonds[a][i];
+                        var seeltest = o.structure.getAtomProxy(this_index);
+                        if (seeltest.element=="H"){
+                            seeltest.residue.eachAtom(function(a){
+                                if (a.hasBondTo(seeltest)){
+                                    //console.log(a)
+                                    //console.log(a.index)
+                                    this_index=a.serial +1;
+                                }
+                            })
+                        }
+                        atom_pair[atom_pair.length]=this_index;
+                    }
+                    new_hbonds[new_hbonds.length]=atom_pair
+                    
+                }
+                hbonds= new_hbonds;
+            }
+            return hbonds;
+        }
+
         
         function createReps(){
             parent.passInfoToIframe();
@@ -825,6 +901,9 @@
             var receptorsel = results["receptorsel"]; 
             var bs_info= results["bs_info"]; 
             var water_dist=results["water_dist"];
+            var water_check=results["water_check"];
+            var polar_check=results["polar_check"];
+            var waterbox = results["waterbox"];
             var hbonds= results["hbondarray"];
             var sbonds_atoms= results["sbondarray"];
             var all_resids=results["allresidshb"];
@@ -855,10 +934,17 @@
             
             o.removeAllRepresentations();
             for (lname in clickedLabData){
-                var lsele=clickedLabData[lname];
+                var lsele=clickedLabData[lname]["sele"];
+                var ltext=clickedLabData[lname]["text"];
                 o.addRepresentation( "label", {
                     sele: lsele,
-                    color: "#cccccc", scale: 1.7, labelType: "qualified name" ,fontWeight: "normal" , name:lname } );
+                    backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                    color: 'lightgrey',
+                    padding: '20px',
+                    backgroundOpacity:0.5,
+                    backgroundMargin: 1,
+                    showBackground: true,
+                    scale: 1.7, labelType: "text", labelText:ltext ,fontWeight: "normal" , name:lname } );
             }
             for (dname in clickedDistData){
                 var apair=clickedDistData[dname];
@@ -893,25 +979,26 @@
                 }
             }
             if (cp.length > 0){
-                var all_cp="";
                 var comptype_dict={
                     "lg":[],
                     "lp":[],
                     "i":[],
                     "w":[],
+                    "t":[],
                     "o":[]
                 }
+                var all_cp_li=[];
                 for (comp=0 ; comp < cp.length ; comp++){
-                    var mycompinfo=cp[comp].split("-");
+                    var mycompinfo=cp[comp].split("_");
                     var mycomp=mycompinfo[0];
                     var mycompType=mycompinfo[1];
                     if (! isNaN(parseInt(mycomp))){
                         mycomp="["+mycomp+"]";
                     }
-                    all_cp += (mycomp + " or ");
+                    all_cp_li[all_cp_li.length]=mycomp;
                     comptype_dict[mycompType].push(mycomp);
                 }
-                all_cp = all_cp.slice(0, -3);
+                var all_cp = all_cp_li.join(" or ");
                 //o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );
                 setSelLi.push(all_cp);
                 for (comp_key in comptype_dict){
@@ -931,7 +1018,14 @@
                         else if (comp_key == "w") {
                             o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel, radius: 0.30 } );
                         }
-                        else {
+                        else if (comp_key == "t") {
+                            if (fpsegStr){
+                                o.addRepresentation( "licorice", { colorScheme: FPscheme, visible: true, sele: comp_sel } );
+                            } else {
+                                o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel } );
+                            }
+                        }
+                        else  {
                             o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: comp_sel } );
                         }
                     }
@@ -1062,12 +1156,10 @@
                 }
 
             }
-
-            if(typeof(water_dist) =='number'){  //CAREFUL if we would change the elses function ObtainWaterDist() in emb_ngl.viewer.js 
+            if (water_check == true){
                 console.log("waterdist " + water_dist)
                 setSelTemp.push("water");
                 setSelLi.push("water");
-
                 var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                 // console.log(water_sele_tostring)
                 atoms_within = sele.toSeleString();
@@ -1076,15 +1168,10 @@
                 o.addRepresentation("ball+stick", {name:"waterselection", sele: water_sele}); 
                 // o.addRepresentation("ball+stick", {name:"waterselection2", sele: water_sele2}); 
 
-                //MY WAY
-                // var water_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
-                // var show_water_sele = ".OH2 " + water_sele.toSeleString();
-                // o.addRepresentation("ball+stick", {name:"waterselection", sele: show_water_sele  }); 
-
-                // var water_li_sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("(( not polymer or hetero ) and not ( water or ion ))"), water_dist)
-
 
             }
+
+
 
             if (onclickshow=="muts"){
                 var pos_li=Object.keys(pdb_muts);
@@ -1141,6 +1228,7 @@
 
             if (hbonds.length > 0){
                 var resids= 'protein and';
+                hbonds=avoid_unload_H(hbonds,showH);
                 resids=resids+' ('+all_resids.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
@@ -1149,6 +1237,7 @@
             }
 
             if (hbonds_inter.length > 0){
+                hbonds_inter=avoid_unload_H(hbonds_inter,showH);
                 var resids='not water and';
                 resids=resids+' ('+all_resids_inter.join(' or ') + ' )'; //not only proteins! lipids also have hbonds
                 o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
@@ -1158,6 +1247,7 @@
             }
 
             if (sbonds_atoms.length > 0){
+                sbonds_atoms=avoid_unload_H(sbonds_atoms,showH);
                 var resids='protein and ';
                 resids=resids + '( '+ all_resids_sb.join(' or ') + ')';
                 o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
@@ -1180,7 +1270,20 @@
                             label_pos=a.index;
                         }
                     },res_sele);
-                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                    labeltext_dd={};
+                    labeltext_dd[label_pos]=label;
+                    var aa= o.addRepresentation("label", {labelType: "text", labelText:labeltext_dd ,
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '40px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                        sele:".CA and "+pos,
+                        xOffset:0.5,
+                        yOffset:0.5,
+                        zOffset:0.5
+                    });
                 }
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
@@ -1203,10 +1306,24 @@
                             label_pos=a.index;
                         }
                     },res_sele);
-                    o.addRepresentation("label", {labelType: "text", labelText:  { label_pos : label}});
+                    labeltext_dd2={};
+                    labeltext_dd2[label_pos]=label;
+                    o.addRepresentation("label", {labelType: "text", labelText:labeltext_dd2 ,
+                        backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+                        color: 'lightgrey',
+                        padding: '40px',
+                        backgroundOpacity:0.5,
+                        backgroundMargin: 1,
+                        showBackground: true,
+                        sele:".CA and "+pos,
+                        xOffset:1,
+                        yOffset:1,
+                        zOffset:1
+                    });
+
                 }
                 final_sele=final_sele.join(" , ");
-                o.addRepresentation( "licorice", {  radius: "0.300", sele: final_sele , colorValue:"#f2e14e"/*"#461bff"*/ } );// colorValue: "#00d215"
+                o.addRepresentation( "spacefill", {   sele: final_sele , colorValue:"#8e74ff"/*"#461bff"*/ } );// colorValue: "#00d215"
                 //setSelDict=addToSel(o,final_sele,setSelDict);
                 setSelLi.push(final_sele);
 
@@ -1234,9 +1351,11 @@
 
             }  
 
-            if ($(".PolarDisplay", window.parent.document).is(':checked')) {
-                polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
-                o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues})
+            // if ($(".PolarDisplay", window.parent.document).is(':checked')) {
+            if (polar_check == true){
+            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
+            o.addRepresentation("licorice", {name:"polar_res",visible:true, sele:polar_residues})
+            setSelTemp.push(polar_residues)
             }
 
 
@@ -1280,8 +1399,8 @@
 
            var cont_h=(cont_h_num).toString() +"px";
            var cont_h_viewport=(cont_h_num-30).toString() +"px";
-           var cont_h_range=(cont_h_num-190).toString() +"px";
-           var cont_h_info=(cont_h_num-135).toString() +"px";
+           var cont_h_range=(cont_h_num-222).toString() +"px";
+           var cont_h_info=(cont_h_num-167).toString() +"px";
            $("#toiframe").css({"width":cont_w , "height" : cont_h});
            $("#viewport").css({"width": cont_w , "height" : cont_h_viewport });
            $("#buttons").css("width", cont_w_in);
@@ -1426,56 +1545,47 @@
 
 
             if (val == 'isolevel'){
-                console.log("this is: " + (Number(slider_val)))
                 p = {
                     isolevel: Number(slider_val)
                 }
 
             }
             if (val == 'transparency'){
-                console.log('transcheck' + (Number(slider_val)))
                 p = {
                     opacity: Number(slider_val)
                 }
+            }
+            if (val == 'smoothness'){
+                p = {
+                    smooth: Number(slider_val)
+                }
+
             }
             stage.getRepresentationsByName("occupancy").setParameters(p);   //we change all the maps, so that if trajectory is changed, the same settings are applied 
 
         }
 
-        function show_hide_watermap(is_checked,slice_checked, mapname,stage){
+        function show_hide_watermap(is_checked, mapname,stage){
             ///This function 
             stage.getComponentsByName(mapname).setVisibility(is_checked);
-            // stage.getRepresentationsByName('slice').setVisibility(slice_checked);
+
 
             
             return(stage)
 
-            // console.log("the function show_hide_watermap takes as arguments " + mapname + ' ' + is_checked);
-            // stage.getComponentsByName(mapname).setVisibility(is_checked);
-            // return(stage);
-            // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
+
             
         }
 
         function show_polar_res(is_checked){
             var o=stage.getComponentsByName("my_comp").list[0]; //"my comp is the name of the pdb structure loaded on NGL " //////  Place this to CreateReps. 
-            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
-            o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
+            // polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
+            // o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
             stage.getRepresentationsByName("polar_res").setVisibility(is_checked)
+            console.log(stage.getRepresentationsByName("polar_res").setVisibility(is_checked))
             
         }
 
-        // function show_hide_slice(is_checked, water_check, mapname, stage){
-        //     ///This function shows or hide the slice representation 
-
-        //     stage.getComponentsByName(mapname).setVisibility(is_checked)
-        //     stage.getRepresentationsByName('slice').setVisibility(is_checked)
-        //     stage.getRepresentationsByName('occupancy').setVisibility(water_check)
-        //     // stage.getRepresentationsByName('occupancy').setVisibility(water_check);
-        //     // stage.getRepresentationsByName("occupancy").setVisibility(is_checked)
-        //     return(stage)
-            
-        // }
 
 
 //END functions.
@@ -1516,25 +1626,26 @@
             
             var fpsegStr , FPscheme;
             
-        var popOverSettings = {
-            placement: 'auto right',
-            trigger:"click",
-            container: 'body',
-            html: true,
-            selector: '.showpopover', //Sepcify the selector here
-            viewport: '#viewport',
-            content: function () {
-                return $('#popover-content').html();
-            }
-        }
+//        var popOverSettings = {
+//            placement: 'auto right',
+//            trigger:"click",
+//            container: 'body',
+//            html: true,
+//            selector: '.showpopover', //Sepcify the selector here
+//            viewport: '#viewport',
+//            content: function () {
+//                return $('#popover-content').html();
+//            }
+//        }
+//
+//        $('body').popover(popOverSettings);   
+//        $('body').tooltip({
+//            selector: '.showtooltip',
+//            trigger:"hover",
+//            html:true,
+//        });   
+        //$('[data-toggle="popover"]').popover(); 
 
-        $('body').popover(popOverSettings);   
-        $('body').tooltip({
-            selector: '.showtooltip',
-            trigger:"hover",
-            html:true,
-        });   
-        //$('[data-toggle="popover"]').popover(); //created JS event which triggers when flareplots is already loaded. It is a trick of Mariona 
         $(document.body).bind('createNGL', function(e, cont_w , cont_w_in , cont_h_num) {
             set_ngl_size(cont_w , cont_w_in , cont_h_num);
             
@@ -1573,9 +1684,10 @@
                             o.addTrajectory( traj_path + traj_li_all[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
-                        var patt = new RegExp("/(.*)$");
-                        var res = patt.exec(traj_li_all[0]);
-                        var mytraj_nm=res[1];
+                        var tral_split=traj_li_all[0].split("/");
+                        var traj_filenm=tral_split[tral_split.length -1];
+                        var traj_db_id=traj_filenm.split("_")[0];
+                        var mytraj_nm="Traj. id: "+traj_db_id;
                         $("#last_played").text(mytraj_nm);
                         //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
                         //traj_li=[mytraj];
@@ -1597,9 +1709,10 @@
                         trajComp.setFrame(traj_fnum[traj_id]);
                         //$("#selectionDiv" , window.parent.document).trigger("click");                        
                         $("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                        var patt = new RegExp("/(.*)$");
-                        var res = patt.exec(traj_li_all[traj_id]);
-                        var mytraj_nm=res[1];
+                        var tral_split=traj_li_all[traj_id].split("/");
+                        var traj_filenm=tral_split[tral_split.length -1];
+                        var traj_db_id=traj_filenm.split("_")[0];
+                        var mytraj_nm="Traj. id: "+traj_db_id;
                         $("#last_played").text(mytraj_nm);
 
                         //WATERMAP CODE 
@@ -1695,7 +1808,7 @@
                             stage.loadFile(trajPath, {visible:false}).then(function(watermap){
                                 watermap.addRepresentation("surface", {
                                     name: "occupancy",
-                                    color: "lightblue", 
+                                    color: "#7baedb", 
                                     isolevelType: "value",
                                     isolevel: 0.3,
 
@@ -1703,7 +1816,9 @@
                                     flatShaded: false,
                                     opacity: 0.5,
                                     metalness: 0,
-                                    wireframe: false 
+                                    wireframe: false,
+                                    smooth: 0,
+                                    linewidth:0.1,
 
                                 });
 
@@ -1732,7 +1847,7 @@
                             }
                         }
 
-                        stage = show_hide_watermap(is_checked,slice_checked, selected_filename, stage)
+                        stage = show_hide_watermap(is_checked,selected_filename, stage)
                     })
 
 
@@ -1766,18 +1881,19 @@
 
                     })
 
-                    $(".PolarDisplay", window.parent.document).on("click", function(){
-                        var is_checked=$(this).is(":checked");
-                        console.log(is_checked)
 
-                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
-                        for (var i = 0; i < trajnames_list.length; i++){
-                            if (trajnames_list[i].includes(selected_traj)){
-                                var selected_filename=trajnames_list[i]
-                            }
-                        }
-                        show_polar_res(is_checked)
-                    })
+                    // $(".PolarDisplay", window.parent.document).on("click", function(){
+                    //     var is_checked=$(this).is(":checked");
+                    //     // console.log(is_checked)
+
+                    //     var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                    //     for (var i = 0; i < trajnames_list.length; i++){
+                    //         if (trajnames_list[i].includes(selected_traj)){
+                    //             var selected_filename=trajnames_list[i]
+                    //         }
+                    //     }
+                    //     show_polar_res(is_checked)
+                    // })
 
                     $(".SliceDisplay", window.parent.document).on("click", function(){
                         var is_checked=$(this).is(":checked");
@@ -1821,8 +1937,6 @@
                           metalness: 0,
                           wireframe: false
                         })
-                        console.log("2fofc")
-                        console.log(edc.getCenter())
 
                     })
                     stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: false}).then(function(edc){
@@ -1855,19 +1969,11 @@
                           wireframe: false
 
                         })
-                        console.log("fofc")
-                        console.log(edc.getCenter())
+
                     })
 
                     $("#EDselectionDiv", window.parent.document).on("click" , function(){
                         updateEDmapSel();
-                        console.log("!")
-                        console.log("fofc (upd)")
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenter())
-                        console.log(stage.getComponentsByName("EDmap_comp_2fofc").list[0].getCenterUntransformed())
-                        console.log("GPCRmd (upd)")
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenter())
-                        console.log(stage.getComponentsByName("my_comp").list[0].getCenterUntransformed())
                     });
                     $(".EDmapStype", window.parent.document).on('change' ,function(){
                         var v=$(this).val()
@@ -2056,9 +2162,9 @@
                     trajIntType=intType;
                 })
                 
-                $("#viewport:not(#varinfo)").on("mousedown" , function(){
-                    $("#varinfo").html("");
-                    $('.popover').popover("hide");                    
+                $("#viewport").on("mousedown" , function(){
+                    $("#varinfo_par" , window.parent.document).html("");
+                    //$('.popover').popover("hide");                    
                 });
                 
                 $(".onclickshow" , window.parent.document).click(function(){
@@ -2103,7 +2209,7 @@
         <div style="height:80px">
             <div id="buttons" style="width:616px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
             </div>
-            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:65px">
+            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:95px;">
             </div>
         </div>
         <div id="trajRangeDiv" style="position:absolute;width:616px;height:30px;margin-top:265px;margin-left:2px;visibility:hidden">
@@ -2115,7 +2221,7 @@
           <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
         </div>
         <span id="varinfo"></span>
-        <div id="infoPannel" style="width:616px;height:30px;margin-top:310px;margin-left:2px;">
+        <div id="infoPannel" style="width:616px;height:30px;margin-top:425;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
             <div id="atomInfo" style="color:green;"></div>
         </div>

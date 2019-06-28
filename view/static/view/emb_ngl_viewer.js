@@ -43,6 +43,22 @@ $(document).ready(function(){
         });
     }
   
+    $(".PolarDisplay").on("click", function(){ 
+        $("#selectionDiv").trigger("click");
+    })
+
+    $(".WaterDistDisplay").on("click", function(){ 
+        $("#selectionDiv").trigger("click");
+    })
+
+    $(".waterswithin").on("change"), function(){
+        $("#selectionDiv").trigger("click");
+    }
+
+
+
+
+
     function uniq(a) {
         var seen = {};
         return a.filter(function(item) {
@@ -170,12 +186,12 @@ $(document).ready(function(){
 
     
     changeTrajFlarePlot = function(traj_el_sel,new_fnum){
-
         var traj_p=$(traj_el_sel).data("tpath");
-        var traj_n=$(traj_el_sel).text();
+        var traj_id=$(traj_el_sel).attr("id").replace("traj_id_","");
         var fpfile_new=$(traj_el_sel).data("fplot_file");
         var old_fp=$("#selectedTraj").data("fplot_file");
-        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new).html(traj_n+' <span class="caret">');
+        $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new);
+        $("#selectedTraj_id").text(traj_id);
         $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
         $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
         
@@ -239,8 +255,9 @@ $(document).ready(function(){
    
     
     function obtainDicts(gpcr_pdb_dict){
-        all_gpcr_dicts={};
+        var all_gpcr_dicts={};
         var num_gpcrs=0;
+        pdb_gpcrdb={}
         for (gpcr_id in gpcr_pdb_dict){
             var bw_dict={};
             var gpcrdb_dict={};
@@ -248,13 +265,16 @@ $(document).ready(function(){
                 split=gen_num.split(new RegExp('[\.x]','g'));
                 bw = split[0]+"."+ split[1];
                 db = split[0]+"x"+ split[2];
-                bw_dict[bw]=gpcr_pdb_dict[gpcr_id][gen_num];
-                gpcrdb_dict[db]=gpcr_pdb_dict[gpcr_id][gen_num];
+                var pdbppos=gpcr_pdb_dict[gpcr_id][gen_num];
+                var pdbppos_s=pdbppos[0]+":"+pdbppos[1]
+                bw_dict[bw]=pdbppos
+                gpcrdb_dict[db]=pdbppos
+                pdb_gpcrdb[pdbppos_s]=db
             }
             num_gpcrs++;
             all_gpcr_dicts[gpcr_id]={"combined_num":gpcr_pdb_dict[gpcr_id], "bw_num": bw_dict, "gpcrDB_num":gpcrdb_dict};
         }
-        return [all_gpcr_dicts , num_gpcrs];
+        return [all_gpcr_dicts , num_gpcrs,pdb_gpcrdb];
     }
     
     $("#receptor").addClass("active");
@@ -263,14 +283,16 @@ $(document).ready(function(){
     var all_chains = $(".str_file").data("all_chains").split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
-    var bw_dict,gpcrdb_dict,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
+    var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
     if (gpcr_pdb_dict !="no"){
         gpcr_id_name=$("#cons_pos_box_all").data("gpcr_id_name");
         //gpcr_pdb_dict=JSON.parse(gpcr_pdb_dict);
         dicts_results=obtainDicts(gpcr_pdb_dict);
-        all_gpcr_dicts=dicts_results[0];
+        all_gpcr_dicts=dicts_results[0];  
         num_gpcrs =dicts_results[1];
+        pdb_gpcrdb=dicts_results[2];
     }
+    window.pdb_gpcrdb=pdb_gpcrdb;
     
 
 
@@ -978,7 +1000,7 @@ $(document).ready(function(){
                     if (inpSource=="main"){
                         var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
                         addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
-                    } else {
+                    } else if (inpSource=="inp_wth") {
                         var to_add_inside=my_gpcr+' not found at '+gpcr_id_name[gpcr_id]+'.';
                         addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                     }
@@ -1033,7 +1055,7 @@ $(document).ready(function(){
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
                             addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
 
-                        } else {
+                        } else if (inpSource=="inp_wth") {
                             var to_add_inside=gpcr_pair_str+' not found at '+gpcr_id_name[gpcr_id]+'.';
                             addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
                         }
@@ -1089,7 +1111,7 @@ $(document).ready(function(){
             if (inpSource=="main"){
                 var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
                 addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","append",to_add_inside);
-            } else {
+            } else if (inpSource=="inp_wth"){
                 var to_add_inside="GPCR generic residue numbering is not supported for this stricture.";
                 addErrorToInput("#"+rownum,inpSource,alertSel+"_gnum","html",to_add_inside);
             }
@@ -1185,14 +1207,42 @@ $(document).ready(function(){
     }
 
 
+    function obtainTMs(tmsel_section){
+        var tm_show_li=[]
+        if (tmsel_section=="em"){
+            var tmcjqsel=".ed_tmsel.active";
+        } else {
+            var tmcjqsel=".tmsel.active";
+        }
+        $(tmcjqsel).each(function(){
+            var sel_li=[];
+            var tmsel=$(this).data("tmsel");
+            for (id in tmsel){
+                sel_li[sel_li.length]=tmsel[id];
+            }
+            var tm_show=sel_li.join(" or ");
+            tm_show_li[tm_show_li.length]="("+tm_show+")";
+        }); 
+        if (tm_show_li){
+            var tm_show_all=tm_show_li.join(" or ");
+            tm_show_ok=inputText(gpcr_pdb_dict,tm_show_all,false,false,false);
+        } else{
+            tm_show_ok="";
+        }    
+        return tm_show_ok;
+    }
 
     function obtainCompounds(){
         var shortTypeName={'Ligand':'lg','Lipid':'lp','Ions':'i','Water':'w','Other':'o'}
         var comp=[];
         $(".comp.active").each(function(){
             var ctype=$(this).data("comptype");
-            comp[comp.length]=$(this).attr("id")+"-"+shortTypeName[ctype];
+            comp[comp.length]=$(this).attr("id")+"_"+shortTypeName[ctype];
         });
+        var tms_selstr=obtainTMs("qs");
+        if (tms_selstr){
+            comp[comp.length]=tms_selstr+"_"+"t" //T for TM
+        }
         return comp;
     }
     
@@ -1425,25 +1475,34 @@ $(document).ready(function(){
     }
 
     function obtainWaterDist(){             
-    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?
-    //we are in the parent so no need for window.parent.document                                     
+    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?    //we are in the parent so no need for window.parent.document                                     
     var checked=$(".WaterDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
 
-        if (checked == true){
-            var inp=$("#waterswithin").val()
-            if(inp && /^[\d.]+$/.test(inp)) {  
-            // if(inp) {
-                var water_dist=Number(inp)
-
-            }else{
-                water_dist=0      //give an error?? or not? for example if user types a letter 
-            }
+    var inp=$("#waterswithin").val()
+        if(inp && /^[\d.]+$/.test(inp)) {  
+            var water_dist=Number(inp)
         }else{
-            water_dist=0         // be careful if you change this with function createReps the if statement is now considering a number to be true 
+            water_dist=Number(0)      //give an error?? or not? for example if user types a letter 
+            }
 
-        }
-        return(water_dist)   
+        return[checked, water_dist]
     }
+
+    function obtainPolar(){
+        var checked=$(".PolarDisplay").is(":checked");
+        return (checked)
+    }
+
+    function obtainWaterBox(){
+        var inp = $("#waterswithin").val()
+        if(inp && /^[\d.]+$/.test(inp)) {  
+            var water_box=Number(inp)
+        }else{
+            water_box = Number(0)
+        }
+        return(water_box)
+    }
+
 
     function activate_row(row,triggerNGL){
         row.find(".tick").html('<span class="glyphicon glyphicon-ok" style="font-size:10px;color:#7acc00;padding:0;margin:0"></span>');
@@ -1618,6 +1677,7 @@ $(document).ready(function(){
                                 //Table
                                     var table_html='<div class="int_tbl" id=int_tbl'+i_id+' data-int_id='+int_id+' class="table-responsive" style="border:1px solid #F3F3F3;padding:10px;overflow:auto">\
                                     <div style="font-size:12px;margin-top:10px;margin-bottom:10px" ><b>Threshold:</b> '+thr_ok+' &#8491; ('+dist_scheme_name+'), <b>Trajectory:</b> '+trajFile+strideText+'</div>\
+                                      <div style="overflow-y:auto;overflow-x:hidden;max-height:400px">\
                                       <table class="table table-condensed int_results_tbl" style="font-size:12px;">\
                                         <thead>\
                                           <tr>\
@@ -1678,11 +1738,12 @@ $(document).ready(function(){
                                         }                              
                                     }
 
-                                    table_html+="</tbody></table>";;
+                                    table_html+="</tbody></table></div>\
+                                    <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear table</button>";
                                                                         
                                     var chart_div="int_chart_"+i_id.toString();
-                                    var infoAndOpts= "<div id='"+chart_div+"'></div>\
-                                        <div class='checkbox' style='font-size:12px;margin-bottom:0'>\
+                                    var infoAndOpts= "<div id='"+chart_div+"' style='margin-top:30px'></div>\
+                                        <div class='checkbox' style='font-size:12px;margin-bottom:0;display:inline-block'>\
 		                                    <label><input type='checkbox' name='view_int' checked class='display_int'>Display interacting residues</label>\
                                         </div>\
                                         <div class='int_settings'>\
@@ -1693,7 +1754,7 @@ $(document).ready(function(){
                                             </div>\
                                             <div style='display:inline-block;margin:5px'>\
                                                 <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                    <span  title='Save data' class='glyphicon glyphicon-file save_data_int'></span>\
+                                                    <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_int'></span>\
                                                 </a>\
                                             </div>\
                                             <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-1px'>\
@@ -1736,6 +1797,17 @@ $(document).ready(function(){
                                             var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
                                             $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source);
                                             
+
+                                            google.visualization.events.addListener(chart, 'select', function(){  
+                                                var mysel = chart.getSelection()[0];
+                                                if (mysel){          
+                                                    var row_to_sel=mysel.row +1
+                                                    console.log("tr:eq("+row_to_sel+")")
+                                                    $("#int_chart_1").siblings("table").find("tr:eq("+row_to_sel+")").children(".AA_td").trigger("click");
+                                                }
+                                            });
+
+
                                             /*var this_tbl_td=$('#int_tbl'+i_id.toString()).find("td");
                                             $("#int_info").on("click", this_tbl_td , function(){
                                                 var this_row=$(this).parent().index();
@@ -1871,14 +1943,25 @@ $(document).ready(function(){
         if (isclicked) {
             $(this).css("background-color","transparent").removeClass("showInP");
         } else {
-            $(this).css("background-color","#ecf6f9").addClass("showInP");
+            $(this).css("background-color","#c5e3ed").addClass("showInP");
         }
         if ($(this).closest(".int_tbl").find(".display_int").is(":checked")){
             $("#selectionDiv").trigger("click");
         }
     });
 
-      
+    $("#int_info").on("click",".clear_int_tbl",function(){
+        var int_tbl_el=$(this).closest(".int_tbl");
+        var found_sel =int_tbl_el.find(".AA_td.showInP");
+        if (found_sel.length >0){
+            found_sel.each(function(){
+                $(this).css("background-color","transparent").removeClass("showInP");
+            })
+            if ((int_tbl_el).find(".display_int").is(":checked")){
+                $("#selectionDiv").trigger("click");                
+            }
+        }
+    });
 //-------- Dist between residues --------
 
     var i_dist=1;
@@ -1919,6 +2002,9 @@ $(document).ready(function(){
     });
     
     $(".dist_btw").on("change" , ".dist_el_sel" , function(){
+        $(".dist_btw").find(".has-error").each(function(){
+            $(this).removeClass("has-error");
+        });
         var selection=$(this).val();
         var drow = $(this).closest(".dist_pair");
         if (selection == "residues"){
@@ -2233,11 +2319,14 @@ $(document).ready(function(){
 
     function updateframeFromPlot(mychart,array_f){
         var mysel = mychart.getSelection()[0];
-        var frame_num=array_f[mysel.row+1][0];
-        //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
-        //frameinput_sel.val(frame_num);
-        //frameinput_sel.slider("refresh");
-        $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ frame_num ]);
+        if (mysel){        
+            var frame_num=array_f[mysel.row+1][0];
+            //console.log(frame_num)
+            //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
+            //frameinput_sel.val(frame_num);
+            //frameinput_sel.slider("refresh");
+            $('#embed_mdsrv')[0].contentWindow.$('body').trigger('changeframeNGL', [ frame_num ]);
+        }
     }
 
     var chart_img={};
@@ -2325,10 +2414,14 @@ $(document).ready(function(){
                                         */
                                         var options_t = {'title':'Residue Distance ('+trajFile+strideText+')',
                                             "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'}};
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Time (ns)"},vAxis: {title: 'Distance (angstroms)'},
+                                            "tooltip": { "trigger": 'selection' }
+                                        };
                                         var options_f = {'title':'Residue Distance ('+trajFile+strideText+')',
                                             "height":350, "width":640, "legend":{"position":"right","textStyle": {"fontSize": 10}}, 
-                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'}};
+                                            "chartArea":{"right":"120","left":"65","top":"50","bottom":"60"},hAxis: {title: "Frame number"},vAxis: {title: 'Distance (angstroms)'},
+                                            "tooltip": { "trigger": 'selection' }
+                                        };
                                         newgraph_sel="dist_chart_"+d_id.toString();
                                         var plot_html;
                                         if ($.active<=1){
@@ -2352,7 +2445,7 @@ $(document).ready(function(){
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
                                                                     <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
@@ -2385,7 +2478,7 @@ $(document).ready(function(){
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
                                                                     <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                        <span  title='Save data' class='glyphicon glyphicon-file save_data_dist_plot'></span>\
+                                                                        <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;vertical-align:-2px'>\
@@ -2409,10 +2502,17 @@ $(document).ready(function(){
                                             var img_source =  chart0.getImageURI(); 
                                             $("#"+chart_cont).attr("data-url",img_source);
                                         });                                
-                                        chart0.draw(data, options);                                
-                                        google.visualization.events.addListener(chart0, 'select', function(){  
+                                        chart0.setAction({
+                                          id: "c0",
+                                          text: 'Display frame on viewer',
+                                          action: function() {
                                             updateframeFromPlot(chart0,dist_array_f);
+                                          }
                                         });
+                                        chart0.draw(data, options);                                
+//                                        google.visualization.events.addListener(chart0, 'select', function(){  
+//                                            updateframeFromPlot(chart0,dist_array_f);
+//                                        });
 
 
                                         var chart_cont=chart_cont_li[1][0];
@@ -2423,11 +2523,21 @@ $(document).ready(function(){
                                         google.visualization.events.addListener(chart1, 'ready', function () {
                                             var img_source =  chart1.getImageURI(); 
                                             $("#"+chart_cont).attr("data-url",img_source);
-                                        });                                
-                                        chart1.draw(data, options);                                    
-                                        google.visualization.events.addListener(chart1, 'select', function(){  
+                                        }); 
+
+                                        chart1.setAction({
+                                          id: "c1",
+                                          text: 'Display frame on viewer',
+                                          action: function() {
                                             updateframeFromPlot(chart1,dist_array_f);
+                                          }
                                         });
+
+
+                                        chart1.draw(data, options);                                    
+//                                        google.visualization.events.addListener(chart1, 'select', function(){  
+//                                            updateframeFromPlot(chart1,dist_array_f);
+//                                        });
 
 ///////////////////
 //                                        for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
@@ -2929,6 +3039,37 @@ $(document).ready(function(){
     });
     
 
+
+    function hbond_dict_to_sorted_li(hbonds){
+        var hbonds_li=[];
+        for (don_res in hbonds){
+            var acc_li=hbonds[don_res];
+            for (aN=0;aN<acc_li.length;aN++){
+                var acc_info=acc_li[aN];
+                var acc_res=acc_info[0];
+                var freq=acc_info[1];
+                var atom0=acc_info[2];
+                var atom1=acc_info[3];
+                var chain0=acc_info[4];
+                var chain1=acc_info[5];
+                hbonds_li[hbonds_li.length]=[don_res,acc_res,freq,atom0,atom1,chain0,chain1];
+            }
+        }
+        hbonds_li.sort(function(a, b){return Number(b[2]) - Number(a[2])});
+        return hbonds_li
+    }
+
+
+    function hb_sb_transfballes(balles){    
+        if (balles=="-"){
+            balles="";
+        } else {
+            balles=' | '+balles;
+        }
+        return balles;
+    }
+
+
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
@@ -2994,64 +3135,164 @@ $(document).ready(function(){
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4><br><center><table id="intramol" class="table table-condesed" style="font-size:12px;"><thead><tr><th>Donor</th><th>Acceptors (Frecuency)</th><th></th><tbody>';
+                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4>\
+                                    <div class="scrolldowndiv">\
+                                        <table id="intramol" class="table table-condesed" style="font-size:12px;">\
+                                            <thead>\
+                                                <tr>\
+                                                    <th>Donor</th>\
+                                                    <th>Acceptor</th>\
+                                                    <th>Frecuency</th>\
+                                                    <th></th>\
+                                            </thead><tbody>';
                         //gnumFromPosChain(pos, chain)
-                        for (var property in hbonds) {
-                            if (hbonds.hasOwnProperty(property)) {
-                                var string =property;
-                                var string2 =hbonds[property][0][0];
-                                var donor = string.match(regex)[0];  // creates array from matches
-                                var acceptor = string2.match(regex)[0];  // creates array from matches
-                                donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
-                                acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+                        var sort_by="freq";
+                        if (sort_by=="freq"){
+                            var hbonds_li_sorted=hbond_dict_to_sorted_li(hbonds);
+                            for (hN=0;hN<hbonds_li_sorted.length;hN++){
+                                var donor_str=hbonds_li_sorted[hN][0];
+                                var acceptor_str=hbonds_li_sorted[hN][1];
+                                var freq=hbonds_li_sorted[hN][2];
+                                var atom0=hbonds_li_sorted[hN][3];
+                                var atom1=hbonds_li_sorted[hN][4];
+                                var chain0=hbonds_li_sorted[hN][5];
+                                var chain1=hbonds_li_sorted[hN][6];
 
-                                table=table+'<tr> <td rowspan='+ hbonds[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds[property][0][0]+' | '+acceptorballes+' ('+hbonds[property][0][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
-                                for (index = 1; index < hbonds[property].length; ++index) {
-                                    var string2 =hbonds[property][index][0];
+                                var donor = donor_str.match(regex)[0];  // creates array from matches
+                                var acceptor = acceptor_str.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),chain0)
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),chain1)
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
+                                table=table+'<tr> \
+                                                <td>'+ donor_str+donorballes+'</td>\
+                                                <td> '+acceptor_str+acceptorballes+'</td>\
+                                                <td> '+freq+'% </td>\
+                                                <td>\
+                                                    <button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' \
+                                                        data-atomindexes='+atom0+'$%$'+atom1+'>Show Hbond</button>' ;
+                            }
+
+                        } else if (sort_by=="donor-acceptor"){ // I leave it in case in the future I want to add the option to switch between sorting methods
+                            for (var property in hbonds) {
+                                if (hbonds.hasOwnProperty(property)) {
+                                    var string =property;
+                                    var string2 =hbonds[property][0][0];
+                                    var donor = string.match(regex)[0];  // creates array from matches
                                     var acceptor = string2.match(regex)[0];  // creates array from matches
-                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
-                                    table=table+'<tr><td>'+hbonds[property][index][0]+' | '+acceptorballes+' ('+hbonds[property][index][1]+'%) </td><td><button class="showhb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button>';
+                                    donorballes=gnumFromPosChain(String(donor),hbonds[property][0][4])
+                                    donorballes=hb_sb_transfballes(donorballes);
+                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][0][5])
+                                    acceptorballes=hb_sb_transfballes(acceptorballes);
+
+                                    table=table+'<tr> \
+                                                    <td rowspan='+ hbonds[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                                    <td> '+hbonds[property][0][0]+acceptorballes+'</td>\
+                                                    <td> '+hbonds[property][0][1]+'% </td>\
+                                                    <td><button class="showhb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][0][2]+'$%$'+hbonds[property][0][3]+'>Show Hbond</button>' ;
+                                    for (index = 1; index < hbonds[property].length; ++index) {
+                                        var string2 =hbonds[property][index][0];
+                                        var acceptor = string2.match(regex)[0];  // creates array from matches
+                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds[property][index][5])
+                                        acceptorballes=hb_sb_transfballes(acceptorballes);
+                                        table=table+'<tr>\
+                                            <td>'+hbonds[property][index][0]+acceptorballes+' </td>\
+                                            <td>'+hbonds[property][index][1]+'% </td>\
+                                            <td><button class="showhb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds[property][index][2]+'$%$'+hbonds[property][index][3]+'>Show Hbond</button></td>';
+                                    }
                                 }
                             }
                         }
-                        table=table+'</table></center><center>';
+                        table=table+'</table></div><center>';
                         $('#ShowAllHbIntra').show();
                         $('#hbonds').html(table);
 
 
-                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4><br><center><table id="intermol"  class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency)</th><th></th><tbody>';
-                        for (var property in hbonds_np) {
-                            if (hbonds_np.hasOwnProperty(property)) {
-                                var string =property;
-                                var string2 =hbonds_np[property][0][0];
-                                if (/^\d/.test(string2)){
-                                    var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
-                                    acceptorballes="-";
-                                } else {
-                                    var acceptor = string2.match(regex)[0];  // creates array from matches
-                                    acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5]) 
-                                }
-                                
-                                var donor = string.match(regex)[0];  // creates array from matches
-                                donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4>\
+                                        <div class="scrolldowndiv" >\
+                                            <table id="intermol"  class="table table-condesed" style="font-size:12px;">\
+                                                <thead>\
+                                                    <tr>\
+                                                        <th>Residue1</th>\
+                                                        <th>Residue2</th>\
+                                                        <th>Frecuency</th>\
+                                                        <th></th>   \
+                                                    </tr>\
+                                                </thead>\
+                                                <tbody>';
+                        
+                        if (sort_by=="freq"){
+                            var hbonds_li_sorted=hbond_dict_to_sorted_li(hbonds_np);
+                            for (hN=0;hN<hbonds_li_sorted.length;hN++){
+                                var donor_str=hbonds_li_sorted[hN][0];
+                                var acceptor_str=hbonds_li_sorted[hN][1];
+                                var freq=hbonds_li_sorted[hN][2];
+                                var atom0=hbonds_li_sorted[hN][3];
+                                var atom1=hbonds_li_sorted[hN][4];
+                                var chain0=hbonds_li_sorted[hN][5];
+                                var chain1=hbonds_li_sorted[hN][6];
 
+                                var donor = donor_str.match(regex)[0];  // creates array from matches
+                                var acceptor = acceptor_str.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),chain0)
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),chain1)
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
 
-                                tablenp=tablenp+'<tr> <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+' | '+donorballes+'<td> '+hbonds_np[property][0][0]+' |'+acceptorballes+' ('+hbonds_np[property][0][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button>';
-                                for (index = 1; index < hbonds_np[property].length; ++index) {
-                                    var string2 =hbonds_np[property][index][0];
+                                tablenp=tablenp+'<tr> \
+                                        <td>'+ donor_str+donorballes+'</td>\
+                                        <td> '+acceptor_str+acceptorballes+' </td>\
+                                        <td> '+freq+'% </td>\
+                                        <td>\
+                                            <button class="showhb_inter btn btn-default btn-xs clickUnclick"  \
+                                            data-resids='+ donor + '$%$' + acceptor +' \
+                                            data-atomindexes='+atom0+'$%$'+atom1+'>Show Hbond</button></td>';
+                            }
+
+                        } else if (sort_by=="donor-acceptor"){
+                            for (var property in hbonds_np) {
+                                if (hbonds_np.hasOwnProperty(property)) {
+                                    var string =property;
+                                    var string2 =hbonds_np[property][0][0];
                                     if (/^\d/.test(string2)){
                                         var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
-                                        acceptorballes="-";
+                                        acceptorballes="";
                                     } else {
                                         var acceptor = string2.match(regex)[0];  // creates array from matches
-                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                        acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][0][5]) 
+                                        acceptorballes=hb_sb_transfballes(acceptorballes);
                                     }
                                     
-                                    tablenp=tablenp+'<tr><td>'+hbonds_np[property][index][0]+' | '+acceptorballes+' ('+hbonds_np[property][index][1]+'%) </td><td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button>';
+                                    var donor = string.match(regex)[0];  // creates array from matches
+                                    donorballes=gnumFromPosChain(String(donor),hbonds_np[property][0][4])
+                                    donorballes=hb_sb_transfballes(donorballes);
+
+                                    tablenp=tablenp+'<tr> \
+                                            <td rowspan='+ hbonds_np[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                            <td> '+hbonds_np[property][0][0]+acceptorballes+' </td>\
+                                            <td> '+hbonds_np[property][0][1]+'% </td>\
+                                            <td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][0][2]+'$%$'+hbonds_np[property][0][3]+'>Show Hbond</button></td>';
+                                    for (index = 1; index < hbonds_np[property].length; ++index) {
+                                        var string2 =hbonds_np[property][index][0];
+                                        if (/^\d/.test(string2)){
+                                            var acceptor ="["+string2.replace(/\d*$/g,"")+"]";
+                                            acceptorballes="-";
+                                        } else {
+                                            var acceptor = string2.match(regex)[0];  // creates array from matches
+                                            acceptorballes=gnumFromPosChain(String(acceptor),hbonds_np[property][index][5])
+                                            acceptorballes=hb_sb_transfballes(acceptorballes);
+                                        }
+                                        
+                                        tablenp=tablenp+'<tr>\
+                                            <td>'+hbonds_np[property][index][0]+acceptorballes+' </td>\
+                                            <td>'+hbonds_np[property][index][1]+'% </td>\
+                                            <td><button class="showhb_inter btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+hbonds_np[property][index][2]+'$%$'+hbonds_np[property][index][3]+'>Show Hbond</button></td>';
+                                    }
                                 }
                             }
                         }
-                        tablenp=tablenp+'</table></center><center>';
+
+                        tablenp=tablenp+'</table></div><center>';
                         $('#ShowAllHbInter').show();
                         $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
                         $('#hbondsnp').html(tablenp);
@@ -3146,18 +3387,38 @@ $(document).ready(function(){
                         $("#wait_saltb").remove();
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
-                        var salt='<center><table class="table table-condesed" style="font-size:12px;"><thead><tr><th>Residue1</th><th>Residue2 (Frecuency%)</th><th></th><tbody>';
+                        var salt='<center>\
+                                    <table class="table table-condesed" style="font-size:12px;">\
+                                        <thead>\
+                                            <tr>\
+                                                <th>Residue1</th>\
+                                                <th>Residue2</th>\
+                                                <th>Frecuency</th>\
+                                                <th></th><tbody>';
                         for (var property in salty) {
                             if (salty.hasOwnProperty(property)) {
                                 var string =property;
                                 var string2 =salty[property][0][0];
                                 var donor = string.match(regex)[0];  // creates array from matches
                                 var acceptor = string2.match(regex)[0];  // creates array from matches
-                                salt=salt+'<tr> <td rowspan='+ salty[property].length.toString() + '>'+ property+'<td> '+salty[property][0][0]+' ('+salty[property][0][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button>';
+                                donorballes=gnumFromPosChain(String(donor),salty[property][0][4]);
+                                donorballes=hb_sb_transfballes(donorballes);
+                                acceptorballes=gnumFromPosChain(String(acceptor),salty[property][0][5]);
+                                acceptorballes=hb_sb_transfballes(acceptorballes);
+                                salt=salt+'<tr> \
+                                            <td rowspan='+ salty[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                            <td> '+salty[property][0][0]+acceptorballes+'</td>\
+                                            <td> '+salty[property][0][1]+'% </td>\
+                                            <td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button></td>';
                                 for (index = 1; index < salty[property].length; ++index) {
                                     string2=salty[property][index][0]
                                     acceptor = string2.match(regex)[0];
-                                    salt=salt+'<tr><td>'+salty[property][index][0]+' ('+salty[property][index][1]+'%) </td><td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button>';
+                                    acceptorballes=gnumFromPosChain(String(acceptor),salty[property][index][5]);
+                                    acceptorballes=hb_sb_transfballes(acceptorballes);
+                                    salt=salt+'<tr>\
+                                                <td>'+salty[property][index][0]+acceptorballes+'</td>\
+                                                <td>'+salty[property][index][1]+'% </td>\
+                                                <td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button></td>';
                                 }
                             }
                         }
@@ -3558,10 +3819,14 @@ $(document).ready(function(){
                                 var data_f = google.visualization.arrayToDataTable(rmsd_array_f,false);
                                 var options_t = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Time (ns)'},vAxis: {title: 'RMSD'},
+                                    "tooltip": { "trigger": 'selection' }
+                                };
                                 var options_f = {'title':'RMSD (traj:'+trajFile+', ref: fr '+rmsdRefFr+' of traj '+refTrajFile + strideText+', sel: '+rmsdSelOk+')',
                                     "height":350, "width":640, "legend":{"position":"none"}, 
-                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'}};
+                                    "chartArea":{"right":"10","left":"60","top":"50","bottom":"60"},hAxis: {title: 'Frame number'},vAxis: {title: 'RMSD'},
+                                    "tooltip": { "trigger": 'selection' }
+                                };
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
                                 if ($.active<=1){
@@ -3585,7 +3850,7 @@ $(document).ready(function(){
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
                                                             <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
@@ -3614,7 +3879,7 @@ $(document).ready(function(){
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
                                                             <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
-                                                                <span  title='Save data' class='glyphicon glyphicon-file save_data_rmsd_plot'></span>\
+                                                                <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;color:#DC143C;cursor:pointer;'>\
@@ -3635,10 +3900,17 @@ $(document).ready(function(){
                                     var rmsd_img_source =  chart0r.getImageURI(); 
                                     $("#"+chart_cont).attr("data-url",rmsd_img_source);
                                 });
-                                chart0r.draw(data, options);   
-                                google.visualization.events.addListener(chart0r, 'select', function(){  
+                                chart0r.setAction({
+                                  id: "c0r",
+                                  text: 'Display frame on viewer',
+                                  action: function() {
                                     updateframeFromPlot(chart0r,rmsd_array_f);
+                                  }
                                 });
+                                chart0r.draw(data, options);   
+//                                google.visualization.events.addListener(chart0r, 'select', function(){  
+//                                    updateframeFromPlot(chart0r,rmsd_array_f);
+//                                });
 
                                 var chart_cont=chart_cont_li[1][0];
                                 var data=chart_cont_li[1][1];
@@ -3649,10 +3921,17 @@ $(document).ready(function(){
                                     var rmsd_img_source =  chart1r.getImageURI(); 
                                     $("#"+chart_cont).attr("data-url",rmsd_img_source);
                                 });
-                                chart1r.draw(data, options);   
-                                google.visualization.events.addListener(chart1r, 'select', function(){  
+                                chart1r.setAction({
+                                  id: "c0r",
+                                  text: 'Display frame on viewer',
+                                  action: function() {
                                     updateframeFromPlot(chart1r,rmsd_array_f);
+                                  }
                                 });
+                                chart1r.draw(data, options);   
+//                                google.visualization.events.addListener(chart1r, 'select', function(){  
+//                                    updateframeFromPlot(chart1r,rmsd_array_f);
+//                                });
 
 
 //                                for (chartN=0 ; chartN < chart_cont_li.length ; chartN++){
@@ -3765,7 +4044,7 @@ $(document).ready(function(){
         if ($("#EdrepsOn").hasClass("active")){
             if (add_reps){
                 //Hide quick reps
-                $("#receptor,.rep_elements").not("#bindingSite").removeClass("active");
+                $("#receptor,.rep_elements,.tmsel").not("#bindingSite").removeClass("active");
 
                 //Add GPCR
                 prot_sel=gpcr_selection();
@@ -3851,7 +4130,7 @@ $(document).ready(function(){
     click_unclick("#receptor");
     click_unclick(".clickUnclick")
     $("#btn_all").click(function(){
-        $(".rep_elements").addClass("active");
+        $(".rep_elements:not(.tmsel)").addClass("active");
         $("#receptor").addClass("active");
         $("#selectionDiv").trigger("click");
     });
@@ -3946,6 +4225,10 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     });
 
+    $("#btn_clear_tms").click(function(){
+        $(".tmsel").removeClass("active");
+        $("#selectionDiv").trigger("click");
+    });
     
     
     $(".showHSet").click(function(){
@@ -4008,6 +4291,10 @@ $(document).ready(function(){
             loadEd=true;
             ed_finsel=ligsel_ed;
         } 
+        if ($(".ed_tmsel.active").length>0){
+            loadEd=true;
+            ed_finsel=obtainTMs("em");
+        }
         var receptorsel_ed=gpcr_selection_active(true);
         if (receptorsel_ed){
             loadEd=true;
@@ -4066,7 +4353,10 @@ $(document).ready(function(){
         var traj = $("#selectedTraj").data("tpath");
         var receptorsel=gpcr_selection_active(false);
         bs_info=obtainBS();
-        var water_dist=obtainWaterDist();
+        var water_dist = obtainWaterDist()[1];
+        var water_check = obtainWaterDist()[0]
+        var waterbox = obtainWaterBox();
+        var polar_check = obtainPolar();
         var resultHBSB=selectionHBSB();
         fpSelInt_send={};
         if ($("#FPdisplay").hasClass("active")){
@@ -4088,6 +4378,9 @@ $(document).ready(function(){
                 "receptorsel":receptorsel,
                 "bs_info" :bs_info,
                 "water_dist":water_dist,
+                "water_check": water_check,
+                "waterbox": waterbox,
+                "polar_check": polar_check,
                 "hbondarray":resultHBSB["atomshb"],
                 "hb_inter":resultHBSB["atomshb_inter"],
                 "sbondarray":resultHBSB["atomssb"],
@@ -4130,8 +4423,10 @@ $(document).ready(function(){
         window.bs_info=bs_info;
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
-        var water_dist=obtainWaterDist();     //
+        var water_dist=obtainWaterDist()[1];     //
         window.water_dist=water_dist;
+        var water_check = obtainWaterDist()[0];
+        window.water_check = water_check; 
     }
     window.passinfoToPlayTraj=passinfoToPlayTraj;
     
@@ -4282,6 +4577,9 @@ $(document).ready(function(){
         if (receptorsel){
             add_fpsegStr=true;
         }
+        if ($(".tmsel.active").length >0){
+            add_fpsegStr=true;
+        }
         var fpsegStr_send=[];
         if (add_fpsegStr){
             fpsegStr_send = fpsegStr;
@@ -4368,6 +4666,7 @@ $(document).ready(function(){
         atomssb=[];
         all_resids_sb=[];
         removeCompBtns();
+        $(".tmsel").removeClass("active");
         $(".sel_input, .dist_from, .dist_to, #rmsd_frame_1, #rmsd_frame_2, #rmsd_ref_frame, #int_thr, .seq_input, .inp_stride, .dis_res_bth").val("");
         $(".sel_within").find(".inputdist").val("");
         $(".sel_within").find(".user_sel_input").val("");
@@ -4405,6 +4704,10 @@ $(document).ready(function(){
         $("#int_info").find(".display_int").each(function(){
             $(this).attr("checked",false);
         });
+        $("#int_info").find(".AA_td.showInP").each(function(){
+            $(this).css("background-color","transparent").removeClass("showInP");
+        });
+
         $("#text_input_all").find(".text_input:not(:first-child)").each(function(){
             $(this).remove();            
         });
@@ -4454,7 +4757,31 @@ $(document).ready(function(){
         });
         $("#EDselectionDiv").trigger("click");
     }); 
-    
+
+
+    $('#varinfo_par').tooltip({
+        selector: '.showtooltip',
+        trigger:"hover",
+        html:true,
+        container: "#view_screen"
+
+    });  
+
+    $("#varinfo_par").on("click", ".close_var_mut" , function(){
+        $("#varinfo_par").html("");
+        //$('.popover').popover("hide");                    
+    });
+
+
+
+//    $("#content:not(#varinfo_par)").on("click", function(){
+//        $("#varinfo_par").html("");
+//    });
+
+//    $("body:not(#varinfo_par)").on("mousedown" , function(){
+//        $("#varinfo_par").html("");
+//    });
+
 //-------- Flare Plots --------
     function showHideTitle(titletext,newWord){
         if (newWord == "display"){
@@ -4478,9 +4805,6 @@ $(document).ready(function(){
               placement: 'auto',
               container: 'body'
             });
-            //console.log("....")
-            //console.log($(this).attr('title'))
-            //console.log("....")
         });
 
         //Put hoverlabels (tooltips) in flareplot position texts
@@ -4589,7 +4913,45 @@ $(document).ready(function(){
 
     }
 
+    function fake_hasClass(selector,classnm){
+        return $(selector).attr("class").indexOf(classnm) != -1 ;
+    }
 
+//    function fake_addClass(selector,classnm){
+//        if (! fake_hasClass(selector,classnm)){
+//            var new_class= $(selector).attr("class") +" "+classnm;
+//            $(selector).attr("class",new_class);
+//        }
+//    }
+
+    var clickEdgeSelectNodes = function(d){
+        var name_s=d.source.name;
+        var name_t=d.target.name;
+        var is_sel_s = fake_hasClass("#node-"+name_s,"toggledNode");// $("#node-"+name_s).attr("class").indexOf("toggledNode") != -1 ;
+        var is_sel_t = fake_hasClass("#node-"+name_t,"toggledNode");//$("#node-"+name_t).attr("class").indexOf("toggledNode") != -1;
+        if (is_sel_s == is_sel_t ){
+            plot.toggleNode(name_s);
+            plot.toggleNode(name_t);
+        } else {
+            if (!is_sel_s){
+                plot.toggleNode(name_s);
+            } else if (!is_sel_t){
+                plot.toggleNode(name_t);
+            }
+        }
+        plot.setFrame(pg_framenum);
+        $("#selectionDiv").trigger("click");
+    }
+
+    function hoverLinksFP(){
+        $("path.link").hover(function(){
+           var newclass=$(this).attr("class") + " hoverlink";
+           $(this).attr("class",newclass);
+        }, function(){
+           var newclass=$(this).attr("class").replace("hoverlink","");
+           $(this).attr("class",newclass);            
+        });
+    }
 
     function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts){
         var fpjson=jsonData;
@@ -4611,14 +4973,17 @@ $(document).ready(function(){
         }*/
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         hoverlabelsFP()
+        hoverLinksFP()
         var fpfile = $("#selectedTraj").data("fplot_file");
         $("#downl_json_hb").attr("href","/dynadb/files/Precomputed/flare_plot/hbonds/"+fpfile);
+        plot.addEdgeToggleListener( function(d){
+            clickEdgeSelectNodes(d);
+        });
         return(plot);
     }
 
-    $("#flare-container svg").mousemove( function(e) {
-        console.log(e.pageY,e.pageX)
-    })
+
+
 
     function setFpNglSize(applyMinSize){
         var screen_h=screen.height;
@@ -4855,7 +5220,7 @@ $(document).ready(function(){
         $("#dropdownAndIframe").css({"border" : "1px solid #F5F5F5" , "max-width": cont_w_max , "height":cont_h});
         $("#embed_mdsrv").css("width",cont_w).attr("width",cont_w).attr("height",cont_h_iframe);
         $("#legend_row").css("max-width",cont_w_max);
-        $("#trajsDropdown").css("visibility","visible");
+        $(".showWhenNGLLoad").css("visibility","visible");
         $("#loading").html("");
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
     });
