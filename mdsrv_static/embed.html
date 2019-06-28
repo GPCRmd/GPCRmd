@@ -243,7 +243,6 @@
             var bs_info = parent.bs_info;
             var dist_within_li=parent.dist_of; 
             var water_dist=parent.water_dist; 
-            console.log("help"+ water_dist)       //this is loaded when structure is loaded, but obviously it is empty then. 
 
             $(".traj_btn").click( function(){
                 var btn_traj_Bid=$(this).attr("id");
@@ -1568,8 +1567,7 @@
         function show_hide_watermap(is_checked, mapname,stage){
             ///This function 
             stage.getComponentsByName(mapname).setVisibility(is_checked);
-
-
+            console.log(is_checked + mapname)
             
             return(stage)
 
@@ -1717,6 +1715,7 @@
 
                         //WATERMAP CODE 
                         var selected_traj=$(this).attr("id").replace("traj_id_", "");
+                        console.log('selected' + selected_traj)
                         var watermap_checked= $(".WaterDisplay", window.parent.document).is(":checked")  
 
                         
@@ -1727,13 +1726,13 @@
                                     var selected_filename=trajnames_list[i]
                                     var watermap_loaded= stage.getComponentsByName(selected_filename)
                                     //
-                                    if($.isEmptyObject(watermap_loaded) == false){            //if the array is not empty, then we know that the watermap for the selected trajectory is loaded. 
+                                    if($.isEmptyObject(watermap_loaded) == false){   
                                     var watermap=watermap_loaded.list[0]
                                     console.log(watermap)
                                     watermap.setVisibility(true)
 
                                     }else{
-                                        console.log("the map is not loaded, load it with visibility true")
+                                        console.log("the map is not loaded")
                                     }
                                     //
                     
@@ -1746,6 +1745,7 @@
                             console.log('we check the selected_filename that will be set to visibility true' + selected_filename)
                             // var test=stage.getComponentsByName(selected_filename).list[0]
                             // test.setVisibility(true)
+                            console.log(hide_list)
 
                             for (var j=0; j<hide_list.length; j++){
                                 var hide_name=hide_list[j]
@@ -1840,7 +1840,7 @@
                     $(".WaterDisplay", window.parent.document).on("change", function(){
                         var is_checked=$(this).is(":checked");
                         var slice_checked=$(".SliceDisplay", window.parent.document).is(":checked");
-                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
+                        var selected_traj=$("#selectedTraj_id", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id. 
                         for (var i = 0; i < trajnames_list.length; i++){
                             if (trajnames_list[i].includes(selected_traj)){
                                 var selected_filename=trajnames_list[i]
@@ -1853,7 +1853,7 @@
 
                     $("#WatermapType", window.parent.document).on("click",function(){
                         var v=$(this).val()
-                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
+                        var selected_traj=$("#selectedTraj_id", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
                         
                         for (var i = 0; i < trajnames_list.length; i++){
                             if (trajnames_list[i].includes(selected_traj)){
@@ -1868,7 +1868,7 @@
                     $(".slider_volmap", window.parent.document).on('input',function(){
                         var slider_val=$(this).val();
 
-                        var selected_traj=$("#selectedTraj", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
+                        var selected_traj=$("#selectedTraj_id", window.parent.document).html().match(/[0-9]*/).toString()   //matches trajectory id.
                         
                         for (var i = 0; i < trajnames_list.length; i++){
                             if (trajnames_list[i].includes(selected_traj)){
