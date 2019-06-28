@@ -293,6 +293,7 @@
               //Find PDB position for selected ballesteres positions, if exist
               if (pos in ballesteros_to_pdb){//IF position exists in this protein
                 pdb_pos = ballesteros_to_pdb[pos];
+                pdb_pos = pdb_pos.substring(0, pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter)
                 pdb_pos_array.push(pdb_pos);
               }
               else if (pos == "Ligand") {
@@ -309,6 +310,7 @@
               pos = int_pos[i];
               if (pos in ballesteros_to_pdb){//IF position exists in this protein
                 pdb_pos = ballesteros_to_pdb[pos];
+                pdb_pos = pdb_pos.substring(0, pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter)
                 pdb_pos_array.push(pdb_pos);
               }
               else if (pos == "Ligand") {
