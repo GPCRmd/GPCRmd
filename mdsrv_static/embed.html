@@ -1545,17 +1545,21 @@
 
 
             if (val == 'isolevel'){
-                console.log("this is: " + (Number(slider_val)))
                 p = {
                     isolevel: Number(slider_val)
                 }
 
             }
             if (val == 'transparency'){
-                console.log('transcheck' + (Number(slider_val)))
                 p = {
                     opacity: Number(slider_val)
                 }
+            }
+            if (val == 'smoothness'){
+                p = {
+                    smooth: Number(slider_val)
+                }
+
             }
             stage.getRepresentationsByName("occupancy").setParameters(p);   //we change all the maps, so that if trajectory is changed, the same settings are applied 
 
@@ -1804,7 +1808,7 @@
                             stage.loadFile(trajPath, {visible:false}).then(function(watermap){
                                 watermap.addRepresentation("surface", {
                                     name: "occupancy",
-                                    color: "lightblue", 
+                                    color: "#7baedb", 
                                     isolevelType: "value",
                                     isolevel: 0.3,
 
@@ -1812,7 +1816,9 @@
                                     flatShaded: false,
                                     opacity: 0.5,
                                     metalness: 0,
-                                    wireframe: false 
+                                    wireframe: false,
+                                    smooth: 0,
+                                    linewidth:0.1,
 
                                 });
 
@@ -1874,6 +1880,7 @@
                         change_watermap_style(v, selected_filename, slider_val)
 
                     })
+
 
                     // $(".PolarDisplay", window.parent.document).on("click", function(){
                     //     var is_checked=$(this).is(":checked");
