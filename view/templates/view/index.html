@@ -156,6 +156,7 @@
     overflow-y:auto;
     max-height:300px;
     overflow-x:hidden;
+    width: 100%;
 }
 
 /*.dropdown:hover .dropdown-content {
@@ -271,7 +272,7 @@
                 {% endif %}
               </span>
               {% endif %}
-              <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Dyn info</a>
+              <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Go to simulation report</a>
             </div>
         </div>
  
@@ -290,7 +291,7 @@
                     
                          {% if traj_list %}
                           <div id="trajsDropdown" class="dropdown showWhenNGLLoad" style="z-index:11;visibility:hidden">
-                            <button id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} > 
+                            <button id="selectedTraj" class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} > 
                               <span class="pull-left">
                                 <b>Trajectory ID:</b> <span id="selectedTraj_id">{{ traj_list.0.2 }}</span>
                               </span>
@@ -306,7 +307,7 @@
                          {% endif %}
                          
                         <div class="dropdown" style="z-index:10">
-                            <button id="onclicksel" class="btn btn-info btn-xs dropdown-toggle showWhenNGLLoad" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left;visibility:hidden">
+                            <button id="onclicksel" class="btn btn-default btn-xs dropdown-toggle showWhenNGLLoad" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left;visibility:hidden">
                               <span class="pull-left">
                                 <b>On click:</b> 
                                 <span id="onclickbtntext">Show dists.</span>
@@ -1440,7 +1441,7 @@
                     </span>
                 </div>-->
                 <!--<span id="fphoverinfo"></span>-->
-                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:15px;overflow:auto;margin-bottom:5px">
+                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
                     
                <center>
                  <div id="flare-container"></div>
@@ -1481,7 +1482,7 @@
                       <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
-                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB" href="/dynadb/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
+                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhencomp" href="/dynadb/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
                         <span title="Download data" class="glyphicon glyphicon-download-alt"></span>
                       </a>
                   </span>
@@ -1493,6 +1494,122 @@
            </div> 
         {% endif %}
 <!-- ======================================== -->
+
+<!-- ============= BONDS Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
+Hydrogen bonding frequency: protein-protein and protein-lipid
+</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_bonds" class="collapse">
+                 <div class="row" style="margin-top:10px;margin-bottom:15px">
+
+
+                        <div style="margin-left:18px;margin-bottom:10px;">
+                         Trajectory: 
+                                <select id="hbonds_traj" name="hbonds_traj">
+                                   {% for traj in traj_list %}
+                                   <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                                   {% endfor %}
+                                </select>
+
+                        </div>
+                        <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
+                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                           </div>
+                           <div id="bonds_sel_frames_id" class="col-md-10" style="margin-bottom:5px" >
+                              <div class="row">
+                                 <input type="radio" name="bonds_sel_frames" value="all_frames" checked> 
+                                      All
+                              </div>
+                              <div class="row" >
+                                 <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
+                                     From 
+                                     <span id="bonds_frame_1_par">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                                     </span>
+                                     to 
+                                     <span id="bonds_frame_2_par">
+                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                                     </span>
+
+                              </div>
+                              <div id="hbonds_sel_frames_error" class="row" >
+                              </div>
+                        </div>
+                        
+                        
+                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
+                           </div>
+                           <div id="bonds_backbone" class="col-md-10" style="margin-bottom:10px">
+                                 <div class="row">
+                                  <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
+                                  </div>
+
+                                  <div class="row">
+                                     <input type="radio" name="backbone" value="all" checked> 
+                                          All Hydrogen Bonds
+                                  </div>
+                                  <div class="row" >
+                                     <input type="radio" name="backbone" value="sidechain"> 
+                                          Only Side Chain Hydrogen Bonds
+                                  </div>
+
+
+                              <div class="row">
+                                 <input type="radio" name="backbone" value="all" checked> 
+                                       Include backbone Hydrogen Bonds
+                              </div>
+                           </div>
+                        <div>
+                            <span id="hbonds_cutoff_par">
+                                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" placeholder=10 id="hbonds_cutoff" type="number" style="width:60px;padding-left:7px;margin-bottom:5px" title="Hydrogen bonds with a frequency lower than the threshold will be filtered out."> %
+                            </span>
+                        </div>
+                 </div>
+
+
+                <div class=row>
+                  <button id="ComputeHbonds" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                </div>
+                <div id="bonds_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
+                 <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
+
+                        <div id="bondsresult" style="margin-bottom:20px"> 
+                           <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+
+                              <div  id="hbonds" class="hbonds_both" style="margin-bottom:10px;padding:0"></div> 
+                              <center class="hbonds_btns">
+                                <button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;visibility:hidden;" >Show All</button>
+                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear table</button>
+
+                                <a role="button" class="btn btn-link href_save_data_hbp  disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbp" style="color:#585858;padding:8px 0" data-linkroot="/view/dwl/freq/hbp">
+                                  <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
+                                </a>
+
+                               </center>
+
+
+                               <div  id="hbondsnp" class="hbonds_both" style="margin-bottom:10px;padding:0;width:100%" ></div>
+                               <center class="hbonds_btns">
+                                    <button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden;" >Show All</button>
+                                    <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb_inter">Clear table</button>
+                                    <a role="button" class="btn btn-link href_save_data_hbo disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbo" data-linkroot="/view/dwl/freq/hbo" style="color:#585858;padding:8px 0">
+                                      <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
+                                    </a>
+                                </center>
+                                                         
+                            
+                           </div>
+                        </div>
+
+                    </div>
+                  </div>
+            </div>
+
+
+
 <!-- ============= Compute distances =========== --> 
 
            <div class="row">
@@ -1724,110 +1841,6 @@
               </div>
             {% endif %}
            <!-- </div> original -->
-<!-- ============= BONDS Analysis =========== --> 
-
-           <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
-Hydrogen bonding frequency
-</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
-           </div>
-             <div id="analysis_bonds" class="collapse">
-                 <div class="row" style="margin-top:10px;margin-bottom:15px">
-
-
-                        <div style="margin-left:18px;margin-bottom:10px;">
-                         Trajectory: 
-                                <select id="hbonds_traj" name="hbonds_traj">
-                                   {% for traj in traj_list %}
-                                   <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
-                                   {% endfor %}
-                                </select>
-
-                        </div>
-                        <div class="col-md-12"  style="margin-left:18px;margin-bottom:10px;padding:0"> 
-                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
-                           </div>
-                           <div id="bonds_sel_frames_id" class="col-md-10" style="margin-bottom:5px" >
-                              <div class="row">
-                                 <input type="radio" name="bonds_sel_frames" value="all_frames" checked> 
-                                      All
-                              </div>
-                              <div class="row" >
-                                 <input type="radio" name="bonds_sel_frames" value="bonds_frames_mine"> 
-                                     From 
-                                     <span id="bonds_frame_1_par">
-                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
-                                     </span>
-                                     to 
-                                     <span id="bonds_frame_2_par">
-                                         <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="bonds_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
-                                     </span>
-
-                              </div>
-                              <div id="hbonds_sel_frames_error" class="row" >
-                              </div>
-                        </div>
-                        
-                        
-                           <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Selection:
-                           </div>
-                           <div id="bonds_backbone" class="col-md-10" style="margin-bottom:10px">
-                                 <div class="row">
-		                              <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
-                                  </div>
-
-                                  <div class="row">
-                                     <input type="radio" name="backbone" value="all" checked> 
-                                          All Hydrogen Bonds
-                                  </div>
-                                  <div class="row" >
-                                     <input type="radio" name="backbone" value="sidechain"> 
-                                          Only Side Chain Hydrogen Bonds
-                                  </div>
-
-
-                              <div class="row">
-                                 <input type="radio" name="backbone" value="all" checked> 
-                                       Include backbone Hydrogen Bonds
-                              </div>
-                           </div>
-                        <div>
-                            <span id="hbonds_cutoff_par">
-                                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" placeholder=10 id="hbonds_cutoff" type="number" style="width:60px;padding-left:7px;margin-bottom:5px" title="Hydrogen bonds with a frequency lower than the threshold will be filtered out."> %
-                            </span>
-                        </div>
-                 </div>
-
-
-                <div class=row>
-                  <button id="ComputeHbonds" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
-                </div>
-                <div id="bonds_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
-                 <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
-
-                        <div id="bondsresult" style="margin-bottom:20px"> 
-                           <div style="margin-bottom:10px;padding:0"  class="col-md-12">
-
-                               <div  id="hbonds" style="margin-bottom:10px;padding:0"></div> 
-                              <center>
-                                <button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;display:none;" >Show All</button>
-                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear table</button>
-                               </center>
-
-
-                               <div  id="hbondsnp" style="margin-bottom:10px;padding:0;width:100%" ></div>
-                               <center>
-                                    <button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button>
-                                    <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb_inter">Clear table</button>
-                                </center>
-                                                         
-                            
-                           </div>
-                        </div>
-
-                    </div>
-                  </div>
-            </div>
 
 <!-- ============= SaltBridges Analysis =========== --> 
 
@@ -1887,8 +1900,11 @@ Hydrogen bonding frequency
                            <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
 
                             <center>
-                                <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;display:none;" >Show All</button>
+                                <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden" >Show All</button>
                                 <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear table</button>
+                                <a role="button" class="btn btn-link href_save_data_sb disablewhencomp pull-right settingsB" href="/view/dwl/freq/sb" data-linkroot="/view/dwl/freq/sb" style="color:#585858;padding:8px 0">
+                                  <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
+                                </a>
                             </center>
                       
                            </div>

@@ -1461,7 +1461,69 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
     return(True, data_fin, small_errors)
 
 
+def download_hb_sb(request, bond_type, traj_path):
+    if request.session.get(bond_type, False):
+        alldata=request.session[bond_type]
+        int_res=alldata["results"]
+        analysis_data=alldata["analysis_data"]
+        bonds_li=[]
+        for don_res,acc_li in int_res.items():
+            for acc_info in acc_li:
+                acc_res=acc_info[0]
+                freq=acc_info[1]
+                atom0=acc_info[2]
+                atom1=acc_info[3]
+                chain0=acc_info[4]
+                chain1=acc_info[5]
+                pair_info=[don_res,acc_res,freq,atom0,atom1,chain0,chain1]
+                bonds_li.append(pair_info)
+        int_res_ok=sorted(bonds_li,key=lambda x:float(x[2]),reverse=True)
+        return_error=True
+        filename_dict={"hbp":"hbonds_prot.csv" , "hbo":"hbonds_other.csv" , "sb":"saltbridges.csv"}
+        dyn_id=analysis_data["dyn_id"]
+        filename= "dyn%s_%s" % ( dyn_id , filename_dict[bond_type])
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="'+filename+'"'
+        writer = csv.writer(response)
 
+        writer.writerow(["#Dyn ID: "+dyn_id])
+        traj_p=analysis_data["traj_path"]
+        traj_nm=traj_p.split("/")[-1]
+        writer.writerow(["#Trajectory: "+traj_nm])
+        frame_from=int(analysis_data["frameFrom"])
+        frame_to=int(analysis_data["frameTo"])
+        if frame_from != 0 or frame_to!= 100000000000000000000:
+            if frame_to==100000000000000000000:
+                frame_to="last"
+            writer.writerow(["#Frames: %s - %s"%(frame_from,frame_to)])
+        else:
+            writer.writerow(["#Frames: all"])
+        writer.writerow(["#Threshold: %s%%" % analysis_data["cutoff"]])
+        if bond_type=="hbp" or bond_type=="hbo":
+            writer.writerow(["#Only side chains: %s" % analysis_data["no_backbone"]])
+            writer.writerow(["#Filter out neighbour residues: %s" % analysis_data["no_neighbours"]])
+            writer.writerow(["Donor residue","Donor chain","Donor atom id","Acceptor residue","Acceptor chain","Acceptor atom id","Frequency (%)"])
+            for row in int_res_ok:
+                (dres,ares,freq,datom,aatom,dchain,achain)=row
+                writer.writerow([dres,dchain,datom,ares,achain,aatom,freq])
+
+        elif bond_type=="sb":
+            writer.writerow(["Residue 1","Chain 1","Atom id 1","Residue 2","Chain 2","Atom id 2","Frequency (%)"])
+            for row in int_res_ok:
+                (dres,ares,freq,datom,aatom,dchain,achain)=row
+                writer.writerow([dres,dchain,int(datom),ares,achain,int(aatom),freq])
+        else:
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="x.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["Data not found."])
+
+    else:
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="x.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["Data not found."])
+    return response
 
 def download_dist(request, dist_id):
     if request.session.get('dist_data', False):
@@ -1708,13 +1770,18 @@ def parser(filename):
 
     return atoms
 
+
+
+
 def hbonds(request):
     if request.method == 'POST':
         arrays=request.POST.getlist('frames[]')
         full_results=dict()
+        dyn_id=arrays[5]
         struc_path = "/protwis/sites/files/"+arrays[4]
         whole_seg_to_chain=obtain_wholeModel_seg_to_chain(struc_path)
-        traj_path = "/protwis/sites/files/"+arrays[3]
+        traj_shortpath=arrays[3]
+        traj_path = "/protwis/sites/files/"+traj_shortpath
         start=int(arrays[0])
         end=int(arrays[1])
         backbone=arrays[6]=='true'
@@ -1878,14 +1945,20 @@ def hbonds(request):
         full_results['hbonds'] = hbonds_residue
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
+        analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_cutoff,"traj_path":traj_shortpath,"dyn_id":dyn_id,"no_backbone":backbone,"no_neighbours":neighbours}
+        request.session["hbp"]={"results":hbonds_residue,"analysis_data":analysis_data}
+        request.session["hbo"]={"results":hbonds_residue_notprotein,"analysis_data":analysis_data}
         return HttpResponse(data, content_type='application/json')
 
 
 def saltbridges(request):#
     if request.method == 'POST':
+
         arrays=request.POST.getlist('frames[]')
+        dyn_id=arrays[5]
         struc_path = "/protwis/sites/files/"+arrays[4]
-        traj_path = "/protwis/sites/files/"+arrays[3]
+        traj_shortpath=arrays[3]
+        traj_path = "/protwis/sites/files/"+traj_shortpath
         whole_seg_to_chain=obtain_wholeModel_seg_to_chain(struc_path);
         label = lambda hbond : '%s--%s' % (mytop.atom(hbond[0]), mytop.atom(hbond[2]))
         full_results=dict()
@@ -2005,6 +2078,9 @@ def saltbridges(request):#
                 writer.writerow(['','','','',''])
 
         full_results['salt_bridges']=bridge_dic
+        analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_threshold,"traj_path":traj_shortpath,"dyn_id":dyn_id}
+        request.session["sb"]={"results":bridge_dic,"analysis_data":analysis_data}
+
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
 

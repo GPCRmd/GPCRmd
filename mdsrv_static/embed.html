@@ -1601,6 +1601,7 @@
             
         }
 
+
         // function show_hide_slice(is_checked, water_check, mapname, stage){
         //     ///This function shows or hide the slice representation 
 
@@ -2057,6 +2058,7 @@
                     for (k in clickedDist){
                         allClickedDists.push(clickedDist[k]);
                     }
+                    $(".imp_btn2", window.parent.document).closest(".dist_pair").find(".has-error").removeClass("has-error")
                     parent.clickedDistToAnalysis(allClickedDists);
                 });
                 

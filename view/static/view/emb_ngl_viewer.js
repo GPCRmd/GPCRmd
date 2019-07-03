@@ -61,7 +61,7 @@ $(document).ready(function(){
       return empty;
     }
 
-    $(".settingsB").hover(function(){
+    $("body").find(".settingsB").hover(function(){
         $(this).css("color","black");
     },
     function(){
@@ -1723,12 +1723,12 @@ $(document).ready(function(){
                                         </div>\
                                         <div class='int_settings'>\
                                             <div style='display:inline-block;margin:5px 5px 5px 0;cursor:pointer;'>\
-                                                <a role='button' class='btn btn-link save_img_int_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                <a role='button' class='btn btn-link save_img_int_plot settingsB' href='#' target='_blank' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                     <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
                                                 </a>\
                                             </div>\
                                             <div style='display:inline-block;margin:5px'>\
-                                                <a role='button' class='btn btn-link href_save_data_int' href='/view/dwl/"+int_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                <a role='button' class='btn btn-link href_save_data_int settingsB' href='/view/dwl/"+int_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                     <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_int'></span>\
                                                 </a>\
                                             </div>\
@@ -1772,13 +1772,28 @@ $(document).ready(function(){
                                             var int_img_source=$("#int_info").find("#"+chart_div).attr("data-url");
                                             $("#"+chart_div).siblings(".int_settings").find(".save_img_int_plot").attr("href",int_img_source);
                                             
-
-                                            google.visualization.events.addListener(chart, 'select', function(){  
-                                                var mysel = chart.getSelection()[0];
-                                                if (mysel){          
-                                                    var row_to_sel=mysel.row +1
-                                                    console.log("tr:eq("+row_to_sel+")")
-                                                    $("#int_chart_1").siblings("table").find("tr:eq("+row_to_sel+")").children(".AA_td").trigger("click");
+                                            //google.visualization.events.addListener(chart, 'select', function(){  
+                                                //var mysel = chart.getSelection()[0];
+                                                //if (mysel){          
+                                                    //var row_to_sel=mysel.row +1
+                                                    //$("#"+chart_div).closest(".int_tbl").find("table tr:eq("+row_to_sel+")").children(".AA_td").trigger("click");
+                                                //}
+                                            //});
+                                            var before=false;
+                                            google.visualization.events.addListener(chart, 'click', function(target){  
+                                                var targetID=target["targetID"];
+                                                if (targetID.startsWith("bar")){
+                                                    var row_data=Number(targetID.split("#")[2]);
+                                                    var row_to_sel=row_data +1
+                                                    var mycell=$("#"+chart_div).closest(".int_tbl").find("table tr:eq("+row_to_sel+")").children(".AA_td");
+                                                    if (mycell.hasClass("showInP")){
+                                                        if (targetID == before){
+                                                            mycell.trigger("click");        
+                                                        }
+                                                    } else {
+                                                        mycell.trigger("click");
+                                                    }
+                                                    before=targetID;
                                                 }
                                             });
 
@@ -2309,6 +2324,10 @@ $(document).ready(function(){
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
         numComputedD = $("#dist_chart").children().length;
         $("#dist_stride_parent").removeClass("has-warning");
+
+        $(".dist_btw dist_from_parent").removeClass("has-error");
+        $(".dist_btw .has-error").removeClass("has-error");
+
         if (numComputedD < 15){
             $(".dist_btw input").each(function(){ 
                 if (!$(this).val()){
@@ -2414,12 +2433,12 @@ $(document).ready(function(){
                                                                     </span>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                                    <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link save_img_dist_plot settingsB' href='#' target='_blank' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -2447,12 +2466,12 @@ $(document).ready(function(){
                                                                 </div>\
                                                             <div style='margin:5px'>\
                                                                 <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                                    <a role='button' class='btn btn-link save_img_dist_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link save_img_dist_plot settingsB' href='#' target='_blank' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled' href='/view/dwl/"+dist_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -3045,13 +3064,40 @@ $(document).ready(function(){
     }
 
 
+    function changeDownloadURLS(mytraj,sel_li){//
+        for (var i=0;i<sel_li.length;i++){
+            var mysel=sel_li[i];
+            var linkel=$(mysel);
+            var linkroot=linkel.data("linkroot");
+            linkel.attr("href",linkroot+"/"+mytraj);    
+        }
+    }
+
+
+
+    $("#analysis_bonds").on("click",".hbond_openchose_click", function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        var btns_el=$(this).closest(".hbonds_both").siblings(".hbonds_btns");
+        var arrow=$(this).find(".hbond_openchose_arrow");
+        if(upOrDown.indexOf("in") > -1){
+            arrow.removeClass("glyphicon-chevron-up");
+            arrow.addClass("glyphicon-chevron-down");
+            btns_el.css("display","none");
+        } else {
+            arrow.removeClass("glyphicon-chevron-down");
+            arrow.addClass("glyphicon-chevron-up");
+            btns_el.css("display","block");
+        }
+    })
+
     var r_id=1;
 
     $("#ComputeHbonds").click(function(){
         $("#bonds_alert").html("");
         $("#hbonds_sel_frames_error").html("");
-        $('#ShowAllHbInter').hide();
-        $('#ShowAllHbIntra').hide();
+        $('#ShowAllHbInter').css("visibility","hidden");
+        $('#ShowAllHbIntra').css("visibility","hidden");
         var struc = $(".str_file").data("struc_file");
         var dyn_id=$(".str_file").data("dyn_id");
         rmsdTraj=$("#hbonds_traj").val();
@@ -3107,11 +3153,17 @@ $(document).ready(function(){
                     success: function(data) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
+                        changeDownloadURLS(rmsdTraj,[".href_save_data_hbp",".href_save_data_hbo"]);
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
-                        var table='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Protein-protein H bonds</h4>\
-                                    <div class="scrolldowndiv">\
+                        var table='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protprot_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
+                                        <div style="padding:5px 10px">\
+                                            Protein-protein H bonds\
+                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-up hbond_openchose_arrow"></span>\
+                                        </div>\
+                                     </div>\
+                                    <div class="scrolldowndiv collapse in"  id="protprot_tablecont" style="padding:5px">\
                                         <table id="intramol" class="table table-condesed" style="font-size:12px;">\
                                             <thead>\
                                                 <tr>\
@@ -3179,12 +3231,16 @@ $(document).ready(function(){
                             }
                         }
                         table=table+'</table></div><center>';
-                        $('#ShowAllHbIntra').show();
+                        $('#ShowAllHbIntra').css("visibility","visible");
                         $('#hbonds').html(table);
 
-
-                        var tablenp='<h4 style="font-size:14px;font-weight:bold;margin-top:10px">Other H bonds including protein-lipid interaction</h4>\
-                                        <div class="scrolldowndiv" >\
+                        var tablenp='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protlip_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
+                                        <div style="padding:5px 10px">\
+                                            Protein-lipid H bonds and other\
+                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-up hbond_openchose_arrow"></span>\
+                                        </div>\
+                                     </div>\
+                                        <div class="scrolldowndiv collapse in" id="protlip_tablecont" style="padding:5px" >\
                                             <table id="intermol"  class="table table-condesed" style="font-size:12px;">\
                                                 <thead>\
                                                     <tr>\
@@ -3268,9 +3324,10 @@ $(document).ready(function(){
                         }
 
                         tablenp=tablenp+'</table></div><center>';
-                        $('#ShowAllHbInter').show();
-                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:10px");
+                        $('#ShowAllHbInter').css("visibility","hidden");;
+                        $("#bondsresult_par").attr("style", "margin-top: 10px; margin-bottom: 15px; border:1px solid #F3F3F3;display:block;padding:0;border-radius:5px");
                         $('#hbondsnp').html(tablenp);
+                        $('#ShowAllHbInter').css("visibility","visible");
                         $("#selectionDiv").trigger("click");
                     },
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
@@ -3349,7 +3406,7 @@ $(document).ready(function(){
             var msn="Some fields are empty or contain errors.";
             showBigError(msn, "#salt_alert");
         }else{
-            $('#ShowAllSb').hide();
+            $('#ShowAllSb').css("visibility","hidden");
             $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $.ajax({
@@ -3360,6 +3417,7 @@ $(document).ready(function(){
                     success: function(data) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
+                        changeDownloadURLS(rmsdTraj,[".href_save_data_sb"]);
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
                         var salt='<center>\
@@ -3398,7 +3456,7 @@ $(document).ready(function(){
                             }
                         }
                         salt=salt+'</table></center>';
-                        $('#ShowAllSb').show();
+                        $('#ShowAllSb').css("visibility","visible");
                         $('#saltbridges').html(salt);
                         $("#saltresult_par").attr("style","border:1px solid #F3F3F3;padding-top:5px;display:block;margin-top:10px");
                         $("#selectionDiv").trigger("click");
@@ -3601,94 +3659,6 @@ $(document).ready(function(){
     }
     
 
-    
-
-/*    $(document).on('click', '.showhb', function(){
-        all_resids_sasa=[];
-        atomssb=[];
-        atomshb_inter=[];
-        atomshb=$(this).data('atomindexes').split('$%$');
-        atomshb=[[Number(atomshb[0]),Number(atomshb[1])]];
-        resids=$(this).data('resids').split('$%$');
-        all_resids=[Number(resids[0]),Number(resids[1])];
-        $("#selectionDiv").trigger("click");
-    });
-
-    $(document).on('click', '.showhb_inter', function(){
-        all_resids_sasa=[];
-        atomssb=[];
-        atomshb=[];
-        atomshb_inter=$(this).data('atomindexes').split('$%$');
-        atomshb_inter=[[Number(atomshb_inter[0]),Number(atomshb_inter[1])]];
-        resids=$(this).data('resids').split('$%$');
-        all_resids=[Number(resids[0]),Number(resids[1])];
-        $("#selectionDiv").trigger("click");
-    });
-
-    $(document).on('click', '.showsb', function(){
-        all_resids_sasa=[];
-        atomshb=[];
-        atomshb_inter=[];
-        atomssb=$(this).data('atomindexes').split('$%$');
-        atomssb=[[Number(atomssb[0]),Number(atomssb[1])]];
-        resids=$(this).data('resids').split('$%$');
-        all_resids_sb=[Number(resids[0]),Number(resids[1])];
-        $("#selectionDiv").trigger("click");
-    });
-
-    $('#ShowAllHbIntra').click(function(){
-            all_resids_sasa=[];
-            atomssb=[];
-            atomshb=[];
-            all_resids=[];
-            atomshb_inter=[];
-        $('#intramol tr button').each(function(index){
-            resids=$(this).data('resids').split('$%$');
-            all_resids.push(Number(resids[0]));
-            all_resids.push(Number(resids[1]));
-            atoms=$(this).data('atomindexes').split('$%$');
-            atoms=[Number(atoms[0]),Number(atoms[1])];
-            atomshb.push(atoms);
-        });
-        $("#selectionDiv").trigger("click");
-    });
-
-    $('#ShowAllHbInter').click(function(){
-            all_resids_sasa=[];
-            atomssb=[];
-            atomshb=[];
-            all_resids=[];
-            atomshb_inter=[];
-        $('#intermol tr button').each(function(index){
-            resids=$(this).data('resids').split('$%$');
-            all_resids.push(Number(resids[0]));
-            all_resids.push(Number(resids[1]));
-            atoms=$(this).data('atomindexes').split('$%$');
-            atoms=[Number(atoms[0]),Number(atoms[1])];
-            atomshb_inter.push(atoms);
-        });
-        $("#selectionDiv").trigger("click");
-    });
-
-
-    $('#ShowAllSb').click(function(){
-            all_resids_sasa=[];
-            atomshb=[];
-            all_resids=[];
-            atomshb_inter=[];
-            atomssb=[];
-            all_resids_sb=[];
-        $('#saltresult tr button').each(function(index){
-            resids=$(this).data('resids').split('$%$');
-            all_resids_sb.push(Number(resids[0]));
-            all_resids_sb.push(Number(resids[1]));
-            atoms=$(this).data('atomindexes').split('$%$');
-            atoms=[Number(atoms[0]),Number(atoms[1])];
-            atomssb.push(atoms);
-        });
-        $("#selectionDiv").trigger("click");
-    });
-*/
 //-------- RMSD computation --------
 
     $("#gotoRMSDPg").click(function(){
@@ -3819,12 +3789,12 @@ $(document).ready(function(){
                                                             </span>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                            <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link save_img_rmsd_plot settingsB' href='#' target='_blank' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
@@ -3848,12 +3818,12 @@ $(document).ready(function(){
                                                             </span>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;cursor:pointer;'>\
-                                                            <a role='button' class='btn btn-link save_img_rmsd_plot' href='#' target='_blank' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link save_img_rmsd_plot settingsB' href='#' target='_blank' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save plot as image' class='glyphicon glyphicon-stats'></span>\
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled' href='/view/dwl/"+rmsd_id+"' style='color:#000000;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
