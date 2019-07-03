@@ -346,6 +346,7 @@
                         if (pdb_pos != "NaN"){
                             if (Array.isArray(pdb_pos)){
                                 for (i = 0; i < pdb_pos.length; i++){
+                                    pdb_pos[i] = pdb_pos[i].substring(0, pdb_pos[i].length -2); //Strip two last characters of pos (dash and residue type letter)
                                     position = pdb_pos[i];
                                     if (position == null){
                                         continue // Skip undefined parts
@@ -360,6 +361,7 @@
                                 }
                             }
                             else {
+                                pdb_pos = pdb_pos.substring(0, pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter) 
                                 pos_sel=pdb_pos.replace("-"," and :");
                                 o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
                                 o = addwaters(o, pos_sel)
