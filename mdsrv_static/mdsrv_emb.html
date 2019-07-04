@@ -292,7 +292,7 @@
             return hbonds;
         }      
 ///////////////
-            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection =fpsegStr="";
+            var struc = s_path =t_path =traj = layers_pre = cons_pos = pdA=pdb=pdC=pdF=cp=dist_within=cons_comp=nonGPCR= int_res_s = int_res_s_ch=dist_groups_s= receptorsel = bs_info = projection =fpsegStr=pdcolors="";
             var struc = NGL.getQuery( "struc" );
             var s_path = "file://_DB/";
             var t_path = "file://_DB/";
@@ -304,6 +304,8 @@
             var  pdB= NGL.getQuery("lb");
             var  pdC= NGL.getQuery("lc");
             var  pdF= NGL.getQuery("lf");
+            var  pdF= NGL.getQuery("lf");
+            var  pdcolors=NGL.getQuery("lz");
             var  cp= NGL.getQuery("cp");
             var  dist_within= NGL.getQuery("wtn");
             var  dist_within_li_fin=[];
@@ -460,6 +462,14 @@
                                 }
                                 if (cons_pos == "y"){
                                     var pre_pd_all=[pdA,pdB,pdC,pdF];
+                                    var pdcolorsdec=decodeURIComponent(pdcolors.replace(/\+/g, " "));
+                                    var pdcolorsd_li=pdcolorsdec.split(",");
+                                    var pdcolors_d={};
+                                    for (i=0;i<pdcolorsd_li.length;i++){
+                                        var el =pdcolorsd_li[i];
+                                        var sp=el.split("-");
+                                        pdcolors_d[sp[0]]=sp[1];
+                                    }
                                     var pd_all = [];
                                     for (elN = 0; elN < pre_pd_all.length; elN++) {
                                         var class_poss=pre_pd_all[elN];
@@ -469,11 +479,15 @@
                                     }
                                     var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
                                     for (ind = 0; ind < pd_all.length; ind++) {
-                                         class_li=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
+                                        class_li_s=decodeURIComponent(pd_all[ind].replace(/\+/g, " "));
+                                        var class_li=class_li_s.split(",")
                                          if (class_li){
-                                             var cons_pos_ok = class_li.replace(/,/g," OR ");
-                                             o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele:"protein and ("+ cons_pos_ok +")"  } ); 
-                                         }
+                                            for (cN=0;cN<class_li.length;cN++){
+                                                var mypos=class_li[cN].replace(" ","");
+                                                var mycolor=pdcolors_d[mypos];
+                                                o.addRepresentation( "spacefill", {  colorValue: mycolor, colorScheme:"uniform", sele: "protein and "+ mypos } );
+                                            }
+                                        }
                                      } 
                                      sel_prot=true;
                                  }  

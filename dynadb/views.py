@@ -3298,9 +3298,26 @@ def query_dynamics(request,dynamics_id):
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
         typeobj=match.id_files.id_file_types
         if typeobj.is_parameter or typeobj.is_anytype:
+            btn_text=""
+            if typeobj.is_parameter:
+                btn_txt="Parameter file (ID: %s)" % match.id_files.id
+            else:
+                btn_txt="File (ID: %s)" % match.id_files.id
             dyna_dic['files']["param_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
         else:
-            dyna_dic['files']["struc_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
+            btn_txt=""
+            typeobj=match.id_files.id_file_types
+            if (typeobj.is_model):
+                btn_txt="Model file (ID: %s)" % match.id_files.id
+            elif typeobj.is_topology:
+                btn_txt="Topology file (ID: %s)" % match.id_files.id
+            elif typeobj.is_trajectory:
+                btn_txt="Trajectory file (ID: %s)" % match.id_files.id
+            else:
+                btn_txt="File (ID: %s)" % match.id_files.id
+
+            strucfile_info=(match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ,btn_txt)
+            dyna_dic['files']["struc_files"].append( strucfile_info ) 
     dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})

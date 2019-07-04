@@ -849,7 +849,7 @@
                                           {% if cons_class.A.1 %}
                                               <p>Highly conserved residues and motifs</p>
       	                                        {% for pos in cons_class.A.1 %}
-                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
       	                                        {% for pos in motifs_def.A %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
@@ -1166,7 +1166,7 @@
                                           {% if cons_class.A.1 %}
                                               <p>Highly conserved residues and motifs</p>
                                                 {% for pos in cons_class.A.1 %}
-                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
+                                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
                                                 {% for pos in motifs_def.A %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd ed_map_el high_pdA_ed btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
@@ -1499,7 +1499,7 @@
 
            <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
-Hydrogen bonding frequency: protein-protein and protein-lipid
+Hydrogen bonding frequency (protein-protein and protein-lipid)
 </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_bonds" class="collapse">
@@ -1577,10 +1577,10 @@ Hydrogen bonding frequency: protein-protein and protein-lipid
                  <div class="col-md-12" id="bondsresult_par" style="margin-top:10px;margin-bottom:15px;display:none;">
 
                         <div id="bondsresult" style="margin-bottom:20px"> 
-                           <div style="margin-bottom:10px;padding:0"  class="col-md-12">
+                           <div style="padding:0"  class="col-md-12">
 
                               <div  id="hbonds" class="hbonds_both" style="margin-bottom:10px;padding:0"></div> 
-                              <center class="hbonds_btns">
+                              <center class="hbonds_btns" id="hbonds_btn" style="display:none">
                                 <button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;visibility:hidden;" >Show All</button>
                                 <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear table</button>
 
@@ -1592,7 +1592,7 @@ Hydrogen bonding frequency: protein-protein and protein-lipid
 
 
                                <div  id="hbondsnp" class="hbonds_both" style="margin-bottom:10px;padding:0;width:100%" ></div>
-                               <center class="hbonds_btns">
+                               <center class="hbonds_btns" id="hbondsnp_btn" style="display:none;margin-bottom:10px">
                                     <button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden;" >Show All</button>
                                     <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb_inter">Clear table</button>
                                     <a role="button" class="btn btn-link href_save_data_hbo disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbo" data-linkroot="/view/dwl/freq/hbo" style="color:#585858;padding:8px 0">
@@ -1608,6 +1608,139 @@ Hydrogen bonding frequency: protein-protein and protein-lipid
                   </div>
             </div>
 
+
+<!-- ============= Interaction Analysis =========== --> 
+            {% if ligands|length >= 1 %}
+            
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Protein-ligand interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_Int" class="collapse">
+             <div class="row" style="margin-top:10px;">
+              
+                    <div class="int_btw" style="margin-right:5px;margin-left:14px;margin-bottom:10px">
+                         Compute interaction between GPCR and 
+                            <select id="comp_int" name="comp_int">
+                               <!--<option class="ligInt"  value="allLig">All ligands</option>-->
+                               {% for long_n, short_n in ligands %}
+                               <option class="ligInt unitInt"  value="{{short_n}}">{{long_n}}</option>
+                               {% endfor %}
+                             <!--  {% if other_prots%}
+                               <option   value="{{other_prots.0}}">Other proteins</option>
+                               {% endif %}-->
+                            </select>  
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
+                         In trajectory: 
+                           <span style="margin-left:5px">
+                                <select id="" name="int_traj">
+                                   <!--<option disabled selected value> </option>-->
+                                   {% for traj in traj_list %}
+                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
+                                   {% endfor %}
+                                </select>
+                           </span>
+                           <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
+                        Threshold:
+                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;" value=3 placeholder=3> &#8491; 
+                          <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
+                    </div>
+                    <div style="margin-right:5px;margin-left:14px;">
+                         Consider 
+                            <select id="dist_scheme" >
+                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
+                               <option class="dist_scheme_opt"  value="closest">all atoms</option>
+                            </select>  
+                    </div>
+                    <div class="row">
+                            <button id="gotoInt" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Compute</button>
+                    </div>
+                    <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px" id="int_alert"> </div>
+                    <div style="margin-top:5px;"  id="int_info" ></div>
+                    <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
+                    <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
+                   </div>-->
+              </div>
+              </div>
+            {% endif %}
+           <!-- </div> original -->
+
+<!-- ============= SaltBridges Analysis =========== --> 
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt Bridges</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_salt" class="collapse">
+             <div class="row" style="margin-top:10px;">
+
+                    <div style="margin-left:18px;margin-bottom:5px;">
+                     Trajectory: 
+                            <select id="salt_traj" name="salt_traj">
+                               {% for traj in traj_list %}
+                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                               {% endfor %}
+                            </select>
+
+                    </div>
+                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:15x;padding:0"> 
+                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
+                       </div>
+                       <div id="salt_sel_frames_id" class="col-md-10" >
+                          <div class="row">
+                             <input type="radio" name="salt_sel_frames" value="all_frames" checked> 
+                                  All
+                          </div>
+                          <div class="row" >
+                             <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
+                                 From 
+                                 <span id="salt_frame_1_par">
+                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                                 </span>
+                                 to 
+                                 <span id="salt_frame_2_par">
+                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
+                                 </span>
+
+                          </div>
+                          <div id="salt_sel_frames_error" class="row" ></div>
+                        </div>
+                    </div>
+             </div>
+
+            <div class="row" style="margin-top:5px;margin-bottom:15px;margin-left:3px">
+                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" id="salt_cutoff" type="number" placeholder=10 title="Salt bridges with a frequency lower than the threshold will be filtered out." style="width:60px;padding-left:7px;margin-bottom:5px"> %
+            </div>
+
+             <div class="row" style="margin-top:10px;margin-bottom:15px">
+                    <div class=row>
+                      <button id="ComputeSaltBridges" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
+                    </div>
+                    <div id="salt_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
+                    <div id="saltresult_par" style="display:none" class="col-md-12" >
+                        <div id="saltresult" style="margin-bottom:20px"> 
+                           <div style="margin-bottom:10px;padding:0"  class="col-md-12" >
+
+                           <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
+
+                            <center>
+                                <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden" >Show All</button>
+                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear table</button>
+                                <a role="button" class="btn btn-link href_save_data_sb disablewhencomp pull-right settingsB" href="/view/dwl/freq/sb" data-linkroot="/view/dwl/freq/sb" style="color:#585858;padding:8px 0">
+                                  <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
+                                </a>
+                            </center>
+                      
+                           </div>
+                        </div>
+                      </div>
+
+                </div>
+              </div>
 
 
 <!-- ============= Compute distances =========== --> 
@@ -1781,138 +1914,6 @@ Hydrogen bonding frequency: protein-protein and protein-lipid
 
 
 
-<!-- ============= Interaction Analysis =========== --> 
-            {% if ligands|length >= 1 %}
-            
-           <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Protein-ligand interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
-           </div>
-             <div id="analysis_Int" class="collapse">
-             <div class="row" style="margin-top:10px;">
-              
-                    <div class="int_btw" style="margin-right:5px;margin-left:14px;margin-bottom:10px">
-                         Compute interaction between GPCR and 
-                            <select id="comp_int" name="comp_int">
-                               <!--<option class="ligInt"  value="allLig">All ligands</option>-->
-                               {% for long_n, short_n in ligands %}
-                               <option class="ligInt unitInt"  value="{{short_n}}">{{long_n}}</option>
-                               {% endfor %}
-                             <!--  {% if other_prots%}
-                               <option   value="{{other_prots.0}}">Other proteins</option>
-                               {% endif %}-->
-                            </select>  
-                    </div>
-                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
-                         In trajectory: 
-                           <span style="margin-left:5px">
-                                <select id="" name="int_traj">
-                                   <!--<option disabled selected value> </option>-->
-                                   {% for traj in traj_list %}
-                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
-                                   {% endfor %}
-                                </select>
-                           </span>
-                           <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
-                    </div>
-                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
-                    </div>
-                    <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
-                        Threshold:
-                          <input class="form-control input-sm " id="int_thr" type="number" title="Residues are considered to interact with the ligand when the distance beween any of the considered atoms is smaller than the threshold." style="width:50px;padding-left:7px;" value=3 placeholder=3> &#8491; 
-                          <span style="color:#DC143C;margin-left:5px" id="int_thr_error"></span>
-                    </div>
-                    <div style="margin-right:5px;margin-left:14px;">
-                         Consider 
-                            <select id="dist_scheme" >
-                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
-                               <option class="dist_scheme_opt"  value="closest">all atoms</option>
-                            </select>  
-                    </div>
-                    <div class="row">
-                            <button id="gotoInt" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px;margin-top:5px" >Compute</button>
-                    </div>
-                    <div class="row" style="margin-top:5px;padding-right:15px;margin-left:14px" id="int_alert"> </div>
-                    <div style="margin-top:5px;"  id="int_info" ></div>
-                    <!--<div class="checkbox" style="margin-left:14px;margin-bottom:15px">
-		                <label><input type="checkbox" name="view_int" checked >Display interacting residues</label>
-                   </div>-->
-              </div>
-              </div>
-            {% endif %}
-           <!-- </div> original -->
-
-<!-- ============= SaltBridges Analysis =========== --> 
-
-           <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt Bridges</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
-           </div>
-             <div id="analysis_salt" class="collapse">
-             <div class="row" style="margin-top:10px;">
-
-                    <div style="margin-left:18px;margin-bottom:5px;">
-                     Trajectory: 
-                            <select id="salt_traj" name="salt_traj">
-                               {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
-                               {% endfor %}
-                            </select>
-
-                    </div>
-                    <div class="col-md-12"  style="margin-left:18px;margin-bottom:15x;padding:0"> 
-                       <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Frames:
-                       </div>
-                       <div id="salt_sel_frames_id" class="col-md-10" >
-                          <div class="row">
-                             <input type="radio" name="salt_sel_frames" value="all_frames" checked> 
-                                  All
-                          </div>
-                          <div class="row" >
-                             <input type="radio" name="salt_sel_frames" value="salt_frames_mine"> 
-                                 From 
-                                 <span id="salt_frame_1_par">
-                                     <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_1" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
-                                 </span>
-                                 to 
-                                 <span id="salt_frame_2_par">
-                                    <input class="form-control input-sm rvSpaces maxinp8 changeVal" id="salt_frame_2" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
-                                 </span>
-
-                          </div>
-                          <div id="salt_sel_frames_error" class="row" ></div>
-                        </div>
-                    </div>
-             </div>
-
-            <div class="row" style="margin-top:5px;margin-bottom:15px;margin-left:3px">
-                Threshold: <input class="form-control input-sm changeThresh maxinp8 rvSpaces" id="salt_cutoff" type="number" placeholder=10 title="Salt bridges with a frequency lower than the threshold will be filtered out." style="width:60px;padding-left:7px;margin-bottom:5px"> %
-            </div>
-
-             <div class="row" style="margin-top:10px;margin-bottom:15px">
-                    <div class=row>
-                      <button id="ComputeSaltBridges" class="pull-right btn btn-info" style="padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
-                    </div>
-                    <div id="salt_alert" style="margin-top:5px;padding-right:15px;margin-left:14px;clear:left;z-index: 10;" class="row"> </div>
-                    <div id="saltresult_par" style="display:none" class="col-md-12" >
-                        <div id="saltresult" style="margin-bottom:20px"> 
-                           <div style="margin-bottom:10px;padding:0"  class="col-md-12" >
-
-                           <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
-
-                            <center>
-                                <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden" >Show All</button>
-                                <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear table</button>
-                                <a role="button" class="btn btn-link href_save_data_sb disablewhencomp pull-right settingsB" href="/view/dwl/freq/sb" data-linkroot="/view/dwl/freq/sb" style="color:#585858;padding:8px 0">
-                                  <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
-                                </a>
-                            </center>
-                      
-                           </div>
-                        </div>
-                      </div>
-
-                </div>
-              </div>
 
 <!-- ============= Water Map Analysis =========== --> 
             {% if watermaps %}

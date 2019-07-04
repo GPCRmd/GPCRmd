@@ -1288,18 +1288,71 @@ $(document).ready(function(){
             $(this).attr("disabled", true);
         }
     });
-    function getSelectedPosLists(selector){
+
+    function color_cons_pos(pos_name){
+        var pos_filt_l = pos_name.match(/\d+\.\d+/g);
+        color_d={
+                "Rotamer toggle switch":"#519C6D",
+                "PIF": "#2C6AA5",
+                "Sodium binding site":"#991217",
+                "NPxxY":"#ff7d7d",
+                "Ionic lock":"#c35527",
+                "DRY":"#a5ab4b",
+                "3.32" : "#47CDAF",
+                "6.30" : "#9284AF",
+                "6.48":  "#a46060",
+                "h.50" : {
+                    "1": "#78C5D5",
+                    "2": "#459BA8",
+                    "3": "#79C268",
+                    "4": "#C5D747",
+                    "5": "#F5D63D",
+                    "6": "#F18C32",
+                    "7": "#E868A1",
+                    "8": "#BF63A6"
+                }
+        }
+
+
+
+
+        if (pos_filt_l){//It's indicated in GPCR res. num.
+            var color=false;
+            var pos_filt=pos_filt_l[0];
+            if (pos_filt.split(".")[1]=="50"){
+                color=color_d["h.50"][pos_filt.split(".")[0]];
+            } else {
+                if (pos_filt in color_d){
+                    color=color_d[pos_filt];
+                }
+            }
+        } else if (pos_name in color_d){
+            color=color_d[pos_name];
+        }
+
+        if (! color){
+            color = "#9B9393";
+        }
+
+        return(color);
+    }
+
+    function getSelectedPosLists(selector,pos_color_d){
         var selPosList=[];
         $(selector).each(function(){
             range = $(this).data("pdbpos").toString();
+            var pos_name=$(this).text();
+            var color =color_cons_pos(pos_name);
             if (range != "None"){
                 if (range.indexOf(",") > -1){
                     range_li=range.split(",");
                     for (num=0; num < range_li.length ; num++){
                         selPosList[selPosList.length]=" " + range_li[num];
+                        pos_color_d[range_li[num]]=color
                     }
                 } else{
                     selPosList[selPosList.length]=" " + range;
+                    pos_color_d[range]=color;
                 }
             }
         });
@@ -1310,15 +1363,25 @@ $(document).ready(function(){
             var yp = Number(patt.exec(y));
             return xp - yp });
         selPosList=uniq(selPosList);
-        return (selPosList);
+        return [selPosList,pos_color_d];
     }
 
     function obtainPredefPositions(){
-        var high_pre={"A":[], "B":[], "C":[], "F":[]};
-        high_pre["A"]=getSelectedPosLists(".high_pdA.active");
-        high_pre["B"]=getSelectedPosLists(".high_pdB.active");
-        high_pre["C"]=getSelectedPosLists(".high_pdC.active");
-        high_pre["F"]=getSelectedPosLists(".high_pdF.active");
+        var high_pre={"A":[], "B":[], "C":[], "F":[],"colors":{}};
+        var color_d={}
+        var resA=getSelectedPosLists(".high_pdA.active",color_d);
+        color_d=resA[1];
+        var resB=getSelectedPosLists(".high_pdB.active",color_d);
+        color_d=resB[1];
+        var resC=getSelectedPosLists(".high_pdC.active",color_d);
+        color_d=resC[1];
+        var resF=getSelectedPosLists(".high_pdF.active",color_d);
+        color_d=resF[1];
+        high_pre["A"]=resA[0];
+        high_pre["B"]=resB[0];
+        high_pre["C"]=resC[0];
+        high_pre["F"]=resF[0];
+        high_pre["colors"]=color_d;
         return (high_pre);
     }
 
@@ -1350,20 +1413,20 @@ $(document).ready(function(){
     }
     disableMissingClasses();
 
-    function obtainLegend(legend_el){
-        var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"};
-        var legend="";
-        if (legend_el.length > 1){
-            for (el=0; el < legend_el.length ; el++){
-                var add=color_dict[legend_el[el]];
-                legend+=add;
-            }
-            var legend_fin = "<span style='margin-top:5px'>" + legend + "</span>";
-            $("#legend").html(legend_fin);
-        } else {
-            $("#legend").html("");
-        }
-    }
+//    function obtainLegend(legend_el){
+//        var color_dict={"A":"<span style='margin-right:5px;color:#01C0E2'>Class A </span>","B":"<span style='margin-right:5px;color:#EF7D02'>Class B </span>","C":"<span style='margin-right:5px;color:#C7F802'>Class C </span>","F":"<span style='margin-right:5px;color:#F904CE'>Class F </span>"};
+//        var legend="";
+//        if (legend_el.length > 1){
+//            for (el=0; el < legend_el.length ; el++){
+//                var add=color_dict[legend_el[el]];
+//                legend+=add;
+//            }
+//            var legend_fin = "<span style='margin-top:5px'>" + legend + "</span>";
+//            $("#legend").html(legend_fin);
+//        } else {
+//            $("#legend").html("");
+//        }
+//    }
 
 
     
@@ -3103,7 +3166,9 @@ $(document).ready(function(){
     $("#analysis_bonds").on("click",".hbond_openchose_click", function(){
         var target=$(this).attr("data-target");
         var upOrDown=$(target).attr("class");
-        var btns_el=$(this).closest(".hbonds_both").siblings(".hbonds_btns");
+        var hbonds_type=$(this).closest(".hbonds_both");
+        var type_btn_id=hbonds_type.attr("id") + "_btn";
+        var btns_el=hbonds_type.siblings("#"+type_btn_id);
         var arrow=$(this).find(".hbond_openchose_arrow");
         if(upOrDown.indexOf("in") > -1){
             arrow.removeClass("glyphicon-chevron-up");
@@ -3185,10 +3250,10 @@ $(document).ready(function(){
                         var table='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protprot_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
                                             Protein-protein H bonds\
-                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-up hbond_openchose_arrow"></span>\
+                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
-                                    <div class="scrolldowndiv collapse in"  id="protprot_tablecont" style="padding:5px">\
+                                    <div class="scrolldowndiv collapse"  id="protprot_tablecont" style="padding:5px">\
                                         <table id="intramol" class="table table-condesed" style="font-size:12px;">\
                                             <thead>\
                                                 <tr>\
@@ -3262,10 +3327,10 @@ $(document).ready(function(){
                         var tablenp='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protlip_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
                                             Protein-lipid H bonds and other\
-                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-up hbond_openchose_arrow"></span>\
+                                            <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
-                                        <div class="scrolldowndiv collapse in" id="protlip_tablecont" style="padding:5px" >\
+                                        <div class="scrolldowndiv collapse" id="protlip_tablecont" style="padding:5px" >\
                                             <table id="intermol"  class="table table-condesed" style="font-size:12px;">\
                                                 <thead>\
                                                     <tr>\
@@ -4282,7 +4347,7 @@ $(document).ready(function(){
             loadEd=true;
         }
 
-        var ed_cons_pos=getSelectedPosLists(".high_pd.ed_map_el.active");
+        var ed_cons_pos=getSelectedPosLists(".high_pd.ed_map_el.active",{})[0];
         if (ed_cons_pos.length>0){
             var ed_finsel="protein and ("+ed_cons_pos.join(",")+")";
             loadEd=true;
@@ -4383,7 +4448,7 @@ $(document).ready(function(){
         window.pd=pd;
         var dist_of=obtainDistSel();  
         window.dist_of=dist_of;
-        obtainLegend(legend_el);
+        //obtainLegend(legend_el);
     }    
     window.passInfoToIframe=passInfoToIframe;
     
@@ -4577,6 +4642,12 @@ $(document).ready(function(){
         var trajStepSend=getCorrectSettingVal($("#trajStep").val(),"3");
         var trajTimeOutSend=getCorrectSettingVal($("#trajTimeOut").val(),"50");
         
+        var high_pre_colors_li=[];
+        for (pos in high_pre["colors"]){
+            high_pre_colors_li[high_pre_colors_li.length]=pos+"-"+high_pre["colors"][pos]
+        }
+        high_pre_colors_s=high_pre_colors_li.join(",");
+
         /////////
         var url_mdsrv=mdsrv_url+"/html/mdsrv_emb.html?struc=" + encode(struc) + "&pd=" + pd;    
 
@@ -4588,6 +4659,7 @@ $(document).ready(function(){
                             "lb":encode(high_pre["B"]),
                             "lc":encode(high_pre["C"]),
                             "lf":encode(high_pre["F"]), 
+                            "lz":encode(high_pre_colors_s), 
                             "wtn":encode(dist_of) , 
                             "in":encode(int_res_s),
                             "ih":encode(int_res_s_ch),

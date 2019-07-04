@@ -924,6 +924,7 @@
             var  pdB= high_pre["B"];
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
+            var  pdcolors=high_pre["colors"];
             //var setSelDict={};
             var setSelLi=[];
             var setSelTemp=[];
@@ -1039,14 +1040,18 @@
             }
             if (cons_pos == "y"){
                 var pd_all = [pdA,pdB,pdC,pdF];
-                var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
+                //var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
                 for (ind =0 ; ind < pd_all.length ; ind++){
                     class_li=pd_all[ind];
                     if (typeof class_li == "object"){
                         if (class_li.length > 0){
+                            for (cN=0;cN<class_li.length;cN++){
+                                var mypos=class_li[cN].replace(" ","");
+                                var mycolor=pdcolors[mypos];
+                                o.addRepresentation( "spacefill", {  colorValue: mycolor, colorScheme:"uniform", sele: "protein and "+ mypos } );
+                            }
+                            
                             var cons_pos_ok = class_li.join(" OR ");
-                            o.addRepresentation( "licorice", {  colorValue: color_list[ind], radius: "0.210", sele: "protein and ("+ cons_pos_ok +")" } );
-                            //setSelDict=addToSel(o,"protein and ("+ cons_pos_ok +")",setSelDict);
                             setSelLi.push("protein and ("+ cons_pos_ok +")");
                                                    
                         }
