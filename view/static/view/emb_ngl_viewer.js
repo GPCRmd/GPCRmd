@@ -3518,33 +3518,69 @@ $(document).ready(function(){
                                                 <th>Residue2</th>\
                                                 <th>Frecuency</th>\
                                                 <th></th><tbody>';
-                        for (var property in salty) {
-                            if (salty.hasOwnProperty(property)) {
-                                var string =property;
-                                var string2 =salty[property][0][0];
-                                var donor = string.match(regex)[0];  // creates array from matches
-                                var acceptor = string2.match(regex)[0];  // creates array from matches
-                                donorballes=gnumFromPosChain(String(donor),salty[property][0][4]);
+                        
+
+
+                        var sort_by="freq";
+                        if (sort_by=="freq"){
+                            var salty_li_sorted=hbond_dict_to_sorted_li(salty);
+                            for (hN=0;hN<salty_li_sorted.length;hN++){
+                                var donor_str=salty_li_sorted[hN][0];
+                                var acceptor_str=salty_li_sorted[hN][1];
+                                var freq=salty_li_sorted[hN][2];
+                                var atom0=salty_li_sorted[hN][3];
+                                var atom1=salty_li_sorted[hN][4];
+                                var chain0=salty_li_sorted[hN][5];
+                                var chain1=salty_li_sorted[hN][6];
+
+                                var donor = donor_str.match(regex)[0];  // creates array from matches
+                                var acceptor = acceptor_str.match(regex)[0];  // creates array from matches
+                                donorballes=gnumFromPosChain(String(donor),chain0)
                                 donorballes=hb_sb_transfballes(donorballes);
-                                acceptorballes=gnumFromPosChain(String(acceptor),salty[property][0][5]);
+                                acceptorballes=gnumFromPosChain(String(acceptor),chain1)
                                 acceptorballes=hb_sb_transfballes(acceptorballes);
                                 salt=salt+'<tr> \
-                                            <td rowspan='+ salty[property].length.toString() + '>'+ property+donorballes+'</td>\
-                                            <td> '+salty[property][0][0]+acceptorballes+'</td>\
-                                            <td> '+salty[property][0][1]+'% </td>\
-                                            <td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button></td>';
-                                for (index = 1; index < salty[property].length; ++index) {
-                                    string2=salty[property][index][0]
-                                    acceptor = string2.match(regex)[0];
-                                    acceptorballes=gnumFromPosChain(String(acceptor),salty[property][index][5]);
+                                                <td>'+ donor_str+donorballes+'</td>\
+                                                <td> '+acceptor_str+acceptorballes+'</td>\
+                                                <td> '+freq+'% </td>\
+                                                <td>\
+                                                    <button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' \
+                                                        data-atomindexes='+atom0+'$%$'+atom1+'>Show Salt Bridge</button>' ;
+                            }
+
+                        } else if (sort_by=="donor-acceptor"){ // I leave it in case in the future I want to add the option to switch between sorting methods
+                            for (var property in salty) {
+                                if (salty.hasOwnProperty(property)) {
+                                    var string =property;
+                                    var string2 =salty[property][0][0];
+                                    var donor = string.match(regex)[0];  // creates array from matches
+                                    var acceptor = string2.match(regex)[0];  // creates array from matches
+                                    donorballes=gnumFromPosChain(String(donor),salty[property][0][4]);
+                                    donorballes=hb_sb_transfballes(donorballes);
+                                    acceptorballes=gnumFromPosChain(String(acceptor),salty[property][0][5]);
                                     acceptorballes=hb_sb_transfballes(acceptorballes);
-                                    salt=salt+'<tr>\
-                                                <td>'+salty[property][index][0]+acceptorballes+'</td>\
-                                                <td>'+salty[property][index][1]+'% </td>\
-                                                <td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button></td>';
+                                    salt=salt+'<tr> \
+                                                <td rowspan='+ salty[property].length.toString() + '>'+ property+donorballes+'</td>\
+                                                <td> '+salty[property][0][0]+acceptorballes+'</td>\
+                                                <td> '+salty[property][0][1]+'% </td>\
+                                                <td><button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][0][2]+'$%$'+salty[property][0][3]+'>Show Salt Bridge</button></td>';
+                                    for (index = 1; index < salty[property].length; ++index) {
+                                        string2=salty[property][index][0]
+                                        acceptor = string2.match(regex)[0];
+                                        acceptorballes=gnumFromPosChain(String(acceptor),salty[property][index][5]);
+                                        acceptorballes=hb_sb_transfballes(acceptorballes);
+                                        salt=salt+'<tr>\
+                                                    <td>'+salty[property][index][0]+acceptorballes+'</td>\
+                                                    <td>'+salty[property][index][1]+'% </td>\
+                                                    <td><button class="showsb btn btn-default btn-xs clickUnclick" data-resids='+ donor + '$%$' + acceptor +' data-atomindexes='+salty[property][index][2]+'$%$'+salty[property][index][3]+'>Show Salt Bridge</button></td>';
+                                    }
                                 }
                             }
+
                         }
+
+
+
                         salt=salt+'</table></center>';
                         $('#ShowAllSb').css("visibility","visible");
                         $('#saltbridges').html(salt);
