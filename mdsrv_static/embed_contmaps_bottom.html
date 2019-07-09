@@ -278,18 +278,6 @@
             parent.$("#flare-container"+id).find("g.node.toggledNode text").each(function(){
               pos = $(this).html();
 
-              //Find positions in interactions with selected ones, if any
-              parent.$("#flare-container"+id+" .source-"+pos).each(function(){
-                classes = $(this).attr('class');
-                newpos = classes.match(target_pat)[1];
-                int_pos.push(newpos);
-              });
-              parent.$("#flare-container"+id+" .target-"+pos).each(function(){
-                classes = $(this).attr('class');
-                newpos = classes.match(source_pat)[1];
-                int_pos.push(newpos);
-              });
-
               //Find PDB position for selected ballesteres positions, if exist
               if (pos in ballesteros_to_pdb){//IF position exists in this protein
                 pdb_pos = ballesteros_to_pdb[pos];

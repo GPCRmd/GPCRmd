@@ -253,7 +253,6 @@
                 $("#loading", window.parent.document).css("display","none");
                 
                 trajButtons(stage);//Control of play/pause and change of frame 
-
                 
                 //Slider settings
                 $(".ui-slider").css({"margin-left":"25px"});
@@ -312,6 +311,12 @@
                     stage.loadFile( path + struc_file , {visible: true}).then( function( o ){
                         o.setName("my_comp");
                         o.setSelection("not _h and ("+lig+" or protein or water)");
+                        
+                        //Dirty solution to avoid loading two times the same component. Needed because heatmap callback JS run two times
+                        var my_comp_li=stage.getComponentsByName("my_comp").list;
+                        if (my_comp_li.length > 1){
+                          return;
+                        };
 
                         //Load trajectories
                         for (t=0 ; t < traj_f.length ; t++){
