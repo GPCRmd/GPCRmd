@@ -30,3 +30,19 @@ def index(request):
         context['release_statistics'] = []
 
     return render(request, 'home/index_{}.html'.format(settings.SITE_NAME), context)
+
+def gpcrmd_home(request):
+    context = {}
+
+    # title of the page
+    context['site_title'] = settings.SITE_TITLE
+    context['documentation_url'] = settings.DOCUMENTATION_URL
+    context['logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main.png';
+    
+    context["style"]={"header":"plain",# plain or img
+                      "sub_header":False,
+                      "columns":"info", #carousel, info, False
+                      "buttons":True
+    }
+
+    return render(request, 'home/index_gpcrmd.html', context )

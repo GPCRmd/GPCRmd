@@ -8,4 +8,6 @@ from home import views
 
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url='/dynadb/search/', permanent=False), name='index'), 
+    url(r'^home/$', views.gpcrmd_home, name='gpcrmd_home'),
+
 ]
