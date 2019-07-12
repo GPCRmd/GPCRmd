@@ -45,6 +45,16 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     }
 
+    function hoverLinksFP(){
+        $("path.link").hover(function(){
+           var newclass=$(this).attr("class") + " hoverlink";
+           $(this).attr("class",newclass);
+        }, function(){
+           var newclass=$(this).attr("class").replace("hoverlink","");
+           $(this).attr("class",newclass);            
+        });
+    }
+
     function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts = false){
         var fpjson=jsonData;
         if (fpjson.edges[0].helixpos != undefined) {
@@ -68,6 +78,20 @@ $(document).ready(function(){
         $("path.link").css('stroke-width', 6); 
         //Thicker lines
         $("path.link").css('stroke-opacity', 0.5);         
+
+        //Make hoverlabels of edges appear on mouse
+        var mouseX;
+        var mouseY;
+        $(fpdiv).mousemove( function(e) {
+           // mouse coordinates
+           mouseX = e.pageX - $(fpdiv).offset().left;
+           mouseY = e.pageY - $(fpdiv).offset().top + $(fpdiv).scrollTop();
+        });  
+        $(fpdiv).on("mouseenter","path",function(e){
+//            $(".tooltip").css({'left':mouseX,'top':mouseY});
+        })
+
+        hoverLinksFP();
 
         return(plot);
     }
@@ -239,7 +263,8 @@ $(document).ready(function(){
               title: source_pos+"-"+target_pos,
               html: true,
               placement: 'auto',
-              container: 'body'
+              container: 'body',
+              delay: {show: 0, hide: 500}              
             });
         });
     };
