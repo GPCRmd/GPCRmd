@@ -23,6 +23,38 @@ $(document).ready(function(){
 	// Functions
 	////////////
 
+    function fake_hasClass(selector,classnm){
+        return $(selector).attr("class").indexOf(classnm) != -1 ;
+    }
+
+    var clickEdgeSelectNodes = function(d, plot){
+        var name_s=d.source.name;
+        var name_t=d.target.name;
+        var is_sel_s = fake_hasClass("#node-"+name_s,"toggledNode");// $("#node-"+name_s).attr("class").indexOf("toggledNode") != -1 ;
+        var is_sel_t = fake_hasClass("#node-"+name_t,"toggledNode");//$("#node-"+name_t).attr("class").indexOf("toggledNode") != -1;
+        if (is_sel_s == is_sel_t ){
+            plot.toggleNode(name_s);
+            plot.toggleNode(name_t);
+        } else {
+            if (!is_sel_s){
+                plot.toggleNode(name_s);
+            } else if (!is_sel_t){
+                plot.toggleNode(name_t);
+            }
+        }
+        $("#selectionDiv").trigger("click");
+    }
+
+    function hoverLinksFP(){
+        $("path.link").hover(function(){
+           var newclass=$(this).attr("class") + " hoverlink";
+           $(this).attr("class",newclass);
+        }, function(){
+           var newclass=$(this).attr("class").replace("hoverlink","");
+           $(this).attr("class",newclass);            
+        });
+    }
+
     function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts = false){
         var fpjson=jsonData;
         if (fpjson.edges[0].helixpos != undefined) {
@@ -47,23 +79,28 @@ $(document).ready(function(){
         //Thicker lines
         $("path.link").css('stroke-opacity', 0.5);         
 
+        //Make hoverlabels of edges appear on mouse
+        var mouseX;
+        var mouseY;
+        $(fpdiv).mousemove( function(e) {
+           // mouse coordinates
+           mouseX = e.pageX - $(fpdiv).offset().left;
+           mouseY = e.pageY - $(fpdiv).offset().top + $(fpdiv).scrollTop();
+        });  
+        $(fpdiv).on("mouseenter","path",function(e){
+//            $(".tooltip").css({'left':mouseX,'top':mouseY});
+        })
+
+        hoverLinksFP();
+
         return(plot);
     }
 
     function setFpNglSize(applyMinSize, flare_container){
-	    var screen_h=screen.height;
 	    var min_size=300;
 	    var fpcont_w_str=$(flare_container).css("width");
 	    var fpcont_w=Number(fpcont_w_str.match(/^\d*/g)[0]);
-	    var final_size = fpcont_w;
-	    if (screen_h){
-	        var max_h=screen_h*0.5;
-	        var maxR_h=Math.round(max_h);
-	        if (fpcont_w > maxR_h){
-	            final_size = maxR_h;
-	        }
-	    } 
-	    
+	    var final_size = fpcont_w;	    
 	    if (applyMinSize){
 	        if (final_size < min_size){
 	            final_size = min_size;
@@ -186,6 +223,11 @@ $(document).ready(function(){
             //Add hoverlabels
             hoverlabels(id)
 
+            //Add click-on-edges
+            plots[id].addEdgeToggleListener( function(d){
+                clickEdgeSelectNodes(d, plots[id]);
+            });
+
         });
     }
 
@@ -221,7 +263,8 @@ $(document).ready(function(){
               title: source_pos+"-"+target_pos,
               html: true,
               placement: 'auto',
-              container: 'body'
+              container: 'body',
+              delay: {show: 0, hide: 500}              
             });
         });
     };
@@ -254,6 +297,12 @@ $(document).ready(function(){
 
                 //Put hoverlabels to flareplot
                 hoverlabels(0)
+
+                //Add click-on-edges
+                plots[0].addEdgeToggleListener( function(d){
+                    clickEdgeSelectNodes(d,plots[0]);
+                });
+
             });
             d3.json(fpdir+"cluster2.json", function(jsonData){
     	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
@@ -261,6 +310,11 @@ $(document).ready(function(){
 
                 //Put hoverlabels to flareplot
                 hoverlabels(1)
+
+                //Add click-on-edges
+                plots[1].addEdgeToggleListener( function(d){
+                    clickEdgeSelectNodes(d, plots[1]);
+                });
             });
 
     	}

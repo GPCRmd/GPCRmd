@@ -28,6 +28,7 @@ path.arc {
 .link {
     stroke: #000;
     stroke-opacity: .3;
+    cursor: pointer;
     /*pointer-events: none;*/
 }
 
@@ -53,6 +54,10 @@ path.arc {
 
 .link.toggled{
     stroke-opacity: 1;
+}
+
+.hoverlink {
+    stroke-opacity: 1;    
 }
 
 svg text {
