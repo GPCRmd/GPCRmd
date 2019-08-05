@@ -1242,7 +1242,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                 if all_gpcrs_info:
                     TMsel_all_ok={}
                     for tm,extdict in TMsel_all.items():
-                        tmname="TM"+str(tm)
+                        prefix="TM"
+                        if tm ==8:
+                            prefix="H"
+                        tmname=prefix+str(tm)
                         for gpcrid,posdict in extdict.items():
                             extdict[gpcrid]=posdict["first"]+"-"+posdict["last"]
                         TMsel_all_ok[tmname]=json.dumps(extdict)
@@ -1290,7 +1293,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
                         "ed_align_matrix":ed_align_matrix,
-                        "TMsel_all":sorted(TMsel_all_ok.items()),
+                        "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
                          }

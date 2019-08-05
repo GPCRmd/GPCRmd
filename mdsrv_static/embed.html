@@ -2195,14 +2195,14 @@
                     if (! $(this).hasClass("is_active")){
                         $(this).css("background-color","#FFF7F7").addClass("is_active");
                         $(this).siblings().css("background-color","#FFFFFF").removeClass("is_active");
-                        if ($(this).text().indexOf("distances") > -1){
-                            $("#onclickbtntext", window.parent.document).text("Show dists.")
+                        if ($(this).text().indexOf("Distances") > -1){
+                            $("#onclickbtntext", window.parent.document).text("dists.")
                             onclickshow="dists";
-                        } else if ($(this).text().indexOf("variants") > -1) {
-                            $("#onclickbtntext", window.parent.document).text("Show vars.")
+                        } else if ($(this).text().indexOf("Variants") > -1) {
+                            $("#onclickbtntext", window.parent.document).text("vars.")
                             onclickshow="vars";
                         }else {
-                            $("#onclickbtntext", window.parent.document).text("Show muts.")
+                            $("#onclickbtntext", window.parent.document).text("muts.")
                             onclickshow="muts";
                         }
                     };

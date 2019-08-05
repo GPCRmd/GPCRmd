@@ -309,21 +309,21 @@
                         <div class="dropdown" style="z-index:10">
                             <button id="onclicksel" class="btn btn-default btn-xs dropdown-toggle showWhenNGLLoad" type="button" data-toggle="dropdown" aria-expanded="false" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left;visibility:hidden">
                               <span class="pull-left">
-                                <b>On click:</b> 
-                                <span id="onclickbtntext">Show dists.</span>
+                                <b>On click show: </b> 
+                                <span id="onclickbtntext">dists.</span>
                               </span>
                               <span class="caret pull-right" style="margin-top:7px"></span></button>
                             <ul id="onclickshowdropd" class="dropdown-menu" style="height: auto;padding:0">
-                              <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Click a pair of residues to show the distance betweent them."  class="onclickshow is_active" data-short="dists" >Show distances</li>
+                              <li id="showdists" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" title="Click a pair of residues to show the distance betweent them."  class="onclickshow is_active" data-short="dists" >Distances</li>
                               {% if pdb_vars|length > 2 %}
-                                <li id="showvars" style="padding:5px 10px 5px 10px;" data-short="vars" title="Display known variants of the residue clicked." class="onclickshow" >Show variants</li>
+                                <li id="showvars" style="padding:5px 10px 5px 10px;" data-short="vars" title="Display known variants of the residue clicked." class="onclickshow" >Variants</li>
                               {% else %}
-                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No variants found."  >Show variants</li>
+                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No variants found."  >Variants</li>
                               {% endif %}
                               {% if pdb_muts|length > 2 %}
-                                <li id="showmuts" style="padding:5px 10px 5px 10px;" data-short="muts" title="Display mutational information of the residue clicked." class="onclickshow" >Show mutations</li>
+                                <li id="showmuts" style="padding:5px 10px 5px 10px;" data-short="muts" title="Display mutational information of the residue clicked." class="onclickshow" >Mutations</li>
                               {% else %}
-                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No mutations found."  >Show mutations</li>
+                                <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No mutations found."  >Mutations</li>
                               {% endif %}
                             </ul>
                           </div>
@@ -1432,7 +1432,7 @@
 <!-- ======================================== -->
         {% if fpdir %}
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hydrogen bonding network </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hbond network </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
            </div>
            <div id="analysis_fplot" class="collapse in" >
 <!--                <div style="height:15px;margin:0;padding:0">
@@ -1499,7 +1499,7 @@
 
            <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
-Hydrogen bonding frequency (protein-protein and protein-lipid)
+Hbond frequency (protein-protein and protein-lipid)
 </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_bonds" class="collapse">
@@ -1613,7 +1613,7 @@ Hydrogen bonding frequency (protein-protein and protein-lipid)
             {% if ligands|length >= 1 %}
             
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Protein-ligand interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Ligand-Protein interaction </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_Int" class="collapse">
              <div class="row" style="margin-top:10px;">
