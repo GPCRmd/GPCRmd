@@ -309,8 +309,8 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
     else:
         return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
 
-def traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
-    """Takes all the lists of conserved residues and traduces to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
+def translate_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict,current_class,other_classes_ok):
+    """Takes all the lists of conserved residues and translates to the GPCR numbering of the class of the protein to visualize the conserved positions of the rest of classes."""
     current_poslists=cons_pos_dict[current_class]
     current_motif = motifs_dict[current_class]
     show_class={"A":True,"B":True,"C":True,"F":True}
@@ -453,16 +453,16 @@ def findGPCRclass(num_scheme):
     """Uses the numbering scheme name to determine the GPCR family (A, B, C or F). Also sets the values of a dict that will determine the class shown at the template."""
     if num_scheme == "gpcrdba" or num_scheme == "gpcrdb":
         current_class ="A"
-        active_class["A"]=["active gpcrbold","in active"]
+        #active_class["A"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbb":
         current_class ="B"
-        active_class["B"]=["active gpcrbold","in active"]
+        #active_class["B"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbc":
         current_class ="C"
-        active_class["C"]=["active gpcrbold","in active"]
+        #active_class["C"]=["active gpcrbold","in active"]
     elif num_scheme == "gpcrdbf":
         current_class ="F"
-        active_class["F"]=["active gpcrbold","in active"]
+        #active_class["F"]=["active gpcrbold","in active"]
     return current_class
 
 def generate_motifs_all_info(all_gpcrs_info):
@@ -1196,6 +1196,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     if len(gen_num_res) > 2:
                         (numbers, num_scheme, db_seq, current_class) = gen_num_res
                         current_class=findGPCRclass(num_scheme)
+                        active_class={"A":["",""],"B":["",""],"C":["",""],"F":["",""]}
+                        active_class[current_class]=["active gpcrbold","in active"]
                         gpcr_n_ex=""
                         for pos_gnum in numbers[current_class].values():
                             if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
@@ -1211,12 +1213,14 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             cons_pos_dict_mod=copy.deepcopy(cons_pos_dict)
                             for chain_name, result in dprot_chain_li:
                                 (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,seq_pdb=seq_pdb)
-                                (show_class,current_poslists,current_motif,other_classes_ok)=traduce_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
+                                (show_class,current_poslists,current_motif,other_classes_ok)=translate_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
                                 obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                             motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
+                            #print("\n\n\n")
                             find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict_mod,motifs)
                             #gpcr_pdb_js=json.dumps(gpcr_pdb)
+                            #########
                             all_gpcrs_info.append((dprot_id, dprot_name, show_class, active_class, copy.deepcopy(cons_pos_dict_mod) , motifs_dict_def))
                             gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                             gpcr_id_name[dprot_id]=dprot_name

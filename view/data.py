@@ -25,5 +25,5 @@ motifs_dict={"A":[motifs,motname_li],"B":[],"C":[],"F":[]}
 
 motifs_all_info={"A":[["PIF","P5.50 , I3.40 , F6.44",""],["DRY","D3.49 , R3.50 , Y3.51",""],["NPxxY","N7.49 , P7.50 , x7.51 , x7.52 , Y7.53",""],["Sodium binding site","D2.50 , S3.39 , N7.45 , S7.46",""],["Ionic lock","R3.50 , E6.30",""],["Rotamer toggle switch","W6.48",""]],"B":[],"C":[],"F":[]}
 
-active_class={"A":["",""],"B":["",""],"C":["",""],"F":["",""]}
+#active_class={"A":["",""],"B":["",""],"C":["",""],"F":["",""]}
 
