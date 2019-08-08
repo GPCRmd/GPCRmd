@@ -91,14 +91,14 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
         if options['dynamics_id']:
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
-
+        trajfiles=dynobj.filter(dyndbfilesdynamics__id_files__id_file_types__is_trajectory=True)
         dynobj=dynobj.annotate(traj_id=F('dyndbfilesdynamics__id_files__id'))
         if options['traj_id']:
             dynobj=dynobj.filter(traj_id__in=options['traj_id'])
             
         #get trajectory filepaths
-        trajfiles = dynobj.annotate(dyn_id=F('id'))
-        trajfiles = trajfiles.filter(dyndbfilesdynamics__id_files__id_file_types__is_trajectory=True)
+        trajfiles = trajfiles.annotate(traj_id=F('dyndbfilesdynamics__id_files__id'))
+        trajfiles = trajfiles.annotate(dyn_id=F('id'))
         trajfiles = trajfiles.annotate(filepath=F('dyndbfilesdynamics__id_files__filepath'))
         trajfiles = trajfiles.values('dyn_id','traj_id','filepath')
  
@@ -162,6 +162,7 @@ class Command(BaseCommand):
                     continue
                 for traj in dyn['traj_files']:
                     traj_id = traj['id']
+                    trajpath=traj['filepath']
                     newfilename = get_file_name(objecttype="dynamics",fileid=traj_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory") #suffix="_hbonds" , remove forceext=True
                     
                     ###########[!] Change get_file_name() to obtain it automatically
@@ -186,7 +187,7 @@ class Command(BaseCommand):
                     if generate_json:
                         self.stdout.write(self.style.NOTICE("Creating flareplot "+newfilename+"..."))
                         try:
-                            create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=traj['filepath'],stride=strideVal)
+                            create_fplot(self,dyn_id=dyn_id,newpath=newpath,pdbpath=pdbpath,trajpath=trajpath,stride=strideVal)
                         except Exception as e:
                             if options['exit-on-error']:
                                 raise

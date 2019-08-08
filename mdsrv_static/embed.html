@@ -1610,7 +1610,26 @@
             
         }
 
+        function obtain_transmat_for_traj(){
+            var edselSel=$("#edSel", window.parent.document);
+            var trajmat_dict=edselSel.data("trajmat_dict");
+            var traj_id=$("#selectedTraj", window.parent.document).find("#selectedTraj_id").text();
+            var mat_info=trajmat_dict[traj_id];
+            return mat_info;
+        }
 
+        function realign_EDmap(){        
+            var mat_info=obtain_transmat_for_traj();
+            var r_angl=mat_info[0];
+            var transl=mat_info[1];
+
+            var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
+            var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
+            ed2fofc.setRotation( r_angl)
+            ed2fofc.setPosition(transl)
+            edfofc.setRotation( r_angl)
+            edfofc.setPosition(transl)
+        }
 
 
 //END functions.
@@ -1740,11 +1759,11 @@
                         var mytraj_nm="Traj. id: "+traj_db_id;
                         $("#last_played").text(mytraj_nm);
 
+                        realign_EDmap()
+
                         //WATERMAP CODE 
                         var selected_traj=$(this).attr("id").replace("traj_id_", "");
-                        console.log('selected' + selected_traj)
                         var watermap_checked= $(".WaterDisplay", window.parent.document).is(":checked")  
-
                         
                         if (watermap_checked){
                             var hide_list=[]
@@ -1940,9 +1959,11 @@
                     var pdbid_spl=pdbid.split(".");
                     pdbid=pdbid_spl[0]
                 }
-                var edselSel=$("#edSel", window.parent.document);
-                var r_angl=edselSel.data("r_angl");
-                var transl=edselSel.data("transl");
+
+                var mat_info=obtain_transmat_for_traj();
+                var r_angl=mat_info[0];
+                var transl=mat_info[1];
+
                 if (pdbid && r_angl && transl){
                     var edmapUrl = "https://edmaps.rcsb.org/maps/";
                     stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_2fofc.dsn6", {visible: false}).then(function(edc){

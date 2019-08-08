@@ -843,7 +843,7 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
             pdb_muts[pdb_pos]["vars"]=pos_muts
     return pdb_muts
 
-def obtain_ed_align_matrix(dyn_id):
+def obtain_ed_align_matrix(dyn_id,traj_list):
 #    if dyn_id=="4":
 #        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
 #        trans=[  9.21,74.12,-80.74]
@@ -851,14 +851,19 @@ def obtain_ed_align_matrix(dyn_id):
 #    else:
     root = settings.MEDIA_ROOT
     EDmap_path=os.path.join(root,"Precomputed/ED_map")
-    matrix_file="dyn_%s_transfmatrix.data"%dyn_id
-    matrix_filepath=os.path.join(EDmap_path,matrix_file)
-    exists=os.path.isfile(matrix_filepath)
-    if exists:
-        with open(matrix_filepath, 'rb') as filehandle:  
-            (r_angl,trans) = pickle.load(filehandle)
-        return (list(r_angl),list(trans))
-    else: 
+    ed_mats={}
+    for mytraj in traj_list:
+        traj_id=mytraj[2]
+        matrix_file="transfmatrix_%s_%s.data" % (dyn_id,traj_id)
+        matrix_filepath=os.path.join(EDmap_path,matrix_file)
+        exists=os.path.isfile(matrix_filepath)
+        if exists:
+            with open(matrix_filepath, 'rb') as filehandle:  
+                (r_angl,trans) = pickle.load(filehandle)
+            ed_mats[traj_id]=(list(r_angl),list(trans))
+    if ed_mats:
+        return json.dumps(ed_mats)
+    else:
         return False
 
 """This function takes the dyn_id as argument and returns 2 dictionaries with the traj_id as key and the filepath as value. If the map does not exist, the key gets the value: None (string)"""
@@ -1076,7 +1081,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         if occupancy:
             watermaps = True 
 #### --------------------------------
-        ed_align_matrix=obtain_ed_align_matrix(dyn_id)
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(dynfiles)
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
@@ -1085,6 +1089,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         chain_name_li=obtain_prot_chains(pdb_name)
         #traj_list=sorted(traj_list,key=lambda x: x[2])
         (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
+        ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
         presel_pos=""
         bind_domain=""
         if sel_pos:
@@ -1292,7 +1297,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdbid":pdbid,
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
-                        "ed_align_matrix":ed_align_matrix,
+                        "ed_mats":ed_mats,
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
@@ -1321,7 +1326,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
-                        "ed_align_matrix":ed_align_matrix,
+                        "ed_mats":ed_mats,
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
                         }
@@ -1347,7 +1352,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
-                        "ed_align_matrix":ed_align_matrix,
+                        "ed_mats":ed_mats,
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
                         }
@@ -1371,7 +1376,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "delta":delta,
                     "bind_domain":bind_domain,
                     "presel_pos":presel_pos,
-                    "ed_align_matrix":ed_align_matrix,
+                    "ed_mats":ed_mats,
                     "watermaps" : watermaps,
                     "occupancy" : json.dumps(occupancy)
                     }

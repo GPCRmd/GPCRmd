@@ -3249,7 +3249,7 @@ $(document).ready(function(){
                         var regex = /\d+/g;
                         var table='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protprot_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
-                                            Protein-protein H bonds\
+                                            Protein-protein Hbonds\
                                             <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
@@ -3259,7 +3259,7 @@ $(document).ready(function(){
                                                 <tr>\
                                                     <th>Donor</th>\
                                                     <th>Acceptor</th>\
-                                                    <th>Frecuency</th>\
+                                                    <th>Frequency</th>\
                                                     <th></th>\
                                             </thead><tbody>';
                         //gnumFromPosChain(pos, chain)
@@ -3326,7 +3326,7 @@ $(document).ready(function(){
 
                         var tablenp='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protlip_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
-                                            Protein-lipid H bonds and other\
+                                            Protein-lipid Hbonds and other\
                                             <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
@@ -3336,7 +3336,7 @@ $(document).ready(function(){
                                                     <tr>\
                                                         <th>Residue1</th>\
                                                         <th>Residue2</th>\
-                                                        <th>Frecuency</th>\
+                                                        <th>Frequency</th>\
                                                         <th></th>   \
                                                     </tr>\
                                                 </thead>\
@@ -3516,7 +3516,7 @@ $(document).ready(function(){
                                             <tr>\
                                                 <th>Residue1</th>\
                                                 <th>Residue2</th>\
-                                                <th>Frecuency</th>\
+                                                <th>Frequency</th>\
                                                 <th></th><tbody>';
                         
 
@@ -4619,10 +4619,13 @@ $(document).ready(function(){
             var edz=$("#EDmapzoom_val").html();
 
             var edselSel=$("#edSel");
-            var r_angl=edselSel.data("r_angl").join(";");
-            var transl=edselSel.data("transl").join(";");
-
-            
+            var trajmat_dict=edselSel.data("trajmat_dict");
+            var traj_id=$("#selectedTraj").find("#selectedTraj_id").text();
+            var mat_info=trajmat_dict[traj_id];
+            var r_angl=mat_info[0].join(";");
+            var transl=mat_info[1].join(";");
+            //var r_angl=edselSel.data("r_angl").join(";");
+            //var transl=edselSel.data("transl").join(";");
         }
 
         int_res_s=join_lil(int_res_lil);

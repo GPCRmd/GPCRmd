@@ -542,7 +542,7 @@
                                     if (trajTimeOut){setTrajTimeOut=Number(trajTimeOut)}
                                     
                                     for (t = 0; t < traj_li.length; t++) {
-                                        o.addTrajectory( t_path + traj_li[t] , {defaultInterpolateType:setIntType , defaultStep:setTrajStep , defaultTimeout:setTrajTimeOut } );
+                                        var trajobj=o.addTrajectory( t_path + traj_li[t] , {defaultInterpolateType:setIntType , defaultStep:setTrajStep , defaultTimeout:setTrajTimeOut  } );
                                     }
                                 }
 
@@ -786,6 +786,7 @@
                                 
                                 // When frame changes:
                                 var trajCompT=stage.getComponentsByName("my_comp").list[0].trajList;
+                                trajCompT[0].setFrame(0)
                                 for (trajN = 0; trajN < trajCompT.length; trajN++) {
                                     trajCompT[trajN].signals.frameChanged.add(function(){
                                         if (bs_info){
@@ -835,8 +836,7 @@
                                     });
                                     
                                 }
-                                console.log("GPCRmd")
-                                console.log(o.getCenter())
+
 
 //                              stage.loadFile("rcsb://2ydo").then(function (comp) {
 //                                comp.setName("PDB");
