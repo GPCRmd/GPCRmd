@@ -91,14 +91,15 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
         if options['dynamics_id']:
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
-        trajfiles=dynobj.filter(dyndbfilesdynamics__id_files__id_file_types__is_trajectory=True)
+
         dynobj=dynobj.annotate(traj_id=F('dyndbfilesdynamics__id_files__id'))
         if options['traj_id']:
             dynobj=dynobj.filter(traj_id__in=options['traj_id'])
             
         #get trajectory filepaths
-        trajfiles = trajfiles.annotate(traj_id=F('dyndbfilesdynamics__id_files__id'))
-        trajfiles = trajfiles.annotate(dyn_id=F('id'))
+        trajfiles = dynobj.annotate(dyn_id=F('id'))
+        trajfiles = trajfiles.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+        trajfiles = trajfiles.filter(is_traj=True)
         trajfiles = trajfiles.annotate(filepath=F('dyndbfilesdynamics__id_files__filepath'))
         trajfiles = trajfiles.values('dyn_id','traj_id','filepath')
  

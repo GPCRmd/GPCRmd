@@ -54,14 +54,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        def obtain_lig_li(dyn_id):
-            comp=DyndbModelComponents.objects.filter(id_model__dyndbdynamics=dyn_id)
-            lig_li=[]
-            for c in comp:
-                ctype=c.type
-                if ctype ==1:
-                    lig_li.append(c.resname)
-            return lig_li
         def seq_from_pdb(filepath,sel_chain_li):
             fpdb=open(filepath,'r')
             onlyaa=""
@@ -257,18 +249,63 @@ class Command(BaseCommand):
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
         if dynobj == []:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
+############
+        dynfiledata = dynobj.annotate(dyn_id=F('id'))
+        dynfiledata = dynfiledata.annotate(file_path=F('dyndbfilesdynamics__id_files__filepath'))
+        dynfiledata = dynfiledata.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
+        dynfiledata = dynfiledata.annotate(file_is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+        dynfiledata = dynfiledata.annotate(file_ext=F('dyndbfilesdynamics__id_files__id_file_types__extension'))
+        dynfiledata = dynfiledata.values("dyn_id","file_path","file_id","file_is_traj","file_ext")
 
-        dynobj=sorted(dynobj,key=lambda x:x.id)   #[!] For testing 
-        # dyn_id, DyndbFiles, DyndbModel, DyndbModelComponents
-        for dyn in dynobj:
-            dyn_id=dyn.id
 
+        dyn_dict = {}
+        for dyn in dynfiledata:
+            dyn_id=dyn["dyn_id"]
+            if dyn_id not in dyn_dict:
+                dyn_dict[dyn_id]={}
+                dyn_dict[dyn_id]["dyn_id"]=dyn_id
+                dyn_dict[dyn_id]["files"]={"traj":[], "pdb":[]}
+                dyn_dict[dyn_id]["pdb_namechain"]=False
+                dyn_dict[dyn_id]["chains"]=set()
+                dyn_dict[dyn_id]["segments"]=set()
+                dyn_dict[dyn_id]["lig_li"]=set()
+            file_info={"id":dyn["file_id"],"path":dyn["file_path"]}
+            if dyn["file_is_traj"]:
+                dyn_dict[dyn_id]["files"]["traj"].append(file_info)
+            elif dyn["file_ext"]=="pdb":
+                dyn_dict[dyn_id]["files"]["pdb"].append(file_info)
+        
+        del dynfiledata
 
-            allfile_li=DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id)
-            pdbfile_li=allfile_li.filter(id_file_types=2)
-            trajfile_li=allfile_li.filter(id_file_types_id__is_trajectory=True)
+        dynmols = dynobj.annotate(dyn_id=F('id'))
+        dynmols = dynmols.annotate(pdb_namechain=F("id_model__pdbid"))
+        dynmols = dynmols.annotate(chain=F("id_model__dyndbmodeledresidues__chain"))
+        dynmols = dynmols.annotate(seg=F("id_model__dyndbmodeledresidues__segid"))
+        dynmols = dynmols.annotate(comp_resname=F("id_model__dyndbmodelcomponents__resname"))
+        dynmols = dynmols.annotate(comp_type=F("id_model__dyndbmodelcomponents__type"))
+        dynmols = dynmols.values("dyn_id","pdb_namechain","chain","seg","comp_resname","comp_type")
+
+        for dyn in dynmols:
+            dyn_id=dyn["dyn_id"]
+            dyn_dict[dyn_id]["pdb_namechain"]=dyn["pdb_namechain"]
+            if dyn["chain"]:
+                dyn_dict[dyn_id]["chains"].add(dyn["chain"])
+            if dyn["seg"]:
+                dyn_dict[dyn_id]["segments"].add(dyn["seg"])
+            if dyn["comp_type"]==1:
+                dyn_dict[dyn_id]["lig_li"].add(dyn["comp_resname"])
+
+        del dynmols
+        del dynobj
+        gc.collect()
+############
+        for dyn in sorted(dyn_dict.values(),key=lambda x:x["dyn_id"]):
+            dyn_id=dyn["dyn_id"]
+
+            pdbfile_li=dyn["files"]["pdb"]
+            trajfile_li=dyn["files"]["traj"]
             if pdbfile_li:
-                ref_filepath=pdbfile_li[0].filepath
+                ref_filepath=pdbfile_li[0]["path"]
                 if len(pdbfile_li) >1:
                     self.stdout.write(self.style.NOTICE("More than one coordinate file found for dyn %s. Only considering %s" % (dyn_id,ref_filepath)))
             else:
@@ -279,8 +316,8 @@ class Command(BaseCommand):
                 continue
 
             for trajfile in trajfile_li:
-                traj_id=trajfile.id
-                ref_traj_filepath=trajfile.filepath
+                traj_id=trajfile["id"]
+                ref_traj_filepath=trajfile["path"]
                 ref_fileroot=re.search("([\w_]*)\.\w*$",ref_traj_filepath).group(1)
                 matrix_datafile=os.path.join(EDmap_path,"transfmatrix_%s_%s.data"%(dyn_id,traj_id))
 
@@ -297,8 +334,7 @@ class Command(BaseCommand):
                 if obtain_matrix:
                     self.stdout.write(self.style.NOTICE("\nObtaining matrix for dyn id %d, traj id %d"%(dyn_id,traj_id)))
                     try:
-                        model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
-                        pdbid_wchain=model.pdbid
+                        pdbid_wchain=dyn["pdb_namechain"]
                         if not pdbid_wchain:
                             self.stdout.write(self.style.ERROR("PDB not found. Skipping." ))
                             continue
@@ -324,7 +360,7 @@ class Command(BaseCommand):
                         #ref_struc=md.load(ref_filepath)
                         ref_struc=md.load_frame(ref_traj_filepath, 0, top=ref_filepath)
                         #-------------
-                        lig_li=obtain_lig_li(dyn_id)
+                        lig_li=dyn["lig_li"]
                         lig_li=["resname "+lig for lig in lig_li]
                         res_sel=" or ".join(lig_li)
                         if res_sel:
@@ -341,15 +377,10 @@ class Command(BaseCommand):
                         ref = mda.Universe(ref_filepath_filt)
 
                         # Now I need to generate the fasta needed as input for fasta2select, which gives us the selection of mathing segments of the two structures
-                        ref_chains=[]
-                        ref_segids=[]
-                        for m in model.dyndbmodeledresidues_set.all():
-                            if (m.chain):
-                                ref_chains.append(m.chain)
-                            if m.segid:
-                                ref_segids.append(m.segid)
+                        ref_chains=list(dyn["chains"])
+                        ref_segids=list(dyn["segments"])
                         if not ref_segids:
-                            ref_segids=ref.segments.segids
+                            ref_segids=list(ref.segments.segids)
                         ref_seq=seq_from_pdb(ref_filepath,ref_chains)
                         if not ref_seq:
                             self.stdout.write(self.style.ERROR("Error extracting sequence of reference structure. Skipping." ))
