@@ -1613,22 +1613,28 @@
         function obtain_transmat_for_traj(){
             var edselSel=$("#edSel", window.parent.document);
             var trajmat_dict=edselSel.data("trajmat_dict");
-            var traj_id=$("#selectedTraj", window.parent.document).find("#selectedTraj_id").text();
-            var mat_info=trajmat_dict[traj_id];
-            return mat_info;
+            if (trajmat_dict){
+                var traj_id=$("#selectedTraj", window.parent.document).find("#selectedTraj_id").text();
+                var mat_info=trajmat_dict[traj_id];
+                return mat_info;
+            } else {
+                return false
+            }
         }
 
         function realign_EDmap(){        
             var mat_info=obtain_transmat_for_traj();
-            var r_angl=mat_info[0];
-            var transl=mat_info[1];
+            if (mat_info){            
+                var r_angl=mat_info[0];
+                var transl=mat_info[1];
 
-            var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
-            var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
-            ed2fofc.setRotation( r_angl)
-            ed2fofc.setPosition(transl)
-            edfofc.setRotation( r_angl)
-            edfofc.setPosition(transl)
+                var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
+                var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
+                ed2fofc.setRotation( r_angl)
+                ed2fofc.setPosition(transl)
+                edfofc.setRotation( r_angl)
+                edfofc.setPosition(transl)
+            }
         }
 
 

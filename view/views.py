@@ -69,13 +69,13 @@ def create_conserved_pos_list_otherclass(gpcr_pdb,gpcr_aa, i,my_pos, cons_pos_li
                 cons_pos_li[i][1]="Correspods to "+cons_pos_bw_ourclass +  current_class.lower()
         i+=1
 
-def create_conserved_motif_list(gpcr_pdb,gpcr_aa,j,my_pos,motifs,multiple_chains,chain_name):
+def create_conserved_motif_list(dyn_id,gpcr_pdb,gpcr_aa,j,my_pos,motifs,multiple_chains,chain_name):
     """Given the GPCR num of a position of our seq, checks if it's one of the residues of a conserved motif, and if it has been mutated"""
     my_pos_bw=my_pos.split("x")[0]
     (my_aa,chain)=gpcr_aa[my_pos]
     add_chain_name=""
     if multiple_chains:
-        add_chain_name=":"+chain_name    
+        add_chain_name=":"+chain_name  
     while j < len(motifs):
         cons_pos = motifs[j][1]
         cons_pos_bw=cons_pos[1:]
@@ -345,7 +345,7 @@ def translate_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_po
     return (show_class,current_poslists,current_motif,other_classes_ok)
 
 
-def obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict,motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name):
+def obtain_predef_positions_lists(dyn_id,current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict,motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name,motifs_dict):
     """Takes the predefined lists of positions/motifs that will appear as predefined views and modifies them so that they match the sequence of our protein."""
     # Obtain list for the predefined views of important positions
     chain_pos = [pos for pos in gpcr_aa if gpcr_aa[pos][1]==chain_name]
@@ -353,7 +353,7 @@ def obtain_predef_positions_lists(current_poslists,current_motif,other_classes_o
         for cons_pos_li in current_poslists:
             create_conserved_pos_list(gpcr_pdb, gpcr_aa,0,my_pos,cons_pos_li,multiple_chains,chain_name)
         if current_motif:
-            create_conserved_motif_list(gpcr_pdb,gpcr_aa,0,my_pos,current_motif[0],multiple_chains,chain_name)
+            create_conserved_motif_list(dyn_id,gpcr_pdb,gpcr_aa,0,my_pos,current_motif[0],multiple_chains,chain_name)
         for gpcr_class in other_classes_ok:
             for cons_pos_li in cons_pos_dict[gpcr_class]:                     
                 create_conserved_pos_list_otherclass(gpcr_pdb,gpcr_aa, 0,my_pos, cons_pos_li, multiple_chains,chain_name,gnum_classes_rel,gpcr_class,current_class)
@@ -362,7 +362,7 @@ def obtain_predef_positions_lists(current_poslists,current_motif,other_classes_o
                 create_conserved_motif_list_otherclass(gpcr_pdb,gpcr_aa,0,my_pos,alt_class_motif[0],multiple_chains,chain_name)
 
 
-def find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs):
+def find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict,motifs,motname_li,motifs_dict):
     """Completes the conserved position lists to indicate the positions that are missing in our prot"""
     for cons_pos_li in current_poslists:
         find_missing_pos(cons_pos_li)
@@ -1216,14 +1216,17 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             seq_pdb={}
                             (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                             cons_pos_dict_mod=copy.deepcopy(cons_pos_dict)
+                            motifs_mod=copy.deepcopy(motifs)
+                            motname_li=["PIF","DRY","NPxxY","Sodium binding site","Ionic lock","Rotamer toggle switch"]
+                            motifs_dict_mod=copy.deepcopy(motifs_dict)
                             for chain_name, result in dprot_chain_li:
                                 (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,seq_pdb=seq_pdb)
-                                (show_class,current_poslists,current_motif,other_classes_ok)=translate_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
-                                obtain_predef_positions_lists(current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name)                                
+                                (show_class,current_poslists,current_motif,other_classes_ok)=translate_all_poslists_to_ourclass_numb(motifs_dict_mod,gnum_classes_rel,cons_pos_dict_mod,current_class,other_classes_ok)
+                                obtain_predef_positions_lists(dyn_id,current_poslists,current_motif,other_classes_ok,current_class,cons_pos_dict_mod, motifs_mod,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,chain_name,motifs_dict_mod)
                             prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                             motifs_dict_def={"A":[],"B":[],"C":[],"F":[]}
                             #print("\n\n\n")
-                            find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict_mod,motifs)
+                            find_missing_positions(motifs_dict_def,current_motif,current_poslists,other_classes_ok,current_class,cons_pos_dict_mod,motifs_mod,motname_li,motifs_dict_mod)
                             #gpcr_pdb_js=json.dumps(gpcr_pdb)
                             #########
                             all_gpcrs_info.append((dprot_id, dprot_name, show_class, active_class, copy.deepcopy(cons_pos_dict_mod) , motifs_dict_def))
@@ -1232,6 +1235,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
                             #Obtain var and mut data
                             pdb_muts=extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb)
+                            print("\n")
+                            print(pdb_muts)
+                            print("\n")
                             pdb_vars=extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb)
                             #TM extremes
                             last_tm=False

@@ -148,7 +148,7 @@
 
                     }
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
-                    if (mut_sel.length > 0){
+                    if (mut_sel && mut_sel.length > 0){
                         o.addRepresentation( "hyperball", { sele: mut_sel, color:"#00ceff", scale:0.3 } );
                     }
 

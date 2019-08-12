@@ -213,7 +213,7 @@
             </div>
              <p style="text-align: justify;">Indicate what you want to display in your molecular representation using the selection options of the GPCRmd Viewer.</p>
 
-         <p style="text-align: justify;">You can choose one of the selections we propose or define a new one using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a> to limit which atoms/residues are shown.<p>
+         <p style="text-align: justify;">You can choose one of the selections we propose or define a new one (Customized selection option) using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a>.<p>
         {% if gpcr_pdb != "no" %}
             <p style="text-align: justify;">Protein residues can be indicated as  <a href="http://docs.gpcrdb.org/generic_numbering.html" target="_blank" >generic GPCR residue numbers</a> (Ballesteros-Weinstein or GPCRdb structure-based numbering).</p>
         {% endif %}
@@ -221,6 +221,8 @@
         <p style="text-align: justify;">Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" target="_blank" >NGL Viewer</a> and <a href="http://nglviewer.org/mdsrv/" target="_blank" >MDsrv</a>.</p>        
         
         <p style="text-align: justify;">The hydrogen bonding network has been generated using <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a>, powered by R. Fonseca and A. J. Venkatakrishnan.</p>
+
+        <p style="text-align: justify;">Mutant and variant information obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a> and <a href="http://exac.broadinstitute.org/" target="_blank" >ExAC</a>.</p>
         
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
 	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
@@ -1655,8 +1657,8 @@ Hbond frequency
                     <div style="margin-right:5px;margin-left:14px;">
                          Consider 
                             <select id="dist_scheme" >
-                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
                                <option class="dist_scheme_opt"  value="closest">all atoms</option>
+                               <option class="dist_scheme_opt"  value="closest-heavy">heavy atoms only</option>
                             </select>  
                     </div>
                     <div class="row">

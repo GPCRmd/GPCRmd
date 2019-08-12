@@ -4104,7 +4104,7 @@ $(document).ready(function(){
             last_input_row.addClass("ed_input_rep "+ inpType);
             last_input_row.find(".sel_input").val(selToAdd);
             changeLastInputColor(colorVal,last_input_row);
-            if (inpType.indexOf("ed_input_rep_lig")<0){
+            if ((inpType.indexOf("ed_input_rep_lig")<0) && (inpType.indexOf("ed_input_rep_sel")<0)){
                 last_input_row.find(".high_type").val("line")
             }
         }
