@@ -146,7 +146,7 @@
 }
 
 .dropdown-content {
-	width:100%;
+  width:100%;
     display: none;
     position: absolute;
     z-index: 1;
@@ -179,6 +179,15 @@
   width:35;
 }
 
+#inner_remaining{
+position: fixed; 
+top: 155px; /*Set top value to HeightOfTopFrameDiv*/
+margin:auto;
+bottom: 0px; /*Set bottom value to HeightOfBottomFrameDiv*/
+width: 100%;
+padding-right:60px
+}
+
 </style>
 {% endblock %}
 </head>
@@ -187,25 +196,27 @@
 {% block content %} 
 {% csrf_token %}
 
+
  <!-- description  -->
  <div class="col-md-12" id="page_info">
 
-    <!-- <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;margin-bottom:10px">   -->
-     <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white">  
-         <div class="panel-body">
-        	<h2 >GPCRmd Workbench</h2>
-         </div> 
-     </div>
+  <!-- <div class="col-md-12 panel panel-primary" style="background-color:blue;text-align:center;color:white;margin-bottom:10px">   -->
+   <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0 7px">  
+       <div class="panel-body">
+        <h2 >GPCRmd Workbench</h2>
+       </div> 
+   </div>
 
-     <!-- main description -->
-     
-     
+   <div id="inner_remaining" >
+  
+    <div id="group_height" class="col-md-12" style="height:100%;padding-bottom:20px;">
+    <div class="row" id="row_info" style="padding:0 7px">
      <div class="col-md-12 panel panel-primary" style="margin-bottom:10px">
          <div id="show_hide_info" class="section_pan"  data-target="#more_info" data-toggle="collapse" style="cursor:pointer"><span id="show_hide_info_text" style="margin-left:5px;font-size:12px">Show info </span><span class="glyphicon glyphicon-chevron-down arrow"></span></div> 
      </div>
 
      
-     <div class="col-md-12 panel panel-primary collapse" id="more_info">
+     <div class="col-md-12 panel panel-primary collapse" id="more_info" style="margin-bottom:10px">
          <div class="panel-body">
 
             <div style="text-align:center"> 
@@ -225,28 +236,26 @@
         <p style="text-align: justify;">Mutant and variant information obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a> and <a href="http://exac.broadinstitute.org/" target="_blank" >ExAC</a>.</p>
         
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
-	    <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
-	    <p class="falselist">Left button click: pick atom or distance.</p>
-	    <p class="falselist">Middle button hold and move: zoom camera in and out.</p>
-	    <p class="falselist">Middle button click: center camera on atom.</p>
-	    <p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
+      <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
+      <p class="falselist">Left button click: pick atom or distance.</p>
+      <p class="falselist">Middle button hold and move: zoom camera in and out.</p>
+      <p class="falselist">Middle button click: center camera on atom.</p>
+      <p style="padding-left:15px" >Right button hold and move: translate camera in screen plane.</p></span>
             <!-- <p style="text-align: justify;">For more information about the viewer, visit the <a href="http://proteinformatics.charite.de/ngl/doc/index.html" target="_blank">NGL documentation</a>.</p>-->
          <p>For more information, see the <a href="{% url 'view:viewer_docs' %}" target="_blank" >docs</a>.
          </p>
 
-         </div>
      </div>
-
+  </div>
 </div> <!-- End page_info-->
+<div class="row" id="viewer_and_analysis" style="height:100%;position: relative; overflow-y: auto; overflow-x: hidden;padding:12px 1px; top:-10px">
+<div id="pprotform left_half" class="col-lg-6 " style="padding:0 7px"> 
+  <div id="leftPanelID" class="col-md-12 panel panel-primary leftPannel" style="margin-bottom:10px;height:100%;position: relative; overflow-y: auto; overflow-x: hidden;"> 
+    <div class="panel-body" style="padding-top:10px;margin-bottom:0;">
 
-
-<div id="pprotform"class="col-md-6 "> 
-  <div id="leftPanelID" class="col-md-12 panel panel-primary leftPannel"> 
-    <div class="panel-body" style="padding-top:10px">
-
-<!-- 			<div style="text-align:center">
-             			<h4><br>GPCR visualizaion</h4>
-            		</div><br>   -->
+<!--      <div style="text-align:center">
+                  <h4><br>GPCR visualizaion</h4>
+                </div><br>   -->
 
         <div class="container-fluid" id="main_container">
 
@@ -418,7 +427,7 @@
    
                       </div>
                    </div>
-     	        </div>
+              </div>
              </div>
              
              
@@ -555,9 +564,9 @@
                           <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
                              <div  class="row">
                                 <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
-      	                        <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
-      	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-      	                             <div style="float:left;height:27px" >
+                                <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+                                <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+                                     <div style="float:left;height:27px" >
                                           <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
                                              <option value="licorice">Licorice</option>
                                              <option value="ball+stick">Ball+stick</option>
@@ -589,14 +598,14 @@
                                           <div class="dropdown-content" style="margin-left:3px">
                                                 <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
                                                 <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
-                            									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
-                            									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-                            									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+                                                <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                                <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
                                           </div>
                                         </div>
                                         <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
        -->
-      	                       </div>
+                               </div>
                                 </div>
                                 <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
                                       <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
@@ -625,9 +634,9 @@
                           <div  class="seq_input_row" id="si_row0" style="margin-bottom:5px">
                              <div  class="row">
                                 <div class="col-sm-11 si_left" style="padding-right:3px;padding-left:3px"> 
-      	                        <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
-      	                        <div class="pull-right" style="padding:0;margin:0;font-size:12px">
-      	                             <div style="float:left;height:27px" >
+                                <input type="text" value="" class="form-control seq_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
+                                <div class="pull-right" style="padding:0;margin:0;font-size:12px">
+                                     <div style="float:left;height:27px" >
                                           <select class="high_type nglCallChangeTI" name="high_type0" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
                                              <option value="licorice">Licorice</option>
                                              <option value="ball+stick">Ball+stick</option>
@@ -659,14 +668,14 @@
                                           <div class="dropdown-content" style="margin-left:3px">
                                                 <div class="dropcolor nglCallClickTI" style="background-color:#3193ff;width:16px; height: 16px;" data-color="#3193ff"></div>
                                                 <div class="dropcolor nglCallClickTI" style="background-color:#B3072F;width:16px; height: 16px;" data-color="#B3072F"></div>
-            									  <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
-            									  <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
-            									  <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
+                                <div class="dropcolor nglCallClickTI" style="background-color:#ff4c00;width:16px; height: 16px;" data-color="#ff4c00"></div>
+                                <div class="dropcolor nglCallClickTI" style="background-color:#c5c5c5;width:16px; height: 16px;" data-color="#c5c5c5"></div>
+                                <div style="background-color:white;width:16px; height: 16px;border:1px solid #808080;" class="dropcolor morecolors nglCallClickTI" data-color="#FFFFFF"><span class="glyphicon glyphicon-plus-sign" style="color:#696969;padding-left:1px"></span></div>
                                           </div>
                                         </div>
                                         <span class="span_morecolors displaydrop" style="float:left" ></span><!--   <input type="text" style="width:50px;padding-left:3px;padding-right:3px;height:22px;margin-top:2px;margin-bottom:0;font-size:12px" placeholder="#FFFFFF" class="form-control input-sm input_dd_color">
        -->
-      	                       </div>
+                               </div>
                                 </div>
                                 <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
                                       <button class="btn btn-link si_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
@@ -738,16 +747,16 @@
                                       {% if cons_pos_all_info.1.A %}
                                           {% if cons_pos_all_info.0.A.1 %}
                                               <p>Highly conserved residues and motifs</p>
-      	                                        {% for pos in cons_pos_all_info.0.A.1 %}
+                                                {% for pos in cons_pos_all_info.0.A.1 %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
-      	                                        {% for pos in motifs_all_info.A %}
+                                                {% for pos in motifs_all_info.A %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
                                           {% if cons_pos_all_info.0.A.0 %}
                                               <p>Most conserved residues</p>
-      	                                        {% for pos in cons_pos_all_info.0.A.0 %}
+                                                {% for pos in cons_pos_all_info.0.A.0 %}
                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
@@ -794,16 +803,16 @@
                                       {% if show_class.A %}
                                           {% if cons_class.A.1 %}
                                               <p>Highly conserved residues and motifs</p>
-      	                                        {% for pos in cons_class.A.1 %}
+                                                {% for pos in cons_class.A.1 %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
-      	                                        {% for pos in motifs_def.A %}
+                                                {% for pos in motifs_def.A %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
                                           {% if cons_class.A.0 %}
                                               <p>Most conserved residues</p>
-      	                                        {% for pos in cons_class.A.0 %}
+                                                {% for pos in cons_class.A.0 %}
                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus"  data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
@@ -851,16 +860,16 @@
                                       {% if show_class.A %}
                                           {% if cons_class.A.1 %}
                                               <p>Highly conserved residues and motifs</p>
-      	                                        {% for pos in cons_class.A.1 %}
+                                                {% for pos in cons_class.A.1 %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
-      	                                        {% for pos in motifs_def.A %}
+                                                {% for pos in motifs_def.A %}
                                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}" title="{{pos.1}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
                                           {% if cons_class.A.0 %}
                                               <p>Most conserved residues</p>
-      	                                        {% for pos in cons_class.A.0 %}
+                                                {% for pos in cons_class.A.0 %}
                                                  <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}" class="high_pd high_pdA btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                                 {% endfor %}
                                           {% endif %}
@@ -1418,9 +1427,9 @@
          
     </div> <!-- left half -->
 
-     <div class="col-md-6" id="right_half">
-        <div class="col-md-12 panel panel-primary" id="rightPanelID">
-            <div class="panel-body" style="padding-top:10px">
+     <div class="col-lg-6" id="right_half" style="padding:0 7px">
+        <div class="col-md-12 panel panel-primary" id="rightPanelID" style="margin-bottom:10px;height:100%;position: relative; overflow-y: auto; overflow-x: hidden;">
+            <div class="panel-body" style="padding-top:10px;margin-bottom:0;">
                 <div class="container-fluid" id="main_analysis_container">        
 <!-- ANALYSIS -->                
                 
@@ -1775,7 +1784,7 @@ Hbond frequency
                         <input class="form-control input-sm dist_from_res dis_res_bth" type="text" title="Introduce residue number and chain name (ex. 50:P)" placeholder="xx:C" style="width:50px;padding-left:7px;margin-bottom:5px;">
                     </span>
                     <span class="dist_from_atomNm_parent"></span>
-			        and
+              and
                      <span class="dist_to_parent">
                          <input class="form-control input-sm dist_to" type="text" title="Introduce atom index" style="width:50px;padding-left:7px;margin-bottom:5px">
                      </span>
@@ -2170,6 +2179,10 @@ Hbond frequency
             </div>
         </div>
      </div>
+     </div>
+     </div>
+    </div><!-- end group_height -->
+  </div><!-- end inner_remaining -->
 
 {% endblock content %} 
          

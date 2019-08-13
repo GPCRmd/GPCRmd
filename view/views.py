@@ -1235,9 +1235,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                             seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
                             #Obtain var and mut data
                             pdb_muts=extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb)
-                            print("\n")
-                            print(pdb_muts)
-                            print("\n")
                             pdb_vars=extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb)
                             #TM extremes
                             last_tm=False
