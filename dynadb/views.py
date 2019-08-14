@@ -13160,6 +13160,14 @@ def get_precomputed_file_path(objecttype,comp_type=None,url=False):
     filepathdict['flare_plot']['type'] = dict()
     #define computation type = folder
     filepathdict['flare_plot']['type']['hbonds'] = "hbonds"
+    filepathdict['flare_plot']['type']['sb'] = 'sb'
+    filepathdict['flare_plot']['type']['pc'] = 'pc'
+    filepathdict['flare_plot']['type']['ps'] = 'ps'
+    filepathdict['flare_plot']['type']['ts'] = 'ts'
+    filepathdict['flare_plot']['type']['vdw'] = 'vdw'
+    filepathdict['flare_plot']['type']['hb'] = 'hb'
+    filepathdict['flare_plot']['type']['wb'] = 'wb'
+    filepathdict['flare_plot']['type']['wb2'] = 'wb2'
     
     path1 = join_path(root,precomputed_folder,filepathdict[objecttype]['main'],relative=False,url=url)
     path = join_path(path1,filepathdict[objecttype]['type'][comp_type],relative=False,url=url) 
