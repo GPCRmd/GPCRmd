@@ -100,7 +100,7 @@ $(document).ready(function(){
     };
     
     colorsHoverActiveInactive(".traj_element","tsel","#f2f2f2","#FFF7F7","#FFFFFF");
-    colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
+    colorsHoverActiveInactive(".fp_options","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
     colorsHoverActiveInactive(".onclickshow","is_active","#f2f2f2","#FFF7F7","#FFFFFF");
     
 /*    $(".traj_element").hover(function(){
@@ -209,7 +209,7 @@ $(document).ready(function(){
                 setFPFrame(pg_framenum)
             }
             if (fpfile_new){
-                d3.json(fpdir+fpfile_new, function(jsonData){
+                d3.json(fpfile_new, function(jsonData){
                     $("#flare-container").html("");
                     var fpsize=setFpNglSize(true);
                     plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "Inter");
@@ -2693,7 +2693,7 @@ $(document).ready(function(){
                     });
                     $("#dist_alert").html("");
                 } else {
-                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors. E.g. select a pair of atoms in the GPCRmd viewer and import the distance by clicking on the <span class="glyphicon glyphicon-circle-arrow-down" style="color:#1e90ff;font-size:10px;margin:0;padding:0"></span> icon.';
                     $("#dist_alert").html(add_error_d);
                 }
             } else {
@@ -2724,7 +2724,7 @@ $(document).ready(function(){
                         timeout: 600000
                     });
                 } else {
-                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors.';
+                    add_error_d='<div class="alert alert-danger"><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>Some fields are empty or contain errors. E.g. select a pair of atoms in the GPCRmd viewer and import the distance by clicking on the <span class="glyphicon glyphicon-circle-arrow-down" style="color:#1e90ff;font-size:10px;margin:0;padding:0"></span> icon.';
                     $("#dist_alert").html(add_error_d);
                 }
             }
@@ -4740,6 +4740,7 @@ $(document).ready(function(){
     
 
     $("#clearAll").click(function(){
+        console.log("..........ClearAll")
         all_resids_sasa=[];
         atomshb=[];
         all_resids=[];
@@ -4821,6 +4822,7 @@ $(document).ready(function(){
         //$("#FPdisplay").removeClass("active");
         //$("#FPdisplay").text("Display interactions");
         emptyFPsels();
+
         fpSelInt={};
         
         $("#selectionDiv").trigger("click");
@@ -4934,6 +4936,34 @@ $(document).ready(function(){
         }
         changeContactsInFplot()
     });
+
+    $(".fp_int_type").on("click",function(){
+        if (! $(this).hasClass("is_active")){
+            $(this).addClass("is_active").css("background-color","#bfbfbf"); 
+            $(".fp_int_type").not($(this)).each(function(){
+                $(this).removeClass("is_active").css("background-color","#FFFFFF"); 
+            });
+
+            var int_tag=$(this).data("tag");
+            //var int_jsonpath=$(this).data("path");
+            $(".traj_element").each(function(){
+                var int_this_jsonpath=$(this).data(int_tag);
+                if (int_this_jsonpath){
+                    $("#fp_int_type_"+int_tag).css("display","list-item")
+                } else {
+                    int_this_jsonpath="";
+                    $("#fp_int_type_"+int_tag).css("display","none")
+                }
+                //$(this).data("fplot_file",int_this_jsonpath);
+                $(this).data("fplot_file",int_this_jsonpath);
+                if ($(this).hasClass("tsel")){
+                    $("#selectedTraj").data("fplot_file",int_this_jsonpath);
+                }
+            });
+            //fplot_intli
+            changeContactsInFplot()
+        }
+    });
     
 
   /*  $(".fpShowResSet").on("click",function(){
@@ -4970,7 +5000,7 @@ $(document).ready(function(){
             pre_resSelected.push(nodenum);
         })
         var fpfile_now=$("#selectedTraj").data("fplot_file");
-        d3.json(fpdir+fpfile_now, function(jsonData){
+        d3.json(fpfile_now, function(jsonData){
             $("#flare-container").html("");
             var fpsize=setFpNglSize(true); // Or just use the size used before?
             plot = createFlareplotCustom(fpsize, jsonData, "#flare-container",showContacts);
@@ -4988,28 +5018,20 @@ $(document).ready(function(){
 
             updateFPInt()// //Update fpSelInt depending on what is in the fplot. 
             $("#selectionDiv").trigger("click");
-
+            $(".tooltip").tooltip("hide");
         });
         
 
     }
 
-    function fake_hasClass(selector,classnm){
-        return $(selector).attr("class").indexOf(classnm) != -1 ;
-    }
-
-//    function fake_addClass(selector,classnm){
-//        if (! fake_hasClass(selector,classnm)){
-//            var new_class= $(selector).attr("class") +" "+classnm;
-//            $(selector).attr("class",new_class);
-//        }
-//    }
 
     var clickEdgeSelectNodes = function(d){
         var name_s=d.source.name;
         var name_t=d.target.name;
-        var is_sel_s = fake_hasClass("#node-"+name_s,"toggledNode");// $("#node-"+name_s).attr("class").indexOf("toggledNode") != -1 ;
-        var is_sel_t = fake_hasClass("#node-"+name_t,"toggledNode");//$("#node-"+name_t).attr("class").indexOf("toggledNode") != -1;
+        var nodeclass_s=$("#node-"+name_s).attr("class");
+        var nodeclass_t=$("#node-"+name_t).attr("class");
+        var is_sel_s =nodeclass_s.indexOf("toggledNode") != -1 ;
+        var is_sel_t =nodeclass_t.indexOf("toggledNode") != -1 ;
         if (is_sel_s == is_sel_t ){
             plot.toggleNode(name_s);
             plot.toggleNode(name_t);
@@ -5020,8 +5042,11 @@ $(document).ready(function(){
                 plot.toggleNode(name_t);
             }
         }
-        plot.setFrame(pg_framenum);
-        $("#selectionDiv").trigger("click");
+        var nodeclass_s=$("#node-"+name_s).attr("class");
+        var nodeclass_t=$("#node-"+name_t).attr("class");
+        captureClickedFPInt(name_s,nodeclass_s)
+        captureClickedFPInt(name_t,nodeclass_t)
+        //plot.setFrame(pg_framenum);
     }
 
     function hoverLinksFP(){
@@ -5056,7 +5081,7 @@ $(document).ready(function(){
         hoverlabelsFP()
         hoverLinksFP()
         var fpfile = $("#selectedTraj").data("fplot_file");
-        $("#downl_json_hb").attr("href","/dynadb/files/Precomputed/flare_plot/hbonds/"+fpfile);
+        $("#downl_json_hb").attr("href",fpfile);
         plot.addEdgeToggleListener( function(d){
             clickEdgeSelectNodes(d);
         });
@@ -5088,15 +5113,15 @@ $(document).ready(function(){
         return (final_size)
     }
 
-    var fpdir=$("#fpdiv").data("fpdir");
+    var show_fp=$("#fpdiv").data("show_fp");
     var fpfile = $("#selectedTraj").data("fplot_file");
     //fpfile="10140_trj_4_hbonds.json";//
 
     var plot, allEdges, numfr;
     var fpSelInt={};
-    if (fpdir){
+    if (show_fp){
         var fpsize=setFpNglSize(true);        
-        d3.json(fpdir+fpfile, function(jsonData){
+        d3.json(fpfile, function(jsonData){
             plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "Inter");
             allEdges= plot.getEdges()
             numfr = plot.getNumFrames();
@@ -5259,6 +5284,7 @@ $(document).ready(function(){
     $("#fpdiv").on("click","#FPclearSel",function(){
         emptyFPsels();
         fpSelInt={};
+        //plot.setFrame(pg_framenum);
         $("#selectionDiv").trigger("click");
     });
 

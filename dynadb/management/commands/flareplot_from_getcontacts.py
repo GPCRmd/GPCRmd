@@ -166,6 +166,7 @@ class Command(BaseCommand):
 
             traj_rep=0    
             pre_frame=False
+            accum_frames=0
             if os.path.isfile(gcdata_path):
                 with open(gcdata_path) as infile:
                     for line in infile:
@@ -190,7 +191,9 @@ class Command(BaseCommand):
                         if frame != pre_frame:
                             if int(pre_frame) == frame_ends_bytraj[traj_rep]:
                                 traj_rep+=1                            
+                                accum_frames=int(frame)
                                 self.stdout.write(self.style.NOTICE("\tTraj id: %s"%dynfiles_traj[traj_rep]["file_id"]))
+                        frame_corr=str(int(frame)-accum_frames)
                         traj_id=dynfiles_traj[traj_rep]["file_id"]
                         traj_int_d=all_int_d[traj_id]
                         #add all res:
@@ -214,15 +217,15 @@ class Command(BaseCommand):
                         if int_type in traj_int_d:
                             edge_d=traj_int_d[int_type]["edges"]
                             if (gnum1,gnum2) in edge_d:
-                                edge_d[(gnum1,gnum2)]["frames"].append(frame)
+                                edge_d[(gnum1,gnum2)]["frames"].append(frame_corr)
                             elif (gnum2,gnum1) in edge_d:
-                                edge_d[(gnum2,gnum1)]["frames"].append(frame)
+                                edge_d[(gnum2,gnum1)]["frames"].append(frame_corr)
                             else:
                                 if (h1==h2):
                                     hpos="Intra"
                                 else:
                                     hpos="Inter"
-                                edge_d[(gnum1,gnum2)] = {'name1':gnum1 , 'name2':gnum2 , 'frames':[frame],  'helixpos':hpos}
+                                edge_d[(gnum1,gnum2)] = {'name1':gnum1 , 'name2':gnum2 , 'frames':[frame_corr],  'helixpos':hpos}
 
                         pre_frame=frame
 

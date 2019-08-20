@@ -718,6 +718,43 @@ def obtain_domain_url(request):
         mdsrv_url = protocol+'://'+domain+':'+str(port)
     return(mdsrv_url)
 
+def get_fplot_data(dyn_id,traj_list):
+    show_fp=False
+    int_type_l=['hbonds', 'hb', 'sb', 'pc', 'ps', 'ts', 'vdw', 'wb', 'wb2']
+    int_name_d={"hbonds":"Hbonds",
+                "hb":"Hbonds new",
+                "sb": "Salt bridges",
+                "pc": "Pi-cation",
+                "ps": "pi-stacking",
+                "ts": "T-stacking",
+                "vdw": "Van der Waals",
+                "wb": "Water bridges",
+                "wb2": "Extended water bridges"}
+    for ind, (trajfile, trajfile_name, f_id) in enumerate(traj_list):
+        fpfilename_pre = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!        
+        fp_data=[]
+        for int_type in int_type_l:
+            ###########[!] Change get_file_name() to obtain it automatically
+            (pre,post)=fpfilename_pre.split(".")
+            fpfilename= "%s_%s.%s" % (pre,int_type,post) 
+            ###########
+            fpdir = get_precomputed_file_path('flare_plot',int_type ,url=False)
+            fppath = path.join(fpdir,fpfilename)
+            exists=path.isfile(fppath)
+            if exists:
+                fpdir_url = get_precomputed_file_path('flare_plot',int_type ,url=True)
+                fppath_url = path.join(fpdir_url,fpfilename)
+                fp_data.append([int_type,int_name_d[int_type],fppath_url])
+                show_fp=True
+            else:
+                fp_data.append([int_type,int_name_d[int_type],""])
+        traj_list[ind].append(fp_data)
+    print("\n\n\n")
+    print(traj_list)
+    print("\n\n\n")
+    return (traj_list, show_fp)
+
+
 def get_fplot_path(dyn_id,traj_list):
     fpdir = get_precomputed_file_path('flare_plot',"hbonds",url=False)
     fpdir_url=""
@@ -740,6 +777,7 @@ def get_fplot_path(dyn_id,traj_list):
         li_n+=1
     if fp_exist:
         fpdir_url = get_precomputed_file_path('flare_plot',"hbonds",url=True)
+        print()
     return (traj_list,fpdir_url)
 
 def extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb):
@@ -1088,7 +1126,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         pdb_name = "/protwis/sites/files/"+structure_file
         chain_name_li=obtain_prot_chains(pdb_name)
         #traj_list=sorted(traj_list,key=lambda x: x[2])
-        (traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
+        #(traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
+        (traj_list, show_fp)=get_fplot_data(dyn_id,traj_list)
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
         presel_pos=""
         bind_domain=""
@@ -1271,6 +1310,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
+                    print("\n\n")
+                    print(traj_list)
+                    print("\n\n")
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1293,7 +1335,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
                         "seg_li":",".join(["-".join(seg) for seg in seg_li]),
-                        "fpdir" : fpdir,
+                        "show_fp" : show_fp,
                         "delta":delta,
                         "bind_domain":bind_domain,
                         "presel_pos":presel_pos,
@@ -1323,7 +1365,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "gpcr_pdb": "no",
                         "all_chains": ",".join(all_chains),
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fpdir" : fpdir,
+                        "show_fp" : show_fp,
                         "seg_li":"",
                         "delta":delta,
                         "bind_domain":bind_domain,
@@ -1349,7 +1391,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "chains" : chain_str,            
                         "gpcr_pdb": "no",
                         "all_prot_names" : ", ".join(all_prot_names),
-                        "fpdir" : fpdir,
+                        "show_fp" : show_fp,
                         "seg_li":"",
                         "delta":delta,
                         "bind_domain":bind_domain,
@@ -1374,7 +1416,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "ligands_short": ",".join(lig_li_s),                  
                     "chains" : "",            
                     "gpcr_pdb": "no",
-                    "fpdir" : fpdir,
+                    "show_fp" : show_fp,
                     "seg_li":"",
                     "delta":delta,
                     "bind_domain":bind_domain,

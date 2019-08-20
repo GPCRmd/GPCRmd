@@ -115,107 +115,109 @@
             });
             trajComp.signals.frameChanged.add(function(){
                 var fnum=trajComp.trajectory.currentFrame;
-                if (trajchange){
-                    parent.emptyFPsels();
-                    trajchange=false;
-                }
-                var fpSelInt= parent.updateFlarePlotFrame(fnum);
-                $("#trajRange").val(fnum);
-                $("#trajRange").slider("refresh");
-                $("#traj_time_val").html((fnum*delta).toFixed(2));
-                traj_fnum[traj_lastPlayedID]=fnum;
-                //setSelTemp=[];//
-                /////////
-                if (! $.isEmptyObject(fpSelInt)){ 
-                    var uplinksli=[];
-                    var uplinkres="";
-                    for (posfrom in fpSelInt){
-                        var atom_from=atomFromPosSel(o,posfrom);
-                        var postoLi=fpSelInt[posfrom];
-                        uplinkres+=(posfrom + " or ");
-                        for (posn=0 ; posn < postoLi.length ; posn++){
-                            var posto=postoLi[posn];
-                            uplinkres+=(posto + " or ");
-                            var atom_to=atomFromPosSel(o,posto);
-                            uplinksli.push([atom_from,atom_to])
-                        }
+                if (fnum != -1){
+                    if (trajchange){
+                        parent.emptyFPsels();
+                        trajchange=false;
                     }
-                    var previousFPintReps=stage.getRepresentationsByName('FP int');//.list.length;
-                    if (previousFPintReps.list.length > 0){
-                        previousFPintReps.setParameters({atomPair: uplinksli});
-                        stage.getRepresentationsByName('FP res').setSelection( uplinkres.slice(0, -4));
-                    } else {
-                        o.addRepresentation( "distance", { atomPair: uplinksli, colorValue: "#000000", colorScheme:"uniform", labelVisible:false   ,fontWeight: "normal" ,name : 'FP int' } );            
-                        o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: uplinkres.slice(0, -4) , name:"FP res" } );
+                    var fpSelInt= parent.updateFlarePlotFrame(fnum);
+                    $("#trajRange").val(fnum);
+                    $("#trajRange").slider("refresh");
+                    $("#traj_time_val").html((fnum*delta).toFixed(2));
+                    traj_fnum[traj_lastPlayedID]=fnum;
+                    //setSelTemp=[];//
+                    /////////
+                    if (! $.isEmptyObject(fpSelInt)){ 
+                        var uplinksli=[];
+                        var uplinkres="";
+                        for (posfrom in fpSelInt){
+                            var atom_from=atomFromPosSel(o,posfrom);
+                            var postoLi=fpSelInt[posfrom];
+                            uplinkres+=(posfrom + " or ");
+                            for (posn=0 ; posn < postoLi.length ; posn++){
+                                var posto=postoLi[posn];
+                                uplinkres+=(posto + " or ");
+                                var atom_to=atomFromPosSel(o,posto);
+                                uplinksli.push([atom_from,atom_to])
+                            }
+                        }
+                        var previousFPintReps=stage.getRepresentationsByName('FP int');//.list.length;
+                        if (previousFPintReps.list.length > 0){
+                            previousFPintReps.setParameters({atomPair: uplinksli});
+                            stage.getRepresentationsByName('FP res').setSelection( uplinkres.slice(0, -4));
+                        } else {
+                            o.addRepresentation( "distance", { atomPair: uplinksli, colorValue: "#000000", colorScheme:"uniform", labelVisible:false   ,fontWeight: "normal" ,name : 'FP int' } );            
+                            o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: uplinkres.slice(0, -4) , name:"FP res" } );
+                        }
+                        //setSelTemp.push(uplinkres.slice(0, -4));
+                    } else if (stage.getRepresentationsByName('FP int').list.length > 0){
+                        //var aa=stage.getRepresentationsByName('FP res').list[0]//.repr.removeRepresentation();
+                        o.removeRepresentation(stage.getRepresentationsByName('FP res').list[0]);
+                        o.removeRepresentation(stage.getRepresentationsByName('FP int').list[0]);
                     }
-                    //setSelTemp.push(uplinkres.slice(0, -4));
-                } else if (stage.getRepresentationsByName('FP int').list.length > 0){
-                    //var aa=stage.getRepresentationsByName('FP res').list[0]//.repr.removeRepresentation();
-                    o.removeRepresentation(stage.getRepresentationsByName('FP res').list[0]);
-                    o.removeRepresentation(stage.getRepresentationsByName('FP int').list[0]);
-                }
-                
-                /////////
-                if (bs_info.length > 0){
-                    var bs_info_li=bs_info.split("-");
-                    var recept =bs_info_li[0];
-                    var ligli=bs_info_li[1].split(",");
-                    var bsnum =0;
-                    for (liN = 0; liN < ligli.length; liN++){
-                        var lig = ligli[liN];
-                        if (! isNaN(parseInt(lig))){
-                            lig="["+lig+"]";
-                        }
-                        var result = selWithinComponent(o,recept , "2.5" ,lig );
-                        var sele = result[0];
-                        var sele2 = result[1];
-                        BSRepName="BS"+bsnum.toString();
-                        //stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
-                        stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
-                        bsnum+=1;
-                        //setSelTemp.push(recept+" and "+ sele2.toSeleString());
-                    }
-                }
-                if (dist_within_li.length > 0){
-                    for (wth_n=0 ; wth_n < dist_within_li.length ; wth_n++){
-                        var dist_comp=  dist_within_li[wth_n].split("-");
-                        var show=dist_comp[0];
-                        if (! isNaN(parseInt(show))){
-                            show="["+show+"]";
-                        }
-                        var ligSele=dist_comp[2];
-                        if (! isNaN(parseInt(ligSele))){
-                            ligSele="["+ligSele+"]";
-                        }
-                        var selectionTest = new NGL.Selection( ligSele ).selection[ "error" ];
-                        if (!selectionTest){
-                            var restriction="";
-                            var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
-                            if (show_sup != "NONE"){
-                                restriction="not ("+ligSele+") and ";
-                            } 
-                            var result=selWithinComponent(o,show,dist_comp[1],ligSele);
+                    
+                    /////////
+                    if (bs_info.length > 0){
+                        var bs_info_li=bs_info.split("-");
+                        var recept =bs_info_li[0];
+                        var ligli=bs_info_li[1].split(",");
+                        var bsnum =0;
+                        for (liN = 0; liN < ligli.length; liN++){
+                            var lig = ligli[liN];
+                            if (! isNaN(parseInt(lig))){
+                                lig="["+lig+"]";
+                            }
+                            var result = selWithinComponent(o,recept , "2.5" ,lig );
                             var sele = result[0];
                             var sele2 = result[1];
-                            WthRepName="sel"+dist_comp[2];
-                            stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
-                            //stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
-                            //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
+                            BSRepName="BS"+bsnum.toString();
+                            //stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
+                            stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
+                            bsnum+=1;
+                            //setSelTemp.push(recept+" and "+ sele2.toSeleString());
                         }
                     }
-                }
+                    if (dist_within_li.length > 0){
+                        for (wth_n=0 ; wth_n < dist_within_li.length ; wth_n++){
+                            var dist_comp=  dist_within_li[wth_n].split("-");
+                            var show=dist_comp[0];
+                            if (! isNaN(parseInt(show))){
+                                show="["+show+"]";
+                            }
+                            var ligSele=dist_comp[2];
+                            if (! isNaN(parseInt(ligSele))){
+                                ligSele="["+ligSele+"]";
+                            }
+                            var selectionTest = new NGL.Selection( ligSele ).selection[ "error" ];
+                            if (!selectionTest){
+                                var restriction="";
+                                var show_sup=o.structure.getAtomSetWithinGroup( new NGL.Selection(show+" and "+ ligSele )).toSeleString();
+                                if (show_sup != "NONE"){
+                                    restriction="not ("+ligSele+") and ";
+                                } 
+                                var result=selWithinComponent(o,show,dist_comp[1],ligSele);
+                                var sele = result[0];
+                                var sele2 = result[1];
+                                WthRepName="sel"+dist_comp[2];
+                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
+                                //stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
+                                //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
+                            }
+                        }
+                    }
 
-                if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
-                    var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
-                    // console.log(water_sele_tostring)
-                    atoms_within = sele.toSeleString();
-                    water_sele = "water and ("+ atoms_within+")";
-                    water_sele2 = "TIP3 and ("+ atoms_within+")";
-                    stage.getRepresentationsByName("waterselection").setSelection(water_sele);
-                    stage.getRepresentationsByName("waterselection2").setSelection(water_sele2);
+                    if (typeof(water_dist)=='number'){ //the ERRORS here?? select for this specific frames
+                        var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
+                        // console.log(water_sele_tostring)
+                        atoms_within = sele.toSeleString();
+                        water_sele = "water and ("+ atoms_within+")";
+                        water_sele2 = "TIP3 and ("+ atoms_within+")";
+                        stage.getRepresentationsByName("waterselection").setSelection(water_sele);
+                        stage.getRepresentationsByName("waterselection2").setSelection(water_sele2);
 
 
-                    
+                        
+                    }
                 }
             });
         }
@@ -295,7 +297,7 @@
                             //$("#trajRange").attr("max",numfr);
                             setTrajRangeMax();
                         }
-                        trajComp.setFrame(toframe);
+                        trajComp.setFrame(toframe); //[!]
                     }
                 }
             });

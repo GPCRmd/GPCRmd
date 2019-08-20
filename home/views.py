@@ -39,10 +39,10 @@ def gpcrmd_home(request):
     context['documentation_url'] = settings.DOCUMENTATION_URL
     context['logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main.png';
     
-    context["style"]={"header":"plain",# plain or img
+    context["style"]={"header":"img",# plain or img
                       "sub_header":False,
                       "columns":"info", #carousel, info, False
-                      "buttons":True
+                      "buttons":"pannels", #pannels, links, all
     }
 
     return render(request, 'home/index_gpcrmd.html', context )

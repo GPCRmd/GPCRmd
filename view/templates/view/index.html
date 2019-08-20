@@ -302,16 +302,24 @@ padding-right:60px
                     
                          {% if traj_list %}
                           <div id="trajsDropdown" class="dropdown showWhenNGLLoad" style="z-index:11;visibility:hidden">
-                            <button id="selectedTraj" class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} > 
+                            <button id="selectedTraj" class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file="{{traj_list.0.3.0.2}}" > 
                               <span class="pull-left">
                                 <b>Trajectory ID:</b> <span id="selectedTraj_id">{{ traj_list.0.2 }}</span>
                               </span>
                               <span class="caret pull-right" style="margin-top:7px"></span>
                             </button>
                             <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
-                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file={{traj_list.0.3}} >Trajectory {{traj_list.0.2}}</li>
+                              <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file="{{traj_list.0.3.0.2}}"  
+                              {% for e in traj_list.0.3 %}
+                                data-{{e.0}}={{e.2}}
+                              {% endfor %}
+                              >Trajectory {{traj_list.0.2}}</li>
                             {% for traj in traj_list|slice:"1:" %}
-                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3}} >Trajectory {{traj.2}}</li>
+                              <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3.0.2}} 
+                              {% for e in traj.3 %}
+                                data-{{e.0}}={{e.2}}
+                              {% endfor %}
+                              >Trajectory {{traj.2}}</li>
                             {% endfor %}
                             </ul>
                           </div>
@@ -1443,9 +1451,9 @@ padding-right:60px
         </div>
            <div id="all_analysis" style="margin-bottom:30px">   
 <!-- ======================================== -->
-        {% if fpdir %}
+        {% if show_fp %}
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Hbond network </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_fplot" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Interaction network </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-up arrow"></span></div>
            </div>
            <div id="analysis_fplot" class="collapse in" >
 <!--                <div style="height:15px;margin:0;padding:0">
@@ -1454,30 +1462,65 @@ padding-right:60px
                     </span>
                 </div>-->
                 <!--<span id="fphoverinfo"></span>-->
-                <div id="fpdiv" data-fpdir="{{fpdir}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
+                <div id="fpdiv" data-show_fp="{{show_fp}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
                     
                <center>
                  <div id="flare-container"></div>
 
                   <span id="allFPoptions" class="showIfTrajFP">
-                      <button id="FPdisplay" class="btn btn-default active changefocus"  title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
-                        Show in structure
-                      </button>
+
+                      <div class="dropup" style="display:inline-block;position: relative;" >
+                        <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define the interaction type to be displayed in the plot.">Interaction type
+                        <span class="caret"></span></button>
+                        <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
+                          <li id="fp_int_type_{{traj_list.0.3.0.0}}" class="is_active fp_options fp_int_type" data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" 
+                            {% if traj_list.0.3.0.2 %}
+                              style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" 
+                            {% else %}
+                              style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf;display:none" 
+                            {% endif %}
+                            >{{traj_list.0.3.0.1}}</li>
+
+
+                            
+
+
+
+                          {% for int_info in traj_list.0.3|slice:"1:" %}
+                                <li class="fp_options fp_int_type" data-tag="{{int_info.0}}" data-path="{{int_info.2}}" 
+                                  {% if int_info.2 %}
+                                    style="padding:5px 15px 5px 15px;cursor:pointer;" 
+                                  {% else %}
+                                    style="padding:5px 15px 5px 15px;cursor:pointer;display:none" 
+                                  {% endif %}
+                                >{{int_info.1}}</li>
+                          {% endfor %}
+                        </ul>
+                      </div>
+
+
+
 
                       <div class="dropup" style="display:inline-block;position: relative;" >
                         <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the hydrogen bonding network flare plot.">Display
                         <span class="caret"></span></button>
                         <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
-                          <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Interaction type</li>
-                          <li id="fp_display_inter" class="fp_display_element fp_display_element_type is_active" data-tag="Inter" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display only inter-helix interactions.">Inter-helix</li>
-                          <li id="fp_display_intra" class="fp_display_element fp_display_element_type" data-tag="Intra" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display only intra-helix interactions.">Intra-helix</li>
-                          <li id="fp_display_all" class="fp_display_element fp_display_element_type" data-tag="all" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display all interactions.">All</li>
+                          <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Interacting pairs</li>
+                          <li id="fp_display_inter" class="fp_display_element fp_options fp_display_element_type is_active" data-tag="Inter" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display only inter-helix interactions.">Inter-helix</li>
+                          <li id="fp_display_intra" class="fp_display_element fp_options fp_display_element_type" data-tag="Intra" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display only intra-helix interactions.">Intra-helix</li>
+                          <li id="fp_display_all" class="fp_display_element fp_options fp_display_element_type" data-tag="all" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display all interactions.">All</li>
                           <li style="margin-left:5px;margin-right:5px;" class="divider"></li>
                           <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Simulation</li>
-                          <li id="fp_display_frame" class="fp_display_element is_active" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display a summary of the itneractions formed during the simulation.">Current frame</li>
-                          <li id="fp_display_summary" class="fp_display_element" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display interactions formed at each simulation frame.">Summary</li>
+                          <li id="fp_display_frame" class="fp_display_element fp_options is_active" style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" title="Display a summary of the itneractions formed during the simulation.">Current frame</li>
+                          <li id="fp_display_summary" class="fp_display_element fp_options" style="padding:5px 15px 5px 15px;cursor:pointer;" title="Display interactions formed at each simulation frame.">Summary</li>
                         </ul>
                       </div>
+
+
+                      <button id="FPdisplay" class="btn btn-default active changefocus"  title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                        Show in structure
+                      </button>
+
 
     <!-- Substitute ids and classes:
          .fpShowResSet
