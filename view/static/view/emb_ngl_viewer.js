@@ -206,11 +206,8 @@ $(document).ready(function(){
         /*Modificaitons done when user goes from FP int type available to unavailable or viceversa*/
         if (is_avail){
             $(".disableIfNoIntFP").removeClass("disabled");
-            $("#ul_fp_int_type").removeClass("limit_drop_h");
         } else{
             $(".disableIfNoIntFP").addClass("disabled");
-            $("#ul_fp_int_type").addClass("limit_drop_h");
-
         }
 
     }
@@ -262,7 +259,7 @@ $(document).ready(function(){
                 });
             } else {
                 FPTypeAvailUnavail(false);
-                alert_msg='<div class="alert alert-info" style="margin:50px 0;">\
+                alert_msg='<div class="alert alert-info" style="margin:95px 0;">\
                             There is no flare plot available for this trajectory and interaction type yet.\
                           </div>';
                 $("#flare-container").html(alert_msg);
@@ -4977,9 +4974,15 @@ $(document).ready(function(){
             $(".fp_int_type").not($(this)).each(function(){
                 $(this).removeClass("is_active").css("background-color","#FFFFFF"); 
             });
-
-            var int_tag=$(this).data("tag");
+            if ($(this).hasClass("submenu_el")){
+                $(this).closest(".dropdown-submenu").children(".submenu_btn").css("background-color","#f2f2f2");
+                $("#fp_int_type_info").html('<p class="fp_int_type_info_p">Hbonds:</p><p class="fp_int_type_info_p">'+$(this).text()+'</p>');
+            } else {
+                $(".submenu_btn").css("background-color","#FFFFFF");
+                $("#fp_int_type_info").html('<p class="fp_int_type_info_p">'+$(this).text()+'</p>');
+            }
             //var int_jsonpath=$(this).data("path");
+            var int_tag=$(this).data("tag");
             $(".traj_element").each(function(){
                 var int_this_jsonpath=$(this).data(int_tag);
                 if (!int_this_jsonpath){
@@ -5147,7 +5150,7 @@ $(document).ready(function(){
 
     var plot, allEdges, numfr;
     var fpSelInt={};
-    if (show_fp){
+    if (show_fp && fpfile){
         var fpsize=setFpNglSize(true);        
         d3.json(fpfile, function(jsonData){
             plot = createFlareplotCustom(fpsize, jsonData, "#flare-container" , "Inter");

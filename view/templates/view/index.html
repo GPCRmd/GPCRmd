@@ -198,12 +198,37 @@ padding-right:60px
   cursor:default;
 }
 
-.dropdown-menu.limit_drop_h{
-    height: auto;
-    max-height: 160px;
-    overflow-x: hidden;
-}
 
+.dropdown-submenu{position:relative;}
+.dropdown-submenu>.dropdown-menu{
+    top:0;
+    left:100%;
+    margin-top:-6px;
+    margin-left:-1px;
+    height:80px;
+    font-size:12px;
+  }
+.dropdown-submenu:hover>.dropdown-menu{
+  display:block;
+    }
+.dropdown-submenu>a:after{
+  display:block;
+    content:" ";
+    float:right;
+    border-color:transparent;
+    border-style:solid;
+    border-width:4px 0 4px 4px;
+    border-left-color:black;
+    margin-top:5px;
+    margin-right:-10px;
+    }
+.dropdown-submenu:hover>a:after{
+  border-left-color:#cccccc;
+    }
+.fp_int_type_info_p{
+  margin-bottom: 0;
+  font-size:13px;
+}
 </style>
 {% endblock %}
 </head>
@@ -1479,11 +1504,18 @@ padding-right:60px
                 </div>-->
                 <!--<span id="fphoverinfo"></span>-->
                 <div id="fpdiv" data-show_fp="{{show_fp}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
-                    
+                <div style="z-index:1; position: absolute;color:gray" id="fp_int_type_info">
+                  {% if traj_list.0.3.0.0 == "hb" or traj_list.0.3.0.0 == "hbonds" %}
+                    <p class="fp_int_type_info_p">Hbonds:</p> 
+                    <p class="fp_int_type_info_p">{{traj_list.0.3.0.1}}</p>
+                  {% else %}
+                    <p class="fp_int_type_info_p">{{traj_list.0.3.0.1}}</p>
+                  {% endif %}
+                </div>
                <center>
                  <div id="flare-container">
                   {% if not traj_list.0.3.0.2 %}
-                     <div class="alert alert-info" style="margin:50px 0;">
+                     <div class="alert alert-info" style="margin:95px 0;">
                         There is no flare plot available for this trajectory and interaction type yet.
                      </div>
                    {% endif %}
@@ -1494,13 +1526,33 @@ padding-right:60px
                       <div class="dropup" style="display:inline-block;position: relative;" >
                         <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define the interaction type to be displayed in the plot.">Interaction type
                         <span class="caret"></span></button>
-                        <ul id="ul_fp_int_type" 
-                            {% if traj_list.0.3.0.2 %}
-                               class="dropdown-menu"
-                            {% else %}
-                               class="dropdown-menu limit_drop_h"
-                            {% endif %}
-                           style="font-size:12px;margin-bottom:-12px">
+                        <ul id="ul_fp_int_type" class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
+
+                          <li class="dropdown-submenu">
+                            <a style="padding:5px 15px 5px 15px;background-color:#f2f2f2" class="submenu_btn">Hbonds</a>
+                            <ul class="dropdown-menu" >
+                              <li  data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" style="padding:5px 15px 5px 15px;background-color:#bfbfbf"
+                                {% if traj_list.0.3.0.2 %}
+                                   class="is_active fp_options fp_int_type submenu_el"
+                                {% else %}
+                                   class="is_active fp_options fp_int_type submenu_el disabled"
+                                {% endif %}
+                                >{{traj_list.0.3.0.1}}</li>
+
+                              <li  data-tag="{{traj_list.0.3.1.0}}" data-path="{{traj_list.0.3.1.2}}" style="padding:5px 15px 5px 15px;background-color: #FFFFFF"
+                                {% if traj_list.0.3.1.2 %}
+                                   class="fp_options fp_int_type submenu_el"
+                                {% else %}
+                                   class="fp_options fp_int_type submenu_el disabled"
+                                {% endif %}
+                                >{{traj_list.0.3.1.1}}</li>
+
+
+                            </ul>
+                          </li>
+
+
+<!--
                           <li id="fp_int_type_{{traj_list.0.3.0.0}}"  data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" style="padding:5px 15px 5px 15px;background-color:#bfbfbf"
                             {% if traj_list.0.3.0.2 %}
                                class="is_active fp_options fp_int_type"
@@ -1508,7 +1560,8 @@ padding-right:60px
                                class="is_active fp_options fp_int_type disabled"
                             {% endif %}
                             >{{traj_list.0.3.0.1}}</li>
-                          {% for int_info in traj_list.0.3|slice:"1:" %}
+-->                          
+                          {% for int_info in traj_list.0.3|slice:"2:" %}
                                 <li  data-tag="{{int_info.0}}" data-path="{{int_info.2}}" style="padding:5px 15px 5px 15px;" 
                                   {% if int_info.2 %}
                                     class="fp_options fp_int_type"

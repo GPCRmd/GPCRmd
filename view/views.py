@@ -721,8 +721,8 @@ def obtain_domain_url(request):
 def get_fplot_data(dyn_id,traj_list):
     show_fp=False
     int_type_l=['hbonds', 'hb', 'sb', 'pc', 'ps', 'ts', 'vdw', 'wb', 'wb2']
-    int_name_d={"hbonds":"Hbonds",
-                "hb":"Hbonds new",
+    int_name_d={"hbonds":"Wernet Nilsson criteria (MDTraj)",
+                "hb":"GetContacts criteria",
                 "sb": "Salt bridges",
                 "pc": "Pi-cation",
                 "ps": "pi-stacking",
@@ -749,9 +749,6 @@ def get_fplot_data(dyn_id,traj_list):
             else:
                 fp_data.append([int_type,int_name_d[int_type],""])
         traj_list[ind].append(fp_data)
-    print("\n\n\n")
-    print(traj_list)
-    print("\n\n\n")
     return (traj_list, show_fp)
 
 
