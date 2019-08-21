@@ -86,12 +86,16 @@ $(document).ready(function(){
     
 
     function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
-        $(myselector).hover(function(){
-            $(this).css("background-color",colorhov);
+        var sel_el=$(myselector);
+        var is_disabled=sel_el.hasClass("disabled");
+        sel_el.hover(function(){
+            if (! $(this).hasClass("disabled")){
+                $(this).css("background-color",colorhov);
+            }
         },
         function(){
             var selected=$(this).hasClass(activeclass);
-            if (selected){
+            if ((selected) && (! $(this).hasClass("disabled"))){
                 $(this).css("background-color",colorNohobAct);
             } else {
                 $(this).css("background-color",colorNohobInact);
@@ -183,18 +187,46 @@ $(document).ready(function(){
     }
     window.fpsegStr=fpsegStr;
       
-
+    function updateFPTypesForTraj(traj_el){
+        /*When trajectory is changed:
+            - Checks if int types that were not available before, are now; and viceversa
+        */
+        $(".fp_int_type").each(function(){
+            var int_tag=$(this).data("tag");
+            var int_this_jsonpath=traj_el.data(int_tag);
+            if (int_this_jsonpath){
+                $(this).removeClass("disabled");
+            } else {
+                $(this).addClass("disabled");
+            }
+        })
+    }
     
+    function FPTypeAvailUnavail(is_avail){
+        /*Modificaitons done when user goes from FP int type available to unavailable or viceversa*/
+        if (is_avail){
+            $(".disableIfNoIntFP").removeClass("disabled");
+            $("#ul_fp_int_type").removeClass("limit_drop_h");
+        } else{
+            $(".disableIfNoIntFP").addClass("disabled");
+            $("#ul_fp_int_type").addClass("limit_drop_h");
+
+        }
+
+    }
+
     changeTrajFlarePlot = function(traj_el_sel,new_fnum){
-        var traj_p=$(traj_el_sel).data("tpath");
-        var traj_id=$(traj_el_sel).attr("id").replace("traj_id_","");
-        var fpfile_new=$(traj_el_sel).data("fplot_file");
+        traj_el=$(traj_el_sel);
+        updateFPTypesForTraj(traj_el);
+        var traj_p=traj_el.data("tpath");
+        var traj_id=traj_el.attr("id").replace("traj_id_","");
+        var fpfile_new=traj_el.data("fplot_file");
         var old_fp=$("#selectedTraj").data("fplot_file");
         $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new);
         $("#selectedTraj_id").text(traj_id);
-        $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
-        $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
-        
+        traj_el.css("background-color","#FFF7F7").addClass("tsel");
+        traj_el.siblings().css("background-color","#FFFFFF").removeClass("tsel");
+
         /* [!] Link to big FP with slide
         var oldhref = $("#gotofplot").attr("href");
         newhref=oldhref.replace(/\w+.json/i,fpfile_new);
@@ -203,6 +235,7 @@ $(document).ready(function(){
         pg_framenum=new_fnum
         var trajchange=false;
         if (fpfile_new != old_fp){
+            $("#downl_json_hb").attr("href",fpfile_new);
             trajchange=true;
             if ($("#fp_display_summary").hasClass("is_active")){
                 change_display_sim_option("#fp_display_frame","#fp_display_summary");
@@ -217,8 +250,8 @@ $(document).ready(function(){
                     //setFPFrame(pg_framenum)
                     allEdges= plot.getEdges();
                     numfr = plot.getNumFrames();
-                    $(".showIfTrajFP").css("display","inline");
-                    $(".showIfTrajFPBlock").css("display","block");
+                    //$(".showIfTrajFP").css("display","inline");
+                    FPTypeAvailUnavail(true);
                     inter_btn=$("#fp_display_inter")
                     inter_btn.addClass("is_active").css("background-color","#bfbfbf"); 
                     $(".fp_display_element_type").not(inter_btn).each(function(){
@@ -228,12 +261,12 @@ $(document).ready(function(){
                     
                 });
             } else {
-                alert_msg='<div class="alert alert-info" style="margin-bottom:10px">\
-                            There is no flare plot available for this trajectory yet.\
+                FPTypeAvailUnavail(false);
+                alert_msg='<div class="alert alert-info" style="margin:50px 0;">\
+                            There is no flare plot available for this trajectory and interaction type yet.\
                           </div>';
                 $("#flare-container").html(alert_msg);
-                $(".showIfTrajFP").css("display","none");
-                $(".showIfTrajFPBlock").css("display","none");
+                //$(".showIfTrajFP").css("display","none");
             }
             fpSelInt={};
         }
@@ -4938,7 +4971,8 @@ $(document).ready(function(){
     });
 
     $(".fp_int_type").on("click",function(){
-        if (! $(this).hasClass("is_active")){
+        if ((! $(this).hasClass("is_active")) && (! $(this).hasClass("disabled"))){
+            FPTypeAvailUnavail(true);
             $(this).addClass("is_active").css("background-color","#bfbfbf"); 
             $(".fp_int_type").not($(this)).each(function(){
                 $(this).removeClass("is_active").css("background-color","#FFFFFF"); 
@@ -4948,13 +4982,9 @@ $(document).ready(function(){
             //var int_jsonpath=$(this).data("path");
             $(".traj_element").each(function(){
                 var int_this_jsonpath=$(this).data(int_tag);
-                if (int_this_jsonpath){
-                    $("#fp_int_type_"+int_tag).css("display","list-item")
-                } else {
+                if (!int_this_jsonpath){
                     int_this_jsonpath="";
-                    $("#fp_int_type_"+int_tag).css("display","none")
                 }
-                //$(this).data("fplot_file",int_this_jsonpath);
                 $(this).data("fplot_file",int_this_jsonpath);
                 if ($(this).hasClass("tsel")){
                     $("#selectedTraj").data("fplot_file",int_this_jsonpath);
@@ -5080,8 +5110,6 @@ $(document).ready(function(){
         plot=createFlareplot(fpsize, fpjson, fpdiv);
         hoverlabelsFP()
         hoverLinksFP()
-        var fpfile = $("#selectedTraj").data("fplot_file");
-        $("#downl_json_hb").attr("href",fpfile);
         plot.addEdgeToggleListener( function(d){
             clickEdgeSelectNodes(d);
         });

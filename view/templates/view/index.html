@@ -188,6 +188,22 @@ width: 100%;
 padding-right:60px
 }
 
+#allFPoptions .fp_int_type {
+  cursor:pointer;
+}
+
+
+#allFPoptions .fp_int_type.disabled {
+  color:lightgray;
+  cursor:default;
+}
+
+.dropdown-menu.limit_drop_h{
+    height: auto;
+    max-height: 160px;
+    overflow-x: hidden;
+}
+
 </style>
 {% endblock %}
 </head>
@@ -311,13 +327,13 @@ padding-right:60px
                             <ul class="dropdown-menu" style="height: auto;max-height:350px;overflow-x: hidden;padding:0">
                               <li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7" id="traj_id_{{traj_list.0.2}}" data-tpath={{traj_list.0.0}} data-fplot_file="{{traj_list.0.3.0.2}}"  
                               {% for e in traj_list.0.3 %}
-                                data-{{e.0}}={{e.2}}
+                                data-{{e.0}}="{{e.2}}"
                               {% endfor %}
                               >Trajectory {{traj_list.0.2}}</li>
                             {% for traj in traj_list|slice:"1:" %}
                               <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3.0.2}} 
                               {% for e in traj.3 %}
-                                data-{{e.0}}={{e.2}}
+                                data-{{e.0}}="{{e.2}}"
                               {% endfor %}
                               >Trajectory {{traj.2}}</li>
                             {% endfor %}
@@ -1465,33 +1481,39 @@ padding-right:60px
                 <div id="fpdiv" data-show_fp="{{show_fp}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
                     
                <center>
-                 <div id="flare-container"></div>
+                 <div id="flare-container">
+                  {% if not traj_list.0.3.0.2 %}
+                     <div class="alert alert-info" style="margin:50px 0;">
+                        There is no flare plot available for this trajectory and interaction type yet.
+                     </div>
+                   {% endif %}
+                 </div>
 
                   <span id="allFPoptions" class="showIfTrajFP">
 
                       <div class="dropup" style="display:inline-block;position: relative;" >
                         <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define the interaction type to be displayed in the plot.">Interaction type
                         <span class="caret"></span></button>
-                        <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
-                          <li id="fp_int_type_{{traj_list.0.3.0.0}}" class="is_active fp_options fp_int_type" data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" 
+                        <ul id="ul_fp_int_type" 
                             {% if traj_list.0.3.0.2 %}
-                              style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf" 
+                               class="dropdown-menu"
                             {% else %}
-                              style="padding:5px 15px 5px 15px;cursor:pointer;background-color:#bfbfbf;display:none" 
+                               class="dropdown-menu limit_drop_h"
+                            {% endif %}
+                           style="font-size:12px;margin-bottom:-12px">
+                          <li id="fp_int_type_{{traj_list.0.3.0.0}}"  data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" style="padding:5px 15px 5px 15px;background-color:#bfbfbf"
+                            {% if traj_list.0.3.0.2 %}
+                               class="is_active fp_options fp_int_type"
+                            {% else %}
+                               class="is_active fp_options fp_int_type disabled"
                             {% endif %}
                             >{{traj_list.0.3.0.1}}</li>
-
-
-                            
-
-
-
                           {% for int_info in traj_list.0.3|slice:"1:" %}
-                                <li class="fp_options fp_int_type" data-tag="{{int_info.0}}" data-path="{{int_info.2}}" 
+                                <li  data-tag="{{int_info.0}}" data-path="{{int_info.2}}" style="padding:5px 15px 5px 15px;" 
                                   {% if int_info.2 %}
-                                    style="padding:5px 15px 5px 15px;cursor:pointer;" 
+                                    class="fp_options fp_int_type"
                                   {% else %}
-                                    style="padding:5px 15px 5px 15px;cursor:pointer;display:none" 
+                                    class="fp_options fp_int_type disabled"
                                   {% endif %}
                                 >{{int_info.1}}</li>
                           {% endfor %}
@@ -1502,7 +1524,13 @@ padding-right:60px
 
 
                       <div class="dropup" style="display:inline-block;position: relative;" >
-                        <button class="btn btn-default dropdown-toggle changefocus" type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the hydrogen bonding network flare plot.">Display
+                        <button 
+                            {% if traj_list.0.3.0.2 %}
+                               class="btn btn-default dropdown-toggle changefocus disableIfNoIntFP"
+                            {% else %}
+                                class="btn btn-default dropdown-toggle changefocus disableIfNoIntFP disabled"
+                            {% endif %}
+                         type="button" data-toggle="dropdown" style="margin-top:15px;width:115px;font-size:12px;" title="Define what to display in the hydrogen bonding network flare plot.">Display
                         <span class="caret"></span></button>
                         <ul class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
                           <li style="padding:5px 15px 5px 15px;font-weight:bold" class="dropdown-header">Interacting pairs</li>
@@ -1517,7 +1545,13 @@ padding-right:60px
                       </div>
 
 
-                      <button id="FPdisplay" class="btn btn-default active changefocus"  title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
+                      <button id="FPdisplay" 
+                          {% if traj_list.0.3.0.2 %}
+                              class="btn btn-default active changefocus disableIfNoIntFP"
+                          {% else %}
+                              class="btn btn-default active changefocus disableIfNoIntFP disabled"
+                          {% endif %}
+                        title="Show/Hide structural representations of the residues selected at the plot." type="button" style="margin-top:15px;font-size:12px;width:115px;padding-right:2px;padding-left:2px;">
                         Show in structure
                       </button>
 
@@ -1535,7 +1569,13 @@ padding-right:60px
                      </div> -->
                      
                      
-                      <button id="FPclearSel" class="btn btn-danger" type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
+                      <button id="FPclearSel"
+                          {% if traj_list.0.3.0.2 %}
+                              class="btn btn-danger disableIfNoIntFP"
+                          {% else %}
+                              class="btn btn-danger disableIfNoIntFP disabled"
+                          {% endif %}
+                        type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
                       <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhencomp" href="/dynadb/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
