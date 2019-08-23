@@ -273,6 +273,7 @@ class Command(BaseCommand):
                 dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"),file_id=F('id_files__id'))
                 dynfiles_traj = dynfiles.filter(type=2)
                 dynfiles_traj = dynfiles_traj.values("file_name","file_path","file_id")
+                print(dynfiles_traj)
                 for traj in dynfiles_traj:
                     traj_path=traj["file_path"]
                     traj["dyn_id"]=dyn_id

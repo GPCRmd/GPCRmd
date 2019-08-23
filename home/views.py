@@ -47,15 +47,15 @@ def gpcrmd_home(request):
                       "buttons":"pannels", #pannels, links, all
     }
 
-    #latest entry
-    latest=DyndbDynamics.objects.filter(is_published=True).latest("creation_timestamp");
-    dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=latest.id)
-    #dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"),file_id=F('id_files__id'))
-    dynfiles = dynfiles.annotate(file_path=F("id_files__filepath"));
-    model_path = dynfiles.get(id_files__id_file_types__is_model=True).file_path;
-    mdsrv_url=obtain_domain_url(request)
-    context["model_path"]=model_path
-    context["mdsrv_url"]=mdsrv_url
+#    #latest entry
+#    latest=DyndbDynamics.objects.filter(is_published=True).latest("creation_timestamp");
+#    dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=latest.id)
+#    #dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"),file_id=F('id_files__id'))
+#    dynfiles = dynfiles.annotate(file_path=F("id_files__filepath"));
+#    model_path = dynfiles.get(id_files__id_file_types__is_model=True).file_path;
+#    mdsrv_url=obtain_domain_url(request)
+#    context["model_path"]= model_path[model_path.index("Dynamics"):] 
+#    context["mdsrv_url"]=mdsrv_url
 
 
 
