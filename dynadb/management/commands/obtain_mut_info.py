@@ -10,6 +10,7 @@ import json
 import urllib
 import re
 from dynadb.pipe4_6_0 import d as aa_short
+from django.db.models import F
 
 class Command(BaseCommand):
     help = "Obtains data on known mutations and/or variants for the GPCRs stored in the database from GPCRdb"
@@ -172,13 +173,29 @@ class Command(BaseCommand):
             muts_dict=open_dict_or_new(muts_filepath)
 
         dyn_li=DyndbDynamics.objects.filter(is_published=True)
+
+
+        dynobj=dyn_li.annotate(dyn_id=F('id'))
+        dynobj=dynobj.annotate(uniprot=F('id_model__id_protein__uniprotkbac'))
+        dynobj=dynobj.annotate(uniprot2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__uniprotkbac'))
+        dynprotdata = dynobj.values("dyn_id","uniprot","uniprot2")
+        dyn_dict = {}
+        for dyn in dynprotdata:
+            dyn_id=dyn["dyn_id"]
+            up=dyn["uniprot"]
+            if not up:
+                up=dyn["uniprot2"]
+            if not up:
+                self.stdout.write(self.style.NOTICE("UniProt ID not found for dyn %s" % (dyn_id)))
+                continue
+            if dyn_id not in dyn_dict:
+                dyn_dict["dyn_id"]=[up]
+            else:
+                dyn_dict["dyn_id"].append(up)
+
         u = UniProt()
-        for dyn in dyn_li:
-            dyn_id=dyn.id
-            gpcr_obj_li_all=obtain_DyndbProtein_id_list(dyn_id)[0]
-            gpcr_obj_li=[dprot for dprot,gprot in gpcr_obj_li_all]
-            for gpcr_obj in gpcr_obj_li:
-                uprot=gpcr_obj.uniprotkbac
+        for dyn_id,uprot_li in dyn_dict.items():
+            for uprot in uprot_li:
                 data=u.quick_search("id:%s" % uprot)
                 if data:
                     entry=data[uprot]['Entry name'].lower()

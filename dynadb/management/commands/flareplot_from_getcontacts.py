@@ -267,31 +267,34 @@ class Command(BaseCommand):
         i=0
         tot=len(dyn_id_li)
         for dyn_id in sorted(dyn_id_li):
-            self.stdout.write(self.style.NOTICE("dyn %s - %.1f%% completed"%(dyn_id , (i/tot)*100) ))
-            dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=dyn_id)
-            dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"),file_id=F('id_files__id'))
-            dynfiles_traj = dynfiles.filter(type=2)
-            dynfiles_traj = dynfiles_traj.values("file_name","file_path","file_id")
-            for traj in dynfiles_traj:
-                traj_path=traj["file_path"]
-                traj["dyn_id"]=dyn_id
-                if os.path.isfile(traj_path):
-                    t=md.open(traj_path)
-                    n_frames=t.__len__()
-                    del t
-                    gc.collect()
-                    traj["n_frames"]=n_frames
-                else:
-                    traj["n_frames"]=False
-            pos_to_gnum=create_pos_to_gnum(dyn_id)
-            if not pos_to_gnum:
-                self.stdout.write(self.style.ERROR("Labels file not found. Skipping." ))
-                continue
-            result=create_p_jsons(dynfiles_traj,pos_to_gnum)
-            if not result:
-                self.stdout.write(self.style.ERROR("GetContacts results file not found. Skipping." ))
-                continue
-            dyn_traj_d[dyn_id]=dynfiles_traj
-            i+=1
+            try:
+                self.stdout.write(self.style.NOTICE("dyn %s - %.1f%% completed"%(dyn_id , (i/tot)*100) ))
+                dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=dyn_id)
+                dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"),file_id=F('id_files__id'))
+                dynfiles_traj = dynfiles.filter(type=2)
+                dynfiles_traj = dynfiles_traj.values("file_name","file_path","file_id")
+                for traj in dynfiles_traj:
+                    traj_path=traj["file_path"]
+                    traj["dyn_id"]=dyn_id
+                    if os.path.isfile(traj_path):
+                        t=md.open(traj_path)
+                        n_frames=t.__len__()
+                        del t
+                        gc.collect()
+                        traj["n_frames"]=n_frames
+                    else:
+                        traj["n_frames"]=False
+                pos_to_gnum=create_pos_to_gnum(dyn_id)
+                if not pos_to_gnum:
+                    self.stdout.write(self.style.ERROR("Labels file not found. Skipping." ))
+                    continue
+                result=create_p_jsons(dynfiles_traj,pos_to_gnum)
+                if not result:
+                    self.stdout.write(self.style.ERROR("GetContacts results file not found. Skipping." ))
+                    continue
+                dyn_traj_d[dyn_id]=dynfiles_traj
+                i+=1
+            except Exception as e:
+                self.stdout.write(self.style.ERROR(e))
         self.stdout.write(self.style.NOTICE("100%" ))
 

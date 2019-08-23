@@ -12,7 +12,7 @@ from dynadb.models import DyndbProtein, DyndbFilesDynamics, DyndbSubmissionMolec
 from protein.models import Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
-from view.views import obtain_prot_chains , obtain_DyndbProtein_id_list, obtain_seq_pos_info, findGPCRclass, obtain_rel_dicts, traduce_all_poslists_to_ourclass_numb,obtain_predef_positions_lists,find_missing_positions
+from view.views import obtain_prot_chains , obtain_DyndbProtein_id_list, obtain_seq_pos_info, findGPCRclass, obtain_rel_dicts, translate_all_poslists_to_ourclass_numb,obtain_predef_positions_lists,find_missing_positions
 import copy
 import operator
 
