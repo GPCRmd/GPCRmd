@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.contrib.sites.shortcuts import get_current_site
@@ -720,16 +721,17 @@ def obtain_domain_url(request):
 
 def get_fplot_data(dyn_id,traj_list):
     show_fp=False
-    int_type_l=['hbonds', 'hb', 'sb', 'pc', 'ps', 'ts', 'vdw', 'wb', 'wb2']
+    int_type_l=['hbonds', 'hb', 'sb', 'pc', 'ps', 'ts', 'vdw', 'wb', 'wb2',"hp"]
     int_name_d={"hbonds":"Wernet Nilsson criteria (MDTraj)",
                 "hb":"GetContacts criteria",
                 "sb": "Salt bridges",
                 "pc": "Pi-cation",
-                "ps": "pi-stacking",
+                "ps": "Pi-stacking",
                 "ts": "T-stacking",
                 "vdw": "Van der Waals",
                 "wb": "Water bridges",
-                "wb2": "Extended water bridges"}
+                "wb2": "Extended water bridges",
+                "hp" : "Hydrophobic"}
     for ind, (trajfile, trajfile_name, f_id) in enumerate(traj_list):
         fpfilename_pre = get_file_name(objecttype="dynamics",fileid=f_id,objectid=dyn_id,ext="json",forceext=True,subtype="trajectory")##[!] Change if function is changed!!!        
         fp_data=[]

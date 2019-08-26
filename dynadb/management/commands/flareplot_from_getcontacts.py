@@ -144,7 +144,7 @@ class Command(BaseCommand):
                 frame_ends_bytraj.append(n_frames+accum_frames -1) #Starts by 0
                 accum_frames+=n_frames
 
-                cont_li=['sb', 'pc', 'ps', 'ts', 'vdw', 'hb', 'wb', 'wb2']
+                cont_li=['sb', 'pc', 'ps', 'ts', 'vdw', 'hb', 'wb', 'wb2', 'hp']
                 
                 traj_int_d={e:dict() for e in cont_li}
                 

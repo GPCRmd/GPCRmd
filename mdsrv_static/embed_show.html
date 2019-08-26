@@ -114,12 +114,23 @@
                 }
             });
         }
+
+        function change_size(){
+            $("#toiframe").css("width","391px");
+            $("#viewport").css({"width":"391px","height":"463px"});
+        }
 //////////////////
 
 
         $(document).ready(function(){
         document.domain=document.domain;
         stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+
+            if ($(".str_file", window.parent.document).data("is_home")){
+                change_size()
+            }
+
+
 
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var traj=$(".traj_file", window.parent.document).data("traj_file");

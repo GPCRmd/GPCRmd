@@ -179,6 +179,7 @@ class Command(BaseCommand):
         dynobj=dynobj.annotate(uniprot=F('id_model__id_protein__uniprotkbac'))
         dynobj=dynobj.annotate(uniprot2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__uniprotkbac'))
         dynprotdata = dynobj.values("dyn_id","uniprot","uniprot2")
+        
         dyn_dict = {}
         for dyn in dynprotdata:
             dyn_id=dyn["dyn_id"]
@@ -189,10 +190,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE("UniProt ID not found for dyn %s" % (dyn_id)))
                 continue
             if dyn_id not in dyn_dict:
-                dyn_dict["dyn_id"]=[up]
+                dyn_dict[dyn_id]=[up]
             else:
-                dyn_dict["dyn_id"].append(up)
-
+                dyn_dict[dyn_id].append(up)
         u = UniProt()
         for dyn_id,uprot_li in dyn_dict.items():
             for uprot in uprot_li:

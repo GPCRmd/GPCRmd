@@ -1,19 +1,18 @@
+from django.core.management.base import BaseCommand, CommandError
+from django.db.models import F
+from django.conf import settings
+
+from dynadb.models import DyndbModel, DyndbDynamics, DyndbFiles, DyndbModelComponents
+from dynadb.pipe4_6_0 import useline2, d
+
 import re
 import os
 import gc
-
-
-from django.core.management.base import BaseCommand, CommandError
-from django.db.models import F
-
 import MDAnalysis as mda
 from MDAnalysis.analysis import align
 from MDAnalysis.analysis.rms import rmsd
-from django.conf import settings
-from dynadb.models import DyndbModel, DyndbDynamics, DyndbFiles, DyndbModelComponents
 import urllib.request
 import mdtraj as md
-from dynadb.pipe4_6_0 import useline2, d
 import pickle
 import numpy as np
 import transforms3d
