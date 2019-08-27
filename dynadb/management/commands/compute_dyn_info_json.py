@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import datetime
 import re
+from view.obtain_gpcr_numbering import generate_gpcr_pdb
 from view.views import compute_interaction, obtain_all_chains, relate_atomSerial_mdtrajIndex
 from view.data import change_lig_name
 from dynadb.models import DyndbProtein, DyndbFilesDynamics, DyndbSubmissionMolecule, DyndbDynamicsComponents,DyndbModeledResidues, DyndbDynamics
@@ -27,6 +28,13 @@ class Command(BaseCommand):
             default=False,
             help='Overwrites already stored data, calculating again the interactions for all the public dynamics stored at the DB.',
         )
+        parser.add_argument(
+            '--do_classdict',
+            action='store_true',
+            dest='do_classdict',
+            default=False,
+            help='If selected, adds positions of the protein of the computed simulations to the GPCRnomenclatures dictionary',
+        )
 
 #        parser.add_argument(
 #           '-dyn_id',
@@ -47,87 +55,6 @@ class Command(BaseCommand):
 #        )
         
     def handle(self, *args, **options):
-
-        def generate_gpcr_pdb (dyn_id, structure_file):
-            """Code extracted frin view/views index"""
-            pdb_name = "/protwis/sites/files/"+structure_file
-            chain_name_li=obtain_prot_chains(pdb_name)
-            multiple_chains=False
-            if len(chain_name_li) > 1:
-                multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
-            dprot_chains={}
-            chains_taken=set()
-            gpcr_chains=[]
-            non_gpcr_chains=[]
-            prot_seq_pos={}
-            seq_pos_n=1
-            all_chains=[]
-            all_prot_names=[]
-            for prot_id, prot_name, prot_is_gpcr, prot_seq in dprot_li_all_info: #To classify chains by protein (dprot_chains is a dict:for each protein, has a list of each chain with its matchpdbfa results + the protein seq_pos)
-                all_prot_names.append(prot_name)
-                seq_pos=[]
-                dprot_chains[prot_id]=[[],[]]  
-                for chain_name in chain_name_li:
-                    checkpdb_res=checkpdb_ngl(pdb_name, segid="",start=-1,stop=9999999999999999999, chain=chain_name)
-                    if isinstance(checkpdb_res, tuple):
-                        tablepdb,pdb_sequence,hexflag=checkpdb_res
-                        result=matchpdbfa_ngl(prot_seq,pdb_sequence, tablepdb, hexflag)
-                        if isinstance(result, list):
-                            #chain_results[chain_name]=result
-                            if chain_name not in chains_taken:
-                                chains_taken.add(chain_name)
-                                dprot_chains[prot_id][0].append((chain_name,result))
-                                seq_pos,seq_pos_n=(seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains)
-                                dprot_chains[prot_id][1]=seq_pos
-                                all_chains.append(chain_name)
-                                if prot_is_gpcr:
-                                    gpcr_chains.append(chain_name)
-                                else:
-                                    non_gpcr_chains.append(chain_name)
-                prot_seq_pos[prot_id]=(prot_name,seq_pos)
-            keys_to_rm=set()
-            for key, val in dprot_chains.items():
-                if val==([],[]):
-                    keys_to_rm.add(key)
-            for key in keys_to_rm:
-                del dprot_chains[key]
-
-                
-            if chains_taken: # To check if some result have been obtained
-                all_gpcrs_info=[]
-                seg_li_all={}
-                gpcr_pdb_all={}
-                gpcr_id_name={}
-                for gpcr_DprotGprot in prot_li_gpcr:
-                    gpcr_Dprot=gpcr_DprotGprot[0]
-                    gpcr_Gprot=gpcr_DprotGprot[1]
-                    dprot_id=gpcr_Dprot.id
-                    dprot_name=gpcr_Dprot.name
-                    gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot)  #warning!! the problem is here
-                    if len(gen_num_res) > 2:
-                        (numbers, num_scheme, db_seq, current_class) = gen_num_res
-                        current_class=findGPCRclass(num_scheme)
-                        gpcr_n_ex=""
-                        for pos_gnum in numbers[current_class].values():
-                            if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
-                                gpcr_n_ex=pos_gnum[1]
-                                break
-                        if "." in gpcr_n_ex: #For the moment we only accept n.nnxnn format
-                            seq_pos_index=0
-                            gpcr_pdb={}
-                            gpcr_aa={}
-                            gnum_classes_rel={}
-                            (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
-                            for chain_name, result in dprot_chain_li:
-                                (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=True)
-                                                                
-                            prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
-                            gpcr_pdb_all[dprot_id]=(gpcr_pdb)
-                            gpcr_id_name[dprot_id]=dprot_name
-                            seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
-            return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict
-
     
         def json_dict(path):
             """Converts json file to pyhton dict."""
@@ -135,6 +62,36 @@ class Command(BaseCommand):
             json_str = json_file.read()
             json_data = json.loads(json_str)
             return json_data
+
+        def create_class_position_dict(classdict_protein):
+
+            #Open and load existing dictionary, if any
+            classdict_path="/protwis/sites/files/Precomputed/get_contacts_files/GPCRnomenclatures_dict.json"
+            if os.path.isdir(classdict_path):
+                classdict = json_dict(classdict_path)
+            else:
+                classdict = {'A' : {}, 'B' : {}, 'C' : {}, 'F' : {}}
+
+            #Each GPCR class (A, B, C and F) will have a dictionary with its equivalent positions in the other classes
+            Aallpos = classdict['A'].keys()
+            Ballpos = classdict['B'].keys()
+            Callpos = classdict['C'].keys()
+            Fallpos = classdict['F'].keys()
+
+            for Apos in classdict_protein:
+                Bpos = classdict_protein[Apos]['B']
+                Cpos = classdict_protein[Apos]['C']
+                Fpos = classdict_protein[Apos]['F']
+
+                if Apos not in Aallpos:
+                    classdict['A'][Apos] = { 'B':Bpos, 'C':Cpos, 'F':Fpos }
+                    classdict['B'][Bpos] = { 'A':Apos, 'C':Cpos, 'F':Fpos }
+                    classdict['C'][Cpos] = { 'B':Bpos, 'A':Apos, 'F':Fpos }
+                    classdict['F'][Fpos] = { 'B':Bpos, 'C':Cpos, 'A':Apos }
+
+            #Store modified dictionary as Json file
+            with open(classdict_path, 'w') as outfile:
+                json.dump(classdict, outfile)
 
         def prot_from_model(model):
             """Given a db model obj, gets the GPCR protein object"""
@@ -230,11 +187,13 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
             else:
                 traj_files = [ i[0] for i in traj_list ]
-                gpcr_pdb=generate_gpcr_pdb(dyn_id, structure_file)
+                pdb_name = "/protwis/sites/files/"+structure_file
+                (gpcr_pdb,classes_dict,current_class)=generate_gpcr_pdb(dyn_id, pdb_name, True)
                 pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
                 delta=DyndbDynamics.objects.get(id=dyn_id).delta
                 compl_data[identifier]={
                     "dyn_id": dyn_id,
+                    "class" : current_class,
                     "prot_id": prot_id, 
                     "comp_id": comp_id,
                     "lig_lname":comp_name,
@@ -249,6 +208,10 @@ class Command(BaseCommand):
                     "delta":delta,
                     "gpcr_pdb":gpcr_pdb
                     }
+                print(compl_data[identifier])
+
+                # If set, create the GPCR position dictionary across classes using the returned positions
+                return classes_dict
 
         def update_time(upd,upd_now):
             year=upd_now.year
@@ -276,7 +239,7 @@ class Command(BaseCommand):
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
         upd_now=datetime.datetime.now()
-        compl_file_path=path.join(cra_path,"compl_info.json")
+        compl_file_path=path.join(cra_path,"compl_info_krosis.json")
         upd_file_path=path.join(cra_path,"last_update.json")
         if options['overwrite']:
             compl_data={}
@@ -304,7 +267,9 @@ class Command(BaseCommand):
         for dyn in dyn_li:
             try:
                 self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id,i , len(dyn_li))))
-                retrieve_info(self,dyn,change_lig_name)
+                classes_dict = retrieve_info(self,dyn,change_lig_name)
+                if (options['do_classdict']) and (classes_dict):
+                    create_class_position_dict(classes_dict)
             except FileNotFoundError:
                 self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
             i+=1
@@ -314,5 +279,3 @@ class Command(BaseCommand):
             json.dump(upd, outfile)
         with open(compl_file_path, 'w') as outfile:
             json.dump(compl_data, outfile)
-
-            
