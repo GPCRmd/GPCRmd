@@ -1,7 +1,7 @@
 from view.views import *
 from dynadb.pipe4_6_0 import *
 
-def generate_gpcr_pdb (dyn_id, structure_file):
+def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
     """Obtain GPCR num. of  structure file"""
     pdb_name = structure_file
     chain_name_li=obtain_prot_chains(pdb_name)
@@ -74,8 +74,20 @@ def generate_gpcr_pdb (dyn_id, structure_file):
                     for chain_name, result in dprot_chain_li:
                         (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=True,add_aa=True)
                                                         
+                    gnum_classes_rel_ok={}
+                    for (gclass,pos_d) in gnum_classes_rel.items():
+                        for changed,current in pos_d.items():
+                            if not current in gnum_classes_rel_ok:
+                                gnum_classes_rel_ok[current]={}
+                            gnum_classes_rel_ok[current][gclass]=changed
+
+
+
                     prot_seq_pos[dprot_id]=(dprot_name, dprot_seq)
                     gpcr_pdb_all[dprot_id]=(gpcr_pdb)
                     gpcr_id_name[dprot_id]=dprot_name
                     seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
-    return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict
+    if retrieve_rel_dict:
+        return(gpcr_pdb,gnum_classes_rel_ok) #[!] For now I only consider 1 GPCR, so I only need this dict
+    else:
+        return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict

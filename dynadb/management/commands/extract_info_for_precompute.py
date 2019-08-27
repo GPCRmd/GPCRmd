@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.db.models import F
 from dynadb.models import DyndbDynamics
-import gc
 import pickle
 
 class Command(BaseCommand):
@@ -79,7 +78,6 @@ class Command(BaseCommand):
                 dyn_dict[dyn_id]["lig_li"].add(dyn["comp_resname"])
 
         del dynmols
-        gc.collect()
 
         dyn_li=DyndbDynamics.objects.filter(is_published=True)
 
