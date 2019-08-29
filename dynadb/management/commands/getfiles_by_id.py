@@ -193,7 +193,6 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
         traj_files = [ i[0] for i in traj_list ]
         pdb_name = "/protwis/sites/files/"+structure_file
         (gpcr_pdb,classes_dict,current_class)=generate_gpcr_pdb(dyn_id, pdb_name, True)
-        print(classes_dict, current_class)
         pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
         delta=DyndbDynamics.objects.get(id=dyn_id).delta
         data_dict[identifier]={

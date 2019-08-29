@@ -50,12 +50,6 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	]
 
 	itypes_order = [
-		("Non-polar", 
-			(
-				("vdw","van der waals"),
-				('hp', "hydrophobic")
-	   		)
-	   	),
 		("Polar/Electrostatic", 
 			(
 				("hb", "hydrogen bond"),
@@ -65,10 +59,16 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 				("pc", "pi-cation")
 			)
 		),
+		("Non-polar", 
+			(
+				("vdw","van der waals"),
+				('hp', "hydrophobic")
+	   		)
+	   	),
 		("Stacking",
 			(
 				("ps", "pi-stacking"),
-				('ts', "t-stacking")
+				('ts', "T-stacking")
 			)
 		)
 	]

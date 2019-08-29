@@ -63,7 +63,16 @@ class Command(BaseCommand):
             json_data = json.loads(json_str)
             return json_data
 
-        def create_class_position_dict(classdict_protein):
+        def create_class_position_dict(classdict_gpcr, class_gpcr):
+            """
+            Reorganizes data in classdict_gpcr (Being GPCR of class B, the structure of this dictionary is something like: 
+            1.34 : { C: 1.37, A: 1.38, F: 1.40  }). 
+            The data is stored in a Json with four dictionaries, one for each GPCRclass, with its equivalences in the other classes
+            """
+
+            #Declaring variables
+            class_letters = set(('A','B','C','F'))
+            class_letters.remove(class_gpcr)
 
             #Open and load existing dictionary, if any
             classdict_path="/protwis/sites/files/Precomputed/get_contacts_files/GPCRnomenclatures_dict.json"
@@ -72,22 +81,26 @@ class Command(BaseCommand):
             else:
                 classdict = {'A' : {}, 'B' : {}, 'C' : {}, 'F' : {}}
 
-            #Each GPCR class (A, B, C and F) will have a dictionary with its equivalent positions in the other classes
+            # Store positions already in the Json in a dictionary
             Aallpos = classdict['A'].keys()
-            Ballpos = classdict['B'].keys()
-            Callpos = classdict['C'].keys()
-            Fallpos = classdict['F'].keys()
 
-            for Apos in classdict_protein:
-                Bpos = classdict_protein[Apos]['B']
-                Cpos = classdict_protein[Apos]['C']
-                Fpos = classdict_protein[Apos]['F']
+            #For every position in the processed gpcr
+            pos_equivalents = {}
+            for pos in classdict_gpcr:
 
-                if Apos not in Aallpos:
-                    classdict['A'][Apos] = { 'B':Bpos, 'C':Cpos, 'F':Fpos }
-                    classdict['B'][Bpos] = { 'A':Apos, 'C':Cpos, 'F':Fpos }
-                    classdict['C'][Cpos] = { 'B':Bpos, 'A':Apos, 'F':Fpos }
-                    classdict['F'][Fpos] = { 'B':Bpos, 'C':Cpos, 'A':Apos }
+                #If this position already exists in at least one entry of the Json, is not required to store it again
+                if pos in Aallpos:
+                    continue
+
+                #For every class not of the current GPCR's class, assign an equivalent
+                for class_letter in class_letters:
+                    pos_equivalents[class_letter] = classdict_gpcr[pos][class_letter]  
+                pos_equivalents[class_gpcr] = pos
+
+                classdict['A'][pos_equivalents['A']] = { 'B':pos_equivalents['B'], 'C':pos_equivalents['C'], 'F':pos_equivalents['F'] }
+                classdict['B'][pos_equivalents['B']] = { 'A':pos_equivalents['A'], 'C':pos_equivalents['C'], 'F':pos_equivalents['F'] }
+                classdict['C'][pos_equivalents['C']] = { 'B':pos_equivalents['B'], 'A':pos_equivalents['A'], 'F':pos_equivalents['F'] }
+                classdict['F'][pos_equivalents['F']] = { 'B':pos_equivalents['B'], 'C':pos_equivalents['C'], 'A':pos_equivalents['A'] }
 
             #Store modified dictionary as Json file
             with open(classdict_path, 'w') as outfile:
@@ -208,10 +221,10 @@ class Command(BaseCommand):
                     "delta":delta,
                     "gpcr_pdb":gpcr_pdb
                     }
-                print(compl_data[identifier])
 
                 # If set, create the GPCR position dictionary across classes using the returned positions
-                return classes_dict
+                if (options['do_classdict']) and (classes_dict):
+                    create_class_position_dict(classes_dict, current_class)
 
         def update_time(upd,upd_now):
             year=upd_now.year
@@ -267,9 +280,7 @@ class Command(BaseCommand):
         for dyn in dyn_li:
             try:
                 self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id,i , len(dyn_li))))
-                classes_dict = retrieve_info(self,dyn,change_lig_name)
-                if (options['do_classdict']) and (classes_dict):
-                    create_class_position_dict(classes_dict)
+                retrieve_info(self,dyn,change_lig_name)
             except FileNotFoundError:
                 self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
             i+=1
