@@ -52,6 +52,8 @@ def user_passes_test_args(test_func, login_url=None, access_denied_response=None
     return decorator
     
 def is_submission_owner(user,submission_id,*args,**kwargs):
+    if user.is_superuser:
+        return True
     entry = DyndbSubmission.objects.filter(pk=submission_id,user_id=user)
     return entry.exists()
     
@@ -75,7 +77,7 @@ def is_published_or_submission_owner(user,object_type=None,incall=False,redirect
         'dynamics'              : {'dbobject': DyndbDynamics,           'path_to_submission_id': 'submission_id'},
     }
     
-    if not settings.QUERY_CHECK_PUBLISHED or incall:
+    if not settings.QUERY_CHECK_PUBLISHED or incall or user.is_superuser:
         return True
     
     #if object_type is not defined obtain it from object ID keyword argument name

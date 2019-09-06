@@ -67,9 +67,16 @@
        <form action="{% url 'dynadb:db_inputform' submission_id=sub.submission_id %}" method="post">
        {% csrf_token %}
        <table class="table table-responsive">
-       <tr><th>Submission ID</th><th>Dynamics ID</th><th>State</th><th></th><th></th></tr>
+       <tr>
+       {% if superuser %}
+       <th>Username</th>
+       {% endif %}
+       <th>Submission ID</th><th>Dynamics ID</th><th>State</th><th></th><th></th></tr>
        {% for sub in submission_table %}
        <tr>
+           {% if superuser %} 
+            <td>{{sub.username}}</td>
+           {% endif %}
             <td>{{sub.submission_id}}</td>
             <td>{% if sub.state != "Open" %}<a href="{% url 'dynadb:query_dynamics' dynamics_id=sub.dynamics_id %}">{{sub.dynamics_id}}</a>{% else %}{{sub.dynamics_id}}{% endif %}</td>
             <td>{{sub.state}}</td>

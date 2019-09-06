@@ -86,6 +86,9 @@ def register(request,
     """The user is registered and an activation email is sent"""
     if request.method == 'POST':
         form = RegistrationForm(data=request.POST)
+        email = form.fields["email"].to_python(form.data["email"])
+        User.objects.filter(email=email,is_active=False,last_login=None).delete()
+
         if form.is_valid():
             opts = {
                 'use_https': request.is_secure(),
@@ -97,8 +100,8 @@ def register(request,
                 'html_email_template_name': html_email_template_name,
                 'extra_email_context': extra_email_context,
             }
-            user = form.save(**opts)
-            return HttpResponseRedirect("/accounts/reg_mail/")
+        user = form.save(**opts)
+        return HttpResponseRedirect("/accounts/reg_mail/")
     else:
         form = RegistrationForm()
     return render_to_response('accounts/register.html', {
@@ -328,9 +331,17 @@ def reset_complete(request):
 @login_required
 def user_submissions(request):
     submission_table = []
-    submissionq = DyndbSubmission.objects.filter(user_id=request.user.pk).order_by('-pk',)
+    submissionq = DyndbSubmission.objects.order_by('-pk',)
     submissionq = submissionq.annotate(dynamics_id=F('dyndbdynamics__pk'))
-    submissionq = submissionq.values('pk','dynamics_id','is_closed','is_ready_for_publication','is_published')
+    values = []
+    if request.user.is_superuser:
+        values = ['user_id__username']
+    else:
+        values = []
+        submissionq = submissionq.filter(user_id=request.user.pk)
+    
+    values += ['pk','dynamics_id','is_closed','is_ready_for_publication','is_published']
+    submissionq = submissionq.values(*values)
     for subinfo in submissionq:
         if subinfo['is_published']:
             state = 'Published'
@@ -340,6 +351,9 @@ def user_submissions(request):
             state = 'Closed'
         else:
             state = 'Open'
-        submission_table.append({'submission_id':subinfo['pk'], 'dynamics_id': subinfo['dynamics_id'], 'state':state})
-        
-    return render(request, 'accounts/user_submissions.html', {'submission_table':submission_table,'username':request.user.username})
+        row_dict = {'submission_id':subinfo['pk'], 'dynamics_id': subinfo['dynamics_id'], 'state':state}
+        if request.user.is_superuser:
+            row_dict['username'] = subinfo['user_id__username']
+        submission_table.append(row_dict)
+    return render(request, 'accounts/user_submissions.html', {'submission_table':submission_table,\
+                 'username':request.user.username,'superuser':request.user.is_superuser})
