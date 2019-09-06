@@ -72,39 +72,34 @@ class Command(BaseCommand):
 
             #Declaring variables
             class_letters = set(('A','B','C','F'))
-            class_letters.remove(class_gpcr)
 
             #Open and load existing dictionary, if any
             classdict_path="/protwis/sites/files/Precomputed/get_contacts_files/GPCRnomenclatures_dict.json"
-            if os.path.isdir(classdict_path):
+            if os.path.isfile(classdict_path):
                 classdict = json_dict(classdict_path)
             else:
                 classdict = {'A' : {}, 'B' : {}, 'C' : {}, 'F' : {}}
-
-            # Store positions already in the Json in a dictionary
-            Aallpos = classdict['A'].keys()
 
             #For every position in the processed gpcr
             pos_equivalents = {}
             for pos in classdict_gpcr:
 
-                #If this position already exists in at least one entry of the Json, is not required to store it again
-                if pos in Aallpos:
-                    continue
+                print(pos)
 
                 #For every class not of the current GPCR's class, assign an equivalent
                 for class_letter in class_letters:
+                    if class_letter == class_gpcr:
+                        continue
                     pos_equivalents[class_letter] = classdict_gpcr[pos][class_letter]  
                 pos_equivalents[class_gpcr] = pos
 
-                classdict['A'][pos_equivalents['A']] = { 'B':pos_equivalents['B'], 'C':pos_equivalents['C'], 'F':pos_equivalents['F'] }
-                classdict['B'][pos_equivalents['B']] = { 'A':pos_equivalents['A'], 'C':pos_equivalents['C'], 'F':pos_equivalents['F'] }
-                classdict['C'][pos_equivalents['C']] = { 'B':pos_equivalents['B'], 'A':pos_equivalents['A'], 'F':pos_equivalents['F'] }
-                classdict['F'][pos_equivalents['F']] = { 'B':pos_equivalents['B'], 'C':pos_equivalents['C'], 'A':pos_equivalents['A'] }
+                # Create dictionary to print in json: class_letter -> position -> equivalentA & equivalentB & equivalentC & equivalentF
+                for class_letter in class_letters:
+                    classdict[class_letter][pos_equivalents[class_letter]] = '&'.join((pos_equivalents['A'],pos_equivalents['B'],pos_equivalents['C'],pos_equivalents['F']))
 
             #Store modified dictionary as Json file
             with open(classdict_path, 'w') as outfile:
-                json.dump(classdict, outfile)
+                json.dump(classdict, outfile, sort_keys=True, indent=4)
 
         def prot_from_model(model):
             """Given a db model obj, gets the GPCR protein object"""
@@ -252,7 +247,7 @@ class Command(BaseCommand):
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
         upd_now=datetime.datetime.now()
-        compl_file_path=path.join(cra_path,"compl_info_krosis.json")
+        compl_file_path=path.join(cra_path,"compl_info.json")
         upd_file_path=path.join(cra_path,"last_update.json")
         if options['overwrite']:
             compl_data={}
