@@ -12,6 +12,9 @@ from django.template import loader
 from django.core.mail import EmailMultiAlternatives
 from django.contrib.auth.forms import PasswordResetForm as PasswordResetForm_default
 
+
+from accounts.models import User
+
 class RegistrationForm(forms.ModelForm):
     """
     When a user registers, saves his data and sends him an email to activate the account.
@@ -27,7 +30,7 @@ class RegistrationForm(forms.ModelForm):
         labels = {'lab':'Laboratory / Group / Unit'}
 
     def clean(self):
-        cleaned_data = super(RegistrationForm, self).clean()
+        cleaned_data = super(RegistrationForm, self).clean()    
         password1 = self.cleaned_data.get('password1')
         password2 = self.cleaned_data.get('password2')
         if password1 and password2:

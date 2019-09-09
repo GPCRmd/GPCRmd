@@ -3,7 +3,7 @@ from dynadb.pipe4_6_0 import *
 from dynadb.models import DyndbDynamics
 from django.db.models import F
 
-def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
+def generate_gpcr_pdb (dyn_id, structure_file, retrieve_rel_dict=False):
     """Obtain GPCR num. of  structure file"""
     pdb_name = structure_file
     chain_name_li=obtain_prot_chains(pdb_name)
@@ -61,7 +61,6 @@ def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
             gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot)  #warning!! the problem is here
             if len(gen_num_res) > 2:
                 (numbers, num_scheme, db_seq, current_class) = gen_num_res
-                current_class=findGPCRclass(num_scheme)
                 gpcr_n_ex=""
                 for pos_gnum in numbers[current_class].values():
                     if pos_gnum[1]: #We take the 1st instance of gpcr num as example, and check in which format it is (n.nnxnn or nxnn)
@@ -90,7 +89,7 @@ def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
                     gpcr_id_name[dprot_id]=dprot_name
                     seg_li_all[dprot_id]=seg_li #[!] For the moment I don't use this, I consider only 1 GPCR
     if retrieve_rel_dict:
-        return(gpcr_pdb,gnum_classes_rel_ok) #[!] For now I only consider 1 GPCR, so I only need this dict
+        return(gpcr_pdb,gnum_classes_rel_ok,current_class) #[!] For now I only consider 1 GPCR, so I only need this dict
     else:
         return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict
 

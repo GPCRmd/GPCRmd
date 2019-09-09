@@ -10,7 +10,7 @@ logo_dict = {
         'logo_path2': 'home/logo/' + settings.SITE_NAME + '/main2.png',
         'logo_width2': '73',
         'logo_path3': 'home/logo/' + settings.SITE_NAME + '/main3.png',
-        'logo_width3': '53',
+        'logo_width3': '76',
 
     }
 
