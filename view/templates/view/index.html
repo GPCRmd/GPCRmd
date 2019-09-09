@@ -381,7 +381,7 @@ padding-right:60px
                                 <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No variants found."  >Variants</li>
                               {% endif %}
                               {% if pdb_muts|length > 2 %}
-                                <li id="showmuts" style="padding:5px 10px 5px 10px;" data-short="muts" title="Display mutational information of the residue clicked." class="onclickshow" >Mutants
+                                <li id="showmuts" style="padding:5px 10px 5px 10px;" data-short="muts" title="Display information on experimental mutation of the residue clicked." class="onclickshow" >Mutations
                                 </li>
                               {% else %}
                                 <li style="padding:5px 10px 5px 10px;color:#a6a6a6;cursor:not-allowed" title="No mutations found."  >Mutations</li>
@@ -835,6 +835,20 @@ padding-right:60px
                                          {% endfor %}
                                         {% endif %}
                                   </div>
+
+
+                                 <div style="float:left;height:27px" >
+                                      Representation:
+                                      <select class="conspos_style_sel updateSelOrNot" name="conspos_style" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                         <option value="spacefill">Spacefill</option>
+                                         <option value="licorice">Licorice</option>
+                                         <option value="ball+stick">Ball+stick</option>
+                                         <option value="hyperball">Hyperball</option>
+                                         <option value="line">Line</option>
+                                         <!--<option value="axes">Axes</option>-->
+                                      </select>
+                                  </div>
+
                                   <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                              </div>
                           </div>
@@ -890,6 +904,17 @@ padding-right:60px
                                         <button style="margin-bottom:10px;margin-right:3px;margin-left:3px" title="{{pos.1}}"    class="high_pd high_pdF btn btn-default changefocus" data-pdbpos="{{pos.2}}">{{pos.0}}</button>
                                          {% endfor %}
                                         {% endif %}
+                                  </div>
+                                 <div style="float:left;height:27px" >
+                                      Representation:
+                                      <select class="conspos_style_sel updateSelOrNot" name="conspos_style" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                         <option value="spacefill">Spacefill</option>
+                                         <option value="licorice">Licorice</option>
+                                         <option value="ball+stick">Ball+stick</option>
+                                         <option value="hyperball">Hyperball</option>
+                                         <option value="line">Line</option>
+                                         <!--<option value="axes">Axes</option>-->
+                                      </select>
                                   </div>
                                   <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                              </div>
@@ -948,6 +973,19 @@ padding-right:60px
                                          {% endfor %}
                                         {% endif %}
                                   </div>
+
+                                 <div style="float:left;height:27px" >
+                                      Representation:
+                                      <select class="conspos_style_sel updateSelOrNot" name="conspos_style" style="padding:0;font-size:12px;height:24px;margin: 3px 0 0 0">
+                                         <option value="spacefill">Spacefill</option>
+                                         <option value="licorice">Licorice</option>
+                                         <option value="ball+stick">Ball+stick</option>
+                                         <option value="hyperball">Hyperball</option>
+                                         <option value="line">Line</option>
+                                         <!--<option value="axes">Axes</option>-->
+                                      </select>
+                                  </div>
+
                                   <button class="btn btn-link pull-right clear_conspos" style="color:#DC143C;margin-bottom;0;padding-bottom:0">Clear</button>
                              </div>
                           </div>

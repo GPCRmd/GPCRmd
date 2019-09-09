@@ -247,7 +247,7 @@ def obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,multiple_chains):
             seq_pos_n+=1
     return (seq_pos,seq_pos_n)
 
-def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=False,add_aa=False,seq_pdb=False):
+def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=False,add_aa=False,seq_pdb=False,all_struc_num=False):
     """Creates a series of dictionaries that will be useful for relating the pdb position with the gpcr number (pos_gnum) or AA (pos_gnum); and the gpcr number for the different classes (in case the user wants to compare)"""
     chain_nm_seq_pos=""
     rs_by_seg={1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [], 9: [], 10: [], 11: [], 12: [], 13: [], 14: [], 15: [], 16: [], 17: []}
@@ -303,10 +303,17 @@ def obtain_rel_dicts(result,numbers,chain_name,current_class,seq_pos,seq_pos_n,g
             for class_name in other_classes_ok:
                 gnum_altclass=numbers[class_name][pos][1]
                 if gnum_altclass:
-                    gnum_classes_rel[class_name][gnum_altclass.split("x")[0]]=gnum.split("x")[0]
+                    if all_struc_num:
+                        (chain_num,bw,gpcrdb)=re.split('\.|x',gnum)
+                        my_num=chain_num+"x"+gpcrdb
+                        (achain_num,abw,agpcrdb)=re.split('\.|x',gnum_altclass)
+                        alt_gnum=achain_num+"x"+agpcrdb
+                    else:
+                        my_num=gnum.split("x")[0]
+                        alt_gnum=gnum_altclass.split("x")[0]
+                    gnum_classes_rel[class_name][alt_gnum]=my_num
     if type(seq_pdb)==dict:
         return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li,seq_pdb)
-             #(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li,seq_pdb)
     else:
         return(gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,seq_pos,seq_pos_n,seg_li)
 

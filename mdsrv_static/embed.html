@@ -927,6 +927,7 @@
             var  pdC= high_pre["C"];
             var  pdF= high_pre["F"];
             var  pdcolors=high_pre["colors"];
+            var  pdrep=high_pre["rep"];
             //var setSelDict={};
             var setSelLi=[];
             var setSelTemp=[];
@@ -1050,7 +1051,7 @@
                             for (cN=0;cN<class_li.length;cN++){
                                 var mypos=class_li[cN].replace(" ","");
                                 var mycolor=pdcolors[mypos];
-                                o.addRepresentation( "spacefill", {  colorValue: mycolor, colorScheme:"uniform", sele: "protein and "+ mypos } );
+                                o.addRepresentation( pdrep, {  colorValue: mycolor, colorScheme:"uniform", sele: "protein and "+ mypos } );
                             }
                             
                             var cons_pos_ok = class_li.join(" OR ");

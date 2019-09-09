@@ -15,7 +15,6 @@ body{
     width:100%;
     height: 100%;
     position:relative;
-    padding:0;
 }
 
 .navbar{
@@ -56,9 +55,6 @@ body{
     background-color:#337AB7;
     color:white;
 }
-
-
-
 
 
 .nav-tabs {
@@ -116,6 +112,59 @@ body{
     background-color:#f2f2f2;
 }
 
+
+
+/*div.tooltip {
+    position: absolute;
+    opacity: 1;
+    background-color:rgba(38, 38, 38, 0.75);
+    border: 1px solid #666666;
+    border-radius:4px;
+    color:white;
+    font-size:12px;
+    padding:5px;
+}
+
+div.tooltip {
+    position: absolute;
+    opacity: 1;
+    background-color:rgba(38, 38, 38, 0.75);
+    border: 1px solid #666666;
+    border-radius:4px;
+    color:white;
+    font-size:12px;
+    padding:5px;
+}*/
+
+g rect {
+    fill: rgb(38, 38, 38);
+    /*stroke: gray;*/
+    opacity:0.75;  
+}
+
+g circle , g text {
+  cursor: pointer;
+}
+
+#closePopup{
+  cursor:pointer;
+}
+#closePopup:hover{
+  fill:white;
+}
+
+
+
+.tooltip text {
+    fill: black;
+    font-size: 12px;
+    font-family: sans-serif;
+}
+.tooltip rect {
+    fill: yellow;
+    stroke: blue;
+}
+
 </style>
 {% endblock %}
 </head>
@@ -126,10 +175,10 @@ body{
 {% block content %} 
 <!-- max-width: 1550px"-->
 
-<div id="header"  style="height:325px;position:relative;background-image: url({% static 'home/images/background3_sc.png' %});background-size:3000px;background-position: center; " >
-        <div class="vert_center" style="height:80%;margin:auto;width:400px;  border: 1px solid gray;">
-            <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:70%">
-            <div style="text-align:center;margin:20px;  font-size:30px;font-variant: small-caps;font-family:Calibri;color:white;font-weight:bold">
+<div id="header"  style="height:150px;position:relative;background-image: url({% static 'home/images/background3_sc.png' %});background-size:3000px;background-position: center; " >
+        <div class="vert_center" style="height:125px;margin:auto;width:400px;  border: 1px solid gray;">
+            <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:80px">
+            <div style="text-align:center;margin:5px 0;  font-size:25px;font-variant: small-caps;font-family:Calibri;color:white;font-weight:bold">
                 <p>The MD database for GPCRs</p>
             </div>
         </div>    
@@ -273,7 +322,7 @@ body{
 {% block addon_js %} 
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <!--<script type="module" src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>-->
-<script  src="{% static 'home/js/gpcrmd_homepage_test.js' %}"></script>
+<script  src="{% static 'home/js/gpcrmd_homepage.js' %}"></script>
 {% endblock %}
 
 

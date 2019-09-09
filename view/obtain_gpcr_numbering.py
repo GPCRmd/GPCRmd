@@ -1,5 +1,7 @@
 from view.views import *
 from dynadb.pipe4_6_0 import *
+from dynadb.models import DyndbDynamics
+from django.db.models import F
 
 def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
     """Obtain GPCR num. of  structure file"""
@@ -72,7 +74,7 @@ def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
                     gnum_classes_rel={}
                     (dprot_chain_li, dprot_seq) = dprot_chains[dprot_id] 
                     for chain_name, result in dprot_chain_li:
-                        (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=True,add_aa=True)
+                        (gpcr_pdb,gpcr_aa,gnum_classes_rel,other_classes_ok,dprot_seq,seq_pos_index,seg_li)=obtain_rel_dicts(result,numbers,chain_name,current_class,dprot_seq,seq_pos_index, gpcr_pdb,gpcr_aa,gnum_classes_rel,multiple_chains,simplified=True,add_aa=True,all_struc_num=True)
                                                         
                     gnum_classes_rel_ok={}
                     for (gclass,pos_d) in gnum_classes_rel.items():
@@ -91,3 +93,17 @@ def generate_gpcr_pdb (dyn_id, structure_file,retrieve_rel_dict=False):
         return(gpcr_pdb,gnum_classes_rel_ok) #[!] For now I only consider 1 GPCR, so I only need this dict
     else:
         return(gpcr_pdb) #[!] For now I only consider 1 GPCR, so I only need this dict
+
+
+
+def obtain_class(dyn_id):
+    dynobj=DyndbDynamics.objects.filter(id=dyn_id)
+    dynprot=dynobj.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
+    fam_slug=dynprot.values("fam_slug")[0]["fam_slug"]
+    if not fam_slug:
+        dynprot=dynobj.annotate(fam_slug=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
+        fam_slug=dynprot.values("fam_slug")[0]["fam_slug"]
+    fam_code=fam_slug.split("_")[0]
+    fam_d={"001":"A","002":"B","003":"B","004":"C","005":"F","006":"Taste 2","007":"Others"}
+    fam=fam_d[fam_code]
+    return fam

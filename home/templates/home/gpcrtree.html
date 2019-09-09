@@ -1,0 +1,60 @@
+<head>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% block addon_css %}
+<style>
+#chart {
+     width: 825px; 
+     height: 825px;
+     margin:auto;
+}
+
+g rect {
+    fill: rgb(38, 38, 38);
+    opacity:0.75;  
+}
+
+g circle , g text {
+  cursor: pointer;
+}
+
+#closePopup{
+  cursor:pointer;
+}
+
+#closePopup:hover{
+  fill:white;
+}
+
+.tooltip text {
+    fill: black;
+    font-size: 12px;
+    font-family: sans-serif;
+}
+.tooltip rect {
+    fill: yellow;
+    stroke: blue;
+}
+
+</style>
+{% endblock %}
+
+</head>
+<body>
+{% block content %} 
+
+
+<div id="chart">    
+</div>
+
+
+
+{% endblock %}
+
+{% block addon_js %} 
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script  src="{% static 'home/js/gpcrmd_homepage_min.js' %}"></script>
+{% endblock %}
+
+
+</body>

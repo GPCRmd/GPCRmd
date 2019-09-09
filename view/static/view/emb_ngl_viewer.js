@@ -1412,6 +1412,7 @@ $(document).ready(function(){
         high_pre["C"]=resC[0];
         high_pre["F"]=resF[0];
         high_pre["colors"]=color_d;
+        high_pre["rep"]=$(".conspos_style_sel").val();
         return (high_pre);
     }
 
