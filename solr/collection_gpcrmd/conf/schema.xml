@@ -77,29 +77,29 @@ haystack/templates/search_configuration/solr.xml
    <field name="django_ct" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="django_id" type="string" indexed="true" stored="true" multiValued="false"/>
 
-   <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-   <field name="std_id_molecule" type="long" indexed="true" stored="true" multiValued="false" />
-
    <field name="pubchem_cid" type="long" indexed="true" stored="true" multiValued="false" />
-
-   <field name="mainnames" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
-
-   <field name="id_compound" type="long" indexed="true" stored="true" multiValued="false" />
-
-   <field name="sinchi" type="text_en" indexed="true" stored="true" multiValued="false" />
-
-   <field name="sinchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
 
    <field name="chemblid" type="long" indexed="true" stored="true" multiValued="false" />
 
+   <field name="id_compound" type="long" indexed="true" stored="true" multiValued="false" />
+
+   <field name="mainnames" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
+
+   <field name="sinchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+   <field name="std_id_molecule" type="long" indexed="true" stored="true" multiValued="false" />
+
+   <field name="sinchi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
    <field name="iupac_name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
-   <field name="inchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
+   <field name="text" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+   <field name="name" type="text_en" indexed="true" stored="true" multiValued="false" />
 
    <field name="inchi" type="text_en" indexed="true" stored="true" multiValued="false" />
+
+   <field name="inchikey" type="text_en" indexed="true" stored="true" multiValued="false" />
 
    <field name="other_names" type="edge_ngram" indexed="true" stored="true" multiValued="false" />
 
