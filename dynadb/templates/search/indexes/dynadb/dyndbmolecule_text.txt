@@ -1,5 +1,5 @@
 {{ object.description }}
-{{ object.id_compound.name }}
+{{ object.name }}
 {{ object.inchi }}
 {{ object.inchikey }}
 {{ object.inchicol }}

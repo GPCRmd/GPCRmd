@@ -1,0 +1,10 @@
+{{ object.name }}
+{{ object.iupac_name }}
+{{ object.pubchem_cid }}
+{{ object.chemblid }}
+{{ object.sinchi }}
+{{ object.sinchikey }}
+{{ object.std_id_molecule }}
+
+
+

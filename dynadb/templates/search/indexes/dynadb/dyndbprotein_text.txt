@@ -1,0 +1,3 @@
+{{ object.uniprotkbac }}
+{{ object.name }}
+{{ object.uniprot_species_scientific_name }}
