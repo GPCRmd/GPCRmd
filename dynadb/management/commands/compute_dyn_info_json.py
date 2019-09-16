@@ -84,8 +84,6 @@ class Command(BaseCommand):
             pos_equivalents = {}
             for pos in classdict_gpcr:
 
-                print(pos)
-
                 #For every class not of the current GPCR's class, assign an equivalent
                 for class_letter in class_letters:
                     if class_letter == class_gpcr:
@@ -95,7 +93,8 @@ class Command(BaseCommand):
 
                 # Create dictionary to print in json: class_letter -> position -> equivalentA & equivalentB & equivalentC & equivalentF
                 for class_letter in class_letters:
-                    classdict[class_letter][pos_equivalents[class_letter]] = '&'.join((pos_equivalents['A'],pos_equivalents['B'],pos_equivalents['C'],pos_equivalents['F']))
+                    joint_eqs_with_helix = '&'.join((pos_equivalents['A'],pos_equivalents['B'],pos_equivalents['C'],pos_equivalents['F']))
+                    classdict[class_letter][pos_equivalents[class_letter]] = re.sub('&\d+x','x', joint_eqs_with_helix)
 
             #Store modified dictionary as Json file
             with open(classdict_path, 'w') as outfile:
