@@ -34,6 +34,7 @@ class Command(BaseCommand):
             dest='dynamics_id',
             nargs='*',
             action='store',
+            type=int,
             default=False,
             help='Specify dynamics id(s) for which the matrix will be precomputed. '
         )
@@ -245,7 +246,9 @@ class Command(BaseCommand):
         if options['submission_id']:
             dynobj=dynobj.filter(submission_id__in=options['submission_id'])
         if options['dynamics_id']:
+            print([d.id for d in dynobj])
             dynobj=dynobj.filter(id__in=options['dynamics_id'])
+            print([d.id for d in dynobj])
         if dynobj == []:
             self.stdout.write(self.style.NOTICE("No dynamics found with specified conditions."))
 ############
