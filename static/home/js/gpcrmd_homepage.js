@@ -4759,7 +4759,7 @@ $(document).ready(function(){
    // var plotheight= screenh-300;
 
     //var maxwidth=826;
-    var width = 932//1000;
+    var width = 1000;
     var height = width
     var radius = (width / 2) - 50
     var width_arc_innerRadius = (width/2) - 40 //(width / 2) - 10;
@@ -4786,7 +4786,7 @@ $(document).ready(function(){
        // .attr("width", "100%")
        // .attr("height", "100%")
         .attr("style","display:block;margin:auto;")
-    .attr('viewBox','0 -25 '+(width)+' '+(width+50))
+    .attr('viewBox','0 0 '+(width)+' '+(width))
     .attr('preserveAspectRatio','xMinYMin')
         .style("font", "10px sans-serif")
         .append("svg:g")
@@ -4844,6 +4844,13 @@ $(document).ready(function(){
             return "10px monospace"
           }
       }
+    }
+
+    function limit_text(mystr,mymax){
+        if (mystr.length >mymax){
+            mystr=mystr.slice(0,mymax-3)+"..."
+        }
+        return (mystr)
     }
 
     function selectOccupation(d,fthis,actiontype) {
@@ -4945,14 +4952,16 @@ $(document).ready(function(){
               } 
               if (!( d.data.Simulated == "-" || d.data.Simulated == undefined )){
                   textblock.append("text")
-                    .text("Deposed ligand: " + d.data.CrystalLigand)
-                    .attr("y", "40");
+                    .text("Deposed ligand: " +limit_text( d.data.CrystalLigand,34))
+                    .attr("y", "40")
+                        .append("title").text(d.data.CrystalLigand);
                   var k=0;
                   if( (d.data.CrystalTransducer !== "-") && (d.data.CrystalTransducer !== "") ){ 
                     k=1;
                     textblock.append("text")
-                      .text("Deposed transducer: " + d.data.CrystalTransducer)
-                      .attr("y",  parseInt(40+16*k));
+                      .text("Deposed transducer: " + limit_text(d.data.CrystalTransducer,30))
+                      .attr("y",  parseInt(40+16*k))
+                        .append("title").text(d.data.CrystalTransducer);
                   }
                   var j=0;
                   if( (d.data.Apo !== "-") && (d.data.Apo !== "") && (d.data.Apo !== undefined)  ){ 
@@ -4985,15 +4994,17 @@ $(document).ready(function(){
                             textblock.append("a")
                               .attr("xlink:href", ComplexNum[i] != "-" ? "https://submission.gpcrmd.org/view/"+ComplexNum[i] : null) 
                               .append("text")
-                                .text("Ligand/Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "ligand: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""))
+                                .text(limit_text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""),50))
                                 .attr("y",  parseInt(56+16*(i+j+k)))
-                                .attr("fill", ComplexNum[i] != "-" ? '#85bae0' : 'grey' );
+                                .attr("fill", ComplexNum[i] != "-" ? '#85bae0' : 'grey' )
+                                    .append("title").text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""));
+
                           }
                       } else {
                           if (ApoNum){
                               i=1;
                               textblock.append("text")
-                                  .text("# Ligand/Complex simulation settings: " + ApoNum.length)
+                                  .text("# Complex simulation settings: " + ApoNum.length)
                                   .attr("y",  parseInt(40+16*(i+j+k)));
                           }
                       }
@@ -5009,11 +5020,13 @@ $(document).ready(function(){
                   }
             }
       
-          //Poiiton rect
+          //Position rect
           var popup_size = document.getElementById(popupID).getBBox();
+          var whole_popup_width=popup_size.width + 40;
+          var whole_popup_height=popup_size.height + 15;
           svg.select(rect_sel)
-              .attr("width",(popup_size.width + 40) + "px")
-              .attr("height",(popup_size.height + 15) + "px")
+              .attr("width",(whole_popup_width) + "px")
+              .attr("height",(whole_popup_height) + "px")
       
           //Close btn
           if (actiontype=="click"){
@@ -5028,17 +5041,59 @@ $(document).ready(function(){
                   .attr("fill", "#a6a6a6");
           }
       
-          //Move popup
+          //Move popup ---------------------------
           var SVGexactTip = textblock;
           var tooltipParent = SVGexactTip.node().parentElement;
+          
           var matrix = 
                   fthis.getTransformToElement(tooltipParent)
                       .translate(+fthis.getAttribute("cx"),
                            +fthis.getAttribute("cy"));
-          SVGexactTip
+          /*SVGexactTip
               .attr("transform", "translate(" + (matrix.e +20)
-                        + "," + (matrix.f) + ")");
-      
+                        + "," + (matrix.f) + ")");*/
+          var rotaiton_val=Number(current_circle.attr("transform").match(/rotate\((.*)\)/)[1]);//from -90 to 270
+          //Height
+          var M=-(whole_popup_height);
+          rotaiton_val=rotaiton_val+90;//from 0 to 360
+          rot_norm=rotaiton_val/360;
+          var b=0;
+          if (rot_norm <0.5){
+            b =rot_norm/0.5;
+          } else {
+            b=(rot_norm-1)/-0.5
+          }
+          var extra_space_b=(30*(Math.abs(1-b)))
+//          if ((rot_norm>=0.25)|| (rot_norm<0.75)){
+//            a=(rot_norm-0.75)/-0.5;
+//          } else {
+//            a=0;
+//          }
+          //Width
+          var N=-(whole_popup_width);
+          var rotaiton_val2=rotaiton_val-270;
+          if (rotaiton_val2<0){
+            rotaiton_val2=rotaiton_val2+360
+          };
+          rot_norm2=rotaiton_val2/360;
+          var a=0;
+          if (rot_norm2 <0.5){
+            a =rot_norm2/0.5;
+          } else {
+            a=(rot_norm2-1)/-0.5
+          }
+
+          if (rot_norm>0.5){
+            var added_w=20;
+          } else {
+            var added_w=N ;
+          }
+          //var extra_space_a=(30*(Math.abs(1-a)))
+          SVGexactTip
+                  .attr("transform", "translate(" + (matrix.e+added_w )
+                            + "," + (matrix.f+(M*b)+extra_space_b) + ")");
+          
+
       //      var offset=$("#chart").offset();
       //      var matrix = this.getScreenCTM()
       //              .translate(+this.getAttribute("cx"),
@@ -5223,7 +5278,11 @@ $(document).ready(function(){
       svg.selectAll("#details-popup_hov").remove()
     });
      
-
+//--------------------------------------------
+    $("#tabs_col").css("height",$("#plot_col").css("height"));
+    $(window).resize(function(){
+      $("#tabs_col").css("height",$("#plot_col").css("height"));
+    });
   
 
 
@@ -5231,7 +5290,6 @@ $(document).ready(function(){
         var select=$(this).data("target")
         $(select).tab('show');
     })
-
 
 
 //    $("#chart").find("g circle").click(function(){
