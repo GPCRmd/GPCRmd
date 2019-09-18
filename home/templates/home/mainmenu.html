@@ -2,7 +2,7 @@
 
 <!-- Fixed navbar -->
 <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-  <div class="container" style="margin-left:40px" >
+  <div class="container-fluid" style="margin:0 40px" >
     <div class="navbar-header">
 
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -16,9 +16,8 @@
       <a class="navbar-brand" alt="{{ site_title }}" style="padding:0px 0px"><img id="logo" src="{% static logo_path %}" class="main-logo" style="float:left;margin-right:5px"></a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
-      <ul class="nav navbar-nav">
       {% include menu_template %}
-      </ul>
     </div><!--/.nav-collapse -->
   </div>
 </nav>
+
