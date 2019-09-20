@@ -1,11 +1,3 @@
 {{ object.other_names}}
-{{ object.id_compound.name }}
-{{ object.id_compound.iupac_name }}
-{{ object.id_compound.pubchem_cid }}
-{{ object.id_compound.chembleid }}
-{{ object.id_compound.sinchi }}
-{{ object.id_compound.sinchikey }}
-{{ object.id_compound.std_id_molecule }}
-
 
 

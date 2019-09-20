@@ -74,6 +74,7 @@
 //            }
 //        }  
 
+
         function atomFromPosSel(o,posSel){
             var res_sele =  new NGL.Selection( posSel );
             var atom_pos="";
@@ -1842,7 +1843,10 @@
 
                 var traj_list_md=[]
                 $(".traj_element",window.parent.document).each(function(){
-                traj_list_md[traj_list_md.length]=$(this).data("tpath").match(/[0-9]{5,25}/g).toString();   //matches the trajid of all the trajectories loaded in the server 
+                    var trajfileid=$(this).data("tpath").match(/[0-9]{5,25}/g);
+                    if (trajfileid){
+                        traj_list_md[traj_list_md.length]=trajfileid.toString();   //matches the trajid of all the trajectories loaded in the server 
+                    }
                 });
 
 

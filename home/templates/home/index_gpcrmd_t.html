@@ -37,29 +37,34 @@ body{
 /*  border: 1px solid black;*/
 }
 
+ #plot_section{
+  padding:0 20px;
+ }
+
 .plot_section_col{
     /*height: 866px;*/ /* !! */
-    padding:20px 50px;
-    height: 100%;
-    
+    padding:20px 30px;
+    /*height: 100%;*/
+    margin-bottom: 20px;
 }
 
 #plot_col{
-    overflow-x:auto;
-    overflow-y:hidden;
+    overflow:auto;
 }
 
 #tabs_col{
-    margin-bottom: 20px;
+    padding-bottom: 0;
+    padding-top: 25px;
+}
+
+#tabs_col li a{
+  padding:10px 8px;
 }
 
 #tabs_col li:not(.active) a{
     background-color:#337AB7;
     color:white;
 }
-
-
-
 
 
 .nav-tabs {
@@ -72,8 +77,9 @@ body{
     border-right: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
     padding:30px;
-    height:  calc(100% - 50px);;
-    overflow: auto;
+    height:  calc(100% - 40px);;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 /*
 .text_col{
@@ -115,6 +121,37 @@ body{
     /*height: 500px;*//* !! */
     background-color:#f2f2f2;
 }
+
+
+g rect {
+    fill: rgb(38, 38, 38);
+    /*stroke: gray;*/
+    opacity:0.75;  
+}
+
+g circle , g text {
+  cursor: pointer;
+}
+
+#closePopup{
+  cursor:pointer;
+}
+#closePopup:hover{
+  fill:white;
+}
+
+
+
+.tooltip text {
+    fill: black;
+    font-size: 12px;
+    font-family: sans-serif;
+}
+.tooltip rect {
+    fill: yellow;
+    stroke: blue;
+}
+
 
 </style>
 {% endblock %}

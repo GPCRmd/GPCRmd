@@ -143,13 +143,42 @@
                 <li><a href="/gpcrome/ligres/3.6/">Cross-receptor analysis</a></li>
             </ul>
         </li>-->
-
-                <li><a href="http://welcome.gpcrmd.org">About</a></li>
-                <li><a href="/accounts/memberpage/">Simulation submission</a></li>
-                <li><a href="/dynadb/references/">Authorship and references form</a></li>
-                <li><a href="/dynadb/search/">Simulation browser</a></li>
-                <li><a href="/contmaps/">Contact Maps</a></li>
+            <ul class="nav navbar-nav">
+                <li><a href="/home/">GPCR tree</a></li>
+                <li><a href="/contmaps/">Cross-receptor analysis</a></li>
+                <li class="dropdown" id=Submission_li>
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">Submission
+                    <span class="caret"></span></a>
+                    <ul class="dropdown-menu" data-pointto="Submission_li">
+                        <li><a href="/accounts/memberpage/">Simulation submission</a></li>
+                        <li><a href="/dynadb/references/">Authorship and references form</a></li>
+                    </ul>
+                </li>
+                <li><a href="https://welcome.gpcrmd.org/home/community/">Community and meetings</a></li>
+                <li><a href="https://welcome.gpcrmd.org/home/contact/">Contact</a></li>
+                
                 <li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="/dynadb/search/" style="font-weight:bold"><span class="glyphicon glyphicon-search"></span> Simulation browser</a></li>
+          </ul>
+
+          <script>
+                var pageName = location.pathname;
+                var selected_a=document.querySelector("a[href='" + pageName + "']");
+                var selected_li=selected_a.parentElement;
+/*                if (selected_li.parentElement.classList.toString().indexOf("dropdown-menu")>-1 ){
+                    var myid=selected_li.parentElement.getAttribute('data-pointto');
+                    console.log(myid)
+                    var myliel=document.getElementById(myid)
+                    if (myliel){
+                        console.log(myliel)
+                        myliel.classList += " active";
+                    }
+                    
+                } */
+                selected_li.classList += "active";
+          </script>
                 <!-- Logo testing  -->
                 <!--
                 <a><select id="logo_select" style="color:#000">
