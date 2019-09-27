@@ -4970,6 +4970,7 @@ $(document).ready(function(){
                           for (j = 0; j < ApoNum.length; j++) { 
                             textblock.append("a")
                               .attr("xlink:href", ApoNum[j] != "-" ? "https://submission.gpcrmd.org/view/"+ApoNum[j] : null) 
+                              .attr("target","_blank")
                               .append("text")
                                 .text("Apo simulation: ID " + ApoNum[j])
                                 .attr("y",  parseInt(56+16*(j+k)))
@@ -4993,6 +4994,7 @@ $(document).ready(function(){
                           for (i = 0; i < ComplexNum.length; i++) { 
                             textblock.append("a")
                               .attr("xlink:href", ComplexNum[i] != "-" ? "https://submission.gpcrmd.org/view/"+ComplexNum[i] : null) 
+                              .attr("target","_blank")
                               .append("text")
                                 .text(limit_text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""),50))
                                 .attr("y",  parseInt(56+16*(i+j+k)))
@@ -5046,7 +5048,7 @@ $(document).ready(function(){
           var tooltipParent = SVGexactTip.node().parentElement;
           
           var matrix = 
-                  fthis.getTransformToElement(tooltipParent)
+                  fthis.getTransformToElement(tooltipParent)//https://codepen.io/billdwhite/pen/rgEbc
                       .translate(+fthis.getAttribute("cx"),
                            +fthis.getAttribute("cy"));
           /*SVGexactTip
@@ -5292,10 +5294,98 @@ $(document).ready(function(){
     })
 
 
-//    $("#chart").find("g circle").click(function(){
-//        var offset=$(this).offset()
-//        $("#details-popup").css({'top':offset.y ,'left':offset.x });
-//    })
+//-------------------------- Stats charts
+
+
+  function drawCharts_subm() {
+          var data_pre=$("#stats_subm").data("subm_data");
+          var datainfo=[['Date', 'Submissions', { role: 'annotation' }]];
+          // Add annotaitons when value changes
+          var last_val=0;
+          for (l=0;l<data_pre.length;l++){
+              val= data_pre[l][1];
+              var add="";
+              if (val != last_val){
+                    add=val.toString();
+                    last_val=val;
+              }
+              data_pre[l].push(add);
+          }
+          var data_all = datainfo.concat(data_pre);
+
+
+          var data = google.visualization.arrayToDataTable(data_all);
+
+
+          var options = {
+            hAxis: {title: 'Date',slantedTextAngle:90},
+            vAxis: {title: "Num. of simulations", minValue: 0, maxvalue: 55 , gridlines: {count: 0, color:"#bfbfbf"}},
+            legend: {position:"none"},
+            annotations: {stem:{length:2}},
+            chartArea:{width:270, top:20}
+
+          };
+
+          var chart = new google.visualization.AreaChart(document.getElementById('stats_subm'));
+          
+          
+          
+          chart.draw(data, options);
+      }
+      google.load("visualization", "1", {packages:["corechart"],'callback': drawCharts_subm});
+
+
+      function drawChart_class() {
+        var data_pre=$("#stats_class").data("class_data");
+        var datainfo=[['Class', 'GPCR']];
+        var data_all = datainfo.concat(data_pre);
+        var data = google.visualization.arrayToDataTable(data_all);
+
+        var options = {
+          legend: 'none',
+          pieSliceText: 'label',
+          width:300,
+          height:350,
+          chartArea:{width:280,height:280}
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('stats_class'));
+
+        chart.draw(data, options);
+      }
+
+      google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_class});
+
+
+      var data_act_pre=$("#stats_act").data("act_data");
+      function drawChart_activation() {
+        var datainfo=[['State', 'GPCR']];
+        var data_all = datainfo.concat(data_act_pre);
+        console.log(data_all)
+        var data = google.visualization.arrayToDataTable(data_all);
+
+        var options = {
+          legend: 'none',
+          pieSliceText: 'label',
+          width:300,
+          height:350,
+          chartArea:{width:280,height:280},
+          //pieStartAngle: -50,
+          pieSliceTextStyle: {
+            color: 'black',
+            fontSize: 12
+          }
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('stats_act'));
+
+        chart.draw(data, options);
+      }
+      if (data_act_pre){
+            google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_activation});
+      }
+
+
 
 })
 
