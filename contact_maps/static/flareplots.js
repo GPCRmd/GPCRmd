@@ -264,7 +264,7 @@ $(document).ready(function(){
               html: true,
               placement: 'auto',
               container: 'body',
-              delay: {show: 0, hide: 500}              
+              delay: {show: 0, hide: 200}              
             });
         });
     };

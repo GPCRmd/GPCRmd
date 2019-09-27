@@ -51,9 +51,13 @@ def create_labelfile(outname, outfolder = "./", ligand = None):
      'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
      'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
 
-    #Reading dictionary file with the Ballesteros numeration for this protein sequence
+    #Reading dictionary file with the GPCR numeration for this protein sequence
     compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
     dictfile = compl_data[outname]['gpcr_pdb']
+    gpcr_class = compl_data[outname]['class']
+
+    #Reading GPCRnomenclatures Json: the json with the equivalences between different GPCR scales (Wooten, Ballesteros, Pi, ...)
+    GPCRnomenclatures = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/GPCRnomenclatures_dict.json")
 
     #open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
     outfile_name = outfolder + outname + "_labels.tsv"
@@ -71,11 +75,11 @@ def create_labelfile(outname, outfolder = "./", ligand = None):
         type_res = AAs[AA_splited[2]]
         ballesteros_id = ballesteros_id.replace(".","-")
         ballesteros_id_cuted = re.sub(pattern,"",ballesteros_id)
-        outdict[int(number)] = ("%s:%s:%s\t%s\n" %(chain, type_res,number, ballesteros_id_cuted))
+        universal_id = GPCRnomenclatures[gpcr_class][ballesteros_id_cuted] 
+        outdict[int(number)] = ("%s:%s:%s\t%s\n" %(chain, type_res,number, universal_id))
 
     #Print a new label file with the results
     for AA in sorted(outdict):
-
         outfile.write(outdict[AA])
 
     # If there's a ligandfile specified, add its content as a label at the end of the labelfile
@@ -154,6 +158,13 @@ def merge_dynamic_files(dynname, files_path):
     """
     Merge the dynamic contacts tabular files of a simulation into a single one, adding them as new frames
     """
+
+    #if no files to merge exist, and the merged file already exists, skip this whole step
+    non_merged_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, "0"))
+    merged_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
+    if (not os.path.isfile(non_merged_file)) and (os.path.isfile(merged_file)):
+        return merged_file
+
     print("merging dynamic files")
     dynfiles = glob.glob(str("%s%s-%s_dynamic.tsv" % (files_path, dynname, "*")))
     merged_file_noheader = "%s%s_dynamic_noheader.tsv" % (files_path, dynname)
@@ -184,7 +195,6 @@ def merge_dynamic_files(dynname, files_path):
 
     #Paste header
     header = "# total_frames:%s beg:0 end:%s stride:1 interaction_types:hp,sb,pc,ps,ts,vdw,hb" % (frame, frame-1 )
-    merged_file = "%s%s_dynamic.tsv" % (files_path, dynname)
     from_file = open(merged_file_noheader, 'r') 
     to_file = open(merged_file, "w")
 
@@ -290,9 +300,10 @@ if ligand_sel:
 else:
     ligand_text1 = ""
     ligand_text2 = ""
-dyn_contacts_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, mytrajid))
 
-if (not os.path.exists(dyn_contacts_file)) or repeat_dynamics:
+dyn_contacts_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, mytrajid))
+dyn_contacts_file_merged = str("%s%s_dynamic.tsv" % (files_path, dynname))
+if (not os.path.exists(dyn_contacts_file) and not os.path.exists(dyn_contacts_file_merged)) or repeat_dynamics:
     os.system(str("python %sget_dynamic_contacts.py         \
     --topology %s  \
     --trajectory %s       \
