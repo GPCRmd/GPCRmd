@@ -72,7 +72,8 @@ body{
 }
 
 #tabs_sect{
-    height:  calc(100% - 335px);;
+    height:  calc(100% - 335px);
+    min-height: 200px
 
 }
 .nav-tabs {
@@ -188,11 +189,16 @@ body{
   padding:0;
 }
 
-g rect {
+g.details rect {
     fill: rgb(38, 38, 38);
     /*stroke: gray;*/
     opacity:0.85;  
 }
+
+g#legend_box rect {
+    stroke: #cccccc;
+}
+
 
 g circle , g text {
   cursor: pointer;
@@ -227,7 +233,7 @@ g circle , g text {
 
 {% block content %} 
 <!-- max-width: 1550px"-->
-
+<!--
 <div id="header"  style="height:150px;position:relative;background-image: url({% static 'home/images/background3_sc.png' %});background-size:3000px;background-position: center; " >
         <div class="vert_center" style="height:125px;margin:auto;width:400px;  border: 1px solid gray;">
             <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:80px">
@@ -236,7 +242,17 @@ g circle , g text {
             </div>
         </div>    
 </div>
+-->
 
+
+<div id="header" style="height:110px;position:relative;background-image: url({% static 'home/images/background3_sc.png' %});background-size:3000px;background-position: center; ">
+        <div class="vert_center" style="height:90px;margin:auto;width:475px; ">
+            <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:80px;float:left;display:block;margin:5px 0 5px 20px">
+            <div style="text-align:left;margin:27px 20px 25px 10px;  font-size:25px;font-variant: small-caps;font-family:Calibri;color:white;font-weight:bold;float:right;display:block">
+                <p>- The  MD database for GPCRs</p>
+            </div>
+        </div>    
+</div>
 
 <div id="plot_section" class="row">
     <div class="col-lg-4 plot_section_col" id="tabs_col" >
@@ -244,9 +260,9 @@ g circle , g text {
         <div id="tabs" style="height:100%">
               <ul class="nav nav-tabs">
                 <li class="active"><a data-toggle="tab" href="#home">Welcome</a></li>
-                <li><a data-toggle="tab" href="#submit" class="tab_unsel"    id="submit_tab">Submit</a></li>
-                <li><a data-toggle="tab" href="#analyze" class="tab_unsel"   id="analyze_tab" >Analyze</a></li>
-                <li><a data-toggle="tab" href="#visualize" class="tab_unsel" id="visualize_tab">Visualize</a></li>
+                <li><a data-toggle="tab" href="#submit" class="tab_unsel"    id="submit_tab">Meetings</a></li>
+                <li><a data-toggle="tab" href="#analyze" class="tab_unsel"   id="analyze_tab" >Contact</a></li>
+                <li><a data-toggle="tab" href="#visualize" class="tab_unsel" id="visualize_tab">Documentation</a></li>
               </ul>
 
 
@@ -335,6 +351,10 @@ g circle , g text {
     </div>
 
     <div class="col-lg-8 plot_section_col" id="plot_col" >
+        <div style="text-align:center;margin:0 auto 10px auto">
+          <h2>GPCRmd tree</h2>
+          <p>Click on a GPCR structure (PDB id) to access the MD simulations in which it appears</p>
+        </div>
         <div id="chart" style="margin:auto;"><!-- width: 826px; height: 826px;-->
             
         </div>
@@ -346,7 +366,7 @@ g circle , g text {
     <div class="col-md-4 extrainfo_col">
         <div class="panel panel-primary text_col">
           <h3 class="panel-heading">Entry of the month</h3>
-          <div class="panel-body" >
+          <div class="panel-body" style="overflow: hidden;">
             <div class="entrymonth_cont" style="margin:15px">
               <h4 class="extrainfo_title">{{prot_name}} </h4>
               {% if lig_name %}

@@ -4853,6 +4853,35 @@ $(document).ready(function(){
         return (mystr)
     }
 
+    function get_this_transform(fthis){
+        var trans_s=fthis.getAttribute("transform");
+        var rotation=Number(trans_s.match(/rotate\(((\w|\.|-)*)\)/)[1]);
+        transl_xy= trans_s.match(/translate\(((\w|,|-|\.)*)\)/)[1];
+        transl_xy_l=transl_xy.split(",")
+        var transl_x=Number(transl_xy_l[0]); //450
+        var transl_y=Number(transl_xy_l[1]); //0
+        return [rotation,transl_x,transl_y]
+    }
+
+  function get_svg_center(){
+      var $this = $("svg");
+      var offset = $this.offset();
+      var width = $this.width();
+      var height = $this.height();
+      var centerX = offset.left + width / 2;
+      var centerY = offset.top + height / 2;
+      return [centerX,centerY]
+  }
+
+
+  function calc_rotation(x,y,rotation){
+      angle=(rotation*Math.PI)/180;
+      var translate_x= x*Math.cos(angle)- y*Math.sin(angle);
+      var translate_y= x*Math.sin(angle) + y*Math.cos(angle);
+      return [translate_x,translate_y]
+  }
+
+
     function selectOccupation(d,fthis,actiontype) {
        if (actiontype=="click"){
         popupID="details-popup";
@@ -4921,18 +4950,22 @@ $(document).ready(function(){
               .style("font-weight",setstyle_fontweight(d,true))
 
 
-
+            var this_transf=get_this_transform(fthis);
+            var rotation =this_transf[0];
+            var transl_x =this_transf[1];
+            var transl_y =this_transf[2];
 
             let textblock = svg.selectAll(popupsel)
               .data([d])
               .enter()
               .append("g")
               .attr("id", popupID)
+              .attr("class","details")
               .attr("font-size", 14)
               .attr("font-family", "sans-serif")
               .attr("fill", "white")
               .attr("text-anchor", "start")
-              .attr("transform", d => `translate(-400, 350)`);
+              .attr("transform", d => `translate(`+transl_x+`, `+transl_y+`)`);
         
             textblock.append("rect")
               .attr("id",rectID)
@@ -5044,18 +5077,17 @@ $(document).ready(function(){
           }
       
           //Move popup ---------------------------
-          var SVGexactTip = textblock;
-          var tooltipParent = SVGexactTip.node().parentElement;
-          
-          var matrix = 
-                  fthis.getTransformToElement(tooltipParent)//https://codepen.io/billdwhite/pen/rgEbc
-                      .translate(+fthis.getAttribute("cx"),
-                           +fthis.getAttribute("cy"));
-          /*SVGexactTip
-              .attr("transform", "translate(" + (matrix.e +20)
-                        + "," + (matrix.f) + ")");*/
+            svg_cent=get_svg_center();
+            centerX=svg_cent[0];
+            centerY=svg_cent[1];
+
+            var pos_fin=calc_rotation(transl_x,transl_y,rotation);
+            var translate_x=pos_fin[0];
+            var translate_y=pos_fin[1];
+
+          // -- Correciton so that box is always inside of the plot
           var rotaiton_val=Number(current_circle.attr("transform").match(/rotate\((.*)\)/)[1]);//from -90 to 270
-          //Height
+          // ---- Height
           var M=-(whole_popup_height);
           rotaiton_val=rotaiton_val+90;//from 0 to 360
           rot_norm=rotaiton_val/360;
@@ -5066,12 +5098,8 @@ $(document).ready(function(){
             b=(rot_norm-1)/-0.5
           }
           var extra_space_b=(30*(Math.abs(1-b)))
-//          if ((rot_norm>=0.25)|| (rot_norm<0.75)){
-//            a=(rot_norm-0.75)/-0.5;
-//          } else {
-//            a=0;
-//          }
-          //Width
+
+          // ----Width
           var N=-(whole_popup_width);
           var rotaiton_val2=rotaiton_val-270;
           if (rotaiton_val2<0){
@@ -5090,22 +5118,15 @@ $(document).ready(function(){
           } else {
             var added_w=N ;
           }
-          //var extra_space_a=(30*(Math.abs(1-a)))
-          SVGexactTip
-                  .attr("transform", "translate(" + (matrix.e+added_w )
-                            + "," + (matrix.f+(M*b)+extra_space_b) + ")");
-          
 
-      //      var offset=$("#chart").offset();
-      //      var matrix = this.getScreenCTM()
-      //              .translate(+this.getAttribute("cx"),
-      //                       +this.getAttribute("cy"));
-      //      var HTMLabsoluteTip = d3.select("div.tooltip.absolute");
-      //      HTMLabsoluteTip
-      //          .style("left", 
-      //                 (window.pageXOffset + matrix.e - offset.left) + "px")
-      //          .style("top",
-      //                 (window.pageYOffset + matrix.f + 30 - offset.top) + "px")      
+          // --Apply transformation
+          var translate_x_fin= (translate_x+added_w );
+          var translate_y_fin= (translate_y+(M*b)+extra_space_b);
+
+          textblock
+                  .attr("transform", "translate(" + translate_x_fin
+                            + "," + translate_y_fin + ")");
+             
       }
     }
   
@@ -5280,10 +5301,71 @@ $(document).ready(function(){
       svg.selectAll("#details-popup_hov").remove()
     });
      
+
+    const leg = svg.append("g")
+      .attr("transform", "translate(150,-600)")
+      .attr("id","legend_box");
+    
+    leg.append("rect")
+      .attr("rx", "5")
+      .attr("ry", "5")
+      .attr("x", "185")
+      .attr("y", "115")
+      .attr("width", "120px")
+      .attr("height", "70px")
+      .attr("fill", "white")
+      .style("background-color","blue");
+    leg.append("circle")
+      .attr("cx",200)
+      .attr("cy",130)
+      .attr("r", 4)
+      .style("fill", "#008000");
+    leg.append("circle")
+      .attr("cx",200)
+      .attr("cy",150)
+      .attr("r", 4)
+      .style("fill", "#F5B745");
+    leg.append("circle")
+      .attr("cx",200)
+      .attr("cy",170)
+      .attr("r", 4)
+      .style("fill", "#F80000");
+    leg.append("text")
+      .attr("x", 215)
+      .attr("y", 135)
+      .text("Active")
+      .style("font", "12px sans-serif")
+      .attr("alignment-baseline","middle");
+    leg.append("text")
+      .attr("x", 215)
+      .attr("y", 155)
+      .text("Intermediate")
+      .style("font", "12px sans-serif")
+      .attr("alignment-baseline","middle");
+    leg.append("text")
+      .attr("x", 215)
+      .attr("y", 175)
+      .text("Inactive")
+      .style("font", "12px sans-serif")
+      .attr("alignment-baseline","middle");
+
+
+
+
 //--------------------------------------------
     $("#tabs_col").css("height",$("#plot_col").css("height"));
+    function control_row_size(){
+      var plot_h = $("#plot_col").css("height");
+      var plot_h_num = Number(plot_h.replace("px",""));
+      if (plot_h_num<600){
+        plot_h="600px";
+      }
+      $("#tabs_col").css("height",plot_h);
+      console.log("!")
+    }
+    control_row_size();
     $(window).resize(function(){
-      $("#tabs_col").css("height",$("#plot_col").css("height"));
+          control_row_size();
     });
   
 
