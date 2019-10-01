@@ -148,7 +148,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	}
 	return render(request, 'contact_maps/index_h.html', context)
 
-def get_csv_file(request,itype, ligandonly, rev):
+def get_csv_file(request, itype, ligandonly, rev):
 	"""
 	Processing informatino from get_contact plots to create and download a csv file
 	"""

@@ -198,6 +198,6 @@ function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
-  $("#dendrogram").css("width","37%");
-  $("#heatmap").css("width","63%");  
+  $("#dendrogram").css("width","40%");
+  $("#heatmap").css("width","60%");  
 }
