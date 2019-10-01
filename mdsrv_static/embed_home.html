@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MDsrv/NGL - embedded</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
+    <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/light.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
+</head>
+<style>
+    .ui-page.ui-page-theme-a.ui-page-active{
+        background-color: white;
+    }
+
+</style>
+<body style="background-color: white">
+    <!-- NGL -->
+    <script src="mdsrv/webapp/js/ngl.js"></script>
+
+    <!-- UI -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
+    <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.extra.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
+    <script src="mdsrv/webapp/js/gui.js"></script>
+
+    <!-- MDSRV -->
+    <!--script src="mdsrv/webapp/js/mdsrv.js"></script>-->
+    <script>
+        NGL.cssDirectory = "mdsrv/webapp/css/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
+
+        // Datasources
+        NGL.DatasourceRegistry.add(
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
+        );
+        NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
+        NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
+        document.addEventListener( "DOMContentLoaded", function(){
+            stage = new NGL.Stage( "viewport" );
+            window.addEventListener( "resize", function( event ){
+                stage.handleResize();
+            }, false );
+        
+
+        function modTooltip(){
+            // create new tooltip
+            /*var tooltip = document.createElement('div')
+            Object.assign(tooltip.style, {
+              display: 'none',
+              position: 'fixed',
+              zIndex: 10,
+              pointerEvents: 'none',
+              backgroundColor: 'rgba( 0, 0, 0, 0.6 )',
+              color: 'lightgrey',
+              padding: '8px',
+              fontFamily: 'sans-serif'
+            })
+            document.body.appendChild(tooltip)*/
+            // remove default hoverPick mouse action
+            stage.mouseControls.remove('hoverPick')
+            // listen to `hovered` signal to move tooltip around and change its text
+/*            stage.signals.hovered.add( function( d ){
+                if (d && (d.atom)){
+                    var hatom = d.atom;
+                    var info="["+hatom.resname.toString()+"]"+hatom.resno.toString()+":"+hatom.chainname+"."+hatom.atomname;
+                    var mp = d.mouse.position
+                    tooltip.innerText = info;
+                    tooltip.style.bottom = window.innerHeight - mp.y + 3 + 'px'
+                    tooltip.style.left = mp.x + 3 + 'px'
+                    tooltip.style.display = 'block'
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });*/
+        }
+
+//        function change_size(){
+//            $("#toiframe").css("width","391px");
+//            $("#viewport").css({"width":"391px","height":"463px"});
+//        }
+//////////////////
+
+
+        $(document).ready(function(){
+        document.domain=document.domain;
+        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+
+//            if ($(".str_file", window.parent.document).data("is_home")){
+//                change_size()
+//            }
+            var struc=$(".str_file", window.parent.document).data("struc_file");
+            //var traj=$(".traj_file", window.parent.document).data("traj_file");
+            //var  traj_path= "_DB/";
+            var  path= "/mdsrv/file/_DB/";
+
+            var ligsel=$(".lig_element", window.parent.document).data("lig_element")
+            //struc="Dynamics/entrymonth/10355_dyn_31_filtered.gro";
+            if (struc) {
+
+                stage.loadFile(  path + struc, { asTrajectory: true } )
+                .then(function( o){
+                    var mysel
+                    o.signals.trajectoryAdded.add(function(trajComp){
+                        $("#loading_ngl" ,window.parent.document).css("display","none");
+                        $("#loaded_ngl" ,window.parent.document).css("visibility","visible");
+                        var player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                        player.interpolateType="spline";
+                        player.timeout=100;
+                        player.play();
+                    });
+                    if (ligsel){
+                        mysel="not _h and (protein or "+ligsel+")";
+                        o.addRepresentation( "hyperball", {  sele: ligsel  } );
+                    } else {
+                        mysel="not _h and protein";
+                    }
+                    o.setSelection(mysel);
+                    //stage.autoView();
+                    //stage.animationControls.zoom(-70)
+                    o.addRepresentation( "tube", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
+
+                    o.addTrajectory( );
+                    o.setName("my_comp");
+                    modTooltip();
+                } );
+
+            }
+
+
+        });
+        });
+
+    </script>
+    <div id="toiframe" style="width:300px">
+        <div id="viewport" style="width:300px; height:300px;"></div>
+    </div>
+</body>
+</html>

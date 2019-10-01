@@ -7,10 +7,9 @@ from  plotly.offline import plot
 import numpy as np
 import os
 import re
-from math import pi
 from bokeh.plotting import figure
 from bokeh.embed import components
-from bokeh.models import HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
+from bokeh.models import Label, HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
 from scipy.cluster.hierarchy import linkage, fcluster, cut_tree
 
@@ -21,6 +20,27 @@ from scipy.cluster.hierarchy import linkage, fcluster, cut_tree
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
 import warnings
 warnings.filterwarnings('ignore')
+#                   ▄              ▄
+#                  ▌▒█           ▄▀▒▌
+#                  ▌▒▒█        ▄▀▒▒▒▐
+#                 ▐▄▀▒▒▀▀▀▀▄▄▄▀▒▒▒▒▒▐
+#               ▄▄▀▒░▒▒▒▒▒▒▒▒▒█▒▒▄█▒▐
+#             ▄▀▒▒▒░░░▒▒▒░░░▒▒▒▀██▀▒▌
+#            ▐▒▒▒▄▄▒▒▒▒░░░▒▒▒▒▒▒▒▀▄▒▒▌
+#            ▌░░▌█▀▒▒▒▒▒▄▀█▄▒▒▒▒▒▒▒█▒▐
+#           ▐░░░▒▒▒▒▒▒▒▒▌██▀▒▒░░░▒▒▒▀▄▌
+#           ▌░▒▄██▄▒▒▒▒▒▒▒▒▒░░░░░░▒▒▒▒▌
+#          ▌▒▀▐▄█▄█▌▄░▀▒▒░░░░░░░░░░▒▒▒▐
+#          ▐▒▒▐▀▐▀▒░▄▄▒▄▒▒▒▒▒▒░▒░▒░▒▒▒▒▌
+#          ▐▒▒▒▀▀▄▄▒▒▒▄▒▒▒▒▒▒▒▒░▒░▒░▒▒▐
+#           ▌▒▒▒▒▒▒▀▀▀▒▒▒▒▒▒░▒░▒░▒░▒▒▒▌
+#           ▐▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▒▄▒▒▐
+#            ▀▄▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▄▒▒▒▒▌
+#              ▀▄▒▒▒▒▒▒▒▒▒▒▄▄▄▀▒▒▒▒▄▀
+#                ▀▄▄▄▄▄▄▀▀▀▒▒▒▒▒▄▄▀
+#                   ▒▒▒▒▒▒▒▒▒▒▀▀
+
+#"Much functions. So wow"
 
 def json_dict(path):
     """Converts json file to pyhton dict."""
@@ -53,7 +73,6 @@ def improve_receptor_names(df_ts,compl_data):
     taken_protlig={}
     index_dict={}
     dyn_gpcr_pdb={}
-
     for recept_id in df_ts['Id']:
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
@@ -83,11 +102,10 @@ def improve_receptor_names(df_ts,compl_data):
 
 #            if bool(prot_lig[1]):
  #               recept_name = recept_name + " + "+prot_lig[1]
-            taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}    
+            taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
         recept_info[dyn_id]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta]
         index_dict[recept_id]=recept_name 
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
-    
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
 
@@ -104,7 +122,7 @@ def filter_lowfreq_old(df, main_itype):
     """
     Filter low-frequency interactions. 
     """    
-                
+
     # Preserve positions which interaction frequency for this type reach, at mean, 0.1 (or 10 if working on percentages)
     df['mean_row'] = df.mean(axis = 1, numeric_only = True)
     pos_topreserve = set(df['Position'][ (df['mean_row'] > 10) & (df['itype'] == main_itype) ])
@@ -123,8 +141,25 @@ def filter_lowfreq(df, main_itype):
     pos_topreserve = set(df['Position'][ (df['above_50perc'] > 1) & (df['itype'] == main_itype) ])
     df.drop('above_50perc', 1, inplace = True)
     df = df[df['Position'].isin(pos_topreserve)]
-    
+     
     return(df)
+
+def set_new_axis(df):
+    """
+    Substitute the original position 3-nomenclatures single line format (1x23x23x24x24 1x23x23x24x24)
+    to 3-nomenclatures multiline format (1x\n23\n23\n24\n24\n\n1x\n23\n23\n24\n24)(similar to gpcrdb).
+    """
+    def new_cell(cell):
+        cell = cell.replace(' ','\n\n')
+        cell = cell.replace('x','\n')
+        cell = re.sub(pattern_pos1, r"\1x\n", cell)
+        cell = re.sub(pattern_pos2, r"\n\n\1x\n", cell)
+        return cell
+    
+    pattern_pos1 = re.compile(r"^(\d+)\n")
+    pattern_pos2 = re.compile(r"\n\n(\d+)\n")
+    df['Position'] = df['Position'].apply(new_cell)
+    return df
 
 def stack_matrix(df, itypes):
     """
@@ -141,7 +176,7 @@ def stack_matrix(df, itypes):
             df_ts = df_ts_type
         else:
             df_ts = pd.merge( df_ts, df_ts_type, how ='outer', on=["level_0", 'Position'])        
-
+    
     df_ts = df_ts.fillna(0.0) # Fill posible NaN in file
 
     df_ts.rename(columns={"level_0": "Id"}, inplace=True)
@@ -151,6 +186,7 @@ def stack_matrix(df, itypes):
 def adapt_to_marionas(df):
     """
     This function comprises a series of operations to adapt the new tsv format to Mariona's original scripts.
+    Also returns a dictionary
     """
 
     #Merging toghether both contacting aminoacid Ids
@@ -174,7 +210,7 @@ def frequencies(df):
     df_t = df.transpose() 
     
     # Create dictionary table with position tuple as keys and interaction-by-simulation-freq array as value
-    freq_table = { tuple(col.split(" ")):list(df_t[col].values) for col in df_t }
+    freq_table = { tuple(col.split("\n\n")):list(df_t[col].values) for col in df_t }
         
     # Convert previous dictionary to numpy array, and traspose it
     freq_matrix = (array([freq_table[(r1, r2)] for (r1, r2) in freq_table])).T
@@ -182,31 +218,21 @@ def frequencies(df):
     # Reorder according to clustering
     return freq_matrix
 
-def clustering(clusters, dend_matrix, labels, linkagefun, dendro_labels, Z):
+def clustering(clusters, dend_matrix, labels, linkagefun):
     """
-    Returns dictionary in which each simulation is assigned to its corresponding cluster
+    Find the color threshold needed for the dendrogram to have "clusters" number of clusters. 
+    Also define to which cluster each simulation belongs
     """
+    Z = linkagefun(dend_matrix)
+    color_threshold = Z[-1*clusters][2]+0.0000000001 #Cut slightly above the tree node
     
     # Defining to which cluster belongs to each simulation
     T = fcluster(Z, t=clusters, criterion='maxclust')
-    sim_to_cluster = { sim : "cluster" + str(clust) for sim,clust in zip(labels,T) }
+    clustdict = { "cluster" + str(clust) : [] for clust in T }
+    for sim,clust in zip(labels,T):
+         clustdict["cluster" + str(clust)].append(sim)
 
-    #Make cluster numbering coincide with the one in dendrogram
-    cluster_to_sim = {}
-    auld_to_new = {} 
-    counter = 0
-    for dyn in dendro_labels:
-        auld_cluster = sim_to_cluster[dyn]
-        if auld_cluster not in auld_to_new.keys():
-            counter += 1
-            new_cluster = "cluster" +str(counter)
-            auld_to_new[auld_cluster] = new_cluster
-
-    clustdict = { cluster : [] for cluster in auld_to_new }
-    for dyn,cluster in sim_to_cluster.items():
-        clustdict[auld_to_new[cluster]].append(dyn)
-
-    return clustdict
+    return(color_threshold, clustdict)
 
 def black_or_white(bgcolor):
     """
@@ -314,10 +340,9 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
 
     return fig
 
-
 def annotate_clusters(fig, default_color = ""):
     """
-    Put an annotation the nodes on top of dendrogram's clusters
+    Put an annotation the nodes on top of clusters
     """
     prevcolor = ""
     min_x = 0
@@ -364,7 +389,7 @@ def annotate_clusters(fig, default_color = ""):
             clustcoords[clustcount]['xanchor'] = 'right'
             
             #For single-branch clusters
-            if (currentcolor == default_color) and (current_max_x == -0):
+            if (currentcolor == default_color) and (current_max_x == -0): 
                 index_x = np.where(entry['x'] == current_max_x) 
                 clustcoords[clustcount]['clusnode_y'] = entry['y'][index_x][0]
                 #If the branch contains two single-node clusters(very rare case), append another cluster label
@@ -402,14 +427,65 @@ def annotate_clusters(fig, default_color = ""):
 
     return annotations
 
+def flareplot_json(df, clustdict, folderpath, flare_template = False):
+    """
+    Create json entries for significative positions (top10 mean frequency) of each cluster produced
+    """
+
+    os.makedirs(folderpath,  exist_ok = True)
+    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    for clust in clustdict.keys():
+
+        # Select top5 interactions based on its mean frequency. Also asign color based on mean value
+        df_clust = df.filter(items = clustdict[clust] + ['APosition 1', 'APosition 2', 'BPosition 1', 'BPosition 2','CPosition 1', 'CPosition 2','FPosition 1', 'FPosition 2',])
+        df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
+        mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
+        df_clust['color'] = df_clust['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
+
+        #Filter top 5 in df_clust
+        df_clust = df_clust.nlargest(5,'mean')
+
+        # 'Edge' entry for json file
+        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+        df_dict['name1'] = df_clust['APosition 1'] 
+        df_dict['name2'] = df_clust['APosition 2']
+        df_dict['frames'] = [[1]]*len(df_dict)
+        df_dict['color'] = df_clust['color']
+        edges = df_dict.to_dict(orient="records")
+
+        # Appending edges to flare plot template, if any submitted
+        if flare_template:
+            flare_template['edges'] = edges
+            jsondict = flare_template
+        else:
+            jsondict = { 'edges' : edges }
+
+        #'Edge' multi-entries, based on the 4 GPCR nomenclatures
+        for leter in ['A', 'B', 'C', 'F']:
+            df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+            df_dict['name1'] = df_clust[leter+'Position 1'] 
+            df_dict['name2'] = df_clust[leter+'Position 2']
+            df_dict['frames'] = [[1]]*len(df_dict)
+            df_dict['color'] = df_clust['color']
+            leter_edges = df_dict.to_dict(orient="records")
+
+            #Appending edges
+            if flare_template:
+                flare_template[leter+'edges'] = leter_edges
+                jsondict = flare_template
+            else:
+                jsondict = { leter+'edges' : leter_edges }
+
+        #Writing json
+        jsonpath = folderpath + clust + ".json"
+        with open(jsonpath, 'w') as jsonfile:
+            dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
+
 def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters, recept_info, recept_info_order): 
     
     # Define linkage function (we'll be using the default one for plotly). 
-    linkagefun=lambda x: linkage(x, 'average')
-
-    #Find the color threshold needed for the dendrogram to have "clusters" number of clusters. 
-    Z = linkagefun(dend_matrix)
-    thres = Z[-1*clusters][2]+0.0000000001 #Cut slightly above the tree node
+    linkagefun=lambda x: linkage(x, 'complete')
+    (thres,clustdict) = clustering(clusters, dend_matrix, labels, linkagefun)
 
     # Create color scale from the "category20" color scale. Not working because color_scale plotly option is inoperative
     colors_category20 = ['rgb(31, 119, 180)', 'rgb(174, 199, 232)', 'rgb(255, 127, 14)', 'rgb(255, 187, 120)', 'rgb(44, 160, 44)', 'rgb(152, 223, 138)', 'rgb(214, 39, 40)', 'rgb(255, 152, 150)', 'rgb(148, 103, 189)', 'rgb(197, 176, 213)', 'rgb(140, 86, 75)', 'rgb(196, 156, 148)', 'rgb(227, 119, 194)', 'rgb(247, 182, 210)', 'rgb(127, 127, 127)', 'rgb(199, 199, 199)', 'rgb(188, 189, 34)', 'rgb(219, 219, 141)', 'rgb(23, 190, 207)', 'rgb(158, 218, 229)']
@@ -428,14 +504,14 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout'].update({
         'width':width, 
         'height':height,
-        'autosize': False,
+        'autosize' : False,
         'hoverdistance' : 10,
         })
 
     fig['layout']['margin'].update({
         'r' : 300,
         'l' : 20,
-        't' : 55,
+        't' : 100,
         'b' : 0,
         'pad' : 0
         })
@@ -467,11 +543,8 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     # Taking order for plot rows
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
-    #Sorting simulations by cluster according to 
-    clustdict = clustering(clusters, dend_matrix, labels, linkagefun, dendro_leaves, Z)
-
     # Writing dendrogram on file
-    plot(fig, auto_open = False, filename=filename, config={
+    plot(fig, auto_open= False, filename=filename, config={
         "displayModeBar": "hover",
         "showAxisDragHandles": False,
         "showAxisRangeEntryBoxes": False,
@@ -481,43 +554,83 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     })
     return (list(dendro_leaves),clustdict)
 
-def flareplot_json(df, clustdict, folderpath, flare_template = False):
+def add_restypes(df, compl_data):
     """
-    Create json entries for significative positions (top10 mean frequency) of each cluster produced
+    Add a new column with the residue type (ARG, CYS, TRP) of each position in each simulation
+    """
+    AAs =  {'C': 'CYS', 'D': 'ASP', 'S': 'SER', 'Q': 'GLN', 'K': 'LYS',
+     'I': 'ILE', 'P': 'PRO', 'T': 'THR', 'F': 'PHE', 'N': 'ASN', 
+     'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
+     'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
+    GPCRclass_numbers = {'A':1, 'B':2, 'C':3, 'F':4}
+    
+    def get_restype_and_realpos(dynid, pos):
+        """
+        Return residue type of position and the position identifier for this position in this protein
+        It's a bit complex, for I need to distinguish which GPCR class nomenclature uses this protein
+        """
+        if pos == 'Ligand':
+            return pd.Series([pos, "Ligand"])
+        
+        GPCRclass_number = GPCRclass_numbers[compl_data[dynid]['class']] 
+        class_pos_array = pos.split('\n')
+        class_pos = class_pos_array[0]+class_pos_array[GPCRclass_number]
+        
+        try:
+            return pd.Series([AAs[compl_data[dynid]['gpcr_pdb'][class_pos][-1]], class_pos])
+        except KeyError:
+            #print("Position %s not found in %s" %(class_pos, dynid)) #Too much output
+            return pd.Series(["NaN", class_pos])
+        
+    #Split Position column
+    new = df['Position'].str.split("\n\n", n = 1, expand = True)
+    df['Position 1'] = new[0]
+    df['Position 2'] = new[1]
+    
+    #Add residue type and protein position column
+    df[['restype_1','protein_Position 1']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 1']), axis = 1) 
+    df[['restype_2','protein_Position 2']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 2']), axis = 1) 
+    df['restypes'] = df['restype_1'] +" "+ df['restype_2']  
+    df['protein_Position'] = df['protein_Position 1'] +" "+ df['protein_Position 2']  
+
+    #Drop Position, proteinPosition and restype columns once they are not needed
+    df.drop(columns = ['Position 1','Position 2','restype_1','restype_2'], inplace = True)
+    
+    return df
+
+def new_columns(df):
+    """
+    Adding Position1 and Position2 columns from A nomenclature system to dataframe, in subsitution of
+    Position column, which included both.
     """
     
-    os.makedirs(folderpath,  exist_ok = True)
-    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    def split_by_class(row, pos_number):
+        """
+        Split 2x\n26\n12\n12\n12 into 2x26 2x12 2x12 2x12 2x12
+        """
+
+        splited_row = row[pos_number].split("\n")
+        number_letter = ["0",'A','B', 'C', 'F']
+        for i in [1,2,3,4]:
+
+            if row[pos_number] == "Ligand":
+                row[number_letter[i]+pos_number] = "Ligand"
+            else:
+                row[number_letter[i]+pos_number] = splited_row[0]+splited_row[i]
+        return(row)
+        
+    #Position column split
+    patern = re.compile(r"x\n(\d+)\n\d+\n\d+\n\d+")
+    df['Position'] = df.index
+    new = df['Position'].str.split("\n\n", n = 1, expand = True)
+    df['Position 1'] = new[0]
+    df['Position 2'] = new[1]
+
+    df = df.apply(lambda x: split_by_class(x, "Position 1"), axis = 1)
+    df = df.apply(lambda x: split_by_class(x, "Position 2"), axis = 1)
+    df.drop(columns = ['Position'], inplace = True)
     
-    for clust in clustdict.keys():
-        # Mean frequencies and mean threshold
-        df_clust = df.filter(items = clustdict[clust] + ['Position 1', 'Position', 'Position 2'])
-        df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
-        mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
-        df_clust['color'] = df_clust['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
-
-        #Filter top 5 in df_clust
-        df_clust = df_clust.nlargest(5,'mean')
-        
-        # 'Edge' entry for json file
-        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-        df_dict['name1'] = df_clust['Position 1'] 
-        df_dict['name2'] = df_clust['Position 2']
-        df_dict['color'] = df_clust['color']
-        df_dict['frames'] = [[1]]*len(df_dict)
-        edges = df_dict.to_dict(orient="records")
-        
-        # Appending edges to flare plot template, if any submitted
-        if flare_template:
-            flare_template['edges'] = edges
-            jsondict = flare_template
-        else:
-            jsondict = { 'edges' : edges }
-
-        #Writing json
-        jsonpath = folderpath + clust + ".json"
-        with open(jsonpath, 'w') as jsonfile:
-            dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
+    return df
 
 def sort_simulations(df_ts, dyn_dend_order):
     """
@@ -554,7 +667,7 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
 
     #Creating hovertool list
-    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@Position'), ('Residues', '@restypes')]
+    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@protein_Position'), ('Residues', '@restypes')]
     if itype == "all":
         for group,type_tuple in itypes_order:
             for itype_code,itype_name in type_tuple:
@@ -582,9 +695,10 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
     colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
     colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
-    
+
+    #Bokeh figure
     p = figure(
-        plot_width= width, 
+        plot_width= width,
         plot_height=height,
         #title="Example freq",
         y_range=list(dataframe.Id.drop_duplicates()),
@@ -594,18 +708,15 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
         active_drag=None,
         toolbar_location="right",
         toolbar_sticky = False,
-        min_border_top = round(height * 0.047), # The proportion of margin to be left on top of matrix to align with dendrogram
+        min_border_top = 200,#leave some space for x-axis artificial labels
         min_border_bottom = 0
     )
-
-    # Rotate angle of x-axis labels
-    p.xaxis.major_label_orientation = pi/3
 
     # Create rectangle for heatmap
     mysource = ColumnDataSource(dataframe)
     p.rect(
         y="Id", 
-        x="Position", 
+        x="Position",
         width=1, 
         height=1, 
         source=mysource,
@@ -621,6 +732,31 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
         nonselection_line_alpha=1,
         nonselection_line_color="white"
         )
+
+    #Very poor way of creating X-axis labels. Necessary for having linejumps inside the axis labels
+    x_cord = 0
+    y_cord = len(list(dataframe.Id.drop_duplicates()))+11#Position: 11 spaces above the plot's top border
+    foolabel = Label(x=-1,
+                     y=y_cord,
+                     text='\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n',
+                     render_mode='css', 
+                     border_line_alpha=1.0,
+                     text_font_size = "10pt",
+                     background_fill_color = "#FFFFFF")
+    p.add_layout(foolabel)
+
+    #Fore every unique position in the set, add a label in axis
+    for position in list(dataframe.Position.drop_duplicates()):
+        position = position.replace("Ligand","Lig")
+        foolabel = Label(x=x_cord,
+                         y=y_cord,
+                         text=position,
+                         render_mode='css', 
+                         border_line_alpha=1.0,
+                         background_fill_color = "#FFFFFF",
+                         text_font_size = "10pt")
+        p.add_layout(foolabel)
+        x_cord +=1
 
     # Add legend
     color_bar = ColorBar(
@@ -639,8 +775,9 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
     p.xaxis.major_label_text_font_size = "10pt"
     p.yaxis.major_label_text_font_size = "10pt"
     p.yaxis.visible = False
+    p.xaxis.visible = False
     p.axis.major_label_standoff = 0
-    p.xaxis.major_label_orientation = 1#"vertical"
+    p.xaxis.major_label_orientation = 1
 
     # Adding hover
     p.add_tools(hover)
@@ -648,37 +785,6 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
     # Needed later
     return(mysource,p)
 
-def add_restypes(df, compl_data):
-    """
-    Add a new column with the residue type (ARG, CYS, TRP) of each position in each simulation
-    """
-    AAs =  {'C': 'CYS', 'D': 'ASP', 'S': 'SER', 'Q': 'GLN', 'K': 'LYS',
-     'I': 'ILE', 'P': 'PRO', 'T': 'THR', 'F': 'PHE', 'N': 'ASN', 
-     'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
-     'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
-    
-    def get_restype(dynid, pos):
-        """
-        Return residue type of position according to compl_data dictionary
-        """
-        try:
-            if pos == "Ligand":
-                return compl_data[dynid]['lig_sname']
-            else:
-                return AAs[compl_data[dynid]['gpcr_pdb'][pos][-1]]
-        except KeyError:
-            return "Na residue"
-        
-    #Split Position column
-    new = df['Position'].str.split(" ", n = 1, expand = True)
-    df['Position_1'] = new[0] 
-    df['Position_2'] = new[1]
-    df['restypes'] = df.apply(lambda x: get_restype(x['Id'], x['Position_1']) +" "+ get_restype(x['Id'], x['Position_2']), axis = 1)
-
-    #Drop Position columns once they are not needed
-    df.drop(columns = ['Position_1','Position_2'], inplace = True)
-
-    return df
 
 def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
     """
@@ -706,7 +812,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var gnum_data=gnum_info.data;
                 var recept_name=data["Name"][sel_ind];
                 var recept_id=data["Id"][sel_ind];
-                var pos = data["Position"][sel_ind];
+                var pos = data["protein_Position"][sel_ind];
                 var restypes = data["restypes"][sel_ind];
                 var freq_total=data["all"][sel_ind];
                 var freq_type=data[itype][sel_ind];
@@ -928,6 +1034,10 @@ def get_contacts_plots(itype, ligandonly):
     #Removing low-frequency contacts
     df = filter_lowfreq(df, itype)
 
+    #Positions on Position column are in different nomenclatures (Ballesteros, Wooten, Pi..). 
+    #Here I add a column with the Positions translated to Ballesteros-Wanstein     
+    df = set_new_axis(df)
+
     # Stack matrix (one row for each interaction pair and dynamic. Colnames are position, dynid and itypes)
     df_ts = stack_matrix(df, set_itypes)
 
@@ -965,18 +1075,14 @@ def get_contacts_plots(itype, ligandonly):
     # Add residue types to dataframe
     df_ts = add_restypes(df_ts, compl_data)
 
-    # Setting columns 'Position', 'Position1' and 'Position2' in df for jsons files
-    df['Position'] = df.index
-    new = df['Position'].str.split(" ", n = 1, expand = True)
-    df['Position 1'] = new[0] 
-    df['Position 2'] = new[1]
-    df.drop(columns = ['Position'], inplace = True)
-
     #Preparing dendrogram folders and parameters
     dendfolder = basepath + "view_input_dataframe/" + itype + "_" + ligandonly + "_dendrograms" 
     os.makedirs(dendfolder, exist_ok = True)
     dend_height = int( int(df.shape[1]) * 16 + 20)
     dend_width = 550
+
+    # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files
+    df = new_columns(df)
 
     # Open json template
     flare_template = json_dict(basepath + "../flare_plot/contact_maps/template.json")
