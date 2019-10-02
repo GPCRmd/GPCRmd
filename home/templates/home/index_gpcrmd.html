@@ -62,16 +62,16 @@ body{
     padding-top: 25px;
 }
 
-#tabs_col li a{
+#actual_tabs li a{
   padding:10px 8px;
 }
 
-#tabs_col li.active a{
+#actual_tabs li.active a{
   border-bottom:1px solid white;
   top:1;
 }
 
-#tabs_col li:not(.active) a{
+#actual_tabs li:not(.active) a{
     background-color:#337AB7;
     color:white;
 }
@@ -81,6 +81,11 @@ body{
     min-height: 200px
 
 }
+
+#tabs_sect .tab-content li{
+  margin-bottom:10px;
+}
+
 .nav-tabs {
     margin: 0;
 }
@@ -268,12 +273,12 @@ g circle , g text {
     <div class="col-lg-4 plot_section_col" id="tabs_col" >
       <div id="tabs_sect">
         <div id="tabs" style="height:100%">
-            <div style="overflow-x:auto;overflow-y:hidden">
+            <div id="actual_tabs" style="overflow-x:auto;overflow-y:hidden">
               <ul class="nav nav-tabs" style="display:inline-flex;width:100%">
                 <li class="active"><a data-toggle="tab" href="#home">Welcome</a></li>
                 <li><a data-toggle="tab" href="#meetings" class="tab_unsel"    id="meetings_tab">Meetings</a></li>
-                <li><a data-toggle="tab" href="#analyze" class="tab_unsel"   id="analyze_tab" >Contact</a></li>
-                <li><a data-toggle="tab" href="#visualize" class="tab_unsel" id="visualize_tab">Documentation</a></li>
+                <li><a data-toggle="tab" href="#contact" class="tab_unsel"   id="contact_tab" >Contact</a></li>
+                <li><a data-toggle="tab" href="#docs" class="tab_unsel" id="docs_tab">Documentation</a></li>
               </ul>
             </div>
 
@@ -348,24 +353,29 @@ g circle , g text {
                 </div>
                 <div id="meetings" class="tab-pane fade">
                   <h3>Meetings</h3>
-                    <!--<ul>
-                      <li>The progress of the GPCRmd project will be presented at the GPCR Pharmacology: Activation, Signalling and Drug Design in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
+                    <ul>
+                      <li>The progress of the GPCRmd project will be presented at the first ERNEST meeting: <a hef="https://ernest-gpcr.eu/first-ernest-meeting-gpcr-pharmacology-activation-signalling-and-drug-design-belfast-28-30-oct-2019/">GPCR Pharmacology – Activation, Signalling and Drug Design</a> in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="https://glistensymposium.wordpress.com/">GLISTEN Spring Meeting</a> in Porto, 29-31 March, 2017</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.glisten2016.cz/?q=node/1">GLISTEN Meeting</a> in Prague, 26-27 September, 2016</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.grk1910.de/glisten-2016.html">GLISTEN Meeting</a> in Erlangen, 6-8 April, 2016</li>
                     </ul>
 
--->
+
 
 
                 </div>
-                <div id="analyze" class="tab-pane fade">
-                  <h3>Menu 2</h3>
-                  <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+                <div id="contact" class="tab-pane fade">
+                  <h3>Contact</h3>
+                  <p>If you have questions, ideas or comments on GPCRmd, you can contact the autors through <a hef="https://submission.gpcrmd.org/home/">this page</a>.</p>
                 </div>
-                <div id="visualize" class="tab-pane fade">
-                  <h3>Menu 3</h3>
-                  <p>Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+                <div id="docs" class="tab-pane fade">
+                  <h3>Documentation</h3>
+                  <ul>
+                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/workbench.html">GPCRmd Workbench</a></li>
+                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/cross-receptor-analysis.html">Collective analysis</a></li>
+                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/submission.html">Simulation submission</a></li>
+                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/simulation-browser.html">Simulaitn browser (Advanced search)</a></li>
+                  </ul>
                 </div>
             </div>
 

@@ -24,6 +24,8 @@ class Command(BaseCommand):
                 dyn["pdb_namechain"]="2YDO"
             pdb_namechain=dyn["pdb_namechain"]
             pdb = pdb_namechain.split(".")[0].upper()
+            if dyn_id==4:
+                pdb="4N6H"
             act_state=pdb_act[pdb]
             if act_state=="Active":
                 active_set.add(dyn_id)

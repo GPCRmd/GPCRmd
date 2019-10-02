@@ -7,7 +7,7 @@ from django.conf import settings
 from home import views
 
 urlpatterns = [
-    url(r'^$', RedirectView.as_view(url='/dynadb/search/', permanent=False), name='index'), 
+    url(r'^$', RedirectView.as_view(url='/home/', permanent=False), name='index'), 
     url(r'^home/$', views.gpcrmd_home, name='gpcrmd_home'),
     #url(r'^hometest/$', views.gpcrmd_home, name='gpcrmd_home'),
     #url(r'^mhometest/$', views.gpcrmd_hometest, name='gpcrmd_hometest'),
