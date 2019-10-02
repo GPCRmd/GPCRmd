@@ -6,6 +6,10 @@ a {
   vertical-align: top;
 }
 
+.navbar-left {
+  width: 60%;
+}
+
 #content {
   width: 100%;
 }
