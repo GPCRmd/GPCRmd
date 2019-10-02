@@ -42,7 +42,7 @@ body{
 /*  border: 1px solid black;*/
 }
 
- #plot_section{
+ .main_section{
   padding:0 20px;
  }
 
@@ -64,6 +64,11 @@ body{
 
 #tabs_col li a{
   padding:10px 8px;
+}
+
+#tabs_col li.active a{
+  border-bottom:1px solid white;
+  top:1;
 }
 
 #tabs_col li:not(.active) a{
@@ -115,9 +120,6 @@ body{
    filter:none !important;
 }
 
-#extrainfo_section{
-  padding: 0 20px;
-}
 .extrainfo_col{
     padding:20px 30px;
     margin-bottom: 20px;
@@ -170,6 +172,9 @@ body{
 .newsCarouselText {
   margin:20px 40px;
   padding-bottom:20px;
+  overflow-y:auto;
+  overflow-x:hidden ;
+  height:100%
 }
 
 .newsCarouselText h2{
@@ -203,6 +208,11 @@ g#legend_box rect {
 g circle , g text {
   cursor: pointer;
 }
+
+#legend_box circle ,#legend_box text {
+  cursor: default;
+}
+
 
 #closePopup{
   cursor:pointer;
@@ -254,27 +264,34 @@ g circle , g text {
         </div>    
 </div>
 
-<div id="plot_section" class="row">
+<div id="plot_section" class="row main_section">
     <div class="col-lg-4 plot_section_col" id="tabs_col" >
       <div id="tabs_sect">
         <div id="tabs" style="height:100%">
-              <ul class="nav nav-tabs">
+            <div style="overflow-x:auto;overflow-y:hidden">
+              <ul class="nav nav-tabs" style="display:inline-flex;width:100%">
                 <li class="active"><a data-toggle="tab" href="#home">Welcome</a></li>
-                <li><a data-toggle="tab" href="#submit" class="tab_unsel"    id="submit_tab">Meetings</a></li>
+                <li><a data-toggle="tab" href="#meetings" class="tab_unsel"    id="meetings_tab">Meetings</a></li>
                 <li><a data-toggle="tab" href="#analyze" class="tab_unsel"   id="analyze_tab" >Contact</a></li>
                 <li><a data-toggle="tab" href="#visualize" class="tab_unsel" id="visualize_tab">Documentation</a></li>
               </ul>
-
+            </div>
 
 
               <div class="tab-content" style="">
                 <div id="home" class="tab-pane fade in active">
-                  <h3>A new database for GPCRs</h3>
+                  <h3>The new database for GPCR MD</h3>
+                  <p>GPCRmd is a database of GPCR MD with the purpose to provide storage, dissemination and analysis of this data.</p>
+                  <p>It contains several analysis and visualisation tools to characterize the simulations.</p>
+                  <p>Users can also <a data-target="#submit_tab" class="tab_trigger">sumbit</a> their simulaitons make them available to the community</p>
+<!--
                   <p>GPCRmd is a database of GPCR MD with the purpose to provide storage, dissemination and analysis of this data.</p>
                   <p>It includes at least one member of each solved GPCR class, both in the apo form and bound to different ligands (natural ligands, agonists or antagonists).</p>
                   <p>GPCRmd also provides several online <a data-target="#analyze_tab" class="tab_trigger">analysis tools</a>, <a data-target="#visualize_tab" class="tab_trigger">visualizaiton tools</a> and annotatons from other databases to characterize the simulations.</p>
                   <p>Use our <a href="/dynadb/search/">browser</a> to find the GPCR that you want to study.</p>
                   <p>Users can also <a data-target="#submit_tab" class="tab_trigger">sumbit</a> their simulaitons to increase the impact and citability of their work by making it available and to the community</p>
+-->
+
 
 
 
@@ -329,9 +346,18 @@ g circle , g text {
 
 
                 </div>
-                <div id="submit" class="tab-pane fade">
-                  <h3>Menu 1</h3>
-                  <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                <div id="meetings" class="tab-pane fade">
+                  <h3>Meetings</h3>
+                    <!--<ul>
+                      <li>The progress of the GPCRmd project will be presented at the GPCR Pharmacology: Activation, Signalling and Drug Design in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
+                      <li>GPCRdb and GPCRmd Satellite meeting at <a href="https://glistensymposium.wordpress.com/">GLISTEN Spring Meeting</a> in Porto, 29-31 March, 2017</li>
+                      <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.glisten2016.cz/?q=node/1">GLISTEN Meeting</a> in Prague, 26-27 September, 2016</li>
+                      <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.grk1910.de/glisten-2016.html">GLISTEN Meeting</a> in Erlangen, 6-8 April, 2016</li>
+                    </ul>
+
+-->
+
+
                 </div>
                 <div id="analyze" class="tab-pane fade">
                   <h3>Menu 2</h3>
@@ -361,12 +387,12 @@ g circle , g text {
     </div>
 </div>
 
-<div class="row "  id="extrainfo_section" >
+<div class="row main_section"  id="extrainfo_section" >
 
     <div class="col-md-4 extrainfo_col">
         <div class="panel panel-primary text_col">
           <h3 class="panel-heading">Entry of the month</h3>
-          <div class="panel-body" style="overflow: hidden;">
+          <div class="panel-body" style="overflow-y: hidden; overflow-x: auto;">
             <div class="entrymonth_cont" style="margin:15px">
               <h4 class="extrainfo_title">{{prot_name}} </h4>
               {% if lig_name %}
@@ -382,8 +408,8 @@ g circle , g text {
             <div id="loading_ngl" style="width: 300px;height:300px;text-align: center;font-size:40px;color:gray;padding:130 0;position:absolute;z-index:10;position: absolute;top: 0;left: 0;right: 0;bottom: 0;margin:auto">
               <i class='fa fa-spinner fa-spin '></i> 
             </div>
-           <div id="loaded_ngl" style="max-width:300px ;overflow-y: hidden;overflow-x:auto; margin: 15px auto; max-height: 300px;visibility: hidden">
-            <iframe class="str_file traj_file lig_element" style="border: 0px none;width: 300px;margin-top:-35px;" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_home.html" scrolling="no" height="400px" width="590px" data-struc_file="{{model_path}}" data-traj_file="{{traj_path}}" data-lig_element="{{lig_li}}" data-is_home="true"></iframe>
+           <div id="loaded_ngl" style="max-width:300px ;margin: 15px auto; max-height: 300px;visibility: hidden">
+            <iframe class="str_file traj_file lig_element" style="border: 0px none;width: 300px;" id="embed_mdsrv" src="{{mdsrv_url}}/html/embed_home.html" scrolling="no" height="400px" width="590px" data-struc_file="{{model_path}}" data-traj_file="{{traj_path}}" data-lig_element="{{lig_li}}" data-is_home="true"></iframe>
             </div>
             <center>
                 <a href="/view/{{dyn_id}}" target="_blank" class="btn btn-info" role="button" style="font-weight:bold;margin:20px;">Go to GPCRmd workbench</a>
@@ -433,7 +459,7 @@ g circle , g text {
                 <div class="item">
                   <div class="newsCarouselText">
                     <p class="newsdate"><span class="glyphicon glyphicon-calendar"></span> 10th of July 2019</p>
-                    <h2>GPCRmd is mentioned in the acticle <span   style="font-style: italic;"">Bringing Molecular Dynamics Simulation Data into View</span></h2>
+                    <h2>GPCRmd is mentioned in the acticle <span   style="font-style: italic;">Bringing Molecular Dynamics Simulation Data into View</span></h2>
                     <p>
                       In this <a href="https://www.sciencedirect.com/science/article/pii/S0968000419301379">publicaiton</a>, P.W. Hildebrand, A.S. Rose and J.K.S Tiemann discuss about the sharing of MD trajectories, examinng its potential, advances and existing barriers.
                     </p>
@@ -536,6 +562,28 @@ g circle , g text {
 
         </div>
     </div>
+  </div>
+  <div class="row main_section" id="partners_section" >
+      <div class="col-md-6" style="padding:20px 30px 0 30px;margin-bottom: 20px;text-align: center">
+        <h4 style="font-size:20px" >Partner servers</h4>
+          <p><a href="http://open.gpcr-modsim.org/">GPCR-ModSim</a> (Uppsala Uni.)</p>
+          <p><a href="https://gpcrm.biomodellab.eu/">GPCRM</a>  (Uni. Warsaw)</p>
+          <p><a href="http://nmrlipids.blogspot.com/">NMRlipids</a> (Uni. Helsinki, Max Planck Institute)</p>
+          <p><a href="http://lmc.uab.cat/homolwat/">HomolWat</a> (Uni. Autònoma de Barcelona)</p>
+      </div>
+      <div class="col-md-6" style="padding:20px 30px;margin-bottom: 20px;text-align: center">
+        <h4 style="font-size:20px">Supported by</h4> 
+        <p><a href="https://ernest-gpcr.eu/">ERNEST</a> (COST Action CA18133)</p>
+        <p><a href="https://www.cost.eu/actions/CM1207/">GLISTEN</a> (COST Action CM1207)</p>
+        <center>
+        <div style="width:250px;">
+          <img class="img-responsive" src="{% static 'home/images/news/ERNESTlogo.png' %}" style="height:50px;display:block;float:left">
+          <img class="img-responsive" src="{% static 'home/images/glisten.jpeg' %}" style="height:47px;float:left;display:block">
+        </div>
+        </center>
+      </div>
+    </div>
+  </div>
 
 
  <!--   <div class="col-md-4 extrainfo_col">
