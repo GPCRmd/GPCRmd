@@ -44,7 +44,6 @@ def gpcrmd_home(request):
     context['site_title'] = settings.SITE_TITLE
     context['documentation_url'] = settings.DOCUMENTATION_URL
     context['logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main.png';
-    context['icon_logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main_square.png';
     context['logo_text_path'] = 'home/logo/' + settings.SITE_NAME + '/text.png';
     
 #    #latest entry
