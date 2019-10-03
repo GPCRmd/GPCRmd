@@ -260,12 +260,14 @@ g circle , g text {
 -->
 
 
-<div id="header" style="height:110px;position:relative;background-image: url({% static 'home/images/background3_sc_sm.png' %});background-size:1600px;background-position: center;background-repeat: repeat-x; ">
-        <div class="vert_center" style="height:90px;margin:auto;width:475px; ">
+<div id="header" style="height:110px;position:relative;background-image: url({% static 'home/images/background3_sc_sm.png' %});background-size:1600px;background-position: center;background-repeat: repeat-x;overflow:hidden; ">
+        <div class="vert_center" style="height:90px;margin:auto;width:500px; ">
             <img id="biglogo" class="h_center_img " src="{% static logo_path %}" style="height:80px;float:left;display:block;margin:5px 0 5px 20px">
+            <img id="biglogo" class="h_center_img " src="{% static logo_text_path %}" style="height:40px;float:left;display:block;margin-top:25px">
+            <!--
             <div style="text-align:left;margin:27px 20px 25px 10px;  font-size:25px;font-variant: small-caps;font-family:Calibri;color:white;font-weight:bold;float:right;display:block">
                 <p>- The  MD database for GPCRs</p>
-            </div>
+            </div>-->
         </div>    
 </div>
 
@@ -288,7 +290,7 @@ g circle , g text {
                   <h3>The new database for GPCR MD</h3>
                   <p>GPCRmd is a database of GPCR MD with the purpose to provide storage, dissemination and analysis of this data.</p>
                   <p>It contains several analysis and visualisation tools to characterize the simulations.</p>
-                  <p>Users can also <a data-target="#submit_tab" class="tab_trigger">sumbit</a> their simulaitons make them available to the community</p>
+                  <p>Users can also <a href="/accounts/memberpage/"  class="tab_trigger">sumbit</a> their simulaitons make them available to the community</p>
 <!--
                   <p>GPCRmd is a database of GPCR MD with the purpose to provide storage, dissemination and analysis of this data.</p>
                   <p>It includes at least one member of each solved GPCR class, both in the apo form and bound to different ligands (natural ligands, agonists or antagonists).</p>
@@ -354,7 +356,7 @@ g circle , g text {
                 <div id="meetings" class="tab-pane fade">
                   <h3>Meetings</h3>
                     <ul>
-                      <li>The progress of the GPCRmd project will be presented at the first ERNEST meeting: <a hef="https://ernest-gpcr.eu/first-ernest-meeting-gpcr-pharmacology-activation-signalling-and-drug-design-belfast-28-30-oct-2019/">GPCR Pharmacology – Activation, Signalling and Drug Design</a> in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
+                      <li>The progress of the GPCRmd project will be presented at the first ERNEST meeting: <a href="https://ernest-gpcr.eu/first-ernest-meeting-gpcr-pharmacology-activation-signalling-and-drug-design-belfast-28-30-oct-2019/">GPCR Pharmacology – Activation, Signalling and Drug Design</a> in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="https://glistensymposium.wordpress.com/">GLISTEN Spring Meeting</a> in Porto, 29-31 March, 2017</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.glisten2016.cz/?q=node/1">GLISTEN Meeting</a> in Prague, 26-27 September, 2016</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.grk1910.de/glisten-2016.html">GLISTEN Meeting</a> in Erlangen, 6-8 April, 2016</li>
@@ -366,7 +368,7 @@ g circle , g text {
                 </div>
                 <div id="contact" class="tab-pane fade">
                   <h3>Contact</h3>
-                  <p>If you have questions, ideas or comments on GPCRmd, you can contact the autors through <a hef="https://submission.gpcrmd.org/home/">this page</a>.</p>
+                  <p>If you have questions, ideas or comments on GPCRmd, you can contact the autors through <a href="https://submission.gpcrmd.org/home/">this page</a>.</p>
                 </div>
                 <div id="docs" class="tab-pane fade">
                   <h3>Documentation</h3>
@@ -374,7 +376,7 @@ g circle , g text {
                     <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/workbench.html">GPCRmd Workbench</a></li>
                     <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/cross-receptor-analysis.html">Collective analysis</a></li>
                     <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/submission.html">Simulation submission</a></li>
-                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/simulation-browser.html">Simulaitn browser (Advanced search)</a></li>
+                    <li><a href="https://gpcrmd-docs.readthedocs.io/en/latest/source/simulation-browser.html">Simulation browser (Advanced search)</a></li>
                   </ul>
                 </div>
             </div>
@@ -415,7 +417,7 @@ g circle , g text {
                 <p class="entrymonth_info"><span>State:</span> {{activ_state}}</p>
               {% endif %}
             </div>
-            <div id="loading_ngl" style="width: 300px;height:300px;text-align: center;font-size:40px;color:gray;padding:130 0;position:absolute;z-index:10;position: absolute;top: 0;left: 0;right: 0;bottom: 0;margin:auto">
+            <div id="loading_ngl" style="height:300px;text-align: center;font-size:40px;color:gray;padding:130 0;position:absolute;z-index:10;position: absolute;top: 0;left: 0;right: 0;bottom: 0;margin:auto">
               <i class='fa fa-spinner fa-spin '></i> 
             </div>
            <div id="loaded_ngl" style="max-width:300px ;margin: 15px auto; max-height: 300px;visibility: hidden">
@@ -581,7 +583,7 @@ g circle , g text {
           <p><a href="http://nmrlipids.blogspot.com/">NMRlipids</a> (Uni. Helsinki, Max Planck Institute)</p>
           <p><a href="http://lmc.uab.cat/homolwat/">HomolWat</a> (Uni. Autònoma de Barcelona)</p>
       </div>
-      <div class="col-md-6" style="padding:20px 30px;margin-bottom: 20px;text-align: center">
+      <div class="col-md-6" style="padding:20px 30px;margin-bottom: 20px;text-align: center;overflow: hidden">
         <h4 style="font-size:20px">Supported by</h4> 
         <p><a href="https://ernest-gpcr.eu/">ERNEST</a> (COST Action CA18133)</p>
         <p><a href="https://www.cost.eu/actions/CM1207/">GLISTEN</a> (COST Action CM1207)</p>
