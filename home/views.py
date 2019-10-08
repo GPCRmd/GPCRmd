@@ -138,7 +138,10 @@ def gpcrmd_home(request):
     prot_name=" and ".join(list({d["protname"] if d["protname"] else d["protname2"] for d in dyndata}))
     context["prot_name"]=prot_name
 
-    context["pdb_id"]=dyndata[0]["pdb_namechain"].split(".")[0]
+    pdb_namechain=dyndata[0]["pdb_namechain"]
+    if dyn_id ==4 and not pdb_namechain:
+        pdb_namechain="4N6H"
+    context["pdb_id"]=pdb_namechain.split(".")[0]
 
     dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=dyn_id)
     dynfiles = dynfiles.annotate(file_path=F("id_files__filepath"))
