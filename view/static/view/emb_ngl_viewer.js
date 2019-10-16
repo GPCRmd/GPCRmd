@@ -4984,6 +4984,8 @@ $(document).ready(function(){
                 $("#fp_int_type_info").html('<p class="fp_int_type_info_p">'+$(this).text()+'</p>');
             }
             //var int_jsonpath=$(this).data("path");
+            var jsonpath=$(this).data("path");
+            $("#downl_json_hb").attr("href",jsonpath);
             var int_tag=$(this).data("tag");
             $(".traj_element").each(function(){
                 var int_this_jsonpath=$(this).data(int_tag);

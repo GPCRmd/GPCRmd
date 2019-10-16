@@ -1571,7 +1571,7 @@ def download_hb_sb(request, bond_type, traj_path):
             writer.writerow(["Residue 1","Chain 1","Atom id 1","Residue 2","Chain 2","Atom id 2","Frequency (%)"])
             for row in int_res_ok:
                 (dres,ares,freq,datom,aatom,dchain,achain)=row
-                writer.writerow([dres,dchain,int(datom),ares,achain,int(aatom),freq])
+                writer.writerow([dres,dchain,int(float(datom)),ares,achain,int(float(aatom)),freq])
         else:
             response = HttpResponse(content_type='text/csv')
             response['Content-Disposition'] = 'attachment; filename="x.csv"'
@@ -2104,7 +2104,9 @@ def saltbridges(request):#
         full_results['salt_bridges'] = salt_bridges_residues
         full_results['salt_bridges'] = [(label([int(saltb[0])-1,'-',int(saltb[1])-1]),str(round(saltb[2],3)*100)[:4], saltb[0]-1,saltb[1]-1 ) for saltb in full_results['salt_bridges']] 
         #-1 to return to zero indexing.
-        bridge_dic=dict()
+        bridge_dic=dict() # To separate into prot - prot and prot-others: create two separate dicts instead o bidge_dict using
+                            # t.topology.atom(atomnum).residue.is_protein 
+                            # where atomnum is bond[2] or bond [3]
         for bond in full_results['salt_bridges']:
             labelbond=bond[0]
             labelbond=labelbond.replace(' ','')
@@ -2122,21 +2124,24 @@ def saltbridges(request):#
             else:
                bridge_dic[donor_res]=[[acceptor_res,bond[1],str(bond[2]),str(bond[3]),chain0,chain1]]
 
-        if False: #warning, to implement in future, download csv with results
-            struc_path=struc_path[:-4]
-            csvfile= open(struc_path+'saltbridges.csv','w',newline='')
-            writer = csv.writer(csvfile,delimiter=' ',
-                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
+#        if False: #warning, to implement in future, download csv with results
+#            struc_path=struc_path[:-4]
+#            csvfile= open(struc_path+'saltbridges.csv','w',newline='')
+#            writer = csv.writer(csvfile,delimiter=' ',
+#                                quotechar=',', quoting=csv.QUOTE_MINIMAL)
+#
+#            header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
+#            writer.writerow(header)
+#
+#            for keys in bridge_dic:
+#                for minilist in bridge_dic[keys]:
+#                    rowlist=[keys]+minilist
+#                    writer.writerow(rowlist)
+#                writer.writerow(['','','','',''])
 
-            header=['Residue1', 'Residue2', 'Frequency', 'Atom_index', 'Atom_index_2']
-            writer.writerow(header)
-
-            for keys in bridge_dic:
-                for minilist in bridge_dic[keys]:
-                    rowlist=[keys]+minilist
-                    writer.writerow(rowlist)
-                writer.writerow(['','','','',''])
-
+        print("\n\n\n")
+        print(bridge_dic)
+        print("\n\n\n")
         full_results['salt_bridges']=bridge_dic
         analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_threshold,"traj_path":traj_shortpath,"dyn_id":dyn_id}
         request.session["sb"]={"results":bridge_dic,"analysis_data":analysis_data}
