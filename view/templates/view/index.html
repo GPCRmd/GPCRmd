@@ -1669,8 +1669,13 @@ padding-right:60px
                         type="button" style="margin-top:15px;width:115px;font-size:12px;" title="Unselect all interactions from the plot.">
                         Clear plot
                       </button>
-                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhencomp" href="/dynadb/files/Precomputed/flare_plot/hbonds" style="color:#585858;margin-top:15px;padding:0">
+                      {% if traj_list.0.3.0.2 %}
+                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhencomp" href="{{traj_list.0.3.0.2}}" style="color:#585858;margin-top:15px;padding:0" target="_blank">
+                      {% else %}
+                      <a role="button" id="downl_json_hb" class="btn btn-link settingsB disablewhencomp disabled"  style="color:#585858;margin-top:15px;padding:0">
+                      {% endif %}
                         <span title="Download data" class="glyphicon glyphicon-download-alt"></span>
+                      
                       </a>
                   </span>
                </center>

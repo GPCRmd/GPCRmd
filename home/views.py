@@ -44,6 +44,7 @@ def gpcrmd_home(request):
     context['site_title'] = settings.SITE_TITLE
     context['documentation_url'] = settings.DOCUMENTATION_URL
     context['logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main.png';
+    context['logo_text_path'] = 'home/logo/' + settings.SITE_NAME + '/text.png';
     
 #    #latest entry
 #    latest=DyndbDynamics.objects.filter(is_published=True).latest("creation_timestamp")
@@ -116,7 +117,7 @@ def gpcrmd_home(request):
 
 
     # Entry of the month
-    dyn_id=31
+    dyn_id=4
     context["dyn_id"]=dyn_id
     dynobj=dynall.filter(id=dyn_id)#.latest("creation_timestamp")
     t=dynobj.annotate(dyn_id=F('id'))
@@ -137,7 +138,10 @@ def gpcrmd_home(request):
     prot_name=" and ".join(list({d["protname"] if d["protname"] else d["protname2"] for d in dyndata}))
     context["prot_name"]=prot_name
 
-    context["pdb_id"]=dyndata[0]["pdb_namechain"].split(".")[0]
+    pdb_namechain=dyndata[0]["pdb_namechain"]
+    if dyn_id ==4 and not pdb_namechain:
+        pdb_namechain="4N6H"
+    context["pdb_id"]=pdb_namechain.split(".")[0]
 
     dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=dyn_id)
     dynfiles = dynfiles.annotate(file_path=F("id_files__filepath"))

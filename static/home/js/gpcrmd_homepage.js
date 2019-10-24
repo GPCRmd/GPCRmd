@@ -5357,8 +5357,8 @@ $(document).ready(function(){
     function control_row_size(){
       var plot_h = $("#plot_col").css("height");
       var plot_h_num = Number(plot_h.replace("px",""));
-      if (plot_h_num<600){
-        plot_h="600px";
+      if (plot_h_num<700){
+        plot_h="700px";
       }
       $("#tabs_col").css("height",plot_h);
       console.log("!")

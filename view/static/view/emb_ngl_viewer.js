@@ -4663,9 +4663,11 @@ $(document).ready(function(){
         int_res_s_ch=join_lil(int_res_lil_ch);
         var pd = "n";
         for (key in high_pre){
-            if (high_pre[key].length > 0){
-                pd = "y";
-                break;
+            if (key != "rep"){
+                if (high_pre[key].length > 0){
+                    pd = "y";
+                    break;
+                }
             }
         }
         var layers_li=[];
@@ -4771,7 +4773,6 @@ $(document).ready(function(){
     
 
     $("#clearAll").click(function(){
-        console.log("..........ClearAll")
         all_resids_sasa=[];
         atomshb=[];
         all_resids=[];
@@ -4983,6 +4984,8 @@ $(document).ready(function(){
                 $("#fp_int_type_info").html('<p class="fp_int_type_info_p">'+$(this).text()+'</p>');
             }
             //var int_jsonpath=$(this).data("path");
+            var jsonpath=$(this).data("path");
+            $("#downl_json_hb").attr("href",jsonpath);
             var int_tag=$(this).data("tag");
             $(".traj_element").each(function(){
                 var int_this_jsonpath=$(this).data(int_tag);
