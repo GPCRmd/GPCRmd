@@ -164,6 +164,18 @@
                 </ul>
               </div>
 
+              <div class="dropup numbering_dropup-div">
+                <button id="numberbutton0" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown">
+                  Class A numbering <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu numbering_dropup-ul">
+                  <li id="fp_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                </ul>
+              </div>
+
               <button id="FPclearSel0" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
                 Clear plot
               </button>
@@ -219,16 +231,27 @@
                 <ul class="dropdown-menu clusters_dropup-ul">
                   {% for clus in clusrange %}
                   {% if clus == 2 %}
-                  <li id="fp1_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  <li id="fp1_cluster{{clus}}" class="fp_display_element is_active" data-tag={{clus}} title="Display 5 main interactions of cluster {{clus}}.">Cluster {{clus}}</li>
                   {% else %}
-                  <li id="fp1_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display all interactions.">Cluster {{clus}}</li>
+                  <li id="fp1_cluster{{clus}}" class="fp_display_element" data-tag={{clus}} title="Display 5 main interactions of cluster {{clus}}.">Cluster {{clus}}</li>
                   {% endif %}
                   {% endfor %}
                 </ul>
               </div>
+              <div class="dropup numbering_dropup-div">
+                <button id="numberbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown">
+                  Class A numbering <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu numbering_dropup-ul">
+                  <li id="fp_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                </ul>
+              </div>
 
               <button id="FPclearSel1" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
-                Clear plot
+                Clear plot <span class="caret"></span>
               </button>
             </span>
 

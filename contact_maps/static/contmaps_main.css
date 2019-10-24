@@ -210,13 +210,18 @@ hr {
 .FP-button {
   margin-top:15px;
   font-size:12px;
-  width:115px;
+  width:130px;
   padding-right:2px;
   padding-left:2px;
   height: 31px;
 }
 
 .clusters_dropup-div {
+  display:inline-block;
+  position: relative;
+}
+
+.numbering_dropup-div {
   display:inline-block;
   position: relative;
 }

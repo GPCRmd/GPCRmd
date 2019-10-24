@@ -55,22 +55,10 @@ $(document).ready(function(){
         });
     }
 
-    function createFlareplotCustom(fpsize, jsonData, fpdiv, showContacts = false){
-        var fpjson=jsonData;
-        if (fpjson.edges[0].helixpos != undefined) {
-            //$("#fpShowResSetBtns").css("display","inline-block");
-            if(showContacts!= "all"){
-                var edges=fpjson.edges;
-                var newedges=[];
-                for (eN=0; eN < edges.length ; eN++ ){
-                    var edge = edges[eN];
-                    if (edge.helixpos == showContacts){
-                        newedges.push(edge);
-                    }
-                }
-                fpjson.edges=newedges;
-            }
-        }
+    function createFlareplotCustom(fpsize, fpjson, fpdiv, class_numbering){
+        
+        //Setting edges section of corresponding nomenclature
+        fpjson['edges'] = fpjson[class_numbering+'edges'] 
 
         plot=createFlareplot(fpsize, fpjson, fpdiv);
 
@@ -189,10 +177,15 @@ $(document).ready(function(){
         
         flare_container = "#flare-container" + id;
         fpdiv = "#fpdiv" + id;
-        showContacts=$(fpdiv).find(".fp_display_element.is_active").data("tag");
 
-        //Update display button
-        $("#clusterbutton" + id).html("Cluster " + showContacts + ' <span class="caret"></span>');
+        //Update cluster button
+        cluster_num=$(fpdiv+" .clusters_dropup-div .fp_display_element.is_active").data("tag");
+        $("#clusterbutton" + id).html("Cluster " + cluster_num + ' <span class="caret"></span>');
+
+        //Update numbering button
+        class_numbering = $(fpdiv+" .numbering_dropup-div .fp_display_element.is_active").data("tag");
+        console.log($("#numberbutton" + id))
+        $("#numberbutton" + id).html("Class " + class_numbering + ' numbering <span class="caret"></span>');        
 
         //pg_framenum=new_fnum //?
         var pre_resSelected=[];
@@ -201,11 +194,11 @@ $(document).ready(function(){
             var nodenum=nodename.split("-")[1];
             pre_resSelected.push(nodenum);
         })
-        var fpfile_now="cluster" + showContacts + ".json";
+        var fpfile_now="cluster" + cluster_num + ".json";
         d3.json(fpdir+fpfile_now, function(jsonData){
             $(flare_container).html("");
             var fpsize=setFpNglSize(true, flare_container); // Or just use the size used before?
-            plots[id] = createFlareplotCustom(fpsize, jsonData, flare_container, showContacts, plots[id]);
+            plots[id] = createFlareplotCustom(fpsize, jsonData, flare_container, class_numbering);
             allEdges= plots[id].getEdges();
             numfr = plots[id].getNumFrames();
             
@@ -272,7 +265,7 @@ $(document).ready(function(){
 	////////////////////
 	//Flare plots time!!
 	////////////////////
-    //Make sure NGL viewers are ok before 
+    //Make sure NGL viewers are ok before starting flareplots
     $('body').on('iframeSet',function(){
         $('#ngl_iframe0')[0].contentWindow.$('body').trigger('iframeSetOk');
         $('#ngl_iframe1')[0].contentWindow.$('body').trigger('iframeSetOk');
@@ -284,7 +277,7 @@ $(document).ready(function(){
             var fpsize=setFpNglSize(true, "#flare-container0");
 
             d3.json(fpdir+"cluster1.json", function(jsonData){
-    	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "Inter");
+    	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "A");
                	$('#loading_flare0').css('display', 'none');
                 
                 /*//Paint flareplots legend once they are loaded
@@ -305,7 +298,7 @@ $(document).ready(function(){
 
             });
             d3.json(fpdir+"cluster2.json", function(jsonData){
-    	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "Inter");
+    	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "A");
     	        $('#loading_flare1').css('display', 'none');
 
                 //Put hoverlabels to flareplot
@@ -338,27 +331,22 @@ $(document).ready(function(){
     	//Hover in "cluster" dropups
         colorsHoverActiveInactive(".fp_display_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");	
 
-        //On click of cluster dropups
-        $("#fpdiv0 .clusters_dropup-ul li").click(function(){
-        	var to_activate =$(this).attr('id');
-        	var to_inactivate = $("#fpdiv0 .clusters_dropup-ul .is_active").attr('id');
-        	if (to_activate != to_inactivate){
+        //On click of cluster or nomenclature dropups, reset Flareplots with new parameter (and shadow selected option)
+        var to_activate, to_inactivate;
+        $("#fpdiv0 .clusters_dropup-ul li, #fpdiv0 .numbering_dropup-ul li").click(function(){
+        	to_activate =$(this).attr('id');
+            to_inactivate=$(this).parent("ul").children(".is_active").attr('id');
+            if (to_activate != to_inactivate){
     	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
         		changeContactsInFplot("0", fpdir, plots);
-
-                //Set new dyn list for dropdown in NGL viewer
-                var new_clust = "cluster"+$(this).attr('data-tag')
         	}
         });
-        $("#fpdiv1 .clusters_dropup-ul li").click(function(){
-        	var to_activate =$(this).attr('id');
-        	var to_inactivate = $("#fpdiv1 .clusters_dropup-ul .is_active").attr('id');
+        $("#fpdiv1 .clusters_dropup-ul li, #fpdiv1 .numbering_dropup-ul li").click(function(){
+        	to_activate =$(this).attr('id');
+        	to_inactivate = $("#fpdiv1 .clusters_dropup-ul .is_active").attr('id');
         	if (to_activate != to_inactivate){
     	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
     	    	changeContactsInFplot("1", fpdir, plots);
-
-                //Set new dyn list for dropdown in NGL viewer
-                var new_clust = "cluster"+$(this).attr('data-tag')
     	    }
         });
 
