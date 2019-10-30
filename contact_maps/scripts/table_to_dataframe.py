@@ -657,10 +657,11 @@ def reverse_positions(df):
     Appends a copy of the dataframe with the Position pair of the interaction being reversed (5x43-7x89 for 7x89-5x43)
     """
     df_rev = df.copy(deep = True)
-    df_rev['Position'] = df_rev['Position'].replace({r'(\w+)\s+(\w+)' : r'\2 \1'}, regex=True)
+    divided_positions = df_rev['Position'].str.split('\n\n',expand = True)
+    df_rev['Position'] = divided_positions[1] + "\n\n" + divided_positions[0]
     df_double = pd.concat([df, df_rev])
-    return df_double    
-
+    return df_double
+    
 def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
     Creates a list in hovertool format from the two dictionaries above
@@ -735,7 +736,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
 
     #Very poor way of creating X-axis labels. Necessary for having linejumps inside the axis labels
     x_cord = 0
-    y_cord = len(list(dataframe.Id.drop_duplicates()))+11#Position: 11 spaces above the plot's top border
+    y_cord = len(list(dataframe.Id.drop_duplicates()))+12#Position: 12 spaces above the plot's top border
     foolabel = Label(x=-1,
                      y=y_cord,
                      text='\nA: \nB: \nC: \nF: \n\n\nA: \nB: \nC: \nF: \n',
@@ -877,8 +878,8 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
                 //Resize dendrogram and heatmap
-                $("#dendrogram").css("width","48%");
-                $("#heatmap").css("width","52%");
+                $("#dendrogram").css("width","55%");
+                $("#heatmap").css("width","45%");
 
             } else {
                 if (plot_bclass != "col-xs-12"){
