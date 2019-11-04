@@ -11,6 +11,7 @@ from bokeh.plotting import figure
 from bokeh.embed import components
 from bokeh.models import Label, HoverTool, TapTool, CustomJS, BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, PrintfTickFormatter
 from bokeh.transform import transform
+from math import ceil
 from scipy.cluster.hierarchy import linkage, fcluster, cut_tree
 
 ############
@@ -510,7 +511,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
 
     fig['layout']['margin'].update({
         'r' : 300,
-        'l' : 20,
+        'l' : 50,
         't' : 100,
         'b' : 0,
         'pad' : 0
@@ -591,11 +592,10 @@ def add_restypes(df, compl_data):
     df[['restype_1','protein_Position 1']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 1']), axis = 1) 
     df[['restype_2','protein_Position 2']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 2']), axis = 1) 
     df['restypes'] = df['restype_1'] +" "+ df['restype_2']  
-    df['protein_Position'] = df['protein_Position 1'] +" "+ df['protein_Position 2']  
+    df['protein_Position'] = df['protein_Position 1'] +" "+ df['protein_Position 2']
 
     #Drop Position, proteinPosition and restype columns once they are not needed
-    df.drop(columns = ['Position 1','Position 2','restype_1','restype_2'], inplace = True)
-    
+    df.drop(columns = ['Position 1','Position 2','restype_1','restype_2','protein_Position 1','protein_Position 2'], inplace = True)
     return df
 
 def new_columns(df):
@@ -657,9 +657,10 @@ def reverse_positions(df):
     Appends a copy of the dataframe with the Position pair of the interaction being reversed (5x43-7x89 for 7x89-5x43)
     """
     df_rev = df.copy(deep = True)
-    df_rev['Position'] = df_rev['Position'].replace({r'(\w+)\s+(\w+)' : r'\2 \1'}, regex=True)
+    divided_positions = df_rev['Position'].str.split('\n\n',expand = True)
+    df_rev['Position'] = divided_positions[1] + "\n\n" + divided_positions[0]
     df_double = pd.concat([df, df_rev])
-    return df_double    
+    return df_double
 
 def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
@@ -877,8 +878,8 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
                 //Resize dendrogram and heatmap
-                $("#dendrogram").css("width","48%");
-                $("#heatmap").css("width","52%");
+                $("#dendrogram").css("width","52%");
+                $(".heatmap").css("width","48%");
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -1104,9 +1105,11 @@ def get_contacts_plots(itype, ligandonly):
         jsonpath = basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_jsons/" + str(cluster) + "clusters/"
         flareplot_json(df, clustdict, jsonpath, flare_template)
 
+        
     for rev in ["rev", "norev"]:
 
-        # If rev option is setted to rev, duplicate all lines with the reversed-position version (4x32-2x54 duplicates to 2x54-4x32)
+        # If rev option is setted to rev, duplicate all lines with the reversed-position version 
+        #(4x32-2x54 duplicates to 2x54-4x32)
         if rev == "rev":
             df_ts_rev = reverse_positions(df_ts)
         else:
@@ -1114,34 +1117,62 @@ def get_contacts_plots(itype, ligandonly):
 
         df_ts_rev = sort_simulations(df_ts_rev, dyn_dend_order)
         
-        # Defining height and width of the future figure from columns (simulations) and rows (positions) of the df dataframe
-        # I use df instead of df_ts because of its intrinsec structure. I know it's kind of strange
-        h=dend_height
-        if rev == "rev":
-            w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20*2 + 130)
-        else: 
-            w=16300 if int(df.shape[0]*20 + 130) > 16300 else int(df.shape[0]*20 + 130)    
+        #Taking some variables for dataframe slicing
+        pairs_number = df.shape[0]
+        inter_number = df_ts_rev.shape[0]
+        inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
+        number_heatmaps = ceil((inter_number/inter_per_pair)/37) #Needed number of heatmaps to have 37 columns max in each
+        
+        #Make heatmaps each 50 interacting pairs
+        div_list = []
+        divwidth_list = []
+        heatmap_filename_list = []
+        number_heatmap_list = []
+        prev_slicepoint = 0
+        for i in range(1,number_heatmaps+1):
+            number_heatmap_list.append(str(i))
+            
+            #Slice dataframe. Also definig heigth and width of the heatmap
+            slicepoint = int(i*inter_per_pair*37)
+            if i == number_heatmaps:
+                df_slided = df_ts_rev[prev_slicepoint:]
+                w= int(df_slided.shape[0]/inter_per_pair*20 + 130)    
+            else:
+                df_slided = df_ts_rev[prev_slicepoint:slicepoint]
+                w=870
+            prev_slicepoint = slicepoint
+            h=dend_height
 
-        # Define a figure
-        hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
-        mytools = ["hover","tap","save","reset","wheel_zoom"]
-        mysource,p = define_figure(w, h, mytools, df_ts_rev, hover, itype)
+            # Define bokeh figure and hovertool
+            hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
+            mytools = ["hover","tap","save","reset","wheel_zoom"]
+            mysource,p = define_figure(w, h, mytools, df_slided, hover, itype)
 
-        # Creating javascript for side-window
-        mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
+            # Creating javascript for side-window
+            mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
 
-        # Find path to files 
-        plotdiv_w= w + 575
-        script, div = components(p)
+            # Extract bokeh plot components and store them in lists
+            script, div = components(p)
+            divwidth_list.append(str(dend_width+w+80))#heatmapwidth+dendwidth+margins
+            div_list.append(div.lstrip())
+            heatmap_filename = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/%s_%s_%s_%sheatmap.html" % (itype,ligandonly,rev,i)
+            heatmap_filename_list.append(heatmap_filename)
+            
+            # Creating directory if it doesn't exist
+            if not os.path.exists(basepath + "view_input_dataframe"):
+                os.makedirs(basepath + "view_input_dataframe")
 
-        # Write heatmap on file
-        with open(str("%sview_input_dataframe/%s_%s_%s_heatmap.html" % (basepath, itype, ligandonly, rev)), 'w') as heatmap:
-            heatmap.write(script)
+            # Write heatmap on file
+            heatmap_filename = "%sview_input_dataframe/%s_%s_%s_%sheatmap.html" % (basepath,itype,ligandonly,rev,i)
+            with open(heatmap_filename, 'w') as heatmap:
+                heatmap.write(script)
 
-        # Write div and plotdiv as python variables in a python file
-        with open(str("%sview_input_dataframe/%s_%s_%s_variables.py" % (basepath, itype, ligandonly, rev)), 'w') as varfile:
-            varfile.write("div = \'%s\'\n" % div.lstrip())
-            varfile.write("plotdiv_w = " + str(plotdiv_w))
+        # Write lists as python variables in a python file
+        with open(basepath + "view_input_dataframe" + "/" + itype + "_" + ligandonly + "_" + rev + "_variables.py", 'w') as varfile:
+            varfile.write("div_list = [\'%s\']\n" % "\',\'".join(div_list))
+            varfile.write("divwidth_list = [\'%s\']\n" % "\',\'".join(divwidth_list))
+            varfile.write("heatmap_filename_list = [\'%s\']\n" % "\',\'".join(heatmap_filename_list))
+            varfile.write("number_heatmaps_list = [\'%s\']\n" % "\',\'".join(number_heatmap_list))
 
 ###################
 ## Calling function

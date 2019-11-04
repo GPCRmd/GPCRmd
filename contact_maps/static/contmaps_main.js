@@ -126,7 +126,7 @@ $(document).ready(function(){
   //---------------Scrollbar to heatmap
   jQuery(function ($) {
     $("#scrolldiv").on("scroll", function () {
-        $("#heatmap").scrollLeft($(this).scrollLeft());
+        $(".heatmap").scrollLeft($(this).scrollLeft());
     });
   });
 
@@ -199,5 +199,43 @@ function closeSideWindow() {
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
   $("#dendrogram").css("width","40%");
-  $("#heatmap").css("width","60%");  
+  $(".heatmap").css("width","60%");  
+}
+
+//--------Heatmap change page system (the return false thing is for links not to redirect)
+function heatmap_change(heatmap) {
+    
+  function set_active_page(number){
+    //Hide all heatmaps and show the one selected
+    $(".heatmap").hide();
+    $("#heatmap"+number).show();
+    //Deactivate all page buttons and activate the selected one
+    $("#heatmap_pager .page-item").removeClass("active");
+    $("#heatmap_page_"+number).addClass("active")
+    //Hide all scrollbars and show the selected one
+    $(".scrolldiv").hide();
+    $("#scrolldiv_inner"+number).show();    
+  }
+  var new_heatmap;
+  //If the clicked option is the current one, do nothing
+  if ($("#heatmap_page_"+heatmap).hasClass("active")){
+    //pass
+  }
+  else if (heatmap=="next"){
+    new_heatmap = parseInt($(".heatmap:visible").attr("data-number"))+1;
+    if ($("#heatmap_page_"+new_heatmap).length){
+      set_active_page(new_heatmap);
+    }
+  } 
+  else if (heatmap=="prev"){
+    new_heatmap = parseInt($(".heatmap:visible").attr("data-number"))-1;
+    if ($("#heatmap_page_"+new_heatmap).length){
+      set_active_page(new_heatmap);
+    }
+  }
+  else {
+    new_heatmap = heatmap;
+    set_active_page(new_heatmap);
+  }
+  return false
 }
