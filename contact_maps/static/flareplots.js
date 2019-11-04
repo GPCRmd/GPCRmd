@@ -184,7 +184,6 @@ $(document).ready(function(){
 
         //Update numbering button
         class_numbering = $(fpdiv+" .numbering_dropup-div .fp_display_element.is_active").data("tag");
-        console.log($("#numberbutton" + id))
         $("#numberbutton" + id).html("Class " + class_numbering + ' numbering <span class="caret"></span>');        
 
         //pg_framenum=new_fnum //?

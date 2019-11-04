@@ -84,16 +84,23 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	#Creating itypes dictionary for selected types
 	selected_itypes = { x:typelist[x] for x in set_itypes }
 
-	# Setting csv_name
-	scriptfilepath = basedir + itype + "_" + ligandonly + "_" + rev + "_heatmap.html"
+	# Loading variables
+	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
+	number_heatmaps_list = variablesmod.number_heatmaps_list
+	divwidth_list = variablesmod.divwidth_list
+	div_list = variablesmod.div_list
+	filenames_list = variablesmod.heatmap_filename_list
 
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/%s_%s_jsons/%sclusters/" %  (itype, ligandonly, cluster)
 
 	# Loading heatmap script if it exists. If not, load "no interactions" template instead
-	if exists(scriptfilepath):
-		with open(scriptfilepath, 'r') as scriptfile:
-			script = scriptfile.read()
+	if exists(filenames_list[0]):
+		script_list = []
+		for filename in filenames_list:
+			with open(filename, 'r') as scriptfile:
+				script = scriptfile.read()
+			script_list.append(script)
 	else:
 		context = {
 			'fpdir' : fpdir,
@@ -110,11 +117,6 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 			'cluster' : int(cluster),
 		}
 		return render(request, 'contact_maps/index_nodata.html', context)
-
-	# Loading variables
-	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
-	div = variablesmod.div
-	plotdiv_w = variablesmod.plotdiv_w
 
 	#Loading dynamics-cluster dictionary
 	clustdict = json_dict(str("%s%s_%s_jsons/%sclusters/clustdict.json" % (basedir, itype, ligandonly, cluster)))
@@ -133,17 +135,17 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'itypes_dict' : typelist,
 		'itype_code' : itype,
 		'ligandonly' : ligandonly,
-		'rev' : rev,
 		'itype_name' : typelist[itype],
 		'dendrogram' : dendr_figure,
 		'hb_itypes' : hb_itypes,
-		'script' : script , 
-		'div' : div,
+		'script_list' : script_list, 
 		'rev' : rev,
+		'number_heatmaps_list' : number_heatmaps_list,
+		'numbered_divs' : zip(number_heatmaps_list, div_list),
+		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
 		'cluster' : int(cluster),
-		'scrolldiv_width':plotdiv_w + 300, #Width of heatmap plus dendrogram
 		'mdsrv_url':mdsrv_url
 	}
 	return render(request, 'contact_maps/index_h.html', context)

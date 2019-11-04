@@ -41,30 +41,72 @@
 </div>
 
 <div id="inner_remaining" class ="row" >
-  <!--Here be dendrogram and heatmap-->
+  <!--Here be dendrogram and heatmaps-->
   <div class="col-xs-12" id="retracting_parts">
     <div class="panel panel-primary" id="main_plot_body">
       <span><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></span>
       <div class="panel-body" >
         {% include './contact_maps/menus.html' %}
+        <div class="row">
+          <div id="heatmap_pager" style="float: right; margin-right: 20%">
+            <ul class="pagination">
+              <li class="page-item prev">
+                <a class="page-link" aria-label="Previous" onclick="heatmap_change('prev')">
+                  <span aria-hidden="true">&laquo;</span>
+                  <span class="sr-only">Previous</span>
+                </a>
+              </li>
+              {% for number_heatmap in number_heatmaps_list %}
+                {% if number_heatmap == number_heatmaps_list.0 %}
+                <li class="page-item active" id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
+                {% else %}
+                <li class="page-item"  id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
+                {% endif %}
+              {% endfor %}
+              <li class="page-item next">
+                <a class="page-link"  aria-label="Next" onclick="heatmap_change('next')">
+                  <span aria-hidden="true">&raquo;</span>
+                  <span class="sr-only">Next</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
         <div id="dendrogram-heatmap" class="row">
-          <div id="dendrogram" class="col-xs-4" style="width: 37%">
+          <div id="dendrogram" class="col-xs-4" style="width: 40%">
             {{dendrogram | safe }}
           </div>
-          <div id="heatmap" class="col-xs-8" style="width: 63%; overflow-x: scroll;">
-            {{ div | safe }}
-          </div>
+          {% for number,div in numbered_divs %}
+            {% if number == "1" %}
+            <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 60%; overflow-x: scroll;">
+              {{ div | safe }}
+            </div>
+            {% else %}
+            <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 60%; display: none; overflow-x: scroll;">
+              {{ div | safe }}
+            </div>
+            {% endif %}
+          {% endfor %}
+          {% for script in script_list %}
+            {{script | safe}}
+          {% endfor %}
         </div>
       </div>
     </div>
     <div id="scrolldiv">
-      <div id="scrolldiv_inner" style="width: {{scrolldiv_width}}; height: 10px;"></div>
+      {% for number,width in numbered_divwidths%}
+        {% if number == "1" %}
+        <div id="scrolldiv_inner{{number}}" class="scrolldiv" style="width: {{width}}; height: 10px;"></div>
+        {% else %}
+        <div id="scrolldiv_inner{{number}}" class="scrolldiv" style="width: {{width}}; height: 10px; display: none;"></div>
+        {% endif %}        
+      {% endfor %}
     </div>
   </div>
 
   <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
   <div class="col-xs-3" id="info">
-    <div class="panel panel-info" style="height:100%; position: relative; overflow-y: auto; overflow-x: auto;">
+    <div id="subinfo" class="panel panel-info">
       <div class="panel-heading" style="">Interaction details
         <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
           <span aria-hidden="true">&times;</span>
@@ -357,7 +399,6 @@
 <link href="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.1.0.min.css" rel="stylesheet" type="text/css">
 <script src="https://cdn.pydata.org/bokeh/release/bokeh-1.1.0.min.js"></script>
 <script src="https://cdn.pydata.org/bokeh/release/bokeh-widgets-1.1.0.min.js"></script>
-{{ script | safe }}
 {% endblock %}
 
 </body>
