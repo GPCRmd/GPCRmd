@@ -116,7 +116,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 			'itype_name' : typelist[itype],
 			'cluster' : int(cluster),
 		}
-		return render(request, 'contact_maps/index_nodata.html', context)
+		return render(request,'contact_maps/index_nodata.html',context)
 
 	#Loading dynamics-cluster dictionary
 	clustdict = json_dict(str("%s%s_%s_jsons/%sclusters/clustdict.json" % (basedir, itype, ligandonly, cluster)))
@@ -165,4 +165,4 @@ def get_csv_file(request, itype, ligandonly, rev):
 	return response
 
 def get_itype_help(request, foo):
-	return render(request, 'contact_maps/itype_help.html')
+	return render(request=request, template_name='contact_maps/itype_help.html')

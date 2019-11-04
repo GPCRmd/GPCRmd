@@ -200,6 +200,11 @@ hr {
   width: 204px !important;
 }
 
+#heatmap_pager {
+  float: right; 
+  margin-right: 20px;
+  margin-left: 700px;
+}
 
 #loading_heatmap {
     left: 65%;
