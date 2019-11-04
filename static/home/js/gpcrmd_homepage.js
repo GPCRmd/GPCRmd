@@ -2017,73 +2017,6 @@ $(document).ready(function(){
           }]
         }]
       }, {
-        "name": "Opioid",
-        "State": "-",
-        "CrystalLigand": "-",
-        "OldLigand": "-",
-        "CrystalTransducer": "-",
-        "Transducer": "-",
-        "Simulated": "-",
-        "Apo": "-",
-        "Complex": "-",
-        "Ligand": "-",
-        "ClassCol": "-",
-        "KlassCol": "A\t\t\t\t",
-        "children": [{
-          "name": "NOP",
-          "State": "-",
-          "CrystalLigand": "-",
-          "OldLigand": "-",
-          "CrystalTransducer": "-",
-          "Transducer": "-",
-          "Simulated": "-",
-          "Apo": "-",
-          "Complex": "-",
-          "Ligand": "-",
-          "ClassCol": "-",
-          "KlassCol": "A\t\t\t\t",
-          "children": [{
-            "name": "5DHG",
-            "State": "Inactive",
-            "CrystalLigand": "nociceptin/orphanin FQ",
-            "OldLigand": "-",
-            "CrystalTransducer": "-",
-            "Transducer": "-",
-            "Simulated": "Yes",
-            "Apo": "156",
-            "Complex": "",
-            "Ligand": "-",
-            "ClassCol": "A",
-            "KlassCol": "A\t\t\t\t"
-          }, {
-            "name": "4EA3",
-            "State": "Inactive",
-            "CrystalLigand": "nociceptin/orphanin FQ",
-            "OldLigand": "-",
-            "CrystalTransducer": "-",
-            "Transducer": "-",
-            "Simulated": "Yes",
-            "Apo": "62",
-            "Complex": "70",
-            "Ligand": "Banyu Compound-24",
-            "ClassCol": "A",
-            "KlassCol": "A\t\t\t\t"
-          }, {
-            "name": "5DHH",
-            "State": "Inactive",
-            "CrystalLigand": "nociceptin/orphanin FQ",
-            "OldLigand": "-",
-            "CrystalTransducer": "-",
-            "Transducer": "-",
-            "Simulated": "Yes",
-            "Apo": "155",
-            "Complex": "",
-            "Ligand": "-",
-            "ClassCol": "A",
-            "KlassCol": "A\t\t\t\t"
-          }]
-        }]
-      }, {
         "name": "Neurotensin",
         "State": "-",
         "CrystalLigand": "-",
@@ -4151,7 +4084,60 @@ $(document).ready(function(){
             "ClassCol": "A",
             "KlassCol": "A\t\t\t\t"
           }]
-        }]
+        }, {
+          "name": "NOP",
+          "State": "-",
+          "CrystalLigand": "-",
+          "OldLigand": "-",
+          "CrystalTransducer": "-",
+          "Transducer": "-",
+          "Simulated": "-",
+          "Apo": "-",
+          "Complex": "-",
+          "Ligand": "-",
+          "ClassCol": "-",
+          "KlassCol": "A\t\t\t\t",
+          "children": [{
+            "name": "5DHG",
+            "State": "Inactive",
+            "CrystalLigand": "nociceptin/orphanin FQ",
+            "OldLigand": "-",
+            "CrystalTransducer": "-",
+            "Transducer": "-",
+            "Simulated": "Yes",
+            "Apo": "156",
+            "Complex": "",
+            "Ligand": "-",
+            "ClassCol": "A",
+            "KlassCol": "A\t\t\t\t"
+          }, {
+            "name": "4EA3",
+            "State": "Inactive",
+            "CrystalLigand": "nociceptin/orphanin FQ",
+            "OldLigand": "-",
+            "CrystalTransducer": "-",
+            "Transducer": "-",
+            "Simulated": "Yes",
+            "Apo": "62",
+            "Complex": "70",
+            "Ligand": "Banyu Compound-24",
+            "ClassCol": "A",
+            "KlassCol": "A\t\t\t\t"
+          }, {
+            "name": "5DHH",
+            "State": "Inactive",
+            "CrystalLigand": "nociceptin/orphanin FQ",
+            "OldLigand": "-",
+            "CrystalTransducer": "-",
+            "Transducer": "-",
+            "Simulated": "Yes",
+            "Apo": "155",
+            "Complex": "",
+            "Ligand": "-",
+            "ClassCol": "A",
+            "KlassCol": "A\t\t\t\t"
+          }]
+        } ]
       }]
     }, {
       "name": "Class B1",

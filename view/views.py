@@ -340,8 +340,9 @@ def translate_all_poslists_to_ourclass_numb(motifs_dict,gnum_classes_rel,cons_po
         if motif_info:
             for el in motif_info[0]:
                 bw_pos=el[1][1:]
-                current_bw_pos=gnum_classes_rel[gpcr_class][bw_pos]
-                el[4]=current_bw_pos
+                if bw_pos in gnum_classes_rel[gpcr_class]:
+                    current_bw_pos=gnum_classes_rel[gpcr_class][bw_pos]
+                    el[4]=current_bw_pos
     none_classes=list({"A","B","C","F"} - set(other_classes_ok + list(current_class)))
     for n_class in none_classes:
         show_class[n_class]=False

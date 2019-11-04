@@ -34,7 +34,10 @@
 .input_ex{
     background-color: #fff4e6;
 }
-
+.function {
+    font-style: italic;
+    font-weight: bold
+}
 
 
 </style>
@@ -125,24 +128,97 @@
         <h4 class=myheader>GPCRmd Toolkit</h4>
 
         <h5 class=subsect>Interaction network (Flare plots)</h5>
-        <p class=ptext>If a flare plot is available for the simulation being displayed at the viewer, the option to obtain it will be available at the GPCRmd Toolkit section. Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. 
-Applied to the study of GPCRs, Flare plots are capable to generate networks which group protein residues according to the helix in which they belong and differentiate interactions between residues of the same helix from inter-helix interactions. <!--For the moment, flare plots are available for the representation of <span class=highlight>hydrogen bonds</span> formed between residues of the GPCR through a given simulation trajectory. Hydrogen bonds interactions-->Residue-residue interactions are represented as lines connecting residue pairs. Hover or click a residue to highligh the lines representing the interactions in which it participates.</p>
+        <p class=ptext>Flare Plots are a tool for the study and representation of intra-protein interactions developed at the Stanford University by Dr. Fonseca and Dr Venkatakishnan. This approach makes it possible to obtain a highly visual depiction of complex data, such as the set of interactions formed between protein residues throughout MD simulations, in the form of circular interactive networks named Flare plots. Residue-residue interactions are represented as lines connecting residue pairs. Hover or click a residue to highligh the lines representing the interactions in which it participates.</p>
         <p class=ptext style="margin-bottom:10px">There are several options available </p>
         <ul>
-            <li><span class=highlight>Interacion type:</span> Select the type of interaciton to display on the plot.</li>
+            <li><span class=highlight>Interacion type:</span> Select the type of interaciton to display on the plot.
+                <ul>
+                    <li><span class=highlight>Hbonds</span>
+                        <ul>
+                            <li><span class=highlight>Wernet Nilsson criteria (MDTraj):</span> Any combination of donor atoms (NH or OH) and acceptor atoms (N or O) that holds the condition: <br><span class="function">|AD| &lt; 3.3 Å − 0.00044 * ∠HDA * ∠HDA</span> <br>Where |AD| is the distance in Angstroms between donor and acceptor heavy atoms, and ∠HDA is the angle formed by the hydrogen atom, donor, and acceptor atoms in degrees. Defined by the MDTraj module function <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_wilson</a>.
+                            </li>
+                            <li><span class=highlight>GetContacts criteria:</span> <br>
+
+                                <span class="function">|AD| &lt; 3.5Å<br>
+                                ∠AHD &lt; 70°<br></span>
+                              Where A (acceptor) and D (donor) are any atom except hydrogen, carbon or sulphur.<br> Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                            </li>
+                        </ul>
+                    </li>
+                    <li><span class=highlight>Salt bridges:</span> <br>
+                               <span class="function">|AC| &lt; 4.0Å</span>
+                                <br>
+                                  Where:<br>
+                                  A (anion): ASP/OD1+OD2, GLU/OE1+OE2<br>
+                                  C (cation): LYS/NZ, ARG/NH1+NH2, HIS/ND1+NE2<br>
+                                  Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Pi-cation:</span><br>
+                                <span class="function">
+                                |AC| &lt; 6.0Å<br>
+                                ∠CAn &lt; 60°<br></span>
+                                Where:<br>
+                                  A (aromatic): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                                  C (cation): LYS/NZ, ARG/NH1+NH2, HIS/ND1+NE2<br>
+                                Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Pi-stacking:</span><br>
+                            <span class="function">
+                            |A1A2| &lt; 7.0Å<br>
+                            ∠(n1, n2) &lt; 30°<br>
+                            ∠(n1, A1A2) &lt; 45°<br>
+                            ∠(n2, A1A2) &lt; 45°<br>
+                            </span>
+                            Where:<br>
+                            A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                            Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.                        
+                    </li>
+                    <li><span class=highlight>T-stacking:</span><br>
+                        <span class="function">
+                            |A1A2| &lt; 5.0Å<br>
+                            60° &lt; ∠(n1, n2) &lt; 90°<br>
+                            ∠(n1, A1A2) &lt; 45°<br>
+                            ∠(n2, A1A2) &lt; 45°<br>
+                        </span>
+                        Where: <br>A1, A2 (aromatic rings): center(PHE/CG+CE1+CE2), center(TRP/CD2+CZ2+CZ3), center(TYR/CG+CE1+CE2), center(HIS/CG+CD2+CE1)<br>
+                        Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Van der Waals:</span><br>
+                              <span class="function">
+                                |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5<br>
+                              </span>
+                              Where A and B are any non-hydrogen atoms.<br>
+                              Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+
+                    </li>
+                    <li><span class=highlight>Water bridges:</span>  Two different residues forming an Hydrogen bond with the same water molecule. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Extended water bridges:</span>  Two different residues forming an Hydrogen bond with two different water moleucules which also form an hydrogen bond between them. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    </li>
+                    <li><span class=highlight>Hydrophobic:</span><br>
+                        <span class="function">
+                            |AB| &lt; R<sub>vdw</sub>(A) + R<sub>vdw</sub>(B) + 0.5<br>
+                        </span>
+                        Where:<br>
+                          A, B: ALA+CYS+PHE+GLY+ILE+LEU+MET+PRO+VAL+TRP and element C or S<br>
+                        Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+
+                    </li>
+                </ul>
+            </li>
             <li><span class=highlight>Display:</span>
                 <ul>
                     <li><span class=highlight>Interacting pairs:</span>Show only a subset of interactions (intra- or inter-helix) or all of them.</li>
                     <li><span class=highlight>Simulation:</span> It is possible to summarize the interactions formed through all the trajectory frames. The frequency of each interaction is represented by the thickness of the lines connecting residues.</li>
                 </ul>
             </li>
-            <li><span class=highlight>Show in structure:</span> Click to display structural representations of the residues selected (clicked) at the flare plot plot. Unclick to hyde them. If there are no residues selected at the flare plot, nothing will happen.</li>
+            <li><span class=highlight>Show in structure:</span> Click to display structural representations of the residues selected (clicked) at the flare plot. Unclick to hyde them. If there are no residues selected at the flare plot, nothing will happen.</li>
             <li><span class=highlight>Clear plot:</span> Click to delete all selections made on the plot.</li>
             <li><span class=highlight>Download data (<span style="color: rgb(88, 88, 88);" title="Download data" class="glyphicon glyphicon-download-alt"></span>):</span> Click to download the plot data.</li>
         </ul>
 
         <h5 class=subsect>Hbond frequency</h5>
-        <p class=ptext>This tool identifies Hydrogen Bonds formed in a simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function called <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>"wernet_wilson"</a> , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; more concretely, this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). You can select between a few options:</p>
+        <p class=ptext>This tool identifies Hydrogen Bonds formed in a simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function  <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_nilson</a> , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). It's possible to choose between a few options:</p>
         <ol style="margin-bottom:20px;">
             <li><span class=highlight>Do not include Hbonds between neighbours:</span> If selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</li>
 
