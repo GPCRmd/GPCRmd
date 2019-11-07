@@ -1,12 +1,11 @@
 import sys
 condapath = ['', '/env/lib/python3.4', '/env/lib/python3.4/plat-x86_64-linux-gnu', '/env/lib/python3.4/lib-dynload', '/usr/lib/python3.4', '/usr/lib/python3.4/plat-x86_64-linux-gnu', '/env/lib/python3.4/site-packages']
 sys.path = sys.path + condapath
-import time
-start_time = time.time()
 import re
 import string
 import os
 import shutil
+import csv
 from django.conf import settings
 from view.obtain_gpcr_numbering import generate_gpcr_pdb
 from view.data import change_lig_name
@@ -215,28 +214,6 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
 
     return data_dict
 
-def update_time(upd,upd_now):
-    year=upd_now.year
-    month=upd_now.month
-    day=upd_now.day
-    hour=upd_now.hour
-    minute=upd_now.minute
-    second=upd_now.second
-    microsecond =upd_now.microsecond
-    updtime=upd["ligres_int"]
-    updtime["year"]=year
-    updtime["month"]=month
-    updtime["day"]=day
-    updtime["hour"]=hour
-    updtime["minute"]=minute
-    updtime["second"]=second
-    updtime["microsecond"]=microsecond
-    
-def obtain_datetime(upd):
-    u=upd["ligres_int"]
-    last_upd_dt=datetime.datetime(u["year"], u["month"], u["day"], u["hour"], u["minute"], u["second"], u["microsecond"])
-    return last_upd_dt
-
 class Command(BaseCommand):
     help=""
     def add_arguments(self, parser):
@@ -290,39 +267,42 @@ class Command(BaseCommand):
         dyn_dict = obtain_dyn_files_from_id(dynids,options['alldyn'])
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
-        commands_path = "/protwis/sites/protwis/contact_maps/scripts/dyn_freq_commands.sh"
+        commands_path = "/protwis/sites/files/Precomputed/get_contacts_files/dyn_freq_commands.sh"
 
         #Prepare compl_data json file and the "last time modified" upd file
         cra_path="/protwis/sites/files/Precomputed/get_contacts_files"
         dyncounter = 1
         if not os.path.isdir(cra_path):
             os.makedirs(cra_path)
-        upd_now=datetime.datetime.now()
         compl_file_path=os.path.join(cra_path,"compl_info.json")
-        upd_file_path=os.path.join(cra_path,"last_update.json")
-        if options['overwrite']:
-            compl_data={}
-            upd={"ligres_int":{}}
-        else: 
-            compl_file_pathobj = Path(compl_file_path)
-            try:
-                compl_abs_path = compl_file_pathobj.resolve()
-                compl_data = json_dict(compl_file_path)
-            except FileNotFoundError:
-                compl_data={}       
-            upd_file_pathobj = Path(upd_file_path)
-            try:
-                upd_abs_path = upd_file_pathobj.resolve()
-                upd=json_dict(upd_file_path)
-                last_upd_dt=obtain_datetime(upd)
-            except FileNotFoundError:
-                upd={"ligres_int":{}}
+        compl_file_pathobj = Path(compl_file_path)
+        try:
+            compl_abs_path = compl_file_pathobj.resolve()
+            compl_data = json_dict(compl_file_path)
+        except FileNotFoundError:
+            compl_data={}       
+ 
+        #Open CSV file with already-done dynids, and loaded on a set
+        dyn_list_file = os.path.join(cra_path, "dyn_list.csv")
+        if os.path.isfile(dyn_list_file):
+            with open(dyn_list_file, "r") as file:
+                dyn_set = set(file.readline().replace('\n','').split(","))
+        else:
+            dyn_set = set()
 
         if dyn_dict:
-
             with open(commands_path,"w") as commands_file:
                 for dynid in dyn_dict:
+                    identifier = "dyn"+ str(dynid) 
+
                     print("\n###%s###" % (dynid))
+                    #Unless user want to overwrite, omit already done dynids
+                    if (identifier in dyn_set) and not (options['overwrite']):
+                        print("%s has already been done. Skippping..." % dynid)
+                        continue
+                    else:
+                        dyn_set.add(identifier)
+
                     if not dyn_dict[dynid]['trajectory']:
                         print("%s has no trajectory file. Skippping..." % dynid)
                         continue
@@ -341,7 +321,7 @@ class Command(BaseCommand):
                     
                     #TO DO: idenfity structure files with an "struc" suffix, not only by extension
                     #TO DO: add id_files number to the filename
-                    mypdbpath =  os.path.join(directory, "dyn" + str(dynid) + os.path.splitext(structure_file)[1])
+                    mypdbpath =  os.path.join(directory, identifier + os.path.splitext(structure_file)[1])
                     if not os.path.lexists(mypdbpath):
                         os.symlink(pdbpath, mypdbpath)
                     self.stdout.write("Created symlink "+pdbpath+" -> "+mypdbpath)
@@ -351,7 +331,7 @@ class Command(BaseCommand):
                         #TO DO: add id_files number to the filename
                         traj_name = traj_dict['name']
                         trajpath = os.path.join(basepath,traj_dict['path'])
-                        mytrajpath = os.path.join(directory,"dyn" + str(dynid) + "_" + str(i) + os.path.splitext(trajpath)[1])
+                        mytrajpath = os.path.join(directory,identifier + "_" + str(i) + os.path.splitext(trajpath)[1])
                         if not os.path.lexists(mytrajpath):
                             os.symlink(trajpath, mytrajpath)
                         traj_dict['local_path'] = mytrajpath
@@ -371,7 +351,7 @@ class Command(BaseCommand):
                         """
 
                         # Open out file
-                        ligfile_name = os.path.join(directory, "dyn" + str(dynid) + "_ligand.txt")
+                        ligfile_name = os.path.join(directory, identifier + "_ligand.txt")
                         with open(ligfile_name, "w") as ligfile:
                             # Print each ligand in a ligand file, after finding out its chain and residue id in the PDB
                             for ligand_info in lig_li:
@@ -420,10 +400,12 @@ class Command(BaseCommand):
                     try:
                         dyn = DyndbDynamics.objects.filter(id=dynid)[0]
                         self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dyn_dict.keys()))))
+                        dyncounter += 1
                         compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
                     except FileNotFoundError:
                         self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
-                                   
+                        continue
+
                     ###########################################
                     ## Compute frequencies and dynamic contacts
                     ###########################################
@@ -451,9 +433,10 @@ class Command(BaseCommand):
                         )  
 
             # Save compl_data.json
-            update_time(upd,upd_now)
-            with open(upd_file_path, 'w') as outfile:
-                json.dump(upd, outfile)
             with open(compl_file_path, 'w') as outfile:
                 json.dump(compl_data, outfile)
                 
+            # Save dynnames in dynfile
+            with open(dyn_list_file, 'w') as csvfile:
+                csvfile.write(",".join(dyn_set))
+

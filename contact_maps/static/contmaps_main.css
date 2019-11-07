@@ -201,9 +201,7 @@ hr {
 }
 
 #heatmap_pager {
-  float: right; 
-  margin-right: 20px;
-  margin-left: 700px;
+  margin-left: 47%;
 }
 
 #loading_heatmap {
@@ -221,6 +219,7 @@ hr {
 
 .FP-button {
   margin-top:15px;
+  margin-bottom:15px;
   font-size:12px;
   width:130px;
   padding-right:2px;
@@ -250,12 +249,12 @@ hr {
   overflow-y: scroll;
 }
 
-.flare_container {
-  background-color: white;
-}
-
 .loading_flare {
   margin: 20px;
+}
+
+.click_title {
+  cursor: pointer;
 }
 
 .title_div {

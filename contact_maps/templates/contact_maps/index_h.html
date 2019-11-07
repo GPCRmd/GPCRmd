@@ -171,23 +171,25 @@
   <div class="col-xs-12" id="not_retracting_parts">
 
     <!--Here be flareplots -->
-    <div class="panel panel-primary" id="flare_col"  data-fpdir="{{fpdir}}">
-      <div class="panel-body">
-        <div class="title_div" data-bind_domain="" data-presel_pos="">
-          <h4 class="title">Top5 representative interactions in cluster</h4>
+
+    <div class="panel panel-primary" id="flare_title">
+      <div class="panel-body click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false" onclick="rotate_arrow('flare_arrow')">
+        <div class="title_div">
+          <h4 class="title">Top5 representative interactions in cluster
+            <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down "></span>
+          </h4>
         </div>
+      </div>
+    </div>
+
+    <div class="panel panel-primary" id="flare_col" data-fpdir="{{fpdir}}">
+      <div class="panel-body">
 
         <div id="fpdiv0" class="col-xs-6 fpdiv">
           <center>
-            <span>
-              <center id="loading_flare0" class="loading_flare">
-                <img src="/static/view/images/loading-gear.gif">
-              </center>
-            </span>
-            <div id="flare-container0" class="flare-container"></div>
             
             <!--Flareplot toolbar-->
-            <span id="allFPoptions" class="showIfTrajFP">
+            <div id="allFPoptions" class="showIfTrajFP">
               <button id="FPdisplay0" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
               Show in structure
               </button>
@@ -222,52 +224,28 @@
               <button id="FPclearSel0" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
                 Clear plot
               </button>
-            </span>
-
-          </center>
-        </div>
-        <!--Auld flareplots Legend, shall not be removed yet 
-        <div id="fpdivlegend" class="my-legend col-xs-2">
-            <div class='legend-title'>Colors for each GPCR structure</div>
-            <div class='legend-scale'>
-              <ul class='legend-labels'>
-                <li><span class="Legend-element" id="trackElement-Ligand"></span>Ligand</li>
-                <li><span class="Legend-element" id="trackElement-1x" ></span>TM1</li>
-                <li><span class="Legend-element" id="trackElement-12x" ></span>IC1</li>
-                <li><span class="Legend-element" id="trackElement-2x" ></span>TM2</li>
-                <li><span class="Legend-element" id="trackElement-23x" ></span>EC1</li>
-                <li><span class="Legend-element" id="trackElement-3x" ></span>TM3</li>
-                <li><span class="Legend-element" id="trackElement-34x" ></span>IC2</li>
-                <li><span class="Legend-element" id="trackElement-4x" ></span>TM4</li>
-                <li><span class="Legend-element" id="trackElement-45x" ></span>EC2</li>
-                <li><span class="Legend-element" id="trackElement-5x" ></span>TM5</li>
-                <li><span class="Legend-element" id="trackElement-56x" ></span>IC3</li>
-                <li><span class="Legend-element" id="trackElement-6x" ></span>TM6</li>
-                <li><span class="Legend-element" id="trackElement-67x" ></span>EC3</li>
-                <li><span class="Legend-element" id="trackElement-7x" ></span>TM7</li>
-                <li><span class="Legend-element" id="trackElement-8x" ></span>H8</li>
-              </ul>
             </div>
-        </div>
-        -->
-        <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
-          <center>
 
             <span>
-              <center id="loading_flare1" class="loading_flare">
+              <center id="loading_flare0" class="loading_flare">
                 <img src="/static/view/images/loading-gear.gif">
               </center>
             </span>
+            <div id="flare-container0" class="flare-container"></div>
 
-            <div id="flare-container1"></div>
+          </center>
+        </div>
+     
+        <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
+          <center>
             
             <!--Flareplot toolbar-->
-            <span id="allFPoptions" class="showIfTrajFP">
+            <div id="allFPoptions" class="showIfTrajFP">
               <button id="FPdisplay1" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
               Show in structure
               </button>
 
-              <div class="dropup clusters_dropup-div">
+              <div class="clusters_dropup-div">
                 <button id="clusterbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown"> 
                   Cluster 2 <span class="caret"></span>
                 </button>
@@ -281,7 +259,7 @@
                   {% endfor %}
                 </ul>
               </div>
-              <div class="dropup numbering_dropup-div">
+              <div class="numbering_dropup-div">
                 <button id="numberbutton1" class="btn btn-default dropdown-toggle changefocus FP-button" type="button" data-toggle="dropdown">
                   Class A numbering <span class="caret"></span>
                 </button>
@@ -294,22 +272,37 @@
               </div>
 
               <button id="FPclearSel1" class="btn btn-danger FP-button" type="button" title="Unselect all interactions from the plot.">
-                Clear plot <span class="caret"></span>
+                Clear plot
               </button>
+            </div>
+
+            <span>
+              <center id="loading_flare1" class="loading_flare">
+                <img src="/static/view/images/loading-gear.gif">
+              </center>
             </span>
+
+            <div id="flare-container1" class="flare-container"></div>
 
           </center>
         </div>
 
       </div>
     </div>
-  
+    
     <!--Here be NGL viewers-->
-    <div class="panel panel-primary" id="NGL_col"  data-fpdir="{{fpdir}}">
-      <div class="panel-body">
-        <div class="title_div" data-bind_domain="" data-presel_pos="">
-          <h4 class="title">Cluster Simulation Viewers</h4>
+    <div class="panel panel-primary" id="NGL_title"  data-fpdir="{{fpdir}}">
+      <div class="panel-body click_title" data-toggle="collapse" data-target="#NGL_col" aria-expanded="false" onclick="rotate_arrow('ngl_arrow')">
+        <div class="title_div">
+          <h4 class="title">Cluster Simulation Viewers
+          <span id="ngl_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
+          </h4>
         </div>
+      </div>
+    </div>
+
+    <div class="panel panel-primary collapse" id="NGL_col"  data-fpdir="{{fpdir}}">
+      <div class="panel-body">
         
         <div id="ngldiv0" class="col-xs-6 ngldiv">
 
