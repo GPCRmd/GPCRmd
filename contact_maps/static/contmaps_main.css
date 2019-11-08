@@ -98,10 +98,6 @@ a {
     margin-top: -1px;
 }
 
-.dropdown {
-  margin: 0.5%;
-}
-
 .HB_row {
   margin: 0px;
   width: 100%;
@@ -196,7 +192,7 @@ hr {
     display: inline-block !important;
 }
 
-.dropdown-menu {  
+.dropdown-itype {  
   width: 204px !important;
 }
 
