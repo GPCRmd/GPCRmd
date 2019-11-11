@@ -239,3 +239,17 @@ function heatmap_change(heatmap) {
   }
   return false
 }
+
+//---------Show/hide flareplots and NGL viewers
+function rotate_arrow(arrow_id) {
+  var arrow = $("#"+arrow_id);
+  if (arrow.hasClass('glyphicon-chevron-up')) {
+    arrow.removeClass('glyphicon-chevron-up');
+    arrow.addClass('glyphicon-chevron-down');
+  }
+  else {
+    arrow.removeClass('glyphicon-chevron-down');
+    arrow.addClass('glyphicon-chevron-up');
+  }
+}
+

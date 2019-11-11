@@ -6,7 +6,7 @@
         Interaction Type 
         <span class="caret"></span>
       </button>
-      <ul class="dropdown-menu">
+      <ul class="dropdown-menu dropdown-itype">
       {% for group, types_tuple in itypes_order %}
         <li>
           <label class="macrotype">
@@ -23,7 +23,7 @@
               <input type="radio" name="itypes" class="option" value="hb" />
                 hydrogen bond
             </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
-            <ul class="dropdown-menu" id="HB">
+            <ul class="dropdown-menu dropdown-itype" id="HB">
               {% for code,itype in hb_itypes %}
               <li>
                 <label class="mycheckbox">
