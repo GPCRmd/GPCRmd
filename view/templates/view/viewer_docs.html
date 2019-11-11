@@ -133,7 +133,7 @@
         <ul>
             <li><span class=highlight>Interacion type:</span> Select the type of interaciton to display on the plot.
                 <ul>
-                    <li><span class=highlight>Hbonds</span>
+                    <li><span class=highlight>Hydrogen bonds</span>
                         <ul>
                             <li><span class=highlight>Wernet Nilsson criteria (MDTraj):</span> Any combination of donor atoms (NH or OH) and acceptor atoms (N or O) that holds the condition: <br><span class="function">|AD| &lt; 3.3 Å − 0.00044 * ∠HDA * ∠HDA</span> <br>Where |AD| is the distance in Angstroms between donor and acceptor heavy atoms, and ∠HDA is the angle formed by the hydrogen atom, donor, and acceptor atoms in degrees. Defined by the MDTraj module function <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_wilson</a>.
                             </li>
@@ -191,7 +191,7 @@
                               Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
 
                     </li>
-                    <li><span class=highlight>Water bridges:</span>  Two different residues forming an Hydrogen bond with the same water molecule. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
+                    <li><span class=highlight>Water volume distribution :</span>  Two different residues forming an Hydrogen bond with the same water molecule. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
                     </li>
                     <li><span class=highlight>Extended water bridges:</span>  Two different residues forming an Hydrogen bond with two different water moleucules which also form an hydrogen bond between them. Based on <a href="https://getcontacts.github.io/interactions.html">GetContacts</a>.
                     </li>
@@ -217,14 +217,16 @@
             <li><span class=highlight>Download data (<span style="color: rgb(88, 88, 88);" title="Download data" class="glyphicon glyphicon-download-alt"></span>):</span> Click to download the plot data.</li>
         </ul>
 
-        <h5 class=subsect>Hbond frequency</h5>
+        <h5 class=subsect>Interaction frequencies</h5>
+
+        <h6 class=subsect>Hydrogen bonds</h6>
         <p class=ptext>This tool identifies Hydrogen Bonds formed in a simulation, splitting the results between protein-protein hydrogen bonds and protein-not protein bonds. We use the MDTraj module function  <a href=http://mdtraj.org/1.8.0/api/generated/mdtraj.wernet_nilsson.html>wernet_nilson</a> , which basically stablishes a threshold distance of 3.3 Angstroms between the donor and acceptor atoms; this threshold becomes progressively stricter as the angle formed by H-D-A increases (a perfect straight bond is 0 degrees, as the donor atom is central). It's possible to choose between a few options:</p>
         <ol style="margin-bottom:20px;">
-            <li><span class=highlight>Do not include Hbonds between neighbours:</span> If selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</li>
+            <li><span class=highlight>Do not include hydrogen bonds between neighbours:</span> If selected, excludes hydrogen bonds among residues which are less than 5 residues apart. These are usually the hydrogen bonds stabilizing alpha helices.</li>
 
-            <li><span class=highlight>Include backbone Hydrogen Bonds:</span> If selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</li>
+            <li><span class=highlight>Include backbone hydrogen bonds:</span> If selected, includes hydrogen bonds formed between backbone (BB) atoms or side chains (SC) atoms, in any combination (SC-SC,BB-BB,SC-BB).</li>
 
-            <li><span class=highlight>Only Side Chain Hydrogen Bonds:</span> If selected, only includes hydrogen bonds formed between side chain atoms.</li>
+            <li><span class=highlight>Only side chain hydrogen bonds:</span> If selected, only includes hydrogen bonds formed between side chain atoms.</li>
         </ol>
 
         <p class=ptext>
@@ -234,18 +236,18 @@
         Results have a "Show Hbond" button next to them which displays the bond in the viewer. At the end of the results table, you can find a "Show All" button, which displays all the bonds in that table at once.<br>
         </p>
 
-        <h5 class=subsect>Lig-prot interaction frequency</h5>
+        <h6 class=subsect>Ligand receptor contacts </h6>
         <p class=ptext>This analysis tool calculates the frequency of interaction between the protein residues and a given ligand across a trajectory. When the distance between any of their atoms and the ligand is smaller than the threshold, it is considered to be an interaction. It is possible to chose which residue atoms will be considered (heavy atoms only or all atoms).
         The result is presented as table and a plot, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. The residues that are found to interact can be displayed at the viewer screen (shown in purple), which can be deactivated using the "Display interacting residues" checkbox. It is also possible to download the interaction data obtained (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
 
 
-        <h5 class=subsect>Salt bridge frequency</h5>
+        <h6 class=subsect>Salt bridges</h6>
         <p class=ptext> This tool allows you to identify the salt bridges formed through a simulation. Salt bridges are defined as any combination between these two sets: {Arg-NH1, Arg-NH2, Lys-NZ, His-NE2, His-ND1} and {Glu-OE1, Glu-OE2, Asp-OD1, Asp-OD2} in which the participating atoms are closer than 4 Angstroms. Histidine atoms are only considered if the residue is protonated. As with hydrogen bond analysis, you can select a percentage threshold, and the results include a "Show Salt Bridge" button and a "Show All" button. Furthermore, you can select an interval of frames, instead of the whole trajectory.
         </p>
 
 
 
-        <h5 class=subsect>Distance progression</h5>
+        <h5 class=subsect>Distance</h5>
         <p class=ptext  style="margin-bottom:10px">This tool is used to calculate the distance between atom pairs across the different frames of a trajectory, and therefore across time. 
         To calculate a distance, you need to indicate the pair or pairs of atoms you are interested in. This can be done in different ways:</p>
         <ul>
@@ -258,12 +260,15 @@
         Finally, just click at <span class=highlight>Compute</span>. Only atom pairs which are marked with a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will be considered, since the absence of a checkmark indicates an error in the input (only numbers are allowed).
         The result will appear as a plot of distance by time or by frame, which can be downloaded as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image">)</span>. It is also possible to download the data obtained as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>). Moreover, the distances calculated can be displayed at the viewer screen, in the colors indicated at the plot legend. Such distance representations can be deactivated by deselecting the "Display distance" checkbox.</p>
 
-        <h5 class=subsect>RMSD progression</h5>
+        <h5 class=subsect>RMSD</h5>
         <p class=ptext>This tool computes the RMSD of all the conformations in a target trajectory to a reference conformation. It is necessary to indicate the trajectory to be used and the frames to be considered. Also, a reference frame of a given trajectory. It is possible to chose which atoms are going to be considered in the calculation: only alpha carbons, non-hydrogen protein atoms, protein C-alpha, etc.
         As in the case of distance analysis, the result will be shown in a plot (RMSD by time or by frame). It is possible to download the plot as an image (<span class="glyphicon glyphicon-stats" title="Save plot as image"></span>) or all the obtained data as a csv file (<span class="glyphicon glyphicon-file save_data_dist_plot" title="Save data"></span>).</p>
 
+        <h5 class=subsect>Water volume distribution </h5>
+        <p class=ptext>
+            Displays an averaged water density map of the MD trajectory under study. Maps are precomputed <a href="https://www.ks.uiuc.edu/Research/vmd/vmd-1.9.1/ug/node153.html">VMD VolMap Tool</a>. They are generated only for oxygen atoms of a water molecule in a cutoff distance of 10 Å to the protein using a resolution of 1 Å. Atoms are treated as spheres using the atomic radii. 
 
-
+        </p>
 
 <!--        <h5 class=subsect>SASA analysis</h5>
         <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the <a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>shrake_rupley</a> function from MDTraj module. Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms belonging to each frame. Then, we plot the obtained value per frame, so you can see how the SASA of that set of atoms fluctuates through time. We have defined a few options to define the atoms that will be considered:</p>

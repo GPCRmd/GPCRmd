@@ -200,7 +200,7 @@
                                 var sele = result[0];
                                 var sele2 = result[1];
                                 WthRepName="sel"+dist_comp[2];
-                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele.toSeleString());
+                                stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele2.toSeleString());
                                 //stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
                                 //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
                             }
@@ -1158,7 +1158,7 @@
                         var sele = result[0];
                         var sele2 = result[1];
                         WthRepName="sel"+ligSele;
-                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele.toSeleString(), name:WthRepName } );
+                        o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString(), name:WthRepName } );
                         //o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
                         //setSelDict=addToSel(o,show+" and "+restriction + sele2.toSeleString(),setSelDict);
                         setSelTemp.push(show);

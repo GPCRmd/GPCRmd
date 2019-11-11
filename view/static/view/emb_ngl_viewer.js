@@ -3265,7 +3265,7 @@ $(document).ready(function(){
             showBigError(msn, "#bonds_alert");
         } else {
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
-            $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing Hbonds...</p>");   
+            $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing hydrogen bonds...</p>");   
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id,backbone,neigh] },
@@ -3280,7 +3280,7 @@ $(document).ready(function(){
                         var regex = /\d+/g;
                         var table='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protprot_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
-                                            Protein-protein Hbonds\
+                                            Protein-protein hydrogen bonds\
                                             <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
@@ -3357,7 +3357,7 @@ $(document).ready(function(){
 
                         var tablenp='<div class="hbond_openchose_click" data-toggle="collapse" data-target="#protlip_tablecont" style="font-size:14px; cursor:pointer;border-bottom:1px solid lightgray;background-color:f2f2f2;height:30px;border-radius:5px 0;">\
                                         <div style="padding:5px 10px">\
-                                            Protein-lipid Hbonds and other\
+                                            Protein-lipid hydrogen bonds and other\
                                             <span style="float:right;margin-right:5px;" class="glyphicon arrow glyphicon-chevron-down hbond_openchose_arrow"></span>\
                                         </div>\
                                      </div>\
@@ -4978,7 +4978,7 @@ $(document).ready(function(){
             });
             if ($(this).hasClass("submenu_el")){
                 $(this).closest(".dropdown-submenu").children(".submenu_btn").css("background-color","#f2f2f2");
-                $("#fp_int_type_info").html('<p class="fp_int_type_info_p">Hbonds:</p><p class="fp_int_type_info_p">'+$(this).text()+'</p>');
+                $("#fp_int_type_info").html('<p class="fp_int_type_info_p">Hydrogen bonds:</p><p class="fp_int_type_info_p">'+$(this).text()+'</p>');
             } else {
                 $(".submenu_btn").css("background-color","#FFFFFF");
                 $("#fp_int_type_info").html('<p class="fp_int_type_info_p">'+$(this).text()+'</p>');
