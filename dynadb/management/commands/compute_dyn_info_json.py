@@ -177,6 +177,7 @@ class Command(BaseCommand):
             model=dyn.id_model
             model_id=model.id
             pdb_id=model.pdbid
+            user=dyn.submission_id.user_id.username
 
             #IF no protein assigned
             if not (model.id_protein or model.id_complex_molecule):
@@ -229,6 +230,7 @@ class Command(BaseCommand):
                     "traj_fnames":traj_name_list,
                     "delta":delta,
                     "gpcr_pdb":gpcr_pdb,
+                    "user": user,
                     }
             dyn_dict = data_dict[identifier]
 
