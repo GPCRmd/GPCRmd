@@ -170,7 +170,7 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "lig_lname":comp_name,
             "lig_sname":res_li[0],
             "prot_lname":prot.name,
-            "shortname":shortname,
+            "prot_sname":shortname,
             "up_name":uniprot_name,
             "pdb_id":pdb_id,
             "struc_f":structure_file,
@@ -314,7 +314,7 @@ class Command(BaseCommand):
         dynobjs=dynobjs.annotate(entry2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__entry_name'))
 
         #Open CSV file with already-done dynids, and loaded on a set
-        dyn_list_file = os.path.join(cra_path, "dyn_list.csv")
+        dyn_list_file = os.path.join(cra_path, "processed_dyns.csv")
         if os.path.isfile(dyn_list_file):
             with open(dyn_list_file, "r") as file:
                 dyn_set = set(file.readline().replace('\n','').split(","))
@@ -425,4 +425,3 @@ class Command(BaseCommand):
         # Save dynnames in dynfile
         with open(dyn_list_file, 'w') as csvfile:
             csvfile.write(",".join(dyn_set))
-

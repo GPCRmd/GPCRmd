@@ -165,14 +165,20 @@ class Command(BaseCommand):
                 comp_set_all=[change_lig_name[dyn_id]["resname"]] 
             return (comp_id,comp_name,list(comp_set_all))
                 
-        def retrieve_info(self,dyn,change_lig_name):
-            """Retrieves all the necessary info of the dyn obj for the analysis and computes it."""
+       def retrieve_info(self,dyn,data_dict,change_lig_name):
+            """
+            Retrieves all the necessary info of the dyn obj for the analysis and computes it.
+            """
+
+            #Getting information from model
             dyn_id=dyn.id
             identifier="dyn"+str(dyn_id)
             allfiles_path="/protwis/sites/files/"
             model=dyn.id_model
             model_id=model.id
             pdb_id=model.pdbid
+
+            #IF no protein assigned
             if not (model.id_protein or model.id_complex_molecule):
                 self.stdout.write(self.style.NOTICE("Model has no protein or complex assigned. Skipping."))
                 return
@@ -190,6 +196,14 @@ class Command(BaseCommand):
                 res_li = ['']
                 copm_name = ''
 
+            #Assign short name
+            if dyn.entry:
+                shortname = dyn.entry
+            elif dyn.entry2:
+                shortname = dyn.entry2
+            else:
+                shortname = ""
+
             if len(traj_list) == 0:
                 self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
             else:
@@ -198,7 +212,7 @@ class Command(BaseCommand):
                 (gpcr_pdb,classes_dict,current_class)=generate_gpcr_pdb(dyn_id, pdb_name, True)
                 pdb_to_gpcr = {v: k for k, v in gpcr_pdb.items()}
                 delta=DyndbDynamics.objects.get(id=dyn_id).delta
-                compl_data[identifier]={
+                data_dict[identifier]={
                     "dyn_id": dyn_id,
                     "class" : current_class,
                     "prot_id": prot_id, 
@@ -206,6 +220,7 @@ class Command(BaseCommand):
                     "lig_lname":comp_name,
                     "lig_sname":res_li[0],
                     "prot_lname":prot.name,
+                    "prot_sname":shortname,
                     "up_name":uniprot_name,
                     "pdb_id":pdb_id,
                     "struc_f":structure_file,
@@ -213,12 +228,11 @@ class Command(BaseCommand):
                     "traj_f":traj_files,
                     "traj_fnames":traj_name_list,
                     "delta":delta,
-                    "gpcr_pdb":gpcr_pdb
+                    "gpcr_pdb":gpcr_pdb,
                     }
+            dyn_dict = data_dict[identifier]
 
-                # If set, create the GPCR position dictionary across classes using the returned positions
-                if (options['do_classdict']) and (classes_dict):
-                    create_class_position_dict(classes_dict, current_class)
+            return(dyn_dict,data_dict)
 
         def update_time(upd,upd_now):
             year=upd_now.year
@@ -268,6 +282,10 @@ class Command(BaseCommand):
             except FileNotFoundError:
                 upd={"ligres_int":{}}
                 dyn_li=DyndbDynamics.objects.filter()
+
+        #Annotate shortname alternatives
+        dynobjs=dynobjs.annotate(entry=F('id_model__id_protein__receptor_id_protein__entry_name'))
+        dynobjs=dynobjs.annotate(entry2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__entry_name'))
 
         i=1
         dyn_li = sorted(dyn_li, key=operator.attrgetter('id'))
