@@ -54,14 +54,18 @@ def gpcrmd_home(request):
 #    model_path = dynfiles.get(id_files__id_file_types__is_model=True).file_path;
 #    context["model_path"]= model_path[model_path.index("Dynamics"):] 
 #########
-    dynall=DyndbDynamics.objects.filter(is_published=True)
+    dynall=DyndbDynamics.objects.all().exclude(id=5) #I think dyn 5 is wrong
 
     ################ Precompute & import
+    #dynclass=dynall.annotate(is_published=F('is_published'))
+    
+
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
+    dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2")
+    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj")
 
 
     dyn_dict = {}
@@ -76,13 +80,18 @@ def gpcrmd_home(request):
         if fam_slug:
             fam_code=fam_slug.split("_")[0]
             fam=fam_d[fam_code]            
+        addtraj=0
+        if dyn["is_traj"]:
+            addtraj=1
         if dyn_id not in dyn_dict:
             dyn_dict[dyn_id]={}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
             dyn_dict[dyn_id]["fam"]=fam
+            dyn_dict[dyn_id]["trajs"]=addtraj
         else:
             if not dyn_dict[dyn_id]["fam"]:
                 dyn_dict[dyn_id]["fam"]=fam
+            dyn_dict[dyn_id]["trajs"]+=addtraj
 
 
     # Submissions by class    
@@ -95,7 +104,10 @@ def gpcrmd_home(request):
 
 
     # Submisisons by date
-    dynall_subm_data=[d["subm_date"] for d in dyn_dict.values()]
+    dynall_subm_data=[]
+    for d in dyn_dict.values():
+        dynall_subm_data.append(d["subm_date"])
+    #dynall_subm_data=[d["subm_date"] for d in dyn_dict.values()]
     s = pd.to_datetime(pd.Series(dynall_subm_data)) 
     s.index = s.dt.to_period('m')
     s = s.groupby(level=0).size()
