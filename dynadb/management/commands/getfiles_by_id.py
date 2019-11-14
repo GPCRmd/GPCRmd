@@ -23,50 +23,6 @@ from protein.models import Protein
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from dynadb.pipe4_6_0 import *
 
-def obtain_dyn_files_from_id(dyn_ids,alldyn=False):
-    """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
-    
-    traj_counter = {} 
-    dynfiles = DyndbFilesDynamics.objects.select_related("id_files").filter(id_dynamics__is_published=True)
-    dynfiles = dynfiles.annotate(file_name=F("id_files__filename"),file_path=F("id_files__filepath"))
-    dynfiles = dynfiles.values("id_dynamics","id_files","file_name","file_path")
-    if not alldyn:
-        dynfiles = dynfiles.filter(id_dynamics__in = dyn_ids)
-    dynfiles_struct = dynfiles.filter(type=[ft[0] for ft in DyndbFilesDynamics.file_types if ft[1] == 'Input coordinates'][0])
-    dynfiles_traj = dynfiles.filter(type=[ft[0] for ft in DyndbFilesDynamics.file_types if ft[1] == 'Trajectory'][0])
-
-    dyn_dict = {}    
-        
-    for dynobj in dynfiles_struct:
-        if not dynobj["id_files"]:
-            continue
-        c_dyn_id = dynobj['id_dynamics']
-        dyn_dict[c_dyn_id] = {}
-        dyn_dict[c_dyn_id]['structure'] = {'name':dynobj['file_name'],'path':dynobj['file_path'],'id_files':dynobj["id_files"]}
-        dyn_dict[c_dyn_id]['trajectory'] = []
-    
-    for dynobj in dynfiles_traj:
-        if not dynobj["id_files"]:
-            continue
-        c_dyn_id = dynobj['id_dynamics']
-        if c_dyn_id not in dyn_dict:
-            continue
-
-        if c_dyn_id in traj_counter:
-            traj_counter[c_dyn_id] += 1  
-        else:
-            traj_counter[c_dyn_id] = 0 
-
-        dyn_dict[c_dyn_id]['trajectory'].append({
-            'name':dynobj['file_name'],
-            'path':dynobj['file_path'],
-            'id_files':dynobj["id_files"],
-            'number':traj_counter[c_dyn_id]
-            })
-            
-    return dyn_dict
-
-
 def parse_pdb(residue_id, pdbfile, residue_num = None):
     """ 
     Finds chain number/s and residue number/s for a given residue_id, and returns it as a set of tuples chain-residue
@@ -120,7 +76,6 @@ def prot_from_model(model):
                 prot=p
     return (prot,total_num_prot)
 
-
 def obtain_dyn_files(dyn_id):
     """Given a dyn id, provides the stricture file name and a list with the trajectory filenames and ids."""
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
@@ -140,7 +95,6 @@ def obtain_dyn_files(dyn_id):
         elif myfile.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
             traj_list.append([myfile,fileobj.id_files.id])
             traj_name_list.append(myfile_name)
-    
     return (structure_file,structure_file_name,traj_list,traj_name_list)
 
 def get_orthostericlig_resname(dyn_id,change_lig_name):
@@ -162,13 +116,20 @@ def get_orthostericlig_resname(dyn_id,change_lig_name):
     return (comp_id,comp_name,list(comp_set_all))
         
 def retrieve_info(self,dyn,data_dict,change_lig_name):
-    """Retrieves all the necessary info of the dyn obj for the analysis and computes it."""
+    """
+    Retrieves all the necessary info of the dyn obj for the analysis and computes it.
+    """
+
+    #Getting information from model
     dyn_id=dyn.id
     identifier="dyn"+str(dyn_id)
     allfiles_path="/protwis/sites/files/"
     model=dyn.id_model
     model_id=model.id
     pdb_id=model.pdbid
+    user=dyn.submission_id.user_id.username
+
+    #IF no protein assigned
     if not (model.id_protein or model.id_complex_molecule):
         self.stdout.write(self.style.NOTICE("Model has no protein or complex assigned. Skipping."))
         return
@@ -186,6 +147,14 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
         res_li = ['']
         copm_name = ''
 
+    #Assign short name
+    if dyn.entry:
+        shortname = dyn.entry
+    elif dyn.entry2:
+        shortname = dyn.entry2
+    else:
+        shortname = ""
+
     if len(traj_list) == 0:
         self.stdout.write(self.style.NOTICE("No trajectories found. Skipping."))
     else:
@@ -202,6 +171,7 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "lig_lname":comp_name,
             "lig_sname":res_li[0],
             "prot_lname":prot.name,
+            "prot_sname":shortname,
             "up_name":uniprot_name,
             "pdb_id":pdb_id,
             "struc_f":structure_file,
@@ -210,9 +180,63 @@ def retrieve_info(self,dyn,data_dict,change_lig_name):
             "traj_fnames":traj_name_list,
             "delta":delta,
             "gpcr_pdb":gpcr_pdb,
+            "user":user,
             }
+    dyn_dict = data_dict[identifier]
 
-    return data_dict
+    return(dyn_dict,data_dict)
+
+def get_ligand_file(dyn_id, identifier, directory, mypdbpath):
+    """
+    Write the required ligand file, a one-line tabular file with four columns:
+    ResNUM   ChainID     ResID  LigName
+    """
+    # Obtain ligand by dynID
+    (comp_li,lig_li,lig_li_s) = obtain_compounds(dyn_id)
+
+    """    
+    comp_li     list of [component_name,component_residue_name,component_type_str].
+    lig_li      list of ligand [component_name,component_residue_name].
+    lig_li_s    list of ligands residue names.
+    """
+
+    # Open out file
+    ligfile_name = os.path.join(directory, identifier + "_ligand.txt")
+    with open(ligfile_name, "w") as ligfile:
+        # Print each ligand in a ligand file, after finding out its chain and residue id in the PDB
+        for ligand_info in lig_li:
+
+            ligand_name = ligand_info[0].replace(" ","_")
+            ligres = ligand_info[1]
+
+            # If we have the dyn7 exception of ligand being one cholesterol among others
+            # isma: this makes no sense
+            # david: it is a very puntual exception for a very puntual case
+            if "and" in ligres: # If its like 'CHL1 and 59'
+                ligpos_list = ligres.split(" and ")
+                ligres = ligpos_list[0]
+                lignum_prov = ligpos_list[1]
+                lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum_prov))
+                ligchain = lig_chains_resnums[0][0]
+                lignum = lig_chains_resnums[0][1]
+
+            else:
+                # TO DO: there is the possibility that there is more than one molecule
+                # of ligand in the same system (but not in our simulations)
+                if len(lig_li) > 1:
+                    lignum = options['ligresid']
+                    ligres = options['ligresname'] 
+                    lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum))
+                    ligchain = lig_chains_resnums[0][0]
+
+                else:
+                    lig_chains_resnums = list(parse_pdb(ligres, mypdbpath))
+                    ligchain = lig_chains_resnums[0][0]
+                    lignum = lig_chains_resnums[0][1]
+                
+            print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
+        return(ligfile_name)
+
 
 class Command(BaseCommand):
     help=""
@@ -260,11 +284,10 @@ class Command(BaseCommand):
         #################################################
         
         if options['dynid'] or options['alldyn']:
-            dynids = options['dynid']
+            dynid = options['dynid']
+            alldyn = options['alldyn']
         else:
             raise CommandError("Neither dynid(s) nor --all options have been specified. Use --help for more details.")
-        # Obtain filenames
-        dyn_dict = obtain_dyn_files_from_id(dynids,options['alldyn'])
 
         # In this file will be stored all commands to run in ORI (for the computer-spending steps, you know)
         commands_path = "/protwis/sites/files/Precomputed/get_contacts_files/dyn_freq_commands.sh"
@@ -281,162 +304,126 @@ class Command(BaseCommand):
             compl_data = json_dict(compl_file_path)
         except FileNotFoundError:
             compl_data={}       
- 
+        
+        # Extract dynamics information from database 
+        if alldyn:
+            dynobjs = DyndbDynamics.objects.filter(is_published=True)
+        else:
+            dynobjs = DyndbDynamics.objects.filter(id__in=dynid, is_published=True)
+
+        #Annotate shortname alternatives
+        dynobjs=dynobjs.annotate(entry=F('id_model__id_protein__receptor_id_protein__entry_name'))
+        dynobjs=dynobjs.annotate(entry2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__entry_name'))
+
         #Open CSV file with already-done dynids, and loaded on a set
-        dyn_list_file = os.path.join(cra_path, "dyn_list.csv")
+        dyn_list_file = os.path.join(cra_path, "processed_dyns.csv")
         if os.path.isfile(dyn_list_file):
             with open(dyn_list_file, "r") as file:
                 dyn_set = set(file.readline().replace('\n','').split(","))
         else:
             dyn_set = set()
 
-        if dyn_dict:
+        ##################
+        ###Begin iteration
+        ##################
+
+        for dyn in dynobjs:
+
+            #Take dynamic identifiers (both dynX and X)
+            dyn_id=dyn.id
+            identifier="dyn"+str(dyn_id)
+
+            #Unless user want to overwrite, omit already done dynids
+            if (identifier in dyn_set) and not (options['overwrite']):
+                self.stdout.write("%s has already been done. Skippping..." % dynid)
+                continue
+            else:
+                dyn_set.add(identifier)
+
+            #Compute compl_data fuke
+            try:
+                self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn_id, dyncounter, len(dynobjs))))
+                dyncounter += 1
+                dyn_dict,compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
+            except FileNotFoundError:
+                self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn_id)))
+                continue
+
+            if not dyn_dict['traj_fnames']:
+                self.stdout.write("%s has no trajectory file. Skippping..." % dynid)
+                continue
+            structure_file = dyn_dict['struc_f']
+            structure_file_name = dyn_dict['struc_fname']
+
+            #Create directory for dynamic simulation id if it doesn't exists yet
+            directory = os.path.join(settings.MEDIA_ROOT,"Precomputed/get_contacts_files/dynamic_symlinks/dyn" + str(dyn_id))
+            if not os.path.exists(directory):
+                os.makedirs(directory,exist_ok=True)
+
+            #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
+            basepath = settings.MEDIA_ROOT
+            pdbpath = os.path.join(basepath,structure_file)
+            
+            #TO DO: idenfity structure files with an "struc" suffix, not only by extension
+            #TO DO: add id_files number to the filename
+            mypdbpath =  os.path.join(directory, identifier + os.path.splitext(structure_file)[1])
+            if not os.path.lexists(mypdbpath):
+                os.symlink(pdbpath, mypdbpath)
+            
+            #Links for trajectories
+            traj_counter = 0
+            for traj_name,traj_file in zip(dyn_dict['traj_fnames'],dyn_dict['traj_f']):
+                #Create symbolic links also for trajectory file list
+                #TO DO: add id_files number to the filename
+                trajpath = os.path.join(basepath,traj_file)
+                mytrajpath = os.path.join(directory,identifier + "_" + str(traj_counter) + os.path.splitext(trajpath)[1])
+                if not os.path.lexists(mytrajpath):
+                    os.symlink(trajpath, mytrajpath)
+                traj_counter += 1
+
+            #Ligand files
+            try:
+                ligfile_name = get_ligand_file(dyn_id, identifier, directory, mypdbpath)    
+            except IndexError:
+                self.stdout.write(self.style.WARNING("Ligand error: options --ligresname and --ligresid are mandatory when more than one ligand molecule is present on the database. Skipping and cleaning up."))
+                shutil.rmtree(directory)
+                continue
+            except Exception:
+                 self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
+                 shutil.rmtree(directory)
+
+            ###########################################
+            ## Compute frequencies and dynamic contacts
+            ###########################################
+
+            # for each trajectory file, write a run-in-ORI command
             with open(commands_path,"w") as commands_file:
-                for dynid in dyn_dict:
-                    identifier = "dyn"+ str(dynid) 
+                numtraj = len(dyn_dict['traj_fnames'])
+                traj_counter = 0
+                for traj_name,traj_file in zip(dyn_dict['traj_fnames'],dyn_dict['traj_f']):
 
-                    print("\n###%s###" % (dynid))
-                    #Unless user want to overwrite, omit already done dynids
-                    if (identifier in dyn_set) and not (options['overwrite']):
-                        print("%s has already been done. Skippping..." % dynid)
-                        continue
+                    trajpath = os.path.join(basepath,traj_file)
+                    mytrajpath = os.path.join(directory,identifier + "_" + str(traj_counter) + os.path.splitext(trajpath)[1])
+                    traj_counter += 1
+
+                    if numtraj == traj_counter:
+                        tail_comand = "--merge_dynamics \n"
                     else:
-                        dyn_set.add(identifier)
+                        tail_comand = "\n"
 
-                    if not dyn_dict[dynid]['trajectory']:
-                        print("%s has no trajectory file. Skippping..." % dynid)
-                        continue
-                    structure_file = dyn_dict[dynid]['structure']['path']
-                    structure_file_name = dyn_dict[dynid]['structure']['name']
+                    commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
+                        --dynid %s \
+                        --traj %s \
+                        --traj_id %s \
+                        --topology %s \
+                        --ligandfile %s \
+                        --cores 4 %s" % (dyn_id, mytrajpath, traj_counter, mypdbpath, ligfile_name, tail_comand))
+                    )  
 
-                    #Create directory for dynamic simulation id if it doesn't exists yet
-                    directory = os.path.join(settings.MEDIA_ROOT,"Precomputed/get_contacts_files/dynamic_symlinks/dyn" + str(dynid))
-                    if not os.path.exists(directory):
-                        os.makedirs(directory,exist_ok=True)
-                    print("directory created")
-
-                    #Inside this folder, create symbolic links to desired files (and delete any previous with same name)
-                    basepath = settings.MEDIA_ROOT
-                    pdbpath = os.path.join(basepath,structure_file)
-                    
-                    #TO DO: idenfity structure files with an "struc" suffix, not only by extension
-                    #TO DO: add id_files number to the filename
-                    mypdbpath =  os.path.join(directory, identifier + os.path.splitext(structure_file)[1])
-                    if not os.path.lexists(mypdbpath):
-                        os.symlink(pdbpath, mypdbpath)
-                    self.stdout.write("Created symlink "+pdbpath+" -> "+mypdbpath)
-                    
-                    for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):
-                        #Create symbolic links also for trajectory file list
-                        #TO DO: add id_files number to the filename
-                        traj_name = traj_dict['name']
-                        trajpath = os.path.join(basepath,traj_dict['path'])
-                        mytrajpath = os.path.join(directory,identifier + "_" + str(i) + os.path.splitext(trajpath)[1])
-                        if not os.path.lexists(mytrajpath):
-                            os.symlink(trajpath, mytrajpath)
-                        traj_dict['local_path'] = mytrajpath
-                        
-                    try:
-                        ############
-                        #Ligand file
-                        ############
-
-                        # Obtain ligand by dynID
-                        (comp_li,lig_li,lig_li_s) = obtain_compounds(dynid)
-
-                        """    
-                        comp_li     list of [component_name,component_residue_name,component_type_str].
-                        lig_li      list of ligand [component_name,component_residue_name].
-                        lig_li_s    list of ligands residue names.
-                        """
-
-                        # Open out file
-                        ligfile_name = os.path.join(directory, identifier + "_ligand.txt")
-                        with open(ligfile_name, "w") as ligfile:
-                            # Print each ligand in a ligand file, after finding out its chain and residue id in the PDB
-                            for ligand_info in lig_li:
-
-                                ligand_name = ligand_info[0].replace(" ","_")
-                                ligres = ligand_info[1]
-
-                                # If we have the dyn7 exception of ligand being one cholesterol among others
-                                # isma: this makes no sense
-                                # david: it is a very puntual exception for a very puntual case
-                                if "and" in ligres: # If its like 'CHL1 and 59'
-                                    ligpos_list = ligres.split(" and ")
-                                    ligres = ligpos_list[0]
-                                    lignum_prov = ligpos_list[1]
-                                    lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum_prov))
-                                    ligchain = lig_chains_resnums[0][0]
-                                    lignum = lig_chains_resnums[0][1]
-
-                                else:
-                                    # TO DO: there is the possibility that there is more than one molecule
-                                    # of ligand in the same system (but not in our simulations)
-                                    if len(lig_li) > 1:
-                                        lignum = options['ligresid']
-                                        ligres = options['ligresname'] 
-                                        lig_chains_resnums = list(parse_pdb(ligres, mypdbpath, lignum))
-                                        ligchain = lig_chains_resnums[0][0]
-
-                                    else:
-                                        lig_chains_resnums = list(parse_pdb(ligres, mypdbpath))
-                                        ligchain = lig_chains_resnums[0][0]
-                                        lignum = lig_chains_resnums[0][1]
-                                    
-                                print("%s\t%s\t%s\t%s" % (lignum,ligchain,ligres,ligand_name),file=ligfile)
-
-                    except IndexError:
-                        self.stdout.write(self.style.WARNING("Ligand error: options --ligresname and --ligresid are mandatory when more than one ligand molecule is present on the database. Skipping and cleaning up."))
-                        shutil.rmtree(directory)
-                        continue
-                    except Exception:
-                         self.stdout.write(self.style.WARNING("Error while processing dynamics "+str(dynid)+". Skipping and cleaning up."))
-                         shutil.rmtree(directory)
-
-                    ##################
-                    ## Compl_data file
-                    ##################
-                    try:
-                        dyn = DyndbDynamics.objects.filter(id=dynid)[0]
-                        self.stdout.write(self.style.NOTICE("Computing dictionary for dynamics with id %d (%d/%d) ...."%(dyn.id, dyncounter, len(dyn_dict.keys()))))
-                        dyncounter += 1
-                        compl_data = retrieve_info(self,dyn,compl_data,change_lig_name)
-                    except FileNotFoundError:
-                        self.stdout.write(self.style.NOTICE("Files for dynamics with id %d are not avalible. Skipping" % (dyn.id)))
-                        continue
-
-                    ###########################################
-                    ## Compute frequencies and dynamic contacts
-                    ###########################################
-
-                    # for each trajectory file, write a run-in-ORI command
-                    numtraj = len(dyn_dict[dynid]['trajectory'])
-                    for i,traj_dict in enumerate(dyn_dict[dynid]['trajectory']):
-                        
-                        # Put option to merge all dynamics from this simulation, if all trajectories are already computed
-                        trajcounter = traj_dict['number'] + 1 
-                        if numtraj == trajcounter:
-                            tail_comand = "--merge_dynamics \n"
-                        else:
-                            tail_comand = "\n"
-
-                        print("printing command line for "+str(dynid))
-
-                        commands_file.write(str("python /protwis/sites/protwis/contact_maps/scripts/get_contacts_dynfreq.py \
-                            --dynid %s \
-                            --traj %s \
-                            --traj_id %s \
-                            --topology %s \
-                            --ligandfile %s \
-                            --cores 4 %s" % (dynid, traj_dict['local_path'], traj_dict['number'], mypdbpath,ligfile_name, tail_comand))
-                        )  
-
-            # Save compl_data.json
-            with open(compl_file_path, 'w') as outfile:
-                json.dump(compl_data, outfile)
-                
-            # Save dynnames in dynfile
-            with open(dyn_list_file, 'w') as csvfile:
-                csvfile.write(",".join(dyn_set))
-
+        # Save compl_data.json
+        with open(compl_file_path, 'w') as outfile:
+            json.dump(compl_data, outfile)
+            
+        # Save dynnames in dynfile
+        with open(dyn_list_file, 'w') as csvfile:
+            csvfile.write(",".join(dyn_set))
