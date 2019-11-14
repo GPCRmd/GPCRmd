@@ -12,4 +12,6 @@ urlpatterns = [
     #url(r'^hometest/$', views.gpcrmd_home, name='gpcrmd_home'),
     #url(r'^mhometest/$', views.gpcrmd_hometest, name='gpcrmd_hometest'),
     url(r'^gpcrtree/$', views.gpcrtree, name='gpcrtree'),
+    url(r'^contact/$', views.contact, name='contact'),
+    url(r'^community/$', views.community, name='community'),
 ]

@@ -184,7 +184,13 @@ def gpcrmd_home(request):
 
     return render(request, 'home/index_gpcrmd.html', context )
 
+def contact(request):
+    context = {}
+    return render(request, 'home/contact.html', context )
 
+def community(request):
+    context = {}
+    return render(request, 'home/community.html', context )
 
 def gpcrtree(request):
     context = {}
