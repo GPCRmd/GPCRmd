@@ -5367,30 +5367,17 @@ $(document).ready(function(){
 
   function drawCharts_subm() {
           var data_pre=$("#stats_subm").data("subm_data");
-          var datainfo=[['Date', 'Submissions', { role: 'annotation' }]];
-          // Add annotaitons when value changes
-          var last_val=0;
-          for (l=0;l<data_pre.length;l++){
-              val= data_pre[l][1];
-              var add="";
-              if (val != last_val){
-                    add=val.toString();
-                    last_val=val;
-              }
-              data_pre[l].push(add);
-          }
+          var datainfo=[['Date', 'Systems (GPCRmd entries)',{ role: 'annotation' }, "Trajectories", { role: 'annotation' }]];
           var data_all = datainfo.concat(data_pre);
-
-
           var data = google.visualization.arrayToDataTable(data_all);
 
 
           var options = {
             hAxis: {title: 'Date',slantedTextAngle:90},
             vAxis: {title: "Num. of simulations", minValue: 0, maxvalue: 55 , gridlines: {count: 0, color:"#bfbfbf"}},
-            legend: {position:"none"},
+            legend: {position:"top"},
             annotations: {stem:{length:2}},
-            chartArea:{width:270, top:20}
+            chartArea:{width:270, top:40}
 
           };
 

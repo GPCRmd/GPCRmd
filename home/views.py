@@ -62,10 +62,11 @@ def gpcrmd_home(request):
 
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
     dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+    dynclass=dynclass.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj")
+    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id")
 
 
     dyn_dict = {}
@@ -80,18 +81,19 @@ def gpcrmd_home(request):
         if fam_slug:
             fam_code=fam_slug.split("_")[0]
             fam=fam_d[fam_code]            
-        addtraj=0
-        if dyn["is_traj"]:
-            addtraj=1
         if dyn_id not in dyn_dict:
             dyn_dict[dyn_id]={}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
             dyn_dict[dyn_id]["fam"]=fam
-            dyn_dict[dyn_id]["trajs"]=addtraj
+            if dyn["is_traj"]:
+                dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
+            else:
+                dyn_dict[dyn_id]["trajs"]=set()
         else:
             if not dyn_dict[dyn_id]["fam"]:
                 dyn_dict[dyn_id]["fam"]=fam
-            dyn_dict[dyn_id]["trajs"]+=addtraj
+            if dyn["is_traj"]:
+                dyn_dict[dyn_id]["trajs"].add(dyn["file_id"])
 
 
     # Submissions by class    
@@ -104,17 +106,43 @@ def gpcrmd_home(request):
 
 
     # Submisisons by date
-    dynall_subm_data=[]
+    date_d={}
+    syst_c=0
+    traj_c=0
     for d in dyn_dict.values():
-        dynall_subm_data.append(d["subm_date"])
-    #dynall_subm_data=[d["subm_date"] for d in dyn_dict.values()]
-    s = pd.to_datetime(pd.Series(dynall_subm_data)) 
-    s.index = s.dt.to_period('m')
-    s = s.groupby(level=0).size()
-    s = s.reindex(pd.period_range(s.index.min(), s.index.max(), freq='m'), fill_value=0)
-    s=s.cumsum()
-    s.index= [s.strftime("%b %Y") for s in s.index]
-    subm_data=[[k,v] for (k,v) in  s.items()] 
+        subm_date_obj=d["subm_date"]
+        subm_date=subm_date_obj.strftime("%b %Y")
+        syst_c+=1
+        traj_c+=len(d["trajs"])
+        if not subm_date in date_d:
+            date_d[subm_date]={}
+        date_d[subm_date]["Systems"]=syst_c
+        date_d[subm_date]["Trajectories"]=traj_c
+        #date_d[subm_date]["Dateobj"]=subm_date_obj
+
+    st=pd.DataFrame.from_dict(date_d,orient="index")
+    st.index=pd.to_datetime(st.index).to_period('m')
+    st = st.reindex(pd.period_range(st.index.min(), st.index.max(), freq='m'), fill_value=0)
+    st.index= [st.strftime("%b %Y") for st in st.index]
+
+    last_s=0
+    last_t=0
+    subm_data=[]
+    for index, row in st.iterrows():
+        sys=row["Systems"]
+        traj=row["Trajectories"]
+        if sys ==0:
+            sys=last_s
+            traj=last_t
+            leg_s=""
+            leg_t=""
+        else:
+            last_s=sys
+            last_t=traj
+            leg_s=str(sys)
+            leg_t=str(traj)
+        subm_data.append([index,int(sys),leg_s,int(traj),leg_t])
+
     context["subm_data"] =json.dumps(subm_data)
     ################
 
