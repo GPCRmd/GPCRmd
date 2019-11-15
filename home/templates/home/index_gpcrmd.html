@@ -579,20 +579,29 @@ g circle , g text {
                 </div>
 
                 <div class="item"  style="padding:15px">
-                  <h4 class="extrainfo_title">Simulations by class</h4>
+                  <h4 class="extrainfo_title">Simulated GPCR families</h4>
+                  <p>Simulated GPCR families with known structure.</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
-                    <div id="stats_class" style="width: 300px; height: 400px;margin:auto" data-class_data="{{class_data}}"></div>
+                    <div id="fam_stats" style="width: 300px; height: 400px;margin:auto" data-fam_stats="{{fam_stats}}"></div>
                   </div>
                 </div>
 
-                {% if act_data %}
                 <div class="item"  style="padding:15px">
-                  <h4 class="extrainfo_title">Simulations by activation state</h4>
+                  <h4 class="extrainfo_title">Simulated GPCR subtypes</h4>
+                  <p>Simulated GPCR subtypes with known structure.</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
-                    <div id="stats_act" style="width: 300px; height: 400px;margin:auto" data-act_data="{{act_data}}"></div>
+                    <div id="subtype_stats" style="width: 300px; height: 400px;margin:auto" data-subtype_stats="{{subtype_stats}}"></div>
                   </div>
                 </div>
-                {% endif %}
+
+                <div class="item"  style="padding:15px">
+                  <h4 class="extrainfo_title">Simulated PDB structures</h4>
+                  <div style="overflow-x: auto;overflow-y: hidden">
+                    <div id="pdb_stats" style="width: 300px; height: 400px;margin:auto" data-pdb_stats="{{pdb_stats}}"></div>
+                  </div>
+                </div>
+                
+
               </div>
         
               <!-- Left and right controls -->
@@ -610,6 +619,7 @@ g circle , g text {
                 <li data-target="#statsCarousel" data-slide-to="0" class="active"></li>
                 <li data-target="#statsCarousel" data-slide-to="1"></li>
                 <li data-target="#statsCarousel" data-slide-to="2"></li>
+                <li data-target="#statsCarousel" data-slide-to="3"></li>
               </ol>
             </div>
           </div>

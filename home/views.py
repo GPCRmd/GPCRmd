@@ -66,21 +66,30 @@ def gpcrmd_home(request):
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id")
+    dynclass = dynclass.annotate(pdb_namechain=F("id_model__pdbid"))
+    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain")
 
 
     dyn_dict = {}
-    fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
+    #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
 
+    pdb_id_set=set()
+    fam_set=set()
+    subtype_set=set()
     for dyn in dynall_values:
         dyn_id=dyn["dyn_id"]
+        pdbid=dyn["pdb_namechain"].split(".")[0]
+        if pdbid:
+            pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
+            subtype_set.add(fam_slug)
+            fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]
-            fam=fam_d[fam_code]            
+            #fam=fam_d[fam_code]            
         if dyn_id not in dyn_dict:
             dyn_dict[dyn_id]={}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
@@ -96,13 +105,13 @@ def gpcrmd_home(request):
                 dyn_dict[dyn_id]["trajs"].add(dyn["file_id"])
 
 
-    # Submissions by class    
-    dynall_fam_data=[d["fam"] for d in dyn_dict.values()]
-    class_li=[]
-    for gclass in ["A","B1","B2","C","F"]:
-        class_count=dynall_fam_data.count(gclass)
-        class_li.append([gclass,class_count])
-    context["class_data"]=json.dumps(class_li)
+#    # Submissions by class    
+#    dynall_fam_data=[d["fam"] for d in dyn_dict.values()]
+#    class_li=[]
+#    for gclass in ["A","B1","B2","C","F"]:
+#        class_count=dynall_fam_data.count(gclass)
+#        class_li.append([gclass,class_count])
+#    context["class_data"]=json.dumps(class_li)
 
 
     # Submisisons by date
@@ -145,15 +154,45 @@ def gpcrmd_home(request):
 
     context["subm_data"] =json.dumps(subm_data)
     ################
+    #Fams sumulated
+    sim_fams=len(fam_set)
+    missing_fams=64 - sim_fams
+    fam_stats= [['Class', 'Num'],
+                ['Simulated', sim_fams],
+                ['Not yet simulated',missing_fams]
+                ]
+    context["fam_stats"]=json.dumps(fam_stats)
 
-    # Activation state
-    stats_precomp_file="/protwis/sites/files/Precomputed/Summary_info/dyn_stats.data"
-    exists=os.path.isfile(stats_precomp_file)
-    act_li=False
-    if exists:
-        with open(stats_precomp_file, 'rb') as filehandle:  
-            act_li = pickle.load(filehandle)
-    context["act_data"]=json.dumps(act_li)
+
+    #Subtypes sumulated
+    sim_subtyppes=len(subtype_set)
+    missing_subtypes=64 - sim_subtyppes
+    subtype_stats= [['Class', 'Num'],
+                ['Simulated', sim_subtyppes],
+                ['Not yet simulated',missing_subtypes]
+                ]
+    context["subtype_stats"]=json.dumps(subtype_stats)
+
+
+    #PDB ids sumulated
+    pdb_id_sim=len(pdb_id_set)
+    missing_pdb_ids=346 - pdb_id_sim
+    pdb_stats= [['Class', 'Num'],
+                ['Simulated', pdb_id_sim],
+                ['Not yet simulated',missing_pdb_ids]
+                ]
+    context["pdb_stats"]=json.dumps(pdb_stats)
+
+
+
+#    # Activation state
+#    stats_precomp_file="/protwis/sites/files/Precomputed/Summary_info/dyn_stats.data"
+#    exists=os.path.isfile(stats_precomp_file)
+#    act_li=False
+#    if exists:
+#        with open(stats_precomp_file, 'rb') as filehandle:  
+#            act_li = pickle.load(filehandle)
+#    context["act_data"]=json.dumps(act_li)
 
 
     # Entry of the month
