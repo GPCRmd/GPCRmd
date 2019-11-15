@@ -140,7 +140,11 @@
 
             var ligli=[];
             $(".lig_element", window.parent.document).each(function(){
-                ligli[ligli.length]=$(this).data("resname");
+                var lignm=$(this).data("resname");
+                if (Number(lignm[0])){
+                    lignm="["lignm+"]";
+                }
+                ligli[ligli.length]=lignm;
             });
             var ligsel=ligli.join(" or ");
 
