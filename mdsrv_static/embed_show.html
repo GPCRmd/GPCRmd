@@ -142,7 +142,7 @@
             $(".lig_element", window.parent.document).each(function(){
                 var lignm=$(this).data("resname");
                 if (Number(lignm[0])){
-                    lignm="["lignm+"]";
+                    lignm="["+lignm+"]";
                 }
                 ligli[ligli.length]=lignm;
             });
