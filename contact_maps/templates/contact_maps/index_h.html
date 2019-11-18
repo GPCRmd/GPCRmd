@@ -32,7 +32,7 @@
 
  <!-- description  -->
 <div id="outer" class="col-xs-12">
-  <div class=" panel panel-primary" id="inner_fixed">  
+  <div class="panel panel-primary" id="inner_fixed">  
      <div class="panel-body">
         <h2>Receptor meta-analysis</h2>
         <h4>Residue interaction frequency: <span style="font-weight: bold">{{itype_name}}</span></h4>
@@ -73,19 +73,19 @@
           </div>
         </div>
         <div id="dendrogram-heatmap" class="row">
-          <div id="dendrogram" class="col-xs-4" style="width: 40%">
+          <div id="dendrogram" class="col-xs-4" style="width: 30%">
             {{dendrogram | safe }}
           </div>
           {% for number,div in numbered_divs %}
-            {% if number == "1" %}
-            <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 60%; overflow-x: scroll;">
-              {{ div | safe }}
-            </div>
-            {% else %}
-            <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 60%; display: none; overflow-x: scroll;">
-              {{ div | safe }}
-            </div>
-            {% endif %}
+          {% if number == "1" %}
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 70%; overflow-x: scroll;">
+            {{ div | safe }}
+          </div>
+          {% else %}
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 70%; display: none; overflow-x: scroll;">
+            {{ div | safe }}
+          </div>
+          {% endif %}
           {% endfor %}
           {% for script in script_list %}
             {{script | safe}}

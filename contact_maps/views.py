@@ -17,7 +17,7 @@ def json_dict(path):
 	json_data = loads(json_str)
 	return json_data
 
-def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 3, rev = "norev"):
+def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = "3", rev = "norev", stnd = "cmpl"):
 	"""
 	Main view of contact plots
 	"""
@@ -73,7 +73,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		)
 	]
 
-	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
+	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/" % (itype,stnd,ligandonly)
 
 	# Creating set_itypes, with all in case it is not still in it
 	if not itype == "all":
@@ -85,14 +85,15 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	selected_itypes = { x:typelist[x] for x in set_itypes }
 
 	# Loading variables
-	variablesmod = SourceFileLoader("module.name", basedir + itype + "_" + ligandonly + "_" + rev + "_variables.py").load_module()
+	variablesfile = "%sheatmaps/%s/variables.py" % (basedir,rev)
+	variablesmod = SourceFileLoader("module.name", variablesfile).load_module()
 	number_heatmaps_list = variablesmod.number_heatmaps_list
 	divwidth_list = variablesmod.divwidth_list
 	div_list = variablesmod.div_list
 	filenames_list = variablesmod.heatmap_filename_list
 
 	#Path to json
-	fpdir = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/%s_%s_jsons/%sclusters/" %  (itype, ligandonly, cluster)
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
 
 	# Loading heatmap script if it exists. If not, load "no interactions" template instead
 	if exists(filenames_list[0]):
@@ -119,10 +120,10 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		return render(request,'contact_maps/index_nodata.html',context)
 
 	#Loading dynamics-cluster dictionary
-	clustdict = json_dict(str("%s%s_%s_jsons/%sclusters/clustdict.json" % (basedir, itype, ligandonly, cluster)))
+	clustdict = json_dict("%sflarejsons/%sclusters/clustdict.json" % (basedir, cluster))
 
 	# Loading dendrogram
-	dendfile = ("%s%s_%s_dendrograms/%s_%s_%s_dendrogram_figure.html" % (basedir, itype, ligandonly, itype, str(cluster), ligandonly))
+	dendfile = ("%sdendrograms/%sclusters_dendrogram.html" % (basedir, cluster))
 	dendr_figure = open(dendfile, 'r').read()
 
 	first_sim = clustdict['cluster1'][0]
@@ -140,6 +141,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		'hb_itypes' : hb_itypes,
 		'script_list' : script_list, 
 		'rev' : rev,
+		'stnd': stnd,
 		'number_heatmaps_list' : number_heatmaps_list,
 		'numbered_divs' : zip(number_heatmaps_list, div_list),
 		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
@@ -150,13 +152,12 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	}
 	return render(request, 'contact_maps/index_h.html', context)
 
-def get_csv_file(request, itype, ligandonly, rev):
+def get_csv_file(request, itype, ligandonly, rev, stnd):
 	"""
 	Processing informatino from get_contact plots to create and download a csv file
 	"""
 
-	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/view_input_dataframe/"
-	csv_name = basedir + itype + "_" + ligandonly + "_dataframe.csv"
+	csv_name = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/dataframe.csv" % (itype, stnd, ligandonly)
 
 	#Creating and downloading CSV file from df
 	csvfile = FileWrapper(open(csv_name, "r"))

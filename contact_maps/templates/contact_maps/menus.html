@@ -20,14 +20,22 @@
         <li class="dropdown-submenu">
           <div class="HB_row">
             <label class="mycheckbox">
-              <input type="radio" name="itypes" class="option" value="hb" />
+              {% if "hb" == itype_code %}
+              <input type="radio" name="itypes" class="option" value="hb" checked/>
+              {% else %}
+              <input type="radio" name="itypes" class="option" value="hb"/>
+              {% endif %}
                 hydrogen bond
             </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
             <ul class="dropdown-menu dropdown-itype" id="HB">
               {% for code,itype in hb_itypes %}
               <li>
                 <label class="mycheckbox">
+                {% if code == itype_code %}
+                <input type="radio" name="itypes" class="option hb_option" value={{code}} checked/>
+                {% else %}
                 <input type="radio" name="itypes" class="option hb_option" value={{code}} />
+                {% endif %}
                   {{itype}}
                 </label>
               </li>
@@ -38,7 +46,11 @@
         {% else %}
         <li>
           <label class="mycheckbox">
+          {% if typecode == itype_code %}
+          <input type="radio" name="itypes" class="option" value={{typecode}} checked/>
+          {% else %}
           <input type="radio" name="itypes" class="option" value={{typecode}} />
+          {% endif %}
             {{typename}}
           </label>
         </li>
@@ -87,7 +99,7 @@
         Protein-Ligand
       </label>
     </div>
-    <!--Repetition checkbox-->
+    <!--Repetition and non-standard checkbox-->
     <div class="optbar">
       <label class="partners_checkbox">
       {% if 'rev' == rev %}
@@ -96,6 +108,15 @@
       <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
       {% endif %}
         Show reversed residue pairs
+      </label>
+      <br>
+      <label class="partners_checkbox">
+      {% if 'cmpl' == stnd %}
+      <input type="checkbox" id="non_standard" value="cmpl" checked/>
+      {% else %}
+      <input type="checkbox" id="non_standard" value="cmpl"/>
+      {% endif %}
+        Include non-standard simulations
       </label>
     </div>
     <!--Apply button -->
