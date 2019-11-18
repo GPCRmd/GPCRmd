@@ -1,17 +1,19 @@
 //Get path arguments (if any)
-var args, itype, ligandonly, cluster, rev;
-args = window.location.pathname.match(/\/(\w+)&(\w+)&(\w+)&(\w+)/);
+var args, itype, ligandonly, clusters, rev;
+args = window.location.pathname.match(/\/(\w+)&(\w+)&(\w+)&(\w+)&(\w+)/);
 if(args){
     itype = args[1];
     clusters = args[2];
     ligandonly = args[3];
     rev = args[4];
+    stnd = args[5];
 }
 else {
     itype = 'all';
     clusters = '3';
     ligandonly = 'prt_lg';
-    rev = 'norev';        
+    rev = 'norev';
+    stnd = 'stnd'        
 }
 
 $(document).ready(function(){
@@ -354,7 +356,7 @@ $(document).ready(function(){
 
         //Load needed Json files and execute NGL bottom viewers
         var clustdict_file, compl_data_file;
-        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json";
+        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
         compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
         $.getJSON(clustdict_file, function(clustdict){  
             $.getJSON(compl_data_file, function(compl_data){
