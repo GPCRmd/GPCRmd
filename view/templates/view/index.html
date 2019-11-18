@@ -1544,7 +1544,7 @@ padding-right:60px
                 <div id="fpdiv" data-show_fp="{{show_fp}}" style="margin-top:15px;overflow:auto;margin-bottom:10px">
                 <div style="z-index:1; position: absolute;color:gray" id="fp_int_type_info">
                   {% if traj_list.0.3.0.0 == "hb" or traj_list.0.3.0.0 == "hbonds" %}
-                    <p class="fp_int_type_info_p">Hbonds:</p> 
+                    <p class="fp_int_type_info_p">Hydrogen bonds:</p> 
                     <p class="fp_int_type_info_p">{{traj_list.0.3.0.1}}</p>
                   {% else %}
                     <p class="fp_int_type_info_p">{{traj_list.0.3.0.1}}</p>
@@ -1567,7 +1567,7 @@ padding-right:60px
                         <ul id="ul_fp_int_type" class="dropdown-menu" style="font-size:12px;margin-bottom:-12px">
 
                           <li class="dropdown-submenu">
-                            <a style="padding:5px 15px 5px 15px;background-color:#f2f2f2" class="submenu_btn">Hbonds</a>
+                            <a style="padding:5px 15px 5px 15px;background-color:#f2f2f2" class="submenu_btn">Hydrogen bonds</a>
                             <ul class="dropdown-menu" >
                               <li  data-tag="{{traj_list.0.3.0.0}}" data-path="{{traj_list.0.3.0.2}}" style="padding:5px 15px 5px 15px;background-color:#bfbfbf"
                                 {% if traj_list.0.3.0.2 %}
@@ -1687,14 +1687,21 @@ padding-right:60px
         {% endif %}
 <!-- ======================================== -->
 
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#interaction_freqs" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
+Interaction frequencies 
+</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+           <div id="interaction_freqs"  class="collapse" style="padding-left:15px;">
+
 <!-- ============= BONDS Analysis =========== --> 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>
-Hbond frequency
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_bonds" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b3b3;border-radius:0;" ><span>
+Hydrogen bonds 
 </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
-             <div id="analysis_bonds" class="collapse">
+             <div id="analysis_bonds" class="collapse" style="padding-left:15px;">
                  <div class="row" style="margin-top:10px;margin-bottom:15px">
 
 
@@ -1736,22 +1743,22 @@ Hbond frequency
                            </div>
                            <div id="bonds_backbone" class="col-md-10" style="margin-bottom:10px">
                                  <div class="row">
-                                  <input type="checkbox" name="neighbours" checked > Do not include Hbonds between neighbours
+                                  <input type="checkbox" name="neighbours" checked > Do not include hydrogen bonds between neighbours
                                   </div>
 
                                   <div class="row">
                                      <input type="radio" name="backbone" value="all" checked> 
-                                          All Hydrogen Bonds
+                                          All hydrogen bonds
                                   </div>
                                   <div class="row" >
                                      <input type="radio" name="backbone" value="sidechain"> 
-                                          Only Side Chain Hydrogen Bonds
+                                          Only side chain hydrogen bonds
                                   </div>
 
 
                               <div class="row">
                                  <input type="radio" name="backbone" value="all" checked> 
-                                       Include backbone Hydrogen Bonds
+                                       Include backbone hydrogen bonds
                               </div>
                            </div>
                         <div>
@@ -1805,9 +1812,9 @@ Hbond frequency
             {% if ligands|length >= 1 %}
             
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Lig-prot interaction frequency </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_Int" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b3b3;border-radius:0;" ><span>Ligand receptor contacts  </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
-             <div id="analysis_Int" class="collapse">
+             <div id="analysis_Int" class="collapse" style="padding-left:15px;">
              <div class="row" style="margin-top:10px;">
               
                     <div class="int_btw" style="margin-right:5px;margin-left:14px;margin-bottom:10px">
@@ -1865,9 +1872,9 @@ Hbond frequency
 <!-- ============= SaltBridges Analysis =========== --> 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Salt bridge frequency</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_salt" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #b3b3b3;border-radius:0;" ><span>Salt bridges </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
-             <div id="analysis_salt" class="collapse">
+             <div id="analysis_salt" class="collapse" style="padding-left:15px;">
              <div class="row" style="margin-top:10px;">
 
                     <div style="margin-left:18px;margin-bottom:5px;">
@@ -1934,11 +1941,11 @@ Hbond frequency
                 </div>
               </div>
 
-
+            </div><!-- END interaction_freqs -->
 <!-- ============= Compute distances =========== --> 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Distance progression </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_dist" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Distance </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
             </div>
              <div id="analysis_dist" class="collapse row">
              <div style="margin-top:10px;margin-left:5px">
@@ -2013,7 +2020,7 @@ Hbond frequency
 <!-- ============= RMSD Analysis =========== --> 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>RMSD progression </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_rmsd" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>RMSD </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_rmsd" class="collapse">
              <div class="row" style="margin-top:10px;margin-bottom:15px">
@@ -2112,7 +2119,7 @@ Hbond frequency
 
 
            <div class="row">
-                <div class="section_pan" data-toggle="collapse" data-target="#analysis_watermap" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Water map</span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_watermap" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Water volume distribution </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
              <div id="analysis_watermap" class="collapse" data-occupancy_data="{{occupancy}}">
                  <div class="row" style="margin-top:10px;margin-bottom:15px">

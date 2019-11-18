@@ -5367,30 +5367,17 @@ $(document).ready(function(){
 
   function drawCharts_subm() {
           var data_pre=$("#stats_subm").data("subm_data");
-          var datainfo=[['Date', 'Submissions', { role: 'annotation' }]];
-          // Add annotaitons when value changes
-          var last_val=0;
-          for (l=0;l<data_pre.length;l++){
-              val= data_pre[l][1];
-              var add="";
-              if (val != last_val){
-                    add=val.toString();
-                    last_val=val;
-              }
-              data_pre[l].push(add);
-          }
+          var datainfo=[['Date', 'Systems (GPCRmd entries)',{ role: 'annotation' }, "Trajectories", { role: 'annotation' }]];
           var data_all = datainfo.concat(data_pre);
-
-
           var data = google.visualization.arrayToDataTable(data_all);
 
 
           var options = {
             hAxis: {title: 'Date',slantedTextAngle:90},
-            vAxis: {title: "Num. of simulations", minValue: 0, maxvalue: 55 , gridlines: {count: 0, color:"#bfbfbf"}},
-            legend: {position:"none"},
+            vAxis: {title: "", minValue: 0, maxvalue: 55 , gridlines: {count: 0, color:"#bfbfbf"}},
+            legend: {position:"top"},
             annotations: {stem:{length:2}},
-            chartArea:{width:270, top:20}
+            chartArea:{width:270, top:40}
 
           };
 
@@ -5403,7 +5390,7 @@ $(document).ready(function(){
       google.load("visualization", "1", {packages:["corechart"],'callback': drawCharts_subm});
 
 
-      function drawChart_class() {
+/*      function drawChart_class() {
         var data_pre=$("#stats_class").data("class_data");
         var datainfo=[['Class', 'GPCR']];
         var data_all = datainfo.concat(data_pre);
@@ -5423,9 +5410,79 @@ $(document).ready(function(){
       }
 
       google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_class});
+*/
+
+      function drawChart_famstats() {
+
+        var data_all = $("#fam_stats").data("fam_stats");
+        var data = google.visualization.arrayToDataTable(data_all);
+        var options = {
+          slices: {
+            0: { color: '#7EF3B1' },
+            1: { color: '#ff8e85' }
+          },
+          pieSliceTextStyle:{color:"black"},
+          width:300,
+          height:350,
+          chartArea:{width:280,height:280},
+          legend:{ alignment:"center"},
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('fam_stats'));
+
+        chart.draw(data, options);
+      }
+      google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_famstats});
 
 
-      var data_act_pre=$("#stats_act").data("act_data");
+
+      function drawChart_subtypestats() {
+
+        var data_all = $("#subtype_stats").data("subtype_stats");
+        var data = google.visualization.arrayToDataTable(data_all);
+        var options = {
+          slices: {
+            0: { color: '#7EF3B1' },
+            1: { color: '#ff8e85' }
+          },
+          pieSliceTextStyle:{color:"black"},
+          width:300,
+          height:350,
+          chartArea:{width:280,height:280},
+          legend:{ alignment:"center"},
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('subtype_stats'));
+
+        chart.draw(data, options);
+      }
+      google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_subtypestats});
+
+
+      
+      function drawChart_pdbstats() {
+
+        var data_all = $("#pdb_stats").data("pdb_stats");
+        var data = google.visualization.arrayToDataTable(data_all);
+        var options = {
+          slices: {
+            0: { color: '#7EF3B1' },
+            1: { color: '#ff8e85' }
+          },
+          pieSliceTextStyle:{color:"black"},
+          width:300,
+          height:350,
+          chartArea:{width:280,height:280},
+          legend:{ alignment:"center"},
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('pdb_stats'));
+
+        chart.draw(data, options);
+      }
+      google.load("visualization", "1", {packages:["corechart"],'callback': drawChart_pdbstats});
+
+      /*      var data_act_pre=$("#stats_act").data("act_data");
       function drawChart_activation() {
         var datainfo=[['State', 'GPCR']];
         var data_all = datainfo.concat(data_act_pre);
@@ -5454,7 +5511,7 @@ $(document).ready(function(){
       }
 
 
-
+*/
 })
 
 

@@ -54,66 +54,145 @@ def gpcrmd_home(request):
 #    model_path = dynfiles.get(id_files__id_file_types__is_model=True).file_path;
 #    context["model_path"]= model_path[model_path.index("Dynamics"):] 
 #########
-    dynall=DyndbDynamics.objects.filter(is_published=True)
+    dynall=DyndbDynamics.objects.all().exclude(id=5) #I think dyn 5 is wrong
 
     ################ Precompute & import
+    #dynclass=dynall.annotate(is_published=F('is_published'))
+    
+
     dynclass=dynall.annotate(subm_date=F('creation_timestamp'))
+    dynclass=dynclass.annotate(is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+    dynclass=dynclass.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
     dynclass=dynclass.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
     dynclass=dynclass.annotate(dyn_id=F('id'))
-    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2")
+    dynclass = dynclass.annotate(pdb_namechain=F("id_model__pdbid"))
+    dynall_values=dynclass.values("dyn_id","subm_date","fam_slug","fam_slug2","is_published","is_traj","file_id","pdb_namechain")
 
 
     dyn_dict = {}
-    fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
+    #fam_d={"001":"A","002":"B1","003":"B2","004":"C","005":"F","006":"Taste 2","007":"Others"}
 
+    pdb_id_set=set()
+    fam_set=set()
+    subtype_set=set()
     for dyn in dynall_values:
         dyn_id=dyn["dyn_id"]
+        pdbid=dyn["pdb_namechain"].split(".")[0]
+        if pdbid:
+            pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
+            subtype_set.add(fam_slug)
+            fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]
-            fam=fam_d[fam_code]            
+            #fam=fam_d[fam_code]            
         if dyn_id not in dyn_dict:
             dyn_dict[dyn_id]={}
             dyn_dict[dyn_id]["subm_date"]=dyn["subm_date"]
             dyn_dict[dyn_id]["fam"]=fam
+            if dyn["is_traj"]:
+                dyn_dict[dyn_id]["trajs"]={dyn["file_id"]}
+            else:
+                dyn_dict[dyn_id]["trajs"]=set()
         else:
             if not dyn_dict[dyn_id]["fam"]:
                 dyn_dict[dyn_id]["fam"]=fam
+            if dyn["is_traj"]:
+                dyn_dict[dyn_id]["trajs"].add(dyn["file_id"])
 
 
-    # Submissions by class    
-    dynall_fam_data=[d["fam"] for d in dyn_dict.values()]
-    class_li=[]
-    for gclass in ["A","B1","B2","C","F"]:
-        class_count=dynall_fam_data.count(gclass)
-        class_li.append([gclass,class_count])
-    context["class_data"]=json.dumps(class_li)
+#    # Submissions by class    
+#    dynall_fam_data=[d["fam"] for d in dyn_dict.values()]
+#    class_li=[]
+#    for gclass in ["A","B1","B2","C","F"]:
+#        class_count=dynall_fam_data.count(gclass)
+#        class_li.append([gclass,class_count])
+#    context["class_data"]=json.dumps(class_li)
 
 
     # Submisisons by date
-    dynall_subm_data=[d["subm_date"] for d in dyn_dict.values()]
-    s = pd.to_datetime(pd.Series(dynall_subm_data)) 
-    s.index = s.dt.to_period('m')
-    s = s.groupby(level=0).size()
-    s = s.reindex(pd.period_range(s.index.min(), s.index.max(), freq='m'), fill_value=0)
-    s=s.cumsum()
-    s.index= [s.strftime("%b %Y") for s in s.index]
-    subm_data=[[k,v] for (k,v) in  s.items()] 
+    date_d={}
+    syst_c=0
+    traj_c=0
+    for d in dyn_dict.values():
+        subm_date_obj=d["subm_date"]
+        subm_date=subm_date_obj.strftime("%b %Y")
+        syst_c+=1
+        traj_c+=len(d["trajs"])
+        if not subm_date in date_d:
+            date_d[subm_date]={}
+        date_d[subm_date]["Systems"]=syst_c
+        date_d[subm_date]["Trajectories"]=traj_c
+        #date_d[subm_date]["Dateobj"]=subm_date_obj
+
+    st=pd.DataFrame.from_dict(date_d,orient="index")
+    st.index=pd.to_datetime(st.index).to_period('m')
+    st = st.reindex(pd.period_range(st.index.min(), st.index.max(), freq='m'), fill_value=0)
+    st.index= [st.strftime("%b %Y") for st in st.index]
+
+    last_s=0
+    last_t=0
+    subm_data=[]
+    for index, row in st.iterrows():
+        sys=row["Systems"]
+        traj=row["Trajectories"]
+        if sys ==0:
+            sys=last_s
+            traj=last_t
+            leg_s=""
+            leg_t=""
+        else:
+            last_s=sys
+            last_t=traj
+            leg_s=str(sys)
+            leg_t=str(traj)
+        subm_data.append([index,int(sys),leg_s,int(traj),leg_t])
+
     context["subm_data"] =json.dumps(subm_data)
     ################
+    #Fams sumulated
+    sim_fams=len(fam_set)
+    missing_fams=64 - sim_fams
+    fam_stats= [['Class', 'Num'],
+                ['Simulated', sim_fams],
+                ['Not yet simulated',missing_fams]
+                ]
+    context["fam_stats"]=json.dumps(fam_stats)
 
-    # Activation state
-    stats_precomp_file="/protwis/sites/files/Precomputed/Summary_info/dyn_stats.data"
-    exists=os.path.isfile(stats_precomp_file)
-    act_li=False
-    if exists:
-        with open(stats_precomp_file, 'rb') as filehandle:  
-            act_li = pickle.load(filehandle)
-    context["act_data"]=json.dumps(act_li)
+
+    #Subtypes sumulated
+    sim_subtyppes=len(subtype_set)
+    missing_subtypes=64 - sim_subtyppes
+    subtype_stats= [['Class', 'Num'],
+                ['Simulated', sim_subtyppes],
+                ['Not yet simulated',missing_subtypes]
+                ]
+    context["subtype_stats"]=json.dumps(subtype_stats)
+
+
+    #PDB ids sumulated
+    pdb_id_sim=len(pdb_id_set)
+    missing_pdb_ids=346 - pdb_id_sim
+    pdb_stats= [['Class', 'Num'],
+                ['Simulated', pdb_id_sim],
+                ['Not yet simulated',missing_pdb_ids]
+                ]
+    context["pdb_stats"]=json.dumps(pdb_stats)
+
+
+
+#    # Activation state
+#    stats_precomp_file="/protwis/sites/files/Precomputed/Summary_info/dyn_stats.data"
+#    exists=os.path.isfile(stats_precomp_file)
+#    act_li=False
+#    if exists:
+#        with open(stats_precomp_file, 'rb') as filehandle:  
+#            act_li = pickle.load(filehandle)
+#    context["act_data"]=json.dumps(act_li)
 
 
     # Entry of the month
@@ -172,7 +251,13 @@ def gpcrmd_home(request):
 
     return render(request, 'home/index_gpcrmd.html', context )
 
+def contact(request):
+    context = {}
+    return render(request, 'home/contact.html', context )
 
+def community(request):
+    context = {}
+    return render(request, 'home/community.html', context )
 
 def gpcrtree(request):
     context = {}

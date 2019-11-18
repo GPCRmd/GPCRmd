@@ -356,7 +356,7 @@ g circle , g text {
                 <div id="meetings" class="tab-pane fade">
                   <h3>Meetings</h3>
                     <ul>
-                      <li>The progress of the GPCRmd project will be presented at the first ERNEST meeting: <a href="https://ernest-gpcr.eu/first-ernest-meeting-gpcr-pharmacology-activation-signalling-and-drug-design-belfast-28-30-oct-2019/">GPCR Pharmacology – Activation, Signalling and Drug Design</a> in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
+                      <li>The progress of the GPCRmd project was presented at the first ERNEST meeting: <a href="https://ernest-gpcr.eu/first-ernest-meeting-gpcr-pharmacology-activation-signalling-and-drug-design-belfast-28-30-oct-2019/">GPCR Pharmacology – Activation, Signalling and Drug Design</a> in Belfast, Northern Ireland, UK , October 28-30, 2019</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="https://glistensymposium.wordpress.com/">GLISTEN Spring Meeting</a> in Porto, 29-31 March, 2017</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.glisten2016.cz/?q=node/1">GLISTEN Meeting</a> in Prague, 26-27 September, 2016</li>
                       <li>GPCRdb and GPCRmd Satellite meeting at <a href="http://www.grk1910.de/glisten-2016.html">GLISTEN Meeting</a> in Erlangen, 6-8 April, 2016</li>
@@ -450,7 +450,7 @@ g circle , g text {
                       We will start a new round of GPCR simulations. Contact us if you are interested in participating.
                     </p>
                     <center>
-                      <a href="https://welcome.gpcrmd.org/contact/" class="btn btn-success btn-lg" role="button" style="font-weight:bold;margin:20px;font-size:20px;padding:10px 20px">Contribute!</a>
+                      <a href="/contact/" class="btn btn-success btn-lg" role="button" style="font-weight:bold;margin:20px;font-size:20px;padding:10px 20px">Contribute!</a>
                     </center>
                   </div>
                 </div>
@@ -572,27 +572,36 @@ g circle , g text {
 
 
                 <div class="item active"  style="padding:15px;">
-                  <h4 class="extrainfo_title">Simulations submitted</h4>
+                  <h4 class="extrainfo_title">Simulations in GPCRmd</h4>
                   <div style="overflow-x: auto;overflow-y: hidden">
                    <div id="stats_subm" data-subm_data="{{subm_data}}" style="width: 300px; height: 400px;margin:auto;"></div>
                   </div>
                 </div>
 
                 <div class="item"  style="padding:15px">
-                  <h4 class="extrainfo_title">Simulations by class</h4>
+                  <h4 class="extrainfo_title">Simulated GPCR families</h4>
+                  <p>Simulated GPCR families with known structure.</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
-                    <div id="stats_class" style="width: 300px; height: 400px;margin:auto" data-class_data="{{class_data}}"></div>
+                    <div id="fam_stats" style="width: 300px; height: 400px;margin:auto" data-fam_stats="{{fam_stats}}"></div>
                   </div>
                 </div>
 
-                {% if act_data %}
                 <div class="item"  style="padding:15px">
-                  <h4 class="extrainfo_title">Simulations by activation state</h4>
+                  <h4 class="extrainfo_title">Simulated GPCR subtypes</h4>
+                  <p>Simulated GPCR subtypes with known structure.</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
-                    <div id="stats_act" style="width: 300px; height: 400px;margin:auto" data-act_data="{{act_data}}"></div>
+                    <div id="subtype_stats" style="width: 300px; height: 400px;margin:auto" data-subtype_stats="{{subtype_stats}}"></div>
                   </div>
                 </div>
-                {% endif %}
+
+                <div class="item"  style="padding:15px">
+                  <h4 class="extrainfo_title">Simulated PDB structures</h4>
+                  <div style="overflow-x: auto;overflow-y: hidden">
+                    <div id="pdb_stats" style="width: 300px; height: 400px;margin:auto" data-pdb_stats="{{pdb_stats}}"></div>
+                  </div>
+                </div>
+                
+
               </div>
         
               <!-- Left and right controls -->
@@ -610,6 +619,7 @@ g circle , g text {
                 <li data-target="#statsCarousel" data-slide-to="0" class="active"></li>
                 <li data-target="#statsCarousel" data-slide-to="1"></li>
                 <li data-target="#statsCarousel" data-slide-to="2"></li>
+                <li data-target="#statsCarousel" data-slide-to="3"></li>
               </ol>
             </div>
           </div>

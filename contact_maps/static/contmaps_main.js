@@ -166,6 +166,12 @@ function printchecked(){
     rev_value = "norev";
   }
 
+  //Check if include non-standard is selected
+  stnd_value = $("#non_standard:checked").val();
+  if (!Boolean(stnd_value)){
+    stnd_value = "stnd";
+  }
+
   //Check location of the interaction options
   checked_locs = $('.option_location:checked');
   for (var i=0; i < checked_locs.length; i++){
@@ -181,7 +187,7 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contmaps/' + check_opt + "&" + clusters + "&" + locs.join("_") + "&"  + rev_value;
+    URL = '/contmaps/' + check_opt + "&" + clusters + "&" + locs.join("_") + "&"  + rev_value + "&" + stnd_value;
     if (window.location.pathname == URL){
       location.reload()
     }
@@ -198,8 +204,10 @@ function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
-  $("#dendrogram").css("width","40%");
-  $(".heatmap").css("width","60%");  
+  $("#dendrogram").css("width","30%");
+  $(".heatmap").css("width","70%");
+  $("#heatmap_pager").css("margin-left","37%")
+  $("#heatmap_pager").css("margin-rigth","15%")
 }
 
 //--------Heatmap change page system (the return false thing is for links not to redirect)
@@ -239,3 +247,17 @@ function heatmap_change(heatmap) {
   }
   return false
 }
+
+//---------Show/hide flareplots and NGL viewers
+function rotate_arrow(arrow_id) {
+  var arrow = $("#"+arrow_id);
+  if (arrow.hasClass('glyphicon-chevron-up')) {
+    arrow.removeClass('glyphicon-chevron-up');
+    arrow.addClass('glyphicon-chevron-down');
+  }
+  else {
+    arrow.removeClass('glyphicon-chevron-down');
+    arrow.addClass('glyphicon-chevron-up');
+  }
+}
+
