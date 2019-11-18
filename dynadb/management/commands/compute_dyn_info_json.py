@@ -206,6 +206,7 @@ class Command(BaseCommand):
                     "lig_lname":comp_name,
                     "lig_sname":res_li[0],
                     "prot_lname":prot.name,
+                    "prot_sname":
                     "up_name":uniprot_name,
                     "pdb_id":pdb_id,
                     "struc_f":structure_file,

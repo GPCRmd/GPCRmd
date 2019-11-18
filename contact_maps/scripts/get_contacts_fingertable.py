@@ -46,10 +46,9 @@ mkdir_p(str(files_path + "contact_tables"))
 
 #Get dynlist
 dyncsv_path = files_path + "dyn_list.csv"
-dyncsv_file = open(dyncsv_path, "r")
-dynlist = dyncsv_file.readline().replace('\n','').split(",")
-dyntsv = "\t".join(dynlist)
-dyncsv_file.close()
+with open(dyncsv_path, "r") as dyncsv_file:
+	dynlist = dyncsv_file.readline().replace('\n','').split(",")
+	dyntsv = "\t".join(dynlist)
 
 #itype sets
 itypes = set(("wb", "wb2", "sb","hp","pc","ps","ts","vdw", "hb", "hbbb","hbsb","hbss","hbls","hblb","all"))
