@@ -270,7 +270,7 @@
 
             <div style="max-width:550px ;overflow-y: hidden;overflow-x:auto; margin: 15px auto; max-height: 405px;border:1px solid #e6e6e6;">
                 <!--<iframe style="border: 0px none; margin-left: -130px; height: 1000px; margin-top: -640px; width: 800px;" src="/view/{{answer.nglviewer_id}}" scrolling="no"></iframe>-->
-                <iframe class="str_file traj_file" style="border: 0px none;width: 545px;margin-top:-35px;" id="embed_mdsrv" src="{{answer.mdsrv_url}}/html/embed_show.html" scrolling="no" height="400px" width="590px" data-struc_file="{{answer.structure_file}}" data-traj_file="{{answer.traj_file}}" ></iframe>
+                <iframe class="str_file traj_file"  data-dyn_id="{{answer.nglviewer_id}}" style="border: 0px none;width: 545px;margin-top:-35px;" id="embed_mdsrv" src="{{answer.mdsrv_url}}/html/embed_show.html" scrolling="no" height="400px" width="590px" data-struc_file="{{answer.structure_file}}" data-traj_file="{{answer.traj_file}}" ></iframe>
                 <center><div style="padding-bottom:10px;padding-top:10px;padding-right:3px;padding-left:3px;width:545px">
                         <p style='text-align:center;color:#808080'>Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" rel="noreferrer" target="_blank">NGL viewer</a> and <a href="http://nglviewer.org/mdsrv/" rel="noreferrer" target="_blank">MDSrv</a></p>
                 </div></center>

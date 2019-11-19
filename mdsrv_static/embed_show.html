@@ -134,6 +134,7 @@
 
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var traj=$(".traj_file", window.parent.document).data("traj_file");
+            var dyn_id=$(".str_file", window.parent.document).data("dyn_id");
             var mut_sel=$("#mutations", window.parent.document).data("mut_sel");
             var  traj_path= "_DB/";
             var  path= "/mdsrv/file/_DB/";
@@ -148,6 +149,9 @@
             });
             var ligsel=ligli.join(" or ");
 
+            if (dyn_id==7){
+                var ligsel="CHL1 and 59";
+            }
 
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){

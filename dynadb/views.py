@@ -3224,6 +3224,8 @@ def query_dynamics(request,dynamics_id):
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
             molname=match.id_molecule.id_compound.name.capitalize()
             mol_id=match.id_molecule.id
+            if {m.type for m in  DyndbModelComponents.objects.filter(id_molecule=mol_id)} == {0}:
+                continue # Do not include ions
             resname=list(set([r.resname for r in DyndbDynamicsComponents.objects.filter(id_molecule=mol_id)]))[0]
             if match.type==0:
                 dyna_dic['ortoligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname])
