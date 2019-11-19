@@ -197,7 +197,8 @@ hr {
 }
 
 #heatmap_pager {
-  margin-left: 47%;
+  margin-left: 37%;
+  margin-right: 15%;
 }
 
 #loading_heatmap {
