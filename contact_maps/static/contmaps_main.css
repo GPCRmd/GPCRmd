@@ -47,8 +47,18 @@ a {
   height: 89%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
 }
 
+#itype_link{
+  color: #337ab7; /*link blue*/
+}
+
 #menus {
   width: 100%; 
+  padding-top: 20;
+  padding-bottom: 50;
+}
+
+#download_csv {
+  color: rgb(88, 88, 88); /*Ugly gray*/
 }
 
 #doc_col{
@@ -425,7 +435,7 @@ hr {
 
 #menu_link {
   font-size: 12;
-  margin-bottom: 15;
+  margin-top: 15;
   margin-left: 0;
 }
 
@@ -433,3 +443,4 @@ hr {
   white-space: pre-wrap;
   text-align: center;  
 }
+
