@@ -517,13 +517,6 @@
           event.preventDefault()
         })
 
-        //Get path arguments (if any) from parent web
-        var args, itype, ligandonly, cluster, JSONfile;
-        itype = parent.$("#ngl_iframe1").attr('data-itype');
-        clusters = parent.$("#ngl_iframe1").attr('data-cluster');
-        ligandonly = parent.$("#ngl_iframe1").attr('data-ligandonly');
-        JSONfile = "/dynadb/files/Precomputed/get_contacts_files/view_input_dataframe/"+itype+"_"+ligandonly+"_jsons/"+clusters+"clusters/clustdict.json";
-
         //Clear button
         parent.$("#ngldiv"+id+" .NGLclear").click(function(){          
           parent.$("#FPclearSel"+id).trigger("click");
