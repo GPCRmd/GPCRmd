@@ -196,7 +196,7 @@ def gpcrmd_home(request):
 
 
     # Entry of the month
-    dyn_id=4
+    dyn_id=90
     context["dyn_id"]=dyn_id
     dynobj=dynall.filter(id=dyn_id)#.latest("creation_timestamp")
     t=dynobj.annotate(dyn_id=F('id'))
@@ -208,10 +208,13 @@ def gpcrmd_home(request):
     t = t.annotate(pdb_namechain=F("id_model__pdbid"))
     dyndata=t.values("id","comp_resname","comp_type","protname","protname2","ligname","pdb_namechain")
 
-    lig_li=[d["comp_resname"].capitalize() for d in dyndata if d["comp_type"]==1]
+    lig_li=[d["comp_resname"].upper() for d in dyndata if d["comp_type"]==1]
     context["lig_li"]=" or ".join(lig_li)
     
-    ligname_li=[d["ligname"].capitalize() for d in dyndata if d["comp_type"]==1] 
+    if dyn_id==90:
+        ligname_li=["Ergotamine"]
+    else:
+        ligname_li=[d["ligname"].capitalize() for d in dyndata if d["comp_type"]==1] 
     context["lig_name"]=" and ".join(ligname_li)
     
     prot_name=" and ".join(list({d["protname"] if d["protname"] else d["protname2"] for d in dyndata}))
