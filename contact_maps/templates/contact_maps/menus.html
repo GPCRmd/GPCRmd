@@ -1,5 +1,30 @@
 <div id="menus" class="container-fluid">
   <div class="row">
+    <!--datasets dropdown-->
+    <div class="dropdown optbar">
+      <button type="button" id="dataset_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="datasetlist">
+        Simulation datasets 
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu dropdown-dataset dropdown-itype">
+        <li>
+          <label class="dataset_checkbox mycheckbox">
+            <input type="checkbox" checked disabled id="" name="dataset"/>
+            GPCRmd community
+          </label>
+        </li>
+        <li>
+          <label class="dataset_checkbox mycheckbox">
+            {% if 'cmpl' == stnd %}
+            <input type="checkbox" id="non_standard" value="cmpl" checked/>
+            {% else %}
+            <input type="checkbox" id="non_standard" value="cmpl"/>
+            {% endif %}
+            Individual contributions
+          </label>
+        </li>
+      </ul>      
+    </div>
     <!--itypes dropdown-->
     <div class="dropdown optbar">
       <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
@@ -58,15 +83,48 @@
         {% endfor %}
         {% endfor %}
         <!--All option-->
-        <br>
+        <hr>
         <li id="all-li">
           <label id="all" class="mycheckbox">
           <input type="radio" name="itypes" class="option" value="all" />
             Total interaction frequency
           </label>
         </li>
+        <hr>
+        <li id="menu_link">
+          <a href="./contmaps/interaction_types" target="blank" id="itype_link">Interaction types definitions</a>    
+        </li>
       </ul>
     </div> 
+    <!--Interacting partners dropdown -->
+    <div class=" dropdown optbar">
+      <button type="button" id="ipartner_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="partnerlist">
+        Interaction Partners 
+        <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu dropdown-partner">
+        <li>
+          <label class="partners_checkbox mycheckbox">
+            {% if "prt" in ligandonly %}
+            <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
+            {% else %}
+            <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+            {% endif %}
+            Protein-Protein
+          </label>
+        </li>
+        <li>
+          <label class="partners_checkbox mycheckbox">
+            {% if "lg" in ligandonly %}
+            <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
+            {% else %}
+            <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
+            {% endif %}
+            Protein-Ligand
+          </label>
+        </li>  
+      </ul>
+    </div>
     <!--Clusters dropdown-->
     <div class="dropdown optbar">
       <select name="clusters" id="clusters_dropdown" class="btn btn-sm btn-primary">
@@ -79,60 +137,26 @@
         {% endfor %}
       </select>
     </div>
-    <!--Checkboxes interacting parts of the simulation -->
-    <div class="optbar">
-      <label class="partners_checkbox">
-      {% if "prt" in ligandonly %}
-      <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
-      {% else %}
-      <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
-      {% endif %}
-        Protein-Protein
-      </label>
-      <br>
-      <label class="partners_checkbox">
-      {% if "lg" in ligandonly %}
-      <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
-      {% else %}
-      <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
-      {% endif %}
-        Protein-Ligand
-      </label>
-    </div>
     <!--Repetition and non-standard checkbox-->
     <div class="optbar">
       <label class="partners_checkbox">
-      {% if 'rev' == rev %}
-      <input type="checkbox" id="rev_pairs" name="rev" value="rev" checked/>
-      {% else %}
-      <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
-      {% endif %}
+        {% if 'rev' == rev %}
+        <input type="checkbox" id="rev_pairs" name="rev" value="rev" checked/>
+        {% else %}
+        <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
+        {% endif %}
         Show reversed residue pairs
-      </label>
-      <br>
-      <label class="partners_checkbox">
-      {% if 'cmpl' == stnd %}
-      <input type="checkbox" id="non_standard" value="cmpl" checked/>
-      {% else %}
-      <input type="checkbox" id="non_standard" value="cmpl"/>
-      {% endif %}
-        Include non-standard simulations
       </label>
     </div>
     <!--Apply button -->
     <div class="dropdown optbar">
       <button type="button" id="applybutton"  onclick="printchecked();" class="btn btn-success btn-sm" >Apply </button>
     </div>
-  </div>
-  <div id="menu_link" class="row">
-    <a  href="./contmaps/interaction_types" target="blank">Interaction types definitions</a>
-  </div>
-  <!--download button-->
-  <div class="row">
+    <!--download button-->
     <div class="dropdown optbar">
-      <button type="button" class="btn btn-sm btn-primary" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'"><!-- onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">-->
-        <span class="glyphicon glyphicon-download"></span> Download csv
-      </button> 
+      <a class="btn btn-link" id="download_csv" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}&{{stnd}}'"><!-- onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">-->
+        <span title="Download data in csv" class="glyphicon glyphicon-download-alt"></span>
+      </a> 
     </div>
   </div>
 </div>

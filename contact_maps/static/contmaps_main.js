@@ -207,7 +207,7 @@ function closeSideWindow() {
   $("#dendrogram").css("width","30%");
   $(".heatmap").css("width","70%");
   $("#heatmap_pager").css("margin-left","37%")
-  $("#heatmap_pager").css("margin-rigth","15%")
+  $("#heatmap_pager").css("margin-right","15%")
 }
 
 //--------Heatmap change page system (the return false thing is for links not to redirect)

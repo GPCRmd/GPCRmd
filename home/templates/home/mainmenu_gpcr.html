@@ -144,23 +144,23 @@
             </ul>
         </li>-->
             <ul class="nav navbar-nav navbar-left">
-                <li><a href="/home/">Home</a></li>
+                <li id="home"><a href="/home/">Home</a></li>
 
-                <li class="dropdown" id=Analysis_li>
+                <li class="dropdown" id="Analysis_li">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Analysis tools
                     <span class="caret"></span></a>
                     <ul class="dropdown-menu" data-pointto="Analysis_li">
-                        <li><a href="/view/4/">GPCRmd Workbench (example)</a></li>
-                        <li><a href="/contmaps/">Receptor meta-analysis</a></li>
+                        <li id="view"><a href="/view/4/">GPCRmd Workbench (example)</a></li>
+                        <li id="contmaps"><a href="/contmaps/">Receptor meta-analysis</a></li>
                     </ul>
                 </li>
 
-                <li class="dropdown" id=Submission_li>
+                <li class="dropdown" id="Submission_li">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Submission
                     <span class="caret"></span></a>
                     <ul class="dropdown-menu" data-pointto="Submission_li">
-                        <li><a href="/accounts/memberpage/">Simulation submission</a></li>
-                        <li><a href="/dynadb/references/">Authorship and references form</a></li>
+                        <li id="simbsub"><a href="/accounts/memberpage/">Simulation submission</a></li>
+                        <li id="references"><a href="/dynadb/references/">Authorship and references form</a></li>
                     </ul>
                 </li>
                 <!--<li><a href="https://welcome.gpcrmd.org/home/contact/">Contact</a></li>-->
@@ -196,14 +196,46 @@
                 
           </ul>
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="/dynadb/search/" style="font-weight:bold"><span class="glyphicon glyphicon-search"></span> Advanced search</a></li>
+            <li id="search"><a href="/dynadb/search/" style="font-weight:bold"><span class="glyphicon glyphicon-search"></span> Advanced search</a></li>
           </ul>
 
           <script>
-                var pageName = location.pathname;
-                var selected_a=document.querySelector("a[href='" + pageName + "']");
-                var selected_li=selected_a.parentElement;
-/*                if (selected_li.parentElement.classList.toString().indexOf("dropdown-menu")>-1 ){
+                function activate_option(id){
+                  document.getElementById(id).classList += " active";                  
+                }
+                //Make active the selected button in navbar
+                var path_list = location.pathname.split("/");
+                switch (path_list[1]){
+                  case "home":
+                    activate_option("home");
+                    break;
+                  case "view":
+                    activate_option("view");
+                    break;
+                  case "contmaps":
+                    activate_option("contmaps");
+                    break;
+                  case "accounts":
+                    activate_option("simbsub");
+                    break;
+                  case "contact":
+                    activate_option("contact");
+                    break;
+                  case "dynadb":
+                    switch (path_list[2]){
+                      case "references":
+                        activate_option("references");
+                        break
+                      case "search":
+                        activate_option("search");
+                        break
+                      default:
+                        activate_option("simsub");
+                    }
+
+                }
+
+                    /*                if (selected_li.parentElement.classList.toString().indexOf("dropdown-menu")>-1 ){
                     var myid=selected_li.parentElement.getAttribute('data-pointto');
                     console.log(myid)
                     var myliel=document.getElementById(myid)
@@ -213,7 +245,6 @@
                     }
                     
                 } */
-                selected_li.classList += "active";
           </script>
                 <!-- Logo testing  -->
                 <!--
