@@ -143,6 +143,9 @@
                     </div><!--related dynamics-->
                     {% endif %}
 
+                    {% if answer.author %}
+                        <span class="techinfo_title">Submitted by</span>: {{answer.author}}
+                    {%endif%}
                     
                 </div>
             </div> <!--lef div end-->

@@ -33,6 +33,7 @@ from operator import itemgetter
 from os import listdir
 from os.path import isfile, normpath
 import urllib
+from accounts.models import User
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count, Prefetch
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
@@ -3170,6 +3171,17 @@ def query_dynamics(request,dynamics_id):
         raise Http404('Oops. That dynamics does not exist')
     except:
         raise
+    user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id)
+    if dynamics_id in range(4,10):
+        author="GPCR drug discovery group (Pompeu Fabra University)"
+    elif user.id in {1, 3, 5, 12, 14}:
+        author="GPCRmd community"
+    else:
+        if DyndbDynamics.objects.get(id=dynamics_id).is_published:
+            author=u.first_name + " "+ u.last_name
+        else:
+            author=False
+    dyna_dic["author"]=author
     dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']={"struc_files":list(), "param_files":list()}
