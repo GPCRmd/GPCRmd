@@ -196,7 +196,7 @@ def gpcrmd_home(request):
 
 
     # Entry of the month
-    dyn_id=4
+    dyn_id=90
     context["dyn_id"]=dyn_id
     dynobj=dynall.filter(id=dyn_id)#.latest("creation_timestamp")
     t=dynobj.annotate(dyn_id=F('id'))
