@@ -54,7 +54,7 @@ def gpcrmd_home(request):
 #    model_path = dynfiles.get(id_files__id_file_types__is_model=True).file_path;
 #    context["model_path"]= model_path[model_path.index("Dynamics"):] 
 #########
-    dynall=DyndbDynamics.objects.all().exclude(id=5) #I think dyn 5 is wrong
+    dynall=DyndbDynamics.objects.filter(is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
 
     ################ Precompute & import
     #dynclass=dynall.annotate(is_published=F('is_published'))
@@ -159,7 +159,7 @@ def gpcrmd_home(request):
     missing_fams=64 - sim_fams
     fam_stats= [['Class', 'Num'],
                 ['Simulated', sim_fams],
-                ['Not yet simulated',missing_fams]
+                ['Pending',missing_fams]
                 ]
     context["fam_stats"]=json.dumps(fam_stats)
 
@@ -169,7 +169,7 @@ def gpcrmd_home(request):
     missing_subtypes=64 - sim_subtyppes
     subtype_stats= [['Class', 'Num'],
                 ['Simulated', sim_subtyppes],
-                ['Not yet simulated',missing_subtypes]
+                ['Pending',missing_subtypes]
                 ]
     context["subtype_stats"]=json.dumps(subtype_stats)
 
@@ -179,7 +179,7 @@ def gpcrmd_home(request):
     missing_pdb_ids=346 - pdb_id_sim
     pdb_stats= [['Class', 'Num'],
                 ['Simulated', pdb_id_sim],
-                ['Not yet simulated',missing_pdb_ids]
+                ['Pending',missing_pdb_ids]
                 ]
     context["pdb_stats"]=json.dumps(pdb_stats)
 
@@ -196,7 +196,7 @@ def gpcrmd_home(request):
 
 
     # Entry of the month
-    dyn_id=4
+    dyn_id=90
     context["dyn_id"]=dyn_id
     dynobj=dynall.filter(id=dyn_id)#.latest("creation_timestamp")
     t=dynobj.annotate(dyn_id=F('id'))
@@ -208,10 +208,13 @@ def gpcrmd_home(request):
     t = t.annotate(pdb_namechain=F("id_model__pdbid"))
     dyndata=t.values("id","comp_resname","comp_type","protname","protname2","ligname","pdb_namechain")
 
-    lig_li=[d["comp_resname"].capitalize() for d in dyndata if d["comp_type"]==1]
+    lig_li=[d["comp_resname"].upper() for d in dyndata if d["comp_type"]==1]
     context["lig_li"]=" or ".join(lig_li)
     
-    ligname_li=[d["ligname"].capitalize() for d in dyndata if d["comp_type"]==1] 
+    if dyn_id==90:
+        ligname_li=["Ergotamine"]
+    else:
+        ligname_li=[d["ligname"].capitalize() for d in dyndata if d["comp_type"]==1] 
     context["lig_name"]=" and ".join(ligname_li)
     
     prot_name=" and ".join(list({d["protname"] if d["protname"] else d["protname2"] for d in dyndata}))

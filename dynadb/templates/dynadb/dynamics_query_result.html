@@ -143,6 +143,9 @@
                     </div><!--related dynamics-->
                     {% endif %}
 
+                    {% if answer.author %}
+                        <span class="techinfo_title">Submitted by</span>: {{answer.author}}
+                    {%endif%}
                     
                 </div>
             </div> <!--lef div end-->
@@ -402,7 +405,7 @@
 
     <div id='references' class="col-md-12">
         {% if answer.references %} 
-            <br><h4>References in which this dynamic is mentioned</h4><br>
+            <br><h4>References in which this simulation is mentioned</h4><br>
             {%for reference in answer.references%}
                 {%if reference.pmid%}
                     <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
@@ -412,6 +415,11 @@
             {%endfor%}
 
         {% endif %} 
+        {% if answer.force_ref %}
+            <br><h4>References in which this simulation is mentioned</h4><br>
+            <p id="gpcrmdref">{{answer.force_ref}} (<a href="https://doi.org/10.1101/839597">https://doi.org/10.1101/839597)</a></p>
+        {% endif %}
+
         <br><br>
         <center><a style="font-weight: bold;" class='btn btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Go to data visualization & analysis</a><br><br><br><br></center>
     </div> <!-- end of references div-->

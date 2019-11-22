@@ -33,6 +33,7 @@ from operator import itemgetter
 from os import listdir
 from os.path import isfile, normpath
 import urllib
+from accounts.models import User
 from django.db.models.functions import Concat
 from django.db.models import CharField,TextField, Case, When, Value as V, F, Q, Count, Prefetch
 from .customized_errors import StreamSizeLimitError, StreamTimeoutError, ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension, DownloadGenericError, RequestBodyTooLarge, FileTooLarge, TooManyFiles, SubmissionValidationError
@@ -165,14 +166,14 @@ def REFERENCEview(request, submission_id=None):
         qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
         qRFpmid=DyndbReferences.objects.filter(pmid=request.POST['pmid'])
         if qRFdoi.exists():
-            iii1="Please, Note that the reference you are trying to submit has a DOI previously stored in the GPCRdb. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
+            iii1="Please, Note that the reference you are trying to submit has a DOI previously stored in the GPCRmd. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
             print(iii1)
             response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             FRpk = qRFdoi.values_list('id',flat=True)
             SubmitRef=False
            # return response
         if qRFpmid.exists():
-            iii1="Please, Note that the reference you are trying to submit has a PMID previously stored in the GPCRdb.  Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
+            iii1="Please, Note that the reference you are trying to submit has a PMID previously stored in the GPCRmd.  Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
             print(iii1)
             response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             SubmitRef=False
@@ -3170,6 +3171,20 @@ def query_dynamics(request,dynamics_id):
         raise Http404('Oops. That dynamics does not exist')
     except:
         raise
+    user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id)
+    force_ref=False
+    if dynamics_id in range(4,10):
+        author="GPCR drug discovery group (Pompeu Fabra University)"
+    elif user.id in {1, 3, 5, 12, 14}:
+        author="GPCRmd community"
+        force_ref="Ismael Rodríguez-Espigares, Mariona Torrens-Fontanals, Johanna K.S. Tiemann, David Aranda-García, Juan Manuel Ramírez-Anguita, Tomasz Maciej Stepniewski, Nathalie Worp, Alejandro Varela-Rial, Adrián Morales-Pastor, Brian Medel Lacruz, Gáspár Pándy-Szekeres, Eduardo Mayol, Rasmus Fonseca, Toni Giorgino, Jens Carlsson, Xavier Deupi, Slawomir Filipek, José Carlos Gómez-Tamayo, Angel Gonzalez, Hugo Gutierrez-de-Teran, Mireia Jimenez, Willem Jespers, Jon Kapla, Peter Kolb, Dorota Latek, Maria Marti-Solano, Pierre Matricon, Minos-Timotheos Matsoukas, Przemyslaw Miszta, Mireia Olivella, Laura Perez-Benito, Santiago Ríos, Iván Rodríguez-Torrecillas, Jessica Sallander, Agnieszka Sztyler, Silvana Vasile, Peter W. Hildebrand, Gianni De Fabritiis, David E. Gloriam, Arnau Cordomi, Ramon Guixà-González, Jana Selent. 2019. GPCRmd uncovers the dynamics of the 3D-GPCRome. bioRxiv. doi:10.1101/839597"
+    else:
+        if DyndbDynamics.objects.get(id=dynamics_id).is_published:
+            author=u.first_name + " "+ u.last_name
+        else:
+            author=False
+    dyna_dic["author"]=author
+    dyna_dic["force_ref"]=force_ref
     dyna_dic['nglviewer_id']=dynamics_id
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']={"struc_files":list(), "param_files":list()}
