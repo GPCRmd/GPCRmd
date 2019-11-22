@@ -53,11 +53,10 @@
         document.domain=document.domain;
 
 ////////////////// Functions
-        function setTrajRangeMax(){
-            var btn_traj_Bid =$(".traj_btn").attr("id");
+        function setTrajRangeMax(trajComp){
+            var btn_traj_Bid =$(".traj_btn").attr("data-traj");
             var tPatt = /\d*$/g;
             var btn_traj_id = tPatt.exec(btn_traj_Bid);
-            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
             numfr=trajComp.trajectory._frameCount;
             if ( numfr && ($("#trajRange").attr("max") != numfr)){
                 $("#trajRange").attr("max",numfr);
@@ -68,13 +67,13 @@
 
             $(".traj_btn").click( function(){
                 //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                var btn_traj_Bid=$(this).attr("id");
+                var btn_traj_Bid=$(this).attr("data-traj");
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
                 var isact = $(this).hasClass("active");
+                trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                 if(isact){
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
                     player.timeout=200;
@@ -82,9 +81,7 @@
                     player.pause();
 
                 } else {
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                     //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     player.play();
                     $(this).addClass("active");
                     $(this).siblings().removeClass("active");
@@ -108,11 +105,11 @@
             });
 
             $("#trajRangeDiv").on("mousedown" , ".ui-slider-handle" , function(){
-                setTrajRangeMax();
+                setTrajRangeMax(trajComp);
             })
             
             $("#trajRangeDiv").on("click" , ".ui-slider-track" , function(){
-                setTrajRangeMax();
+                setTrajRangeMax(trajComp);
             })
             return
         }
@@ -184,55 +181,6 @@
             }
           });
         }
-                        
-        function create_traj_dropdown(traj_li,sel_traj,id){
-
-            $("#trajButton"+id, window.parent.document).text(sel_traj);
-
-            add_html='<li class="traj_element tsel" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
-            for(i=1; i<traj_li.length; i++ ){
-              var add_element='<li class="traj_element" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
-              add_html+=add_element;
-            }
-
-            $("#add_traj_bottom"+id, window.parent.document).html(add_html);
-            $("#trajsDropdown"+id, window.parent.document).css("visibility","visible");
-            $("#last_played").css("visibility","visible");
-
-            $(".traj_element", window.parent.document).hover(function(){
-              $(this).css("background-color","#f2f2f2");
-            },
-        
-            function(){
-              var selected=$(this).hasClass("tsel");
-              if (selected){
-                $(this).css("background-color","#FFF7F7");
-              } else {
-                $(this).css("background-color","#FFFFFF");
-              }
-            });
-        }
-    
-        function manageTrajChange(stage,traj_el_sel,mytraj,traj_fnames){
-            console.log("kkk")
-            traj_id=traj_fnames.indexOf(mytraj);
-            $(".traj_btn").attr("id","playerButton"+traj_id.toString());
-            
-            $(traj_el_sel).css("background-color","#FFF7F7").addClass("tsel");
-            $(traj_el_sel).siblings().css("background-color","#FFFFFF").removeClass("tsel");
-            
-            if (player && $(".traj_btn").hasClass("active")){
-              player.pause();
-              $(".traj_btn").removeClass("active");
-              $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
-            }
-            //traj_lastPlayedID=traj_id;
-
-            trajComp.setFrame(-1);
-              
-            $("#trajRange").attr("max",trajComp.trajectory._frameCount);
-            $("#last_played").text(mytraj);        
-        }
 
         function colorsHoverActiveInactive(myselector,activeclass,colorhov,colorNohobAct, colorNohobInact){
             parent.$(myselector).hover(function(){
@@ -254,6 +202,51 @@
             
             parent.$(to_inactivate).removeClass("is_active");
             parent.$(to_inactivate).css("background-color","#FFFFFF");
+        }
+                        
+        function create_traj_dropdown(traj_li,sel_traj,id){
+
+            $("#trajButton"+id, window.parent.document).html(sel_traj+' <span class="caret"></span></button>');
+
+            add_html='<li class="traj_element tsel is_active" id="ngl'+id+'_traj0" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
+            for(i=1; i<traj_li.length; i++ ){
+              var add_element='<li class="traj_element" id="ngl'+id+'_traj'+i+'" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
+              add_html+=add_element;
+            }
+
+            $("#add_traj_bottom"+id, window.parent.document).html(add_html);
+            $("#trajsDropdown"+id, window.parent.document).css("visibility","visible");
+            $("#last_played").css("visibility","visible");
+
+            //Reset hover options
+            colorsHoverActiveInactive(".traj_element","is_active","#f2f2f2","#bfbfbf","#FFFFFF");
+
+        }
+    
+        function manageTrajChange(trajComp,traj_el_sel,mytraj,traj_id,id){
+            
+            //Things to do when changing the trajectory on a simulaion viewer
+
+            //Set active class to selected option, and inactivate the prviously active one
+            var to_activate = $(traj_el_sel).attr('id');
+            var to_inactivate = parent.$("#ngldiv"+id+" .traj_element.is_active").attr('id');
+            if (to_activate != to_inactivate){
+
+              //Set simulation (dyn) button text and attributes
+              change_display_sim_option("#" + to_activate, "#" + to_inactivate);
+              parent.$("#trajButton"+id).html(mytraj + ' <span class="caret"></span>');
+            }
+            
+            //Reset trajectory player and adapt to new trajectory
+            if (player && $(".traj_btn").hasClass("active")){
+              player.pause();
+              $(".traj_btn").removeClass("active");
+              $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+            }
+            trajComp.setFrame(-1);
+            $("#last_played").text(mytraj);        
+            $("#trajRange").attr("max",trajComp.trajectory._frameCount);
+            $(".traj_btn").attr('data-traj', traj_id);
         }
 
         function set_positions(stage, id, ballesteros_to_pdb, o){
@@ -432,11 +425,16 @@
 
           });
 
-          //Control of change of trajectory
-          $("#trajsDropdown"+id , window.parent.document).find(".traj_element").click(function(){
-              mytraj=$(this).text();
-              manageTrajChange(stage,this,mytraj,traj_fnames);
-          }) 
+          //On click of the trajectory dropdown options
+          $("#trajsDropdown"+id+" .traj_element" , window.parent.document).click(function(){
+            
+            //Change trajcctory controller
+            mytraj=$(this).text();
+            traj_id=traj_fnames.indexOf(mytraj);
+            trajComp = stage.getComponentsByName("my_comp").list[0].trajList[traj_id]
+            manageTrajChange(trajComp,this,mytraj,traj_id,id);
+
+          })
 
           return(stage);
         }
@@ -513,6 +511,9 @@
         var trajComp,traj_fnames,player;
         var new_clust, stage;
 
+        //Set id of traj_btn element, with the 0 or 1 of corresponding NGL viewer
+        $(".traj_btn").attr('id', 'traj_btn'+id);
+
         //Prevent whole page scrolling inside iframe (not working)
         $("body").on('mousewheel',function(event){
           event.preventDefault()
@@ -581,7 +582,7 @@
       
       <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:5px" class="pull-right" id="last_played"></p>
         
-      <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" id=playerButton0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
+      <div style="font-size: 17px;float: left;padding:0;border:none;width:20px;background-color:transparent;margin:10px 0 0 5px;cursor:pointer" class="traj_btn" data-traj=0><span class="glyphicon glyphicon-play" style="color:#808080"></div>
 
         <input title="Frame" id="trajRange" type="range" name="points" id="points" value="-1" min="-1" max="977">
         <p style="margin-right:18px;font-size:10px;color:#B8B8B8;margin-top:-20px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>

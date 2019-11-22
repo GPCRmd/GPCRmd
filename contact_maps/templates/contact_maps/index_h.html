@@ -146,8 +146,8 @@
           <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
 
           <!-- Trajectory dropdown -->
-          <div class="dropdown blueDropdownDiv">
-            <button  id="selectedTraj" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
+          <div class="dropdown blueDropdownDiv" id="trajsDropdown">
+            <button  id="trajButton" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
             <span class="caret"></span></button>
             <ul id="trajsDropdown_options" class="dropdown-menu">
               <span id="add_traj_options"></span>
@@ -173,7 +173,7 @@
     <!--Here be flareplots -->
 
     <div class="panel panel-primary" id="flare_title">
-      <div class="panel-body click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false" onclick="rotate_arrow('flare_arrow')">
+      <div class="panel-body click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false">
         <div class="title_div">
           <h4 class="title">Top5 representative interactions in cluster
             <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down "></span>
@@ -296,7 +296,7 @@
     
     <!--Here be NGL viewers-->
     <div class="panel panel-primary" id="NGL_title"  data-fpdir="{{fpdir}}">
-      <div class="panel-body click_title" data-toggle="collapse" data-target="#NGL_col" aria-expanded="false" onclick="rotate_arrow('ngl_arrow')">
+      <div class="panel-body click_title" data-toggle="collapse" data-target="#NGL_col" aria-expanded="false">
         <div class="title_div">
           <h4 class="title">Cluster Simulation Viewers
           <span id="ngl_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
