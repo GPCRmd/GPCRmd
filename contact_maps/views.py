@@ -68,7 +68,7 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		("Stacking",
 			(
 				("ps", "pi-stacking"),
-				('ts', "T-stacking")
+				('ts', "t-stacking")
 			)
 		)
 	]
@@ -84,25 +84,18 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	#Creating itypes dictionary for selected types
 	selected_itypes = { x:typelist[x] for x in set_itypes }
 
-	# Loading variables
-	variablesfile = "%sheatmaps/%s/variables.py" % (basedir,rev)
-	variablesmod = SourceFileLoader("module.name", variablesfile).load_module()
-	number_heatmaps_list = variablesmod.number_heatmaps_list
-	divwidth_list = variablesmod.divwidth_list
-	div_list = variablesmod.div_list
-	filenames_list = variablesmod.heatmap_filename_list
-
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
 
-	# Loading heatmap script if it exists. If not, load "no interactions" template instead
-	if exists(filenames_list[0]):
-		script_list = []
-		for filename in filenames_list:
-			with open(filename, 'r') as scriptfile:
-				script = scriptfile.read()
-			script_list.append(script)
-	else:
+	# Loading variables if file exists. If not, it means there are no interactions avalible for the selected options
+	variablesfile = "%sheatmaps/%s/variables.py" % (basedir,rev)
+	if exists(variablesfile):
+		variablesmod = SourceFileLoader("module.name", variablesfile).load_module()
+		number_heatmaps_list = variablesmod.number_heatmaps_list
+		divwidth_list = variablesmod.divwidth_list
+		div_list = variablesmod.div_list
+		filenames_list = variablesmod.heatmap_filename_list
+	else :
 		context = {
 			'fpdir' : fpdir,
 			'itype_code' : itype,
@@ -118,6 +111,13 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 			'cluster' : int(cluster),
 		}
 		return render(request,'contact_maps/index_nodata.html',context)
+
+	# Loading heatmap script 
+	script_list = []
+	for filename in filenames_list:
+		with open(filename, 'r') as scriptfile:
+			script = scriptfile.read()
+		script_list.append(script)
 
 	#Loading dynamics-cluster dictionary
 	clustdict = json_dict("%sflarejsons/%sclusters/clustdict.json" % (basedir, cluster))

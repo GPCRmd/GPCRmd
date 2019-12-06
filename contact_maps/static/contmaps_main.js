@@ -1,8 +1,5 @@
 $(document).ready(function(){
 
-  //Remove heatmap loading icon once page is loaded
-  document.getElementById("loading_heatmap").remove();
-
   //--------Used later for some functions
   var typedict =  {
     'sb' : 'salt bridge',
@@ -76,7 +73,6 @@ $(document).ready(function(){
 
   });
 
-
   //--------Show name of selected interaction in dropdown button
   $(".option").change(function(){
     var sel_code = $(".option[type=radio]:checked").val();
@@ -95,26 +91,7 @@ $(document).ready(function(){
     $('#cluster_button').html($(this).html() + ' clusters <span class="caret"></span>');    
   })
 
-  //-------- Info panels
-  $(".section_pan").click(function(){
-      var target=$(this).attr("data-target");
-      var upOrDown=$(target).attr("class");
-      if(upOrDown.indexOf("in") > -1){
-          var arrow=$(this).children(".arrow");
-          arrow.removeClass("glyphicon-chevron-up");
-          arrow.addClass("glyphicon-chevron-down");
-      } else {
-          var arrow=$(this).children(".arrow");
-          arrow.removeClass("glyphicon-chevron-down");
-          arrow.addClass("glyphicon-chevron-up");
-          if (target=="#analysis_fplot"){
-              if (plot){
-                  setFPFrame(pg_framenum)
-              }
-          }
-      }
-  });
-    
+  //-------- Change text in documentation title on click
   $("#show_hide_info").click(function(){
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
@@ -123,31 +100,68 @@ $(document).ready(function(){
       }
   });
 
-  //---------------Scrollbar to heatmap
-  jQuery(function ($) {
-    $("#scrolldiv").on("scroll", function () {
-        $(".heatmap").scrollLeft($(this).scrollLeft());
+  //If it is not the "not avalible interaction" page, but the regular one:
+  if (!$("#not_avalible_text")[0]){
+
+    //---------Remove heatmap loading icon once page is loaded
+    document.getElementById("loading_heatmap").remove();
+
+    //-------- Info panels
+    $(".section_pan").click(function(){
+        var target=$(this).attr("data-target");
+        var upOrDown=$(target).attr("class");
+        if(upOrDown.indexOf("in") > -1){
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-up");
+            arrow.addClass("glyphicon-chevron-down");
+        } else {
+            var arrow=$(this).children(".arrow");
+            arrow.removeClass("glyphicon-chevron-down");
+            arrow.addClass("glyphicon-chevron-up");
+            if (target=="#analysis_fplot"){
+                if (plot){
+                    setFPFrame(pg_framenum)
+                }
+            }
+        }
     });
-  });
+    
+    //---------------Scrollbar to heatmap
+    jQuery(function ($) {
+      $("#scrolldiv").on("scroll", function () {
+          $(".heatmap").scrollLeft($(this).scrollLeft());
+      });
+    });
 
+    //---------------When scrolling on heatmap, move the x-axis annotations along with the scrolling
+    var  scrollPos = 0, container, anots, pager, pager_height, anots_height, pager_mintop, anots_mintop, top_window, new_top;
+    //Elements to scroll
+    container = $("#main_plot_body"); 
+    anots =  $(".bk-annotation");
+    pager = $("#heatmap_pager");
+    pager_height = pager.offset().top;
+    anots_height = anots.outerHeight();
+    pager_mintop = parseInt(pager.css('top'));
+    anots_mintop = parseInt(anots.css('top'));
+    container.on("scroll", function() {
+      top_window = container.scrollTop();
+      anots.each(function(){
+        new_top = scrollPos - anots_height;
+        //Now move the axis annotations
+        //If scroll would result in annotations going higher than original position, set them in original position again
+        if (anots_mintop > new_top){
+          $(this).css('top', anots_mintop);
+        }
+        // if previous scrolling-position of window was down from the axis original position 
+        else if (anots_height < scrollPos) {
+          $(this).css('top', new_top+50);
+        }
+
+      });
+      scrollPos = top_window;
+    });
+  };
 });
-
-//---------Check all options upon clicking "check all" (currently not used) 
-function checkoruncheckall(checkboxclass,changename){
-  var checkcomand = checkboxclass + ':checked';
-  if (Boolean($(checkcomand).val())) {
-    $(checkboxclass).prop('checked', false);
-    if(Boolean(changename)){
-      document.getElementById("allbutton").innerHTML = "Select all";
-    }
-  }
-  else {
-    $(checkboxclass + ":enabled").prop('checked', true);
-    if(Boolean(changename)){
-      document.getElementById("allbutton").innerHTML = "Unselect all";
-    }
-  }
-}
 
 //------Extract checked values, create an URL with them and refresh page with new URL
 function printchecked(){
@@ -247,17 +261,3 @@ function heatmap_change(heatmap) {
   }
   return false
 }
-
-//---------Show/hide flareplots and NGL viewers
-function rotate_arrow(arrow_id) {
-  var arrow = $("#"+arrow_id);
-  if (arrow.hasClass('glyphicon-chevron-up')) {
-    arrow.removeClass('glyphicon-chevron-up');
-    arrow.addClass('glyphicon-chevron-down');
-  }
-  else {
-    arrow.removeClass('glyphicon-chevron-down');
-    arrow.addClass('glyphicon-chevron-up');
-  }
-}
-
