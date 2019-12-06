@@ -156,7 +156,12 @@ def gpcrmd_home(request):
     ################
     #Fams sumulated
     sim_fams=len(fam_set)
-    missing_fams=64 - sim_fams
+    total_fams=30 #missing=["Melatonin",
+                           #"Parathyroid hormone receptors", 
+                           #'Prostanoid receptors' ,"Tachykinin"]
+                   #GPCRdb: 34
+                   #GPCRmd:30
+    missing_fams= total_fams - sim_fams
     fam_stats= [['Class', 'Num'],
                 ['Simulated', sim_fams],
                 ['Pending',missing_fams]
@@ -166,7 +171,10 @@ def gpcrmd_home(request):
 
     #Subtypes sumulated
     sim_subtyppes=len(subtype_set)
-    missing_subtypes=64 - sim_subtyppes
+    total_subtyppes=52
+                   #GPCRdb: 64
+                   #GPCRmd: 52
+    missing_subtypes=total_subtyppes - sim_subtyppes
     subtype_stats= [['Class', 'Num'],
                 ['Simulated', sim_subtyppes],
                 ['Pending',missing_subtypes]
@@ -176,7 +184,10 @@ def gpcrmd_home(request):
 
     #PDB ids sumulated
     pdb_id_sim=len(pdb_id_set)
-    missing_pdb_ids=346 - pdb_id_sim
+    pdb_id_total=270
+                   #GPCRdb: 346
+                   #GPCRmd: 270
+    missing_pdb_ids=pdb_id_total - pdb_id_sim
     pdb_stats= [['Class', 'Num'],
                 ['Simulated', pdb_id_sim],
                 ['Pending',missing_pdb_ids]

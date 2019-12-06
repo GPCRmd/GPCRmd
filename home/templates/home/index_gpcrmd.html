@@ -131,9 +131,12 @@ body{
 }
 
 #extrainfo_section{
-    background-color:#f2f2f2;
     margin-top: 20px;
 }
+
+.grey_section{
+    background-color:#f2f2f2;
+  }
 
 #extrainfo_section .panel-body{
   height: 505px;
@@ -397,7 +400,7 @@ g circle , g text {
     <div class="col-lg-8 plot_section_col" id="plot_col" >
         <div style="text-align:center;margin:0 auto 10px auto">
           <h2>3D-GPCRome tree</h2>
-          <p>Click on a GPCR structure (PDB id) to access the MD simulations</p>
+          <p>Click on a GPCR structure (PDB id) to access the MD simulations*</p>
         </div>
         <div id="chart" style="margin:auto;"><!-- width: 826px; height: 826px;-->
             
@@ -405,7 +408,7 @@ g circle , g text {
     </div>
 </div>
 
-<div class="row main_section"  id="extrainfo_section" >
+<div class="row main_section grey_section"  id="extrainfo_section" >
 
     <div class="col-md-4 extrainfo_col">
         <div class="panel panel-primary text_col">
@@ -586,7 +589,7 @@ g circle , g text {
 
                 <div class="item"  style="padding:15px">
                   <h4 class="extrainfo_title">Simulated GPCR families</h4>
-                  <p>Simulated GPCR families with known structure.</p>
+                  <p>Simulated GPCR families with known structure.*</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
                     <div id="fam_stats" style="width: 300px; height: 400px;margin:auto" data-fam_stats="{{fam_stats}}"></div>
                   </div>
@@ -594,7 +597,7 @@ g circle , g text {
 
                 <div class="item"  style="padding:15px">
                   <h4 class="extrainfo_title">Simulated GPCR subtypes</h4>
-                  <p>Simulated GPCR subtypes with known structure.</p>
+                  <p>Simulated GPCR subtypes with known structure.*</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
                     <div id="subtype_stats" style="width: 300px; height: 400px;margin:auto" data-subtype_stats="{{subtype_stats}}"></div>
                   </div>
@@ -602,6 +605,7 @@ g circle , g text {
 
                 <div class="item"  style="padding:15px">
                   <h4 class="extrainfo_title">Simulated PDB structures</h4>
+                  <p>Simulated GPCRs with known structure.*</p>
                   <div style="overflow-x: auto;overflow-y: hidden">
                     <div id="pdb_stats" style="width: 300px; height: 400px;margin:auto" data-pdb_stats="{{pdb_stats}}"></div>
                   </div>
@@ -654,8 +658,12 @@ g circle , g text {
         </center>
       </div>
     </div>
+
+  <div class="row main_section " id="footnote" >
+    * Data extracted from the <a href="https://www.rcsb.org/">PDB</a> on January 2019.
   </div>
 
+  </div>
 
  <!--   <div class="col-md-4 extrainfo_col">
         <div class="panel panel-primary text_col">
