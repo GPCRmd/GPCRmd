@@ -15,7 +15,7 @@ $(document).ready(function(){
 //Click tooltip
 //$("#chart").on("click","g",function(e){
 //    console.log(e.pageX,e.pageY)
-//    $("#clickinfo").html("<div style='background-color:blue'>aaaaaaaaaaaaaaaaa</div>")
+//    $("#clickinfo").html("<div style='background-color:#3278B4'>aaaaaaaaaaaaaaaaa</div>")
 //    $("#clickinfo").css({"top":e.pageY,"left":e.pageX})
 //})
 
