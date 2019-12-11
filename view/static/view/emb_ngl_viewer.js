@@ -3264,6 +3264,17 @@ $(document).ready(function(){
             var msn="Some fields are empty or contain errors";
             showBigError(msn, "#bonds_alert");
         } else {
+            $(".hbond_openchose_click").each(function(){
+                //if (!($(this).hasClass("collapsed"))){
+                if ($(this).attr("aria-expanded") =="true"){
+                    $(this).trigger("click");
+                }
+            })
+
+            if ($("#bondsresult_par").css("display")!="none"){
+                $("#blockbondsresult").css("display","block");
+            }
+            $("#ComputeHbonds").addClass("disabled");
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing hydrogen bonds...</p>");   
             $.ajax({
@@ -3275,6 +3286,8 @@ $(document).ready(function(){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         changeDownloadURLS(rmsdTraj,[".href_save_data_hbp",".href_save_data_hbo"]);
+                        $("#blockbondsresult").css("display","none");
+                        $("#ComputeHbonds").removeClass("disabled");
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
@@ -3454,6 +3467,8 @@ $(document).ready(function(){
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
+                        $("#blockbondsresult").css("display","none");
+                        $("#ComputeHbonds").removeClass("disabled");
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
 
@@ -3530,6 +3545,10 @@ $(document).ready(function(){
             $('#ShowAllSb').css("visibility","hidden");
             $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
+            $("#ComputeSaltBridges").addClass("disabled");
+            if ($("#saltresult_par").css("display")!="none"){
+                $("#blockSBbondsresult").css("display","block");
+            }
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
@@ -3538,6 +3557,8 @@ $(document).ready(function(){
                     success: function(data) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
+                        $("#ComputeSaltBridges").removeClass("disabled");
+                        $("#blockSBbondsresult").css("display","none");
                         changeDownloadURLS(rmsdTraj,[".href_save_data_sb"]);
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
@@ -3621,6 +3642,8 @@ $(document).ready(function(){
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
+                        $("#ComputeSaltBridges").removeClass("disabled");
+                        $("#blockSBbondsresult").css("display","none");
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
 
@@ -5363,7 +5386,7 @@ $(document).ready(function(){
         $("#embed_mdsrv").css("width",cont_w).attr("width",cont_w).attr("height",cont_h_iframe);
         $("#legend_row").css("max-width",cont_w_max);
         $(".showWhenNGLLoad").css("visibility","visible");
-        $("#loading").html("");
+       // $("#loading").html("");
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
     });
     

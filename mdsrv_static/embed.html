@@ -56,8 +56,9 @@
 
 ////////////////// Functions
         $(document).ready(function(){
-                
+            
         document.domain=document.domain;
+        $('[data-toggle="tooltip"]').tooltip();
         //stage.setParameters( { backgroundColor: "white" /*, cameraType:"orthographic"*/} );
 
 
@@ -241,6 +242,7 @@
             $(".ui-slider-track").css({"height":"5px","margin-top":"7px"});
             $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"});
             $("#toiframe").find("#trajRangeDiv").css("visibility","visible");
+            $("#trajnotready").css("display","block");
             parent.passinfoToPlayTraj();
             var bs_info = parent.bs_info;
             var dist_within_li=parent.dist_of; 
@@ -1726,6 +1728,7 @@
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
                         o.setSelection("protein");
+                        o.signals.trajectoryAdded.add(function(trajComp){ $("#loading", window.parent.document).html(""); });
                         if (fpsegStr){
                             o.addRepresentation( "cartoon", { colorScheme: FPscheme,  sele: "protein" } );
                         } else {
@@ -1738,6 +1741,10 @@
                             o.addTrajectory( traj_path + traj_li_all[t] );
                         }
                         trajComp = stage.getComponentsByName("my_comp").list[0].trajList[0]; 
+                        trajComp.signals.countChanged.add(function(a){
+                            $("#trajnotready").css("display","none");
+                        })
+
                         var tral_split=traj_li_all[0].split("/");
                         var traj_filenm=tral_split[tral_split.length -1];
                         var traj_db_id=traj_filenm.split("_")[0];
@@ -2278,6 +2285,7 @@
           
           <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:-17px" class="pull-right" id="traj_time"><span id="traj_time_val">0</span>ns</p>
         </div>
+        <div id="trajnotready" data-toggle="tooltip" title="The first time a trajectory is ever displayed (or right after a server update) it requires some extra time to load. Please wait." style="display: none;position: absolute; width: 677px; height: 40px; margin-top: 370px; margin-left: 2px; visibility: visible;background-color:white;opacity:0.5;z-index:1;cursor:progress"></div>
         <span id="varinfo"></span>
         <div id="infoPannel" style="width:616px;height:30px;margin-top:425;margin-left:2px;">
             <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
