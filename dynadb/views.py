@@ -7627,7 +7627,7 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
     if trajectory is None:
         request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,5*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,4*5*1024**3,max_files=trajectory_max_files)
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)

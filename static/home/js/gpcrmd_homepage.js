@@ -256,7 +256,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "21|165",
             "Complex": "",
@@ -963,7 +963,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-|-",
             "Simulated": "Yes",
             "Apo": "189",
             "Complex": "190|120|146",
@@ -1217,7 +1217,7 @@ $(document).ready(function(){
             "CrystalLigand": "2-arachidonoylglycerol",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "163",
             "Complex": "22|164",
@@ -1298,7 +1298,7 @@ $(document).ready(function(){
             "CrystalLigand": "CCL11 CCL14 CCL16 CCL2 CCL3 CCL4 CCL5 CCL7 CCL8",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "118",
             "Complex": "119|67",
@@ -1352,11 +1352,11 @@ $(document).ready(function(){
             "CrystalLigand": "CXCL12α CXCL12β",
             "OldLigand": "CXCL12α CXCL12β",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "101",
             "Complex": "103|102",
-            "Ligand": "isothiourea-1t",
+            "Ligand": "isothiourea-1t|isothiourea-1t",
             "ClassCol": "isothiourea-1t",
             "KlassCol": "A"
           }, {
@@ -1417,7 +1417,7 @@ $(document).ready(function(){
             "CrystalLigand": "CXCL12α CXCL12β",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "98",
             "Complex": "89|86",
@@ -1726,7 +1726,7 @@ $(document).ready(function(){
             "CrystalLigand": "histamine",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "108",
             "Complex": "109|126",
@@ -1888,7 +1888,7 @@ $(document).ready(function(){
             "CrystalLigand": "acetylcholine",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "73|72",
             "Complex": "",
@@ -2287,11 +2287,11 @@ $(document).ready(function(){
             "CrystalLigand": "ADP",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "180",
             "Complex": "181|182",
-            "Ligand": "MRS-2500\"MRS-2500",
+            "Ligand": "MRS-2500|MRS-2500",
             "ClassCol": "A",
             "KlassCol": "A\t\t\t\t"
           }, {
@@ -2448,7 +2448,7 @@ $(document).ready(function(){
             "CrystalLigand": "thrombin",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "128",
             "Complex": "129|130",
@@ -3381,7 +3381,7 @@ $(document).ready(function(){
             "State": "Inactive",
             "CrystalLigand": "-",
             "OldLigand": "-",
-            "CrystalTransducer": "-",
+            "CrystalTransducer": "-|-",
             "Transducer": "-",
             "Simulated": "Yes",
             "Apo": "141|142",
@@ -3395,11 +3395,11 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "13|14",
             "Complex": "15|16",
-            "Ligand": "(R)-DOBUTAMINE",
+            "Ligand": "(R)-DOBUTAMINE|(R)-DOBUTAMINE",
             "ClassCol": "(R)-DOBUTAMINE",
             "KlassCol": "A"
           }, {
@@ -3408,7 +3408,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "27|28",
             "Complex": "29|55",
@@ -3421,7 +3421,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "23|24",
             "Complex": "25|26",
@@ -3473,7 +3473,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "138|139",
             "Complex": "140",
@@ -3499,7 +3499,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "18|17",
             "Complex": "19|20",
@@ -3525,7 +3525,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "143|144",
             "Complex": "58",
@@ -3538,7 +3538,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-|-",
             "Simulated": "Yes",
             "Apo": "137|135|136",
             "Complex": "",
@@ -3590,11 +3590,11 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "131|132",
             "Complex": "133|134",
-            "Ligand": "4-(1-Piperazinyl)-1H-indole",
+            "Ligand": "4-(1-Piperazinyl)-1H-indole|4-(1-Piperazinyl)-1H-indole",
             "ClassCol": "4-(1-Piperazinyl)-1H-indole",
             "KlassCol": "A"
           }, {
@@ -3603,7 +3603,7 @@ $(document).ready(function(){
             "CrystalLigand": "-",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "147|148",
             "Complex": "150|149",
@@ -3708,7 +3708,7 @@ $(document).ready(function(){
             "CrystalLigand": "(-)-adrenaline (-)-noradrenaline",
             "OldLigand": "isonorene|carazolol",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-",
             "Simulated": "Yes",
             "Apo": "",
             "Complex": "9|10",
@@ -3931,7 +3931,7 @@ $(document).ready(function(){
             "CrystalLigand": "β-endorphin dynorphin A dynorphin B endomorphin-1 [Leu]enkephalin [Met]enkephalin",
             "OldLigand": "-",
             "CrystalTransducer": "-",
-            "Transducer": "-",
+            "Transducer": "-|-|-",
             "Simulated": "Yes",
             "Apo": "",
             "Complex": "4|8|145",
@@ -4970,6 +4970,8 @@ $(document).ready(function(){
                     .attr("y", "24");
               } 
               if (!( d.data.Simulated == "-" || d.data.Simulated == undefined )){
+                k=0
+                /*
                   textblock.append("text")
                     .text("Deposed ligand: " +limit_text( d.data.CrystalLigand,34))
                     .attr("y", "40")
@@ -4981,7 +4983,7 @@ $(document).ready(function(){
                       .text("Deposed transducer: " + limit_text(d.data.CrystalTransducer,30))
                       .attr("y",  parseInt(40+16*k))
                         .append("title").text(d.data.CrystalTransducer);
-                  }
+                  }*/
                   var j=0;
                   if( (d.data.Apo !== "-") && (d.data.Apo !== "") && (d.data.Apo !== undefined)  ){ 
                     var ApoNum = d.data.Apo.split("|");
@@ -4992,7 +4994,7 @@ $(document).ready(function(){
                               .attr("target","_blank")
                               .append("text")
                                 .text("Apo simulation: ID " + ApoNum[j])
-                                .attr("y",  parseInt(56+16*(j+k)))
+                                .attr("y",  parseInt(40+16*(j+k)))
                                 .attr("fill", ApoNum[j] != "-" ? '#85bae0' : 'grey' );
                           }
                       } else {
@@ -5000,13 +5002,18 @@ $(document).ready(function(){
                               j=1;
                               textblock.append("text")
                                   .text("# Apo simulation settings: " + ApoNum.length)
-                                  .attr("y",  parseInt(40+16*(j+k)));
+                                  .attr("y",  parseInt(24+16*(j+k)));
                               }
                       }
                   }
                   if( (d.data.Complex !== "-") && (d.data.Complex !== "") && (d.data.Complex !== undefined) ){ 
                     var i;
                     var ComplexNum = d.data.Complex.split("|");
+
+
+                    var Ligandname = d.data.Ligand.split("|");
+                    var TransducerNum = d.data.Transducer.split("|");
+
                     if (actiontype=="click"){
                           var Ligandname = d.data.Ligand.split("|");
                           var TransducerNum = d.data.Transducer.split("|");
@@ -5015,10 +5022,10 @@ $(document).ready(function(){
                               .attr("xlink:href", ComplexNum[i] != "-" ? "https://submission.gpcrmd.org/view/"+ComplexNum[i] : null) 
                               .attr("target","_blank")
                               .append("text")
-                                .text(limit_text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""),50))
-                                .attr("y",  parseInt(56+16*(i+j+k)))
+                                .text(limit_text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i] :"") + (TransducerNum[i] !="-" ? "; transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""),50))
+                                .attr("y",  parseInt(40+16*(i+j+k)))
                                 .attr("fill", ComplexNum[i] != "-" ? '#85bae0' : 'grey' )
-                                    .append("title").text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i]+";" :"") + (TransducerNum[i] !="-" ? " transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""));
+                                    .append("title").text("Complex simulation: ID " + ComplexNum[i] + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? " (" :"") + (Ligandname[i] != "-" ? "lig: "+Ligandname[i] :"") + (TransducerNum[i] !="-" ? "; transducer: "+TransducerNum[i]+";" :"") + (Ligandname[0] != "-" ||  TransducerNum[0] != "-" ? ")" :""));
 
                           }
                       } else {
@@ -5026,7 +5033,7 @@ $(document).ready(function(){
                               i=1;
                               textblock.append("text")
                                   .text("# Complex simulation settings: " + ApoNum.length)
-                                  .attr("y",  parseInt(40+16*(i+j+k)));
+                                  .attr("y",  parseInt(24+16*(i+j+k)));
                           }
                       }
                   }
@@ -5036,7 +5043,7 @@ $(document).ready(function(){
                           l=1;
                           textblock.append("text")
                               .text("# Total simulation settings: " + getAllSims(d))
-                              .attr("y",  parseInt(56+16*(i+j+k+l)));
+                              .attr("y",  parseInt(40+16*(i+j+k+l)));
                       }
                   }
             }
