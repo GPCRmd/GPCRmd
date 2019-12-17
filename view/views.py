@@ -394,6 +394,21 @@ def str_len_limit(mystr):
         mystr=mystr[:47]+"..."
     return mystr
 
+def obtain_prot_lig(dyn_id):
+    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    if model.id_protein:
+        dprot_li_all=[model.id_protein]
+    else:
+        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+    protlig_all=[]
+    for dprot in dprot_li_all:
+        if not dprot.receptor_id_protein:
+            name=dprot.name
+            sel_s= {":%s" % res.chain.upper() for res in DyndbModeledResidues.objects.filter(id_protein=dprot.id)}
+            sel=" or ".join(sel_s)
+            protlig_all.append({"sel":sel,"name":name})
+    return(protlig_all)
+
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
     Arguments:
@@ -456,6 +471,14 @@ def obtain_compounds(dyn_id):
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
     comp_li=[[str_len_limit(lname),sname,mtype]  for lname,sname,mtype in comp_li]
     lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
+
+    protlig_all=obtain_prot_lig(dyn_id)
+    for protlig in protlig_all:
+        protlig_name=protlig["name"]
+        protlig_sel=protlig["sel"]
+        lig_li.append([protlig_name,protlig_sel])
+        lig_li_s.append(protlig_sel)
+        comp_li.append([protlig_name,protlig_sel,"Prot_ligand"])
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
@@ -562,6 +585,17 @@ def distances_notraj(dist_struc,dist_ids):
     return(True, dist_result, None)
 
 
+def retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info):
+    is_gpcr = False
+    gprot= dprot.receptor_id_protein
+    if gprot:
+        is_gpcr=True
+        prot_li_gpcr.append((dprot,gprot))
+    dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
+    dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
+    return (prot_li_gpcr,dprot_li_all_info)
+
+
 def obtain_DyndbProtein_id_list(dyn_id):
     """Given a dynamic id, gets a list of the dyndb_proteins and proteins associated to it that are GPCRs + a list of all proteins (GPCRs or not)"""
     model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
@@ -570,25 +604,15 @@ def obtain_DyndbProtein_id_list(dyn_id):
     dprot_li_all=[]
     dprot_li_all_info=[]
     if model.id_protein:
-        is_gpcr = False
-        gprot= model.id_protein.receptor_id_protein
-        if gprot:
-            prot_li_gpcr=[(model.id_protein, gprot)]
-            is_gpcr=True
-        dprot_li_all=[model.id_protein]
-        dprot_seq=DyndbProteinSequence.objects.get(id_protein=model.id_protein.id).sequence
-        dprot_li_all_info=[(model.id_protein.id, model.id_protein.name, is_gpcr , dprot_seq )]     
+        dprot=model.id_protein
+        dprot_li_all=[dprot]
+        (prot_li_gpcr,dprot_li_all_info)=retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info)
     else:
         dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
         for dprot in dprot_li_all:
-            is_gpcr = False
-            gprot= dprot.receptor_id_protein
-            if gprot:
-                is_gpcr = True
-                prot_li_gpcr.append((dprot,gprot))
-            dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
-            dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
+            (prot_li_gpcr,dprot_li_all_info)=retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info)
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info,pdbid)
+
 
 def obtain_protein_names(dyn_id):
     """Given a dynamic id, gets a list of the GPCR names"""
@@ -965,46 +989,50 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             traj_sel= request.POST.get("rmsdSel")
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
-                       
-            if request.session.get('rmsd_data', False):
-                rmsd_data=request.session['rmsd_data']
-                rmsd_dict=rmsd_data["rmsd_dict"]
-                new_rmsd_id=rmsd_data["new_rmsd_id"]
-                no_rv_l=no_rv.split(",")
-                to_rv=[];
-                for r_id in rmsd_dict.keys():
-                    if (r_id not in no_rv_l):
-                        to_rv.append(r_id)
-                for r_id in to_rv:
-                    del rmsd_dict[r_id]   
+            if request.session.get('main_strc_data', False):
+                session_data=request.session["main_strc_data"]
+                seg_to_chain=session_data["seg_to_chain"]
+                if request.session.get('rmsd_data', False):
+                    rmsd_data=request.session['rmsd_data']
+                    rmsd_dict=rmsd_data["rmsd_dict"]
+                    new_rmsd_id=rmsd_data["new_rmsd_id"]
+                    no_rv_l=no_rv.split(",")
+                    to_rv=[];
+                    for r_id in rmsd_dict.keys():
+                        if (r_id not in no_rv_l):
+                            to_rv.append(r_id)
+                    for r_id in to_rv:
+                        del rmsd_dict[r_id]   
+                else:
+                    new_rmsd_id=1
+                    rmsd_dict={}
+                
+                if len(rmsd_dict) < 15:
+                    (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal),seg_to_chain)
+                    if success:
+                        data_frame=data_fin
+                        data_store=copy.deepcopy(data_frame)
+                        data_store[0].insert(1,"Time")
+                        data_time=[data_store[0][1:]]
+                        for row in data_store[1:]:
+                            frame=row[0]
+                            time=frame*delta
+                            row.insert(1,time)
+                            d_time=row[1:]
+                            data_time.append(d_time)  
+                        p=re.compile("\w*\.\w*$")
+                        struc_filename=p.search(struc_p).group(0)
+                        traj_filename=p.search(traj_p).group(0)
+                        rtraj_filename=p.search(ref_traj_p).group(0)
+                        rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
+                        request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
+                        data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
+                    else: 
+                        data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
+                else:
+                    data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
             else:
-                new_rmsd_id=1
-                rmsd_dict={}
-            
-            if len(rmsd_dict) < 15:
-                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal))
-                if success:
-                    data_frame=data_fin
-                    data_store=copy.deepcopy(data_frame)
-                    data_store[0].insert(1,"Time")
-                    data_time=[data_store[0][1:]]
-                    for row in data_store[1:]:
-                        frame=row[0]
-                        time=frame*delta
-                        row.insert(1,time)
-                        d_time=row[1:]
-                        data_time.append(d_time)  
-                    p=re.compile("\w*\.\w*$")
-                    struc_filename=p.search(struc_p).group(0)
-                    traj_filename=p.search(traj_p).group(0)
-                    rtraj_filename=p.search(ref_traj_p).group(0)
-                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
-                    request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
-                else: 
-                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
-            else:
-                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
+                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Session error." , "strided":strideVal}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
@@ -1161,7 +1189,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             chain_str=""
             if len(chain_name_li) > 1:
                 multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)
             model_res=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics__id=dyn_id)
             seg_to_chain={mr.segid : mr.chain for mr in model_res}
             request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False,"seg_to_chain":seg_to_chain}
@@ -1437,7 +1465,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 
 #########################
 
-def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal):
+def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal,seg_to_chain):
     i=0
     struc_path = "/protwis/sites/files/" + rmsdStr
     traj_path = "/protwis/sites/files/" + rmsdTraj
@@ -1489,13 +1517,29 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
             if " and " in traj_sel:
                 (resname,resseqpos)=traj_sel.split(" and ")
                 lig_sel="resname '"+resname+"' and residue "+resseqpos
+                try:
+                    selection=itraj.topology.select(lig_sel)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
+
+            elif ":" in traj_sel:
+                try:
+                    mytop=itraj.topology
+                    structable, bonds=mytop.to_dataframe()
+                    reschain_li=traj_sel.split(" or ")
+                    reschain_li=[chain.replace(":","") for chain in reschain_li]
+                    selection=select_prot_chains(structable,seg_to_chain,mytop,reschain_li)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
             else:
                 lig_sel="resname "+traj_sel
-            try:
-                selection=itraj.topology.select(lig_sel)
-            except Exception:
-                error_msg="Ligand not found."
-                return (False,None, error_msg)
+                try:
+                    selection=itraj.topology.select(lig_sel)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
             if (len(selection)==0):
                 error_msg="Ligand not found."
                 return (False,None, error_msg)
@@ -1684,42 +1728,63 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
     return(np.array(gpcr_atomInd))
 
 
+def select_prot_chains(structable,seg_to_chain,mytop,chains):
+    chains_sel_li=[]
+    chainid_li=[]
+    for chain in chains:
+        chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
+        for segname in chain_segments:
+            seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
+            chainid_li+=list(seg_chainid_li)
+    chainid_li=list(set(chainid_li))
+    for chainid in chainid_li:
+        chains_sel_li.append("chainid "+ str(chainid))
+    chains_sel="protein and ("+" or ".join(chains_sel_li)+")"
+    mysel=mytop.select(chains_sel)
+    return mysel
+
 
 def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal,seg_to_chain):
+
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
     first=True 
+    structable=False
+    lig_multiple_res=False
     try:
         for itraj in itertraj:
             if first:
                 mytop=itraj.topology
                 all_lig_res=[]
+                fin_dict={}
                 for res in res_li:
                     if " and " in res:
                         (resname,resseqpos)=res.split(" and ")
                         lig_sel=mytop.select("resname '"+resname+"' and residue "+resseqpos)
+                        fin_dict[res]=[]
+                    elif ":" in res:
+                        structable, bonds=mytop.to_dataframe()
+                        reschain_li=res.split(" or ")
+                        reschain_li=[chain.replace(":","") for chain in reschain_li]
+                        lig_sel=select_prot_chains(structable,seg_to_chain,mytop,reschain_li)
+                        fin_dict["Lig"]=[]
                     else:
+                        fin_dict[res]=[]
                         lig_sel=mytop.select("resname '"+res+"'")
                     if len(lig_sel)>0:
                         lig_res=[residue.index for residue in itraj.atom_slice(lig_sel).topology.residues]
-                        all_lig_res.append(lig_res[0])
+                        for myres in lig_res:
+                            all_lig_res.append(myres)
                 if len(all_lig_res)==0:
                     return (False,None, "Error with ligand selection.")
+                elif len(all_lig_res)>1 :
+                    lig_multiple_res=True
                 if gpcr_chains:
-                    structable, bonds=mytop.to_dataframe()
-                    gpcr_chains_sel_li=[]
-                    chainid_li=[]
-                    for chain in gpcr_chains:
-                        chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
-                        for segname in chain_segments:
-                            seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
-                            chainid_li+=list(seg_chainid_li)
-                    chainid_li=list(set(chainid_li))
-                    for chainid in chainid_li:
-                        gpcr_chains_sel_li.append("chainid "+ str(chainid))
-                    gpcr_chains_sel="protein and ("+" or ".join(gpcr_chains_sel_li)+")"
-                    gpcr_sel=mytop.select(gpcr_chains_sel)
+                    if type(structable) != bool:
+                        structable, bonds=mytop.to_dataframe()
+                    gpcr_sel=select_prot_chains(structable,seg_to_chain,mytop,gpcr_chains)
+
                 else:
                     gpcr_sel=mytop.select("protein") 
                 gpcr_res=[residue.index for residue in itraj.atom_slice(gpcr_sel).topology.residues]
@@ -1736,13 +1801,26 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
         return (False,None, "Error loading input files.")
     contact_freq={}
     for pair in allres_p:
-        contact_freq[tuple(pair)]=0
+        mykey=tuple(pair)
+        if lig_multiple_res:
+            mykey=(mykey[0],"Lig")
+        contact_freq[mykey]=0
     for frame_dist in alldists:
-         i=0
-         while i < len(frame_dist):
-             if frame_dist[i]<(thresh/10):
-                 contact_freq[tuple(allres_p[i])]+=1
-             i+=1
+        i=0
+        ligint_in_frame=set()
+        while i < len(frame_dist):
+            pair=allres_p[i]
+            mykey=tuple(pair)
+            if lig_multiple_res:
+                mykey=(mykey[0],"Lig")
+                if mykey in ligint_in_frame:
+                    i+=1
+                    continue
+                else:
+                    ligint_in_frame.add(mykey)
+            if frame_dist[i]<(thresh/10):
+                contact_freq[mykey]+=1
+            i+=1
     num_frames=len(alldists)
     to_delete=[]
     for allres_p , freq in contact_freq.items():
@@ -1752,18 +1830,19 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
              contact_freq[allres_p]=(freq/num_frames)*100
     for key in to_delete:
         del contact_freq[key]
-    fin_dict={}
-    for r in res_li:
-         fin_dict[r]=[]
     for pair in sorted(contact_freq, key=lambda x: contact_freq[x], reverse=True):
         freq=contact_freq[pair]
         res_ind=pair[0]
         lig_ind=pair[1]
-        lig_nm=mytop.residue(lig_ind).name
         res_topo=mytop.residue(res_ind)
         res_pdb=res_topo.resSeq
         res_name=res_topo.name
         res_chain=seg_to_chain[res_topo.segment_id]
+        if lig_ind=="Lig":
+            lig_nm=lig_ind
+        else:
+            lig_topo=mytop.residue(lig_ind)
+            lig_nm=lig_topo.name
         if lig_nm in fin_dict:
             fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
         else:
@@ -1773,7 +1852,10 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
             if (ligres_sel in fin_dict):
                 fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
             else: 
-                return (False,None, "Error when parsing results.")
+                print("\n\n\n")
+                print(fin_dict)
+                print("\n\n\n")
+                return (False,None, "Error when parsing results (2).")
     return(True,fin_dict,None)
 
 def download_rmsd(request, rmsd_id):

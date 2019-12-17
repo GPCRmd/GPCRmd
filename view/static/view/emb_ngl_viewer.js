@@ -309,8 +309,10 @@ $(document).ready(function(){
     
     $("#receptor").addClass("active");
 
-    var chains_str =$("#receptor").attr("title"); 
-    var all_chains = $(".str_file").data("all_chains").split(",");
+    var chains_str =$("#receptor").attr("title");
+    var all_chains_raw = $(".str_file").data("all_chains");
+    var all_chains_raw_s=all_chains_raw.toString();
+    var all_chains = all_chains_raw_s.split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
@@ -1290,15 +1292,14 @@ $(document).ready(function(){
     function obtainNonGPCRchains(selector){
         var nonGPCR_chains_all=[];
         $(selector).each(function(){
-            var nonGPCR_chains=$(this).attr("id");
-            var patt = new RegExp("protein and \\((.*)\\)");
-            var nonGPCR_substr = patt.exec(nonGPCR_chains);
-            if (nonGPCR_substr){
-                nonGPCR_substr=nonGPCR_substr[1];
-                nonGPCR_li = nonGPCR_substr.match(/[A-Z]/g);
-                nonGPCR_str = nonGPCR_li.join();
-                nonGPCR_chains_all.push(nonGPCR_str);
-            }
+            var nonGPCR_chains=$(this).data("selector");
+            //var patt = new RegExp("protein and \\((.*)\\)");
+            //var nonGPCR_substr = patt.exec(nonGPCR_chains);
+            //if (nonGPCR_substr){
+            //nonGPCR_substr=nonGPCR_substr[1];
+            nonGPCR_li = nonGPCR_chains.match(/[A-Z]/g);
+            nonGPCR_str = nonGPCR_li.join();
+            nonGPCR_chains_all.push(nonGPCR_str);
         });
         return (nonGPCR_chains_all);
     }

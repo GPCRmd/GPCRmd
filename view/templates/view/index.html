@@ -506,12 +506,16 @@ padding-right:60px
 
                       <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
                           <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn changefocus"  id="receptor">Receptor</button>
-                          {% if other_prots%}
+                          <!--{% if other_prots%}
                             <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
-                          {% endif %}
+                          {% endif %}-->
                           {% for long_n, short_n, ctype in compounds %}
                               {% if ctype == "Ligand" %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus {{ctype}}" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                              {% elif ctype == "Prot_ligand" %}
+
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn active changefocus" title="Chain {{short_n}}" data-selector="{{short_n}}" >{{long_n}}</button>
+
                               {% else %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                               {% endif %}
@@ -564,9 +568,9 @@ padding-right:60px
                                  {% for long_n, short_n, ctype in compounds %}
                                  <option  value="{{short_n}}">{{long_n}}</option>
                                  {% endfor %}
-                                 {% if other_prots%}
+                                 <!--{% if other_prots%}
                                  <option   value="{{other_prots.0}}">Other proteins</option>
-                                 {% endif %}
+                                 {% endif %}-->
                                  <option   value="user_sel">Selection</option>
                               </select>
                               <span class="user_sel_input_p"></span>
