@@ -4016,7 +4016,9 @@ def get_submission_molecule_info(request,form_type,submission_id):
 @test_if_closed
 def upload_model_pdb(request,submission_id):
 
-    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+    #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2) #Increase size limit
+    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*50*1024**2)
+
     try:
         return _upload_model_pdb(request,submission_id)
     except (RequestBodyTooLarge, FileTooLarge, TooManyFiles) as e:
@@ -6547,7 +6549,8 @@ def SMALL_MOLECULEview2(request,submission_id):
 @test_if_closed
 def generate_molecule_properties(request,submission_id):
 
-    request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+    #request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+    request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,100*50*1024**2)#Increase size limit
     
     try:
         return _generate_molecule_properties(request,submission_id)
@@ -7625,9 +7628,10 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
         trajectory_max_files = settings.trajectory_max_files
     
     if trajectory is None:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+        #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2) #Increase size limit
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*50*1024**2) #Increase size limit
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,4*5*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*5*1024**3,max_files=trajectory_max_files)#Increase size limit
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)
