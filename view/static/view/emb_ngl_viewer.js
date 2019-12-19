@@ -1835,7 +1835,7 @@ $(document).ready(function(){
 
                                     table_html+="</tbody></table></div>\
                                     <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear table</button>";
-                                                                        
+                                    var dyn_id=$(".str_file").data("dyn_id");
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"' style='margin-top:30px'></div>\
                                         <div class='checkbox' style='font-size:12px;margin-bottom:0;display:inline-block'>\
@@ -1848,7 +1848,7 @@ $(document).ready(function(){
                                                 </a>\
                                             </div>\
                                             <div style='display:inline-block;margin:5px'>\
-                                                <a role='button' class='btn btn-link href_save_data_int settingsB' href='/view/dwl/"+int_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                <a role='button' class='btn btn-link href_save_data_int settingsB' href='/view/dwl/"+dyn_id+"/"+int_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                     <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_int'></span>\
                                                 </a>\
                                             </div>\
@@ -2538,6 +2538,7 @@ $(document).ready(function(){
                                         };
                                         newgraph_sel="dist_chart_"+d_id.toString();
                                         var plot_html;
+                                        var dyn_id=$(".str_file").data("dyn_id");
                                         if ($.active<=1){
                                             plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                             <div class='dist_time' id='"+newgraph_sel+"t'></div>\
@@ -2558,7 +2559,7 @@ $(document).ready(function(){
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot settingsB' href='/view/dwl/"+dyn_id+"/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -2591,7 +2592,7 @@ $(document).ready(function(){
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled settingsB' href='/view/dwl/"+dyn_id+"/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -3955,6 +3956,7 @@ $(document).ready(function(){
                                 };
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
+                                var dyn_id=$(".str_file").data("dyn_id");
                                 if ($.active<=1){
                                     RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
@@ -3975,7 +3977,7 @@ $(document).ready(function(){
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot settingsB' href='/view/dwl/"+dyn_id+"/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
@@ -4004,7 +4006,7 @@ $(document).ready(function(){
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled settingsB' href='/view/dwl/"+dyn_id+"/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
