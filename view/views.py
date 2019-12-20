@@ -1190,6 +1190,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(dynfiles)
+        if dyn_id==29:
+            traj_list=[traj_list[0]]
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
