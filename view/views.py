@@ -1190,8 +1190,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(dynfiles)
-        if dyn_id==29:
-            traj_list=[traj_list[0]]
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
@@ -1387,7 +1385,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
-                    traj_list=[traj_list[0]]
+                    if dyn_id==29:
+                        traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
