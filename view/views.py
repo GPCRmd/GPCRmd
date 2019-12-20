@@ -2655,12 +2655,14 @@ def trim_path_for_mdsrv(path):
     return myfile
 
 def quickload(request,dyn_id,trajfile_id):
+    #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
     mdsrv_url=obtain_domain_url(request)
     modelfile=DyndbFiles.objects.get(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_model=True)
     trajfile=DyndbFiles.objects.get(id=trajfile_id)
     model_filepath=trim_path_for_mdsrv(modelfile.filepath)
     traj_filepath=trim_path_for_mdsrv(trajfile.filepath)
     context={
+        "dyn_id":dyn_id,
         "struc_file":model_filepath,
         "traj_file":traj_filepath,
         "mdsrv_url":mdsrv_url
