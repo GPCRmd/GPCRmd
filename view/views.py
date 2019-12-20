@@ -1385,6 +1385,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
+                    traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -2648,7 +2649,24 @@ def view_session(request , session_name):
 
         return redirect(mdsrv_url+redirect_url)
 
-    
+def trim_path_for_mdsrv(path):
+    p=re.compile("(/protwis/sites/files/)(.*)")
+    myfile=p.search(path).group(2)
+    return myfile
+
+def quickload(request,dyn_id,trajfile_id):
+    mdsrv_url=obtain_domain_url(request)
+    modelfile=DyndbFiles.objects.get(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_model=True)
+    trajfile=DyndbFiles.objects.get(id=trajfile_id)
+    model_filepath=trim_path_for_mdsrv(modelfile.filepath)
+    traj_filepath=trim_path_for_mdsrv(trajfile.filepath)
+    context={
+        "struc_file":model_filepath,
+        "traj_file":traj_filepath,
+        "mdsrv_url":mdsrv_url
+            }
+    return render(request, 'view/quickload.html', context)
+
     
 ############ TEST #############
 def fplot_test(request, dyn_id, filename):
