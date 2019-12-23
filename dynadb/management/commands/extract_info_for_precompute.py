@@ -33,11 +33,13 @@ class Command(BaseCommand):
 
 
         dynfiledata = dynobj.annotate(dyn_id=F('id'))
+        dynfiledata = dynfiledata.annotate(is_pub=F('is_published'))
+        dynfiledata = dynfiledata.annotate(sub_id=F('submission_id__id'))
         dynfiledata = dynfiledata.annotate(file_path=F('dyndbfilesdynamics__id_files__filepath'))
         dynfiledata = dynfiledata.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
         dynfiledata = dynfiledata.annotate(file_is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
         dynfiledata = dynfiledata.annotate(file_ext=F('dyndbfilesdynamics__id_files__id_file_types__extension'))
-        dynfiledata = dynfiledata.values("dyn_id","file_path","file_id","file_is_traj","file_ext")
+        dynfiledata = dynfiledata.values("dyn_id","file_path","file_id","file_is_traj","file_ext","is_pub","sub_id")
 
         dyn_dict = {}
         for dyn in dynfiledata:
@@ -51,6 +53,8 @@ class Command(BaseCommand):
                 dyn_dict[dyn_id]["segments"]=set()
                 dyn_dict[dyn_id]["lig_li"]=set()
                 dyn_dict[dyn_id]["uniprot"]=[]
+                dyn_dict[dyn_id]["is_published"]=dyn["is_pub"]
+                dyn_dict[dyn_id]["submission_id"]=dyn["sub_id"]
             file_info={"id":dyn["file_id"],"path":dyn["file_path"]}
             if dyn["file_is_traj"]:
                 dyn_dict[dyn_id]["files"]["traj"].append(file_info)
