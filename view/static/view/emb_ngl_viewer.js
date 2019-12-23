@@ -819,6 +819,7 @@ $(document).ready(function(){
             last_input_row.removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_sel");
             $(".ed_ligand").each(function(){
                 var lig_nm=$(this).data("shortn");
+                lig_nm=lig_sel_if_starts_num(lig_nm);
                 var class_nm="ed_input_rep_lig_"+lig_nm;
                 last_input_row.removeClass(class_nm)
             });
@@ -4168,6 +4169,15 @@ $(document).ready(function(){
 
     }
 
+    function lig_sel_if_starts_num(lig_nm){
+        if (lig_nm){
+            if (lig_nm.match(/^\d/)) {
+                var lig_nm="["+lig_nm+"]";
+            } 
+        }
+        return lig_nm
+    }
+
     function createEDReps(add_reps,highlight_sel){
         if ($("#EdrepsOn").hasClass("active")){
             if (add_reps){
@@ -4194,6 +4204,7 @@ $(document).ready(function(){
                 var lig_li=[]
                 $(".ed_ligand").each(function(){
                     var lig_nm=$(this).data("shortn");
+                    lig_nm=lig_sel_if_starts_num(lig_nm);
                     lig_li[lig_li.length]=lig_nm
                     var class_nm="ed_input_rep_lig_"+lig_nm;
                     if ($("#text_input_all").find("."+class_nm).length ==0){
@@ -4415,6 +4426,7 @@ $(document).ready(function(){
         var loadEd=false;
         var ed_finsel="";
         var ligsel_ed=$(".ed_ligand.active").data("shortn");
+        ligsel_ed=lig_sel_if_starts_num(ligsel_ed);
         if (ligsel_ed){
             loadEd=true;
             ed_finsel=ligsel_ed;
