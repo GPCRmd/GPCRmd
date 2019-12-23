@@ -9,9 +9,14 @@ def get_num_frames(trj_file,stride):
     t=md.open(trj_file , mode="r",  force_overwrite=False)
     res=t.read(stride=stride)
     num_frames=np.shape(res[0])[0]
+
+    #t=md.open(trj_file)
+    #num_frames=t.__len__()
+    
     del t
     gc.collect()
     return num_frames
+
 
 def get_cont_type(self,jsonfile,n1,n2):
     if(len(n1.split("x")) != 2):
