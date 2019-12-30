@@ -6617,6 +6617,7 @@ def _generate_molecule_properties(request,submission_id):
                     mol = open_molecule_file(uploadfile,logfile=logfile)
                     
                 except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                    print("------------------_!!!!!!!!---------------")
                     print(e.args[0],file=logfile)
                     logfile.close()
                     data['msg'] = e.args[0]
@@ -6717,10 +6718,12 @@ def _generate_molecule_properties(request,submission_id):
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
                 
-                if qMOL.exists():
-                    data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
-                    data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
-                    data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+                if qMOL.exists(): # [!] BUG HERE: often mol is stored at DyndbMolecule but no id_compound__std_id_molecule
+                    qMOLfilt=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2)
+                    if qMOLfilt:
+                        data['urlstdmol']=qMOLfilt.values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
+                        data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
+                        data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
                 return JsonResponse(data,safe=False)
             else:
                 data['msg'] = 'Unknown molecule file reference.'
