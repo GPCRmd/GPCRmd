@@ -5394,7 +5394,11 @@ $(document).ready(function(){
             var cont_h_num=Math.round(screen_h*0.40);
         }
         var cont_h=(cont_h_num).toString() +"px";
-        var cont_h_iframe=(cont_h_num+30).toString() +"px";
+        var cont_h_iframe_num=cont_h_num+30;
+        var cont_h_iframe=(cont_h_iframe_num).toString() +"px";
+        var cont_h_loading_num=cont_h_num/2
+        var cont_h_loading=(cont_h_loading_num).toString() +"px";
+        $("#loading").find("img").css("margin-top",cont_h_loading)
         //var cont_h_viewport=(cont_h_num-25).toString() +"px";
         //....
         $("#dropdownAndIframe").css({"border" : "1px solid #F5F5F5" , "max-width": cont_w_max , "height":cont_h});

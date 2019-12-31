@@ -128,9 +128,24 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
         successful_classes=0
         for (gpcr_cl, seq_num) in all_num_schemes.items():
             if seq_num:
-                result=align_wt_mut_viewer(wt_seq,seq_db)
-                res_wt=result[0]
-                res_mut=result[1]
+
+
+                mut_dict={mut.resid:{"res_from":mut.resletter_from,"res_to":mut.resletter_to } for mut in mutations_s}
+                wt_seq_post=""
+                res_pos=1
+                while res_pos <=  len(wt_seq):
+                    if res_pos in mut_dict:
+                        res_from=mut_dict[res_pos]["res_from"]
+                        if res_from =="-":
+                            wt_seq_post+="-"
+                    wt_seq_post+=wt_seq[res_pos-1]
+                    res_pos+=1
+
+                res_wt=wt_seq_post
+
+                #result=align_wt_mut_viewer(wt_seq,seq_db)
+                #res_wt=result[0]
+                #res_mut=result[1]
                 seq_n=0
                 align_n=1
                 align_seq={}
@@ -143,10 +158,11 @@ def obtain_gen_numbering(dyn_id, dprot_gpcr, gprot_gpcr):
                         align_seq[align_n]=(res_from, None, "-")
                     align_n+=1
 
-                for mut in mutations_s:
-                    res_position =mut.resid 
-                    res_from = mut.resletter_from
-                    res_to =  mut.resletter_to
+                for (res_position, res_info) in mut_dict.items():
+                #for mut in mutations_s:
+                    #res_position =mut.resid 
+                    res_from = res_info["res_from"]#mut.resletter_from
+                    res_to =   res_info["res_to"]#mut.resletter_to
                     (my_res_from, gpcr_n, segm)=align_seq[res_position]
                     if res_from == "-":
                         (my_res_from_before, gpcr_n_before, segm_before)=align_seq[res_position-1]

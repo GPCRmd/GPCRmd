@@ -6724,6 +6724,12 @@ def _generate_molecule_properties(request,submission_id):
                         data['urlstdmol']=qMOLfilt.values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
                         data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
                         data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+                else:
+                    for q in qMOL:
+                        if q.molecule_creation_submission_id == submission_id:
+                            sn=DyndbSubmissionMolecule.objects.get(molecule_id=q.id)
+                            sn.delete()
+                            q.delete()
                 return JsonResponse(data,safe=False)
             else:
                 data['msg'] = 'Unknown molecule file reference.'
