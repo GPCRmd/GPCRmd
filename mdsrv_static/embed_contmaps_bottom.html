@@ -550,26 +550,29 @@
           new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
           stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
 
-          //Once both NGLs, hide the whole div
-          var ngl_col = parent.$("#NGL_col");
-          if (ngl_col.hasClass("first_loaded")){
-            ngl_col.addClass("collapse");
-          } 
-          else {
-            ngl_col.addClass("first_loaded");
-          } 
-
         });
 
-        // We define the setInterval function, which will be stopped when 'iframeSetOk' is launched from flareplots.js
-        var myStopVar = setInterval(callParent, 1000);
-        function callParent(){
-            parent.$('body').trigger('iframeSet');
-        }
+        //Start loading NGLs, and subsequent flareplots, only when the section is uncollapsed on click
+        parent.$("#flare_title").click(function(){
+
+          //This things have to be done only once, the first time the button is clicked
+          if ($(this).hasClass('Already_clicked0') && $(this).hasClass('Already_clicked1')){
+            return;
+          }
+
+          // We define the setInterval function, which will be stopped when 'iframeSetOk' is launched from flareplots.js
+          var myStopVar = setInterval(callParent, 1000);
+          function callParent(){
+              parent.$('body').trigger('iframeSet');
+          }
+          
+          $(document.body).bind('iframeSetOk', function(e) {
+              clearInterval(myStopVar);
+          });
+
+          $(this).addClass("Already_clicked"+id);
         
-        $(document.body).bind('iframeSetOk', function(e) {
-            clearInterval(myStopVar);
-        });
+        }); 
 
       });
     });

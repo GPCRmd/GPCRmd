@@ -351,9 +351,6 @@ $(document).ready(function(){
     	    }
         });
 
-        //Once done the flareplots, hide the whole div
-        $("#flare_col").addClass("collapse");
-
         //Load needed Json files and execute NGL bottom viewers
         var clustdict_file, compl_data_file;
         clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";

@@ -3,7 +3,7 @@
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 <script>document.domain=document.domain;</script>
 
-<!--Bootstrap things-->
+<!--Jquery things-->
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 
 <!--Load javascripts -->
@@ -42,6 +42,7 @@
       <span><img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/></span>
       <div class="panel-body" >
         {% include './contact_maps/menus.html' %}
+        <!--Heatmap pager -->
         <div id="heatmap_pager">
           <ul class="pagination">
             <li class="page-item prev">
@@ -64,18 +65,19 @@
               </a>
             </li>
           </ul>
+          <canvas width="80" height="255" id="cv"></canvas>
         </div>
         <div id="dendrogram-heatmap" class="row">
-          <div id="dendrogram" class="col-xs-4" style="width: 30%">
+          <div id="dendrogram" class="col-xs-4" style="width: 35%">
             {{dendrogram | safe }}
           </div>
           {% for number,div in numbered_divs %}
           {% if number == "1" %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 70%; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; overflow-x: scroll;">
             {{ div | safe }}
           </div>
           {% else %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 70%; display: none; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; display: none; overflow-x: scroll;">
             {{ div | safe }}
           </div>
           {% endif %}
@@ -106,7 +108,7 @@
         </button>
       </div>
       <div class="panel-body" style="">
-        <div style="min-width:350px">
+        <div style="min-width:100%">
           <!-- Info on clicked dyn -->
           <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
           <p><b>PDB id:</b> <span id="pdb_id"></span> <a id="pdb_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
@@ -150,8 +152,8 @@
           <!-- Loading div-->
           <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
           <!-- iframe for the ngl viewer -->
-          <div id="ngl_div"  style="width:350px;height:350px;margin:auto;">
-            <iframe style="border:none; position:relative;"  id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no" height="348px" width="348px"></iframe>
+          <div id="ngl_div">
+            <iframe id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no"></iframe>
           </div>
           <div id="posNotinRec" class="alert alert-warning">
             <span id="posNotinRec_text"></span>
@@ -163,19 +165,19 @@
 
   <div class="col-xs-12" id="not_retracting_parts">
 
-    <!--Here be flareplots -->
+    <!--Here be flareplots and NGLs -->
 
     <div class="panel panel-primary" id="flare_title">
-      <div class="panel-body click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false">
+      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false">
         <div class="title_div">
-          <h4 class="title">Top5 representative interactions in cluster
+          <h4 class="title">Top5 representative interactions in clusters
             <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down "></span>
           </h4>
         </div>
       </div>
     </div>
 
-    <div class="panel panel-primary" id="flare_col" data-fpdir="{{fpdir}}">
+    <div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}">
       <div class="panel-body">
 
         <center>
@@ -283,36 +285,19 @@
 
           </center>
         </div>
-
-      </div>
-    </div>
-    
-    <!--Here be NGL viewers-->
-    <div class="panel panel-primary" id="NGL_title"  data-fpdir="{{fpdir}}">
-      <div class="panel-body click_title" data-toggle="collapse" data-target="#NGL_col" aria-expanded="false">
-        <div class="title_div">
-          <h4 class="title">Cluster Simulation Viewers
-          <span id="ngl_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
-          </h4>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel panel-primary" id="NGL_col"  data-fpdir="{{fpdir}}">
-      <div class="panel-body">
         
         <div id="ngldiv0" class="col-xs-6 ngldiv">
 
           <div class="container-fluid NGLtoolbar" >
             <div class="row NGLtoolbar_row">
-              <div id="trajsDropdown0" class="dropdown blueDropdownDiv traj_select">
+              <div id="trajsDropdown0" class="col-xs-6 dropdown blueDropdownDiv traj_select">
                 <button id="trajButton0" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
                 <span class="caret"></span></button>
                 <ul class="dropdown-menu blueList trajList">
                   <span id="add_traj_bottom0"></span>
                 </ul>
               </div>               
-              <div class="dropdown blueDropdownDiv" id="simulation_select">
+              <div class="col-xs-6 dropdown blueDropdownDiv" id="simulation_select">
                 <button id="simButton0" class="btn btn-info btn-xs dropdown-toggle pull-right blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span class="caret"></span></button>
                 <ul class="dropdown-menu blueList simList">
                   <span id="add_sim_bottom0"></span>
@@ -320,7 +305,9 @@
               </div>
             </div>  
             <div class="row NGLtoolbar_row">
-              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              <div class="col-xs-12">
+                <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              </div>
             </div>  
           </div>
 
@@ -336,7 +323,7 @@
 
           <div class="container-fluid NGLtoolbar" >
             <div class="row NGLtoolbar_row">
-              <div id="trajsDropdown1" class="dropdown blueDropdownDiv traj_select">
+              <div id="trajsDropdown1" class="col-xs-6 dropdown blueDropdownDiv traj_select">
                 <button id="trajButton1" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
                 <span class="caret"></span></button>
                 <ul class="dropdown-menu blueList trajList">
@@ -349,9 +336,11 @@
                   <span id="add_sim_bottom0"></span>
                 </ul>
               </div>
-            </div>  
+            </div>
             <div class="row NGLtoolbar_row">
-              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              <div class="col-xs-12">
+                <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              </div>
             </div>  
           </div>
 
