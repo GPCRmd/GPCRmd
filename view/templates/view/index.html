@@ -229,6 +229,32 @@ padding-right:60px
   margin-bottom: 0;
   font-size:13px;
 }
+
+.howtoparent{
+    /*float:right;
+    position:absolute; */
+    right: 45px;
+    margin-top:-5px
+}
+
+.howtobtn{
+    width: 52px;
+    height: 52px;
+    font-size:10px;
+    font-weight: bold;
+    display: inline-block;
+    line-height: 11px;
+    margin: 0 auto;
+    padding: 0;
+    padding-top: 8px;
+    text-align: center;
+    border-radius:100px;
+    color:#4d4d4d;
+}
+
+#aroundtitle{
+  width: calc(100% - 52px)
+}
 </style>
 {% endblock %}
 </head>
@@ -242,9 +268,14 @@ padding-right:60px
  <div class="col-md-12" id="page_info">
 
   <!-- <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;margin-bottom:10px">   -->
-   <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0 7px">  
-       <div class="panel-body">
-        <h2 >GPCRmd Workbench</h2>
+   <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0 7px; overflow:auto;">  
+       <div class="panel-body" style="min-width:400px;padding-bottom:10px">
+          <div style="float:left;" id="aroundtitle">
+          <h2 >GPCRmd Workbench</h2>
+          </div>
+        <div class="howtoparent" style="">
+            <a href="https://youtu.be/4chW27Cg2PE" class="btn btn-default btn-sm howtobtn"  target="_blank" role="button" style="">How to<br>use it<br><span class="glyphicon glyphicon-play" style="font-size:14px"></span></a>
+        </div>
        </div> 
    </div>
 
@@ -274,7 +305,7 @@ padding-right:60px
         
         <p style="text-align: justify;">The hydrogen bonding network has been generated using <a href="https://github.com/GPCRviz/flareplot" target="_blank" >Flare Plots</a>, powered by R. Fonseca and A. J. Venkatakrishnan.</p>
 
-        <p style="text-align: justify;">Mutant and variant information obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a> and <a href="http://exac.broadinstitute.org/" target="_blank" >ExAC</a>.</p>
+        <p style="text-align: justify;">Mutant and variant information obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a> and <a href="https://gnomad.broadinstitute.org/" target="_blank" >gnomAD</a>.</p>
         
              <p style="text-align: justify;margin-bottom:4px;font-weight:bold;color:#337AB7">Mouse controls:</p>
       <span><p class="falselist">Left button hold and move: rotate camera around center.</p>
@@ -313,7 +344,11 @@ padding-right:60px
               {% if all_prot_names %}
                   {{all_prot_names}}
                   {% if pdbid %}
-                    (<span id="pdbid">{{pdbid}}</span>)
+                    {% if pdbid == "HOMO" %}
+                      (<span id="pdbid">Homology modeling</span>)
+                    {% else %}
+                      (<span id="pdbid">{{pdbid}}</span>)
+                    {% endif %}
                   {% else %}
                     <span id="pdbid"></span>
                   {% endif %}
@@ -324,7 +359,7 @@ padding-right:60px
                 {% endif %}
               </span>
               {% endif %}
-              <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Go to simulation report</a>
+              <a href="{% url 'dynadb:query_dynamics' dyn_id %}" target="_blank" class="btn btn-default btn-xs pull-right"><span class="glyphicon glyphicon-plus"></span> Simulation report and files</a>
             </div>
         </div>
  
@@ -506,12 +541,16 @@ padding-right:60px
 
                       <div class="row" style="margin-top:10px;margin-bottom:10px"><center>
                           <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default receptor active nglCallBtn changefocus"  id="receptor">Receptor</button>
-                          {% if other_prots%}
+                          <!--{% if other_prots%}
                             <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
-                          {% endif %}
+                          {% endif %}-->
                           {% for long_n, short_n, ctype in compounds %}
                               {% if ctype == "Ligand" %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus {{ctype}}" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                              {% elif ctype == "Prot_ligand" %}
+
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn active changefocus" title="Chain {{short_n}}" data-selector="{{short_n}}" >{{long_n}}</button>
+
                               {% else %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                               {% endif %}
@@ -564,9 +603,9 @@ padding-right:60px
                                  {% for long_n, short_n, ctype in compounds %}
                                  <option  value="{{short_n}}">{{long_n}}</option>
                                  {% endfor %}
-                                 {% if other_prots%}
+                                 <!--{% if other_prots%}
                                  <option   value="{{other_prots.0}}">Other proteins</option>
-                                 {% endif %}
+                                 {% endif %}-->
                                  <option   value="user_sel">Selection</option>
                               </select>
                               <span class="user_sel_input_p"></span>
@@ -606,7 +645,9 @@ padding-right:60px
                       <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337AB7;border-radius:0" data-toggle="collapse" data-target="#selection"><span>Custom selection </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-down arrow"></span></div> 
                   </div>
                   <div id="selection" class="collapse" style="padding-right:15px;">
-
+                    <div style="margin-top:10px;margin-bottom:15px;color:#808080">
+                    Input your selection using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a>. Generic GPCR residue numbering can also be used (more info <a href="/view/docs/#customsel" target="_blank">here</a>).
+                    </div>
 
                    <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
                      <div id="text_input_all"  style="margin-top:10px;">
@@ -1777,13 +1818,13 @@ Hydrogen bonds
 
                         <div id="bondsresult" style="margin-bottom:20px"> 
                            <div style="padding:0"  class="col-md-12">
-
+                              <div id="blockbondsresult" style="height:70px;background-color:white;position:absolute ;z-index:10;width:100%;cursor:progress;opacity:0.5;display:none"></div>
                               <div  id="hbonds" class="hbonds_both" style="margin-bottom:10px;padding:0"></div> 
                               <center class="hbonds_btns" id="hbonds_btn" style="display:none">
                                 <button id="ShowAllHbIntra" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;margin-bottom:20px;visibility:hidden;" >Show All</button>
                                 <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb">Clear table</button>
 
-                                <a role="button" class="btn btn-link href_save_data_hbp  disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbp" style="color:#585858;padding:8px 0" data-linkroot="/view/dwl/freq/hbp">
+                                <a role="button" class="btn btn-link href_save_data_hbp  disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbp" style="color:#585858;padding:8px 0" data-linkroot="/view/dwl/freq/{{dyn_id}}/hbp">
                                   <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
                                 </a>
 
@@ -1794,7 +1835,7 @@ Hydrogen bonds
                                <center class="hbonds_btns" id="hbondsnp_btn" style="display:none;margin-bottom:10px">
                                     <button id="ShowAllHbInter" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden;" >Show All</button>
                                     <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showhb_inter">Clear table</button>
-                                    <a role="button" class="btn btn-link href_save_data_hbo disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbo" data-linkroot="/view/dwl/freq/hbo" style="color:#585858;padding:8px 0">
+                                    <a role="button" class="btn btn-link href_save_data_hbo disablewhencomp pull-right settingsB" href="/view/dwl/freq/hbo" data-linkroot="/view/dwl/freq/{{dyn_id}}/hbo" style="color:#585858;padding:8px 0">
                                       <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
                                     </a>
                                 </center>
@@ -1923,13 +1964,13 @@ Hydrogen bonds
                     <div id="saltresult_par" style="display:none" class="col-md-12" >
                         <div id="saltresult" style="margin-bottom:20px"> 
                            <div style="margin-bottom:10px;padding:0"  class="col-md-12" >
-
+                          <div id="blockSBbondsresult" style="height:100%;background-color:white;position:absolute ;z-index:10;width:100%;cursor:progress;opacity:0.5;display:none"></div>
                            <div class='scrolldowndiv' id="saltbridges" style="margin-bottom:10px;padding:0"></div>
 
                             <center>
                                 <button id="ShowAllSb" class="btn btn-default" style="padding:5px;margin-left:10px;margin-right:15px;visibility:hidden" >Show All</button>
                                 <button style="color:#DC143C;margin-bottom;0;padding-bottom:0" class="btn btn-link pull-right clearAnalysisView" id="clear_showsb">Clear table</button>
-                                <a role="button" class="btn btn-link href_save_data_sb disablewhencomp pull-right settingsB" href="/view/dwl/freq/sb" data-linkroot="/view/dwl/freq/sb" style="color:#585858;padding:8px 0">
+                                <a role="button" class="btn btn-link href_save_data_sb disablewhencomp pull-right settingsB" href="/view/dwl/freq/sb" data-linkroot="/view/dwl/freq/{{dyn_id}}/sb" style="color:#585858;padding:8px 0">
                                   <span title="Save data" class="glyphicon glyphicon-download-alt"></span>
                                 </a>
                             </center>

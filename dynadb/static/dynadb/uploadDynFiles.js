@@ -37,7 +37,7 @@ $(document).ready(function() {
         
         self.prop('disabled',true);
         if (file_type == "traj") {
-            var maxsize = "2 GB";
+            var maxsize = "8 GB";
         } else {
             var maxsize = "50 MB";
         }

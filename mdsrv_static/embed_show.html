@@ -158,19 +158,15 @@
                     if (ligsel){
                         o.setSelection("not _h and (protein or "+ligsel+")");
                         o.addRepresentation( "spacefill", {  sele: ligsel  } );
-                        stage.autoView();
-                        stage.animationControls.zoom(-30)
                     } else {
                         o.setSelection("protein");
-                        stage.autoView();
-                        stage.animationControls.zoom(-50)
-
                     }
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
                     if (mut_sel && mut_sel.length > 0){
                         o.addRepresentation( "hyperball", { sele: mut_sel, color:"#00ceff", scale:0.3 } );
                     }
-
+                    stage.autoView();
+                    stage.animationControls.zoom(-70)
                     o.setName("my_comp");
                     if (traj){
                         o.addTrajectory( traj_path + traj );

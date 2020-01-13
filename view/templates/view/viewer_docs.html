@@ -85,7 +85,7 @@
                     </ul>
                 </li>
                 <li><span style="font-style: italic;">On click show variants</span> mode:
-                    <ul>Click on the blue dots to obtain information on known natural variants of a residue. Data obtained from the <a href="http://exac.broadinstitute.org/" target="_blank" >ExAC database</a>.</ul>
+                    <ul>Click on the blue dots to obtain information on known natural variants of a residue. Data obtained from the <a href="https://gnomad.broadinstitute.org/" target="_blank" >gnomAD database</a>.</ul>
                 </li>
                 <li><span style="font-style: italic;">On click show mutations</span> mode:
                     <ul>Click on the blue dots to obtain information on mutational experiments done on a residue. Data obtained from <a href="https://www.gpcrdb.org/" target="_blank" >GPCRdb</a>.</ul>
@@ -111,11 +111,11 @@
         <p class=ptext>If the selection is correct, a green checkmark (<span style="color:#7acc00;font-size:10px" class="glyphicon glyphicon-ok"></span>) will appear at the left. More than one distance selection can be displayed at the same time. Selections made with this tool will appear in coral red. The  distance selection will be updated for each trajectory frame, as the disposition of the atoms may change.</p> 
         
 
-        <h5 class=subsect>Custom selection</h5>
-        <p class=ptext>Use the text input field to specify your personalized representations. You can choose a representation type (licorice, cartoon, etc.) and a coloring scheme (color by element, by chain, etc.).</p>
-        <p class=ptext>Selections must be expressed using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank" style="text-decoration: underline;">NGL selection language</a>. Moreover, to indicate protein residues it is also possible to use <span class=highlight>generic GPCR residue numbering</span>: Ballesteros-Weinstein (ex. <span style="font-style:italic">1.50</span>), GPCRdb structure-based numbering (ex. <span style="font-style:italic">1x50</span>) or a combination of both (ex. <span style="font-style:italic">1.50x50</span>).</p>
+        <h5 class=subsect id="customsel">Custom selection</h5>
+        <p class=ptext>Use the text input field to indicate the residues or molecules to be represented. You can choose a representation type (licorice, cartoon, etc.) and a coloring scheme (color by element, by chain, etc.).</p>
+        <p class=ptext>Selections must be expressed using the <a href="http://proteinformatics.charite.de/ngl/doc/index.html#User_manual/Usage/Selection_language" target="_blank" style="text-decoration: underline;">NGL selection language</a>. To indicate protein residues it is also possible to use <span class=highlight>generic GPCR residue numbering</span>: sequence-based (Ballesteros-Weinstein for class A, Wootten for class B, Pin for C and Wang for F.) (ex. <span style="font-style:italic">1.50</span>), structure-based (ex. <span style="font-style:italic">1x50</span>) or a combination (ex. <span style="font-style:italic">1.50x50</span>).</p>
         
-        <p class=ptext>For example, if you input <span class="input_ex">40-70:P or CLZ</span>, residues numbered from 40 to 70 at the PDB belonging to chain P and Clozapine will be displayed. Another example, this time using a combination of different generic GPCR numbering styles, could be <span class="input_ex">1.50 - 2x48 or 3.35x35  or SOD</span>.</p>
+        <p class=ptext>For example, if you input <span class="input_ex">40-70:P or CLZ</span>, residues numbered from 40 to 70 at the PDB belonging to chain P and Clozapine will be displayed. Another example, using a combination of different generic GPCR numbering styles, could be <span class="input_ex">1.50 - 2x48 or 3.35x35  or SOD</span>.</p>
 
         <h5 class=subsect>Sequence selection</h5>
         <p class=ptext>The GPCR Workbench also provides the option to select a protein segment from its sequence. Set your selection by clicking at the desired range or ranges of residues, selected segments will appear at the sequence in green. To deselect a residue range from the sequence, just click on it. Finally, click at <span class=highlight>Confirm selection</span>: the residue range(s) will be added to a text input field, which you can modify to adjust the selection to what you want to display. If you want to add new sequence selections, click at the <span style="color: rgb(87, 200, 87)" class="glyphicon glyphicon-plus-sign"></span> button.</p>

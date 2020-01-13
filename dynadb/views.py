@@ -3177,7 +3177,7 @@ def query_dynamics(request,dynamics_id):
         author="GPCR drug discovery group (Pompeu Fabra University)"
     elif user.id in {1, 3, 5, 12, 14}:
         author="GPCRmd community"
-        force_ref="Ismael Rodríguez-Espigares, Mariona Torrens-Fontanals, Johanna K.S. Tiemann, David Aranda-García, Juan Manuel Ramírez-Anguita, Tomasz Maciej Stepniewski, Nathalie Worp, Alejandro Varela-Rial, Adrián Morales-Pastor, Brian Medel Lacruz, Gáspár Pándy-Szekeres, Eduardo Mayol, Rasmus Fonseca, Toni Giorgino, Jens Carlsson, Xavier Deupi, Slawomir Filipek, José Carlos Gómez-Tamayo, Angel Gonzalez, Hugo Gutierrez-de-Teran, Mireia Jimenez, Willem Jespers, Jon Kapla, Peter Kolb, Dorota Latek, Maria Marti-Solano, Pierre Matricon, Minos-Timotheos Matsoukas, Przemyslaw Miszta, Mireia Olivella, Laura Perez-Benito, Santiago Ríos, Iván Rodríguez-Torrecillas, Jessica Sallander, Agnieszka Sztyler, Silvana Vasile, Peter W. Hildebrand, Gianni De Fabritiis, David E. Gloriam, Arnau Cordomi, Ramon Guixà-González, Jana Selent. 2019. GPCRmd uncovers the dynamics of the 3D-GPCRome. bioRxiv. doi:10.1101/839597"
+        force_ref="Ismael Rodríguez-Espigares, Mariona Torrens-Fontanals, Johanna KS Tiemann, David Aranda-García, Juan Manuel Ramírez-Anguita, Tomasz Maciej Stepniewski, Nathalie Worp, Alejandro Varela-Rial, Adrián Morales-Pastor, Brian Medel Lacruz, Gáspár Pándy-Szekeres, Eduardo Mayol, Toni Giorgino, Jens Carlsson, Xavier Deupi, Slawomir Filipek, José Carlos Gómez-Tamayo, Angel Gonzalez, Hugo Gutierrez-de-Teran, Mireia Jimenez, Willem Jespers, Jon Kapla, George Khelashvili, Peter Kolb, Dorota Latek, Maria Marti-Solano, Pierre Matricon, Minos-Timotheos Matsoukas, Przemyslaw Miszta, Mireia Olivella, Laura Perez-Benito, Santiago Ríos, Iván Rodríguez-Torrecillas, Jessica Sallander, Agnieszka Sztyler, Nagarajan Vaidehi, Silvana Vasile, Harel Weinstein, Ulrich Zachariae, Peter W Hildebrand, Gianni De Fabritiis, Ferran Sanz, David E Gloriam, Arnau Cordomi, Ramon Guixà-González, Jana Selent. 2019. GPCRmd uncovers the dynamics of the 3D-GPCRome. bioRxiv. doi:10.1101/839597"
     else:
         if DyndbDynamics.objects.get(id=dynamics_id).is_published:
             author=u.first_name + " "+ u.last_name
@@ -4016,7 +4016,9 @@ def get_submission_molecule_info(request,form_type,submission_id):
 @test_if_closed
 def upload_model_pdb(request,submission_id):
 
-    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+    #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2) #Increase size limit
+    request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*50*1024**2)
+
     try:
         return _upload_model_pdb(request,submission_id)
     except (RequestBodyTooLarge, FileTooLarge, TooManyFiles) as e:
@@ -6547,7 +6549,8 @@ def SMALL_MOLECULEview2(request,submission_id):
 @test_if_closed
 def generate_molecule_properties(request,submission_id):
 
-    request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+    #request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,50*1024**2)
+    request.upload_handlers[1] = TemporaryMoleculeFileUploadHandlerMaxSize(request,100*50*1024**2)#Increase size limit
     
     try:
         return _generate_molecule_properties(request,submission_id)
@@ -6614,6 +6617,7 @@ def _generate_molecule_properties(request,submission_id):
                     mol = open_molecule_file(uploadfile,logfile=logfile)
                     
                 except (ParsingError, MultipleMoleculesinSDF, InvalidMoleculeFileExtension) as e:
+                    print("------------------_!!!!!!!!---------------")
                     print(e.args[0],file=logfile)
                     logfile.close()
                     data['msg'] = e.args[0]
@@ -6714,10 +6718,18 @@ def _generate_molecule_properties(request,submission_id):
             #####################
                 qMOL=DyndbMolecule.objects.filter(inchi=data['inchi']['inchi'].split('=')[1],net_charge=data['charge'])
                 
-                if qMOL.exists():
-                    data['urlstdmol']=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2).values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
+                if qMOL.exists(): # [!] BUG HERE: often mol is stored at DyndbMolecule but no id_compound__std_id_molecule
+                    qMOLfilt=qMOL.filter(id_compound__std_id_molecule__dyndbfilesmolecule__type=2)
+                    #if qMOLfilt:
+                    data['urlstdmol']=qMOLfilt.values_list('id_compound__std_id_molecule__dyndbfilesmolecule__id_files__url',flat=True)[0]
                     data['name'],data['iupac_name'],data['pubchem_cid'],data['chemblid'] =qMOL.values_list('id_compound__name','id_compound__iupac_name','id_compound__pubchem_cid','id_compound__chemblid')[0]
                     data['other_names']=("; ").join(list(qMOL.values_list('id_compound__dyndbothercompoundnames__other_names',flat=True)))
+#                    else:
+#                        for q in qMOL:
+#                            if int(q.molecule_creation_submission_id) == int(submission_id):
+#                                sn=DyndbSubmissionMolecule.objects.get(molecule_id=q.id)
+#                                sn.delete()
+#                                q.delete()
                 return JsonResponse(data,safe=False)
             else:
                 data['msg'] = 'Unknown molecule file reference.'
@@ -7625,9 +7637,10 @@ def upload_dynamics_files(request,submission_id,trajectory=None):
         trajectory_max_files = settings.trajectory_max_files
     
     if trajectory is None:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2)
+        #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,50*1024**2) #Increase size limit
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*50*1024**2) #Increase size limit
     else:
-        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,5*1024**3,max_files=trajectory_max_files)
+        request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,100*5*1024**3,max_files=trajectory_max_files)#Increase size limit
         #request.upload_handlers[1] = TemporaryFileUploadHandlerMaxSize(request,2*1024**3)
     try:
         return _upload_dynamics_files(request,submission_id,trajectory=trajectory,trajectory_max_files=trajectory_max_files)

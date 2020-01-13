@@ -309,8 +309,10 @@ $(document).ready(function(){
     
     $("#receptor").addClass("active");
 
-    var chains_str =$("#receptor").attr("title"); 
-    var all_chains = $(".str_file").data("all_chains").split(",");
+    var chains_str =$("#receptor").attr("title");
+    var all_chains_raw = $(".str_file").data("all_chains");
+    var all_chains_raw_s=all_chains_raw.toString();
+    var all_chains = all_chains_raw_s.split(",");
 
     var gpcr_pdb_dict = $(".gpcr_pdb").data("gpcr_pdb");
     var bw_dict,gpcrdb_dict,pdb_gpcrdb,gpcr_id_name,all_gpcr_dicts,num_gpcrs;
@@ -817,6 +819,7 @@ $(document).ready(function(){
             last_input_row.removeClass("ed_input_rep ed_input_rep_GPCR ed_input_rep_otherprot ed_input_rep_sel");
             $(".ed_ligand").each(function(){
                 var lig_nm=$(this).data("shortn");
+                lig_nm=lig_sel_if_starts_num(lig_nm);
                 var class_nm="ed_input_rep_lig_"+lig_nm;
                 last_input_row.removeClass(class_nm)
             });
@@ -1290,15 +1293,14 @@ $(document).ready(function(){
     function obtainNonGPCRchains(selector){
         var nonGPCR_chains_all=[];
         $(selector).each(function(){
-            var nonGPCR_chains=$(this).attr("id");
-            var patt = new RegExp("protein and \\((.*)\\)");
-            var nonGPCR_substr = patt.exec(nonGPCR_chains);
-            if (nonGPCR_substr){
-                nonGPCR_substr=nonGPCR_substr[1];
-                nonGPCR_li = nonGPCR_substr.match(/[A-Z]/g);
-                nonGPCR_str = nonGPCR_li.join();
-                nonGPCR_chains_all.push(nonGPCR_str);
-            }
+            var nonGPCR_chains=$(this).data("selector");
+            //var patt = new RegExp("protein and \\((.*)\\)");
+            //var nonGPCR_substr = patt.exec(nonGPCR_chains);
+            //if (nonGPCR_substr){
+            //nonGPCR_substr=nonGPCR_substr[1];
+            nonGPCR_li = nonGPCR_chains.match(/[A-Z]/g);
+            nonGPCR_str = nonGPCR_li.join();
+            nonGPCR_chains_all.push(nonGPCR_str);
         });
         return (nonGPCR_chains_all);
     }
@@ -1834,7 +1836,7 @@ $(document).ready(function(){
 
                                     table_html+="</tbody></table></div>\
                                     <button class='btn btn-link pull-right clear_int_tbl' style='color:#DC143C;'>Clear table</button>";
-                                                                        
+                                    var dyn_id=$(".str_file").data("dyn_id");
                                     var chart_div="int_chart_"+i_id.toString();
                                     var infoAndOpts= "<div id='"+chart_div+"' style='margin-top:30px'></div>\
                                         <div class='checkbox' style='font-size:12px;margin-bottom:0;display:inline-block'>\
@@ -1847,7 +1849,7 @@ $(document).ready(function(){
                                                 </a>\
                                             </div>\
                                             <div style='display:inline-block;margin:5px'>\
-                                                <a role='button' class='btn btn-link href_save_data_int settingsB' href='/view/dwl/"+int_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                <a role='button' class='btn btn-link href_save_data_int settingsB' href='/view/dwl/"+dyn_id+"/"+int_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                     <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_int'></span>\
                                                 </a>\
                                             </div>\
@@ -2537,6 +2539,7 @@ $(document).ready(function(){
                                         };
                                         newgraph_sel="dist_chart_"+d_id.toString();
                                         var plot_html;
+                                        var dyn_id=$(".str_file").data("dyn_id");
                                         if ($.active<=1){
                                             plot_html="<div class='dist_plot' id='all_"+newgraph_sel+"' data-dist_id="+dist_id+" style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                             <div class='dist_time' id='"+newgraph_sel+"t'></div>\
@@ -2557,7 +2560,7 @@ $(document).ready(function(){
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot settingsB' href='/view/dwl/"+dyn_id+"/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -2590,7 +2593,7 @@ $(document).ready(function(){
                                                                     </a>\
                                                                 </div>\
                                                                 <div style='display:inline-block;margin:5px;'>\
-                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled settingsB' href='/view/dwl/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                                    <a role='button' class='btn btn-link href_save_data_dist_plot disabled settingsB' href='/view/dwl/"+dyn_id+"/"+dist_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                         <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_dist_plot'></span>\
                                                                     </a>\
                                                                 </div>\
@@ -3264,6 +3267,17 @@ $(document).ready(function(){
             var msn="Some fields are empty or contain errors";
             showBigError(msn, "#bonds_alert");
         } else {
+            $(".hbond_openchose_click").each(function(){
+                //if (!($(this).hasClass("collapsed"))){
+                if ($(this).attr("aria-expanded") =="true"){
+                    $(this).trigger("click");
+                }
+            })
+
+            if ($("#bondsresult_par").css("display")!="none"){
+                $("#blockbondsresult").css("display","block");
+            }
+            $("#ComputeHbonds").addClass("disabled");
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
             $("#bondsresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_hbonds'><span class='glyphicon glyphicon-time'></span> Computing hydrogen bonds...</p>");   
             $.ajax({
@@ -3275,6 +3289,8 @@ $(document).ready(function(){
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
                         changeDownloadURLS(rmsdTraj,[".href_save_data_hbp",".href_save_data_hbo"]);
+                        $("#blockbondsresult").css("display","none");
+                        $("#ComputeHbonds").removeClass("disabled");
                         hbonds=data.hbonds;
                         hbonds_np=data.hbonds_notprotein;
                         var regex = /\d+/g;
@@ -3454,6 +3470,8 @@ $(document).ready(function(){
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_hbonds").remove();
+                        $("#blockbondsresult").css("display","none");
+                        $("#ComputeHbonds").removeClass("disabled");
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
 
@@ -3530,6 +3548,10 @@ $(document).ready(function(){
             $('#ShowAllSb').css("visibility","hidden");
             $("#saltresult_par").before("<p style='margin-top:5px;padding:5px;background-color:#e6e6ff;border-radius:3px;clear:left' id='wait_saltb'><span class='glyphicon glyphicon-time'></span> Computing salt bridges...</p>"); 
             $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").addClass("disabled"); 
+            $("#ComputeSaltBridges").addClass("disabled");
+            if ($("#saltresult_par").css("display")!="none"){
+                $("#blockSBbondsresult").css("display","block");
+            }
             $.ajax({
                     type: "POST",
                     data: { "frames[]": [frameFrom,frameTo,cutoff,rmsdTraj,struc,dyn_id]},
@@ -3538,6 +3560,8 @@ $(document).ready(function(){
                     success: function(data) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
+                        $("#ComputeSaltBridges").removeClass("disabled");
+                        $("#blockSBbondsresult").css("display","none");
                         changeDownloadURLS(rmsdTraj,[".href_save_data_sb"]);
                         var regex = /\d+/g;
                         salty=data.salt_bridges;
@@ -3621,6 +3645,8 @@ $(document).ready(function(){
                     error: function(XMLHttpRequest, textStatus, errorThrown) {
                         $(".href_save_data_dist_plot,.href_save_data_rmsd_plot, .href_save_data_int, #downl_json_hb").removeClass("disabled"); 
                         $("#wait_saltb").remove();
+                        $("#ComputeSaltBridges").removeClass("disabled");
+                        $("#blockSBbondsresult").css("display","none");
                         if (XMLHttpRequest.readyState == 4) {
                             var responsetext = XMLHttpRequest.responseText;
 
@@ -3931,6 +3957,7 @@ $(document).ready(function(){
                                 };
                                 newRMSDgraph_sel="rmsd_chart_"+r_id.toString();
                                 var RMSDplot_html;
+                                var dyn_id=$(".str_file").data("dyn_id");
                                 if ($.active<=1){
                                     RMSDplot_html="<div class='rmsd_plot' id='all_"+newRMSDgraph_sel+"' data-rmsd_id='"+rmsd_id+"' style='border:1px solid #F3F3F3;overflow:auto;overflow-y:hidden;-ms-overflow-y: hidden;'>\
                                                     <div class='rmsd_time' id='"+newRMSDgraph_sel+"t'></div>\
@@ -3951,7 +3978,7 @@ $(document).ready(function(){
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot settingsB' href='/view/dwl/"+dyn_id+"/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
@@ -3980,7 +4007,7 @@ $(document).ready(function(){
                                                             </a>\
                                                         </div>\
                                                         <div style='display:inline-block;margin:5px;'>\
-                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled settingsB' href='/view/dwl/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
+                                                            <a role='button' class='btn btn-link href_save_data_rmsd_plot disabled settingsB' href='/view/dwl/"+dyn_id+"/"+rmsd_id+"' style='color:#585858;margin-right:0;margin-left;padding-right:0;padding-left:0;margin-bottom:3px'>\
                                                                 <span  title='Save data' class='glyphicon glyphicon-download-alt save_data_rmsd_plot'></span>\
                                                             </a>\
                                                         </div>\
@@ -4142,6 +4169,15 @@ $(document).ready(function(){
 
     }
 
+    function lig_sel_if_starts_num(lig_nm){
+        if (lig_nm){
+            if (lig_nm.match(/^\d/)) {
+                var lig_nm="["+lig_nm+"]";
+            } 
+        }
+        return lig_nm
+    }
+
     function createEDReps(add_reps,highlight_sel){
         if ($("#EdrepsOn").hasClass("active")){
             if (add_reps){
@@ -4168,6 +4204,7 @@ $(document).ready(function(){
                 var lig_li=[]
                 $(".ed_ligand").each(function(){
                     var lig_nm=$(this).data("shortn");
+                    lig_nm=lig_sel_if_starts_num(lig_nm);
                     lig_li[lig_li.length]=lig_nm
                     var class_nm="ed_input_rep_lig_"+lig_nm;
                     if ($("#text_input_all").find("."+class_nm).length ==0){
@@ -4389,6 +4426,7 @@ $(document).ready(function(){
         var loadEd=false;
         var ed_finsel="";
         var ligsel_ed=$(".ed_ligand.active").data("shortn");
+        ligsel_ed=lig_sel_if_starts_num(ligsel_ed);
         if (ligsel_ed){
             loadEd=true;
             ed_finsel=ligsel_ed;
@@ -5356,14 +5394,18 @@ $(document).ready(function(){
             var cont_h_num=Math.round(screen_h*0.40);
         }
         var cont_h=(cont_h_num).toString() +"px";
-        var cont_h_iframe=(cont_h_num+30).toString() +"px";
+        var cont_h_iframe_num=cont_h_num+30;
+        var cont_h_iframe=(cont_h_iframe_num).toString() +"px";
+        var cont_h_loading_num=cont_h_num/2
+        var cont_h_loading=(cont_h_loading_num).toString() +"px";
+        $("#loading").find("img").css("margin-top",cont_h_loading)
         //var cont_h_viewport=(cont_h_num-25).toString() +"px";
         //....
         $("#dropdownAndIframe").css({"border" : "1px solid #F5F5F5" , "max-width": cont_w_max , "height":cont_h});
         $("#embed_mdsrv").css("width",cont_w).attr("width",cont_w).attr("height",cont_h_iframe);
         $("#legend_row").css("max-width",cont_w_max);
         $(".showWhenNGLLoad").css("visibility","visible");
-        $("#loading").html("");
+       // $("#loading").html("");
         $('#embed_mdsrv')[0].contentWindow.$('body').trigger('createNGL', [ cont_w , cont_w_in , cont_h_num ]);
     });
     

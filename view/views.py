@@ -394,6 +394,21 @@ def str_len_limit(mystr):
         mystr=mystr[:47]+"..."
     return mystr
 
+def obtain_prot_lig(dyn_id):
+    model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
+    if model.id_protein:
+        dprot_li_all=[model.id_protein]
+    else:
+        dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
+    protlig_all=[]
+    for dprot in dprot_li_all:
+        if not dprot.receptor_id_protein:
+            name=dprot.name
+            sel_s= {":%s" % res.chain.upper() for res in DyndbModeledResidues.objects.filter(id_protein=dprot.id)}
+            sel=" or ".join(sel_s)
+            protlig_all.append({"sel":sel,"name":name})
+    return(protlig_all)
+
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
     Arguments:
@@ -456,6 +471,14 @@ def obtain_compounds(dyn_id):
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
     comp_li=[[str_len_limit(lname),sname,mtype]  for lname,sname,mtype in comp_li]
     lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
+
+    protlig_all=obtain_prot_lig(dyn_id)
+    for protlig in protlig_all:
+        protlig_name=protlig["name"]
+        protlig_sel=protlig["sel"]
+        lig_li.append([protlig_name,protlig_sel])
+        lig_li_s.append(protlig_sel)
+        comp_li.append([protlig_name,protlig_sel,"Prot_ligand"])
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
@@ -562,6 +585,17 @@ def distances_notraj(dist_struc,dist_ids):
     return(True, dist_result, None)
 
 
+def retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info):
+    is_gpcr = False
+    gprot= dprot.receptor_id_protein
+    if gprot:
+        is_gpcr=True
+        prot_li_gpcr.append((dprot,gprot))
+    dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
+    dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
+    return (prot_li_gpcr,dprot_li_all_info)
+
+
 def obtain_DyndbProtein_id_list(dyn_id):
     """Given a dynamic id, gets a list of the dyndb_proteins and proteins associated to it that are GPCRs + a list of all proteins (GPCRs or not)"""
     model=DyndbModel.objects.select_related("id_protein","id_complex_molecule").get(dyndbdynamics__id=dyn_id)
@@ -570,25 +604,15 @@ def obtain_DyndbProtein_id_list(dyn_id):
     dprot_li_all=[]
     dprot_li_all_info=[]
     if model.id_protein:
-        is_gpcr = False
-        gprot= model.id_protein.receptor_id_protein
-        if gprot:
-            prot_li_gpcr=[(model.id_protein, gprot)]
-            is_gpcr=True
-        dprot_li_all=[model.id_protein]
-        dprot_seq=DyndbProteinSequence.objects.get(id_protein=model.id_protein.id).sequence
-        dprot_li_all_info=[(model.id_protein.id, model.id_protein.name, is_gpcr , dprot_seq )]     
+        dprot=model.id_protein
+        dprot_li_all=[dprot]
+        (prot_li_gpcr,dprot_li_all_info)=retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info)
     else:
         dprot_li_all=DyndbProtein.objects.select_related("receptor_id_protein").filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=model.id_complex_molecule.id)
         for dprot in dprot_li_all:
-            is_gpcr = False
-            gprot= dprot.receptor_id_protein
-            if gprot:
-                is_gpcr = True
-                prot_li_gpcr.append((dprot,gprot))
-            dprot_seq=DyndbProteinSequence.objects.get(id_protein=dprot.id).sequence
-            dprot_li_all_info.append((dprot.id, dprot.name, is_gpcr, dprot_seq))
+            (prot_li_gpcr,dprot_li_all_info)=retrieve_prot_info(dprot,prot_li_gpcr,dprot_li_all_info)
     return (prot_li_gpcr, dprot_li_all, dprot_li_all_info,pdbid)
+
 
 def obtain_protein_names(dyn_id):
     """Given a dynamic id, gets a list of the GPCR names"""
@@ -965,46 +989,63 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             traj_sel= request.POST.get("rmsdSel")
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
-                       
-            if request.session.get('rmsd_data', False):
-                rmsd_data=request.session['rmsd_data']
-                rmsd_dict=rmsd_data["rmsd_dict"]
-                new_rmsd_id=rmsd_data["new_rmsd_id"]
-                no_rv_l=no_rv.split(",")
-                to_rv=[];
-                for r_id in rmsd_dict.keys():
-                    if (r_id not in no_rv_l):
-                        to_rv.append(r_id)
-                for r_id in to_rv:
-                    del rmsd_dict[r_id]   
+            if request.session.get('main_strc_data', False):
+                session_data=request.session["main_strc_data"][dyn_id]
+                seg_to_chain=session_data["seg_to_chain"]
+                if request.session.get('rmsd_data', False):
+                    rmsd_data_all=request.session['rmsd_data']
+                    if dyn_id in rmsd_data_all:
+                        rmsd_data=rmsd_data_all[dyn_id]
+                        rmsd_dict=rmsd_data["rmsd_dict"]
+                        new_rmsd_id=rmsd_data["new_rmsd_id"]
+                        no_rv_l=no_rv.split(",")
+                        to_rv=[];
+                        for r_id in rmsd_dict.keys():
+                            if (r_id not in no_rv_l):
+                                to_rv.append(r_id)
+                        for r_id in to_rv:
+                            del rmsd_dict[r_id]   
+                    else:
+                        new_rmsd_id=1
+                        rmsd_dict={}
+                else:
+                    new_rmsd_id=1
+                    rmsd_dict={}
+                
+                if len(rmsd_dict) < 15:
+                    (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal),seg_to_chain)
+                    if success:
+                        data_frame=data_fin
+                        data_store=copy.deepcopy(data_frame)
+                        data_store[0].insert(1,"Time")
+                        data_time=[data_store[0][1:]]
+                        for row in data_store[1:]:
+                            frame=row[0]
+                            time=frame*delta
+                            row.insert(1,time)
+                            d_time=row[1:]
+                            data_time.append(d_time)  
+                        p=re.compile("\w*\.\w*$")
+                        struc_filename=p.search(struc_p).group(0)
+                        traj_filename=p.search(traj_p).group(0)
+                        rtraj_filename=p.search(ref_traj_p).group(0)
+                        rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
+                        
+                        rmsd_data_dyn={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
+                        if request.session.get('rmsd_data', False):
+                            rmsd_data_all=request.session["rmsd_data"]
+                        else:
+                            rmsd_data_all={}
+                        rmsd_data_all[dyn_id]= rmsd_data_dyn
+                        request.session['rmsd_data']=rmsd_data_all
+
+                        data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
+                    else: 
+                        data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
+                else:
+                    data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
             else:
-                new_rmsd_id=1
-                rmsd_dict={}
-            
-            if len(rmsd_dict) < 15:
-                (success,data_fin, errors)=compute_rmsd(struc_p,traj_p,traj_frame_rg,ref_frame,ref_traj_p,traj_sel,int(strideVal))
-                if success:
-                    data_frame=data_fin
-                    data_store=copy.deepcopy(data_frame)
-                    data_store[0].insert(1,"Time")
-                    data_time=[data_store[0][1:]]
-                    for row in data_store[1:]:
-                        frame=row[0]
-                        time=frame*delta
-                        row.insert(1,time)
-                        d_time=row[1:]
-                        data_time.append(d_time)  
-                    p=re.compile("\w*\.\w*$")
-                    struc_filename=p.search(struc_p).group(0)
-                    traj_filename=p.search(traj_p).group(0)
-                    rtraj_filename=p.search(ref_traj_p).group(0)
-                    rmsd_dict["rmsd_"+str(new_rmsd_id)]=(data_store,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)
-                    request.session['rmsd_data']={"rmsd_dict":rmsd_dict, "new_rmsd_id":new_rmsd_id+1}
-                    data_rmsd = {"result_t":data_time,"result_f":data_frame,"rmsd_id":"rmsd_"+str(new_rmsd_id),"success": success, "msg":errors , "strided":strideVal}
-                else: 
-                    data_rmsd = {"result":data_fin,"rmsd_id":None,"success": success, "msg":errors , "strided":strideVal}
-            else:
-                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Please, remove some RMSD results to obtain new ones." , "strided":strideVal}
+                data_rmsd = {"result":None,"rmsd_id":None,"success": False, "msg":"Session error." , "strided":strideVal}
             return HttpResponse(json.dumps(data_rmsd), content_type='view/'+dyn_id)   
         elif request.POST.get("distStr"):
             dist_struc=request.POST.get("distStr")
@@ -1019,22 +1060,27 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             no_rv=request.POST.get("no_rv")
             strideVal=request.POST.get("stride")
             if request.session.get('main_strc_data', False):
-                session_data=request.session["main_strc_data"]
+                session_data=request.session["main_strc_data"][dyn_id]
                 #num_prots=session_data["prot_num"]
                 #serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]
                 seg_to_chain=session_data["seg_to_chain"]
                 if request.session.get('dist_data', False):
-                    dist_data=request.session['dist_data']
-                    dist_dict=dist_data["dist_dict"]
-                    new_id=dist_data["new_id"]
-                    no_rv_l=no_rv.split(",")
-                    to_rv=[];
-                    for d_id in dist_dict.keys():
-                        if (d_id not in no_rv_l):
-                            to_rv.append(d_id)
-                    for d_id in to_rv:
-                        del dist_dict[d_id]   
+                    dist_data_all=request.session['dist_data']
+                    if dyn_id in dist_data_all:
+                        dist_data=dist_data_all[dyn_id]
+                        dist_dict=dist_data["dist_dict"]
+                        new_id=dist_data["new_id"]
+                        no_rv_l=no_rv.split(",")
+                        to_rv=[];
+                        for d_id in dist_dict.keys():
+                            if (d_id not in no_rv_l):
+                                to_rv.append(d_id)
+                        for d_id in to_rv:
+                            del dist_dict[d_id]   
+                    else:
+                        new_id=1
+                        dist_dict={}                        
                 else:
                     new_id=1
                     dist_dict={}
@@ -1058,8 +1104,13 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     struc_filename=p.search(dist_struc_p).group(0)
                     traj_filename=p.search(dist_traj_p).group(0)
                     dist_dict["dist_"+str(new_id)]=(data_store,struc_filename,traj_filename,strideVal)
-                    request.session['dist_data']={"dist_dict":dist_dict, "new_id":new_id+1 ,
-                         "traj_filename":traj_filename, "struc_filename":struc_filename}
+                    dist_data_dyn={"dist_dict":dist_dict, "new_id":new_id+1 ,"traj_filename":traj_filename, "struc_filename":struc_filename}
+                    if request.session.get('dist_data', False):
+                        dist_data_all=request.session['dist_data']
+                    else:
+                        dist_data_all={}
+                    dist_data_all[dyn_id]=dist_data_dyn
+                    request.session['dist_data']=dist_data_all               
                     data = {"result_t":data_time,"result_f":data_frame,"dist_id":"dist_"+str(new_id),"success": success, "msg":msg , "strided":strideVal , "isEmpty":isEmpty , "dist_pair_new":dist_pair_new}
                 else: 
                     data = {"result":data_fin,"dist_id":None,"success": success, "msg":msg , "strided":strideVal, "isEmpty":isEmpty, "dist_pair_new":dist_pair_new}
@@ -1076,23 +1127,28 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             strideVal=request.POST.get("stride")
             res_li=all_ligs.split(',')
             if request.session.get('main_strc_data', False):
-                session_data=request.session["main_strc_data"]
+                session_data=request.session["main_strc_data"][dyn_id]
                 num_prots=session_data["prot_num"]
                 serial_mdInd=session_data["serial_mdInd"]
                 gpcr_chains=session_data["gpcr_chains"]
                 seg_to_chain=session_data["seg_to_chain"]
                 
                 if request.session.get('int_data', False):
-                    int_data=request.session['int_data']
-                    int_info=int_data["int_info"]
-                    new_int_id=int_data["new_int_id"]
-                    no_rv_l=no_rv.split(",")
-                    to_rv=[];
-                    for i_id in int_info.keys():
-                        if (i_id not in no_rv_l):
-                            to_rv.append(i_id)
-                    for i_id in to_rv:
-                        del int_info[i_id]   
+                    int_data_all=request.session['int_data']
+                    if dyn_id in int_data_all:
+                        int_data=int_data_all[dyn_id]
+                        int_info=int_data["int_info"]
+                        new_int_id=int_data["new_int_id"]
+                        no_rv_l=no_rv.split(",")
+                        to_rv=[];
+                        for i_id in int_info.keys():
+                            if (i_id not in no_rv_l):
+                                to_rv.append(i_id)
+                        for i_id in to_rv:
+                            del int_info[i_id]   
+                    else:
+                        new_int_id=1
+                        int_info={}
                 else:
                     new_int_id=1
                     int_info={}
@@ -1107,7 +1163,13 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         traj_fileint=p.search(int_struc_p).group(0)
                         int_id="int_"+str(new_int_id)
                         int_info[int_id]=(int_dict,thresh,traj_fileint,struc_fileint,dist_scheme, strideVal)
-                        request.session['int_data']={"int_info":int_info, "new_int_id":new_int_id+1 }
+                        int_data_dyn={"int_info":int_info, "new_int_id":new_int_id+1 }
+                        if request.session.get('int_data', False):
+                            int_data_all=request.session["int_data"]
+                        else:
+                            int_data_all={}
+                        int_data_all[dyn_id]=int_data_dyn
+                        request.session['int_data']=int_data_all
                     data = {"result":int_dict,"success": success, "e_msg":errors, "int_id":int_id ,"strided":strideVal}
                 else:
                     data = {"result":None,"success": False, "e_msg":"Please, remove some interaction results to obtain new ones.","int_id":None ,"strided":strideVal}
@@ -1161,10 +1223,16 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             chain_str=""
             if len(chain_name_li) > 1:
                 multiple_chains=True
-            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)            
+            (prot_li_gpcr, dprot_li_all,dprot_li_all_info,pdbid)=obtain_DyndbProtein_id_list(dyn_id)
             model_res=DyndbModeledResidues.objects.filter(id_model__dyndbdynamics__id=dyn_id)
             seg_to_chain={mr.segid : mr.chain for mr in model_res}
-            request.session['main_strc_data']={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False,"seg_to_chain":seg_to_chain}
+            session_data_dyn={"chain_name_li":chain_name_li,"prot_num":len(dprot_li_all),"serial_mdInd":relate_atomSerial_mdtrajIndex(pdb_name),"gpcr_chains":False,"seg_to_chain":seg_to_chain}
+            if request.session.get('main_strc_data', False):
+                session_data_all=request.session["main_strc_data"]
+            else:
+                session_data_all={}
+            session_data_all[dyn_id]= session_data_dyn
+            request.session['main_strc_data']=session_data_all
             dprot_chains={}
             chains_taken=set()
             gpcr_chains=[]
@@ -1226,7 +1294,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     chain_str="GPCR chains: "+", ".join(gpcr_chains)
                 
             if chains_taken: # To check if some result have been obtained
-                request.session['main_strc_data']["gpcr_chains"]=gpcr_chains
+                request.session['main_strc_data'][dyn_id]["gpcr_chains"]=gpcr_chains
                 all_gpcrs_info=[]
                 seg_li_all={}
                 gpcr_pdb_all={}
@@ -1303,7 +1371,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         for gpcrid,posdict in extdict.items():
                             extdict[gpcrid]=posdict["first"]+"-"+posdict["last"]
                         TMsel_all_ok[tmname]=json.dumps(extdict)
-                    request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
+                    #request.session['gpcr_pdb']= gpcr_pdb #[!] For the moment I consider only 1 GPCR
                     cons_pos_all_info=generate_cons_pos_all_info(copy.deepcopy(cons_pos_dict),all_gpcrs_info)
                     motifs_all_info=generate_motifs_all_info(all_gpcrs_info)
                     #Fill blanks
@@ -1317,6 +1385,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
+                    if dyn_id=="29":
+                        traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1437,7 +1507,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
 
 #########################
 
-def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal):
+def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,strideVal,seg_to_chain):
     i=0
     struc_path = "/protwis/sites/files/" + rmsdStr
     traj_path = "/protwis/sites/files/" + rmsdTraj
@@ -1489,13 +1559,29 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
             if " and " in traj_sel:
                 (resname,resseqpos)=traj_sel.split(" and ")
                 lig_sel="resname '"+resname+"' and residue "+resseqpos
+                try:
+                    selection=itraj.topology.select(lig_sel)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
+
+            elif ":" in traj_sel:
+                try:
+                    mytop=itraj.topology
+                    structable, bonds=mytop.to_dataframe()
+                    reschain_li=traj_sel.split(" or ")
+                    reschain_li=[chain.replace(":","") for chain in reschain_li]
+                    selection=select_prot_chains(structable,seg_to_chain,mytop,reschain_li)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
             else:
                 lig_sel="resname "+traj_sel
-            try:
-                selection=itraj.topology.select(lig_sel)
-            except Exception:
-                error_msg="Ligand not found."
-                return (False,None, error_msg)
+                try:
+                    selection=itraj.topology.select(lig_sel)
+                except Exception:
+                    error_msg="Ligand not found."
+                    return (False,None, error_msg)
             if (len(selection)==0):
                 error_msg="Ligand not found."
                 return (False,None, error_msg)
@@ -1522,133 +1608,153 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
     return(True, data_fin, small_errors)
 
 
-def download_hb_sb(request, bond_type, traj_path):
+def download_hb_sb(request, dyn_id, bond_type, traj_path):
+    sbhb_save_error=False
     if request.session.get(bond_type, False):
-        alldata=request.session[bond_type]
-        int_res=alldata["results"]
-        analysis_data=alldata["analysis_data"]
-        bonds_li=[]
-        for don_res,acc_li in int_res.items():
-            for acc_info in acc_li:
-                acc_res=acc_info[0]
-                freq=acc_info[1]
-                atom0=acc_info[2]
-                atom1=acc_info[3]
-                chain0=acc_info[4]
-                chain1=acc_info[5]
-                pair_info=[don_res,acc_res,freq,atom0,atom1,chain0,chain1]
-                bonds_li.append(pair_info)
-        int_res_ok=sorted(bonds_li,key=lambda x:float(x[2]),reverse=True)
-        return_error=True
-        filename_dict={"hbp":"hbonds_prot.csv" , "hbo":"hbonds_other.csv" , "sb":"saltbridges.csv"}
-        dyn_id=analysis_data["dyn_id"]
-        filename= "dyn%s_%s" % ( dyn_id , filename_dict[bond_type])
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="'+filename+'"'
-        writer = csv.writer(response)
-
-        writer.writerow(["#Dyn ID: "+dyn_id])
-        traj_p=analysis_data["traj_path"]
-        traj_nm=traj_p.split("/")[-1]
-        writer.writerow(["#Trajectory: "+traj_nm])
-        frame_from=int(analysis_data["frameFrom"])
-        frame_to=int(analysis_data["frameTo"])
-        if frame_from != 0 or frame_to!= 100000000000000000000:
-            if frame_to==100000000000000000000:
-                frame_to="last"
-            writer.writerow(["#Frames: %s - %s"%(frame_from,frame_to)])
-        else:
-            writer.writerow(["#Frames: all"])
-        writer.writerow(["#Threshold: %s%%" % analysis_data["cutoff"]])
-        if bond_type=="hbp" or bond_type=="hbo":
-            writer.writerow(["#Only side chains: %s" % analysis_data["no_backbone"]])
-            writer.writerow(["#Filter out neighbour residues: %s" % analysis_data["no_neighbours"]])
-            writer.writerow(["Donor residue","Donor chain","Donor atom id","Acceptor residue","Acceptor chain","Acceptor atom id","Frequency (%)"])
-            for row in int_res_ok:
-                (dres,ares,freq,datom,aatom,dchain,achain)=row
-                writer.writerow([dres,dchain,datom,ares,achain,aatom,freq])
-
-        elif bond_type=="sb":
-            writer.writerow(["Residue 1","Chain 1","Atom id 1","Residue 2","Chain 2","Atom id 2","Frequency (%)"])
-            for row in int_res_ok:
-                (dres,ares,freq,datom,aatom,dchain,achain)=row
-                writer.writerow([dres,dchain,int(float(datom)),ares,achain,int(float(aatom)),freq])
-        else:
+        alldata_alldyn=request.session[bond_type]
+        if dyn_id in alldata_alldyn:
+            alldata=alldata_alldyn[dyn_id]
+            int_res=alldata["results"]
+            analysis_data=alldata["analysis_data"]
+            bonds_li=[]
+            for don_res,acc_li in int_res.items():
+                for acc_info in acc_li:
+                    acc_res=acc_info[0]
+                    freq=acc_info[1]
+                    atom0=acc_info[2]
+                    atom1=acc_info[3]
+                    chain0=acc_info[4]
+                    chain1=acc_info[5]
+                    pair_info=[don_res,acc_res,freq,atom0,atom1,chain0,chain1]
+                    bonds_li.append(pair_info)
+            int_res_ok=sorted(bonds_li,key=lambda x:float(x[2]),reverse=True)
+            return_error=True
+            filename_dict={"hbp":"hbonds_prot.csv" , "hbo":"hbonds_other.csv" , "sb":"saltbridges.csv"}
+            dyn_id=analysis_data["dyn_id"]
+            filename= "dyn%s_%s" % ( dyn_id , filename_dict[bond_type])
             response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="x.csv"'
+            response['Content-Disposition'] = 'attachment; filename="'+filename+'"'
             writer = csv.writer(response)
-            writer.writerow(["Data not found."])
 
+            writer.writerow(["#Dyn ID: "+dyn_id])
+            traj_p=analysis_data["traj_path"]
+            traj_nm=traj_p.split("/")[-1]
+            writer.writerow(["#Trajectory: "+traj_nm])
+            frame_from=int(analysis_data["frameFrom"])
+            frame_to=int(analysis_data["frameTo"])
+            if frame_from != 0 or frame_to!= 100000000000000000000:
+                if frame_to==100000000000000000000:
+                    frame_to="last"
+                writer.writerow(["#Frames: %s - %s"%(frame_from,frame_to)])
+            else:
+                writer.writerow(["#Frames: all"])
+            writer.writerow(["#Threshold: %s%%" % analysis_data["cutoff"]])
+            if bond_type=="hbp" or bond_type=="hbo":
+                writer.writerow(["#Only side chains: %s" % analysis_data["no_backbone"]])
+                writer.writerow(["#Filter out neighbour residues: %s" % analysis_data["no_neighbours"]])
+                writer.writerow(["Donor residue","Donor chain","Donor atom id","Acceptor residue","Acceptor chain","Acceptor atom id","Frequency (%)"])
+                for row in int_res_ok:
+                    (dres,ares,freq,datom,aatom,dchain,achain)=row
+                    writer.writerow([dres,dchain,datom,ares,achain,aatom,freq])
+
+            elif bond_type=="sb":
+                writer.writerow(["Residue 1","Chain 1","Atom id 1","Residue 2","Chain 2","Atom id 2","Frequency (%)"])
+                for row in int_res_ok:
+                    (dres,ares,freq,datom,aatom,dchain,achain)=row
+                    writer.writerow([dres,dchain,int(float(datom)),ares,achain,int(float(aatom)),freq])
+            else:
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="x.csv"'
+                writer = csv.writer(response)
+                writer.writerow(["Data not found."])
+        else:
+            sbhb_save_error=True
     else:
+        sbhb_save_error=True
+    if sbhb_save_error:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
         writer.writerow(["Data not found."])
     return response
 
-def download_dist(request, dist_id):
+def download_dist(request, dyn_id, dist_id):
+    save_error_dist=False
     if request.session.get('dist_data', False):
-        dist_data_s=request.session['dist_data']
-        dist_dict=dist_data_s["dist_dict"]
-        dist_data_all=dist_dict[dist_id]
-        (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
-        writer = csv.writer(response)
-        writer.writerow(["#Structure: "+struc_filename])
-        writer.writerow(["#Trajectory: "+traj_filename])
-        if (int(strideVal) > 1):
-            writer.writerow(["#Strided: "+strideVal])
-        header=[]
-        for name in dist_data[0]:
-            header.append("'"+name+"'")
-        writer.writerow(header)
-        for row in dist_data[1:]:
-            rowcol=[]
-            for col in row:
-                rowcol.append(col)
-            writer.writerow(rowcol) 
+        dist_data_s_all=request.session['dist_data']
+        if dyn_id in dist_data_s_all:
+            dist_data_s=dist_data_s_all[dyn_id]
+            dist_dict=dist_data_s["dist_dict"]
+            dist_data_all=dist_dict[dist_id]
+            dist_data_all=dist_dict[dist_id]
+            (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["#Structure: "+struc_filename])
+            writer.writerow(["#Trajectory: "+traj_filename])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            header=[]
+            for name in dist_data[0]:
+                header.append("'"+name+"'")
+            writer.writerow(header)
+            for row in dist_data[1:]:
+                rowcol=[]
+                for col in row:
+                    rowcol.append(col)
+                writer.writerow(rowcol) 
+        else:
+            save_error_dist=True
     else:
+        save_error_dist=True
+    if save_error_dist:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
         writer.writerow([" "])
     return response
     
-def download_int(request, int_id):
+def download_int(request,dyn_id, int_id):
+    int_save_error=False
     if request.session.get('int_data', False):
-        int_data_s=request.session['int_data']
-        int_info=int_data_s["int_info"]
-        int_data_all=int_info[int_id]
-        (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
-        writer = csv.writer(response)
-        if (dist_scheme=="closest"):
-            dist_scheme_name="All atoms";
+        int_data_s_all=request.session['int_data']
+        if dyn_id in int_data_s_all:
+            int_data_s=int_data_s_all[dyn_id]
+            int_info=int_data_s["int_info"]
+            int_data_all=int_info[int_id]
+            (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
+            writer = csv.writer(response)
+            if (dist_scheme=="closest"):
+                dist_scheme_name="All atoms";
+            else:
+                dist_scheme_name="Heavy atoms only";
+
+            writer.writerow(["#Structure: "+struc_fileint])
+            writer.writerow(["#Trajectory: "+traj_fileint])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            if (dist_scheme=="closest"):
+                dist_scheme_name="All atoms";
+            else:
+                dist_scheme_name="Heavy atoms only";
+
+            writer.writerow(["#Threshold: "+thresh+ " angstroms ("+dist_scheme+")"])
+            writer.writerow(["'Ligand'","'Position'" ,"'Residue'", "'Chain'", "'Frequency (%)'"])
+            for (lig, lig_int) in int_dict.items():
+                (pos,chain,res,freq)=lig_int[0]
+                all_first=["'"+lig+"'", pos,"'"+res+"'","'"+chain+"'",freq]
+                writer.writerow(all_first)
+                for inter in lig_int[1:]:
+                    (pos,chain,res,freq)=inter
+                    writer.writerow(["", pos,"'"+res+"'","'"+chain+"'",freq])
         else:
-            dist_scheme_name="Heavy atoms only";
-
-        writer.writerow(["#Structure: "+struc_fileint])
-        writer.writerow(["#Trajectory: "+traj_fileint])
-        if (int(strideVal) > 1):
-            writer.writerow(["#Strided: "+strideVal])
-        if (dist_scheme=="closest"):
-            dist_scheme_name="All atoms";
-        else:
-            dist_scheme_name="Heavy atoms only";
-
-        writer.writerow(["#Threshold: "+thresh+ " angstroms ("+dist_scheme+")"])
-        writer.writerow(["'Ligand'","'Position'" ,"'Residue'", "'Chain'", "'Frequency (%)'"])
-        for (lig, lig_int) in int_dict.items():
-            (pos,chain,res,freq)=lig_int[0]
-            all_first=["'"+lig+"'", pos,"'"+res+"'","'"+chain+"'",freq]
-            writer.writerow(all_first)
-            for inter in lig_int[1:]:
-                (pos,chain,res,freq)=inter
-                writer.writerow(["", pos,"'"+res+"'","'"+chain+"'",freq])
-
+            int_save_error=True
     else:
+        int_save_error=True
+    if int_save_error:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
@@ -1684,42 +1790,63 @@ def obtain_pdb_atomInd_from_chains(gpcr_chains,struc_path,serial_mdInd):
     return(np.array(gpcr_atomInd))
 
 
+def select_prot_chains(structable,seg_to_chain,mytop,chains):
+    chains_sel_li=[]
+    chainid_li=[]
+    for chain in chains:
+        chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
+        for segname in chain_segments:
+            seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
+            chainid_li+=list(seg_chainid_li)
+    chainid_li=list(set(chainid_li))
+    for chainid in chainid_li:
+        chains_sel_li.append("chainid "+ str(chainid))
+    chains_sel="protein and ("+" or ".join(chains_sel_li)+")"
+    mysel=mytop.select(chains_sel)
+    return mysel
+
 
 def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr_chains,dist_scheme,strideVal,seg_to_chain):
+
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
     itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
     first=True 
+    structable=False
+    lig_multiple_res=False
     try:
         for itraj in itertraj:
             if first:
                 mytop=itraj.topology
                 all_lig_res=[]
+                fin_dict={}
                 for res in res_li:
                     if " and " in res:
                         (resname,resseqpos)=res.split(" and ")
                         lig_sel=mytop.select("resname '"+resname+"' and residue "+resseqpos)
+                        fin_dict[res]=[]
+                    elif ":" in res:
+                        structable, bonds=mytop.to_dataframe()
+                        reschain_li=res.split(" or ")
+                        reschain_li=[chain.replace(":","") for chain in reschain_li]
+                        lig_sel=select_prot_chains(structable,seg_to_chain,mytop,reschain_li)
+                        fin_dict["Lig"]=[]
                     else:
+                        fin_dict[res]=[]
                         lig_sel=mytop.select("resname '"+res+"'")
                     if len(lig_sel)>0:
                         lig_res=[residue.index for residue in itraj.atom_slice(lig_sel).topology.residues]
-                        all_lig_res.append(lig_res[0])
+                        for myres in lig_res:
+                            all_lig_res.append(myres)
                 if len(all_lig_res)==0:
                     return (False,None, "Error with ligand selection.")
+                elif len(all_lig_res)>1 :
+                    lig_multiple_res=True
                 if gpcr_chains:
-                    structable, bonds=mytop.to_dataframe()
-                    gpcr_chains_sel_li=[]
-                    chainid_li=[]
-                    for chain in gpcr_chains:
-                        chain_segments=[seg for seg,chainval in seg_to_chain.items() if chainval==chain]
-                        for segname in chain_segments:
-                            seg_chainid_li=structable.loc[structable['segmentID'] == segname].chainID.unique()#In princliple should be a list of 1 value but just in case I iterate
-                            chainid_li+=list(seg_chainid_li)
-                    chainid_li=list(set(chainid_li))
-                    for chainid in chainid_li:
-                        gpcr_chains_sel_li.append("chainid "+ str(chainid))
-                    gpcr_chains_sel="protein and ("+" or ".join(gpcr_chains_sel_li)+")"
-                    gpcr_sel=mytop.select(gpcr_chains_sel)
+                    if type(structable) == bool:
+                        structable, bonds=mytop.to_dataframe()
+                    gpcr_sel=select_prot_chains(structable,seg_to_chain,mytop,gpcr_chains)
+
                 else:
                     gpcr_sel=mytop.select("protein") 
                 gpcr_res=[residue.index for residue in itraj.atom_slice(gpcr_sel).topology.residues]
@@ -1736,13 +1863,26 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
         return (False,None, "Error loading input files.")
     contact_freq={}
     for pair in allres_p:
-        contact_freq[tuple(pair)]=0
+        mykey=tuple(pair)
+        if lig_multiple_res:
+            mykey=(mykey[0],"Lig")
+        contact_freq[mykey]=0
     for frame_dist in alldists:
-         i=0
-         while i < len(frame_dist):
-             if frame_dist[i]<(thresh/10):
-                 contact_freq[tuple(allres_p[i])]+=1
-             i+=1
+        i=0
+        ligint_in_frame=set()
+        while i < len(frame_dist):
+            pair=allres_p[i]
+            mykey=tuple(pair)
+            if lig_multiple_res:
+                mykey=(mykey[0],"Lig")
+                if mykey in ligint_in_frame:
+                    i+=1
+                    continue
+                else:
+                    ligint_in_frame.add(mykey)
+            if frame_dist[i]<(thresh/10):
+                contact_freq[mykey]+=1
+            i+=1
     num_frames=len(alldists)
     to_delete=[]
     for allres_p , freq in contact_freq.items():
@@ -1752,18 +1892,19 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
              contact_freq[allres_p]=(freq/num_frames)*100
     for key in to_delete:
         del contact_freq[key]
-    fin_dict={}
-    for r in res_li:
-         fin_dict[r]=[]
     for pair in sorted(contact_freq, key=lambda x: contact_freq[x], reverse=True):
         freq=contact_freq[pair]
         res_ind=pair[0]
         lig_ind=pair[1]
-        lig_nm=mytop.residue(lig_ind).name
         res_topo=mytop.residue(res_ind)
         res_pdb=res_topo.resSeq
         res_name=res_topo.name
         res_chain=seg_to_chain[res_topo.segment_id]
+        if lig_ind=="Lig":
+            lig_nm=lig_ind
+        else:
+            lig_topo=mytop.residue(lig_ind)
+            lig_nm=lig_topo.name
         if lig_nm in fin_dict:
             fin_dict[lig_nm].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
         else:
@@ -1773,35 +1914,45 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
             if (ligres_sel in fin_dict):
                 fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
             else: 
-                return (False,None, "Error when parsing results.")
+                print("\n\n\n")
+                print(fin_dict)
+                print("\n\n\n")
+                return (False,None, "Error when parsing results (2).")
     return(True,fin_dict,None)
 
-def download_rmsd(request, rmsd_id):
+def download_rmsd(request, dyn_id,rmsd_id):
+    save_error=False
     if request.session.get('rmsd_data', False):
-        rmsd_data_s=request.session['rmsd_data']
-        rmsd_dict=rmsd_data_s["rmsd_dict"]
-        rmsd_data_all=rmsd_dict[rmsd_id]
-        (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
-        response = HttpResponse(content_type='text/csv')
-        
-        response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
-        writer = csv.writer(response)
-        writer.writerow(["#Structure: "+struc_filename])
-        writer.writerow(["#Trajectory: "+traj_filename])
-        if (int(strideVal) > 1):
-            writer.writerow(["#Strided: "+strideVal])
-        writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
-        writer.writerow(["#Selection: "+proper_name(traj_sel)])
-        header=[]
-        for name in rmsd_data[0]:
-            header.append("'"+name+"'")
-        writer.writerow(header)
-        for row in rmsd_data[1:]:
-            rowcol=[]
-            for col in row:
-                rowcol.append(col)
-            writer.writerow(rowcol) 
+        rmsd_data_s_all=request.session['rmsd_data']
+        if dyn_id in rmsd_data_s_all:
+            rmsd_data_s=rmsd_data_s_all[dyn_id]
+            rmsd_dict=rmsd_data_s["rmsd_dict"]
+            rmsd_data_all=rmsd_dict[rmsd_id]
+            (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
+            response = HttpResponse(content_type='text/csv')
+            
+            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
+            writer = csv.writer(response)
+            writer.writerow(["#Structure: "+struc_filename])
+            writer.writerow(["#Trajectory: "+traj_filename])
+            if (int(strideVal) > 1):
+                writer.writerow(["#Strided: "+strideVal])
+            writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
+            writer.writerow(["#Selection: "+proper_name(traj_sel)])
+            header=[]
+            for name in rmsd_data[0]:
+                header.append("'"+name+"'")
+            writer.writerow(header)
+            for row in rmsd_data[1:]:
+                rowcol=[]
+                for col in row:
+                    rowcol.append(col)
+                writer.writerow(rowcol) 
+        else:
+            save_error=True
     else:
+        save_error=True
+    if save_error:
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
@@ -2007,8 +2158,20 @@ def hbonds(request):
         full_results['hbonds_notprotein'] = hbonds_residue_notprotein
         data = json.dumps(full_results)
         analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_cutoff,"traj_path":traj_shortpath,"dyn_id":dyn_id,"no_backbone":backbone,"no_neighbours":neighbours}
-        request.session["hbp"]={"results":hbonds_residue,"analysis_data":analysis_data}
-        request.session["hbo"]={"results":hbonds_residue_notprotein,"analysis_data":analysis_data}
+        hbp_data_dyn={"results":hbonds_residue,"analysis_data":analysis_data}
+        if request.session.get('hbp', False):
+            hbp_data_all=request.session["hbp"]
+        else:
+            hbp_data_all={}
+        hbp_data_all[dyn_id]=hbp_data_dyn
+        request.session["hbp"]=hbp_data_all
+        hbo_data_dyn={"results":hbonds_residue_notprotein,"analysis_data":analysis_data}
+        if request.session.get('hbo', False):
+            hbo_data_all=request.session["hbo"]
+        else:
+            hbo_data_all={}
+        hbo_data_all[dyn_id]=hbo_data_dyn
+        request.session["hbo"]=hbo_data_all
         return HttpResponse(data, content_type='application/json')
 
 
@@ -2145,7 +2308,13 @@ def saltbridges(request):#
         print("\n\n\n")
         full_results['salt_bridges']=bridge_dic
         analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_threshold,"traj_path":traj_shortpath,"dyn_id":dyn_id}
-        request.session["sb"]={"results":bridge_dic,"analysis_data":analysis_data}
+        sb_data_dyn={"results":bridge_dic,"analysis_data":analysis_data}
+        if request.session.get('sb', False):
+            sb_data_all=request.session["sb"]
+        else:
+            sb_data_all={}
+        sb_data_all[dyn_id]=sb_data_dyn
+        request.session["sb"]=sb_data_all
 
         data = json.dumps(full_results)
         return HttpResponse(data, content_type='application/json')
@@ -2296,16 +2465,26 @@ def sasa(request):
     result=[list(i) for i in result]
     sasares={'sasa':result,'selected_residues':final_resids}
     if request.session.get('sasa_data', False):
-        sasa_data=request.session['sasa_data']
-        sasa_dict=sasa_data["sasa_dict"]
-        new_sasa_id=sasa_data["new_sasa_id"]+1
-
+        sasa_data_all=request.session['sasa_data']
+        if dyn_id in sasa_data_all:
+            sasa_data=sasa_data_all[dyn_id]
+            sasa_dict=sasa_data["sasa_dict"]
+            new_sasa_id=sasa_data["new_sasa_id"]+1
+        else:
+            new_sasa_id=1
+            sasa_dict={}
     else:
         new_sasa_id=1
         sasa_dict={}
             
     sasa_dict["sasa_"+str(new_sasa_id)]=sasares
-    request.session['sasa_data']={"sasa_dict":sasa_dict, "new_sasa_id":new_sasa_id}
+    sasa_data_dyn={"sasa_dict":sasa_dict, "new_sasa_id":new_sasa_id}
+    if request.session.get('sasa_data', False):
+        sasa_data_all=request.session["sasa_data"]
+    else:
+        sasa_data_all={}
+    sasa_data_all[dyn_id]=sasa_data_dyn
+    request.session['sasa_data']=sasa_data_all
     sasares={'sasa':result,'selected_residues':final_resids,'sasa_id':new_sasa_id}
     data = json.dumps(sasares)
     return HttpResponse(data, content_type='application/json')
@@ -2471,7 +2650,26 @@ def view_session(request , session_name):
 
         return redirect(mdsrv_url+redirect_url)
 
-    
+def trim_path_for_mdsrv(path):
+    p=re.compile("(/protwis/sites/files/)(.*)")
+    myfile=p.search(path).group(2)
+    return myfile
+
+def quickload(request,dyn_id,trajfile_id):
+    #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
+    mdsrv_url=obtain_domain_url(request)
+    modelfile=DyndbFiles.objects.get(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_model=True)
+    trajfile=DyndbFiles.objects.get(id=trajfile_id)
+    model_filepath=trim_path_for_mdsrv(modelfile.filepath)
+    traj_filepath=trim_path_for_mdsrv(trajfile.filepath)
+    context={
+        "dyn_id":dyn_id,
+        "struc_file":model_filepath,
+        "traj_file":traj_filepath,
+        "mdsrv_url":mdsrv_url
+            }
+    return render(request, 'view/quickload.html', context)
+
     
 ############ TEST #############
 def fplot_test(request, dyn_id, filename):

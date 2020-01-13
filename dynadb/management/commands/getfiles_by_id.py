@@ -397,7 +397,7 @@ class Command(BaseCommand):
             ###########################################
 
             # for each trajectory file, write a run-in-ORI command
-            with open(commands_path,"w") as commands_file:
+            with open(commands_path,"a") as commands_file:
                 numtraj = len(dyn_dict['traj_fnames'])
                 traj_counter = 0
                 for traj_name,traj_file in zip(dyn_dict['traj_fnames'],dyn_dict['traj_f']):
