@@ -45,6 +45,16 @@ def create_labelfile(outname, outfolder = "./", ligand = None):
     NUMBER CHAIN RESIDUE Ligand
     """
 
+    # If labelfile already exists, skip
+    outfile_name = outfolder + outname + "_labels.tsv"
+    if os.path.exists(outfile_name):
+        print('labelfile already exists. Step omitted')
+        return
+
+    #open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
+    outfile = open(outfile_name,'w')
+    outdict = {}
+
     #Dictionary with aminoacid codes (label files require 3-letter code)
     AAs =  {'C': 'CYS', 'D': 'ASP', 'S': 'SER', 'Q': 'GLN', 'K': 'LYS',
      'I': 'ILE', 'P': 'PRO', 'T': 'THR', 'F': 'PHE', 'N': 'ASN', 
@@ -58,11 +68,6 @@ def create_labelfile(outname, outfolder = "./", ligand = None):
 
     #Reading GPCRnomenclatures Json: the json with the equivalences between different GPCR scales (Wooten, Ballesteros, Pi, ...)
     GPCRnomenclatures = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/GPCRnomenclatures_dict.json")
-
-    #open a output label file. It's name will be the same as the pdb, but with a _label.tsv at the end
-    outfile_name = outfolder + outname + "_labels.tsv"
-    outfile = open(outfile_name,'w')
-    outdict = {}
 
     #Iterate over residues in the dictionary, and extract its corresponding aminoacid type from the PDB
     pattern = re.compile("-\d\d")
@@ -160,7 +165,7 @@ def merge_dynamic_files(dynname, files_path):
     """
 
     #if no files to merge exist, and the merged file already exists, skip this whole step
-    non_merged_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, "0"))
+    non_merged_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, "1"))
     merged_file = str("%s%s_dynamic.tsv" % (files_path, dynname))
     if (not os.path.isfile(non_merged_file)) and (os.path.isfile(merged_file)):
         return merged_file
@@ -170,7 +175,7 @@ def merge_dynamic_files(dynname, files_path):
     merged_file_noheader = "%s%s_dynamic_noheader.tsv" % (files_path, dynname)
     outfile = open(merged_file_noheader, 'w')
     for dynfile in dynfiles:
-        if "0_dynamic.tsv" in dynfile:
+        if "1_dynamic.tsv" in dynfile:
             with open(dynfile, "r") as f:
                 for line in f: 
                     if line[0] == '#':
@@ -289,7 +294,7 @@ multi_itypes = {
 #Ligand information extracting
 ligand_sel = read_ligandfile(ligfile)
 
-#Creating labelfile
+#Creating labelfile if it does not exists
 print("computing labelfile")
 create_labelfile(dynname, files_path, ligfile)
 
@@ -327,9 +332,13 @@ if merge_dynamics:
     # Calculate frequencies for each type
     for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbsb","hbss","hbls","hblb","all")):
 
+        #Omit already computed frequencies
+        outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
+        if os.path.exists(outfile):
+            continue
+
         print(str("computing %s frequencies") % (itype))
         labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
-        outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
         
         # HB and wb have to be calculated in a special way
         if  itype in multi_itypes:

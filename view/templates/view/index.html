@@ -231,10 +231,10 @@ padding-right:60px
 }
 
 .howtoparent{
-    float:right;
-    position:absolute; 
+    /*float:right;
+    position:absolute; */
     right: 45px;
-    top:10px;
+    margin-top:-5px
 }
 
 .howtobtn{
@@ -251,6 +251,10 @@ padding-right:60px
     border-radius:100px;
     color:#4d4d4d;
 }
+
+#aroundtitle{
+  width: calc(100% - 52px)
+}
 </style>
 {% endblock %}
 </head>
@@ -264,13 +268,15 @@ padding-right:60px
  <div class="col-md-12" id="page_info">
 
   <!-- <div class="col-md-12 panel panel-primary" style="background-color:#3278B4;text-align:center;color:white;margin-bottom:10px">   -->
-   <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0 7px">  
-       <div class="panel-body">
-        <h2 >GPCRmd Workbench</h2>
-       </div> 
-        <div class="howtoparent">
+   <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0 7px; overflow:auto;">  
+       <div class="panel-body" style="min-width:400px;padding-bottom:10px">
+          <div style="float:left;" id="aroundtitle">
+          <h2 >GPCRmd Workbench</h2>
+          </div>
+        <div class="howtoparent" style="">
             <a href="https://youtu.be/4chW27Cg2PE" class="btn btn-default btn-sm howtobtn"  target="_blank" role="button" style="">How to<br>use it<br><span class="glyphicon glyphicon-play" style="font-size:14px"></span></a>
         </div>
+       </div> 
    </div>
 
    <div id="inner_remaining" >

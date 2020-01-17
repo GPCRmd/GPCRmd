@@ -47,6 +47,7 @@ $(document).ready(function(){
     e.preventDefault();
   });
   //---------Avoid dropdown menu to retract at click
+  var button;
   $('.dropdown-menu').on("click", function(e){
     e.stopPropagation();
   });
@@ -91,12 +92,15 @@ $(document).ready(function(){
     $('#cluster_button').html($(this).html() + ' clusters <span class="caret"></span>');    
   })
 
-  //-------- Change text in documentation title on click
+  //-------- Change text and arrow in documentation title on click
   $("#show_hide_info").click(function(){
+      arrow=$(this).children(".arrow");
       if ($("#more_info").attr("aria-expanded")=="true"){
           $("#show_hide_info_text").text("Show info ");
+          arrow.css('transform', 'rotate(180deg)');
       } else {
           $("#show_hide_info_text").text("Hide info ");
+          arrow.css('transform', 'rotate(0deg)');
       }
   });
 
@@ -105,26 +109,6 @@ $(document).ready(function(){
 
     //---------Remove heatmap loading icon once page is loaded
     document.getElementById("loading_heatmap").remove();
-
-    //-------- Info panels
-    $(".section_pan").click(function(){
-        var target=$(this).attr("data-target");
-        var upOrDown=$(target).attr("class");
-        if(upOrDown.indexOf("in") > -1){
-            var arrow=$(this).children(".arrow");
-            arrow.removeClass("glyphicon-chevron-up");
-            arrow.addClass("glyphicon-chevron-down");
-        } else {
-            var arrow=$(this).children(".arrow");
-            arrow.removeClass("glyphicon-chevron-down");
-            arrow.addClass("glyphicon-chevron-up");
-            if (target=="#analysis_fplot"){
-                if (plot){
-                    setFPFrame(pg_framenum)
-                }
-            }
-        }
-    });
     
     //---------------Scrollbar to heatmap
     jQuery(function ($) {
@@ -145,22 +129,59 @@ $(document).ready(function(){
     anots_mintop = parseInt(anots.css('top'));
     container.on("scroll", function() {
       top_window = container.scrollTop();
-      anots.each(function(){
+      anots.each(function(index, anot){
         new_top = scrollPos - anots_height;
         //Now move the axis annotations
         //If scroll would result in annotations going higher than original position, set them in original position again
-        if (anots_mintop > new_top){
-          $(this).css('top', anots_mintop);
+        if (anots_mintop > new_top+50){
+          $(anot).css('top', anots_mintop);
         }
         // if previous scrolling-position of window was down from the axis original position 
-        else if (anots_height < scrollPos) {
-          $(this).css('top', new_top+50);
+        else  {
+          $(anot).css('top', new_top+50);
         }
 
       });
       scrollPos = top_window;
     });
+
+    //------------Personalized colorbar for heatmap, made in a javascript canvas
+    var cv  = document.getElementById('cv'),
+    ctx = cv.getContext('2d');
+    ctx.font = "12px Arial";
+
+    var red = 255, green = 0, color;
+    for(var i = 0; i <= 255*2; i++) {
+      ctx.beginPath();
+
+      if (green == 255){
+        red--;
+      } else {
+        green++;
+      }
+      color = 'rgb('+red+', ' + green + ',  0)';
+      ctx.fillStyle = color;
+      
+      ctx.fillRect(0, i/4, 30, 1);
+    }
+
+    ctx.fillStyle = "rgb(68, 68, 68)";
+    ctx.fillText("100%", 40, 12);
+    ctx.fillText("50%", 40, 255/2/2);
+    ctx.fillText("0%", 40, 255/2);
   };
+
+  //-------------Turn around little arrow on click of flare_title
+  $("#click_title").click(function(){
+    arrow=$("#click_title .arrow");
+    if($(this).attr("aria-expanded") == "true"){
+      arrow.css('transform', 'rotate(180deg)');
+    } 
+    else {
+      arrow.css('transform', 'rotate(0deg)');
+    }; 
+  });
+
 });
 
 //------Extract checked values, create an URL with them and refresh page with new URL
@@ -218,10 +239,9 @@ function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
-  $("#dendrogram").css("width","30%");
-  $(".heatmap").css("width","70%");
-  $("#heatmap_pager").css("margin-left","37%")
-  $("#heatmap_pager").css("margin-right","15%")
+  $("#dendrogram").css("width","35%");
+  $(".heatmap").css("width","57%");
+  $("#heatmap_pager").css("margin-left","40%")
 }
 
 //--------Heatmap change page system (the return false thing is for links not to redirect)

@@ -14,15 +14,30 @@ from bokeh.transform import transform
 from math import ceil
 from scipy.cluster.hierarchy import linkage, fcluster, cut_tree
 
-print("functions imported")
-
 # Be careful with this!!! Put here only because some false-positive warnings from pandas
 import warnings
 warnings.filterwarnings('ignore')
+#                   ▄              ▄
+#                  ▌▒█           ▄▀▒▌
+#                  ▌▒▒█        ▄▀▒▒▒▐
+#                 ▐▄▀▒▒▀▀▀▀▄▄▄▀▒▒▒▒▒▐
+#               ▄▄▀▒░▒▒▒▒▒▒▒▒▒█▒▒▄█▒▐
+#             ▄▀▒▒▒░░░▒▒▒░░░▒▒▒▀██▀▒▌
+#            ▐▒▒▒▄▄▒▒▒▒░░░▒▒▒▒▒▒▒▀▄▒▒▌
+#            ▌░░▌█▀▒▒▒▒▒▄▀█▄▒▒▒▒▒▒▒█▒▐
+#           ▐░░░▒▒▒▒▒▒▒▒▌██▀▒▒░░░▒▒▒▀▄▌
+#           ▌░▒▄██▄▒▒▒▒▒▒▒▒▒░░░░░░▒▒▒▒▌
+#          ▌▒▀▐▄█▄█▌▄░▀▒▒░░░░░░░░░░▒▒▒▐
+#          ▐▒▒▐▀▐▀▒░▄▄▒▄▒▒▒▒▒▒░▒░▒░▒▒▒▒▌
+#          ▐▒▒▒▀▀▄▄▒▒▒▄▒▒▒▒▒▒▒▒░▒░▒░▒▒▐
+#           ▌▒▒▒▒▒▒▀▀▀▒▒▒▒▒▒░▒░▒░▒░▒▒▒▌
+#           ▐▒▒▒▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▒▄▒▒▐
+#            ▀▄▒▒▒▒▒▒▒▒▒▒▒░▒░▒░▒▄▒▒▒▒▌
+#              ▀▄▒▒▒▒▒▒▒▒▒▒▄▄▄▀▒▒▒▒▄▀
+#                ▀▄▄▄▄▄▄▀▀▀▒▒▒▒▒▄▄▀
+#                   ▒▒▒▒▒▒▒▒▒▒▀▀
 
-#############
-### Functions
-#############
+#"Much functions. So wow"
 
 def json_dict(path):
     """Converts json file to pyhton dict."""
@@ -117,19 +132,7 @@ def split_by_standard(df, compl_data):
     df_standard = df[df.columns[~df.columns.isin(nonstandard_simulations)]]
     
     return(df, df_standard)
-    
-def filter_lowfreq_old(df, main_itype):
-    """
-    Filter low-frequency interactions. 
-    """    
 
-    # Preserve positions which interaction frequency for this type reach, at mean, 0.1 (or 10 if working on percentages)
-    df['mean_row'] = df.mean(axis = 1, numeric_only = True)
-    pos_topreserve = set(df['Position'][ (df['mean_row'] > 10) & (df['itype'] == main_itype) ])
-    df.drop('mean_row', 1, inplace = True)
-    df = df[df['Position'].isin(pos_topreserve)]
-     
-    return(df)
 
 def filter_lowfreq(df, main_itype):
     """
@@ -482,7 +485,7 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
             dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
 
 def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters, recept_info, recept_info_order): 
-
+    
     # Define linkage function (we'll be using the default one for plotly). 
     linkagefun=lambda x: linkage(x, 'complete')
     (thres,clustdict) = clustering(clusters, dend_matrix, labels, linkagefun)
@@ -504,17 +507,16 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout'].update({
         'width':width, 
         'height':height,
+        'autosize' : False,
         'hoverdistance' : 10,
-        'plot_bgcolor' : "#FFFFFF"
         })
 
     fig['layout']['margin'].update({
-        'r' : 150,
-        'l' : 100,
-        't' : 60,#This problem with the phantom margin has to be solved at some point
+        'r' : 300,
+        'l' : 50,
+        't' : 100,
         'b' : 0,
-        'pad' : 0,
-        'autoexpand' : False,
+        'pad' : 0
         })
 
     fig['layout']['xaxis'].update({
@@ -522,7 +524,6 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
         'showticklabels': False,
         'ticks' : '',
         'fixedrange' : True,
-        'automargin' : False
         })
 
     fig['layout']['yaxis'].update({
@@ -534,20 +535,19 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
             'color' : 'white'
             },
         'fixedrange' : True,
-        'automargin' : False
         })
-
+   
     #Annotating cluster nodes
     annotations = annotate_clusters(fig, 'rgb(0,116,217)') # Default color for tree
-
+    
     # Correcting hoverlabels
     fig = hoverlabels_axis(fig, recept_info, recept_info_order, 'rgb(0,116,217)', annotations)
-
+    
     # Taking order for plot rows
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plot(fig, filename=filename, auto_open=False,config={
+    plot(fig, auto_open= False, filename=filename, config={
         "displayModeBar": "hover",
         "showAxisDragHandles": False,
         "showAxisRangeEntryBoxes": False,
@@ -634,7 +634,6 @@ def new_columns(df):
     
     return df
 
-
 def sort_simulations(df_ts, dyn_dend_order):
     """
     Sorts the simulations in the dataframe according to the order in the list dyn_dend_order
@@ -670,7 +669,7 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     Creates a list in hovertool format from the two dictionaries above
     """
 
-    #Creating hovertool listzzzz
+    #Creating hovertool list
     hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@protein_Position'), ('Residues', '@restypes')]
     if itype == "all":
         for group,type_tuple in itypes_order:
@@ -690,7 +689,6 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
 
     return hover
 
-  
 def define_figure(width, height, tool_list, dataframe, hover, itype):
     """
     Prepare bokeh figure heatmap as intended
@@ -714,7 +712,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
         toolbar_location="right",
         toolbar_sticky = False,
         min_border_top = 200,#leave some space for x-axis artificial labels
-        min_border_bottom = 0,
+        min_border_bottom = 0
     )
 
     # Create rectangle for heatmap
@@ -752,7 +750,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
 
     #Fore every unique position in the set, add a label in axis
     for position in list(dataframe.Position.drop_duplicates()):
-        position = position.replace("Ligand","Lig\n\n\n\n\n")
+        position = position.replace("Ligand","Lig")
         foolabel = Label(x=x_cord,
                          y=y_cord,
                          text=position,
@@ -762,6 +760,17 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
                          text_font_size = "10pt")
         p.add_layout(foolabel)
         x_cord +=1
+
+    # Add legend
+    color_bar = ColorBar(
+        color_mapper=mapper,
+        location=(0, 0),
+        label_standoff = 12,
+        ticker=BasicTicker(desired_num_ticks=2),
+        formatter=PrintfTickFormatter(format="%d%%"),
+        major_label_text_font_size="11pt"
+        )
+    p.add_layout(color_bar, 'left')
 
     # Setting axis
     p.axis.axis_line_color = None
@@ -778,6 +787,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
 
     # Needed later
     return(mysource,p)
+
 
 def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource):
     """
@@ -870,13 +880,12 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
                 //Resize dendrogram and heatmap
-                $("#dendrogram").css("width","50%");
-                $(".heatmap").css("width","40%");
-                
+                $("#dendrogram").css("width","40%");
+                $(".heatmap").css("width","60%");
+
                 //Resize little pager on top
                 $("#heatmap_pager").css("margin-left","48%")
-                $("#heatmap_pager").css("margin-right","0%")
-
+                $("#heatmap_pager").css("margin-rigth","0%")
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -983,12 +992,16 @@ itypes_order = [
 # Main function 
 ###############
 
-def get_contacts_plots(itype, ligandonly):
+def get_contacts_plots(itype, ligandonly, rev, code="XKCD", dynlist = ['dyn4', 'dyn5', 'dyn7']):
 
     """
-    Create and save dataframe, dendrogram, and other data necessary for computing get_contacts online plots
+    Create and save dataframe, dendrogram, and other data necessary for creating a temporary set of heatmaps for a 
+    customized dinamics selection. Supposed to be able of running on the fly. We will see.
         - itype: any of the codes from below typelist.
-        - ligandonly: lg (only residue-ligand contacts), prt (only intraprotein contacts), all 
+        - ligandonly: lg (only residue-ligand contacts), prt (only intraprotein contacts), all
+        - rev: Is the dataframe duplicated for reversed-residue positions?
+        - code: unique hash of letters/numbers for the temporary file
+        - dynlist: dyns that are going to be in the customized heatmap
     """    
 
     # Creating set_itypes, with all in case it is not still in it
@@ -1010,7 +1023,8 @@ def get_contacts_plots(itype, ligandonly):
         df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict(str(basepath + "compl_info.json"))
 
-    print("Computing input files for itype %s and partners %s" % (itype, ligandonly))
+    #Filtering out non-selected dyns
+    df_raw =df_raw[df_raw.columns.intersection(dynlist)]
 
     # Adapting to Mariona's format (Single column with both interacting positions names and frequencies in percentage)
     df_original = adapt_to_marionas(df_raw)
@@ -1030,152 +1044,145 @@ def get_contacts_plots(itype, ligandonly):
     (df_complete, df_standard) = split_by_standard(df_original, compl_data)
 
     # Open json template
-    flare_template = json_dict(basepath + "template.json")
+    flare_template = json_dict(basepath + "../flare_plot/contact_maps/template.json")
 
-    for (stnd,df) in (("cmpl", df_complete), ("stnd", df_standard)):
-            
-        #If doesn't exists yet, create base input folder
-        options_path = "%scontmaps_inputs/%s/%s/%s/" %(basepath, itype, stnd, ligandonly)
-        os.makedirs(options_path, exist_ok=True)
+    #If doesn't exists yet, create base input folder
+    options_path = "%scontmaps_inputs/tmp/%s/" %(basepath, code)
+    os.makedirs(options_path, exist_ok=True)
+    
+    #Removing low-frequency contacts
+    df = filter_lowfreq(df, itype)
+
+    # If there are no interactions with this ligandonly-itype combination
+    if df.empty:
+        exit("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
+    
+    #Positions on Position column are in different nomenclatures (Ballesteros, Wooten, Pi..). 
+    #Here I add a column with the Positions translated to Ballesteros-Wanstein     
+    df = set_new_axis(df)
+
+    # Stack matrix (one row for each interaction pair and dynamic. Colnames are position, dynid and itypes)
+    df_ts = stack_matrix(df, set_itypes)
+
+    #Dropping away non main-type interaction rows.
+    df = df[df['itype'] == itype]
+
+    #Dropping away interaction type colum
+    df.drop('itype', 1, inplace = True)
+
+    # Set position as row index of the dataframe
+    df = df.set_index('Position')    
+
+    #Computing frequency matrix
+    (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
+
+    # Apending column with PDB ids
+    pdb_id = recept_info_order['pdb_id']
+    df_ts['pdb_id'] = df_ts['Id'].apply(lambda x: recept_info[x][pdb_id])
+
+    # Labels for dendogram NO DENDROGRAM
+    #dendlabels_dyns = [ dyn for dyn in df ]
+
+    #Storing dataframe with results in a CSV file, downloadable from web NO CSV
+    #csvfile = options_path+"dataframe.csv" 
+    #create_csvfile(csvfile, recept_info,df)
+
+    # Add residue types to dataframe
+    df_ts = add_restypes(df_ts, compl_data)
+
+    #Preparing dendrogram folders and parameters NO DENDROGRAM
+    #dendfolder = options_path + "dendrograms/" 
+    #os.makedirs(dendfolder, exist_ok = True)
+    #dend_height = int( int(df.shape[1]) * 16 + 200)
+    #dend_width = 550
+
+    # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files
+    df = new_columns(df)
+
+    # Computing several dendrograms and corresponding json files NO DENDROGRAM
+    """
+    for cluster in list(range(2,21)):
+
+        dendfile = ("%s%iclusters_dendrogram.html" % (dendfolder, cluster))
+        (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
+
+        # Write dynamicID-cluster dictionary on a json
+        clustdir = "%sflarejsons/%sclusters/" % (options_path, cluster)
+        os.makedirs(clustdir, exist_ok= True)
+        with open(clustdir + "clustdict.json", 'w') as clusdictfile:
+            dump(clustdict, clusdictfile, ensure_ascii=False, indent = 4)
+
+        #Jsons for the flareplots of this combinations of clusters
+        flareplot_json(df, clustdict, clustdir, flare_template)
+    """
+
+    # If rev option is setted to rev, duplicate all lines with the reversed-position version 
+    #(4x32-2x54 duplicates to 2x54-4x32)
+    if rev == "rev":
+        df_ts_rev = reverse_positions(df_ts)
+    else:
+        df_ts_rev = df_ts
+
+    df_ts_rev = sort_simulations(df_ts_rev, dyn_dend_order)
+
+    #Taking some variables for dataframe slicing
+    pairs_number = df.shape[0]
+    inter_number = df_ts_rev.shape[0]
+    inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
+    number_heatmaps = ceil((inter_number/inter_per_pair)/37) #Needed number of heatmaps to have 37 columns max in each
+
+    #Make heatmaps each 50 interacting pairs
+    div_list = []
+    divwidth_list = []
+    heatmap_filename_list = []
+    number_heatmap_list = []
+    prev_slicepoint = 0
+    for i in range(1,number_heatmaps+1):
+        number_heatmap_list.append(str(i))
+
+        #Create heatmap folder if not yet exists
+        heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/tmp/heatmaps/"
+        heatmap_path = "%sheatmaps/" % (options_path)
+        os.makedirs(heatmap_path, exist_ok=True)
         
-        #Removing low-frequency contacts
-        df = filter_lowfreq(df, itype)
+        #Slice dataframe. Also definig heigth and width of the heatmap
+        slicepoint = int(i*inter_per_pair*37)
+        if i == number_heatmaps:
+            df_slided = df_ts_rev[prev_slicepoint:]
+            w= int(df_slided.shape[0]/inter_per_pair*20 + 130)    
+        else:
+            df_slided = df_ts_rev[prev_slicepoint:slicepoint]
+            w=870
+        prev_slicepoint = slicepoint
+        h=dend_height
 
-        # If there are no interactions with this ligandonly-itype combination
-        if df.empty:
-            print("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
-            return
+        # Define bokeh figure and hovertool
+        hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
+        mytools = ["hover","tap","save","reset","wheel_zoom"]
+        mysource,p = define_figure(w, h, mytools, df_slided, hover, itype)
 
-        #Positions on Position column are in different nomenclatures (Ballesteros, Wooten, Pi..). 
-        #Here I add a column with the Positions translated to Ballesteros-Wanstein     
-        df = set_new_axis(df)
+        # Creating javascript for side-window
+        mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
 
-        # Stack matrix (one row for each interaction pair and dynamic. Colnames are position, dynid and itypes)
-        df_ts = stack_matrix(df, set_itypes)
+        # Extract bokeh plot components and store them in lists
+        script, div = components(p)
+        divwidth_list.append(str(w+80))#heatmapwidth+dendwidth+margins
+        div_list.append(div.lstrip())
+        heatmap_filename = "%s%iheatmap.html" % (heatmap_path_jupyter,i)
+        heatmap_filename_list.append(heatmap_filename)
 
-        #Dropping away non main-type interaction rows.
-        df = df[df['itype'] == itype]
+        # Write heatmap on file
+        heatmap_filename = "%s%iheatmap.html" % (heatmap_path,i)
+        with open(heatmap_filename, 'w') as heatmap:
+            heatmap.write(script)
 
-        #Dropping away interaction type colum
-        df.drop('itype', 1, inplace = True)
-
-        # Set position as row index of the dataframe
-        df = df.set_index('Position')    
-
-        #Computing frequency matrix
-        dend_matrix = frequencies(df)
-        (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
-
-        # Apending column with PDB ids
-        pdb_id = recept_info_order['pdb_id']
-        df_ts['pdb_id'] = df_ts['Id'].apply(lambda x: recept_info[x][pdb_id])
-
-        # Labels for dendogram
-        dendlabels_dyns = [ dyn for dyn in df ]
-
-        #Storing dataframe with results in a CSV file, downloadable from web
-        csvfile = options_path+"dataframe.csv" 
-        create_csvfile(csvfile, recept_info,df)
-
-        # Add residue types to dataframe
-        df_ts = add_restypes(df_ts, compl_data)
-
-        #Preparing dendrogram folders and parameters
-        dendfolder = options_path + "dendrograms/" 
-        os.makedirs(dendfolder, exist_ok = True)
-        dend_height = int( int(df.shape[1]) * 16)
-        dend_width = 450
-
-        # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files
-        df = new_columns(df)
-
-
-        # Computing several dendrograms and corresponding json files
-        for cluster in list(range(2,21)):
-
-            print("computing cluster " + str(cluster))
-            dendfile = ("%s%iclusters_dendrogram.html" % (dendfolder, cluster))
-            (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
-
-            # Write dynamicID-cluster dictionary on a json
-            clustdir = "%sflarejsons/%sclusters/" % (options_path, cluster)
-            os.makedirs(clustdir, exist_ok= True)
-            with open(clustdir + "clustdict.json", 'w') as clusdictfile:
-                dump(clustdict, clusdictfile, ensure_ascii=False, indent = 4)
-
-            #Jsons for the flareplots of this combinations of clusters
-            flareplot_json(df, clustdict, clustdir, flare_template)
-
-        for rev in ["norev"]:
-
-            # If rev option is setted to rev, duplicate all lines with the reversed-position version 
-            #(4x32-2x54 duplicates to 2x54-4x32)
-            if rev == "rev":
-                df_ts_rev = reverse_positions(df_ts)
-            else:
-                df_ts_rev = df_ts
-            
-            df_ts_rev = sort_simulations(df_ts_rev, dyn_dend_order)
-
-            #Taking some variables for dataframe slicing
-            max_columns = 40
-            pairs_number = df.shape[0]
-            inter_number = df_ts_rev.shape[0]
-            inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
-            number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
-            
-            #Make heatmaps each 50 interacting pairs
-            div_list = []
-            divwidth_list = []
-            heatmap_filename_list = []
-            number_heatmap_list = []
-            prev_slicepoint = 0
-            for i in range(1,number_heatmaps+1):
-                number_heatmap_list.append(str(i))
-
-                #Create heatmap folder if not yet exists
-                heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
-                heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
-                os.makedirs(heatmap_path, exist_ok=True)
-                
-                #Slice dataframe. Also definig heigth and width of the heatmap
-                slicepoint = int(i*inter_per_pair*max_columns)
-                if i == number_heatmaps:
-                    df_slided = df_ts_rev[prev_slicepoint:]
-                else:
-                    df_slided = df_ts_rev[prev_slicepoint:slicepoint]
-                w = int(df_slided.shape[0]/inter_per_pair*20+40)
-                prev_slicepoint = slicepoint
-                h=dend_height
-
-                # Define bokeh figure and hovertool
-                hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
-                mytools = ["hover","tap","save","reset","wheel_zoom"]
-                mysource,p = define_figure(w, h, mytools, df_slided, hover, itype)
-
-                # Creating javascript for side-window
-                mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
-
-                # Extract bokeh plot components and store them in lists
-                script, div = components(p)
-                divwidth_list.append(str(dend_width+w))#heatmapwidth+dendwidth+margins
-                div_list.append(div.lstrip())
-                heatmap_filename = "%s%iheatmap.html" % (heatmap_path_jupyter,i)
-                heatmap_filename_list.append(heatmap_filename)
-
-                # Write heatmap on file
-                heatmap_filename = "%s%iheatmap.html" % (heatmap_path,i)
-                with open(heatmap_filename, 'w') as heatmap:
-                    heatmap.write(script)
-
-            # Write lists as python variables in a python file
-            variables_file = "%svariables.py" % (heatmap_path)
-            with open(variables_file, 'w') as varfile:
-                varfile.write("div_list = [\'%s\']\n" % "\',\'".join(div_list))
-                varfile.write("divwidth_list = [\'%s\']\n" % "\',\'".join(divwidth_list))
-                varfile.write("heatmap_filename_list = [\'%s\']\n" % "\',\'".join(heatmap_filename_list))
-                varfile.write("number_heatmaps_list = [\'%s\']\n" % "\',\'".join(number_heatmap_list))
-
+    # Write lists as python variables in a python file
+    variables_file = "%svariables.py" % (heatmap_path)
+    with open(variables_file, 'w') as varfile:
+        varfile.write("div_list = [\'%s\']\n" % "\',\'".join(div_list))
+        varfile.write("divwidth_list = [\'%s\']\n" % "\',\'".join(divwidth_list))
+        varfile.write("heatmap_filename_list = [\'%s\']\n" % "\',\'".join(heatmap_filename_list))
+        varfile.write("number_heatmaps_list = [\'%s\']\n" % "\',\'".join(number_heatmap_list))
 
 ###################
 ## Calling function

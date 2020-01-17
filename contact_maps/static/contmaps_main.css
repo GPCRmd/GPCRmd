@@ -194,6 +194,11 @@ hr {
   text-align: justify;
 }
 
+.arrow {
+  -webkit-transition-duration: 0.5s;
+  transition-property: transform;
+}
+
 .open>.dropdown-menu {
     display: inline-block !important;
 }
@@ -203,11 +208,15 @@ hr {
 }
 
 #heatmap_pager {
-  margin-left: 37%;
-  margin-right: 15%;
+  margin-left: 40%;
   z-index: 50;
   position: sticky;
   top: 00;
+}
+
+#cv {
+  float: right;
+  margin-top: 95px;
 }
 
 #loading_heatmap {
@@ -218,7 +227,10 @@ hr {
 
 .bk-annotation {
   width: 21px;
-  -webkit-transition: 0.1s;
+}
+
+#flare_title {
+  cursor: pointer;
 }
 
 /*Flareplots*/
@@ -230,9 +242,9 @@ hr {
 
 .FP-button {
   margin-top:15px;
-  margin-bottom:15px;
+  margin-bottom:15px !important;
   font-size:12px;
-  width:130px;
+  width:150px;
   padding-right:2px;
   padding-left:2px;
   height: 31px;
@@ -241,6 +253,10 @@ hr {
 .clusters_dropup-div {
   display:inline-block;
   position: relative;
+}
+
+#clusters_dropdown {
+  height: 30px;
 }
 
 .numbering_dropup-div {
@@ -298,6 +314,33 @@ hr {
   z-index:10;
   margin-left:-25px
 } 
+
+/*Thing to make viewer always square*/
+#ngl_div {
+  width: 100%;
+  position: relative;
+  margin-bottom: 15px;
+}
+#ngl_div:before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+#ngl_iframe {
+  border: none;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height:100%;
+}
+
+.ui-page {
+  overflow-y: hidden !important;
+}
 
 /*NGL viewer*/
 
