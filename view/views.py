@@ -2670,6 +2670,43 @@ def quickload(request,dyn_id,trajfile_id):
             }
     return render(request, 'view/quickload.html', context)
 
+def quickloadall(request):
+    #DyndbFiles.objects.filter(dyndbfilesdynamics__id_dynamics=dyn_id, id_file_types__is_trajectory=True)
+    mdsrv_url=obtain_domain_url(request)
+    dynobj=DyndbDynamics.objects.all()
+    dynfiledata = dynobj.annotate(dyn_id=F('id'))
+    #dynfiledata = dynfiledata.annotate(is_pub=F('is_published'))
+    #dynfiledata = dynfiledata.annotate(sub_id=F('submission_id__id'))
+    dynfiledata = dynfiledata.annotate(file_path=F('dyndbfilesdynamics__id_files__filepath'))
+    #dynfiledata = dynfiledata.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
+    dynfiledata = dynfiledata.annotate(file_is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+    dynfiledata = dynfiledata.annotate(file_ext=F('dyndbfilesdynamics__id_files__id_file_types__extension'))
+    dynfiledata = dynfiledata.values("dyn_id","file_path","file_is_traj","file_ext")
+
+    dyn_dict = {}
+    for dyn in dynfiledata:
+        dyn_id=dyn["dyn_id"]
+        if dyn_id not in dyn_dict:
+            dyn_dict[dyn_id]={}
+            dyn_dict[dyn_id]["traj"]=[]
+            dyn_dict[dyn_id]["pdb"]=[]
+        file_info=dyn["file_path"]
+        if not file_info:
+            continue
+        file_short=file_info[file_info.index("Dynamics"):]
+        if dyn["file_is_traj"]:
+            dyn_dict[dyn_id]["traj"].append(file_short)
+        elif dyn["file_ext"]=="pdb":
+            dyn_dict[dyn_id]["pdb"].append(file_short)
+
+    del dynfiledata
+    filesli=[[d["pdb"][0],d["traj"]] for d in dyn_dict.values() if d["pdb"]]
+    context={
+        "mdsrv_url":mdsrv_url,
+        "filesli":json.dumps(filesli)
+            }
+    return render(request, 'view/quickloadall.html', context)
+
     
 ############ TEST #############
 def fplot_test(request, dyn_id, filename):

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MDsrv/NGL - embedded</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="icon" href="mdsrv/webapp/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css"><!-- test -->
+    <link rel="stylesheet" href="mdsrv/webapp/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="mdsrv/webapp/css/main.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/light.css" />
+    <link rel="subresource" href="mdsrv/webapp/css/dark.css" />
+
+</head>
+<body >
+    <!-- NGL -->
+    <script src="mdsrv/webapp/js/ngl.js"></script>
+
+    <!-- UI -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script><!-- test -->
+    <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
+    <script src="mdsrv/webapp/js/lib/colorpicker.min.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.extra.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.ngl.js"></script>
+    <script src="mdsrv/webapp/js/ui/ui.helper.js"></script>
+    <script src="mdsrv/webapp/js/gui.js"></script>
+
+    <!-- MDSRV -->
+    <!--script src="mdsrv/webapp/js/mdsrv.js"></script>-->
+    <script>
+        NGL.cssDirectory = "mdsrv/webapp/css/";
+        NGL.MDsrvdocumentationUrl = "http://arose.github.io/mdsrv";
+
+        // Datasources
+        NGL.DatasourceRegistry.add(
+            "file", new NGL.MdsrvDatasource( window.location.origin + "/mdsrv/" )
+        );
+        NGL.DatasourceRegistry.listing = NGL.DatasourceRegistry.get( "file" );
+        NGL.DatasourceRegistry.trajectory = NGL.DatasourceRegistry.get( "file" );
+        document.addEventListener( "DOMContentLoaded", function(){
+            stage = new NGL.Stage( "viewport" );
+
+////////////////// Functions
+
+//////////////////
+
+
+        $(document).ready(function(){
+        document.domain=document.domain;
+        stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
+
+
+        // For todays date;
+        Date.prototype.today = function () { 
+            return ((this.getDate() < 10)?"0":"") + this.getDate() +"/"+(((this.getMonth()+1) < 10)?"0":"") + (this.getMonth()+1) +"/"+ this.getFullYear();
+        }
+
+        // For the time now
+        Date.prototype.timeNow = function () {
+             return ((this.getHours() < 10)?"0":"") + this.getHours() +":"+ ((this.getMinutes() < 10)?"0":"") + this.getMinutes() +":"+ ((this.getSeconds() < 10)?"0":"") + this.getSeconds();
+        }
+
+        var s_i=0;
+        var t_i=0;
+        function load_dyn(s_i,t_i){
+            struc=filesli[s_i][0];
+            traj=filesli[s_i][1][t_i];
+            stage.removeAllComponents();
+            stage.loadFile( path + struc , {visible: true}).then( function( o ){
+
+                o.signals.trajectoryAdded.add(function(trajComp){ 
+                    if (t_i < filesli[s_i][1].length -1){
+                        t_i++
+                        traj=filesli[s_i][1][t_i];
+                        console.log(traj_path + traj)
+                        o.addTrajectory( traj_path + traj );
+                    } else {
+                        if (s_i < filesli.length -1){
+                            s_i++
+                            t_i=0
+                            //$("#viewport").trigger("newdyn")
+                            load_dyn(s_i,t_i)
+                        } else {
+                            var datetime = "End: " + new Date().today() + " @ " + new Date().timeNow();
+                            console.log(datetime)
+                        }
+                    }
+                 });
+
+                o.setSelection("protein");
+                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
+
+                stage.autoView();
+                //stage.animationControls.zoom(-70)
+                o.setName("my_comp");
+                console.log(traj_path + traj)
+                o.addTrajectory( traj_path + traj );
+
+            });
+
+
+        }
+
+        var datetime = "Start: " + new Date().today() + " @ " + new Date().timeNow();
+        console.log(datetime)
+        var  traj_path= "_DB/";
+        var  path= "/mdsrv/file/_DB/";
+        var filesli=$("#embed_mdsrv", window.parent.document).data("filesli");
+        console.log(filesli)
+        load_dyn(s_i,t_i)
+
+
+//        $("#viewport").on("newdyn",function(){
+//            console.log("AAAAAAAAAAAAAA :D")
+//            load_dyn(s_i,t_i)
+//        })
+
+
+
+    });
+        });
+
+    </script>
+    <div id="toiframe" style="width:590px">
+        <div id="viewport" style="width:590px; height:370px;"></div>
+        <div style="height:80px">
+            <div id="buttons" style="width:586px;margin-top:36px;margin-left:2px"><!-- 30+36+10 =~ 80 -->
+            </div>
+            <div id="clear_dists_btn" style="margin-left:3px;height:10px;margin-top:1px">
+            </div>
+        </div>
+        <div id="trajRangeDiv" style="position:absolute;width:586px;height:30px;margin-top:245px;margin-left:2px;visibility:hidden">
+          <input title="Frame" id="trajRange" type="range" name="points" id="points" value="0" min="0" max="100">
+        </div>
+        <div style="width:586px;height:30px;margin-top:285px;margin-left:2px;">
+            <div id="atomClicked" style="color:grey;float:left;margin-right:4px;"></div>
+            <div id="atomInfo" style="color:green;"></div>
+        </div>
+    </div>
+</body>
+</html>

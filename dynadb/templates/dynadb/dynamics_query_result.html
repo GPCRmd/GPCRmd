@@ -10,7 +10,7 @@
         width:80%;
     }
     .panel-body {
-        word-break:break-all;
+        /*word-break:break-all;*/
         padding: 30px 40px 30px 40px;
     }    
 
@@ -109,34 +109,34 @@
                 <p class="techinfo_title">Parameters</p>
                 <div class="techinfo_content">
                     {%if answer.soft%}
-                        <b>Software and version</b>: {{answer.soft}}, {{answer.softv}} <br><br>
+                        <p><b>Software and version</b>: {{answer.soft}}, {{answer.softv}} </p>
                     {%endif%}
 
                     {%if answer.forcefield%}
-                        <b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} <br> <br>
+                        <p><b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} </p>
                     {%endif%}
 
                     {%if answer.solventtype%}
-                        <b>Solvent type</b>: {{answer.solventtype}} <br><br>
+                        <p><b>Solvent type</b>: {{answer.solventtype}}</p>
                     {%endif%}
 
                     {%if answer.membranetype%}
-                        <b>Membrane type</b>: {{answer.membranetype}} <br><br>
+                        <p><b>Membrane type</b>: {{answer.membranetype}}</p>
                     {%endif%}
 
                     {%if answer.timestep%}
-                        <b>Time step <span title="Time interval between new positions computation" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{answer.timestep}} fs <br><br>
+                        <p><b>Time step <span title="Time interval between new positions computation" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{answer.timestep}} fs </p>
                     {%endif%}
 
                     {%if answer.delta%}
-                        <b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></b>: {{answer.delta}} ns <br><br>
+                        <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></b>: {{answer.delta}} ns </p>
                     {%endif%}
                     {% if answer.description %}
-                        <b>Description</b>: {{answer.description}}<br><br>
+                        <p><b>Description</b>: {{answer.description}}</p>
                     {%endif%}
                     {% if answer.related %}
                     <div id='reldyn' class="miniscroll">
-                        <b>Related Dynamics</b>:<br>
+                        <p><b>Related Dynamics</b>:</p>
                         {% for dyn in answer.related %}
                             <a class='btn btn-info' role='button' href= /dynadb/dynamics/id/{{dyn}}>Dynamics ID: {{dyn}}</a>
                         {% endfor %}
@@ -144,7 +144,7 @@
                     {% endif %}
 
                     {% if answer.author %}
-                        <span class="techinfo_title">Submitted by</span>: {{answer.author}}
+                        <p><b>Submitted by</b>: {{answer.author}}</p>
                     {%endif%}
                     
                 </div>
@@ -165,7 +165,7 @@
 
             <div id='rightcol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
                 {% if answer.files.param_files %}
-                <p class="techinfo_title">Download starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip"></span></p>
+                <p class="techinfo_title">Download starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom"></span></p>
                 <div class="techinfo_content">
                     <div  id='paramfiles'>
                         {% for fil in answer.files.param_files %}
@@ -177,9 +177,33 @@
 
             </div> <!--end right col div-->
         </div>
+
+    {% if answer.references  or answer.force_ref%}
+        <div class="techinfo">
+            <p class="techinfo_title" style="text-align:center">References</p>
+            <div class="techinfo_content" >
+        {% if answer.references %} 
+            {%for reference in answer.references%}
+                <p>{{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>. {{reference.journal}}{% if reference.volume %} {{reference.volume}}{%endif%}{% if reference.issue %} ({{reference.issue}}){%endif%}. doi: {{reference.doi}}.                    
+                    {%if reference.url%}
+                         (<a href="{{reference.url}}">{{reference.url}}</a>)                
+                    {%elif reference.pmid%}
+                        (<a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}</a>)
+                    {%endif%}
+                </p><br>
+            {%endfor%}
+
+        {% elif answer.force_ref %}
+            <p id="gpcrmdref">{{answer.force_ref}} (<a href="https://doi.org/10.1101/839597">https://doi.org/10.1101/839597)</a></p>
+
+        {% endif %}
+          </div>
+        </div>
+    {% endif %}
     </div>
     </div>
     </div>
+
 
 
     <div class="col-md-12" style="padding:0">
@@ -403,26 +427,7 @@
 
     {% endif %}
 
-    <div id='references' class="col-md-12">
-        {% if answer.references %} 
-            <br><h4>References in which this simulation is mentioned</h4><br>
-            {%for reference in answer.references%}
-                {%if reference.pmid%}
-                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}. Available in: <a href=https://www.ncbi.nlm.nih.gov/pubmed/{{reference.pmid}}>Pubmed Link</a></p><br>
-                {%else%}
-                    <p>{{reference.authors}}. {{reference.pub_year}}. {{reference.title}}. {{reference.journal}} {{reference.volume}} ({{reference.issue}}). doi: {{reference.doi}}.</p><br>
-                {%endif%}
-            {%endfor%}
 
-        {% endif %} 
-        {% if answer.force_ref %}
-            <br><h4>References in which this simulation is mentioned</h4><br>
-            <p id="gpcrmdref">{{answer.force_ref}} (<a href="https://doi.org/10.1101/839597">https://doi.org/10.1101/839597)</a></p>
-        {% endif %}
-
-        <br><br>
-        <center><a style="font-weight: bold;" class='btn btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Go to data visualization & analysis</a><br><br><br><br></center>
-    </div> <!-- end of references div-->
     </div> <!-- end of bottom div-->
 
     </div></div></div>

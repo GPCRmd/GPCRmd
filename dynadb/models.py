@@ -216,7 +216,7 @@ class DyndbDynamics(models.Model):
     ff = models.CharField(max_length=20, blank=True, null=True)
     ffversion = models.CharField(max_length=15, blank=True, null=True)
     id_assay_types = models.ForeignKey(DyndbAssayTypes, models.DO_NOTHING, db_column='id_assay_types', blank=True, null=True)
-    description = models.CharField(max_length=150, blank=True, null=True)
+    description = models.CharField(max_length=1000, blank=True, null=True)
     id_dynamics_membrane_types = models.ForeignKey('DyndbDynamicsMembraneTypes', models.DO_NOTHING, db_column='id_dynamics_membrane_types', blank=True, null=True)
     id_dynamics_solvent_types = models.ForeignKey('DyndbDynamicsSolventTypes', models.DO_NOTHING, db_column='id_dynamics_solvent_types', blank=True, null=True)
     solvent_num = models.IntegerField(blank=True, null=True)
@@ -723,7 +723,7 @@ class DyndbProteinSequence(models.Model):
 
 class DyndbReferences(models.Model):
     doi = models.CharField("DOI", help_text="Digital object identifier.", unique=True, max_length=80, blank=True, null=True)
-    authors = models.CharField("Authors", help_text="List of the authors separated by semicolon.", max_length=600, blank=True, null=True)
+    authors = models.CharField("Authors", help_text="List of the authors separated by semicolon.", max_length=1000, blank=True, null=True)
     title = models.CharField("Title",help_text="Title of the paper.", max_length=900, blank=True, null=True)
              #institution = models.CharField(max_length=100, blank=True, null=True)
     pmid = models.IntegerField("PMID", help_text="PubMed identifier or PubMed unique identifier", unique=True, blank=True, null=True)

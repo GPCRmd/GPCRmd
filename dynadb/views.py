@@ -166,14 +166,14 @@ def REFERENCEview(request, submission_id=None):
         qRFdoi=DyndbReferences.objects.filter(doi=request.POST['doi'])
         qRFpmid=DyndbReferences.objects.filter(pmid=request.POST['pmid'])
         if qRFdoi.exists():
-            iii1="Please, Note that the reference you are trying to submit has a DOI previously stored in the GPCRmd. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
+            iii1="Please, Note that the reference you are trying to submit has a DOI previously stored in the GPCRmd. Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCRmd administrator"
             print(iii1)
             response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             FRpk = qRFdoi.values_list('id',flat=True)
             SubmitRef=False
            # return response
         if qRFpmid.exists():
-            iii1="Please, Note that the reference you are trying to submit has a PMID previously stored in the GPCRmd.  Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCR DB administrator"
+            iii1="Please, Note that the reference you are trying to submit has a PMID previously stored in the GPCRmd.  Check if the stored entry corresponds to the one you are submitting. Click 'ok' to continue to the stored reference. In case of error in the stored data, contact the GPCRmd administrator"
             print(iii1)
             response = HttpResponse(iii1,content_type='text/plain; charset=UTF-8')
             SubmitRef=False
@@ -3173,14 +3173,14 @@ def query_dynamics(request,dynamics_id):
         raise
     user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id)
     force_ref=False
-    if dynamics_id in range(4,10):
+    if int(dynamics_id) in range(4,10):
         author="GPCR drug discovery group (Pompeu Fabra University)"
     elif user.id in {1, 3, 5, 12, 14}:
         author="GPCRmd community"
         force_ref="Ismael Rodríguez-Espigares, Mariona Torrens-Fontanals, Johanna KS Tiemann, David Aranda-García, Juan Manuel Ramírez-Anguita, Tomasz Maciej Stepniewski, Nathalie Worp, Alejandro Varela-Rial, Adrián Morales-Pastor, Brian Medel Lacruz, Gáspár Pándy-Szekeres, Eduardo Mayol, Toni Giorgino, Jens Carlsson, Xavier Deupi, Slawomir Filipek, José Carlos Gómez-Tamayo, Angel Gonzalez, Hugo Gutierrez-de-Teran, Mireia Jimenez, Willem Jespers, Jon Kapla, George Khelashvili, Peter Kolb, Dorota Latek, Maria Marti-Solano, Pierre Matricon, Minos-Timotheos Matsoukas, Przemyslaw Miszta, Mireia Olivella, Laura Perez-Benito, Santiago Ríos, Iván Rodríguez-Torrecillas, Jessica Sallander, Agnieszka Sztyler, Nagarajan Vaidehi, Silvana Vasile, Harel Weinstein, Ulrich Zachariae, Peter W Hildebrand, Gianni De Fabritiis, Ferran Sanz, David E Gloriam, Arnau Cordomi, Ramon Guixà-González, Jana Selent. 2019. GPCRmd uncovers the dynamics of the 3D-GPCRome. bioRxiv. doi:10.1101/839597"
     else:
         if DyndbDynamics.objects.get(id=dynamics_id).is_published:
-            author=u.first_name + " "+ u.last_name
+            author=user.first_name + " "+ user.last_name+", "+user.institution
         else:
             author=False
     dyna_dic["author"]=author
@@ -5571,7 +5571,7 @@ def MODELview(request, submission_id):
                         # Let's get the id_complex_exp of complexes involving just the same proteins in our submission and NO ONE ELSE!!!!! There should be only one result. To do so we have to exclude complex_exp containing compounds!!!!
                         p=DyndbComplexProtein.objects.filter(id_complex_exp__in=ROWLp).values('id_complex_exp').annotate(num=Count('id_complex_exp')).filter(num=len(lprot_in_model)).exclude(id_complex_exp__in=DyndbComplexCompound.objects.filter(id_complex_exp__gt=0).values_list('id_complex_exp',flat=True))
                         if(len(p)>1):# Complexes involving exactly the same proteins in our submission is higher than one
-                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins exist in the GPCRmd DB... Please Report that error to the GPCRmd administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                         elif(len(p)==1):
                             ce=p[0]['id_complex_exp']
@@ -5619,7 +5619,7 @@ def MODELview(request, submission_id):
                         rowCompl=list(a&b) # if the id_complex is in both lists cep and cec this is the complex we are looking for
                         print( "JJJJJOOOOOLLLL    2"  )
                         if len(rowCompl) > 1:
-                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRdb administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
+                            response = HttpResponse('Several complex_exp entries involving exactly the same set of proteins and compounds exist in the GPCRmd DB... Please Report that error to the GPCRmd administrator',status=500,reason='Unprocessable Entity',content_type='text/plain; charset=UTF-8')
                             return response
                             
 ##                      if(len(cec)<len(cep)):# Complexes with the same number of molecules than our submission is lower than complexes with the same number of proteins than our submission. There should be only one. Then complex_exp value is taken from the DyndbComplexCompound query "c"
