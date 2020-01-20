@@ -8,7 +8,8 @@ import pandas as pd
 from view.views import obtain_domain_url
 from json import loads
 from wsgiref.util import FileWrapper
-
+from contact_maps.scripts.customized_heatmap import *
+from django.views.decorators.csrf import csrf_protect
 
 def json_dict(path):
 	"""Converts json file to pyhton dict."""
@@ -17,75 +18,49 @@ def json_dict(path):
 	json_data = loads(json_str)
 	return json_data
 
-def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = "3", rev = "norev", stnd = "cmpl"):
+def get_contacts_plots(request):
 	"""
 	Main view of contact plots
 	"""
+
+	#Take query arguments, if any
+	if request.GET.get('itype'): #If there are parameters
+		itype = request.GET.get('itype')
+		ligandonly = request.GET.get('prtn')
+		rev = request.GET.get('rev')
+		cluster = request.GET.get('cluster')
+		stnd = request.GET.get('stnd')
+	else:
+		itype = 'all'
+		ligandonly = 'prt_lg'
+		rev = 'norev'
+		cluster = '3'
+		stnd = 'stnd'
+
 	mdsrv_url=obtain_domain_url(request)
-
-	#Declaring dictionaries with types
-	typelist =  {
-		'sb' : 'salt bridge',
-		"pc" : 'pi-cation',
-		"ps" : 'pi-stacking',
-		'ts' : 't-stacking',
-		"vdw" : 'van der waals',
-		'hp' : 'hydrophobic',
-		"hbbb" : 'backbone to backbone HB',
-		"hbsb" : 'sidechain to backbone HB',
-		"hbss" : 'sidechain to sidechain HB',
-		"hbls" : 'ligand to sidechain HB',
-		"hblb" : 'ligand to backbone HB',
-		"wb" : 'water bridge',
-		"wb2" : 'extended water bridge',
-		"hb" : 'hydrogen bond',
-		'all' : 'total frequency',
-	}
-	hb_itypes = [
-		("hbbb", 'backbone to backbone HB'),
-		("hbsb" , 'sidechain to backbone HB'),
-		("hbss" , 'sidechain to sidechain HB'),
-		("hbls" , 'ligand to sidechain HB'),
-		("hblb" , 'ligand to backbone HB'),
-	]
-
-	itypes_order = [
-		("Polar/Electrostatic", 
-			(
-				("hb", "hydrogen bond"),
-				("wb", "water bridge"),
-				("wb2", "extended water bridge"),
-				('sb', "salt bridge"),
-				("pc", "pi-cation")
-			)
-		),
-		("Non-polar", 
-			(
-				("vdw","van der waals"),
-				('hp', "hydrophobic")
-	   		)
-	   	),
-		("Stacking",
-			(
-				("ps", "pi-stacking"),
-				('ts', "t-stacking")
-			)
-		)
-	]
-
-	basedir = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/" % (itype,stnd,ligandonly)
-
-	# Creating set_itypes, with all in case it is not still in it
-	if not itype == "all":
-		set_itypes = set(itype.split("_"))
-	else: 
-		set_itypes =  (("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb"))
-
-	#Creating itypes dictionary for selected types
-	selected_itypes = { x:typelist[x] for x in set_itypes }
+	basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
 
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
+
+	#Loading json dynID-to-receptor_name dictionary
+	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
+
+	#First batch of context variables
+	context = {
+		'fpdir' : fpdir,
+		'itype_code' : itype,
+		'itype_name' : typelist[itype],
+		'hb_itypes' : hb_itypes,
+		'itypes_order' : itypes_order,
+		'clusrange_all': list(range(2,21)),
+		'ligandonly' : ligandonly,
+		'rev' : rev,
+		'stnd': stnd,
+		'cluster' : int(cluster),
+		'dyn_to_names' : dyn_to_names,
+	}
 
 	# Loading variables if file exists. If not, it means there are no interactions avalible for the selected options
 	variablesfile = "%sheatmaps/%s/variables.py" % (basedir,rev)
@@ -96,20 +71,6 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 		div_list = variablesmod.div_list
 		filenames_list = variablesmod.heatmap_filename_list
 	else :
-		context = {
-			'fpdir' : fpdir,
-			'itype_code' : itype,
-			'itype_name' : typelist[itype],
-			'hb_itypes' : hb_itypes,
-			'itypes_order' : itypes_order,
-			'clusrange_all': list(range(2,21)),
-			'selected_itypes' : selected_itypes,
-			'itype_code' : itype,
-			'ligandonly' : ligandonly,
-			'rev' : rev,
-			'itype_name' : typelist[itype],
-			'cluster' : int(cluster),
-		}
 		return render(request,'contact_maps/index_nodata.html',context)
 
 	# Loading heatmap script 
@@ -129,33 +90,30 @@ def get_contacts_plots(request, itype = "all", ligandonly = "prt_lg", cluster = 
 	first_sim = clustdict['cluster1'][0]
 
 	# Send request 
-	context={
+	context.update({
 		'clustdict' : clustdict,
-		'fpdir' : fpdir,
-		'itypes_order' : itypes_order,
 		'itypes_dict' : typelist,
-		'itype_code' : itype,
-		'ligandonly' : ligandonly,
-		'itype_name' : typelist[itype],
 		'dendrogram' : dendr_figure,
-		'hb_itypes' : hb_itypes,
 		'script_list' : script_list, 
-		'rev' : rev,
-		'stnd': stnd,
 		'number_heatmaps_list' : number_heatmaps_list,
 		'numbered_divs' : zip(number_heatmaps_list, div_list),
 		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
-		'cluster' : int(cluster),
 		'mdsrv_url':mdsrv_url
-	}
+	})
 	return render(request, 'contact_maps/index_h.html', context)
 
-def get_csv_file(request, itype, ligandonly, rev, stnd):
+def get_csv_file(request):
 	"""
 	Processing informatino from get_contact plots to create and download a csv file
 	"""
+
+	#Taking arguments
+	itype = request.GET.get('itype')
+	ligandonly = request.GET.get('prtn')
+	rev = request.GET.get('rev')
+	stnd = request.GET.get('stnd')
 
 	csv_name = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/dataframe.csv" % (itype, stnd, ligandonly)
 
@@ -167,3 +125,151 @@ def get_csv_file(request, itype, ligandonly, rev, stnd):
 
 def get_itype_help(request, foo):
 	return render(request=request, template_name='contact_maps/itype_help.html')
+
+@csrf_protect
+def customized_heatmap(request, foo):
+
+	"""
+	This whole script is designed with the single purpouse of creating a customized bokeh interaction heatmap for a desired set of simulations
+		- dyn_list: set with the identifiers of the selected simulations
+		- itype, ligandonly, rev, stnd: parameters of the selected contactMap
+		- code: unique identifier of this request.
+	"""
+
+	#Parameters
+	dyn_list  = request.POST['SimList'].split('&')
+	itype = request.GET.get('itype')
+	ligandonly = request.GET.get('prtn')
+	rev = request.GET.get('rev')
+	cluster = request.GET.get('cluster')
+	stnd = request.GET.get('stnd')
+	code = request.GET.get('code')
+
+	#Paths
+	basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+	options_path = "%scontmaps_inputs/%s/%s/%s/" %(basepath, itype, stnd, ligandonly)
+	heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
+	heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
+	custom_path = "%scustom_heatmaps_temp/" % (basepath)
+
+	print(str("Processing heatmap and dendrograms for %s-%s") % (itype, ligandonly))
+
+	#Loading files
+	compl_data = json_dict(str(basepath + "compl_info.json"))
+	df_ts = pd.read_pickle("%sheatmaps/%s/dataframe_for_customized.pkl" % (options_path, rev))
+
+	#Getting GPCR long-names (improved names)
+	(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
+
+	#Remove non-listed simulations from the dataframe
+	df_filt = df_ts[df_ts['Id'].isin(dyn_list)]
+
+	#Calculate heatmap height from the number of simulations present
+	h = int( len(df_filt.Id.unique()) * 16 + 200)
+
+	#Taking some variables for dataframe slicing
+	max_columns = 50
+	pairs_number = len(df_filt.Position.unique())
+	inter_number = df_filt.shape[0]
+	inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
+	number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
+
+	#Create custom heatmaps folder if not yet exists
+	os.makedirs(custom_path, exist_ok=True)
+
+	#Add PDB id column
+	pdb_id = recept_info_order['pdb_id']
+	df_filt['pdb_id'] = df_filt['Id'].apply(lambda x: recept_info[x][pdb_id])
+
+	#Add complete name (RECEPTOR_NAME (PDB_ID) (DYNID if repeqted))
+	df_filt['complete_name'] = df_filt['Id'].apply(lambda x: recept_info[x][14])
+	
+	#Make a CSV donwlodable file for this customized heatmap
+	csvpath = "%sdataframe_%s.csv"%(custom_path,code)
+	customized_csv(df_filt,itype,recept_info, csvpath)
+
+	#Make heatmaps each 50 interacting pairs
+	div_list = []
+	divwidth_list = []
+	heatmap_filename_list = []
+	number_heatmaps_list = []
+	prev_slicepoint = 0
+	for i in range(1,number_heatmaps+1):
+		number_heatmaps_list.append(str(i))
+
+		#Slice dataframe. Also definig width of the heatmaps
+		slicepoint = int(i*inter_per_pair*max_columns)
+		if i == number_heatmaps:
+			df_slided = df_filt[prev_slicepoint:]
+		else:
+			df_slided = df_filt[prev_slicepoint:slicepoint]
+		w = int(df_slided.shape[0]/inter_per_pair*21+300)
+		dend_width = 450
+		prev_slicepoint = slicepoint
+		
+		# Define bokeh figure and hovertool
+		hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
+		mysource,p = define_figure(w, h, df_slided, hover, itype)
+		# Creating javascript for side-window
+		mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
+		
+		# Extract bokeh plot components and store them in lists
+		script, div = components(p)
+		divwidth_list.append(str(dend_width+w))
+		div_list.append(div.lstrip())
+		heatmap_filename = "%s%iheatmap_%s.html" % (custom_path,i, code)
+		heatmap_filename_list.append(heatmap_filename)
+
+		# Write heatmap on file
+		heatmap_filename = "%s%iheatmap_%s.html" % (custom_path,i,code)
+		with open(heatmap_filename, 'w') as heatmap:
+			heatmap.write(script)
+		print("heatmap",i)
+
+	#==================================
+
+	mdsrv_url=obtain_domain_url(request)
+	basepath = "/protwis/sites/files/Precomputed/get_contacts_files/"
+	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
+
+	#Path to json
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
+
+	#Loading json dynID-to-receptor_name dictionary
+	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
+
+	#First batch of context variables
+	context = {
+		'fpdir' : fpdir,
+		'itype_code' : itype,
+		'itype_name' : typelist[itype],
+		'hb_itypes' : hb_itypes,
+		'itypes_order' : itypes_order,
+		'clusrange_all': list(range(2,21)),
+		'ligandonly' : ligandonly,
+		'rev' : rev,
+		'stnd': stnd,
+		'cluster' : int(cluster),
+		'dyn_to_names' : dyn_to_names,
+	}
+
+	# Loading heatmap script 
+	script_list = []
+	for filename in heatmap_filename_list:
+		with open(filename, 'r') as scriptfile:
+			script = scriptfile.read()
+		script_list.append(script)
+
+	# Send request 
+	context.update({
+		'itypes_dict' : typelist,
+		'script_list' : script_list, 
+		'number_heatmaps_list' : number_heatmaps_list,
+		'numbered_divs' : zip(number_heatmaps_list, div_list),
+		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
+		'clusrange_all': list(range(2,21)),
+		'clusrange': list(range(1,int(cluster)+1)),
+		'mdsrv_url':mdsrv_url
+	})
+	print('returning')
+	return render(request, 'contact_maps/customized.html', context)

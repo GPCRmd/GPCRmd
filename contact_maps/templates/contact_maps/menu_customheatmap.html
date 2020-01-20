@@ -1,0 +1,27 @@
+<br>
+<!--Simulation selection -->
+<div class="row menu">
+  <h4 id="custom_title">Customized heatmaps</h4>
+  <div class="dropdown optbar">
+    <button id="simulation_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="simulationlist">
+      Simulations to display 
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-partner" id="dropdown_simulations">
+      {% for dyn_name in dyn_to_names %}
+      <li>
+        <label class="mycheckbox">
+          <input type="checkbox" id="{{dyn_name.0}}_checkbox" name="{{dyn_name.0}}" class="simulation_checkbox" value="{{dyn_name.0}}"/>
+          {{dyn_name.1}}
+        </label>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <!--Create customized button -->
+  <form class="dropdown optbar" target="_blank" method="post">
+    {% csrf_token %}
+    <input type="hidden" name="SimList" value="">
+    <input type="submit" disabled  target="_blank" method="post" id="CustomButton" class="btn btn-success btn-sm" value="Create custom heatmap">
+  </form>
+</div>

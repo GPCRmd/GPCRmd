@@ -25,7 +25,7 @@
  <!-- description  -->
   <div class="panel panel-primary" id="inner_fixed">  
      <div class="panel-body">
-        <h2>Receptor meta-analysis</h2>
+        <h2>Customized meta-analysis</h2>
         <h4>Residue interaction frequency: <span style="font-weight: bold">{{itype_name}}</span></h4>
      </div> 
   </div>
@@ -37,11 +37,10 @@
       <div class="panel-body" >
         <div id="menus" class="container-fluid">
           {% include './contact_maps/menus.html' %}
-          {% include './contact_maps/menu_customheatmap.html' %}
         </div>
         <!--Heatmap pager -->
         <div id="heatmap_pager">
-          <ul class="pagination" id="pager_list">
+          <ul class="pagination">
             <li class="page-item prev">
               <a class="page-link" aria-label="Previous" onclick="heatmap_change('prev')">
                 <span aria-hidden="true">&laquo;</span>
@@ -64,21 +63,23 @@
           </ul>
           <canvas width="80" height="255" id="cv"></canvas>
         </div>
-        <div id="dendrogram-heatmap" class="row">
+        <div id="dendrogram-heatmap">
+          <!--
           <div id="dendrogram" class="col-xs-4" style="width: 35%">
             {{dendrogram | safe }}
           </div>
+        -->
           <div id="loading_div" class="col-xs-8">
             <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/>
             <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
           </div>
           {% for number,div in numbered_divs %}
           {% if number == "1" %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-11 heatmap" style="overflow-x: scroll;">
             {{ div | safe }}
           </div>
           {% else %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; display: none; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-11 heatmap" style=" display: none; overflow-x: scroll;">
             {{ div | safe }}
           </div>
           {% endif %}
@@ -167,7 +168,7 @@
   <div class="col-xs-12" id="not_retracting_parts">
 
     <!--Here be flareplots and NGLs -->
-
+    
     <div class="panel panel-primary" id="flare_title">
       <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false">
         <div class="title_div">
@@ -188,7 +189,7 @@
         <div id="fpdiv0" class="col-xs-6 fpdiv">
           <center>
             
-            <!--Flareplot toolbar-->
+            <!--Flareplot toolbar->
             <div id="allFPoptions" class="showIfTrajFP">
               <button id="FPdisplay0" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
               Show in structure
@@ -239,7 +240,7 @@
         <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
           <center>
             
-            <!--Flareplot toolbar-->
+            <!--Flareplot toolbar->
             <div id="allFPoptions" class="showIfTrajFP">
               <button id="FPdisplay1" class="btn btn-default active changefocus FP-button" title="Show/Hide structural representations of the residues selected at the plot." type="button">
               Show in structure
@@ -355,6 +356,7 @@
 
       </div>
     </div>
+  -->
     <!--Load documentation div-->
     {% include './contact_maps/docs.html' %}
   </div>

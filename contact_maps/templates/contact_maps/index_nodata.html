@@ -43,7 +43,9 @@
       <div class="col-xs-12" id="plot_col">
         <div class="panel panel-primary" id="main_plot_body">
           <div class="panel-body" style="padding-left: 0px">
-            {% include './contact_maps/menus.html' %}
+            <div id="menus" class="container-fluid">
+              {% include './contact_maps/menus.html' %}
+            </div>
             <div class="container" style="min-height: 70%">
             <div id="second_col" class="col-xs-12">
               <h1 id="not_avalible_text"><center>No {{itype_name}} interactions avalible for these simulations</scenter></h1>
