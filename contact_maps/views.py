@@ -44,8 +44,6 @@ def get_contacts_plots(request):
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
 
-	#Loading json dynID-to-receptor_name dictionary
-	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
 
 	#First batch of context variables
 	context = {
@@ -59,7 +57,6 @@ def get_contacts_plots(request):
 		'rev' : rev,
 		'stnd': stnd,
 		'cluster' : int(cluster),
-		'dyn_to_names' : dyn_to_names,
 	}
 
 	# Loading variables if file exists. If not, it means there are no interactions avalible for the selected options
@@ -72,6 +69,9 @@ def get_contacts_plots(request):
 		filenames_list = variablesmod.heatmap_filename_list
 	else :
 		return render(request,'contact_maps/index_nodata.html',context)
+
+	#Loading json dynID-to-receptor_name dictionary
+	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
 
 	# Loading heatmap script 
 	script_list = []
@@ -235,9 +235,6 @@ def customized_heatmap(request, foo):
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
 
-	#Loading json dynID-to-receptor_name dictionary
-	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
-
 	#First batch of context variables
 	context = {
 		'fpdir' : fpdir,
@@ -250,7 +247,6 @@ def customized_heatmap(request, foo):
 		'rev' : rev,
 		'stnd': stnd,
 		'cluster' : int(cluster),
-		'dyn_to_names' : dyn_to_names,
 	}
 
 	# Loading heatmap script 
@@ -259,6 +255,9 @@ def customized_heatmap(request, foo):
 		with open(filename, 'r') as scriptfile:
 			script = scriptfile.read()
 		script_list.append(script)
+
+	#Loading json dynID-to-receptor_name dictionary
+	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
 
 	# Send request 
 	context.update({
@@ -272,4 +271,5 @@ def customized_heatmap(request, foo):
 		'mdsrv_url':mdsrv_url
 	})
 	print('returning')
+
 	return render(request, 'contact_maps/customized.html', context)

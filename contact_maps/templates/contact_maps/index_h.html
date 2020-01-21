@@ -125,7 +125,7 @@
               {% if typecode == "hb" %}
                 <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>                  
                 <ul>
-                {% for hbcode,hbitype in hb_itypes %}
+                {% for hbcode,hbitype in hb_itypes.items %}
                   <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
                 {% endfor %}
                 </ul>

@@ -52,7 +52,7 @@
               hydrogen bond
           </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
           <ul class="dropdown-menu dropdown-itype" id="HB">
-            {% for code,itype in hb_itypes %}
+            {% for code,itype in hb_itypes.items %}
             <li>
               <label class="mycheckbox">
               {% if code == itype_code %}

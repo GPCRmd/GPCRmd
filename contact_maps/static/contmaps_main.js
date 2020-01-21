@@ -123,8 +123,9 @@ $(document).ready(function(){
       });
     });
 
-    //---------------When scrolling on heatmap, move the x-axis annotations along with the scrolling
     $(window).on('load', function(){
+
+      //---------------When scrolling on heatmap, move the x-axis annotations along with the scrolling
       var  scrollPos = 0, container, anots, pager, pager_height, anots_height, pager_mintop, anots_mintop, top_window, new_top;
       //Elements to scroll
       container = $("#main_plot_body"); 
@@ -150,6 +151,36 @@ $(document).ready(function(){
 
         });
         scrollPos = top_window;
+      });
+
+      //------------ On click of dendrogram, check corresponding checkbox on the customized heatmap dropdown
+      var re = /dyn\d+/, dynid, checkbox, rect;
+      $(".annotation-text").click(function(){
+        dynid = $(this).attr('data-unformatted').match(re)[0];
+        rect = $(this).prev();
+        checkbox = $("#"+dynid+"_checkbox");
+        if (checkbox.is(':checked')){
+          checkbox.prop('checked',false);
+          rect.css('stroke-opacity', '0');
+        } 
+        else {
+          checkbox.prop('checked',true)
+          rect.css('stroke-opacity', '1');
+        }
+      });
+
+      //----------- On click of checkboxes dropdown, border corresponding annotations on dendrogram
+      $(".simulation_checkbox").on('change', function(){
+        dynid = $(this).attr('name');
+        rect = $(".annotation-text[data-unformatted*='" + dynid + "<']").prev();
+        checkbox = $(this);
+        console.log(dynid, rect, checkbox)
+        if (checkbox.is(':checked')){
+          rect.css('stroke-opacity', '1');
+        }
+        else {
+          rect.css('stroke-opacity', '0');
+        }
       });
     });
 
