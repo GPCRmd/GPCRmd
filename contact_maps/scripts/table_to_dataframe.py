@@ -293,6 +293,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
             y = y_pos,
             xanchor = 'left',
             text = text,
+            captureevents = True,
             showarrow = False,
             bgcolor = bgcolor,
             font = { 'size' : 12, 'color' : colorfont },
@@ -309,7 +310,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
         simname = recept_info[dynid][name_index]
         ligname = recept_info[dynid][ligname_index]
         bgcolor = hoverentry['marker']['color']
-        anot_text = "%s (%s)" % (simname, pdbcode)
+        anot_text = "%s (%s)<b style='display: none'>%s</b>" % (simname, pdbcode, dynid)
         hovertext = str("complex with %s (dynID: %s)" % (ligname, nodyn_id)) if (ligname) else  str("apoform (dynID: %s)" % (nodyn_id))
 
         # Create new mini-entry reaching only branch of interest
@@ -1197,7 +1198,7 @@ def get_contacts_plots(itype, ligandonly):
 
                 # Extract bokeh plot components and store them in lists
                 script, div = components(p)
-                divwidth_list.append(str(dend_width+w))#heatmapwidth+dendwidth+margins
+                divwidth_list.append(str(dend_width+w+260))#heatmapwidth+dendwidth+margins
                 div_list.append(div.lstrip())
                 heatmap_filename = "%s%iheatmap.html" % (heatmap_path_jupyter,i)
                 heatmap_filename_list.append(heatmap_filename)
