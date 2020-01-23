@@ -252,11 +252,17 @@ hr {
   padding-bottom: 200px;
 }
 
+#uncheck_all_sim {
+    position: fixed;
+    margin-left: 19%;
+}
+
+
+/*Flareplots*/
+
 #flare_title {
   cursor: pointer;
 }
-
-/*Flareplots*/
 
 .fpdiv {
   margin-top: 15px;

@@ -4,7 +4,7 @@
 <script>document.domain=document.domain;</script>
 
 <!--Jquery things-->
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
@@ -178,7 +178,7 @@
       </div>
     </div>
 
-    <div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}">
+    <div class="panel panel-primary" style="visibility: hidden; position: absolute;" id="flare_col" data-fpdir="{{fpdir}}">
       <div class="panel-body">
 
         <center>

@@ -20,7 +20,7 @@
   <script src="../mdsrv/webapp/js/ngl.js"></script>
 
   <!-- UI -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
   <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
   <script src="mdsrv/webapp/js/lib/signals.min.js"></script>
   <script src="mdsrv/webapp/js/lib/tether.min.js"></script>
@@ -504,7 +504,7 @@
 
 ////////////////// Main: 
 
-        //Variables
+        /////Variables
         var id = window.frameElement.getAttribute("data-number");
         var traj_path= "_DB/";
         var path= "/mdsrv/file/_DB/";
@@ -524,7 +524,7 @@
           parent.$("#FPclearSel"+id).trigger("click");
         });
 
-        //Initial stage. Triggered when flareplots are fully loaded
+        /////Initial stage. Triggered when flareplots are fully loaded
         $(document.body).bind('createNGL'+id, function(e, clustdict, compl_data) {  
 
           //Slider and page settings
@@ -552,13 +552,19 @@
 
         });
 
-        //Start loading NGLs, and subsequent flareplots, only when the section is uncollapsed on click
+        ////////Start loading NGLs, and subsequent flareplots, only when the section is uncollapsed on click
         parent.$("#flare_title").click(function(){
 
-          //This things have to be done only once, the first time the button is clicked
+          //If has already been opened, do not load NGLs and flareplots once again
           if ($(this).hasClass('Already_clicked0') && $(this).hasClass('Already_clicked1')){
             return;
           }
+
+          //Make visible the flareplots-NGL viewer section
+          var flarecol = parent.$('#flare_col');
+          flarecol.removeClass('collapse');
+          flarecol.css('position', 'relative');
+          flarecol.css('visibility', 'visible');
 
           // We define the setInterval function, which will be stopped when 'iframeSetOk' is launched from flareplots.js
           var myStopVar = setInterval(callParent, 1000);

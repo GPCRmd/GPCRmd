@@ -174,13 +174,22 @@ $(document).ready(function(){
         dynid = $(this).attr('name');
         rect = $(".annotation-text[data-unformatted*='" + dynid + "<']").prev();
         checkbox = $(this);
-        console.log(dynid, rect, checkbox)
         if (checkbox.is(':checked')){
           rect.css('stroke-opacity', '1');
         }
         else {
           rect.css('stroke-opacity', '0');
         }
+      });
+    });
+
+    //---------Uncheck all simulations button
+    $("#uncheck_all_sim").click(function(){
+      $('.simulation_checkbox').each(function(){
+        $(this).prop('checked',false);
+      });
+      $('.annotation-text').prev().each(function(){
+        $(this).css('stroke-opacity','0')
       });
     });
 
@@ -261,12 +270,12 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    var newparams = '?itype=' + check_opt + "&cluster=" + clusters + "&prtn=" + locs.join("_") + "&rev="  + rev_value + "&stnd=" + stnd_value;
+    var newurl = window.origin + '/contmaps/?itype=' + check_opt + "&cluster=" + clusters + "&prtn=" + locs.join("_") + "&rev="  + rev_value + "&stnd=" + stnd_value;
     if (window.location.pathname == URL){
       location.reload()
     }
     else {
-      window.location.search = newparams; 
+      window.open(newurl, "_self") 
     }
   }
   else {
@@ -352,4 +361,5 @@ function select_simulations(itype, clusters, ligandonly, rev, stnd){
   else {
     custombutton.attr('disabled',false);
   }
+
 }

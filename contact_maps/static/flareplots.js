@@ -1,19 +1,20 @@
 //Get path arguments (if any)
-var args, itype, ligandonly, clusters, rev;
-args = window.location.pathname.match(/\/(\w+)&(\w+)&(\w+)&(\w+)&(\w+)/);
-if(args){
-    itype = args[1];
-    clusters = args[2];
-    ligandonly = args[3];
-    rev = args[4];
-    stnd = args[5];
+var param_string, search_params, itype, clusters, ligandonly, rev, stnd;
+param_string = window.location.search; 
+search_params = new URLSearchParams(param_string)
+if (Boolean(param_string)) {
+    itype = search_params.get('itype');
+    clusters = search_params.get('cluster');
+    ligandonly = search_params.get('prtn');
+    rev = search_params.get('rev');
+    stnd = search_params.get('stnd');
 }
 else {
-    itype = 'all';
-    clusters = '3';
-    ligandonly = 'prt_lg';
-    rev = 'norev';
-    stnd = 'stnd'        
+    itype = "all";
+    clusters = "3";
+    ligandonly = "prt_lg";
+    rev = "norev";
+    stnd = "cmpl";
 }
 
 $(document).ready(function(){

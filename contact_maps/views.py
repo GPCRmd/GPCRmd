@@ -100,7 +100,8 @@ def get_contacts_plots(request):
 		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
-		'mdsrv_url':mdsrv_url
+		'mdsrv_url':mdsrv_url,
+		'dyn_to_names' : dyn_to_names,		
 	})
 	return render(request, 'contact_maps/index_h.html', context)
 
@@ -268,7 +269,8 @@ def customized_heatmap(request, foo):
 		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
-		'mdsrv_url':mdsrv_url
+		'mdsrv_url':mdsrv_url,
+		'dyn_to_names' : dyn_to_names,	
 	})
 	print('returning')
 
