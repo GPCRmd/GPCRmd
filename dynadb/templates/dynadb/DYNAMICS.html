@@ -311,8 +311,8 @@ font-weight:normal
                 <br></div>
 
                 <div class="row">
-	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Additional Information: Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
-                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder=""  >{%if saved%} {{qDS.values.0.description}} {%endif%}</textarea></div>
+	        	 <div class="col-md-1"style="height:85px"> </div><div class="col-md-3"><tr><th><label for="id_description"><a title="Short text describing other relevant information that it is not contained on other fields. ">Additional Info:</a> </label></th></div>
+                        <div class="col-md-6"><td><textarea cols="40" id="id_description" name="description" rows="2" style="width:300px" placeholder="Description of simulaiton protocol, ensemble type, what is studied in the simulation (e.g. sodium binding)..." >{%if saved%}{{qDS.values.0.description}}{%endif%}</textarea></div>
 		</div>
 </div>
 

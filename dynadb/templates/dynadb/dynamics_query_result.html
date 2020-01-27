@@ -123,7 +123,15 @@
                     {%if answer.membranetype%}
                         <p><b>Membrane type</b>: {{answer.membranetype}}</p>
                     {%endif%}
-
+                    {%if answer.membcomp%}
+                        <p><b>Membrane composition</b>: {{answer.membcomp}}</p>
+                    {%endif%}
+                    {%if answer.ioncomp%}
+                        <p><b>Ionic composition</b>: {{answer.ioncomp}}</p>
+                    {%endif%}
+                    {%if answer.atom_num%}
+                        <p><b>Total number of atoms</b>: {{answer.atom_num}}</p>
+                    {%endif%}
                     {%if answer.timestep%}
                         <p><b>Time step <span title="Time interval between new positions computation" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{answer.timestep}} fs </p>
                     {%endif%}
@@ -131,9 +139,16 @@
                     {%if answer.delta%}
                         <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></b>: {{answer.delta}} ns </p>
                     {%endif%}
+                    {%if answer.replicates%}
+                        <p><b>Replicates</b>: {{answer.replicates}}</p>
+                    {%endif%}
+                    {%if answer.accum_sim_time%}
+                        <p><b>Accumulated simulation time</b>: {{answer.accum_sim_time}} <span>&#181;</span>s</p>
+                    {%endif%}
                     {% if answer.description %}
                         <p><b>Description</b>: {{answer.description}}</p>
                     {%endif%}
+                    <p><b>Additonal parameters</b>: Download protocol & starting files</p>
                     {% if answer.related %}
                     <div id='reldyn' class="miniscroll">
                         <p><b>Related Dynamics</b>:</p>
@@ -152,7 +167,7 @@
 
 
             <div id='middlecol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
-                <p class="techinfo_title">Download simulation files</p>
+                <p class="techinfo_title">Simulation output files</p>
                 <div class="techinfo_content">
                     <div id='allfiles' >
                         {% for dyn in answer.files.struc_files %}
@@ -165,7 +180,7 @@
 
             <div id='rightcol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
                 {% if answer.files.param_files %}
-                <p class="techinfo_title">Download starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom"></span></p>
+                <p class="techinfo_title">Simulation protocol & starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip"  data-container="body"></span></p>
                 <div class="techinfo_content">
                     <div  id='paramfiles'>
                         {% for fil in answer.files.param_files %}
@@ -178,11 +193,10 @@
             </div> <!--end right col div-->
         </div>
 
-    {% if answer.references  or answer.force_ref%}
+    {% if answer.references  %}
         <div class="techinfo">
             <p class="techinfo_title" style="text-align:center">References</p>
             <div class="techinfo_content" >
-        {% if answer.references %} 
             {%for reference in answer.references%}
                 <p>{{reference.authors}}. {{reference.pub_year}}. <span style="font-weight:bold;">{{reference.title}}</span>. {{reference.journal}}{% if reference.volume %} {{reference.volume}}{%endif%}{% if reference.issue %} ({{reference.issue}}){%endif%}. doi: {{reference.doi}}.                    
                     {%if reference.url%}
@@ -192,11 +206,6 @@
                     {%endif%}
                 </p><br>
             {%endfor%}
-
-        {% elif answer.force_ref %}
-            <p id="gpcrmdref">{{answer.force_ref}} (<a href="https://doi.org/10.1101/839597">https://doi.org/10.1101/839597)</a></p>
-
-        {% endif %}
           </div>
         </div>
     {% endif %}
@@ -227,7 +236,12 @@
                             </div>
                             {% for url in answer.ortoligands %}
                                <!-- <center><button type="button" class="btn btn-primary ortoligand" id={{url.0}}> See 3D </button></center><br>-->
-                               <p style="margin: 0"><a title="Specific state id: {{url.0}}"  class="btn btn-primary lig_element"  data-resname="{{url.2}}" role='button' href=/dynadb/molecule/id/{{url.0}}>{{url.3}}</a></p>
+                               <p style="margin-bottom:5px">
+                                <a title="Specific state id: {{url.0}}"  class="btn btn-primary lig_element"  data-resname="{{url.2}}" role='button' href=/dynadb/molecule/id/{{url.0}}>{{url.3}}</a>
+                               </p>
+                               <p>
+                                ({{url.4}})
+                               </p>
                                <img  src="{{url.1}}" height="270" width="270" style="margin-bottom:15px;padding:7px;margin-top:15px"/> </a><br>
 
                             {% endfor %}
@@ -241,6 +255,9 @@
                             </div>
                             {% for url in answer.aloligands %}
                                <p  style="margin: 0"><a title="Specific state id: {{url.0}}" class="btn btn-primary lig_element"  data-resname="{{url.2}}" role='button' href=/dynadb/molecule/id/{{url.0}}>{{url.3}}</a></p>
+                               <p>
+                                ({{url.4}})
+                               </p>
                                <img   src="{{url.1}}" height="270" width="270" style="margin-bottom: :15px;padding:7px;margin-top:15px"/> </a><br>
                             {% endfor %}
                         {% endif %}
@@ -289,7 +306,11 @@
                         </div> 
                     {% endif %}                
                     {%for link in answer.link2protein%}
-                        <a class='btn btn-primary' role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}</a>
+                        <a class='btn btn-primary prot_in_dyn' data-prot_sel="{{link.3}}" role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}
+                            {% if link.2 %}
+                            (ligand)
+                            {% endif %}
+                        </a>
                     {%endfor%}
                 </div>
             </div>
@@ -385,7 +406,11 @@
                     <div class="col-md-6" style="margin-bottom:10px">
                         <center>
                             <p style="font-weight:bold;margin-bottom:5px">{{url.2}}</p>
-                            <a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}}> Specific State ID: {{url.0}}</a>
+                            <a class="btn btn-primary" role='button' href=/dynadb/molecule/id/{{url.0}} style="margin-bottom:5px">Specific State ID: {{url.0}}</a>
+                            <p >
+                                {% if url.6 %}
+                                    ({{url.6}})</p>
+                                {% endif %}
                         </center>
                         <center>
                             {% if url.4 %}
@@ -411,10 +436,11 @@
                 <div id='threeb' class="col-md-10" style="padding: 0; margin: 0 0;">
                     <center><div id="container-02" class="mol-container"></div></center>
                     <br>
-                    <b><center>
-                        <div id="namediv"></div>
-                        <a id="linkmol" role="button" href="#" class="btn btn-primary " style="margin-top:5px"><span class="glyphicon glyphicon-hourglass"></span></a>
-                    </center></b>
+                    <center>
+                        <b><div id="namediv"></div></b>
+                        <b><a id="linkmol" role="button" href="#" class="btn btn-primary " style="margin:5px"><span class="glyphicon glyphicon-hourglass"></span></a></b>
+                        <div id="molnumdcarousel3d"></div>
+                    </center>
                     <br>
                 </div>
                 <div id='rb' class="col-md-1">
@@ -434,6 +460,7 @@
     
     <div id='moleculesids' style="display:none;">{{answer.molecules_string}}</div>
     <div id='moleculesnames' style="display:none;">{{answer.molecules_names}}</div>
+    <div id='moleculesnumber' style="display:none;">{{answer.molecules_number}}</div>
 
 {% endblock content %}
 

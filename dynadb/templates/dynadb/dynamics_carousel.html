@@ -61,12 +61,22 @@
         $(document).ready(function() {
             var currentimg=$('div.item.active .molinfo').data("molname");
             var currentid=$('div.item.active .molinfo').data('molid');
+            var currentmolnum=$('div.item.active .molinfo').data('numofmol');
+            if (currentmolnum=="()"){
+                currentmolnum="";
+            }
             $('#molecule_name').html(currentimg);           
+            $('#num_of_mol').text(currentmolnum);        
             $("#linkmol_if").attr("href","/dynadb/molecule/id/"+currentid).text("Molecule ID:"+currentid);
             $('#myCarousel').on('slid.bs.carousel', function(e) {
                 var currentimg2=$('div.item.active .molinfo').data("molname");
                 var currentid2=$('div.item.active .molinfo').data('molid');
+                var currentmolnum2=$('div.item.active .molinfo').data('numofmol');
+                if (currentmolnum2=="()"){
+                    currentmolnum2="";
+                }
                 $('#molecule_name').html(currentimg2);
+                $('#num_of_mol').text(currentmolnum2);
                 $("#linkmol_if").attr("href","/dynadb/molecule/id/"+currentid2).text("Molecule ID:"+currentid2);
             });
         });
@@ -91,10 +101,10 @@
                 <div class="item">
             {% endif %}
             {% if url.4 %}
-                    <img class="molinfo" alt="{{url.2|capfirst}}" data-molname="{{url.2|capfirst}}" src="{{url.1}}" data-molid={{url.0}} height="400" width="400"/>
+                    <img class="molinfo" alt="{{url.2|capfirst}}" data-molname="{{url.2|capfirst}}" src="{{url.1}}" data-molid={{url.0}} data-numofmol="({{url.6}})" height="400" width="400"/>
             {% else %}
                     <center>
-                        <div class="molinfo" data-molname="{{url.2|capfirst}}" data-molid={{url.0}} style="padding-top:180px; background-color:white;height:400px;width: 400px;font-size:40px;text-align:center">
+                        <div class="molinfo" data-molname="{{url.2|capfirst}}" data-molid={{url.0}} data-numofmol="({{url.6}})" style="padding-top:180px; background-color:white;height:400px;width: 400px;font-size:40px;text-align:center">
                             <p>{{url.5 | safe}}</p>
                         </div>
                     </center>
@@ -115,10 +125,15 @@
         </div></div>
     {% endif %}
     <br>
-    <center> <b>
-        <p id='molecule_name'></p>
-        <a id="linkmol_if" target="_blank" role="button" href="#" class="btn btn-primary " style="margin-top:5px"><span class="glyphicon glyphicon-hourglass"></span></a>
-    </b> </center>
+    <center> 
+        <b>
+            <p id='molecule_name' style="margin:0"></p>
+        </b>
+        <b>
+            <a id="linkmol_if" target="_blank" role="button" href="#" class="btn btn-primary " style="margin:5px"><span class="glyphicon glyphicon-hourglass"></span></a>
+        </b> 
+        <p id='num_of_mol' ></p>
+    </center>
     <br>
     </div>
 

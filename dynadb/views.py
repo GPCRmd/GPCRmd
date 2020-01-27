@@ -73,7 +73,7 @@ from django.views.defaults import server_error
 from revproxy.views import ProxyView
 import mdtraj as md
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
-
+from scipy import constants
 
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pink"]
@@ -3148,8 +3148,103 @@ def get_nonlig_comp_info(match,moltype):
     elif moltype==3:#water
         show_img=False
         mol_chem_name="H<sub>2</sub>O"
-    candidatecomp=[mol_id,img_path,mol_name,moltype,show_img,mol_chem_name]
+    numbmol=match.numberofmol
+    candidatecomp=[mol_id,img_path,mol_name,moltype,show_img,mol_chem_name,numbmol]
     return candidatecomp
+
+
+def extract_all_nonlig_info(dynamics_id):
+    membcomp={}
+    ioncomp={}
+    totallipidmol=0
+    totalwatermol=0
+    link_2_molecules_dict={}
+    ligmolid_to_nummol={}
+    for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
+        moltype=match.type
+        if moltype==1: #we don't take ligands, only save the num of mol
+            molid=match.id_molecule.id
+            ligmolid_to_nummol[molid]=match.numberofmol
+        else:
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+            #dyna_dic['link_2_molecules'].append(candidatecomp)
+            molid=candidatecomp[0]
+            link_2_molecules_dict[molid]=candidatecomp
+            num_mol=candidatecomp[6]
+            if not num_mol:
+                num_mol=0
+            if moltype==3:
+                totalwatermol+=num_mol
+            if moltype==2:
+                membcomp[match.resname]=num_mol
+                totallipidmol+=num_mol
+            if moltype==0:
+                ioncomp[candidatecomp[2]]=num_mol
+    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
+        moltype=match.type
+        if moltype==1: #we don't take ligands, only save the num of mol
+            molid=match.id_molecule.id
+            ligmolid_to_nummol[molid]=match.numberofmol
+        else:
+            candidatecomp=get_nonlig_comp_info(match,moltype)
+            molid=candidatecomp[0]
+            if molid in link_2_molecules_dict:
+                link_2_molecules_dict[molid][6]+=candidatecomp[6]
+            else : 
+                link_2_molecules_dict[molid]=candidatecomp
+            if moltype==2:
+                numlipmol=candidatecomp[6]
+                if not numlipmol:
+                    numlipmol=0
+                membcompresname=match.resname
+                if membcompresname in membcomp:
+                    membcomp[membcompresname]+=numlipmol   
+                else:
+                    membcomp[membcompresname]=numlipmol
+                totallipidmol+=numlipmol
+            if moltype==0:
+                ionname=candidatecomp[2]
+                if ionname in ioncomp:
+                    ioncomp[ionname]+=num_mol
+                else:
+                    ioncomp[ionname]=num_mol
+                link_2_molecules_dict.values()
+    allmolinfo=[]       
+    for molinfo in link_2_molecules_dict.values():
+        nummols=molinfo[6]
+        if not nummols:
+            molinfo[6]=""
+            allmolinfo.append(molinfo)
+            continue
+        if nummols==1:
+            nummols_s="%i molecule" % nummols
+        else:
+            nummols_s="%i molecules" % nummols
+        molinfo[6]=nummols_s
+        allmolinfo.append(molinfo)
+    if int(dynamics_id)==7:
+        membcomp["CHL1"]=112
+    if len(membcomp)>1:
+        finmemcompli=[]
+        for lipres,lipnum in membcomp.items():
+            percentlipidmol=(lipnum/totallipidmol)*100
+            lipiddata="%s (%.1f%%)" % (lipres,percentlipidmol)
+            finmemcompli.append(lipiddata)
+        finmemcomp=(", ").join(finmemcompli)
+    elif len(membcomp)==1:
+        finmemcomp=list(membcomp.keys())[0]
+    else:
+        finmemcomp=""
+    totalwatervol=totalwatermol/constants.N_A*18/1000 #1 mol H2O=num_avogadro molecules H2O; 18g H2O=1 mol H2O; 1L H2O=1000g H2O
+    ion_fin_l=[]
+    if totalwatervol:
+        for ion_name,ion_num in ioncomp.items():
+            ion_conc=((ion_num/constants.N_A)/totalwatervol)*1000
+            ion_fin_l.append("%s (%i mM)" % (ion_name,round(ion_conc)))
+    else:
+        ion_fin_l=ioncomp.keys()
+    finioncomp=", ".join(ion_fin_l)
+    return (finmemcomp,finioncomp,allmolinfo,ligmolid_to_nummol)
 
     
 @user_passes_test_args(is_published_or_submission_owner)
@@ -3172,20 +3267,18 @@ def query_dynamics(request,dynamics_id):
     except:
         raise
     user=User.objects.get(dyndbsubmission__dyndbdynamics=dynamics_id)
-    force_ref=False
-    if int(dynamics_id) in range(4,10):
+    if int(dynamics_id) in range(4,11):
         author="GPCR drug discovery group (Pompeu Fabra University)"
     elif user.id in {1, 3, 5, 12, 14}:
         author="GPCRmd community"
-        force_ref="Ismael Rodríguez-Espigares, Mariona Torrens-Fontanals, Johanna KS Tiemann, David Aranda-García, Juan Manuel Ramírez-Anguita, Tomasz Maciej Stepniewski, Nathalie Worp, Alejandro Varela-Rial, Adrián Morales-Pastor, Brian Medel Lacruz, Gáspár Pándy-Szekeres, Eduardo Mayol, Toni Giorgino, Jens Carlsson, Xavier Deupi, Slawomir Filipek, José Carlos Gómez-Tamayo, Angel Gonzalez, Hugo Gutierrez-de-Teran, Mireia Jimenez, Willem Jespers, Jon Kapla, George Khelashvili, Peter Kolb, Dorota Latek, Maria Marti-Solano, Pierre Matricon, Minos-Timotheos Matsoukas, Przemyslaw Miszta, Mireia Olivella, Laura Perez-Benito, Santiago Ríos, Iván Rodríguez-Torrecillas, Jessica Sallander, Agnieszka Sztyler, Nagarajan Vaidehi, Silvana Vasile, Harel Weinstein, Ulrich Zachariae, Peter W Hildebrand, Gianni De Fabritiis, Ferran Sanz, David E Gloriam, Arnau Cordomi, Ramon Guixà-González, Jana Selent. 2019. GPCRmd uncovers the dynamics of the 3D-GPCRome. bioRxiv. doi:10.1101/839597"
     else:
         if DyndbDynamics.objects.get(id=dynamics_id).is_published:
             author=user.first_name + " "+ user.last_name+", "+user.institution
         else:
             author=False
     dyna_dic["author"]=author
-    dyna_dic["force_ref"]=force_ref
     dyna_dic['nglviewer_id']=dynamics_id
+    dyna_dic['atom_num']=dynaobj.atom_num
     dyna_dic['link_2_molecules']=list()
     dyna_dic['files']={"struc_files":list(), "param_files":list()}
     dyna_dic['references']=list()
@@ -3221,36 +3314,33 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['structure_file'] = structure_file
     dyna_dic['traj_file'] = traj_displayed
 
-    for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
-        moltype=match.type
-        if moltype!=1:#we don't take ligands
-            candidatecomp=get_nonlig_comp_info(match,moltype)
-            dyna_dic['link_2_molecules'].append(candidatecomp)
-
-    for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
-        moltype=match.type
-        if moltype!=1:#we don't take ligands
-            candidatecomp=get_nonlig_comp_info(match,moltype)
-            if candidatecomp not in dyna_dic['link_2_molecules'] : 
-                dyna_dic['link_2_molecules'].append(candidatecomp)
+    (finmemcomp,finioncomp,allmolinfo,ligmolid_to_nummol)=extract_all_nonlig_info(dynamics_id)
+    dyna_dic['link_2_molecules']=allmolinfo 
+    dyna_dic['membcomp']=finmemcomp
+    dyna_dic['ioncomp']=finioncomp
     cmolid=dynaobj.id_model.id_complex_molecule
     if cmolid is not None:
         cmol_id=cmolid.id
         for match in DyndbComplexMoleculeMolecule.objects.select_related('id_molecule').filter(id_complex_molecule=cmol_id):
             molname=match.id_molecule.id_compound.name.capitalize()
             mol_id=match.id_molecule.id
+            num_of_mol=ligmolid_to_nummol[match.id_molecule_id]
+            if num_of_mol==1:
+                num_of_mol_s="%s molecule" % num_of_mol
+            else:
+                num_of_mol_s="%s molecules" % num_of_mol
             if {m.type for m in  DyndbModelComponents.objects.filter(id_molecule=mol_id)} == {0}:
                 continue # Do not include ions
             resname=list(set([r.resname for r in DyndbDynamicsComponents.objects.filter(id_molecule=mol_id)]))[0]
             if match.type==0:
-                dyna_dic['ortoligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname])
+                dyna_dic['ortoligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname,num_of_mol_s])
                 i=0
                 while i < len(dyna_dic['link_2_molecules']):
                     if dyna_dic['link_2_molecules'][i][0]==mol_id:
                         dyna_dic['link_2_molecules'][i][2]+= " (orthosteric lig.)"
                     i+=1
             else:
-                dyna_dic['aloligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname])
+                dyna_dic['aloligands'].append([mol_id,search_molecule(match.id_molecule.id)['imagelink'],resname,molname,num_of_mol_s])
                 i=0
                 while i < len(dyna_dic['link_2_molecules']):
                     if dyna_dic['link_2_molecules'][i][0]==mol_id:
@@ -3282,9 +3372,12 @@ def query_dynamics(request,dynamics_id):
         if dynprot_id not in dynprot_id_list:
             prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
             search_prot_res=search_protein(dynprot_id)
+            is_prot_lig=not dynprot_obj.receptor_id_protein
+            prot_sel_s= {":%s" % res.chain.upper() for res in DyndbModeledResidues.objects.filter(id_protein=dynprot_obj.id)}
+            prot_sel=" or ".join(prot_sel_s)
             prot_name=search_prot_res['Protein_name']
             dynprot_id_list.append(dynprot_id)
-            dyna_dic['link2protein'].append([dynprot_id,prot_name ])
+            dyna_dic['link2protein'].append([dynprot_id,prot_name,is_prot_lig , prot_sel ])
             seq_pdb,chains_taken=assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li)
             is_mutated=search_prot_res["is_mutated"]
             if is_mutated:
@@ -3312,6 +3405,8 @@ def query_dynamics(request,dynamics_id):
             counter+=1            
         dyna_dic['references'].append(ref)
     filestraj=dict()
+    num_replicates=0
+    accum_framenum=0
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
         typeobj=match.id_files.id_file_types
         if typeobj.is_parameter or typeobj.is_anytype:
@@ -3330,13 +3425,20 @@ def query_dynamics(request,dynamics_id):
                 btn_txt="Topology file (ID: %s)" % match.id_files.id
             elif typeobj.is_trajectory:
                 btn_txt="Trajectory file (ID: %s)" % match.id_files.id
+                num_replicates+=1
+                if match.framenum:
+                    accum_framenum+=match.framenum
             else:
                 btn_txt="File (ID: %s)" % match.id_files.id
 
             strucfile_info=(match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ,btn_txt)
             dyna_dic['files']["struc_files"].append( strucfile_info ) 
+    accum_sim_time=(accum_framenum*dyna_dic['delta'])/1000
+    dyna_dic['accum_sim_time']=accum_sim_time
+    dyna_dic['replicates']=num_replicates
     dyna_dic['molecules_string']='%$!'.join([str(int(i[0])) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     dyna_dic['molecules_names']='%$!'.join([str(i[2]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
+    dyna_dic['molecules_number']='%$!'.join(["(%s)"%str(i[6]) for i in dyna_dic['link_2_molecules'] if i[3]!=0]) #no ions
     return render(request, 'dynadb/dynamics_query_result.html',{'answer':dyna_dic})
     
 @user_passes_test_args(is_published_or_submission_owner)    
@@ -3353,23 +3455,40 @@ def carousel_dynamics_components(request,dynamics_id):
     dyna_dic=dict()
     dyna_dic['link_2_molecules']=[]
     image_name=[]
+    link_2_molecules_dict={}
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
         moltype=match.type
         if moltype!=1:#we don't take ligands
             candidatecomp=get_nonlig_comp_info(match,moltype)
-            dyna_dic['link_2_molecules'].append(candidatecomp)
-            #dyna_dic['link_2_molecules'].append([match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name])
+            molid=candidatecomp[0]
+            link_2_molecules_dict[molid]=candidatecomp
+            #dyna_dic['link_2_molecules'].append(candidatecomp)
             image_name.append([match.id_molecule.id_compound.name , search_molecule(match.id_molecule.id)['imagelink']])
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
         moltype=match.type
         if moltype!=1:#we don't take ligands
             candidatecomp=get_nonlig_comp_info(match,moltype)
-    #        candidatecomp=[match.id_molecule.id,search_molecule(match.id_molecule.id)['imagelink'],match.id_molecule.id_compound.name]
-            if candidatecomp not in dyna_dic['link_2_molecules']:
-                dyna_dic['link_2_molecules'].append(candidatecomp)
+            molid=candidatecomp[0]
+            if molid in link_2_molecules_dict:
+                link_2_molecules_dict[molid][6]+=candidatecomp[6]
+            else : 
+                link_2_molecules_dict[molid]=candidatecomp
                 image_name.append([match.id_molecule.id_compound.name,search_molecule(match.id_molecule.id)['imagelink']])
+    allmolinfo=[]       
+    for molinfo in link_2_molecules_dict.values():
+        nummols=molinfo[6]
+        if not nummols:
+            molinfo[6]=""
+            allmolinfo.append(molinfo)
+            continue
+        if nummols==1:
+            nummols_s="%i molecule" % nummols
+        else:
+            nummols_s="%i molecules" % nummols
+        molinfo[6]=nummols_s
+        allmolinfo.append(molinfo)
+    dyna_dic['link_2_molecules']=allmolinfo 
     dyna_dic['imagetonames']= image_name
-
 
     ortholig=[]
     alolig=[]
