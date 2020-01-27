@@ -1,162 +1,160 @@
-<div id="menus" class="container-fluid">
-  <div class="row">
-    <!--datasets dropdown-->
-    <div class="dropdown optbar">
-      <button type="button" id="dataset_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="datasetlist">
-        Simulation datasets 
-        <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu dropdown-dataset dropdown-itype">
-        <li>
-          <label class="dataset_checkbox mycheckbox">
-            <input type="checkbox" checked disabled id="" name="dataset"/>
-            GPCRmd community
-          </label>
-        </li>
-        <li>
-          <label class="dataset_checkbox mycheckbox">
-            {% if 'cmpl' == stnd %}
-            <input type="checkbox" id="non_standard" value="cmpl" checked/>
-            {% else %}
-            <input type="checkbox" id="non_standard" value="cmpl"/>
-            {% endif %}
-            Individual contributions
-          </label>
-        </li>
-      </ul>      
-    </div>
-    <!--itypes dropdown-->
-    <div class="dropdown optbar">
-      <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
-        Interaction Type 
-        <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu dropdown-itype">
-      {% for group, types_tuple in itypes_order %}
-        <li>
-          <label class="macrotype">
-            {{group}}
-          </label>
-        </li>
-        <hr>
-        {% for typecode,typename in types_tuple  %}
-        {% if typecode == "hb" %}
-        <!--Hydrogen bond itypes dropdown-->
-        <li class="dropdown-submenu">
-          <div class="HB_row">
-            <label class="mycheckbox">
-              {% if "hb" == itype_code %}
-              <input type="radio" name="itypes" class="option" value="hb" checked/>
-              {% else %}
-              <input type="radio" name="itypes" class="option" value="hb"/>
-              {% endif %}
-                hydrogen bond
-            </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
-            <ul class="dropdown-menu dropdown-itype" id="HB">
-              {% for code,itype in hb_itypes %}
-              <li>
-                <label class="mycheckbox">
-                {% if code == itype_code %}
-                <input type="radio" name="itypes" class="option hb_option" value={{code}} checked/>
-                {% else %}
-                <input type="radio" name="itypes" class="option hb_option" value={{code}} />
-                {% endif %}
-                  {{itype}}
-                </label>
-              </li>
-              {% endfor %}
-            </ul>
-          </div>
-        </li>
-        {% else %}
-        <li>
-          <label class="mycheckbox">
-          {% if typecode == itype_code %}
-          <input type="radio" name="itypes" class="option" value={{typecode}} checked/>
+<div class="row">
+  <!--datasets dropdown-->
+  <div class="dropdown optbar">
+    <button type="button" id="dataset_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="datasetlist">
+      Simulation datasets 
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-dataset dropdown-itype">
+      <li>
+        <label class="dataset_checkbox mycheckbox">
+          <input type="checkbox" checked disabled id="" name="dataset"/>
+          GPCRmd community
+        </label>
+      </li>
+      <li>
+        <label class="dataset_checkbox mycheckbox">
+          {% if 'cmpl' == stnd %}
+          <input type="checkbox" id="non_standard" value="cmpl" checked/>
           {% else %}
-          <input type="radio" name="itypes" class="option" value={{typecode}} />
+          <input type="checkbox" id="non_standard" value="cmpl"/>
           {% endif %}
-            {{typename}}
-          </label>
-        </li>
-        {% endif %}
-        {% endfor %}
-        {% endfor %}
-        <!--All option-->
-        <hr>
-        <li id="all-li">
-          <label id="all" class="mycheckbox">
-          <input type="radio" name="itypes" class="option" value="all" />
-            Total interaction frequency
-          </label>
-        </li>
-        <hr>
-        <li id="menu_link">
-          <a href="./contmaps/interaction_types" target="blank" id="itype_link">Interaction types definitions</a>    
-        </li>
-      </ul>
-    </div> 
-    <!--Interacting partners dropdown -->
-    <div class=" dropdown optbar">
-      <button type="button" id="ipartner_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="partnerlist">
-        Interaction Partners 
-        <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu dropdown-partner">
-        <li>
-          <label class="partners_checkbox mycheckbox">
-            {% if "prt" in ligandonly %}
-            <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
+          Individual contributions
+        </label>
+      </li>
+    </ul>      
+  </div>
+  <!--itypes dropdown-->
+  <div class="dropdown optbar">
+    <button type="button" id="itype_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="typelist">
+      Interaction Type 
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-itype">
+    {% for group, types_tuple in itypes_order %}
+      <li>
+        <label class="macrotype">
+          {{group}}
+        </label>
+      </li>
+      <hr>
+      {% for typecode,typename in types_tuple  %}
+      {% if typecode == "hb" %}
+      <!--Hydrogen bond itypes dropdown-->
+      <li class="dropdown-submenu">
+        <div class="HB_row">
+          <label class="mycheckbox">
+            {% if "hb" == itype_code %}
+            <input type="radio" name="itypes" class="option" value="hb" checked/>
             {% else %}
-            <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+            <input type="radio" name="itypes" class="option" value="hb"/>
             {% endif %}
-            Protein-Protein
-          </label>
-        </li>
-        <li>
-          <label class="partners_checkbox mycheckbox">
-            {% if "lg" in ligandonly %}
-            <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
-            {% else %}
-            <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
-            {% endif %}
-            Protein-Ligand
-          </label>
-        </li>  
-      </ul>
-    </div>
-    <!--Clusters dropdown-->
-    <div class="dropdown optbar">
-      <select name="clusters" id="clusters_dropdown" class="btn btn-sm btn-primary">
-        {% for clust in clusrange_all %}
-        {% ifequal clust cluster %}
-        <option class="clusteropt" value={{clust}} selected=selected> {{clust}} clusters </option>
+              hydrogen bond
+          </label><a class="test" tabindex="-1" href="#"> <span class="caret"></span></a>
+          <ul class="dropdown-menu dropdown-itype" id="HB">
+            {% for code,itype in hb_itypes.items %}
+            <li>
+              <label class="mycheckbox">
+              {% if code == itype_code %}
+              <input type="radio" name="itypes" class="option hb_option" value={{code}} checked/>
+              {% else %}
+              <input type="radio" name="itypes" class="option hb_option" value={{code}} />
+              {% endif %}
+                {{itype}}
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </li>
+      {% else %}
+      <li>
+        <label class="mycheckbox">
+        {% if typecode == itype_code %}
+        <input type="radio" name="itypes" class="option" value={{typecode}} checked/>
         {% else %}
-        <option class="clusteropt" value={{clust}}> {{clust}} clusters </option>
-        {% endifequal %}
-        {% endfor %}
-      </select>
-    </div>
-    <!--Repetition and non-standard checkbox-->
-    <div class="optbar">
-      <label class="partners_checkbox">
-        {% if 'rev' == rev %}
-        <input type="checkbox" id="rev_pairs" name="rev" value="rev" checked/>
-        {% else %}
-        <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
+        <input type="radio" name="itypes" class="option" value={{typecode}} />
         {% endif %}
-        Show reversed residue pairs
-      </label>
-    </div>
-    <!--Apply button -->
-    <div class="dropdown optbar">
-      <button type="button" id="applybutton"  onclick="printchecked();" class="btn btn-success btn-sm" >Apply </button>
-    </div>
-    <!--download button-->
-    <div class="dropdown optbar">
-      <a class="btn btn-link" id="download_csv" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}&{{stnd}}'"><!-- onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">-->
-        <span title="Download data in csv" class="glyphicon glyphicon-download-alt"></span>
-      </a> 
-    </div>
+          {{typename}}
+        </label>
+      </li>
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+      <!--All option-->
+      <hr>
+      <li id="all-li">
+        <label id="all" class="mycheckbox">
+        <input type="radio" name="itypes" class="option" value="all" />
+          Total interaction frequency
+        </label>
+      </li>
+      <hr>
+      <li id="menu_link">
+        <a href="./contmaps/interaction_types" target="blank" id="itype_link">Interaction types definitions</a>    
+      </li>
+    </ul>
+  </div> 
+  <!--Interacting partners dropdown -->
+  <div class=" dropdown optbar">
+    <button type="button" id="ipartner_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="partnerlist">
+      Interaction Partners 
+      <span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-partner">
+      <li>
+        <label class="partners_checkbox mycheckbox">
+          {% if "prt" in ligandonly %}
+          <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt" checked/>
+          {% else %}
+          <input type="checkbox" id="Intraprotein contacts" name="molec" class="option_location" value="prt"/>
+          {% endif %}
+          Protein-Protein
+        </label>
+      </li>
+      <li>
+        <label class="partners_checkbox mycheckbox">
+          {% if "lg" in ligandonly %}
+          <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg" checked/>
+          {% else %}
+          <input type="checkbox" id="Protein to ligand contacts" name="molec" class="option_location" value="lg"/>
+          {% endif %}
+          Protein-Ligand
+        </label>
+      </li>  
+    </ul>
+  </div>
+  <!--Clusters dropdown-->
+  <div class="dropdown optbar">
+    <select name="clusters" id="clusters_dropdown" class="btn btn-sm btn-primary">
+      {% for clust in clusrange_all %}
+      {% ifequal clust cluster %}
+      <option class="clusteropt" value={{clust}} selected=selected> {{clust}} clusters </option>
+      {% else %}
+      <option class="clusteropt" value={{clust}}> {{clust}} clusters </option>
+      {% endifequal %}
+      {% endfor %}
+    </select>
+  </div>
+  <!--Repetition and non-standard checkbox-->
+  <div class="optbar">
+    <label class="partners_checkbox">
+      {% if 'rev' == rev %}
+      <input type="checkbox" id="rev_pairs" name="rev" value="rev" checked/>
+      {% else %}
+      <input type="checkbox" id="rev_pairs" name="rev" value="rev"/>
+      {% endif %}
+      Show reversed residue pairs
+    </label>
+  </div>
+  <!--Apply button -->
+  <div class="dropdown optbar">
+    <button type="button" id="applybutton"  onclick="printchecked();" class="btn btn-success btn-sm" >Apply </button>
+  </div>
+  <!--download button-->
+  <div class="dropdown optbar">
+    <a class="btn btn-link" id="download_csv" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}&{{stnd}}'"><!-- onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">-->
+      <span title="Download data in csv" class="glyphicon glyphicon-download-alt"></span>
+    </a> 
   </div>
 </div>

@@ -39,7 +39,7 @@ def improve_receptor_names(df_ts,compl_data):
     recept_info={}
     recept_info_order={
         "upname":0,
-        "resname":1,
+        "lig_sname":1,
         "dyn_id":2,
         "prot_id":3,
         "comp_id":4,
@@ -50,15 +50,17 @@ def improve_receptor_names(df_ts,compl_data):
         "struc_f":9,
         "traj_fnames":10,
         "traj_f":11,
-        "delta":12
+        "delta":12,
+        "repeated_receptor":13,
+        "receptor_unique_name":14,
     }
-    taken_protlig={}
+    dyns_by_receptor={}
     index_dict={}
     dyn_gpcr_pdb={}
     for recept_id in df_ts['Id']:
         dyn_id=recept_id
         upname=compl_data[recept_id]["up_name"]
-        resname=compl_data[recept_id]["lig_sname"]
+        lig_sname=compl_data[recept_id]["lig_sname"]
         lig_lname=compl_data[recept_id]["lig_lname"]
         prot_id=compl_data[recept_id]["prot_id"]
         comp_id=compl_data[recept_id]["comp_id"]
@@ -70,26 +72,35 @@ def improve_receptor_names(df_ts,compl_data):
         traj_f=compl_data[recept_id]["traj_f"]
         delta=compl_data[recept_id]["delta"]
         if pdb_id:
-            prot_lig=(pdb_id,resname)
+            prot_lig=(pdb_id,lig_sname)
         else:
-            prot_lig=(upname,resname)
+            prot_lig=(upname,lig_sname)
 
-        if prot_lig in taken_protlig:
-            name_base=taken_protlig[prot_lig]["recept_name"]
-            #recept_name=name_base +" (dynID:"+str(dyn_id)+")"
-            recept_name = name_base
+        recept_name=prot_lname+" ("+prot_lig[0]+")"
+        if recept_name in dyns_by_receptor:
+            dyns_by_receptor[recept_name].add(dyn_id)
 
         else:
-            recept_name=prot_lname+" ("+prot_lig[0]+")"
+            dyns_by_receptor[recept_name] = {dyn_id}
 
-#            if bool(prot_lig[1]):
- #               recept_name = recept_name + " + "+prot_lig[1]
-            taken_protlig[prot_lig]={"recept_name":recept_name,"id_added":False}
-        recept_info[dyn_id]=[upname, resname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta]
+        recept_info[dyn_id]=[upname, lig_sname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta,False]
         index_dict[recept_id]=recept_name 
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
+
+    #Check which receptors have more than one simulation, and mark this simulations as "repeated_receptor", and
+    #also add the "unique name" of the receptor
+    for protlig,dynset in dyns_by_receptor.items():
+        if len(dynset) > 1:
+            for dyn_id in dynset:
+                recept_info[dyn_id][13] = True
+                recept_info[dyn_id].append("%s(%s)(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6],dyn_id))
+        else:
+            dyn_id = list(dynset)[0] 
+            recept_info[dyn_id].append("%s(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6]))
+
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
+
 
 def filter_same_helix(df):
     """
@@ -282,6 +293,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
             y = y_pos,
             xanchor = 'left',
             text = text,
+            captureevents = True,
             showarrow = False,
             bgcolor = bgcolor,
             font = { 'size' : 12, 'color' : colorfont },
@@ -298,7 +310,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
         simname = recept_info[dynid][name_index]
         ligname = recept_info[dynid][ligname_index]
         bgcolor = hoverentry['marker']['color']
-        anot_text = "%s (%s)" % (simname, pdbcode)
+        anot_text = "%s (%s)<b style='display: none'>%s</b>" % (simname, pdbcode, dynid)
         hovertext = str("complex with %s (dynID: %s)" % (ligname, nodyn_id)) if (ligname) else  str("apoform (dynID: %s)" % (nodyn_id))
 
         # Create new mini-entry reaching only branch of interest
@@ -316,7 +328,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
     # Adapting hovertool to what I want from it
     name_index = recept_info_order['upname']
     pdb_index = recept_info_order['pdb_id']
-    ligname_index = recept_info_order['resname']
+    ligname_index = recept_info_order['lig_sname']
     occuped_positions = dict()
     for hoverentry in fig['data']:
 
@@ -556,6 +568,17 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
         "modeBarButtons": [["toImage"]]
     })
     return (list(dendro_leaves),clustdict)
+
+def create_dyntoname_file(dyn_dend_order, recept_info, options_path):
+    """
+    Creates a list of tuples, each one containing dynID-receptor names pairs
+    Needed to display menu dropdown's receptor names in same order as dendrogram
+    """
+    dyn_names = [ recept_info[dyn][14] for dyn in dyn_dend_order ]
+    dyn_to_names = list(zip(dyn_dend_order, list(dyn_names)))
+    dyn_to_names.reverse()
+    with open(options_path+"name_to_dyn_dict.json", "w") as dyn_names_file:
+        dump(dyn_to_names, dyn_names_file, ensure_ascii=False, indent = 4)
 
 def add_restypes(df, compl_data):
     """
@@ -813,7 +836,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var pos_string = pos_array.join("_")
                 var pos_ind_array = pos_array.map(value => { return gnum_data['index'].indexOf(value); });
                 var pdb_pos_array = pos_ind_array.map(value => { return gnum_data[recept_name][value]; });
-                var lig=ri_data[recept_id][rio_data['resname']];
+                var lig=ri_data[recept_id][rio_data['lig_sname']];
                 var lig_lname=ri_data[recept_id][rio_data['lig_lname']];
                 var recept=ri_data[recept_id][rio_data['upname']];
                 var dyn_id_pre=ri_data[recept_id][rio_data['dyn_id']];
@@ -888,23 +911,32 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
 
     return mysource
 
-def create_csvfile(filename, recept_info,df):
+def create_csvfile(options_path, recept_info,df):
     """
     This function creates the CSV file to be donwloaded from web
     """
     df_csv = df.copy()
     df_csv.index.names = ['Interacting positions']
-    
-    #Change dynX by full name of receptor
-    df_csv.columns = df_csv.columns.map(lambda x: str("%s(%s)" %(recept_info[x][5],recept_info[x][6])))
-    
+
+    #Change dynX by full name of receptor, adding the dynid if there is more than a simulation for that receptor
+    df_csv.columns = df_csv.columns.map(lambda x: "%s(%s)(%s)" %(recept_info[x][5],recept_info[x][6],x) 
+                                        if recept_info[x][13] else 
+                                         "%s(%s)" %(recept_info[x][5],recept_info[x][6]))
+
+    #Store Simulation names and dyn on file (Not the best way to tthis, since it will be repeated 
+    #over and over every time the script is run)
+    dyns_names = dict(zip(list(df.columns), list(df_csv.columns)))
+    with open(options_path+"name_to_dyn_dict.json", "w") as dyns_names_file:
+        dump(dyns_names, dyns_names_file, ensure_ascii=False, indent = 4)
+
     #Sorting by ballesteros Id's (helixloop column) and clustering order
     df_csv['Interacting positions'] = df_csv.index
     df_csv['helixloop'] = df_csv['Interacting positions'].apply(lambda x: re.sub(r'^(\d)x',r'\g<1>0x',x)) 
     df_csv = df_csv.sort_values(["helixloop"])
     df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
 
-    df_csv.to_csv(path_or_buf = filename)
+    #Store dataframe as csv
+    df_csv.to_csv(path_or_buf = options_path+"dataframe.csv" )
 
 ############
 ## Variables
@@ -998,9 +1030,6 @@ def get_contacts_plots(itype, ligandonly):
         set_itypes = set(itype.split("_"))
         set_itypes.add('all')
 
-    #Creating itypes dictionary for selected types
-    selected_itypes = { x:typelist[x] for x in set_itypes }
-
     #Loading files
     df_raw = pd.read_csv(str(basepath + "contact_tables/compare_all.tsv"), sep="\s+")
     for itype_df in set_itypes:
@@ -1075,7 +1104,7 @@ def get_contacts_plots(itype, ligandonly):
 
         #Storing dataframe with results in a CSV file, downloadable from web
         csvfile = options_path+"dataframe.csv" 
-        create_csvfile(csvfile, recept_info,df)
+        create_csvfile(options_path, recept_info, df)
 
         # Add residue types to dataframe
         df_ts = add_restypes(df_ts, compl_data)
@@ -1088,7 +1117,6 @@ def get_contacts_plots(itype, ligandonly):
 
         # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files
         df = new_columns(df)
-
 
         # Computing several dendrograms and corresponding json files
         for cluster in list(range(2,21)):
@@ -1105,6 +1133,10 @@ def get_contacts_plots(itype, ligandonly):
 
             #Jsons for the flareplots of this combinations of clusters
             flareplot_json(df, clustdict, clustdir, flare_template)
+
+        #Store Simulation names and dyn on file
+        create_dyntoname_file(dyn_dend_order, recept_info, options_path)
+
 
         for rev in ["norev"]:
 
@@ -1123,6 +1155,14 @@ def get_contacts_plots(itype, ligandonly):
             inter_number = df_ts_rev.shape[0]
             inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
             number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
+                
+            #Create heatmap folder if not yet exists
+            heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
+            heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
+            os.makedirs(heatmap_path, exist_ok=True)
+
+            #Saving dataframe for future uses in customized heatmaps
+            df_ts_rev.to_pickle(heatmap_path+"dataframe_for_customized.pkl")
             
             #Make heatmaps each 50 interacting pairs
             div_list = []
@@ -1158,7 +1198,7 @@ def get_contacts_plots(itype, ligandonly):
 
                 # Extract bokeh plot components and store them in lists
                 script, div = components(p)
-                divwidth_list.append(str(dend_width+w))#heatmapwidth+dendwidth+margins
+                divwidth_list.append(str(dend_width+w+260))#heatmapwidth+dendwidth+margins
                 div_list.append(div.lstrip())
                 heatmap_filename = "%s%iheatmap.html" % (heatmap_path_jupyter,i)
                 heatmap_filename_list.append(heatmap_filename)

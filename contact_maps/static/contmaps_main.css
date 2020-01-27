@@ -83,6 +83,10 @@ a {
   white-space:nowrap;
 }
 
+input[type=checkbox] {
+  margin: 0px !important;
+}
+
 #all_label {
   font-weight: bold !important;
 }
@@ -121,7 +125,11 @@ a {
   float: left;
   padding-left: 0.5%;  
   padding-right: 0.5%;
+}
 
+#custom_title {
+  padding-left: 0.5%;  
+  padding-right: 0.5%;  
 }
 
 #subinfo {
@@ -129,6 +137,13 @@ a {
   position: relative;
   overflow-y: auto; 
   overflow-x: auto;
+}
+
+#dropdown_simulations {
+  max-height: 400px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  min-width: 400;
 }
 
 .molec-check {
@@ -208,32 +223,46 @@ hr {
 }
 
 #heatmap_pager {
-  margin-left: 40%;
+  margin-left: 35%;
   z-index: 50;
   position: sticky;
   top: 00;
 }
 
-#cv {
-  float: right;
-  margin-top: 95px;
+#pager_list {
+  max-width: 85%;
 }
 
-#loading_heatmap {
-    left: 65%;
-    position: absolute;
-    top: 45%;
+#cv {
+  margin-top: 20;
+  float: right;
+}
+
+#loading_div {
+  margin-top: 15%;
+  width: 57%;
+  padding-left: 25%;
 }
 
 .bk-annotation {
   width: 21px;
 }
 
+.heatmap {
+  padding-bottom: 200px;
+}
+
+#uncheck_all_sim {
+    position: fixed;
+    margin-left: 19%;
+}
+
+
+/*Flareplots*/
+
 #flare_title {
   cursor: pointer;
 }
-
-/*Flareplots*/
 
 .fpdiv {
   margin-top: 15px;

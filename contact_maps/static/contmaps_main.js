@@ -20,22 +20,23 @@ $(document).ready(function(){
     'all' : 'total frequency',
   }
 
-  //Mark options selected
-  var itype, clusters, ligandonly, rev;
-  url_pathname = window.location.pathname.split("/")
-  url_variables = url_pathname[url_pathname.length-1]
-  if (url_variables) {
-    url_variables_ary = url_variables.split("&");
-    itype = url_variables_ary[url_variables_ary.length-4];
-    clusters = url_variables_ary[url_variables_ary.length-3];
-    ligandonly = url_variables_ary[url_variables_ary.length-2];
-    rev = url_variables_ary[url_variables_ary.length-1];
+  //---------Mark options selected
+  var param_string, search_params, itype, clusters, ligandonly, rev, stnd;
+  param_string = window.location.search; 
+  search_params = new URLSearchParams(param_string)
+  if (Boolean(param_string)) {
+    itype = search_params.get('itype');
+    clusters = search_params.get('cluster');
+    ligandonly = search_params.get('prtn');
+    rev = search_params.get('rev');
+    stnd = search_params.get('stnd');
   }
   else {
     itype = "all";
     clusters = "3";
     ligandonly = "prt_lg";
     rev = "norev";
+    stnd = "cmpl";
   }
 
   $('input[value="' + itype + '"]').prop('checked', true);
@@ -107,8 +108,13 @@ $(document).ready(function(){
   //If it is not the "not avalible interaction" page, but the regular one:
   if (!$("#not_avalible_text")[0]){
 
+    //-------- On click of the custom simulation selection dropdown
+    $("#dropdown_simulations").change(function(){
+      select_simulations(itype, clusters, ligandonly, rev, stnd)
+    });
+
     //---------Remove heatmap loading icon once page is loaded
-    document.getElementById("loading_heatmap").remove();
+    document.getElementById("loading_div").remove();
     
     //---------------Scrollbar to heatmap
     jQuery(function ($) {
@@ -117,32 +123,74 @@ $(document).ready(function(){
       });
     });
 
-    //---------------When scrolling on heatmap, move the x-axis annotations along with the scrolling
-    var  scrollPos = 0, container, anots, pager, pager_height, anots_height, pager_mintop, anots_mintop, top_window, new_top;
-    //Elements to scroll
-    container = $("#main_plot_body"); 
-    anots =  $(".bk-annotation");
-    pager = $("#heatmap_pager");
-    pager_height = pager.offset().top;
-    anots_height = anots.outerHeight();
-    pager_mintop = parseInt(pager.css('top'));
-    anots_mintop = parseInt(anots.css('top'));
-    container.on("scroll", function() {
-      top_window = container.scrollTop();
-      anots.each(function(index, anot){
-        new_top = scrollPos - anots_height;
-        //Now move the axis annotations
-        //If scroll would result in annotations going higher than original position, set them in original position again
-        if (anots_mintop > new_top+50){
-          $(anot).css('top', anots_mintop);
-        }
-        // if previous scrolling-position of window was down from the axis original position 
-        else  {
-          $(anot).css('top', new_top+50);
-        }
+    $(window).on('load', function(){
 
+      //---------------When scrolling on heatmap, move the x-axis annotations along with the scrolling
+      var  scrollPos = 0, container, anots, pager, pager_height, anots_height, pager_mintop, anots_mintop, top_window, new_top;
+      //Elements to scroll
+      container = $("#main_plot_body"); 
+      anots =  $(".bk-annotation");
+      pager = $("#heatmap_pager");
+      pager_height = pager.offset().top;
+      anots_height = anots.outerHeight();
+      pager_mintop = parseInt(pager.css('top'));
+      anots_mintop = parseInt(anots.css('top'));
+      container.on("scroll", function() {
+        top_window = container.scrollTop();
+        anots.each(function(index, anot){
+          new_top = scrollPos - anots_height;
+          //Now move the axis annotations
+          //If scroll would result in annotations going higher than original position, set them in original position again
+          if (anots_mintop > new_top){
+            $(anot).css('top', anots_mintop);
+          }
+          // if previous scrolling-position of window was down from the axis original position 
+          else  {
+            $(anot).css('top', new_top-45);
+          }
+
+        });
+        scrollPos = top_window;
       });
-      scrollPos = top_window;
+
+      //------------ On click of dendrogram, check corresponding checkbox on the customized heatmap dropdown
+      var re = /dyn\d+/, dynid, checkbox, rect;
+      $(".annotation-text").click(function(){
+        dynid = $(this).attr('data-unformatted').match(re)[0];
+        rect = $(this).prev();
+        checkbox = $("#"+dynid+"_checkbox");
+        if (checkbox.is(':checked')){
+          checkbox.prop('checked',false);
+          rect.css('stroke-opacity', '0');
+        } 
+        else {
+          checkbox.prop('checked',true)
+          rect.css('stroke-opacity', '1');
+        }
+      });
+
+      //----------- On click of checkboxes dropdown, border corresponding annotations on dendrogram
+      $(".simulation_checkbox").on('change', function(){
+        dynid = $(this).attr('name');
+        rect = $(".annotation-text[data-unformatted*='" + dynid + "<']").prev();
+        checkbox = $(this);
+        if (checkbox.is(':checked')){
+          rect.css('stroke-opacity', '1');
+        }
+        else {
+          rect.css('stroke-opacity', '0');
+        }
+      });
+    });
+
+    //---------Uncheck all simulations button
+    $("#uncheck_all_sim").click(function(){
+      $('.simulation_checkbox').each(function(){
+        $(this).prop('checked',false);
+      });
+      $('.annotation-text').prev().each(function(){
+        $(this).css('stroke-opacity','0')
+      });
     });
 
     //------------Personalized colorbar for heatmap, made in a javascript canvas
@@ -222,12 +270,12 @@ function printchecked(){
   }
 
   else if (Boolean(check_opt)){
-    URL = '/contmaps/' + check_opt + "&" + clusters + "&" + locs.join("_") + "&"  + rev_value + "&" + stnd_value;
+    var newurl = window.origin + '/contmaps/?itype=' + check_opt + "&cluster=" + clusters + "&prtn=" + locs.join("_") + "&rev="  + rev_value + "&stnd=" + stnd_value;
     if (window.location.pathname == URL){
       location.reload()
     }
     else {
-      window.location.pathname = URL; 
+      window.open(newurl, "_self") 
     }
   }
   else {
@@ -239,9 +287,15 @@ function closeSideWindow() {
   //Close the side window which appears upon clicking bokeh plot
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
-  $("#dendrogram").css("width","35%");
-  $(".heatmap").css("width","57%");
-  $("#heatmap_pager").css("margin-left","40%")
+  //Different sizes depending if it is a customized heatmap or not
+  if (window.location.pathname == "/contmaps/customized/"){
+    $("#heatmap_pager").css("margin-left","40%")
+  }
+  else {
+    $("#dendrogram").css("width","35%");
+    $(".heatmap").css("width","57%");
+    $("#heatmap_pager").css("margin-left","40%")
+  }
 }
 
 //--------Heatmap change page system (the return false thing is for links not to redirect)
@@ -280,4 +334,32 @@ function heatmap_change(heatmap) {
     set_active_page(new_heatmap);
   }
   return false
+}
+
+//---------Customized selection of simulations
+function select_simulations(itype, clusters, ligandonly, rev, stnd){
+  
+  //variables
+  var simulationlist, code, URL, custombutton;
+
+  //Get selected simulations dynIDs
+  simulationlist = $(".simulation_checkbox:checked").map(function(){return $(this).attr("name");}).get();
+
+  //(Pseudo-)Random identifier for this customized heatmap
+  code = Math.random().toString(36).substring(7);
+
+  //Open new tab with the results
+  URL = window.location.origin + '/contmaps/customized/?itype=' + itype + "&cluster=" + clusters + "&prtn=" + ligandonly + "&rev="  + rev + "&stnd=" + stnd + "&code=" + code;
+
+  //Set new attributes to the custom form, and enable it if any simulations are selected
+  custombutton = $("#CustomButton");
+  $("input[name='SimList']").val(simulationlist.join("&"));
+  custombutton.attr('formaction',URL);
+  if (simulationlist.length == 0){
+    custombutton.attr('disabled',true);
+  }
+  else {
+    custombutton.attr('disabled',false);
+  }
+
 }
