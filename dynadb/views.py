@@ -3426,12 +3426,14 @@ def query_dynamics(request,dynamics_id):
     for match in DyndbFilesDynamics.objects.select_related('id_files').filter(id_dynamics=dynamics_id):
         typeobj=match.id_files.id_file_types
         if typeobj.is_parameter or typeobj.is_anytype:
+            myfilename=match.id_files.filename
             btn_text=""
-            if typeobj.is_parameter:
-                btn_txt="Parameter file (ID: %s)" % match.id_files.id
+            if "prm" in myfilename:
+            #if typeobj.is_parameter:
+                btn_txt="Parameters file (ID: %s)" % match.id_files.id
             else:
-                btn_txt="File (ID: %s)" % match.id_files.id
-            dyna_dic['files']["param_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename ) ) 
+                btn_txt="Others file (ID: %s)" % match.id_files.id
+            dyna_dic['files']["param_files"].append( ( match.id_files.filepath.replace("/protwis/sites/","/dynadb/") , match.id_files.filename , btn_txt) ) 
         else:
             btn_txt=""
             typeobj=match.id_files.id_file_types

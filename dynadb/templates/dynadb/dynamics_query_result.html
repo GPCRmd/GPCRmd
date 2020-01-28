@@ -133,7 +133,7 @@
                         <p style="margin-bottom:5px"><b>Number of molecules</b>: 
                             <div style="margin-left:20px">
                             {% for molnum in answer.number_of_mols %}
-                                <p><span style="font-style:italic">{{ molnum.0 }}:</span> {{ molnum.1 }}</p>
+                                <p>{{ molnum.0 }}: {{ molnum.1 }}</p>
                             {% endfor %}
                             </div>
                     {%endif%}
@@ -156,7 +156,9 @@
                     {% if answer.description %}
                         <p><b>Description</b>: {{answer.description}}</p>
                     {%endif%}
-                    <p><b>Additonal parameters</b>: Download protocol & starting files</p>
+                    {% if answer.files.param_files %}
+                    <p><b>Additonal parameters</b>: Available at "Simulation protocol & starting files"</p>
+                    {%endif%}
                     {% if answer.related %}
                     <div id='reldyn' class="miniscroll">
                         <p><b>Related Dynamics</b>:</p>
@@ -192,7 +194,7 @@
                 <div class="techinfo_content">
                     <div  id='paramfiles'>
                         {% for fil in answer.files.param_files %}
-                            <a  href={{fil.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{fil.1}}</button></a><br>
+                            <a  href={{fil.0}}><button style="width:250px;text-align: center" class="btn btn-primary" type="button">{{fil.2}}</button></a><br>
                         {% endfor %}
                     </div> 
                 </div>
@@ -347,7 +349,7 @@
                         <p style='text-align:center;color:#808080'>Visualization and trajectory sharing powered by <a href="http://nglviewer.org/ngl/api/index.html" rel="noreferrer" target="_blank">NGL viewer</a> and <a href="http://nglviewer.org/mdsrv/" rel="noreferrer" target="_blank">MDSrv</a></p>
                 </div></center>
             </div>
-            <center><a style="font-weight: bold;" class='btn btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Go to data visualization & analysis</a></center>
+            <center><a style="font-weight: bold;" class='btn btn-danger' role='button' href=/view/{{answer.nglviewer_id}}>Open with GPCRmd Workbench</a></center>
         {%endif%}
         </div>
         <div  class="col-md-3 techinfo">

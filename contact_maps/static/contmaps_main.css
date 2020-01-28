@@ -19,6 +19,7 @@ a {
   text-align: center;
   margin-bottom: 10px;
   color: white;
+  overflow:auto;  
 }
 
 #inner_remaining{
@@ -520,3 +521,35 @@ hr {
   text-align: center;  
 }
 
+#restricttitlewidth{
+  min-width:400px;
+  padding-bottom:10px;
+}
+
+.howtoparent{
+    /*float:right;
+    position:absolute; */
+    right: 45px;
+    margin-top:7px
+}
+
+.howtobtn{
+    width: 52px;
+    height: 52px;
+    font-size:10px;
+    font-weight: bold;
+    display: inline-block;
+    line-height: 11px;
+    margin: 0 auto;
+    padding: 0;
+    padding-top: 8px;
+    text-align: center;
+    border-radius:100px;
+    color:#4d4d4d;
+  margin-left:10px;
+}
+
+#aroundtitle{
+  width: calc(100% - 62px);
+  float:left;
+}
