@@ -3315,6 +3315,7 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['traj_file'] = traj_displayed
 
     (finmemcomp,finioncomp,allmolinfo,ligmolid_to_nummol)=extract_all_nonlig_info(dynamics_id)
+    number_of_mols=[[e[2], e[6].split(" ")[0] ] for e in allmolinfo]
     dyna_dic['link_2_molecules']=allmolinfo 
     dyna_dic['membcomp']=finmemcomp
     dyna_dic['ioncomp']=finioncomp
@@ -3366,16 +3367,19 @@ def query_dynamics(request,dynamics_id):
     else:
         #if it is a complex
         dynprot_li_all=DyndbProtein.objects.filter(dyndbcomplexprotein__id_complex_exp__dyndbcomplexmolecule=dynmodel_obj.id_complex_molecule.id)
-    
+    number_of_prots={}
     for dynprot_obj in dynprot_li_all:
         dynprot_id=dynprot_obj.id
+        search_prot_res=search_protein(dynprot_id)
+        prot_name=search_prot_res['Protein_name']
+        if prot_name not in number_of_prots:
+            number_of_prots[prot_name]=0
+        number_of_prots[prot_name]+=1
         if dynprot_id not in dynprot_id_list:
             prot_li.append([dynprot_obj,dynprot_obj.receptor_id_protein])
-            search_prot_res=search_protein(dynprot_id)
             is_prot_lig=not dynprot_obj.receptor_id_protein
             prot_sel_s= {":%s" % res.chain.upper() for res in DyndbModeledResidues.objects.filter(id_protein=dynprot_obj.id)}
             prot_sel=" or ".join(prot_sel_s)
-            prot_name=search_prot_res['Protein_name']
             dynprot_id_list.append(dynprot_id)
             dyna_dic['link2protein'].append([dynprot_id,prot_name,is_prot_lig , prot_sel ])
             seq_pdb,chains_taken=assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li)
@@ -3386,6 +3390,18 @@ def query_dynamics(request,dynamics_id):
         else:
             raise RuntimeError("Protein %d in molecular complex %d is duplicated." % (dynprot_id,dynmodel_obj.id_complex_molecule.id))
 
+    number_of_mols += [[k,v] for k,v in number_of_prots.items()]
+    number_of_mols=sorted( number_of_mols, key=lambda x: int(x[1]) , reverse=True)
+    dyna_dic["number_of_mols"]=number_of_mols
+    link2ligandprotein=[ [e[0],e[1],e[3],number_of_prots[e[1]]] for e in dyna_dic['link2protein'] if e[2]]
+    for e in link2ligandprotein:
+        nummols=e[3]
+        if nummols==1:
+            nummols_s="%i molecule" % nummols
+        else:
+            nummols_s="%i molecules" % nummols
+        e[3]=nummols_s
+    dyna_dic['link2ligandprotein']=link2ligandprotein
     dyna_dic["mutation_dict"]=prot_muts
     mut_sel_li=[]
     for mut_li in prot_muts.values():

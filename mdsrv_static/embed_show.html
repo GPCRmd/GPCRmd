@@ -139,7 +139,10 @@
             var  traj_path= "_DB/";
             var  path= "/mdsrv/file/_DB/";
             var prot_sel_li=[];
-            $(".prot_in_dyn", window.parent.document).each(function(){
+            $(".recept_in_dyn", window.parent.document).each(function(){
+                prot_sel_li[prot_sel_li.length]=$(this).data("prot_sel");
+            })
+            $(".ligprot_in_dyn", window.parent.document).each(function(){
                 prot_sel_li[prot_sel_li.length]=$(this).data("prot_sel");
             })
 
@@ -179,7 +182,6 @@
                         o.setSelection("protein");
                     }
                     if (prot_sel_li){
-                        console.log(prot_sel_li)
                         for (ps=0; ps<prot_sel_li.length;ps++){
                             var prot_sel=prot_sel_li[ps];
                             if (ps -1 < prot_colors_li.length){

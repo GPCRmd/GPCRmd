@@ -129,6 +129,14 @@
                     {%if answer.ioncomp%}
                         <p><b>Ionic composition</b>: {{answer.ioncomp}}</p>
                     {%endif%}
+                    {%if answer.number_of_mols%}
+                        <p style="margin-bottom:5px"><b>Number of molecules</b>: 
+                            <div style="margin-left:20px">
+                            {% for molnum in answer.number_of_mols %}
+                                <p><span style="font-style:italic">{{ molnum.0 }}:</span> {{ molnum.1 }}</p>
+                            {% endfor %}
+                            </div>
+                    {%endif%}
                     {%if answer.atom_num%}
                         <p><b>Total number of atoms</b>: {{answer.atom_num}}</p>
                     {%endif%}
@@ -225,7 +233,7 @@
 <!--  ----------- -->
     <div class="row" >
         <div id='bottoninfoleft' class="techinfo col-md-3">
-            {% if answer.ortoligands or answer.aloligands or answer.expdatabind or answer.expdataeff or answer.expdatainhi %}
+            {% if answer.ortoligands or answer.aloligands or answer.expdatabind or answer.expdataeff or answer.expdatainhi or answer.link2ligandprotein %}
                 <p class="techinfo_title">Ligands</p>
                 <div class="">
                     <div style="max-height:480px;overflow:auto;margin-bottom: 10px">
@@ -261,6 +269,20 @@
                                <img   src="{{url.1}}" height="270" width="270" style="margin-bottom: :15px;padding:7px;margin-top:15px"/> </a><br>
                             {% endfor %}
                         {% endif %}
+
+                        {% if answer.link2ligandprotein %}
+                            <div style="margin-bottom:7px">
+                                <b >Peptidic ligand(s)</b>
+                            </div>
+                            {% for link in answer.link2ligandprotein %}
+                                <p style="margin-bottom:5px">
+                                    <a class='btn btn-primary ligprot_in_dyn'  role='button' data-prot_sel="{{link.2}}" href=/dynadb/protein/id/{{link.0}}>{{link.1}}</a>
+                                </p>
+                                <p>
+                                 ({{link.3}})
+                                </p>
+                            {%endfor%}
+                        {%endif%}
                         </div>
                     </div>
 
@@ -297,7 +319,7 @@
         <div id='iframemodel' class="col-md-6">
         {%if answer.link2protein%}
             <div class="techinfo">
-            <p class="techinfo_title">Proteins</p>
+            <p class="techinfo_title">Receptor</p>
                 <div class="" >
                     {% if answer.pdbid %}
                         <div style="margin-top:10px;margin-bottom:7px">
@@ -306,11 +328,13 @@
                         </div> 
                     {% endif %}                
                     {%for link in answer.link2protein%}
-                        <a class='btn btn-primary prot_in_dyn' data-prot_sel="{{link.3}}" role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}
-                            {% if link.2 %}
-                            (ligand)
-                            {% endif %}
-                        </a>
+                        {% if link.2 == False %}
+                            <a class='btn btn-primary recept_in_dyn' data-prot_sel="{{link.3}}" role='button' href=/dynadb/protein/id/{{link.0}}>{{link.1}}
+                                {% if link.2 %}
+                                (ligand)
+                                {% endif %}
+                            </a>
+                        {% endif %}
                     {%endfor%}
                 </div>
             </div>
