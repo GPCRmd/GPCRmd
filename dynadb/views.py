@@ -3162,53 +3162,56 @@ def extract_all_nonlig_info(dynamics_id):
     ligmolid_to_nummol={}
     for match in DyndbDynamicsComponents.objects.select_related('id_molecule').filter(id_dynamics=dynamics_id):
         moltype=match.type
-        if moltype==1: #we don't take ligands, only save the num of mol
+        candidatecomp=get_nonlig_comp_info(match,moltype)
+        #dyna_dic['link_2_molecules'].append(candidatecomp)
+        molid=candidatecomp[0]
+        link_2_molecules_dict[molid]=candidatecomp
+        num_mol=candidatecomp[6]
+        if moltype==1: 
             molid=match.id_molecule.id
             ligmolid_to_nummol[molid]=match.numberofmol
-        else:
-            candidatecomp=get_nonlig_comp_info(match,moltype)
-            #dyna_dic['link_2_molecules'].append(candidatecomp)
-            molid=candidatecomp[0]
-            link_2_molecules_dict[molid]=candidatecomp
-            num_mol=candidatecomp[6]
-            if not num_mol:
-                num_mol=0
-            if moltype==3:
-                totalwatermol+=num_mol
-            if moltype==2:
-                membcomp[match.resname]=num_mol
-                totallipidmol+=num_mol
-            if moltype==0:
-                ioncomp[candidatecomp[2]]=num_mol
+        if not num_mol:
+            num_mol=0
+        if moltype==3:
+            totalwatermol+=num_mol
+        if moltype==2:
+            membcomp[match.resname]=num_mol
+            totallipidmol+=num_mol
+        if moltype==0:
+            ioncomp[candidatecomp[2]]=num_mol
     for match in DyndbModelComponents.objects.select_related('id_molecule').filter(id_model=DyndbDynamics.objects.get(pk=dynamics_id).id_model.id):
         moltype=match.type
+        candidatecomp=get_nonlig_comp_info(match,moltype)
+        molid=candidatecomp[0]
+        num_mol=candidatecomp[6]
+#            if molid in link_2_molecules_dict:
+#                link_2_molecules_dict[molid][6]+=num_mol
+#            else : 
+        if molid not in link_2_molecules_dict:
+            link_2_molecules_dict[molid]=candidatecomp
         if moltype==1: #we don't take ligands, only save the num of mol
             molid=match.id_molecule.id
-            ligmolid_to_nummol[molid]=match.numberofmol
-        else:
-            candidatecomp=get_nonlig_comp_info(match,moltype)
-            molid=candidatecomp[0]
-            if molid in link_2_molecules_dict:
-                link_2_molecules_dict[molid][6]+=candidatecomp[6]
-            else : 
-                link_2_molecules_dict[molid]=candidatecomp
-            if moltype==2:
-                numlipmol=candidatecomp[6]
-                if not numlipmol:
-                    numlipmol=0
-                membcompresname=match.resname
-                if membcompresname in membcomp:
-                    membcomp[membcompresname]+=numlipmol   
-                else:
-                    membcomp[membcompresname]=numlipmol
+            if molid not in ligmolid_to_nummol:
+                ligmolid_to_nummol[molid]=match.numberofmol
+        if moltype==2:
+            numlipmol=num_mol
+            if not numlipmol:
+                numlipmol=0
+            membcompresname=match.resname
+#                if membcompresname in membcomp:
+#                    membcomp[membcompresname]+=numlipmol   
+#                else:
+            if membcompresname not in membcomp:
+                membcomp[membcompresname]=numlipmol
                 totallipidmol+=numlipmol
-            if moltype==0:
-                ionname=candidatecomp[2]
-                if ionname in ioncomp:
-                    ioncomp[ionname]+=num_mol
-                else:
-                    ioncomp[ionname]=num_mol
-                link_2_molecules_dict.values()
+        if moltype==0:
+            ionname=candidatecomp[2]
+#                if ionname in ioncomp:
+#                    ioncomp[ionname]+=num_mol
+#                else:
+            if ionname not in ioncomp:
+                ioncomp[ionname]=num_mol
+            link_2_molecules_dict.values()
     allmolinfo=[]       
     for molinfo in link_2_molecules_dict.values():
         nummols=molinfo[6]
@@ -3224,6 +3227,7 @@ def extract_all_nonlig_info(dynamics_id):
         allmolinfo.append(molinfo)
     if int(dynamics_id)==7:
         membcomp["CHL1"]=112
+        totallipidmol+=112
     if len(membcomp)>1:
         finmemcompli=[]
         for lipres,lipnum in membcomp.items():
