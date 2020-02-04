@@ -55,7 +55,9 @@
         margin-bottom:20px;
         font-size: 20px;
     }
-
+    .dyn_info_title{
+        font-size: 20px;
+    }
     .table-curved {
         border-collapse: separate;
     }
@@ -105,17 +107,22 @@
     <div class="panel-body">
 
         <div class="row" style="margin-bottom:15px">
-            <div id='leftcol' class="col-md-4 techinfo">
-                <p class="techinfo_title">Parameters</p>
-                <div class="techinfo_content">
-                    {%if answer.soft%}
-                        <p><b>Software and version</b>: {{answer.soft}}, {{answer.softv}} </p>
-                    {%endif%}
-
-                    {%if answer.forcefield%}
-                        <p><b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} </p>
-                    {%endif%}
-
+            <div id='leftcol' class="col-md-4 ">
+                <p class="dyn_info_title">General information</p>
+                    <div class="techinfo_content">
+                        <p><b>Name</b>: {{answer.model_name}} </p>
+                        {% if answer.pdbid %}
+                            <p><b>PDB id</b>: {{answer.pdbid}}</p>
+                        {% endif %}
+                        {% if answer.act_state %}
+                            <p><b>Activation state</b>: {{answer.act_state}}</p>
+                        {% endif %}
+                        {% if answer.author %}
+                            <p><b>Submitted by</b>: {{answer.author}}</p>
+                        {%endif%}
+                    </div>
+                <p class="dyn_info_title" style="margin-top:20px">System details</p>
+                    <div class="techinfo_content">
                     {%if answer.solventtype%}
                         <p><b>Solvent type</b>: {{answer.solventtype}}</p>
                     {%endif%}
@@ -130,7 +137,7 @@
                         <p><b>Ionic composition</b>: {{answer.ioncomp}}</p>
                     {%endif%}
                     {%if answer.number_of_mols%}
-                        <p style="margin-bottom:5px"><b>Number of molecules</b>: 
+                        <p style="margin-bottom:5px"><b>Number of molecules</b>: </p>
                             <div style="margin-left:20px">
                             {% for molnum in answer.number_of_mols %}
                                 <p>{{ molnum.0 }}: {{ molnum.1 }}</p>
@@ -140,6 +147,20 @@
                     {%if answer.atom_num%}
                         <p><b>Total number of atoms</b>: {{answer.atom_num}}</p>
                     {%endif%}
+                    {% if answer.description %}
+                        <p><b>Description</b>: {{answer.description}}</p>
+                    {%endif%}
+                    </div>
+                <p class="dyn_info_title" style="margin-top:20px">Simulation details</p>
+                <div class="techinfo_content">
+                    {%if answer.soft%}
+                        <p><b>Software and version</b>: {{answer.soft}}, {{answer.softv}} </p>
+                    {%endif%}
+
+                    {%if answer.forcefield%}
+                        <p><b>Forcefield and version</b>: {{answer.forcefield}}, {{answer.forcefieldv}} </p>
+                    {%endif%}
+
                     {%if answer.timestep%}
                         <p><b>Time step <span title="Time interval between new positions computation" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{answer.timestep}} fs </p>
                     {%endif%}
@@ -153,9 +174,6 @@
                     {%if answer.accum_sim_time%}
                         <p><b>Accumulated simulation time</b>: {{answer.accum_sim_time}} <span>&#181;</span>s</p>
                     {%endif%}
-                    {% if answer.description %}
-                        <p><b>Description</b>: {{answer.description}}</p>
-                    {%endif%}
                     {% if answer.files.param_files %}
                     <p><b>Additonal parameters</b>: Available at "Simulation protocol & starting files"</p>
                     {%endif%}
@@ -168,9 +186,6 @@
                     </div><!--related dynamics-->
                     {% endif %}
 
-                    {% if answer.author %}
-                        <p><b>Submitted by</b>: {{answer.author}}</p>
-                    {%endif%}
                     
                 </div>
             </div> <!--lef div end-->

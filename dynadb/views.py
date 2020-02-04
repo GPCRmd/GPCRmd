@@ -74,6 +74,7 @@ from revproxy.views import ProxyView
 import mdtraj as md
 from view.assign_generic_numbers_from_DB import obtain_gen_numbering 
 from scipy import constants
+from dynadb.data import *
 
 model_2_dynamics_molecule_type = Model2DynamicsMoleculeType()
 color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pink"]
@@ -3132,6 +3133,17 @@ def assign_seq_pdb(pdb_name,dynamics_id,dynprot_obj,seq_pdb,pdb_chain_li):
                                 seq_pdb[db_pos]=[pos[0][1],chain_name,this_gnum]
     return (seq_pdb,chains_taken)
 
+def get_act_state(pdbid):
+    pdbid=pdbid.upper()
+    if "." in pdbid:
+        pdbid=pdbid.split(".")[0]
+    state=""
+    if pdbid in pdb_state:
+        state=pdb_state[pdbid]
+    return state
+
+
+
 def get_nonlig_comp_info(match,moltype):
     mol_id=match.id_molecule.id
     mol_name=match.id_molecule.id_compound.name
@@ -3250,6 +3262,8 @@ def extract_all_nonlig_info(dynamics_id):
     finioncomp=", ".join(ion_fin_l)
     return (finmemcomp,finioncomp,allmolinfo,ligmolid_to_nummol)
 
+
+
     
 @user_passes_test_args(is_published_or_submission_owner)
 def query_dynamics(request,dynamics_id):
@@ -3292,6 +3306,7 @@ def query_dynamics(request,dynamics_id):
     dyna_dic['forcefield']=dynaobj.ff
     dyna_dic['forcefieldv']=dynaobj.ffversion
     dyna_dic['link_2_model']=dynaobj.id_model.id
+    dyna_dic['model_name']=dynaobj.id_model.name.capitalize()
     dyna_dic['description']=dynaobj.description
     dyna_dic['timestep']=dynaobj.timestep
     dyna_dic['delta']=dynaobj.delta
@@ -3306,6 +3321,7 @@ def query_dynamics(request,dynamics_id):
     pdbid=dynaobj.id_model.pdbid
     dyna_dic["pdbid"]=pdbid
     dyna_dic["mutation_dict"]={}
+    dyna_dic["act_state"]=get_act_state(pdbid)
     try:
         dyna_dic['link_2_complex']=dynaobj.id_model.id_complex_molecule.id_complex_exp.id
         expdata=search_complex(dyna_dic['link_2_complex'])
@@ -3395,7 +3411,10 @@ def query_dynamics(request,dynamics_id):
             raise RuntimeError("Protein %d in molecular complex %d is duplicated." % (dynprot_id,dynmodel_obj.id_complex_molecule.id))
 
     number_of_mols += [[k,v] for k,v in number_of_prots.items()]
-    number_of_mols=sorted( number_of_mols, key=lambda x: int(x[1]) , reverse=True)
+    try:
+        number_of_mols=sorted( number_of_mols, key=lambda x: int(x[1]) , reverse=True)
+    except:
+           number_of_mols=number_of_mols 
     dyna_dic["number_of_mols"]=number_of_mols
     link2ligandprotein=[ [e[0],e[1],e[3],number_of_prots[e[1]]] for e in dyna_dic['link2protein'] if e[2]]
     for e in link2ligandprotein:
@@ -3406,6 +3425,8 @@ def query_dynamics(request,dynamics_id):
             nummols_s="%i molecules" % nummols
         e[3]=nummols_s
     dyna_dic['link2ligandprotein']=link2ligandprotein
+    if not (dyna_dic['link2ligandprotein'] or dyna_dic['ortoligands'] or dyna_dic['aloligands']):
+        dyna_dic['model_name']+=" (apoform)"
     dyna_dic["mutation_dict"]=prot_muts
     mut_sel_li=[]
     for mut_li in prot_muts.values():
