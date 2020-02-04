@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'^session/(?P<session_name>\w*)/$', views.view_session, name='view_session'),
     url(r'^quickload/(?P<dyn_id>[0-9]+)/(?P<trajfile_id>[0-9]+)/$', views.quickload, name="quickload"),
     url(r'^quickloadall/$', views.quickloadall, name="quickloadall"),
-
+    url(r'^metatest/$', views.metatest, name="metatest"),
 ]
 
 
