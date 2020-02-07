@@ -1,5 +1,5 @@
 //Get path arguments (if any)
-var param_string, search_params, itype, clusters, ligandonly, rev, stnd;
+var param_string, search_params, itype, clusters, ligandonly, rev, stnd, dyn_list;
 param_string = window.location.search; 
 search_params = new URLSearchParams(param_string)
 if (Boolean(param_string)) {
@@ -178,12 +178,15 @@ $(document).ready(function(){
 	 function changeContactsInFplot(id, fpdir, plots){
         //create new FP but saving the selected contacts
         
+        var flare_container, fpdiv, sel_sim, dyn, name;
         flare_container = "#flare-container" + id;
         fpdiv = "#fpdiv" + id;
 
         //Update cluster button
-        cluster_num=$(fpdiv+" .clusters_dropup-div .fp_display_element.is_active").data("tag");
-        $("#clusterbutton" + id).html("Cluster " + cluster_num + ' <span class="caret"></span>');
+        sel_sim = $('#fpdiv'+id+' .clusters_dropup-div .fp_display_element.is_active')
+        dyn = sel_sim.data('tag');
+        name = sel_sim.html();
+        $("#clusterbutton" + id).html(name + ' <span class="caret"></span>');
 
         //Update numbering button
         class_numbering = $(fpdiv+" .numbering_dropup-div .fp_display_element.is_active").data("tag");
@@ -196,7 +199,7 @@ $(document).ready(function(){
             var nodenum=nodename.split("-")[1];
             pre_resSelected.push(nodenum);
         })
-        var fpfile_now="cluster" + cluster_num + ".json";
+        var fpfile_now= dyn + "_top5.json";
         d3.json(fpdir+fpfile_now, function(jsonData){
             $(flare_container).html("");
             var fpsize=setFpNglSize(true, flare_container); // Or just use the size used before?
@@ -212,7 +215,6 @@ $(document).ready(function(){
                 plots[id].toggleNode(pre_resSelected[nN]);
             }
 
-            //updateFPInt(plot, flare_container)//I'm going to skip this for the moment. fpgpcrdb_dict is hard to obtain. //Update fpSelInt depending on what is in the fplot.
             $("#selectionDiv").trigger("click");
 
             //Add hoverlabels
@@ -269,16 +271,19 @@ $(document).ready(function(){
 	////////////////////
     //Make sure NGL viewers are ok before starting flareplots
     $('body').on('iframeSet',function(){
+        
+        var fpdir, dyn0, dyn1, plots = [], fpsize
         $('#ngl_iframe0')[0].contentWindow.$('body').trigger('iframeSetOk');
         $('#ngl_iframe1')[0].contentWindow.$('body').trigger('iframeSetOk');
-        var fpdir = $("#flare_col").data("fpdir");
-
+         
     	//Create initial flareplots
+        dyn0 = $('#fpdiv0 .fp_display_element.is_active').data('tag');
+        dyn1 = $('#fpdiv1 .fp_display_element.is_active').data('tag');
+        fpdir = $("#flare_col").data("fpdir");
     	if (fpdir) {
-    		var plots = [];
-            var fpsize=setFpNglSize(true, "#flare-container0");
+            fpsize=setFpNglSize(true, "#flare-container0");
 
-            d3.json(fpdir+"cluster1.json", function(jsonData){
+            d3.json(fpdir+dyn0+"_top5.json", function(jsonData){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "A");
                	$('#loading_flare0').css('display', 'none');
 
@@ -291,7 +296,7 @@ $(document).ready(function(){
                 });
 
             });
-            d3.json(fpdir+"cluster2.json", function(jsonData){
+            d3.json(fpdir+dyn1+"_top5.json", function(jsonData){
     	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "A");
     	        $('#loading_flare1').css('display', 'none');
 
@@ -344,16 +349,18 @@ $(document).ready(function(){
     	    }
         });
 
+        //Create clustdict for customized selection
+        clustdict = {
+            'custom_cluster' : eval($('#flare_col').data('dyn_list')),
+        }
+
         //Load needed Json files and execute NGL bottom viewers
         var clustdict_file, compl_data_file;
-        clustdict_file = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/"+itype+"/"+stnd+"/"+ligandonly+"/flarejsons/"+clusters+"clusters/clustdict.json";
         compl_data_file = window.location.origin + "/dynadb/files/Precomputed/get_contacts_files/compl_info.json"; 
-        $.getJSON(clustdict_file, function(clustdict){  
-            $.getJSON(compl_data_file, function(compl_data){
-                //Trigger the NGL viewers
-                $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0', [clustdict, compl_data]);
-                $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1', [clustdict, compl_data]);
-            });
+        $.getJSON(compl_data_file, function(compl_data){
+            //Trigger the NGL viewers
+            $('#ngl_iframe0')[0].contentWindow.$('body').trigger('createNGL0', [clustdict, compl_data]);
+            $('#ngl_iframe1')[0].contentWindow.$('body').trigger('createNGL1', [clustdict, compl_data]);
         });
     });
 });

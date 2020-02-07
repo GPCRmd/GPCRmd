@@ -4,12 +4,12 @@ from os.path import exists
 from django.shortcuts import render
 from importlib.machinery import SourceFileLoader
 from django.http import HttpResponse
-import pandas as pd
 from view.views import obtain_domain_url
-from json import loads
+from json import loads, dumps
 from wsgiref.util import FileWrapper
 from contact_maps.scripts.customized_heatmap import *
 from django.views.decorators.csrf import csrf_protect
+import csv
 
 def json_dict(path):
 	"""Converts json file to pyhton dict."""
@@ -31,7 +31,7 @@ def get_contacts_plots(request):
 		cluster = request.GET.get('cluster')
 		stnd = request.GET.get('stnd')
 	else:
-		itype = 'all'
+		itype = 'hb'
 		ligandonly = 'prt_lg'
 		rev = 'norev'
 		cluster = '3'
@@ -43,7 +43,6 @@ def get_contacts_plots(request):
 
 	#Path to json
 	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
-
 
 	#First batch of context variables
 	context = {
@@ -59,12 +58,16 @@ def get_contacts_plots(request):
 		'cluster' : int(cluster),
 	}
 
+	#Creating and downloading CSV file from df
+	csv_name = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/dataframe.csv" % (itype, stnd, ligandonly)
+	csv_data_list = open(csv_name, 'r').readlines()
+	csv_data = ''.join(csv_data_list)
+
 	# Loading variables if file exists. If not, it means there are no interactions avalible for the selected options
 	variablesfile = "%sheatmaps/%s/variables.py" % (basedir,rev)
 	if exists(variablesfile):
 		variablesmod = SourceFileLoader("module.name", variablesfile).load_module()
 		number_heatmaps_list = variablesmod.number_heatmaps_list
-		divwidth_list = variablesmod.divwidth_list
 		div_list = variablesmod.div_list
 		filenames_list = variablesmod.heatmap_filename_list
 	else :
@@ -97,11 +100,11 @@ def get_contacts_plots(request):
 		'script_list' : script_list, 
 		'number_heatmaps_list' : number_heatmaps_list,
 		'numbered_divs' : zip(number_heatmaps_list, div_list),
-		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
 		'clusrange_all': list(range(2,21)),
 		'clusrange': list(range(1,int(cluster)+1)),
 		'mdsrv_url':mdsrv_url,
-		'dyn_to_names' : dyn_to_names,		
+		'dyn_to_names' : dyn_to_names,
+		'csvfile' : dumps(csv_data),
 	})
 	return render(request, 'contact_maps/index_h.html', context)
 
@@ -115,13 +118,12 @@ def get_csv_file(request):
 	ligandonly = request.GET.get('prtn')
 	rev = request.GET.get('rev')
 	stnd = request.GET.get('stnd')
-
-	csv_name = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/dataframe.csv" % (itype, stnd, ligandonly)
+	csvstring = request.POST['csvfile']
 
 	#Creating and downloading CSV file from df
-	csvfile = FileWrapper(open(csv_name, "r"))
-	response = HttpResponse(csvfile, content_type='text/plain')
+	response = HttpResponse(eval(csvstring), content_type='text/plain')
 	response['Content-Disposition'] = 'attachment; filename={0}'.format("ContactMaps-%s-%s.csv" % (itype, ligandonly))
+	
 	return response
 
 def get_itype_help(request, foo):
@@ -158,12 +160,17 @@ def customized_heatmap(request, foo):
 	#Loading files
 	compl_data = json_dict(str(basepath + "compl_info.json"))
 	df_ts = pd.read_pickle("%sheatmaps/%s/dataframe_for_customized.pkl" % (options_path, rev))
+	flare_template = json_dict(basepath + "template.json")
 
 	#Getting GPCR long-names (improved names)
 	(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
 
 	#Remove non-listed simulations from the dataframe
 	df_filt = df_ts[df_ts['Id'].isin(dyn_list)]
+
+	#Get long names of simulations
+	index = recept_info_order['receptor_unique_name']
+	name_list = [ recept_info[dyn][index]  for dyn in dyn_list ]
 
 	#Calculate heatmap height from the number of simulations present
 	h = int( len(df_filt.Id.unique()) * 16 + 200)
@@ -182,18 +189,14 @@ def customized_heatmap(request, foo):
 	pdb_id = recept_info_order['pdb_id']
 	df_filt['pdb_id'] = df_filt['Id'].apply(lambda x: recept_info[x][pdb_id])
 
-	#Add complete name (RECEPTOR_NAME (PDB_ID) (DYNID if repeqted))
-	df_filt['complete_name'] = df_filt['Id'].apply(lambda x: recept_info[x][14])
-	
 	#Make a CSV donwlodable file for this customized heatmap
-	csvpath = "%sdataframe_%s.csv"%(custom_path,code)
-	customized_csv(df_filt,itype,recept_info, csvpath)
+	csv_data = customized_csv(df_filt,itype)
 
 	#Make heatmaps each 50 interacting pairs
 	div_list = []
-	divwidth_list = []
 	heatmap_filename_list = []
 	number_heatmaps_list = []
+	script_list = []
 	prev_slicepoint = 0
 	for i in range(1,number_heatmaps+1):
 		number_heatmaps_list.append(str(i))
@@ -216,16 +219,8 @@ def customized_heatmap(request, foo):
 		
 		# Extract bokeh plot components and store them in lists
 		script, div = components(p)
-		divwidth_list.append(str(dend_width+w))
 		div_list.append(div.lstrip())
-		heatmap_filename = "%s%iheatmap_%s.html" % (custom_path,i, code)
-		heatmap_filename_list.append(heatmap_filename)
-
-		# Write heatmap on file
-		heatmap_filename = "%s%iheatmap_%s.html" % (custom_path,i,code)
-		with open(heatmap_filename, 'w') as heatmap:
-			heatmap.write(script)
-		print("heatmap",i)
+		script_list.append(script)
 
 	#==================================
 
@@ -234,8 +229,8 @@ def customized_heatmap(request, foo):
 	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
 
 	#Path to json
-	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/flarejsons/%sclusters/" %  (itype, stnd, ligandonly, cluster)
-
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/simulation_jsons/" %  (itype)
+	
 	#First batch of context variables
 	context = {
 		'fpdir' : fpdir,
@@ -248,30 +243,15 @@ def customized_heatmap(request, foo):
 		'rev' : rev,
 		'stnd': stnd,
 		'cluster' : int(cluster),
-	}
-
-	# Loading heatmap script 
-	script_list = []
-	for filename in heatmap_filename_list:
-		with open(filename, 'r') as scriptfile:
-			script = scriptfile.read()
-		script_list.append(script)
-
-	#Loading json dynID-to-receptor_name dictionary
-	dyn_to_names = json_dict(basedir+"name_to_dyn_dict.json")
-
-	# Send request 
-	context.update({
+		'dyn_list' : dyn_list,
 		'itypes_dict' : typelist,
 		'script_list' : script_list, 
 		'number_heatmaps_list' : number_heatmaps_list,
 		'numbered_divs' : zip(number_heatmaps_list, div_list),
-		'numbered_divwidths':zip(number_heatmaps_list, divwidth_list), 
-		'clusrange_all': list(range(2,21)),
-		'clusrange': list(range(1,int(cluster)+1)),
+		'sim_list' : list(zip(dyn_list, name_list)),
 		'mdsrv_url':mdsrv_url,
-		'dyn_to_names' : dyn_to_names,	
-	})
+		'csvfile' : dumps(csv_data),
+	}
 	print('returning')
 
 	return render(request, 'contact_maps/customized.html', context)

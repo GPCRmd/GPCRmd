@@ -42,7 +42,7 @@ a {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
-  height: 89%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
+  max-height: 89%; /* seems stupid but it is not. This way one avoids overflow in mozzilla browsers*/
 }
 
 #itype_link{
@@ -143,25 +143,27 @@ input[type=checkbox] {
   max-height: 400px;
   overflow-y: scroll;
   overflow-x: hidden;
-  min-width: 400;
+  min-width: 275;
 }
 
 .molec-check {
   padding-right: 10%
 }
 
-.dendrogram {
-  width: 520px;
-  float: left;
-  overflow-x: hidden; 
-  background-color: white
+#download_span {
+  cursor: pointer;
 }
 
-#scrolldiv {
-  height: 10px;
-  margin-bottom: 20;
-  margin-top: -20; 
-  overflow-x: scroll;
+#csvButton {
+  display: none;
+}
+
+#dendrogram {
+  display: inline-block;
+}
+
+#dendrogram-heatmap {
+  margin-bottom: 50;
 }
 
 /*Side-window*/
@@ -223,7 +225,6 @@ hr {
 }
 
 #heatmap_pager {
-  margin-left: 35%;
   z-index: 50;
   position: sticky;
   top: 00;
@@ -231,16 +232,29 @@ hr {
 
 #pager_list {
   max-width: 85%;
+  margin-left: 450px;
+}
+
+#pager_list_custom {
+  max-width: 85%;
+  margin-left: 370px;
+}
+
+.fixedwidth {
+  width: 1520;
 }
 
 #cv {
-  margin-top: 20;
-  float: right;
+  position: absolute;
+  left: 90%;
+  margin-top: 80px;
+  margin-left: 20;
 }
 
 #loading_div {
-  margin-top: 15%;
-  width: 57%;
+  display: inline-block;
+  vertical-align: top;
+  margin-top: 200px;
   padding-left: 25%;
 }
 
@@ -249,19 +263,28 @@ hr {
 }
 
 .heatmap {
-  padding-bottom: 200px;
+  display: none;
+}
+
+#freqtypes_click {
+  cursor: pointer;
 }
 
 #uncheck_all_sim {
-    position: fixed;
-    margin-left: 19%;
+  position: sticky;
+  top: 0%;
+  margin-left: 35%;
 }
-
 
 /*Flareplots*/
 
 #flare_title {
   cursor: pointer;
+}
+
+#flare_col {
+  visibility: hidden;
+  position: absolute;
 }
 
 .fpdiv {
@@ -381,13 +404,9 @@ hr {
   margin-bottom:5px;
 }
 
-.blueDropdownDiv {
-  z-index:10;
-} 
-
 .blueButton {
   margin-left:3px;
-  margin-top:7px
+  margin-bottom:7px
 }
 
 .blueList {
@@ -399,14 +418,6 @@ hr {
 
 .blueElement {
   padding:5px 10px 5px 10px;
-}
-
-#simulation_select {
-  float: right;
-}
-
-.traj_select {
-  float: left;
 }
 
 #embed_mdsrv {
@@ -434,6 +445,11 @@ hr {
   margin-top: 15; 
 }
 
+.setttingsB {
+  padding: 7px; 
+  color: rgb(88, 88, 88);
+}
+
 .loading_NGL_bottom {
   position:absolute;
   z-index:10;
@@ -445,18 +461,9 @@ hr {
   display: none;
 }
 
-.viewer_link_bottom {
-  margin: 6px;
-}
-
 .ngldiv {
   margin-top: 15px;
   margin-bottom: 15px;
-}
-
-.simList {
-  left: auto;
-  right: 0;
 }
 
 #fpdivlegend{

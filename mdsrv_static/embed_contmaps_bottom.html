@@ -67,12 +67,11 @@
 
             $(".traj_btn").click( function(){
                 //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                var btn_traj_Bid=$(this).attr("data-traj");
-                var tPatt = /\d*$/g;
-                var btn_traj_id = tPatt.exec(btn_traj_Bid);
+                var btn_traj_id=$(this).attr("data-traj");
                 var isact = $(this).hasClass("active");
                 trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                 player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                player.interpolateType='spline';
                 if(isact){
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
@@ -206,11 +205,15 @@
                         
         function create_traj_dropdown(traj_li,sel_traj,id){
 
-            $("#trajButton"+id, window.parent.document).html(sel_traj+' <span class="caret"></span></button>');
+            //As the name says, create the trajectory dropdown for the NGL viewer
+            var traj_id, add_element
+            traj_id = sel_traj.split('_')[0]
+            $("#trajButton"+id, window.parent.document).html('<b>Trajectory ID:</b> '+traj_id+' <span class="caret"></span></button>');
 
-            add_html='<li class="traj_element tsel is_active" id="ngl'+id+'_traj0" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
+            add_html='<li class="traj_element tsel is_active" traj_file="'+sel_traj+'" id="ngl'+id+'_traj0" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+traj_id+'</li>';
             for(i=1; i<traj_li.length; i++ ){
-              var add_element='<li class="traj_element" id="ngl'+id+'_traj'+i+'" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
+              traj_id = traj_li[i].split('_')[0]
+              add_element='<li class="traj_element" traj_file="'+traj_li[i]+'" id="ngl'+id+'_traj'+i+'" style="padding:5px 10px 5px 10px;"  >'+traj_id+'</li>';
               add_html+=add_element;
             }
 
@@ -230,18 +233,19 @@
             //Set active class to selected option, and inactivate the prviously active one
             var to_activate = $(traj_el_sel).attr('id');
             var to_inactivate = parent.$("#ngldiv"+id+" .traj_element.is_active").attr('id');
+            var traj_number = mytraj.split('_')[0]
             if (to_activate != to_inactivate){
-
               //Set simulation (dyn) button text and attributes
               change_display_sim_option("#" + to_activate, "#" + to_inactivate);
-              parent.$("#trajButton"+id).html(mytraj + ' <span class="caret"></span>');
+              parent.$("#trajButton"+id).html('<b>Trajectory ID:</b> ' + traj_number + ' <span class="caret"></span>');
             }
             
             //Reset trajectory player and adapt to new trajectory
-            if (player && $(".traj_btn").hasClass("active")){
+            var buttons = $(".traj_btn");
+            if (player && buttons.hasClass("active")){
               player.pause();
-              $(".traj_btn").removeClass("active");
-              $(".traj_btn").children().attr("class","glyphicon glyphicon-play");
+              buttons.removeClass("active");
+              buttons.children().attr("class","glyphicon glyphicon-play");
             }
             trajComp.setFrame(-1);
             $("#last_played").text(mytraj);        
@@ -423,13 +427,26 @@
             //Show positions previously setted
             set_positions(stage, id, ballesteros_to_pdb, o);
 
+            //Get Original position of the system
+            ori= stage.viewerControls.getOrientation();
+
+            //Recenter protein on click of center button
+            $("#center"+id, window.parent.document).click(function(){
+                stage.autoView(1000); 
+            });
+
+            //Reset protein to original position
+            $("#restartPos"+id, window.parent.document).click(function(){
+                stage.animationControls.orient(ori);
+            });
+
           });
 
           //On click of the trajectory dropdown options
           $("#trajsDropdown"+id+" .traj_element" , window.parent.document).click(function(){
             
             //Change trajcctory controller
-            mytraj=$(this).text();
+            mytraj=$(this).attr('traj_file');
             traj_id=traj_fnames.indexOf(mytraj);
             trajComp = stage.getComponentsByName("my_comp").list[0].trajList[traj_id]
             manageTrajChange(trajComp,this,mytraj,traj_id,id);
@@ -440,17 +457,25 @@
         }
 
         function create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage){
-            var dyn_list = clustdict[new_clust].sort();
+
+            //If it is a customized selection page, put 'custom_cluster' as the selected cluster 
             var new_dyns, name_simulation, dynid;
+            if (isNaN(new_clust)){
+              new_clust = "custom_cluster";
+            } 
+            else {
+              new_clust = "cluster"+new_clust;
+            }
 
             //Set dropdown list
+            var dyn_list = clustdict[new_clust].sort();
             for (var i=0; i < dyn_list.length; i++){
 
                 dynid = dyn_list[i];
-                name_simulation = compl_data[dynid]['prot_lname']+" ("+compl_data[dynid]['pdb_id']+")";
+                name_simulation = compl_data[dynid]['up_name']+" ("+compl_data[dynid]['pdb_id']+") ("+dynid+")";
 
                 if (i==0){
-                    parent.$("#simButton"+id).html(name_simulation + ' <span class="caret"></span>');
+                    parent.$("#simButton"+id).html('<b>Simulation</b>: '+name_simulation + ' <span class="caret"></span>');
                     parent.$("#simButton"+id).attr("data-spath", compl_data[dynid]['struc_f']);
                     parent.$("#simButton"+id).attr("data-dynid", dynid);
 
@@ -479,7 +504,7 @@
                     change_display_sim_option("#" + to_activate, "#" + to_inactivate);
 
                     //Set simulation (dyn) button text and attributes
-                    parent.$("#simButton"+id).html(name_simulation + ' <span class="caret"></span>');
+                    parent.$("#simButton"+id).html('<b>Simulation</b>: ' + name_simulation + ' <span class="caret"></span>');
                     parent.$("#simButton"+id).attr("data-spath", compl_data[new_dynid]['struc_f']);
                     parent.$("#simButton"+id).attr("data-dynid", new_dynid);
 
@@ -527,6 +552,9 @@
         /////Initial stage. Triggered when flareplots are fully loaded
         $(document.body).bind('createNGL'+id, function(e, clustdict, compl_data) {  
 
+          //Variables
+          var viewheight, new_clust;
+
           //Slider and page settings
           $(".ui-slider").css({"margin-left":"25px"});
           $(".ui-slider-handle").css({"height":"15px","width":"15px","border-radius":"100%","margin-top":"-7px","margin-left":"0"});
@@ -534,20 +562,22 @@
           $(".ui-slider-input").css({"font-size":"10px","padding":"2px","margin-top":"2px","margin-left":"6px"})
           $(".ui-page").css({"overflow":"hidden"})
 
-            
+          //Positionate trajRangeDiv bar
+          viewheight = parseInt($('#viewport').css('height'));
+          $('#trajRangeDiv').css('margin-top', viewheight*0.95)
+
           //Upon click of cluster button, set new dynamics dropdown
           parent.$("#fpdiv"+id+" .clusters_dropup-ul li").click(function(){
-            new_clust = "cluster"+$(this).attr('data-tag');
+            new_clust = $(this).attr('data-tag');
             stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
           });
 
-          var stage = new NGL.Stage("viewport");
+          stage = new NGL.Stage("viewport");
           stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
-          //stage.viewer.scene.background = new THREE.Color( 0xffffff );
           trajButtons(stage);//Control of play/pause and change of frame 
 
-          //Initial dynamics
-          new_clust = "cluster"+parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag');
+          //Initial dynamics. If clusternumber is not a number (but a dynX thing), go for customized path
+          new_clust = parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag')
           stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
 
         });
@@ -555,8 +585,13 @@
         ////////Start loading NGLs, and subsequent flareplots, only when the section is uncollapsed on click
         parent.$("#flare_title").click(function(){
 
+          //If screen is narrow, put flareplots and NGL viewers one on top of the other instead of side by side
+          if (parent.document.body.clientWidth < 1060){
+            parent.$(".bottomElement").removeClass('col-xs-6').addClass('col-xs-12');
+          }
+
           //If has already been opened, do not load NGLs and flareplots once again
-          if ($(this).hasClass('Already_clicked0') && $(this).hasClass('Already_clicked1')){
+          if (($(this).hasClass('Already_clicked0') && $(this).hasClass('Already_clicked1')) || $(this).hasClass('Already_clickedC')){
             return;
           }
 
@@ -585,9 +620,9 @@
 
     </script>
 
-    <div id="toiframe" style="width:100%;height:500px"><!-- w: 590 = 348 ; h: 370 = 348 -->
-      <div id="viewport" style="width:100%;height:500px;margin-top:-30px;"></div>
-      <div id="trajRangeDiv" style="position:absolute;width:95%;height:30px;margin-top:452px;margin-left:10px;">
+    <div id="toiframe" style="width:100%;height:100%"><!-- w: 590 = 348 ; h: 370 = 348 -->
+      <div id="viewport" style="width:100%;height:100%;"></div>
+      <div id="trajRangeDiv" style="position:absolute;width:95%;height:30px;;margin-left:10px;">
       
       <p style="margin-right:18px;font-size:12px;color:#B8B8B8;margin-top:5px" class="pull-right" id="last_played"></p>
         

@@ -40,7 +40,7 @@
           {% include './contact_maps/menu_customheatmap.html' %}
         </div>
         <!--Heatmap pager -->
-        <div id="heatmap_pager">
+        <div id="heatmap_pager" class="fixedwidth">
           <ul class="pagination" id="pager_list">
             <li class="page-item prev">
               <a class="page-link" aria-label="Previous" onclick="heatmap_change('prev')">
@@ -64,21 +64,21 @@
           </ul>
           <canvas width="80" height="255" id="cv"></canvas>
         </div>
-        <div id="dendrogram-heatmap" class="row">
-          <div id="dendrogram" class="col-xs-4" style="width: 35%">
+        <div id="dendrogram-heatmap" class="row fixedwidth">
+          <div id="dendrogram">
             {{dendrogram | safe }}
           </div>
-          <div id="loading_div" class="col-xs-8">
+          <div id="loading_div">
             <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/>
             <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
           </div>
           {% for number,div in numbered_divs %}
           {% if number == "1" %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} style="display: inline-block;" class="heatmap">
             {{ div | safe }}
           </div>
           {% else %}
-          <div id="heatmap{{number}}" data-number={{number}} class="col-xs-8 heatmap" style="width: 57%; display: none; overflow-x: scroll;">
+          <div id="heatmap{{number}}" data-number={{number}} class="heatmap">
             {{ div | safe }}
           </div>
           {% endif %}
@@ -89,103 +89,32 @@
         </div>
       </div>
     </div>
-    <div id="scrolldiv">
-      {% for number,width in numbered_divwidths%}
-        {% if number == "1" %}
-        <div id="scrolldiv_inner{{number}}" class="scrolldiv" style="width: {{width}}; height: 10px;"></div>
-        {% else %}
-        <div id="scrolldiv_inner{{number}}" class="scrolldiv" style="width: {{width}}; height: 10px; display: none;"></div>
-        {% endif %}        
-      {% endfor %}
-    </div>
   </div>
 
   <!--Here be side-window (the thing that opens up upon clicking on heatmap)-->
-  <div class="col-xs-3" id="info">
-    <div id="subinfo" class="panel panel-info">
-      <div class="panel-heading" style="">Interaction details
-        <button type="button" class="close" aria-label="Close" onclick="closeSideWindow()">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="panel-body" style="">
-        <div style="min-width:100%">
-          <!-- Info on clicked dyn -->
-          <p><b>Receptor:</b> <span id="recept_val"></span> <a id="recept_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
-          <p><b>PDB id:</b> <span id="pdb_id"></span> <a id="pdb_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
-          <p><b>Ligand:</b> <span id="lig_val"></span> <a id="lig_link" href="#" target='_blank' class="btn btn-link btn-xs" role="button"><span class="glyphicon glyphicon-plus-sign"></span> info</a></p>
-          <p><b>Positions:</b> <span id="pos_val"></span></p>
-          <p><b>Residue types: </b><span id="restypes_val">Not avalible</span></p>
-
-          {% if itype_code == "all" %}
-          <p><b>Frequencies by type:</b> </p>
-          <ul>
-          {% for group, types_tuple in itypes_order %}
-            {% for typecode,typename in types_tuple  %}
-              {% if typecode == "hb" %}
-                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>                  
-                <ul>
-                {% for hbcode,hbitype in hb_itypes.items %}
-                  <li><p>{{hbitype}}: <span id="freq_{{hbcode}}" ></span></p></li> 
-                {% endfor %}
-                </ul>
-              {% else %}
-                <li><p>{{typename}}: <span id="freq_{{typecode}}" ></span></p></li>
-              {% endif %}
-            {% endfor %}
-          {% endfor %}
-          </ul>
-          {% else %}
-          <p><b>{{itype_name}} frequency:</b> <span id="freq_{{itype_code}}" ></span></p>
-          {% endif %}
-          <p><b>Total interaction frequency:</b> <span id="freqtotal_val">%</span></p>
-          <a id="viewer_link" href="#" target='_blank' class="btn btn-success btn-sm" role="button"><b>Open with GPCRmd viewer</b></a>
-
-          <!-- Trajectory dropdown -->
-          <div class="dropdown blueDropdownDiv" id="trajsDropdown">
-            <button  id="trajButton" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">-
-            <span class="caret"></span></button>
-            <ul id="trajsDropdown_options" class="dropdown-menu">
-              <span id="add_traj_options"></span>
-            </ul>
-          </div>
-        
-          <!-- Loading div-->
-          <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" id="loading_NGL_side"/></center></span>
-          <!-- iframe for the ngl viewer -->
-          <div id="ngl_div">
-            <iframe id="ngl_iframe" src="{{mdsrv_url}}/html/embed_contmaps.html" scrolling="no"></iframe>
-          </div>
-          <div id="posNotinRec" class="alert alert-warning">
-            <span id="posNotinRec_text"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  {% include './contact_maps/side_window.html' %}
 
   <div class="col-xs-12" id="not_retracting_parts">
 
     <!--Here be flareplots and NGLs -->
-
     <div class="panel panel-primary" id="flare_title">
-      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false">
+      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false" onclick="turn_arrow('flare_arrow','click_title')">
         <div class="title_div">
           <h4 class="title">Top5 representative interactions in clusters
-            <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down "></span>
+            <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
           </h4>
         </div>
       </div>
     </div>
 
-    <div class="panel panel-primary" style="visibility: hidden; position: absolute;" id="flare_col" data-fpdir="{{fpdir}}">
+    <div class="panel panel-primary" id="flare_col" data-fpdir="{{fpdir}}">
       <div class="panel-body">
 
         <center>
           <h4>Please, select two of the clusters of the dendrogram above to compare its main 5 interactions</h4>
         </center>
 
-        <div id="fpdiv0" class="col-xs-6 fpdiv">
+        <div id="fpdiv0" class="col-xs-6 fpdiv bottomElement">
           <center>
             
             <!--Flareplot toolbar-->
@@ -214,10 +143,10 @@
                   Class A numbering <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu numbering_dropup-ul">
-                  <li id="fp_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
-                  <li id="fp_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
-                  <li id="fp_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
-                  <li id="fp_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                  <li id="fp0_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp0_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp0_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp0_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
                 </ul>
               </div>
 
@@ -236,7 +165,7 @@
           </center>
         </div>
      
-        <div id="fpdiv1" class="col-xs-6 fpdiv" data-fpdir="{{fpdir}}">
+        <div id="fpdiv1" class="col-xs-6 fpdiv bottomElement" data-fpdir="{{fpdir}}">
           <center>
             
             <!--Flareplot toolbar-->
@@ -264,10 +193,10 @@
                   Class A numbering <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu numbering_dropup-ul">
-                  <li id="fp_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
-                  <li id="fp_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
-                  <li id="fp_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
-                  <li id="fp_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
+                  <li id="fp1_nomenA" class="fp_display_element is_active" data-tag="A" title="Ballesteros-Weinstein numbering system">Class A numbering</li> 
+                  <li id="fp1_nomenB" class="fp_display_element" data-tag="B" title="Wootten numbering system">Class B numbering</li> 
+                  <li id="fp1_nomenC" class="fp_display_element" data-tag="C" title="Pin numbering system">Class C numbering</li> 
+                  <li id="fp1_nomenF" class="fp_display_element" data-tag="F" title="Wang numbering system">Class F numbering</li> 
                 </ul>
               </div>
 
@@ -287,28 +216,26 @@
           </center>
         </div>
         
-        <div id="ngldiv0" class="col-xs-6 ngldiv">
+        <div id="ngldiv0" class="col-xs-6 ngldiv bottomElement">
 
           <div class="container-fluid NGLtoolbar" >
             <div class="row NGLtoolbar_row">
-              <div id="trajsDropdown0" class="col-xs-6 dropdown blueDropdownDiv traj_select">
-                <button id="trajButton0" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
+              <div class="dropdown blueDropdownDiv" id="simulation_select">
+                <button id="simButton0" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+              <div id="trajsDropdown0" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton0" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
                 <span class="caret"></span></button>
                 <ul class="dropdown-menu blueList trajList">
                   <span id="add_traj_bottom0"></span>
                 </ul>
               </div>               
-              <div class="col-xs-6 dropdown blueDropdownDiv" id="simulation_select">
-                <button id="simButton0" class="btn btn-info btn-xs dropdown-toggle pull-right blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster1.0}}" aria-expanded="false"><span class="caret"></span></button>
-                <ul class="dropdown-menu blueList simList">
-                  <span id="add_sim_bottom0"></span>
-                </ul>
-              </div>
             </div>  
             <div class="row NGLtoolbar_row">
-              <div class="col-xs-12">
-                <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
-              </div>
+              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
             </div>  
           </div>
 
@@ -318,30 +245,32 @@
             <span id="posNotinRec_text0"></span>
           </div>
           <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+          <div class="pull-right">                          
+            <button id="restartPos0" type="button" class="btn btn-link settingsB" title="Reset position" ><span class="glyphicon glyphicon-repeat"></span></button>       
+            <button id="center0" type="button" class="btn btn-link settingsB" title="Center"><span class="glyphicon glyphicon-record"></span></button>
+          </div>
         </div>
 
-        <div id="ngldiv1" class="col-xs-6 ngldiv">
+        <div id="ngldiv1" class="col-xs-6 ngldiv bottomElement">
 
           <div class="container-fluid NGLtoolbar" >
             <div class="row NGLtoolbar_row">
-              <div id="trajsDropdown1" class="col-xs-6 dropdown blueDropdownDiv traj_select">
-                <button id="trajButton1" class="btn btn-info btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
+              <div class="dropdown blueDropdownDiv" id="simulation_select">
+                <button id="simButton1" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster2.0}}" aria-expanded="false"><span class="caret"></span></button>
+                <ul class="dropdown-menu blueList simList">
+                  <span id="add_sim_bottom0"></span>
+                </ul>
+              </div>
+              <div id="trajsDropdown1" class="dropdown blueDropdownDiv traj_select">
+                <button id="trajButton1" class="btn btn-default btn-xs dropdown-toggle blueButton" type="button" data-toggle="dropdown">
                 <span class="caret"></span></button>
                 <ul class="dropdown-menu blueList trajList">
                   <span id="add_traj_bottom1"></span>
                 </ul>
               </div>               
-              <div class="dropdown blueDropdownDiv" id="simulation_select">
-                <button id="simButton1" class="btn btn-info btn-xs dropdown-toggle pull-right blueButton" type="button" data-toggle="dropdown" data-dynid="{{clustdict.cluster2.0}}" aria-expanded="false"><span class="caret"></span></button>
-                <ul class="dropdown-menu blueList simList">
-                  <span id="add_sim_bottom0"></span>
-                </ul>
-              </div>
             </div>
             <div class="row NGLtoolbar_row">
-              <div class="col-xs-12">
-                <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
-              </div>
+              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
             </div>  
           </div>
 
@@ -351,6 +280,10 @@
             <span id="posNotinRec_text1"></span>
           </div>
           <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
+          <div class="pull-right">                          
+            <button id="restartPos1" type="button" class="btn btn-link settingsB" title="Reset position" ><span class="glyphicon glyphicon-repeat"></span></button>       
+            <button id="center1" type="button" class="btn btn-link settingsB" title="Center"><span class="glyphicon glyphicon-record"></span></button>
+          </div>
         </div>  
 
       </div>
