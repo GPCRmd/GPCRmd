@@ -24,6 +24,7 @@ warnings.filterwarnings('ignore')
 ### Functions
 #############
 
+
 def json_dict(path):
     """Converts json file to pyhton dict."""
     json_file=open(path)
@@ -51,8 +52,8 @@ def improve_receptor_names(df_ts,compl_data):
         "traj_fnames":10,
         "traj_f":11,
         "delta":12,
-        "repeated_receptor":13,
-        "receptor_unique_name":14,
+        "receptor_unique_name":13,
+        'gpcr_class':14
     }
     dyns_by_receptor={}
     index_dict={}
@@ -71,36 +72,22 @@ def improve_receptor_names(df_ts,compl_data):
         traj_fnames=compl_data[recept_id]["traj_fnames"]
         traj_f=compl_data[recept_id]["traj_f"]
         delta=compl_data[recept_id]["delta"]
+        sim__fullname="%s (%s) (%s)" % (upname,pdb_id,dyn_id)
+        gpcr_class = compl_data[recept_id]["class"]
+        
         if pdb_id:
             prot_lig=(pdb_id,lig_sname)
         else:
             prot_lig=(upname,lig_sname)
 
         recept_name=prot_lname+" ("+prot_lig[0]+")"
-        if recept_name in dyns_by_receptor:
-            dyns_by_receptor[recept_name].add(dyn_id)
-
-        else:
-            dyns_by_receptor[recept_name] = {dyn_id}
-
-        recept_info[dyn_id]=[upname, lig_sname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta,False]
+        recept_info[dyn_id]=[upname, lig_sname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta,sim__fullname,gpcr_class]
         index_dict[recept_id]=recept_name 
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
 
-    #Check which receptors have more than one simulation, and mark this simulations as "repeated_receptor", and
-    #also add the "unique name" of the receptor
-    for protlig,dynset in dyns_by_receptor.items():
-        if len(dynset) > 1:
-            for dyn_id in dynset:
-                recept_info[dyn_id][13] = True
-                recept_info[dyn_id].append("%s(%s)(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6],dyn_id))
-        else:
-            dyn_id = list(dynset)[0] 
-            recept_info[dyn_id].append("%s(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6]))
-
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+    df_ts['shortName'] = list(map(lambda x: recept_info[x][13], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
-
 
 def filter_same_helix(df):
     """
@@ -128,26 +115,13 @@ def split_by_standard(df, compl_data):
     df_standard = df[df.columns[~df.columns.isin(nonstandard_simulations)]]
     
     return(df, df_standard)
-    
-def filter_lowfreq_old(df, main_itype):
-    """
-    Filter low-frequency interactions. 
-    """    
-
-    # Preserve positions which interaction frequency for this type reach, at mean, 0.1 (or 10 if working on percentages)
-    df['mean_row'] = df.mean(axis = 1, numeric_only = True)
-    pos_topreserve = set(df['Position'][ (df['mean_row'] > 10) & (df['itype'] == main_itype) ])
-    df.drop('mean_row', 1, inplace = True)
-    df = df[df['Position'].isin(pos_topreserve)]
-     
-    return(df)
 
 def filter_lowfreq(df, main_itype):
     """
     Filter low-frequency interactions. Remove all positions With do not have at least 2 interactions with more than 
     50% frequency
     """
-    df_purged = df.drop(['itype','Position'], 1)
+    df_purged = df.drop(['itype','Position','Position1','Position2'], 1)
     df['above_50perc'] = (df_purged > 50).sum(1)
     pos_topreserve = set(df['Position'][ (df['above_50perc'] > 1) & (df['itype'] == main_itype) ])
     df.drop('above_50perc', 1, inplace = True)
@@ -188,7 +162,7 @@ def stack_matrix(df, itypes):
         else:
             df_ts = pd.merge( df_ts, df_ts_type, how ='outer', on=["level_0", 'Position'])        
     
-    df_ts = df_ts.fillna(0.0) # Fill posible NaN in file
+    df_ts = df_ts.fillna("0.0") # Fill posible NaN in file
 
     df_ts.rename(columns={"level_0": "Id"}, inplace=True)
 
@@ -202,7 +176,6 @@ def adapt_to_marionas(df):
 
     #Merging toghether both contacting aminoacid Ids
     df['Position'] = df.Position1.str.cat(df.Position2, sep = " ")
-    df = df.drop(df.columns[[0, 1]], axis=1)
 
     # Passing frequencies from decimal to percentage
     nocols = (("Position1","Position2","itype","Position"))
@@ -211,6 +184,72 @@ def adapt_to_marionas(df):
             df[colname] = df[[colname]].apply(lambda x: x*100)
 
     return(df)
+
+def flareplot_template(df, basepath):
+    """
+    Create a pseudoflareplot input json with no interactions, but with all avalible positions.
+    It will be used later as a template to create the top5 interactions flareplots.  
+    """
+    #'track' entry for json file: each track is a node (position) in the flareplot
+    helix_colors = {'1':"#78C5D5",'12':"#5FB0BF",'2':"#459BA8",'23':"#5FAF88",'3':"#79C268",'34':"#9FCD58",'4':"#C5D747",'45':"#DDD742",'5':"#F5D63D",'56':"#F3B138",'6':"#F18C32",'67':"#ED7A6A",'7':"#E868A1",'78':"#D466A4",'8':"#BF63A6",'Ligand--1':'#FF5050', 'Ligand': '#FF5050'}        
+    allpos = set(df['Position1']).union(set(df['Position2']))
+    tracks = [{
+        'trackLabel': 'Degree centrality',
+        "trackProperties": []
+    }]
+    trees = [{
+        'treeLabel': 'Helices',
+        'treePaths': []
+    }]
+    
+    #Add ligand
+    tracks[0]['trackProperties'].append({
+        'color' : "#FF5050",
+        'size' : 1.0,
+        'nodeName': 'Ligand'
+    })
+    trees[0]['treePaths'].append([1, 'Ligand'])
+    
+    setpos = set()
+    for multipos in allpos:
+        if multipos.startswith('Ligand'):
+            continue
+            
+        split_pos = multipos.split('x')
+        for pos in split_pos:
+            if split_pos.index(pos) == 0:
+                helix = pos
+                color = helix_colors[helix]
+            else:                
+                real_pos = helix+'x'+pos
+                if real_pos not in setpos:
+                    trackprop = {
+                        'color' : color,
+                        'size' : 1.0,
+                        'nodeName': real_pos
+                    }
+                    if len(helix) == 2:
+                        newhelix = int(helix[0]) + int(helix[1])
+                        trees[0]['treePaths'].append([newhelix, real_pos])
+                    else:
+                        newhelix = int(helix)*2
+                        trees[0]['treePaths'].append([newhelix, real_pos])
+
+                    tracks[0]['trackProperties'].append(trackprop)
+                    setpos.add(real_pos)
+
+    #Sort trees
+    treePaths_sorted = sorted(list(trees[0]['treePaths']), key=lambda l: (l[0],l[1]))
+    treePaths_sorted = [ str(x[0])+"."+x[1] for x in treePaths_sorted ]
+    trees[0]['treePaths'] = treePaths_sorted
+    
+    #Output jsondict to store
+    jsondict = { 'trees' : trees, 'tracks' : tracks }
+    
+    # Store json file
+    jsonpath = basepath + "template.json"
+    with open(jsonpath, 'w') as jsonfile:
+        dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
 
 def frequencies(df):
     """
@@ -268,23 +307,7 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
     colors.
     """
     
-    def define_hoverentry(marker, text, x, y,):
-        """
-        Define a new trace (U-shape things that consitute dendrograms)
-        """
-        return dict(
-            type = 'scatter',
-            hoverinfo = 'text',
-            marker = marker,
-            text = text,
-            mode = 'markers',
-            x = x,
-            xaxis = 'x',
-            y = y,
-            yaxis = 'y'
-        )
-    
-    def define_annotation_list(y_pos, bgcolor, text, colorfont):
+    def define_annotation_list(y_pos, bgcolor, text, colorfont, name, hovertext):
         """
         Create a list of annotation objects. This annotations are meant to replace the axis labels as names of simulations
         """
@@ -293,8 +316,9 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
             y = y_pos,
             xanchor = 'left',
             text = text,
-            captureevents = True,
+            hovertext = hovertext,
             showarrow = False,
+            captureevents = True,
             bgcolor = bgcolor,
             font = { 'size' : 12, 'color' : colorfont },
             height = 14
@@ -313,13 +337,9 @@ def hoverlabels_axis(fig, recept_info, recept_info_order, default_color, annotat
         anot_text = "%s (%s)<b style='display: none'>%s</b>" % (simname, pdbcode, dynid)
         hovertext = str("complex with %s (dynID: %s)" % (ligname, nodyn_id)) if (ligname) else  str("apoform (dynID: %s)" % (nodyn_id))
 
-        # Create new mini-entry reaching only branch of interest
-        newhoverentry = define_hoverentry(hoverentry['marker'], hovertext, [-0]*4, [ypos] * 4)
-        fig.add_trace(newhoverentry)
-
         # Annotation to corresponding simulation
         colorfont = black_or_white(bgcolor)
-        annotations.append(define_annotation_list(ypos, bgcolor, anot_text, colorfont))
+        annotations.append(define_annotation_list(ypos, bgcolor, anot_text, colorfont, dynid, hovertext))
 
         return(fig, annotations)
     
@@ -443,13 +463,12 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
     """
     Create json entries for significative positions (top10 mean frequency) of each cluster produced
     """
-
     os.makedirs(folderpath,  exist_ok = True)
     colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
     for clust in clustdict.keys():
 
         # Select top5 interactions based on its mean frequency. Also asign color based on mean value
-        df_clust = df.filter(items = clustdict[clust] + ['APosition 1', 'APosition 2', 'BPosition 1', 'BPosition 2','CPosition 1', 'CPosition 2','FPosition 1', 'FPosition 2',])
+        df_clust = df.filter(items = clustdict[clust] + ['APosition1', 'APosition2', 'BPosition1', 'BPosition2','CPosition1', 'CPosition2','FPosition1', 'FPosition2',])
         df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
         mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
         df_clust['color'] = df_clust['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
@@ -459,8 +478,8 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
 
         # 'Edge' entry for json file
         df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-        df_dict['name1'] = df_clust['APosition 1'] 
-        df_dict['name2'] = df_clust['APosition 2']
+        df_dict['name1'] = df_clust['APosition1'] 
+        df_dict['name2'] = df_clust['APosition2']
         df_dict['frames'] = [[1]]*len(df_dict)
         df_dict['color'] = df_clust['color']
         edges = df_dict.to_dict(orient="records")
@@ -475,8 +494,8 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
         #'Edge' multi-entries, based on the 4 GPCR nomenclatures
         for leter in ['A', 'B', 'C', 'F']:
             df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-            df_dict['name1'] = df_clust[leter+'Position 1'] 
-            df_dict['name2'] = df_clust[leter+'Position 2']
+            df_dict['name1'] = df_clust[leter+'Position1'] 
+            df_dict['name2'] = df_clust[leter+'Position2']
             df_dict['frames'] = [[1]]*len(df_dict)
             df_dict['color'] = df_clust['color']
             leter_edges = df_dict.to_dict(orient="records")
@@ -523,7 +542,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout']['margin'].update({
         'r' : 150,
         'l' : 100,
-        't' : 60,#This problem with the phantom margin has to be solved at some point
+        't' : 50,#This problem with the phantom margin has to be solved at some point
         'b' : 0,
         'pad' : 0,
         'autoexpand' : False,
@@ -569,18 +588,19 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     })
     return (list(dendro_leaves),clustdict)
 
-def create_dyntoname_file(dyn_dend_order, recept_info, options_path):
+def create_dyntoname_file(dyn_dend_order, recept_info, recept_info_order, options_path):
     """
     Creates a list of tuples, each one containing dynID-receptor names pairs
     Needed to display menu dropdown's receptor names in same order as dendrogram
     """
-    dyn_names = [ recept_info[dyn][14] for dyn in dyn_dend_order ]
+    unique_name_index = recept_info_order['receptor_unique_name']
+    dyn_names = [ recept_info[dyn][unique_name_index] for dyn in dyn_dend_order ]
     dyn_to_names = list(zip(dyn_dend_order, list(dyn_names)))
     dyn_to_names.reverse()
     with open(options_path+"name_to_dyn_dict.json", "w") as dyn_names_file:
         dump(dyn_to_names, dyn_names_file, ensure_ascii=False, indent = 4)
 
-def add_restypes(df, compl_data):
+def add_restypes(df, compl_data, recept_info, recept_info_order):
     """
     Add a new column with the residue type (ARG, CYS, TRP) of each position in each simulation
     """
@@ -589,38 +609,54 @@ def add_restypes(df, compl_data):
      'G': 'GLY', 'H': 'HIS', 'L': 'LEU', 'R': 'ARG', 'W': 'TRP', 
      'A': 'ALA', 'V': 'VAL', 'E': 'GLU', 'Y': 'TYR', 'M': 'MET'}
     GPCRclass_numbers = {'A':1, 'B':2, 'C':3, 'F':4}
-    
-    def get_restype_and_realpos(dynid, pos):
+    class_index = recept_info_order['gpcr_class']
+
+    def get_restype_and_realpos(dynid_col, pos_col):
         """
         Return residue type of position and the position identifier for this position in this protein
         It's a bit complex, for I need to distinguish which GPCR class nomenclature uses this protein
         """
-        if pos == 'Ligand':
-            return pd.Series([pos, "Ligand"])
-        
-        GPCRclass_number = GPCRclass_numbers[compl_data[dynid]['class']] 
-        class_pos_array = pos.split('\n')
-        class_pos = class_pos_array[0]+class_pos_array[GPCRclass_number]
-        
-        try:
-            return pd.Series([AAs[compl_data[dynid]['gpcr_pdb'][class_pos][-1]], class_pos])
-        except KeyError:
-            #print("Position %s not found in %s" %(class_pos, dynid)) #Too much output
-            return pd.Series(["NaN", class_pos])
-        
+        restype_list = []
+        prot_pos = []
+        for dynid,pos in zip(dynid_col, pos_col):
+            if pos == 'Ligand':
+                return pd.Series([pos, "Ligand"])
+
+            GPCRclass_number = GPCRclass_numbers[recept_info[dynid][class_index]] 
+            class_pos_array = pos.split('\n')
+            class_pos = class_pos_array[0]+class_pos_array[GPCRclass_number]
+
+            if class_pos in compl_data[dynid]['gpcr_pdb']: 
+                restype = compl_data[dynid]['gpcr_pdb'][class_pos][-1]
+                restype_list.append(restype)
+                prot_pos.append(class_pos)
+            else:
+                #print("Position %s not found in %s" %(class_pos, dynid)) #Too much output
+                restype_list.append("(N/A)")
+                prot_pos.append(class_pos)
+
+        return(restype_list,prot_pos)
+
     #Split Position column
     new = df['Position'].str.split("\n\n", n = 1, expand = True)
     df['Position 1'] = new[0]
     df['Position 2'] = new[1]
-    
+
     #Add residue type and protein position column
-    df[['restype_1','protein_Position 1']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 1']), axis = 1) 
-    df[['restype_2','protein_Position 2']] = df.apply(lambda x: get_restype_and_realpos(x['Id'], x['Position 2']), axis = 1) 
+    (restype_1, protein_Position_1) = get_restype_and_realpos(df['Id'], df['Position 1'].values)
+    df['restype_1'] = restype_1
+    df['protein_Position 1'] = protein_Position_1
+    (restype_2, protein_Position_2) = get_restype_and_realpos(df['Id'], df['Position 2'].values)
+    df['restype_2'] = restype_2
+    df['protein_Position 2'] = protein_Position_2
+    
     df['restypes'] = df['restype_1'] +" "+ df['restype_2']  
     df['protein_Position'] = df['protein_Position 1'] +" "+ df['protein_Position 2']
-
+    df['restypePosition'] = df['restype_1'] + df['protein_Position 1'] + " " + df['restype_2'] + df['protein_Position 2']
+    
     #Drop Position, proteinPosition and restype columns once they are not needed
     df.drop(columns = ['Position 1','Position 2','restype_1','restype_2','protein_Position 1','protein_Position 2'], inplace = True)
+  
     return df
 
 def new_columns(df):
@@ -628,33 +664,30 @@ def new_columns(df):
     Adding Position1 and Position2 columns from A nomenclature system to dataframe, in subsitution of
     Position column, which included both.
     """
-    
-    def split_by_class(row, pos_number):
+
+    def split_by_class(position_col):
         """
         Split 2x\n26\n12\n12\n12 into 2x26 2x12 2x12 2x12 2x12
         """
-
-        splited_row = row[pos_number].split("\n")
+        name = position_col.name
+        positions = position_col.values
+        pos_by_class = {"A"+name :[], "B"+name :[], "C"+name :[], "F"+name :[]}
         number_letter = ["0",'A','B', 'C', 'F']
-        for i in [1,2,3,4]:
+        for pos in positions:
+            splited_pos = pos.split("x")
+            for i in [1,2,3,4]:
+                if pos == "Ligand":
+                    pos_by_class[number_letter[i]+name].append("Ligand")
+                else:
+                    pos_by_class[number_letter[i]+name].append(splited_pos[0]+"x"+splited_pos[i])
 
-            if row[pos_number] == "Ligand":
-                row[number_letter[i]+pos_number] = "Ligand"
-            else:
-                row[number_letter[i]+pos_number] = splited_row[0]+splited_row[i]
-        return(row)
-        
-    #Position column split
-    patern = re.compile(r"x\n(\d+)\n\d+\n\d+\n\d+")
-    df['Position'] = df.index
-    new = df['Position'].str.split("\n\n", n = 1, expand = True)
-    df['Position 1'] = new[0]
-    df['Position 2'] = new[1]
+        return(pd.DataFrame.from_dict(pos_by_class))
 
-    df = df.apply(lambda x: split_by_class(x, "Position 1"), axis = 1)
-    df = df.apply(lambda x: split_by_class(x, "Position 2"), axis = 1)
-    df.drop(columns = ['Position'], inplace = True)
-    
+    df.reset_index(drop = True, inplace = True)
+    df_newcols1 =  split_by_class(df["Position1"])
+    df_newcols2 =  split_by_class(df["Position2"])
+    df = pd.concat([df, df_newcols1, df_newcols2], axis = 1)
+
     return df
 
 
@@ -694,17 +727,11 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
 
     #Creating hovertool listzzzz
-    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@protein_Position'), ('Residues', '@restypes')]
-    if itype == "all":
-        for group,type_tuple in itypes_order:
-            for itype_code,itype_name in type_tuple:
-                hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
-                if itype_code == "hb":
-                    for hb_code,hb_name in hb_itypes.items():
-                        hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
-    else:
-        hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
-    hoverlist.append(('Total interaction frequency', '@{all}{0.00}%'))
+    hoverlist = [('Name', '@Name'),
+                 ('PDB id', '@pdb_id'),
+                 ('Position', '@restypePosition'),
+                 (typelist[itype], "@{" + itype + '}{0.00}%')
+                ]
 
     #Hover tool:
     hover = HoverTool(
@@ -712,9 +739,8 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     )
 
     return hover
-
   
-def define_figure(width, height, tool_list, dataframe, hover, itype):
+def define_figure(width, height, dataframe, hover, itype):
     """
     Prepare bokeh figure heatmap as intended
     """
@@ -731,7 +757,7 @@ def define_figure(width, height, tool_list, dataframe, hover, itype):
         #title="Example freq",
         y_range=list(dataframe.Id.drop_duplicates()),
         x_range=list(dataframe.Position.drop_duplicates()),
-        tools=tool_list, 
+        tools=["hover","tap","save","reset","wheel_zoom"], 
         x_axis_location="above",
         active_drag=None,
         toolbar_location="right",
@@ -829,8 +855,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var recept_name=data["Name"][sel_ind];
                 var recept_id=data["Id"][sel_ind];
                 var pos = data["protein_Position"][sel_ind];
-                var restypes = data["restypes"][sel_ind];
-                var freq_total=data["all"][sel_ind];
+                var restypepos = data["restypePosition"][sel_ind];
                 var freq_type=data[itype][sel_ind];
                 var pos_array = pos.split(" ");
                 var pos_string = pos_array.join("_")
@@ -852,7 +877,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var pdb_id_nochain = pdb_id.split(".")[0];
                 var delta=ri_data[recept_id][rio_data['delta']];
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
-                
+             
                 if (plot_bclass != "col-xs-9"){
                     $("#retracting_parts").attr("class","col-xs-9");
                     $("#first_col").attr("class","col-xs-7");
@@ -861,23 +886,16 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 }
 
                 //Setting type specific frequencies
+                $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
                 if (itype == "all") {
                     for (my_type in typelist) {
-                        if (my_type == "all"){ // Total frequency shall not be displayed twice
-                            continue;
-                        }
-                        var freq_type = data[my_type][sel_ind];
-                        $( "#freq_" + my_type).html(freq_type.toFixed(2) + "%");
+                        freq_type = data[my_type][sel_ind];
+                        $( "#freq_" + my_type).html(parseFloat(freq_type).toFixed(2) + "%");
                     }
                 }
-                else {
-                    $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
-                }
 
-                $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
                 $("#recept_val").html(prot_lname + " ("+recept+")");
-                $("#restypes_val").html(restypes);
-                $("#pos_val").html(pos);
+                $("#pos_val").html(restypepos);
                 $("#pdb_id").html(pdb_id);
                 $("#pdb_link").attr("href","https://www.rcsb.org/structure/" + pdb_id_nochain)
                 if (Boolean(lig)) {
@@ -892,14 +910,6 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
-                //Resize dendrogram and heatmap
-                $("#dendrogram").css("width","50%");
-                $(".heatmap").css("width","40%");
-                
-                //Resize little pager on top
-                $("#heatmap_pager").css("margin-left","48%")
-                $("#heatmap_pager").css("margin-right","0%")
-
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -919,20 +929,24 @@ def create_csvfile(options_path, recept_info,df):
     df_csv.index.names = ['Interacting positions']
 
     #Change dynX by full name of receptor, adding the dynid if there is more than a simulation for that receptor
-    df_csv.columns = df_csv.columns.map(lambda x: "%s(%s)(%s)" %(recept_info[x][5],recept_info[x][6],x) 
-                                        if recept_info[x][13] else 
-                                         "%s(%s)" %(recept_info[x][5],recept_info[x][6]))
-
-    #Store Simulation names and dyn on file (Not the best way to tthis, since it will be repeated 
-    #over and over every time the script is run)
-    dyns_names = dict(zip(list(df.columns), list(df_csv.columns)))
-    with open(options_path+"name_to_dyn_dict.json", "w") as dyns_names_file:
-        dump(dyns_names, dyns_names_file, ensure_ascii=False, indent = 4)
+    df_csv.columns = df_csv.columns.map(lambda x: recept_info[x][13])
 
     #Sorting by ballesteros Id's (helixloop column) and clustering order
     df_csv['Interacting positions'] = df_csv.index
     df_csv['helixloop'] = df_csv['Interacting positions'].apply(lambda x: re.sub(r'^(\d)x',r'\g<1>0x',x)) 
     df_csv = df_csv.sort_values(["helixloop"])
+
+    #Change jumplines by 'x' to avoid formatting problems
+    def new_index(cell):
+        cell = cell.replace('\n\n', '  ')
+        cell = cell.replace('\n', 'x')
+        cell = cell.replace('xx', 'x')
+        return cell
+
+    df_csv['Interacting positions'] =  df_csv['Interacting positions'].apply(lambda x: new_index(x))
+    df_csv.index = df_csv['Interacting positions']
+
+    #Drop columns
     df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
 
     #Store dataframe as csv
@@ -1023,27 +1037,30 @@ def get_contacts_plots(itype, ligandonly):
         - ligandonly: lg (only residue-ligand contacts), prt (only intraprotein contacts), all 
     """    
 
-    # Creating set_itypes, with all in case it is not still in it
+    # Creating set_itypes and loading data
     if itype == "all":
         set_itypes =  set(("sb", "pc", "ps", "ts", "vdw", "hp", "hb", "hbbb", "hbsb", "hbss", "wb", "wb2", "hbls", "hblb", "all"))
+        df_raw = None
+        for itype_df in set_itypes:
+            df_raw_itype = pd.read_csv(str(basepath + "contact_tables/compare_" + itype_df + ".tsv"), sep="\s+")
+            df_raw = pd.concat([df_raw, df_raw_itype])
     else: 
-        set_itypes = set(itype.split("_"))
-        set_itypes.add('all')
+        set_itypes = { itype }
+        df_raw = pd.read_csv(str(basepath + "contact_tables/compare_" + itype + ".tsv"), sep="\s+")
+
+    print("Computing contmaps inputs for %s-%s" % (itype, ligandonly))
 
     #Loading files
-    df_raw = pd.read_csv(str(basepath + "contact_tables/compare_all.tsv"), sep="\s+")
-    for itype_df in set_itypes:
-        if itype_df == "all": 
-            continue
-        df_raw_itype = pd.read_csv(str(basepath + "contact_tables/compare_" + itype_df + ".tsv"), sep="\s+")
-        df_raw = pd.concat([df_raw, df_raw_itype])
     compl_data = json_dict(str(basepath + "compl_info.json"))
+    flare_template = json_dict(basepath + "template.json")
 
-    print("Computing input files for itype %s and partners %s" % (itype, ligandonly))
-
-    # Adapting to Mariona's format (Single column with both interacting positions names and frequencies in percentage)
+    # Adapting to Mariona's format
     df_original = adapt_to_marionas(df_raw)
 
+    # If is working with total frequency and all interaction partners, create a new flareplot template file
+    if (itype=='all') and (ligandonly=='prt_lg'):
+        flareplot_template(df_original, basepath)
+        
     # Filtering out non-ligand interactions if option ligandonly is True
     if ligandonly == "lg":
         ligandfilter = df_original['Position'].str.contains('Ligand')
@@ -1052,79 +1069,74 @@ def get_contacts_plots(itype, ligandonly):
         ligandfilter = ~df_original['Position'].str.contains('Ligand')
         df_original = df_original[ligandfilter]
 
-    #Removing helix-to-helix pairs
     df_original = filter_same_helix(df_original)
+
+    #Removing low-frequency contacts
+    df_original = filter_lowfreq(df_original, itype)
+
+    #Add \n between GPCR nomenclatures, to show it multiline in the heatmap axis   
+    df_original = set_new_axis(df_original)
 
     # Excluding non-standard (and by standard I'm saying "made by us") simulations
     (df_complete, df_standard) = split_by_standard(df_original, compl_data)
-
-    # Open json template
-    flare_template = json_dict(basepath + "template.json")
-
+    
+    #Repeat everything for standartd and non-standard dataframes (our simulations and the simulations from everone in GPCRmd)
     for (stnd,df) in (("cmpl", df_complete), ("stnd", df_standard)):
-            
+        
         #If doesn't exists yet, create base input folder
         options_path = "%scontmaps_inputs/%s/%s/%s/" %(basepath, itype, stnd, ligandonly)
         os.makedirs(options_path, exist_ok=True)
-        
-        #Removing low-frequency contacts
-        df = filter_lowfreq(df, itype)
 
         # If there are no interactions with this ligandonly-itype combination
         if df.empty:
             print("No interactions avalible for this molecular partners and interaction type: %s and %s" % (ligandonly, itype) )
             return
 
-        #Positions on Position column are in different nomenclatures (Ballesteros, Wooten, Pi..). 
-        #Here I add a column with the Positions translated to Ballesteros-Wanstein     
-        df = set_new_axis(df)
+        # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files    
+        df_columned = new_columns(df)
+        df_columned.to_pickle(options_path+"dataframe_customflareplot.pkl")
 
+        #Dropping away Position columns, once they are not needed
+        df_drop = df.drop(['Position1','Position2'], 1)
+        
         # Stack matrix (one row for each interaction pair and dynamic. Colnames are position, dynid and itypes)
-        df_ts = stack_matrix(df, set_itypes)
-
+        df_ts = stack_matrix(df_drop, set_itypes)
+        
         #Dropping away non main-type interaction rows.
-        df = df[df['itype'] == itype]
-
-        #Dropping away interaction type colum
-        df.drop('itype', 1, inplace = True)
+        df_drop = df_drop[df_drop['itype'] == itype]
+        df_drop.drop('itype',axis=1, inplace=True)
 
         # Set position as row index of the dataframe
-        df = df.set_index('Position')    
+        df_drop = df_drop.set_index('Position')    
 
+        # Labels for dendogram
+        dendlabels_dyns = list(df_drop.columns)
+        
         #Computing frequency matrix
-        dend_matrix = frequencies(df)
-        (recept_info,recept_info_order,df_t,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
-
+        dend_matrix = frequencies(df_drop)
+        (recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
+        
         # Apending column with PDB ids
         pdb_id = recept_info_order['pdb_id']
         df_ts['pdb_id'] = df_ts['Id'].apply(lambda x: recept_info[x][pdb_id])
-
-        # Labels for dendogram
-        dendlabels_dyns = [ dyn for dyn in df ]
-
+        
         #Storing dataframe with results in a CSV file, downloadable from web
-        csvfile = options_path+"dataframe.csv" 
-        create_csvfile(options_path, recept_info, df)
+        create_csvfile(options_path, recept_info,df_drop)
 
         # Add residue types to dataframe
-        df_ts = add_restypes(df_ts, compl_data)
+        df_ts = add_restypes(df_ts, compl_data, recept_info, recept_info_order)
 
         #Preparing dendrogram folders and parameters
         dendfolder = options_path + "dendrograms/" 
         os.makedirs(dendfolder, exist_ok = True)
-        dend_height = int( int(df.shape[1]) * 16)
+        dend_height = int( int(df.shape[1]) * 17)
         dend_width = 450
-
-        # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files
-        df = new_columns(df)
 
         # Computing several dendrograms and corresponding json files
         for cluster in list(range(2,21)):
-
-            print("computing cluster " + str(cluster))
+            print('      computing dendrogram with '+str(cluster)+' clusters')
             dendfile = ("%s%iclusters_dendrogram.html" % (dendfolder, cluster))
             (dyn_dend_order, clustdict) = dendrogram_clustering(dend_matrix, dendlabels_dyns, dend_height, dend_width, dendfile, cluster, recept_info, recept_info_order)
-
             # Write dynamicID-cluster dictionary on a json
             clustdir = "%sflarejsons/%sclusters/" % (options_path, cluster)
             os.makedirs(clustdir, exist_ok= True)
@@ -1132,13 +1144,12 @@ def get_contacts_plots(itype, ligandonly):
                 dump(clustdict, clusdictfile, ensure_ascii=False, indent = 4)
 
             #Jsons for the flareplots of this combinations of clusters
-            flareplot_json(df, clustdict, clustdir, flare_template)
-
+            flareplot_json(df_columned, clustdict, clustdir, flare_template)
+        
         #Store Simulation names and dyn on file
-        create_dyntoname_file(dyn_dend_order, recept_info, options_path)
-
-
-        for rev in ["norev"]:
+        create_dyntoname_file(dyn_dend_order, recept_info, recept_info_order, options_path)
+        
+        for rev in ["norev","rev"]:
 
             # If rev option is setted to rev, duplicate all lines with the reversed-position version 
             #(4x32-2x54 duplicates to 2x54-4x32)
@@ -1150,12 +1161,12 @@ def get_contacts_plots(itype, ligandonly):
             df_ts_rev = sort_simulations(df_ts_rev, dyn_dend_order)
 
             #Taking some variables for dataframe slicing
-            max_columns = 40
-            pairs_number = df.shape[0]
+            max_columns = 45
+            pairs_number = df_drop.shape[0]
             inter_number = df_ts_rev.shape[0]
             inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
             number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
-                
+            
             #Create heatmap folder if not yet exists
             heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
             heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
@@ -1166,18 +1177,12 @@ def get_contacts_plots(itype, ligandonly):
             
             #Make heatmaps each 50 interacting pairs
             div_list = []
-            divwidth_list = []
             heatmap_filename_list = []
             number_heatmap_list = []
             prev_slicepoint = 0
             for i in range(1,number_heatmaps+1):
                 number_heatmap_list.append(str(i))
 
-                #Create heatmap folder if not yet exists
-                heatmap_path_jupyter = "/protwis/sites/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/%s/heatmaps/%s/" % (itype,stnd,ligandonly,rev)
-                heatmap_path = "%sheatmaps/%s/" % (options_path,rev)
-                os.makedirs(heatmap_path, exist_ok=True)
-                
                 #Slice dataframe. Also definig heigth and width of the heatmap
                 slicepoint = int(i*inter_per_pair*max_columns)
                 if i == number_heatmaps:
@@ -1189,16 +1194,15 @@ def get_contacts_plots(itype, ligandonly):
                 h=dend_height
 
                 # Define bokeh figure and hovertool
+                
                 hover = create_hovertool(itype, itypes_order, hb_itypes, typelist)
-                mytools = ["hover","tap","save","reset","wheel_zoom"]
-                mysource,p = define_figure(w, h, mytools, df_slided, hover, itype)
+                mysource,p = define_figure(w, h, df_slided, hover, itype)
 
                 # Creating javascript for side-window
                 mysource = select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, typelist, mysource)
 
                 # Extract bokeh plot components and store them in lists
                 script, div = components(p)
-                divwidth_list.append(str(dend_width+w+260))#heatmapwidth+dendwidth+margins
                 div_list.append(div.lstrip())
                 heatmap_filename = "%s%iheatmap.html" % (heatmap_path_jupyter,i)
                 heatmap_filename_list.append(heatmap_filename)
@@ -1212,10 +1216,8 @@ def get_contacts_plots(itype, ligandonly):
             variables_file = "%svariables.py" % (heatmap_path)
             with open(variables_file, 'w') as varfile:
                 varfile.write("div_list = [\'%s\']\n" % "\',\'".join(div_list))
-                varfile.write("divwidth_list = [\'%s\']\n" % "\',\'".join(divwidth_list))
                 varfile.write("heatmap_filename_list = [\'%s\']\n" % "\',\'".join(heatmap_filename_list))
                 varfile.write("number_heatmaps_list = [\'%s\']\n" % "\',\'".join(number_heatmap_list))
-
 
 ###################
 ## Calling function
