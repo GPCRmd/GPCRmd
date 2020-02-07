@@ -2707,6 +2707,14 @@ def quickloadall(request):
             }
     return render(request, 'view/quickloadall.html', context)
 
+
+def metatest(request):
+    mdsrv_url=obtain_domain_url(request)
+
+    context={
+        "mdsrv_url":mdsrv_url,
+            }
+    return render(request, 'view/metatest.html', context)
     
 ############ TEST #############
 def fplot_test(request, dyn_id, filename):

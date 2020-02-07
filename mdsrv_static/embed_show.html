@@ -138,8 +138,28 @@
             var mut_sel=$("#mutations", window.parent.document).data("mut_sel");
             var  traj_path= "_DB/";
             var  path= "/mdsrv/file/_DB/";
+            var prot_sel_li=[];
+            $(".recept_in_dyn", window.parent.document).each(function(){
+                prot_sel_li[prot_sel_li.length]=$(this).data("prot_sel");
+            })
+            $(".ligprot_in_dyn", window.parent.document).each(function(){
+                prot_sel_li[prot_sel_li.length]=$(this).data("prot_sel");
+            })
 
             var ligli=[];
+            var prot_colors_li=[
+ '#c80028',
+ '#2980b9',
+ '#1abc9c',
+ '#27ae60',
+ '#f1c40f',
+ '#ec7063',
+ '#a569bd',
+ '#5dade2',
+ '#45b39d',
+ '#58d68d',
+ '#f5b041']
+
             $(".lig_element", window.parent.document).each(function(){
                 var lignm=$(this).data("resname");
                 if (Number(lignm[0])){
@@ -161,7 +181,19 @@
                     } else {
                         o.setSelection("protein");
                     }
-                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
+                    if (prot_sel_li){
+                        for (ps=0; ps<prot_sel_li.length;ps++){
+                            var prot_sel=prot_sel_li[ps];
+                            if (ps -1 < prot_colors_li.length){
+                                mycolor=prot_colors_li[ps]
+                                o.addRepresentation( "cartoon", { colorValue:mycolor, sele: prot_sel , colorScheme:"uniform" } );
+                            } else {
+                                o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: "protein" } );
+                            }
+                        }
+                    } else {
+                        o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"RdYlBu",  sele: "protein" } );
+                    }
                     if (mut_sel && mut_sel.length > 0){
                         o.addRepresentation( "hyperball", { sele: mut_sel, color:"#00ceff", scale:0.3 } );
                     }

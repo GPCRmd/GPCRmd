@@ -23,12 +23,27 @@
 {% csrf_token %}
 
  <!-- description  -->
-  <div class="panel panel-primary" id="inner_fixed">  
+ <!-- <div class="panel panel-primary" id="inner_fixed">  
      <div class="panel-body">
         <h2>Receptor meta-analysis</h2>
         <h4>Residue interaction frequency: <span style="font-weight: bold">{{itype_name}}</span></h4>
      </div> 
   </div>
+
+-->
+
+
+   <div class="panel panel-primary" id="inner_fixed" >  
+       <div class="panel-body" id="restricttitlewidth" >
+          <div id="aroundtitle">
+            <h2>Receptor meta-analysis</h2>
+            <h4>Residue interaction frequency: <b>{{itype_name}}</b></h4>
+          </div>
+        <div class="howtoparent">
+            <a href="https://youtu.be/hHaw3SEf-D0" class="btn btn-default btn-sm howtobtn"  target="_blank" role="button" >How to<br>use it<br><span class="glyphicon glyphicon-play" style="font-size:14px"></span></a>
+        </div>
+       </div> 
+   </div>
 
 <div id="inner_remaining" class ="row" >
   <!--Here be dendrogram and heatmaps-->

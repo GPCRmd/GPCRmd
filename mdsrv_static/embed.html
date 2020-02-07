@@ -75,7 +75,6 @@
 //            }
 //        }  
 
-
         function atomFromPosSel(o,posSel){
             var res_sele =  new NGL.Selection( posSel );
             var atom_pos="";
@@ -986,7 +985,7 @@
                 for (ng=0 ; ng < nonGPCR.length ; ng++){
                     chains_s = nonGPCR[ng];
                     nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
-                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set3",  sele: nonGPCR_sel } );
+                    o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set1",  sele: nonGPCR_sel } );
                     //setSelDict=addToSel(o,nonGPCR_sel,setSelDict);
                     setSelLi.push(nonGPCR_sel);
                 }

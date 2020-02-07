@@ -1,13 +1,19 @@
 function show3dmol(counter){
   let molids=$('#moleculesids').html().split('%$!');
   let molnames=$('#moleculesnames').html().split('%$!');
+  let molnumbers=$('#moleculesnumber').html().split('%$!');
   let myid=molids[counter];
   let myname=molnames[counter];
+  let mymolnumber=molnumbers[counter]
+  if (mymolnumber=="()"){
+    mymolnumber="";
+  }
   let element = $('#container-02');
   let config = {backgroundColor:'white'};
   let viewer = $3Dmol.createViewer( element, config );
   let pdbUri = '/dynadb/molecule/id/'+myid+'/sdf';
   $('#namediv').html(myname);
+  $('#molnumdcarousel3d').text(mymolnumber);
   $("#linkmol").attr("href","/dynadb/molecule/id/"+myid).text("Molecule ID:"+myid);
   jQuery.ajax(pdbUri, { 
     success: function(data) {
