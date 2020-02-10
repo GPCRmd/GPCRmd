@@ -124,7 +124,7 @@
                     var fpSelInt= parent.updateFlarePlotFrame(fnum);
                     $("#trajRange").val(fnum);
                     $("#trajRange").slider("refresh");
-                    $("#traj_time_val").html((fnum*delta).toFixed(2));
+                    $("#traj_time_val").html(((fnum+1)*delta).toFixed(2));
                     traj_fnum[traj_lastPlayedID]=fnum;
                     //setSelTemp=[];//
                     /////////
@@ -224,13 +224,17 @@
         }
         
         function setTrajRangeMax(){
+            var traj_id_nm=$(".traj_element.tsel", window.parent.document).attr("id");
+            var mytraj_id=Number(traj_id_nm.replace("traj_id_",""))
+            var numfr=trajidtoframenum[mytraj_id];
+            var lastfr=numfr-1;
             var btn_traj_Bid =$(".traj_btn").attr("id");
             var tPatt = /\d*$/g;
             var btn_traj_id = tPatt.exec(btn_traj_Bid);
             trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-            numfr=trajComp.trajectory._frameCount;
-            if ( numfr && ($("#trajRange").attr("max") != numfr)){
-                $("#trajRange").attr("max",numfr);
+            //numfr=trajComp.trajectory._frameCount;
+            if ( lastfr && ($("#trajRange").attr("max") != lastfr)){
+                $("#trajRange").attr("max",lastfr);
             }
 
         }
@@ -1681,7 +1685,7 @@
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
             
             var fpsegStr , FPscheme;
-            
+            var trajidtoframenum= $("#selectedTraj", window.parent.document).data("trajidtoframenum");
 //        var popOverSettings = {
 //            placement: 'auto right',
 //            trigger:"click",

@@ -24,7 +24,7 @@ $(document).ready(function(){
 
 //CREATE PLOT ---------------------------------------------
 
-  var data = {
+/*  var data = {
     "children": [{
       "name": "Class A",
       "State": "-",
@@ -4740,7 +4740,10 @@ $(document).ready(function(){
         }]
       }]
     }]
-  }
+  }*/
+
+    data=$("#chart").data("chart_data")
+
    // var screenh=screen.height;
    // var plotheight= screenh-300;
 

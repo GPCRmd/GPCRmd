@@ -37,6 +37,12 @@ def index(request):
 
     return render(request, 'home/index_{}.html'.format(settings.SITE_NAME), context)
 
+def open_json(filepath):
+    json_file=open(filepath)
+    json_str = json_file.read()
+    json_data=pd.io.json.loads(json_str)
+    return json_data
+
 def gpcrmd_home(request):
     context = {}
 
@@ -45,7 +51,11 @@ def gpcrmd_home(request):
     context['documentation_url'] = settings.DOCUMENTATION_URL
     context['logo_path'] = 'home/logo/' + settings.SITE_NAME + '/main.png';
     context['logo_text_path'] = 'home/logo/' + settings.SITE_NAME + '/text.png';
-    
+    gpcrmdtree_path="/protwis/sites/files/Precomputed/Summary_info/gpcrmdtree.data"
+    with open(gpcrmdtree_path, 'rb') as filehandle:  
+        tree_data = pickle.load(filehandle)
+    context['tree_data']=json.dumps(tree_data)
+
 #    #latest entry
 #    latest=DyndbDynamics.objects.filter(is_published=True).latest("creation_timestamp")
 #    dynfiles = DyndbFilesDynamics.objects.filter(id_dynamics__id=latest.id)

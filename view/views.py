@@ -179,6 +179,7 @@ def obtain_dyn_files(dynfiles):
     structure_file=""
     structure_name=""
     traj_list=[]
+    trajidToFramenum={}
     p=re.compile("(/protwis/sites/files/)(.*)")
     p2=re.compile("[\.\w]*$")
     for e in dynfiles:
@@ -192,7 +193,8 @@ def obtain_dyn_files(dynfiles):
             structure_name=myfile_name
         elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
             traj_list.append([myfile, myfile_name, f_id])
-    return (structure_file,structure_file_id,structure_name, traj_list)
+            trajidToFramenum[f_id]=e.framenum
+    return (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)
 
 def obtain_prot_chains(pdb_name):
     chain_name_s=set()
@@ -1021,7 +1023,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         data_time=[data_store[0][1:]]
                         for row in data_store[1:]:
                             frame=row[0]
-                            time=frame*delta
+                            time=(frame+1)*delta
                             row.insert(1,time)
                             d_time=row[1:]
                             data_time.append(d_time)  
@@ -1096,7 +1098,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     data_time=[data_store[0][1:]]
                     for row in data_store[1:]:
                         frame=row[0]
-                        time=frame*delta
+                        time=(frame+1)*delta
                         row.insert(1,time)
                         d_time=row[1:]
                         data_time.append(d_time)                 
@@ -1189,7 +1191,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             watermaps = True 
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
-        (structure_file,structure_file_id,structure_name, traj_list)=obtain_dyn_files(dynfiles)
+        (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)=obtain_dyn_files(dynfiles)
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
@@ -1385,8 +1387,6 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
-                    if dyn_id=="29":
-                        traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1394,6 +1394,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
+                        "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1430,6 +1431,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
+                        "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1458,6 +1460,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
+                        "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1484,6 +1487,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "structure_name":structure_name , 
                     "structure_file_id":structure_file_id,
                     "traj_list":traj_list, 
+                    "trajidToFramenum":json.dumps(trajidToFramenum),
                     "compounds" : comp_li,
                     "ligands": lig_li,
                     "other_prots":[],
