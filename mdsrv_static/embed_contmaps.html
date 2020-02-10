@@ -70,9 +70,10 @@
                 var tPatt = /\d*$/g;
                 var btn_traj_id = tPatt.exec(btn_traj_Bid);
                 var isact = $(this).hasClass("active");
+                trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
+                player = new NGL.TrajectoryPlayer(trajComp.trajectory);
+                player.interpolateType='spline';
                 if(isact){
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
                     player.timeout=200;
@@ -80,9 +81,6 @@
                     player.pause();
 
                 } else {
-                    trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
-                    //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                    player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                     player.play();
                     $(this).addClass("active");
                     $(this).siblings().removeClass("active");
@@ -200,12 +198,16 @@
         };
             
         function create_traj_dropdown(traj_li,sel_traj){
-            $("#trajButton", window.parent.document).html(sel_traj+ ' <span class="caret"></span></button>');
 
-            add_html='<li class="traj_element tsel is_active" id="ngl_traj0" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+sel_traj+'</li>';
+            var traj_id, add_element
+            traj_id = sel_traj.split('_')[0]
+            $("#trajButton", window.parent.document).html('<b>Trajectory ID:</b> '+traj_id+' <span class="caret"></span></button>');
+
+            add_html='<li class="traj_element tsel is_active" traj_file="'+sel_traj+'" id="ngl_traj0" style="padding:5px 10px 5px 10px;background-color:#FFF7F7"  >'+traj_id+'</li>';
             for(i=1; i<traj_li.length; i++ ){
-                var add_element='<li class="traj_element" id="ngl_traj'+i+'" style="padding:5px 10px 5px 10px;"  >'+traj_li[i]+'</li>';
-                add_html+=add_element;
+              traj_id = traj_li[i].split('_')[0]
+              add_element='<li class="traj_element" traj_file="'+traj_li[i]+'" id="ngl_traj'+i+'" style="padding:5px 10px 5px 10px;"  >'+traj_id+'</li>';
+              add_html+=add_element;
             }
             $("#add_traj_options", window.parent.document).html(add_html);
             $("#trajsDropdown", window.parent.document).css("visibility","visible");
@@ -370,20 +372,20 @@
                         }
                         if (pdb_pos != "NaN"){
                             if (Array.isArray(pdb_pos)){
-                                for (i = 0; i < pdb_pos.length; i++){
-                                    pdb_pos[i] = pdb_pos[i].substring(0, pdb_pos[i].length -2); //Strip two last characters of pos (dash and residue type letter)
-                                    position = pdb_pos[i];
-                                    if (position == null){
-                                        continue // Skip undefined parts
-                                    }
-                                    pos_sel=position.replace("-"," and :");
-                                    o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
-
-                                    //If interaction is water bridges, add water representation withing 4 amstrongs
-                                    if (Boolean(is_wb)){
-                                      o = addwaters(o, pos_sel);
-                                    }
+                              for (i = 0; i < pdb_pos.length; i++){
+                                pdb_pos[i] = pdb_pos[i].substring(0, pdb_pos[i].length -2); //Strip two last characters of pos (dash and residue type letter)
+                                position = pdb_pos[i];
+                                if (position == null){
+                                    continue // Skip undefined parts
                                 }
+                                pos_sel=position.replace("-"," and :");
+                                o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+
+                                //If interaction is water bridges, add water representation withing 4 amstrongs
+                                if (Boolean(is_wb)){
+                                  o = addwaters(o, pos_sel);
+                                }
+                              }
                             }
                             else {
                                 pdb_pos = pdb_pos.substring(0, pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter) 
@@ -395,13 +397,25 @@
                             $("#posNotinRec_text", window.parent.document).text(pos+" not found in this receptor.");
                             $("#posNotinRec", window.parent.document).css("display","block");
                         }
+  
+                       //Get Original position of the system
+                        ori= stage.viewerControls.getOrientation();
 
+                        //Recenter protein on click of center button
+                        $("#center", window.parent.document).click(function(){
+                            stage.autoView(1000); 
+                        });
+
+                        //Reset protein to original position
+                        $("#restartPos", window.parent.document).click(function(){
+                            stage.animationControls.orient(ori);
+                        });
                     });
                     
                     //Control of change of trajectory
                     $("#trajsDropdown .traj_element", window.parent.document).click(function(){
                       //Change trajcctory controller
-                      mytraj=$(this).text();
+                      mytraj=$(this).attr('traj_file');
                       traj_id=traj_fnames.indexOf(mytraj);
                       trajComp = stage.getComponentsByName("my_comp").list[0].trajList[traj_id]
                       manageTrajChange(trajComp,this,mytraj,traj_id);

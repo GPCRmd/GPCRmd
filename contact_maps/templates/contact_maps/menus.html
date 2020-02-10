@@ -153,8 +153,12 @@
   </div>
   <!--download button-->
   <div class="dropdown optbar">
-    <a class="btn btn-link" id="download_csv" onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}&{{stnd}}'"><!-- onclick="window.location.pathname = '/contmaps/download_csv/{{itype_code}}&{{ligandonly}}&{{rev}}'">-->
-      <span title="Download data in csv" class="glyphicon glyphicon-download-alt"></span>
+    <form class="dropdown optbar" target="_blank" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="csvfile" value='{{csvfile}}'>
+      <input type="submit" target="_blank" method="post" id="csvButton" formaction="/contmaps/download_csv/?itype={{itype_code}}&prtn={{ligandonly}}&rev={{rev}}&stnd={{stnd}}" >
+      <span id="download_span" title="Download data in csv" class="glyphicon glyphicon-download-alt" onclick="$('#csvButton').trigger('click')"></span>    
+</form>
     </a> 
   </div>
 </div>

@@ -32,7 +32,7 @@ $(document).ready(function(){
     stnd = search_params.get('stnd');
   }
   else {
-    itype = "all";
+    itype = "hb";
     clusters = "3";
     ligandonly = "prt_lg";
     rev = "norev";
@@ -108,20 +108,8 @@ $(document).ready(function(){
   //If it is not the "not avalible interaction" page, but the regular one:
   if (!$("#not_avalible_text")[0]){
 
-    //-------- On click of the custom simulation selection dropdown
-    $("#dropdown_simulations").change(function(){
-      select_simulations(itype, clusters, ligandonly, rev, stnd)
-    });
-
     //---------Remove heatmap loading icon once page is loaded
     document.getElementById("loading_div").remove();
-    
-    //---------------Scrollbar to heatmap
-    jQuery(function ($) {
-      $("#scrolldiv").on("scroll", function () {
-          $(".heatmap").scrollLeft($(this).scrollLeft());
-      });
-    });
 
     $(window).on('load', function(){
 
@@ -167,6 +155,7 @@ $(document).ready(function(){
           checkbox.prop('checked',true)
           rect.css('stroke-opacity', '1');
         }
+        select_simulations(itype, clusters, ligandonly, rev, stnd)
       });
 
       //----------- On click of checkboxes dropdown, border corresponding annotations on dendrogram
@@ -180,6 +169,7 @@ $(document).ready(function(){
         else {
           rect.css('stroke-opacity', '0');
         }
+        select_simulations(itype, clusters, ligandonly, rev, stnd)
       });
     });
 
@@ -219,18 +209,21 @@ $(document).ready(function(){
     ctx.fillText("0%", 40, 255/2);
   };
 
-  //-------------Turn around little arrow on click of flare_title
-  $("#click_title").click(function(){
-    arrow=$("#click_title .arrow");
-    if($(this).attr("aria-expanded") == "true"){
-      arrow.css('transform', 'rotate(180deg)');
-    } 
-    else {
-      arrow.css('transform', 'rotate(0deg)');
-    }; 
-  });
-
 });
+
+//-------------Turn around little arrow on click of flare_title
+function turn_arrow(arrowid, clicked_id) {
+  var arrow, clickable;
+  arrow = $("#"+arrowid);
+  clicked = $("#"+clicked_id)
+  if(clicked.attr("aria-expanded") == "false"){
+    arrow.css('transform', 'rotate(180deg)');
+  } 
+  else {
+    arrow.css('transform', 'rotate(0deg)');
+  }; 
+
+}
 
 //------Extract checked values, create an URL with them and refresh page with new URL
 function printchecked(){
@@ -288,29 +281,18 @@ function closeSideWindow() {
   $("#info").css({"visibility":"hidden","position":"absolute","z-index":"-1"});
   $("#retracting_parts").attr("class","col-xs-12");
   //Different sizes depending if it is a customized heatmap or not
-  if (window.location.pathname == "/contmaps/customized/"){
-    $("#heatmap_pager").css("margin-left","40%")
-  }
-  else {
-    $("#dendrogram").css("width","35%");
-    $(".heatmap").css("width","57%");
-    $("#heatmap_pager").css("margin-left","40%")
-  }
 }
 
-//--------Heatmap change page system (the return false thing is for links not to redirect)
+//--------Heatmap change page system (the return false thing is for links not to redirect anywhere)
 function heatmap_change(heatmap) {
     
   function set_active_page(number){
     //Hide all heatmaps and show the one selected
     $(".heatmap").hide();
-    $("#heatmap"+number).show();
+    $("#heatmap"+number).css('display','inline-block');
     //Deactivate all page buttons and activate the selected one
     $("#heatmap_pager .page-item").removeClass("active");
     $("#heatmap_page_"+number).addClass("active")
-    //Hide all scrollbars and show the selected one
-    $(".scrolldiv").hide();
-    $("#scrolldiv_inner"+number).show();    
   }
   var new_heatmap;
   //If the clicked option is the current one, do nothing

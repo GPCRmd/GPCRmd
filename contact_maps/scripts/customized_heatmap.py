@@ -47,8 +47,8 @@ def improve_receptor_names(df_ts,compl_data):
         "traj_fnames":10,
         "traj_f":11,
         "delta":12,
-        "repeated_receptor":13,
-        "receptor_unique_name":14,
+        "receptor_unique_name":13,
+        'gpcr_class':14
     }
     dyns_by_receptor={}
     index_dict={}
@@ -67,35 +67,102 @@ def improve_receptor_names(df_ts,compl_data):
         traj_fnames=compl_data[recept_id]["traj_fnames"]
         traj_f=compl_data[recept_id]["traj_f"]
         delta=compl_data[recept_id]["delta"]
+        sim__fullname="%s (%s) (%s)" % (upname,pdb_id,dyn_id)
+        gpcr_class = compl_data[recept_id]["class"]
+        
         if pdb_id:
             prot_lig=(pdb_id,lig_sname)
         else:
             prot_lig=(upname,lig_sname)
 
         recept_name=prot_lname+" ("+prot_lig[0]+")"
-        if recept_name in dyns_by_receptor:
-            dyns_by_receptor[recept_name].add(dyn_id)
-
-        else:
-            dyns_by_receptor[recept_name] = {dyn_id}
-
-        recept_info[dyn_id]=[upname, lig_sname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta,False]
+        recept_info[dyn_id]=[upname, lig_sname,dyn_id,prot_id,comp_id,prot_lname,pdb_id,lig_lname,struc_fname,struc_f,traj_fnames,traj_f,delta,sim__fullname,gpcr_class]
         index_dict[recept_id]=recept_name 
         dyn_gpcr_pdb[recept_name]=compl_data[recept_id]["gpcr_pdb"]
 
-    #Check which receptors have more than one simulation, and mark this simulations as "repeated_receptor", and
-    #also add the "unique name" of the receptor
-    for protlig,dynset in dyns_by_receptor.items():
-        if len(dynset) > 1:
-            for dyn_id in dynset:
-                recept_info[dyn_id][13] = True
-                recept_info[dyn_id].append("%s(%s)(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6],dyn_id))
-        else:
-            dyn_id = list(dynset)[0] 
-            recept_info[dyn_id].append("%s(%s)" %(recept_info[dyn_id][5],recept_info[dyn_id][6]))
-                
     df_ts['Name'] = list(map(lambda x: index_dict[x], df_ts['Id']))
+    df_ts['shortName'] = list(map(lambda x: recept_info[x][13], df_ts['Id']))
     return(recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)
+
+
+def new_columns(df):
+    """
+    Adding Position1 and Position2 columns from A nomenclature system to dataframe, in subsitution of
+    Position column, which included both.
+    """
+
+    def split_by_class(position_col):
+        """
+        Split 2x\n26\n12\n12\n12 into 2x26 2x12 2x12 2x12 2x12
+        """
+        name = position_col.name
+        positions = position_col.values
+        pos_by_class = {"A"+name :[], "B"+name :[], "C"+name :[], "F"+name :[]}
+        number_letter = ["0",'A','B', 'C', 'F']
+        for pos in positions:
+            splited_pos = pos.split("x")
+            for i in [1,2,3,4]:
+                if pos == "Ligand":
+                    pos_by_class[number_letter[i]+name].append("Ligand")
+                else:
+                    pos_by_class[number_letter[i]+name].append(splited_pos[0]+"x"+splited_pos[i])
+
+        return(pd.DataFrame.from_dict(pos_by_class))
+
+    df.reset_index(drop = True, inplace = True)
+    df_newcols1 =  split_by_class(df["Position1"])
+    df_newcols2 =  split_by_class(df["Position2"])
+    df = pd.concat([df, df_newcols1, df_newcols2], axis = 1)
+
+    return df
+
+def flareplot_json(df, dyn_list, flare_template = False):
+    """
+    Create json for flareplot of top5 interactions
+    """
+    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+
+    # Select top5 interactions based on its mean frequency. Also asign color based on mean value
+    df_list = df.filter(items = dyn_list + ['APosition1', 'APosition2', 'BPosition1', 'BPosition2','CPosition1', 'CPosition2','FPosition1', 'FPosition2',])
+    df_list['mean'] = df_list.mean(axis = 1, numeric_only = True)
+    mean_threshold = min(df_list['mean'].nlargest(5).tolist())
+    df_list['color'] = df_list['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
+
+    #Filter top 5 in df_clust
+    df_list = df_list.nlargest(5,'mean')
+
+    # 'Edge' entry for json file
+    df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+    df_dict['name1'] = df_list['APosition1'] 
+    df_dict['name2'] = df_list['APosition2']
+    df_dict['frames'] = [[1]]*len(df_dict)
+    df_dict['color'] = df_list['color']
+    edges = df_dict.to_dict(orient="records")
+
+    # Appending edges to flare plot template, if any submitted
+    if flare_template:
+        flare_template['edges'] = edges
+        jsondict = flare_template
+    else:
+        jsondict = { 'edges' : edges }
+
+    #'Edge' multi-entries, based on the 4 GPCR nomenclatures
+    for leter in ['A', 'B', 'C', 'F']:
+        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+        df_dict['name1'] = df_list[leter+'Position1'] 
+        df_dict['name2'] = df_list[leter+'Position2']
+        df_dict['frames'] = [[1]]*len(df_dict)
+        df_dict['color'] = df_list['color']
+        leter_edges = df_dict.to_dict(orient="records")
+
+        #Appending edges
+        if flare_template:
+            flare_template[leter+'edges'] = leter_edges
+            jsondict = flare_template
+        else:
+            jsondict = { leter+'edges' : leter_edges }
+
+    return jsondict
 
 def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
@@ -103,17 +170,11 @@ def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
 
     #Creating hovertool listzzzz
-    hoverlist = [('Name', '@Name'), ('PDB id', '@pdb_id'), ('Position', '@protein_Position'), ('Residues', '@restypes')]
-    if itype == "all":
-        for group,type_tuple in itypes_order:
-            for itype_code,itype_name in type_tuple:
-                hoverlist.append((itype_name, "@{" + itype_code + '}{0.00}%'))
-                if itype_code == "hb":
-                    for hb_code,hb_name in hb_itypes.items():
-                        hoverlist.append((hb_name, "@{" + hb_code + '}{0.00}%'))
-    else:
-        hoverlist.append((typelist[itype], "@{" + itype + '}{0.00}%'))
-    hoverlist.append(('Total interaction frequency', '@{all}{0.00}%'))
+    hoverlist = [('Name', '@Name'),
+                 ('PDB id', '@pdb_id'),
+                 ('Position', '@restypePosition'),
+                 (typelist[itype], "@{" + itype + '}{0.00}%')
+                ]
 
     #Hover tool:
     hover = HoverTool(
@@ -137,7 +198,7 @@ def define_figure(width, height, dataframe, hover, itype):
         plot_width= width,
         plot_height=height,
         #title="Example freq",
-        y_range=list(dataframe.complete_name.drop_duplicates()),
+        y_range=list(dataframe.shortName.drop_duplicates()),
         x_range=list(dataframe.Position.drop_duplicates()),
         tools=["hover","tap","save","reset","wheel_zoom"], 
         x_axis_location="above",
@@ -152,7 +213,7 @@ def define_figure(width, height, dataframe, hover, itype):
     mysource = ColumnDataSource(dataframe)
 
     p.rect(
-        y="complete_name", 
+        y="shortName", 
         x="Position",
         width=1, 
         height=1, 
@@ -237,8 +298,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var recept_name=data["Name"][sel_ind];
                 var recept_id=data["Id"][sel_ind];
                 var pos = data["protein_Position"][sel_ind];
-                var restypes = data["restypes"][sel_ind];
-                var freq_total=data["all"][sel_ind];
+                var restypepos = data["restypePosition"][sel_ind];
                 var freq_type=data[itype][sel_ind];
                 var pos_array = pos.split(" ");
                 var pos_string = pos_array.join("_")
@@ -260,7 +320,7 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 var pdb_id_nochain = pdb_id.split(".")[0];
                 var delta=ri_data[recept_id][rio_data['delta']];
                 $('#ngl_iframe')[0].contentWindow.$('body').trigger('createNewRef', [struc_file, traj_fnames, traj_f ,lig, delta, pos, pdb_pos_array]);
-                
+             
                 if (plot_bclass != "col-xs-9"){
                     $("#retracting_parts").attr("class","col-xs-9");
                     $("#first_col").attr("class","col-xs-7");
@@ -269,23 +329,16 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 }
 
                 //Setting type specific frequencies
+                $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
                 if (itype == "all") {
                     for (my_type in typelist) {
-                        if (my_type == "all"){ // Total frequency shall not be displayed twice
-                            continue;
-                        }
-                        var freq_type = data[my_type][sel_ind];
-                        $( "#freq_" + my_type).html(freq_type.toFixed(2) + "%");
+                        freq_type = data[my_type][sel_ind];
+                        $( "#freq_" + my_type).html(parseFloat(freq_type).toFixed(2) + "%");
                     }
                 }
-                else {
-                    $( "#freq_" + itype).html(freq_type.toFixed(2) + "%");
-                }
 
-                $("#freqtotal_val").html(freq_total.toFixed(2) + "%");
                 $("#recept_val").html(prot_lname + " ("+recept+")");
-                $("#restypes_val").html(restypes);
-                $("#pos_val").html(pos);
+                $("#pos_val").html(restypepos);
                 $("#pdb_id").html(pdb_id);
                 $("#pdb_link").attr("href","https://www.rcsb.org/structure/" + pdb_id_nochain)
                 if (Boolean(lig)) {
@@ -300,10 +353,6 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                 $("#viewer_link").attr("href","../../../view/"+dyn_id+"/"+pos_string);
                 $("#recept_link").attr("href","../../../dynadb/protein/id/"+prot_id);
                 
-                //Resize little pager on top
-                $("#heatmap_pager").css("margin-left","48%")
-                $("#heatmap_pager").css("margin-right","0%")
-
 
             } else {
                 if (plot_bclass != "col-xs-12"){
@@ -313,13 +362,33 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
             }           
         """)
 
-    return mysource
+def customized_csv(df_filt,itype):
 
-def customized_csv(df_filt,itype,recept_info,csvpath):
+    """
+    Prepare the downloadable customized csv file
+    """
     
-    df_csv = df_filt.pivot(index='Position', columns='complete_name')[itype]    
-    df_csv.to_csv(path_or_buf = csvpath)
-    
+    df_csv = df_filt.pivot(index='Position', columns='shortName')[itype]
+
+    #Sorting by ballesteros Id's (helixloop column) and clustering order
+    df_csv['Interacting positions'] = df_csv.index
+    df_csv['helixloop'] = df_csv['Interacting positions'].apply(lambda x: re.sub(r'^(\d)x',r'\g<1>0x',x)) 
+    df_csv = df_csv.sort_values(["helixloop"])
+
+    #Change jumplines by 'x' to avoid formatting problems
+    def new_index(cell):
+        cell = cell.replace('\n\n', '  ')
+        cell = cell.replace('\n', 'x')
+        cell = cell.replace('xx', 'x')
+        return cell
+    df_csv['Interacting positions'] =  df_csv['Interacting positions'].apply(lambda x: new_index(x))
+    df_csv.index = df_csv['Interacting positions']
+
+    #Drop columns
+    df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
+
+    csv_data = df_csv.to_csv()
+    return csv_data
 
 ########
 ## Main

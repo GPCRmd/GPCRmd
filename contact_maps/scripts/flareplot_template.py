@@ -83,9 +83,6 @@ else:
     set_itypes = set(itype.split("_"))
     set_itypes.add('all')
 
-#Creating itypes dictionary for selected types
-selected_itypes = { x:typelist[x] for x in set_itypes }
-
 #Loading files
 df = pd.read_csv(str(basepath + "contact_tables/compare_all.tsv"), sep="\s+")
 for itype_df in set_itypes:
