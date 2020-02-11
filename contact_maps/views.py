@@ -105,6 +105,7 @@ def get_contacts_plots(request):
 		'mdsrv_url':mdsrv_url,
 		'dyn_to_names' : dyn_to_names,
 		'csvfile' : dumps(csv_data),
+		'flarerange' : list(range(1,21))		
 	})
 	return render(request, 'contact_maps/index_h.html', context)
 
@@ -251,6 +252,7 @@ def customized_heatmap(request, foo):
 		'sim_list' : list(zip(dyn_list, name_list)),
 		'mdsrv_url':mdsrv_url,
 		'csvfile' : dumps(csv_data),
+		'flarerange' : list(range(1,21))
 	}
 	print('returning')
 

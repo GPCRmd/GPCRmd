@@ -183,30 +183,6 @@ $(document).ready(function(){
       });
     });
 
-    //------------Personalized colorbar for heatmap, made in a javascript canvas
-    var cv  = document.getElementById('cv'),
-    ctx = cv.getContext('2d');
-    ctx.font = "12px Arial";
-
-    var red = 255, green = 0, color;
-    for(var i = 0; i <= 255*2; i++) {
-      ctx.beginPath();
-
-      if (green == 255){
-        red--;
-      } else {
-        green++;
-      }
-      color = 'rgb('+red+', ' + green + ',  0)';
-      ctx.fillStyle = color;
-      
-      ctx.fillRect(0, i/4, 30, 1);
-    }
-
-    ctx.fillStyle = "rgb(68, 68, 68)";
-    ctx.fillText("100%", 40, 12);
-    ctx.fillText("50%", 40, 255/2/2);
-    ctx.fillText("0%", 40, 255/2);
   };
 
 });

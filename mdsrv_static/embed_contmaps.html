@@ -220,7 +220,6 @@
         function change_display_sim_option(to_activate,to_inactivate){
             parent.$(to_activate).addClass("is_active");
             parent.$(to_activate).css("background-color","#bfbfbf");
-            
             parent.$(to_inactivate).removeClass("is_active");
             parent.$(to_inactivate).css("background-color","#FFFFFF");
         }
@@ -380,6 +379,7 @@
                                 }
                                 pos_sel=position.replace("-"," and :");
                                 o.addRepresentation( "ball+stick", {  sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+                                o.autoView(pos_sel, 1000)
 
                                 //If interaction is water bridges, add water representation withing 4 amstrongs
                                 if (Boolean(is_wb)){

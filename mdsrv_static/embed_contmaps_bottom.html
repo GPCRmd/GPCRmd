@@ -253,7 +253,52 @@
             $(".traj_btn").attr('data-traj', traj_id);
         }
 
-        function set_positions(stage, id, ballesteros_to_pdb, o){
+        function set_positions(stage, id, ballesteros_to_pdb, o, clicked_tag = false){
+
+          //Take the pdb code of the clicked position, if any
+          var clicked_pos, classes, source, target;
+          var source_pat = /source-(\w+)/;
+          var target_pat = /target-(\w+)/;
+
+          // Take PDB code of clicked position to zoom in
+          if (clicked_tag) {
+            // If a node has been clicked
+            if (clicked_tag.is('text')) {
+              //If node is not being unselected
+              if (clicked_tag.parent().hasClass('toggledNode')){
+                clicked_pos = clicked_tag.html();
+              }
+              else {
+                clicked_tag = false;
+              }
+            }
+            //If a link has been clicked
+            else {
+              //If link is not being unselected
+              if (clicked_tag.hasClass('toggled')){
+                classes = clicked_tag.attr('class');
+                source = classes.match(source_pat)[1]
+                target = classes.match(target_pat)[1]
+                if (source !== "Ligand"){
+                  clicked_pos = source;
+                }
+                else {
+                  clicked_pos = target;
+                }
+              }
+              else {
+                clicked_tag = false;
+              }
+            }
+
+            //Take pdb code from dict
+            if (clicked_pos in ballesteros_to_pdb) {
+              clicked_pdb_pos = ballesteros_to_pdb[clicked_pos];
+              clicked_pdb_pos = clicked_pdb_pos.substring(0, clicked_pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter)
+              clicked_pdb_pos=clicked_pdb_pos.replace("-"," and :");
+
+            }
+          }
 
           //Hide below window 
           $("#posNotinRec"+id, window.parent.document).css("display","none");    
@@ -270,8 +315,6 @@
           var int_pos = [];
           var notfound = [];
           var pdb_pos_array = [];
-          var source_pat = /source-(\w+)/;
-          var target_pat = /target-(\w+)/;
           if (parent.$("#FPdisplay"+id).hasClass("active")){
             parent.$("#flare-container"+id).find("g.node.toggledNode text").each(function(){
               pos = $(this).html();
@@ -291,23 +334,6 @@
               }
             })
 
-            //Repeat for interacting positions
-            for (var i=0; i < int_pos.length; i++){
-              pos = int_pos[i];
-              if (pos in ballesteros_to_pdb){//IF position exists in this protein
-                pdb_pos = ballesteros_to_pdb[pos];
-                pdb_pos = pdb_pos.substring(0, pdb_pos.length -2); //Strip two last characters of pos (dash and residue type letter)
-                pdb_pos_array.push(pdb_pos);
-              }
-              else if (pos == "Ligand") {
-                return true; //Skip
-              }
-              else {
-                $("#posNotinRec"+id, window.parent.document).css("display","block");
-                notfound.push(pos);
-              }
-
-            }
             $("#posNotinRec_text"+id, window.parent.document).text("Positions "+notfound.join(", ")+" not found on this receptor.");
 
             //Add ball-stick representations for each position. If itype is "all" or "wb", add also waters within 3.5A
@@ -321,11 +347,14 @@
                 o.addRepresentation("ball+stick", {  name: pos_sel, sele: water_sele, colorValue: "#828282", colorScheme: "element"});
               }
               o.addRepresentation( "ball+stick", { name: 'pos_rep', sele: pos_sel, colorValue: "#828282", colorScheme: "element"} );
+              if (clicked_tag){
+                o.autoView(clicked_pdb_pos, 1000)
+              }
             }
           }
         }
 
-        function change_sim(compl_data, stage = false, id){
+        function change_sim(compl_data, stage = false, id, first_sim = false){
 
           //Set Nglviewr ID (0 or 1)  and dynid selected
           var dynid = parent.$("#simButton"+id).attr('data-dynid');
@@ -408,7 +437,7 @@
             stage = modTooltip(stage);
 
             // Add representations
-            var index, position, pos_sel;
+            var index, position, pos_sel, clicked_pos;
             //o.addRepresentation( "licorice", { color:"green",  sele: "water" } );
             o.addRepresentation( "cartoon", { color:"#79C5D5",  sele: "protein" } );
             if (lig){
@@ -421,14 +450,19 @@
             //Function to Show selected positions from flareplot in NGL
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").off('click');
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").on('click', function(){
-              set_positions(stage, id, ballesteros_to_pdb, o);
+              set_positions(stage, id, ballesteros_to_pdb, o, $(this));
             })
 
             //Show positions previously setted
             set_positions(stage, id, ballesteros_to_pdb, o);
 
-            //Get Original position of the system
-            ori= stage.viewerControls.getOrientation();
+            //Get Original position of the system, in the first simulation loaded. If not first time, set original orientation
+            if (first_sim){
+              ori= stage.viewerControls.getOrientation();
+            }
+            else {
+              stage.viewerControls.orient(ori);
+            }
 
             //Recenter protein on click of center button
             $("#center"+id, window.parent.document).click(function(){
@@ -456,7 +490,7 @@
           return(stage);
         }
 
-        function create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage){
+        function create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage, first_sim = false){
 
             //If it is a customized selection page, put 'custom_cluster' as the selected cluster 
             var new_dyns, name_simulation, dynid;
@@ -509,12 +543,13 @@
                     parent.$("#simButton"+id).attr("data-dynid", new_dynid);
 
                     //Change simulation
+                    console.log('hh')
                     stage = change_sim(compl_data, stage, id);
                 }
             });
 
             //Load first simulation of new cluster
-            stage = change_sim(compl_data, stage, id);
+            stage = change_sim(compl_data, stage, id, first_sim = first_sim);
             return(stage);
         }
 
@@ -544,9 +579,10 @@
           event.preventDefault()
         })
 
-        //Clear button
+        //Clear button. Delete all nodes or links selected and recenter the protein
         parent.$("#ngldiv"+id+" .NGLclear").click(function(){          
           parent.$("#FPclearSel"+id).trigger("click");
+          parent.$("#restartPos"+id).trigger('click');
         });
 
         /////Initial stage. Triggered when flareplots are fully loaded
@@ -578,7 +614,7 @@
 
           //Initial dynamics. If clusternumber is not a number (but a dynX thing), go for customized path
           new_clust = parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag')
-          stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage);
+          stage = create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage = stage, first_sim = true);
 
         });
 

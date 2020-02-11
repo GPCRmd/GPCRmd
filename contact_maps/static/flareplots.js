@@ -63,6 +63,10 @@ $(document).ready(function(){
         //Setting edges section of corresponding nomenclature
         fpjson['edges'] = fpjson[class_numbering+'edges'] 
 
+        //Take only the topX edges required
+        var top_number = $('#flarerange option:selected').val();
+        fpjson['edges'] = fpjson['edges'].slice(0, top_number);
+
         plot=createFlareplot(fpsize, fpjson, fpdiv);
 
         //Wider lines
@@ -78,9 +82,9 @@ $(document).ready(function(){
            mouseX = e.pageX - $(fpdiv).offset().left;
            mouseY = e.pageY - $(fpdiv).offset().top + $(fpdiv).scrollTop();
         });  
-        $(fpdiv).on("mouseenter","path",function(e){
+//      $(fpdiv).on("mouseenter","path",function(e){
 //            $(".tooltip").css({'left':mouseX,'top':mouseY});
-        })
+//      })
 
         hoverLinksFP();
 
@@ -175,7 +179,7 @@ $(document).ready(function(){
         fpSelInt = updFpSelInt;
     }
 
-	 function changeContactsInFplot(id, fpdir, plots){
+	function changeContactsInFplot(id, fpdir, plots){
         //create new FP but saving the selected contacts
         
         flare_container = "#flare-container" + id;
@@ -197,11 +201,13 @@ $(document).ready(function(){
             pre_resSelected.push(nodenum);
         })
         var fpfile_now="cluster" + cluster_num + ".json";
-        d3.json(fpdir+fpfile_now, function(jsonData){
+        $.getJSON(fpdir+fpfile_now,id,function(jsonData){
+
+            flare_container = "#flare-container" + id;
+            fpdiv = "#fpdiv" + id;            
             $(flare_container).html("");
             var fpsize=setFpNglSize(true, flare_container); // Or just use the size used before?
             plots[id] = createFlareplotCustom(fpsize, jsonData, flare_container, class_numbering);
-            allEdges= plots[id].getEdges();
             numfr = plots[id].getNumFrames();
             
             if ($("#fp_display_summary").hasClass("is_active")){
@@ -342,6 +348,12 @@ $(document).ready(function(){
     	    	change_display_sim_option("#" + to_activate, "#" + to_inactivate);
     	    	changeContactsInFplot("1", fpdir, plots);
     	    }
+        });
+
+        //On change of number of interactions selected, reload the flareplots
+        $("#flarerange").change(function(){
+            changeContactsInFplot("0", fpdir, plots);
+            changeContactsInFplot("1", fpdir, plots);
         });
 
         //Load needed Json files and execute NGL bottom viewers
