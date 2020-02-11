@@ -180,7 +180,7 @@ def customized_heatmap(request, foo):
 	max_columns = 50
 	pairs_number = len(df_filt.Position.unique())
 	inter_number = df_filt.shape[0]
-	inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
+	inter_per_pair = inter_number/pairs_number 
 	number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
 
 	#Create custom heatmaps folder if not yet exists
