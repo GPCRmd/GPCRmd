@@ -105,6 +105,7 @@ def get_contacts_plots(request):
 		'mdsrv_url':mdsrv_url,
 		'dyn_to_names' : dyn_to_names,
 		'csvfile' : dumps(csv_data),
+		'flarerange' : list(range(1,21))		
 	})
 	return render(request, 'contact_maps/index_h.html', context)
 
@@ -179,7 +180,7 @@ def customized_heatmap(request, foo):
 	max_columns = 50
 	pairs_number = len(df_filt.Position.unique())
 	inter_number = df_filt.shape[0]
-	inter_per_pair = (inter_number/pairs_number)/2 if rev == "rev" else inter_number/pairs_number 
+	inter_per_pair = inter_number/pairs_number 
 	number_heatmaps = ceil((inter_number/inter_per_pair)/max_columns)
 
 	#Create custom heatmaps folder if not yet exists
@@ -251,6 +252,7 @@ def customized_heatmap(request, foo):
 		'sim_list' : list(zip(dyn_list, name_list)),
 		'mdsrv_url':mdsrv_url,
 		'csvfile' : dumps(csv_data),
+		'flarerange' : list(range(1,21))
 	}
 	print('returning')
 
