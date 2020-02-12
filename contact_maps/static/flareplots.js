@@ -229,6 +229,9 @@ $(document).ready(function(){
                 clickEdgeSelectNodes(d, plots[id]);
             });
 
+            //To reset the selection system from fareplot
+            $('#ngl_iframe'+id)[0].contentWindow.$('body').trigger('flareplot_changed');
+
         });
     }
 

@@ -354,9 +354,9 @@
           }
         }
 
-        function change_sim(compl_data, stage = false, id, first_sim = false){
+        function change_sim(compl_data, stage = false, id, first_sim = false, custom_dynid = false){
 
-          //Set Nglviewr ID (0 or 1)  and dynid selected
+          //Select dynid, if not provided
           var dynid = parent.$("#simButton"+id).attr('data-dynid');
 
           //Set button link to GPCRmd viewer
@@ -447,6 +447,14 @@
             //End loading icon
             $("#loading_ngl"+id, window.parent.document).css("display","none");
 
+            //Reset function to show selected positions in case the flareplots are changed
+            $(document.body).bind('flareplot_changed', function() {
+              parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").off('click');
+              parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").on('click', function(){
+                set_positions(stage, id, ballesteros_to_pdb, o, $(this));
+              });
+            });
+
             //Function to Show selected positions from flareplot in NGL
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").off('click');
             parent.$("#flare-container"+id+" g text, #flare-container"+id+" g path").on('click', function(){
@@ -493,9 +501,10 @@
         function create_dyn_dropdown(compl_data, clustdict, new_clust, id, stage, first_sim = false){
 
             //If it is a customized selection page, put 'custom_cluster' as the selected cluster 
-            var new_dyns, name_simulation, dynid;
+            var new_dyns, name_simulation, dynid, custom_dyn;
             if (isNaN(new_clust)){
               new_clust = "custom_cluster";
+              custom_dyn = parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").data('tag');
             } 
             else {
               new_clust = "cluster"+new_clust;
@@ -508,7 +517,7 @@
                 dynid = dyn_list[i];
                 name_simulation = compl_data[dynid]['up_name']+" ("+compl_data[dynid]['pdb_id']+") ("+dynid+")";
 
-                if (i==0){
+                if ((i==0 && isNaN(new_clust)) || dynid == custom_dyn){
                     parent.$("#simButton"+id).html('<b>Simulation</b>: '+name_simulation + ' <span class="caret"></span>');
                     parent.$("#simButton"+id).attr("data-spath", compl_data[dynid]['struc_f']);
                     parent.$("#simButton"+id).attr("data-dynid", dynid);
@@ -543,7 +552,6 @@
                     parent.$("#simButton"+id).attr("data-dynid", new_dynid);
 
                     //Change simulation
-                    console.log('hh')
                     stage = change_sim(compl_data, stage, id);
                 }
             });
