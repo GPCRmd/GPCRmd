@@ -90,14 +90,16 @@ def gpcrmd_home(request):
         dyn_id=dyn["dyn_id"]
         pdbid=dyn["pdb_namechain"].split(".")[0]
         if pdbid:
-            pdb_id_set.add(pdbid)
+            if pdbid != "HOMO":
+                pdb_id_set.add(pdbid)
         fam_slug=dyn["fam_slug"]
         if not fam_slug:
             fam_slug=dyn["fam_slug2"]
         fam=False
         if fam_slug:
-            subtype_set.add(fam_slug)
-            fam_set.add(fam_slug[:-4])
+            if pdbid != "HOMO":
+                subtype_set.add(fam_slug)
+                fam_set.add(fam_slug[:-4])
             fam_code=fam_slug.split("_")[0]
             #fam=fam_d[fam_code]            
         if dyn_id not in dyn_dict:
@@ -164,9 +166,27 @@ def gpcrmd_home(request):
 
     context["subm_data"] =json.dumps(subm_data)
     ################
+    gpcrmdtree_path='/protwis/sites/files/Precomputed/Summary_info/gpcrmdtree.data'
+    with open(gpcrmdtree_path, 'rb') as filehandle:  
+        tree_data = pickle.load(filehandle)
+    fam_count=0
+    subt_count=0
+    pdb_count=0
+    for nclasstmp in range(0,len(tree_data["children"])):
+        fam=tree_data["children"][nclasstmp]["children"]
+        len_fam=len(fam)
+        fam_count+=len_fam
+        for nfamtmp in range(0,len_fam):            
+            st=tree_data["children"][nclasstmp]["children"][nfamtmp]["children"]
+            len_st=len(st)
+            subt_count+=len_st
+            for nsubt in range(0,len_st):
+                pdbli=tree_data["children"][nclasstmp]["children"][nfamtmp]["children"][nsubt]["children"]
+                pdb_count+=len(pdbli)
+
     #Fams sumulated
     sim_fams=len(fam_set)
-    total_fams=30 #missing=["Melatonin",
+    total_fams=fam_count #missing=["Melatonin",
                            #"Parathyroid hormone receptors", 
                            #'Prostanoid receptors' ,"Tachykinin"]
                    #GPCRdb: 34
@@ -181,7 +201,7 @@ def gpcrmd_home(request):
 
     #Subtypes sumulated
     sim_subtyppes=len(subtype_set)
-    total_subtyppes=52
+    total_subtyppes=subt_count
                    #GPCRdb: 64
                    #GPCRmd: 52
     missing_subtypes=total_subtyppes - sim_subtyppes
@@ -194,7 +214,7 @@ def gpcrmd_home(request):
 
     #PDB ids sumulated
     pdb_id_sim=len(pdb_id_set)
-    pdb_id_total=270
+    pdb_id_total=pdb_count
                    #GPCRdb: 346
                    #GPCRmd: 270
     missing_pdb_ids=pdb_id_total - pdb_id_sim
@@ -226,6 +246,7 @@ def gpcrmd_home(request):
     t = t.annotate(protname=F('id_model__id_protein__uniprotkbac'))
     t = t.annotate(protname2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__name'))
     t = t.annotate(ligname=F("id_model__dyndbmodelcomponents__id_molecule__dyndbcompound__name"))
+    #t = t.annotate(ligname=F("id_model__id_complex_molecule__dyndbcomplexmoleculemolecule__id_molecule__id_compound__name"))
     t = t.annotate(pdb_namechain=F("id_model__pdbid"))
     dyndata=t.values("id","comp_resname","comp_type","protname","protname2","ligname","pdb_namechain")
 
