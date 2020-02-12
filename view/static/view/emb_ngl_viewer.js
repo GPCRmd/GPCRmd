@@ -221,6 +221,10 @@ $(document).ready(function(){
         var old_fp=$("#selectedTraj").data("fplot_file");
         $("#selectedTraj").data("tpath",traj_p).data("fplot_file",fpfile_new);
         $("#selectedTraj_id").text(traj_id);
+        var traj_note=traj_el.data("trajcomment");
+        if (traj_note){
+            $("#selectedTraj_note").text(traj_note);
+        }
         traj_el.css("background-color","#FFF7F7").addClass("tsel");
         traj_el.siblings().css("background-color","#FFFFFF").removeClass("tsel");
 

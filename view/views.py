@@ -1200,6 +1200,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         #(traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         (traj_list, show_fp)=get_fplot_data(dyn_id,traj_list)
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
+        if str(dyn_id)=="197":
+            i=1
+            for traj_e in traj_list:
+                traj_e.append("Step %s"%i)
+                i+=1
         presel_pos=""
         bind_domain=""
         if sel_pos:

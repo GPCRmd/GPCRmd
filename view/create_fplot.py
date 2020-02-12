@@ -70,7 +70,7 @@ def create_fplot(self,dyn_id,newpath,pdbpath=None,trajpath=None,traj_id=None,str
                     if chain_name not in chains_taken:
                         chains_taken.add(chain_name)
                         dprot_chains[prot_id][0].append((chain_name,result))
-                        seq_pos,seq_pos_n=(seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,True)
+                        (seq_pos,seq_pos_n)=obtain_seq_pos_info(result,seq_pos,seq_pos_n,chain_name,True)
                         dprot_chains[prot_id][1]=seq_pos
         prot_seq_pos[prot_id]=(prot_name,seq_pos)
     keys_to_rm=set()
