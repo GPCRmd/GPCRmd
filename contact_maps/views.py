@@ -230,7 +230,7 @@ def customized_heatmap(request, foo):
 	basedir = "%scontmaps_inputs/%s/%s/%s/" % (basepath,itype,stnd,ligandonly)
 
 	#Path to json
-	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/simulation_jsons/" %  (itype)
+	fpdir = "/dynadb/files/Precomputed/get_contacts_files/contmaps_inputs/%s/%s/simulation_jsons/" %  (itype, ligandonly)
 	
 	#First batch of context variables
 	context = {

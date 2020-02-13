@@ -116,54 +116,6 @@ def new_columns(df):
 
     return df
 
-def flareplot_json(df, dyn_list, flare_template = False):
-    """
-    Create json for flareplot of top5 interactions
-    """
-    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
-
-    # Select top5 interactions based on its mean frequency. Also asign color based on mean value
-    df_list = df.filter(items = dyn_list + ['APosition1', 'APosition2', 'BPosition1', 'BPosition2','CPosition1', 'CPosition2','FPosition1', 'FPosition2',])
-    df_list['mean'] = df_list.mean(axis = 1, numeric_only = True)
-    mean_threshold = min(df_list['mean'].nlargest(5).tolist())
-    df_list['color'] = df_list['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
-
-    #Filter top 5 in df_clust
-    df_list = df_list.nlargest(5,'mean')
-
-    # 'Edge' entry for json file
-    df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-    df_dict['name1'] = df_list['APosition1'] 
-    df_dict['name2'] = df_list['APosition2']
-    df_dict['frames'] = [[1]]*len(df_dict)
-    df_dict['color'] = df_list['color']
-    edges = df_dict.to_dict(orient="records")
-
-    # Appending edges to flare plot template, if any submitted
-    if flare_template:
-        flare_template['edges'] = edges
-        jsondict = flare_template
-    else:
-        jsondict = { 'edges' : edges }
-
-    #'Edge' multi-entries, based on the 4 GPCR nomenclatures
-    for leter in ['A', 'B', 'C', 'F']:
-        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
-        df_dict['name1'] = df_list[leter+'Position1'] 
-        df_dict['name2'] = df_list[leter+'Position2']
-        df_dict['frames'] = [[1]]*len(df_dict)
-        df_dict['color'] = df_list['color']
-        leter_edges = df_dict.to_dict(orient="records")
-
-        #Appending edges
-        if flare_template:
-            flare_template[leter+'edges'] = leter_edges
-            jsondict = flare_template
-        else:
-            jsondict = { leter+'edges' : leter_edges }
-
-    return jsondict
-
 def create_hovertool(itype, itypes_order, hb_itypes, typelist):
     """
     Creates a list in hovertool format from the two dictionaries above
@@ -189,7 +141,7 @@ def define_figure(width, height, dataframe, hover, itype):
     """
 
     # Mapper
-    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']
     colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
