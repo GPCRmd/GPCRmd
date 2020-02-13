@@ -117,6 +117,9 @@
                         {% if answer.act_state %}
                             <p><b>Activation state</b>: {{answer.act_state}}</p>
                         {% endif %}
+                        {% if answer.description %}
+                            <p><b>Description</b>: {{answer.description}}</p>
+                        {%endif%}
                         {% if answer.author %}
                             <p><b>Submitted by</b>: {{answer.author}}</p>
                         {%endif%}
@@ -146,9 +149,6 @@
                     {%endif%}
                     {%if answer.atom_num%}
                         <p><b>Total number of atoms</b>: {{answer.atom_num}}</p>
-                    {%endif%}
-                    {% if answer.description %}
-                        <p><b>Description</b>: {{answer.description}}</p>
                     {%endif%}
                     </div>
                 <p class="dyn_info_title" style="margin-top:20px">Simulation details</p>

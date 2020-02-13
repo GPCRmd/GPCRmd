@@ -61,7 +61,14 @@
               </a>
             </li>
           </ul>
-          <canvas width="80" height="255" id="cv"></canvas>
+          <div class="legendary" id="legend_container">
+            <div class="legendary col-xs-6" id="legend_bar"></div>
+            <div class="legendary col-xs-6">
+              <p class="legend_text"  style="top: 0%">100%</p>
+              <p class="legend_text" style="top: 40%">50%</p>
+              <p class="legend_text" style="top: 85%">0%</p>
+            </div>
+          </div>
         </div>
         <div id="dendrogram-heatmap" class="fixedwidth">
           <div id="loading_div">
@@ -104,6 +111,21 @@
 
     <div class="panel panel-primary" id="flare_col" data-fpdir="{{fpdir}}" data-dyn_list="{{dyn_list}}">
       <div class="panel-body">
+
+        <center>
+          <h4>Please, select two of the clusters of the dendrogram bellow to compare its main
+            <select id="flarerange">
+              {% for number in flarerange %}
+              {% if number == 5 %}
+              <option value={{number}} selected>{{number}}</option>
+              {% else %}
+              <option value={{number}}>{{number}}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          interactions
+          </h4>
+        </center>
 
         <div id="fpdiv0" class="col-xs-6 fpdiv bottomElement">
           <center>
@@ -226,7 +248,7 @@
               </div>               
             </div>  
             <div class="row NGLtoolbar_row">
-              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              <a id="viewer_link_bottom0" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>open with GPCRmd workbench</b></a>
             </div>  
           </div>
 
@@ -261,7 +283,7 @@
               </div>               
             </div>
             <div class="row NGLtoolbar_row">
-              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>Open with GPCRmd viewer</b></a>
+              <a id="viewer_link_bottom1" href="#" target='_blank' class="btn btn-success btn-sm viewer_link_bottom" role="button"><b>open with GPCRmd workbench</b></a>
             </div>  
           </div>
 
