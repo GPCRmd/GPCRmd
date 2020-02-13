@@ -185,10 +185,10 @@ def adapt_to_marionas(df):
 
     return(df)
 
-def flareplot_template(df, basepath):
+def flareplot_template(df, jsonpath):
     """
     Create a pseudoflareplot input json with no interactions, but with all avalible positions.
-    It will be used later as a template to create the top5 interactions flareplots.  
+    It will be used later as a template to create the top interactions flareplots.  
     """
     #'track' entry for json file: each track is a node (position) in the flareplot
     helix_colors = {'1':"#78C5D5",'12':"#5FB0BF",'2':"#459BA8",'23':"#5FAF88",'3':"#79C268",'34':"#9FCD58",'4':"#C5D747",'45':"#DDD742",'5':"#F5D63D",'56':"#F3B138",'6':"#F18C32",'67':"#ED7A6A",'7':"#E868A1",'78':"#D466A4",'8':"#BF63A6",'Ligand--1':'#FF5050', 'Ligand': '#FF5050'}        
@@ -247,10 +247,65 @@ def flareplot_template(df, basepath):
     jsondict = { 'trees' : trees, 'tracks' : tracks }
     
     # Store json file
-    jsonpath = basepath + "template.json"
+    jsonpath = basepath + "template.json" 
     with open(jsonpath, 'w') as jsonfile:
         dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
 
+
+def dyn_flareplots(df, folderpath, dyn_list, itype, flare_template = False):
+    """
+    Create top20 interaction jsons for each simulation. Needed for customized selection flareplots.
+    """
+    os.makedirs(folderpath, exist_ok = True)
+    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']
+    for dyn in dyn_list:
+
+        # Select top interactions based on its mean frequency. Also asign color based on mean value
+        df_clust = df.filter(items = [dyn, 'APosition1', 'APosition2', 'BPosition1', 'BPosition2','CPosition1', 'CPosition2','FPosition1', 'FPosition2',])
+        df_clust['color'] = df_clust[dyn].apply(lambda x: colors[100-round(x*100/100)]) #There are 101 colors avalible in list
+
+        #Filter top 5 in df_clust
+        df_clust = df_clust.nlargest(20, dyn)
+
+        # 'Edge' entry for json file
+        df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+        df_dict['name1'] = df_clust['APosition1'] 
+        df_dict['name2'] = df_clust['APosition2']
+        df_dict['frames'] = [[1]]*len(df_dict)
+        df_dict['color'] = df_clust['color']
+        df_dict['value'] = df_clust[dyn]
+        edges = df_dict.to_dict(orient="records")
+
+        # Appending edges to flare plot template, if any submitted
+        if flare_template:
+            flare_template['edges'] = edges
+            jsondict = flare_template
+        else:
+            jsondict = { 'edges' : edges }
+
+        #'Edge' multi-entries, based on the 4 GPCR nomenclatures
+        for leter in ['A', 'B', 'C', 'F']:
+            df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
+            df_dict['name1'] = df_clust[leter+'Position1'] 
+            df_dict['name2'] = df_clust[leter+'Position2']
+            df_dict['frames'] = [[1]]*len(df_dict)
+            df_dict['color'] = df_clust['color']
+            df_dict['value'] = df_clust[dyn]
+            leter_edges = df_dict.to_dict(orient="records")
+
+            #Appending edges
+            if flare_template:
+                flare_template[leter+'edges'] = leter_edges
+                jsondict = flare_template
+            else:
+                jsondict = { leter+'edges' : leter_edges }
+
+        #Writing json
+        jsonpath = folderpath + dyn + "_top.json"
+        with open(jsonpath, 'w') as jsonfile:
+            dump(jsondict, jsonfile, ensure_ascii=False, indent = 4)
+
+        
 def frequencies(df):
     """
     Creates an interaction frequency numpy matrix from 
@@ -464,17 +519,17 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
     Create json entries for significative positions (top10 mean frequency) of each cluster produced
     """
     os.makedirs(folderpath,  exist_ok = True)
-    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']    
     for clust in clustdict.keys():
 
-        # Select top5 interactions based on its mean frequency. Also asign color based on mean value
+        # Select top interactions based on its mean frequency. Also asign color based on mean value
         df_clust = df.filter(items = clustdict[clust] + ['APosition1', 'APosition2', 'BPosition1', 'BPosition2','CPosition1', 'CPosition2','FPosition1', 'FPosition2',])
         df_clust['mean'] = df_clust.mean(axis = 1, numeric_only = True)
-        mean_threshold = min(df_clust['mean'].nlargest(5).tolist())
-        df_clust['color'] = df_clust['mean'].apply(lambda x: colors[63-round(x*63/100)]) #There are 64 colors avalible in list
+        mean_threshold = min(df_clust['mean'].nlargest(20).tolist())
+        df_clust['color'] = df_clust['mean'].apply(lambda x: colors[100-round(x*100/100)]) #There are 101 colors avalible in list
 
         #Filter top 5 in df_clust
-        df_clust = df_clust.nlargest(5,'mean')
+        df_clust = df_clust.nlargest(20,'mean')
 
         # 'Edge' entry for json file
         df_dict = pd.DataFrame(columns = ["name1", "name2", "frames"])
@@ -482,6 +537,7 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
         df_dict['name2'] = df_clust['APosition2']
         df_dict['frames'] = [[1]]*len(df_dict)
         df_dict['color'] = df_clust['color']
+        df_dict['value'] = df_clust['mean']
         edges = df_dict.to_dict(orient="records")
 
         # Appending edges to flare plot template, if any submitted
@@ -498,6 +554,7 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
             df_dict['name2'] = df_clust[leter+'Position2']
             df_dict['frames'] = [[1]]*len(df_dict)
             df_dict['color'] = df_clust['color']
+            df_dict['value'] = df_clust['mean']
             leter_edges = df_dict.to_dict(orient="records")
 
             #Appending edges
@@ -620,20 +677,21 @@ def add_restypes(df, compl_data, recept_info, recept_info_order):
         prot_pos = []
         for dynid,pos in zip(dynid_col, pos_col):
             if pos == 'Ligand':
-                return pd.Series([pos, "Ligand"])
+                restype_list.append('')
+                prot_pos.append('Ligand')
+            else: 
+                GPCRclass_number = GPCRclass_numbers[recept_info[dynid][class_index]] 
+                class_pos_array = pos.split('\n')
+                class_pos = class_pos_array[0]+class_pos_array[GPCRclass_number]
 
-            GPCRclass_number = GPCRclass_numbers[recept_info[dynid][class_index]] 
-            class_pos_array = pos.split('\n')
-            class_pos = class_pos_array[0]+class_pos_array[GPCRclass_number]
-
-            if class_pos in compl_data[dynid]['gpcr_pdb']: 
-                restype = compl_data[dynid]['gpcr_pdb'][class_pos][-1]
-                restype_list.append(restype)
-                prot_pos.append(class_pos)
-            else:
-                #print("Position %s not found in %s" %(class_pos, dynid)) #Too much output
-                restype_list.append("(N/A)")
-                prot_pos.append(class_pos)
+                if class_pos in compl_data[dynid]['gpcr_pdb']: 
+                    restype = compl_data[dynid]['gpcr_pdb'][class_pos][-1]
+                    restype_list.append(restype)
+                    prot_pos.append(class_pos)
+                else:
+                    #print("Position %s not found in %s" %(class_pos, dynid)) #Too much output
+                    restype_list.append("(N/A)")
+                    prot_pos.append(class_pos)
 
         return(restype_list,prot_pos)
 
@@ -659,7 +717,7 @@ def add_restypes(df, compl_data, recept_info, recept_info_order):
   
     return df
 
-def new_columns(df):
+def new_columns(df, itype):
     """
     Adding Position1 and Position2 columns from A nomenclature system to dataframe, in subsitution of
     Position column, which included both.
@@ -683,13 +741,15 @@ def new_columns(df):
 
         return(pd.DataFrame.from_dict(pos_by_class))
 
+    #Delete non-main itypes
+    df = df[df['itype']==itype]
+    
     df.reset_index(drop = True, inplace = True)
     df_newcols1 =  split_by_class(df["Position1"])
     df_newcols2 =  split_by_class(df["Position2"])
     df = pd.concat([df, df_newcols1, df_newcols2], axis = 1)
 
     return df
-
 
 def sort_simulations(df_ts, dyn_dend_order):
     """
@@ -746,7 +806,7 @@ def define_figure(width, height, dataframe, hover, itype):
     """
 
     # Mapper
-    colors = ['#FF0000','#FF0800','#FF1000','#FF1800','#FF2000','#FF2800','#FF3000','#FF3800','#FF4000','#FF4800','#FF5000','#FF5900','#FF6100','#FF6900','#FF7100','#FF7900','#FF8100','#FF8900','#FF9100','#FF9900','#FFA100','#FFAA00','#FFB200','#FFBA00','#FFC200','#FFCA00','#FFD200','#FFDA00','#FFE200','#FFEA00','#FFF200','#FFFA00','#FAFF00','#F2FF00','#EAFF00','#E2FF00','#DAFF00','#D2FF00','#CAFF00','#C2FF00','#BAFF00','#B2FF00','#AAFF00','#A1FF00','#99FF00','#91FF00','#89FF00','#81FF00','#79FF00','#71FF00','#69FF00','#61FF00','#59FF00','#50FF00','#48FF00','#40FF00','#38FF00','#30FF00','#28FF00','#20FF00','#18FF00','#10FF00','#08FF00','#00FF00']
+    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']
     colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
@@ -883,6 +943,11 @@ def select_tool_callback(recept_info, recept_info_order, dyn_gpcr_pdb, itype, ty
                     $("#first_col").attr("class","col-xs-7");
                     $("#second_col").attr("class","col-xs-5");
                     $("#info").css({"visibility":"visible","position":"relative","z-index":"auto"});
+                }
+                
+                //Show NA comment if there is a NA in the position
+                if(/N\/A/.test(restypepos)){
+                    $('#na_comment').show();
                 }
 
                 //Setting type specific frequencies
@@ -1093,7 +1158,7 @@ def get_contacts_plots(itype, ligandonly):
             return
 
         # Setting columns 'Position', 'leter+Position1' and 'leter+Position2' in df for jsons files    
-        df_columned = new_columns(df)
+        df_columned = new_columns(df, itype)
         df_columned.to_pickle(options_path+"dataframe_customflareplot.pkl")
 
         #Dropping away Position columns, once they are not needed
@@ -1112,6 +1177,11 @@ def get_contacts_plots(itype, ligandonly):
         # Labels for dendogram
         dendlabels_dyns = list(df_drop.columns)
         
+        # Making one-simulation flareplots. Only done in cmpl to avoid repeating same Simulations
+        if stnd == "cmpl":
+            sim_jsons_path = '%scontmaps_inputs/%s/%s/simulation_jsons/' % (basepath, itype, ligandonly)
+            dyn_flareplots(df_columned, sim_jsons_path, dendlabels_dyns, itype,  flare_template)
+
         #Computing frequency matrix
         dend_matrix = frequencies(df_drop)
         (recept_info,recept_info_order,df_ts,dyn_gpcr_pdb,index_dict)=improve_receptor_names(df_ts,compl_data)
