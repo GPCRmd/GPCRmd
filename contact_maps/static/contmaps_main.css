@@ -317,6 +317,7 @@ hr {
 }
 
 .FP-button {
+  overflow-x: hidden;
   margin-top:15px;
   margin-bottom:15px !important;
   font-size:12px;

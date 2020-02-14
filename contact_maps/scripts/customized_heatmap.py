@@ -339,7 +339,7 @@ def customized_csv(df_filt,itype):
     #Drop columns
     df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
 
-    csv_data = df_csv.to_csv()
+    csv_data = df_csv.to_csv(float_format='%.1f')
     return csv_data
 
 ########
