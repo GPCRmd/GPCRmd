@@ -461,6 +461,19 @@ def obtain_compounds(dyn_id):
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
         resn=c.resname
+        if (int(dyn_id) in change_lig_name) and (change_lig_name[int(dyn_id)]["orig_resname"]==resn):
+            if resn not in changed_res:
+##############################
+                lname=change_lig_name[int(dyn_id)]["longname"]
+                resname=change_lig_name[int(dyn_id)]["resname"]
+                comp_dict[lname] = [resname,"Ligand"]
+                add_twice=change_lig_name[int(dyn_id)]["add_twice"]
+                if ctype ==1:
+                        lig_li.append([lname,resname])
+                        lig_li_s.append(resname)
+                if (not add_twice):
+                    continue
+##############################
         if (dc not in comp_dict) and (c.resname not in changed_res):
             comp_dict[dc]=[resn,molecule_type.get(ctype,"Other")]
         else:
