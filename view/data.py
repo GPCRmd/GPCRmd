@@ -9,7 +9,7 @@ change_lig_name={7:{"resname":"CHL1 and 59",
                     "orig_resname":"CAU",
                     "add_twice":False},
                 197:{"resname":"POPC and (173, 197, 206, 217, 285, 301)",
-                    "longname":"Lipid scrambling",
+                    "longname":"Lipid translocation",
                     "orig_resname":"POPC",
                     "add_twice":"Lipid"}
                 }
