@@ -90,6 +90,13 @@
           <div id="dendrogram">
             {{dendrogram | safe }}
           </div>
+          <script>
+            //-------------- Resize dendrograms to avoid spurious margin. 
+            //I know it is a bad practice to put javascript intermixed with html, but it was the only way to get it correctly executed
+            var dend_elements = $('.infolayer, .cartesianlayer');
+            dend_elements.css('transform-origin', 'bottom');
+            dend_elements.css('transform', 'scale(1.0, 1.05)');
+          </script>
           <div id="loading_div">
             <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/>
             <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
@@ -132,7 +139,7 @@
       <div class="panel-body">
 
         <center>
-          <h4>Please, select two of the clusters of the dendrogram bellow to compare its main
+          <h4>Please, select two of the clusters from the above dendrogram to compare its top
             <select id="flarerange">
               {% for number in flarerange %}
               {% if number == 5 %}

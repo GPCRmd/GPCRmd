@@ -128,7 +128,7 @@ input[type=checkbox] {
   padding-right: 0.5%;
 }
 
-#custom_title {
+.menu_title {
   padding-left: 0.5%;  
   padding-right: 0.5%;  
 }
@@ -584,3 +584,17 @@ hr {
   width: calc(100% - 62px);
   float:left;
 }
+
+
+/* EXperiments 
+.main-svg {
+  transform: scale(1.0);
+  transform-origin: bottom;
+}
+
+.cartesianlayer, .infolayer {
+  transform-origin: bottom;
+  transform: scale(1.0, 1.05);
+}
+
+*/
