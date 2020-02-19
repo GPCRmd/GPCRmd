@@ -1897,10 +1897,10 @@ Hydrogen bonds
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                          In trajectory: 
                            <span style="margin-left:5px">
-                                <select id="" name="int_traj">
+                                <select id="interact_traj_sel" class="analysis_traj_sel" data-analysisstride="#int_stride" name="int_traj">
                                    <!--<option disabled selected value> </option>-->
                                    {% for traj in traj_list %}
-                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">
+                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}" data-trajid={{traj.2}} >
                                       Traj. ID {{traj.2}}
                                         {% if traj.4 %}
                                           ({{traj.4}})
@@ -1912,7 +1912,7 @@ Hydrogen bonds
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
@@ -2069,10 +2069,10 @@ Hydrogen bonds
                     <div style="margin-bottom:10px;">
                      In trajectory: 
                        <span style="margin-left:5px">
-                            <select id="" name="dist_traj">
+                            <select id="dist_traj_sel" class="analysis_traj_sel" data-analysisstride="#dist_stride" name="dist_traj">
                                <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">
+                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}" data-trajid={{traj.2}}>
                                   Traj. ID {{traj.2}}
                                     {% if traj.4 %}
                                       ({{traj.4}})
@@ -2083,7 +2083,7 @@ Hydrogen bonds
                        </span>
                     </div>
                     <div id="dist_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
                         <button id="gotoDistPg" class="pull-right btn btn-info withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
@@ -2107,10 +2107,10 @@ Hydrogen bonds
 
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
-                            <select id="rmsd_traj" name="rmsd_traj">
+                            <select id="rmsd_traj_sel" class="analysis_traj_sel" data-analysisstride="#rmsd_stride" name="rmsd_traj">
                                <!--option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">
+                               <option   value="{{traj.0}}" data-trajid={{traj.2}}>
                                   Traj. ID {{traj.2}}
                                     {% if traj.4 %}
                                       ({{traj.4}})
@@ -2140,7 +2140,7 @@ Hydrogen bonds
                                  </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
-                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                           </div>
 
                           <div id="rmsd_sel_frames_error" class="row" >

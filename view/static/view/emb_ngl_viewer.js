@@ -186,6 +186,8 @@ $(document).ready(function(){
         fpsegStr=fpsegStrTmpLi.join(",");
     }
     window.fpsegStr=fpsegStr;
+
+    var trajidtoframenum= $("#selectedTraj").data("trajidtoframenum");
       
     function updateFPTypesForTraj(traj_el){
         /*When trajectory is changed:
@@ -2444,6 +2446,21 @@ $(document).ready(function(){
         }
     }
 
+
+    $(".analysis_traj_sel").change(function(){
+        if (trajidtoframenum){
+            var seltrajid=$(this).children(":selected").data("trajid");
+            var newstride=trajidtoframenum[seltrajid][1];
+            newstride=newstride.toString();
+            console.log(newstride)
+            var selector_strideinp=$(this).data("analysisstride");
+            var strideinp_obj=$(selector_strideinp);
+            strideinp_obj.data("default",newstride);
+            strideinp_obj.attr("placeholder",newstride)
+            console.log("...........")
+        }
+    })
+
     var chart_img={};
     var d_id=1;
     $("#gotoDistPg").click(function(){ // if fistComp="" or no traj is selected do nothing
@@ -3854,7 +3871,7 @@ $(document).ready(function(){
         $("#rmsd_stride_parent").removeClass("has-warning");
         numComputedR = $("#rmsd_chart").children().length;
         if (numComputedR < 15){
-            rmsdTraj=$("#rmsd_traj").val();
+            rmsdTraj=$("#rmsd_traj_sel").val();
             rmsdFrames=$("#rmsd_sel_frames_id input[name=rmsd_sel_frames]:checked").val();
             if (rmsdFrames=="rmsd_frames_mine"){
                 frameFrom=$("#rmsd_frame_1").val();

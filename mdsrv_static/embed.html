@@ -131,7 +131,6 @@
                             tmptrajComp=stage.getComponentsByName("my_comp").list[0].trajList[traj_lastPlayedID]
                             ok=framenum_rpresetsel
                             tmptrajComp.setFrame(ok);
-                            console.log("fix jump")
                         }
                         compsel_changed_todo=compsel_changed_todo-1;
                         compsel_changed_trajnum=0;
@@ -143,7 +142,6 @@
                 }
                 if (update_fp_etal){
                     var fnum=trajComp.trajectory.currentFrame;
-                    console.log("update FP frame ",fnum)
                     if (fnum != -1){
                         if (trajchange){
                             parent.emptyFPsels();
@@ -255,7 +253,7 @@
         function setTrajRangeMax(){
             var traj_id_nm=$(".traj_element.tsel", window.parent.document).attr("id");
             var mytraj_id=Number(traj_id_nm.replace("traj_id_",""))
-            var numfr=trajidtoframenum[mytraj_id];
+            var numfr=trajidtoframenum[mytraj_id][0];
             var lastfr=numfr-1;
             var btn_traj_Bid =$(".traj_btn").attr("id");
             var tPatt = /\d*$/g;
