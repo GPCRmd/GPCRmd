@@ -203,7 +203,7 @@ $(document).ready(function(){
             var nodenum=nodename.split("-")[1];
             pre_resSelected.push(nodenum);
         })
-        var fpfile_now= dyn + "_top5.json";
+        var fpfile_now= dyn + "_top.json";
         $.getJSON(fpdir+fpfile_now,id,function(jsonData){
             flare_container = "#flare-container" + id;
             fpdiv = "#fpdiv" + id;            
@@ -229,6 +229,9 @@ $(document).ready(function(){
             plots[id].addEdgeToggleListener( function(d){
                 clickEdgeSelectNodes(d, plots[id]);
             });
+           
+            //To reset the selection system from fareplot
+            $('#ngl_iframe'+id)[0].contentWindow.$('body').trigger('flareplot_changed');
 
         });
     }
@@ -288,7 +291,7 @@ $(document).ready(function(){
     	if (fpdir) {
             fpsize=setFpNglSize(true, "#flare-container0");
 
-            d3.json(fpdir+dyn0+"_top5.json", function(jsonData){
+            d3.json(fpdir+dyn0+"_top.json", function(jsonData){
     	        plots[0] = createFlareplotCustom(fpsize, jsonData, "#flare-container0", "A");
                	$('#loading_flare0').css('display', 'none');
 
@@ -301,7 +304,7 @@ $(document).ready(function(){
                 });
 
             });
-            d3.json(fpdir+dyn1+"_top5.json", function(jsonData){
+            d3.json(fpdir+dyn1+"_top.json", function(jsonData){
     	        plots[1] = createFlareplotCustom(fpsize, jsonData, "#flare-container1", "A");
     	        $('#loading_flare1').css('display', 'none');
 
@@ -358,6 +361,8 @@ $(document).ready(function(){
         $("#flarerange").change(function(){
             changeContactsInFplot("0", fpdir, plots);
             changeContactsInFplot("1", fpdir, plots);
+            $('#ngl_iframe0')[0].contentWindow.$('body').trigger('top_number_changed');
+            $('#ngl_iframe0')[0].contentWindow.$('body').trigger('top_number_changed');
         });
 
         //Create clustdict for customized selection

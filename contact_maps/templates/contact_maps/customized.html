@@ -61,7 +61,14 @@
               </a>
             </li>
           </ul>
-          <canvas width="80" height="255" id="cv"></canvas>
+          <div class="legendary" id="legend_container">
+            <div class="legendary col-xs-6" id="legend_bar"></div>
+            <div class="legendary col-xs-6">
+              <p class="legend_text"  style="top: 0%">100%</p>
+              <p class="legend_text" style="top: 40%">50%</p>
+              <p class="legend_text" style="top: 85%">0%</p>
+            </div>
+          </div>
         </div>
         <div id="dendrogram-heatmap" class="fixedwidth">
           <div id="loading_div">
@@ -106,7 +113,7 @@
       <div class="panel-body">
 
         <center>
-          <h4>Please, select two of the clusters of the dendrogram above to compare its main
+          <h4>Please, select two of the clusters of the dendrogram bellow to compare its main
             <select id="flarerange">
               {% for number in flarerange %}
               {% if number == 5 %}
