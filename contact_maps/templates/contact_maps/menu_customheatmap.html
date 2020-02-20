@@ -1,10 +1,12 @@
 <br>
 <!--Simulation selection -->
 <div class="row menu">
-  <h4 class="menu_title">Customized dataset</h4>
+  <h4 class="menu_title">
+    Customized dataset <span class="info_icon glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Choose your own set of simulations to anlayze its interactions" ></span>
+  </h4>
   <div class="dropdown optbar">
     <button id="simulation_button" class="btn btn-primary btn-sm dropdown-toggle" data-toggle="dropdown" name="simulationlist">
-      Simulations to display 
+      Select simulations
       <span class="caret"></span>
     </button>
     <ul class="dropdown-menu dropdown-partner" id="dropdown_simulations">
@@ -25,6 +27,11 @@
   <form class="dropdown optbar" target="_self" method="post">
     {% csrf_token %}
     <input type="hidden" name="SimList" value="">
-    <input type="submit" disabled  target="_blank" method="post" id="CustomButton" class="btn btn-success btn-sm" value="Create custom heatmap">
+    <input type="submit" disabled  target="_blank" method="post" id="CustomButton" class="btn btn-success btn-sm" value="Apply">
   </form>
 </div>
+<script type="text/javascript" >
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>

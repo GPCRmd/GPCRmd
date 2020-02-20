@@ -43,7 +43,7 @@ a {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
-  height: 85%; /* DO NOT TOUCH THIS LINE!!!!!!! It may result in overflowing problems in firefox */
+  height: 77%; /* DO NOT TOUCH THIS LINE!!!!!!! It may result in overflowing problems in firefox */
 }
 
 #itype_link{
@@ -58,6 +58,10 @@ a {
 
 #download_csv {
   color: rgb(88, 88, 88); /*Ugly gray*/
+}
+
+.info_icon {
+  font-size: 14;
 }
 
 #doc_col{
@@ -586,7 +590,7 @@ hr {
 }
 
 
-/* EXperiments 
+/* Experiments 
 .main-svg {
   transform: scale(1.0);
   transform-origin: bottom;
