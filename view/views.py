@@ -174,7 +174,7 @@ def find_missing_pos_in_motif_otherclass(motifs, motname_li,dict_class,current_c
     return motifs_def
 
 
-def obtain_dyn_files(dynfiles):
+def obtain_dyn_files(dynfiles,get_framenum=False):
     """Given a list of files related to a dynamic, separates them in structure files and trajectory files."""
     structure_file=""
     structure_name=""
@@ -193,8 +193,19 @@ def obtain_dyn_files(dynfiles):
             structure_name=myfile_name
         elif myfile_name.endswith((".xtc", ".trr", ".netcdf", ".dcd")):
             traj_list.append([myfile, myfile_name, f_id])
-            trajidToFramenum[f_id]=e.framenum
-    return (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)
+            framenum=e.framenum
+            if framenum < 5000:
+                strideto=10
+            elif framenum < 10000:
+                strideto=50
+            else:
+                strideto=100
+            trajidToFramenum[f_id]=[framenum,strideto]
+    if get_framenum:
+        return (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)
+    else:
+        return (structure_file,structure_file_id,structure_name, traj_list)
+
 
 def obtain_prot_chains(pdb_name):
     chain_name_s=set()
@@ -461,6 +472,19 @@ def obtain_compounds(dyn_id):
         else:
             dc=DyndbCompound.objects.get(dyndbmolecule__dyndbdynamicscomponents=c.id).name
         resn=c.resname
+        if (int(dyn_id) in change_lig_name) and (change_lig_name[int(dyn_id)]["orig_resname"]==resn):
+            if resn not in changed_res:
+##############################
+                lname=change_lig_name[int(dyn_id)]["longname"]
+                resname=change_lig_name[int(dyn_id)]["resname"]
+                comp_dict[lname] = [resname,"Ligand"]
+                add_twice=change_lig_name[int(dyn_id)]["add_twice"]
+                if ctype ==1:
+                        lig_li.append([lname,resname])
+                        lig_li_s.append(resname)
+                if (not add_twice):
+                    continue
+##############################
         if (dc not in comp_dict) and (c.resname not in changed_res):
             comp_dict[dc]=[resn,molecule_type.get(ctype,"Other")]
         else:
@@ -810,7 +834,6 @@ def get_fplot_path(dyn_id,traj_list):
         li_n+=1
     if fp_exist:
         fpdir_url = get_precomputed_file_path('flare_plot',"hbonds",url=True)
-        print()
     return (traj_list,fpdir_url)
 
 def extract_var_info_file(pdb_vars,gpcr_Gprot,seq_pdb):
@@ -1191,7 +1214,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             watermaps = True 
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
-        (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)=obtain_dyn_files(dynfiles)
+        (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)=obtain_dyn_files(dynfiles,True)
+        first_strideval=trajidToFramenum[traj_list[0][2]][1]
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
         #structure_name="with_prot_lig_multchains_gpcrs.pdb" ################################### [!] REMOVE
         pdb_name = "/protwis/sites/files/"+structure_file
@@ -1200,6 +1224,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         #(traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         (traj_list, show_fp)=get_fplot_data(dyn_id,traj_list)
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
+        if str(dyn_id)=="197":
+            i=1
+            for traj_e in traj_list:
+                traj_e.append("Step %s"%i)
+                i+=1
         presel_pos=""
         bind_domain=""
         if sel_pos:
@@ -1387,6 +1416,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         pdbid="4N6H"
                     #traj_list.append(['Dynamics/dyn20/tmp_trj_0_20.dcd', 'tmp_trj_0_20.dcd', 10170, '10140_trj_4_hbonds_rep.json'])#[!] REMOVE! only for Flare Plot tests
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
+                    
+
+                    
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1394,6 +1426,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name, 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list,
+                        "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
@@ -1431,6 +1464,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
+                        "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
@@ -1460,6 +1494,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "structure_name":structure_name , 
                         "structure_file_id":structure_file_id,
                         "traj_list":traj_list, 
+                        "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
                         "ligands": lig_li,
@@ -1487,6 +1522,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "structure_name":structure_name , 
                     "structure_file_id":structure_file_id,
                     "traj_list":traj_list, 
+                    "first_strideval":first_strideval,
                     "trajidToFramenum":json.dumps(trajidToFramenum),
                     "compounds" : comp_li,
                     "ligands": lig_li,
@@ -1918,9 +1954,6 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
             if (ligres_sel in fin_dict):
                 fin_dict[ligres_sel].append((res_pdb,res_chain,res_name,("%.2f" % freq)))
             else: 
-                print("\n\n\n")
-                print(fin_dict)
-                print("\n\n\n")
                 return (False,None, "Error when parsing results (2).")
     return(True,fin_dict,None)
 
@@ -2307,9 +2340,6 @@ def saltbridges(request):#
 #                    writer.writerow(rowlist)
 #                writer.writerow(['','','','',''])
 
-        print("\n\n\n")
-        print(bridge_dic)
-        print("\n\n\n")
         full_results['salt_bridges']=bridge_dic
         analysis_data={"frameFrom":start,"frameTo":end,"cutoff":percentage_threshold,"traj_path":traj_shortpath,"dyn_id":dyn_id}
         sb_data_dyn={"results":bridge_dic,"analysis_data":analysis_data}

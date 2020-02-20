@@ -101,9 +101,12 @@
     {% mainmenu %}
 
     <div class="container" id="content">
+
+<!--<div class="alert alert-warning alert-dismissible" style="padding:5px 30px 5px 10px;margin:0 20px;position:absolute;z-index:10">
+    <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a><span class="glyphicon glyphicon-warning-sign"></span> Due to a recent server update, this page will be slow for the next 1-2 hours. We apologize for any inconvenience this may cause.</div>
+-->
         {% block content %}{% endblock %}
     </div>
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{% static 'home/js/jquery.js' %}"></script>
     <!-- jQueryUI -->

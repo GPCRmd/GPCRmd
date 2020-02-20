@@ -381,6 +381,11 @@ padding-right:60px
                             <button id="selectedTraj" class="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown" style="margin-left:3px;margin-top:7px;min-width:150px;text-align:left" data-tpath={{traj_list.0.0}} data-fplot_file="{{traj_list.0.3.0.2}}" data-trajidtoframenum="{{trajidToFramenum}}" > 
                               <span class="pull-left">
                                 <b>Trajectory ID:</b> <span id="selectedTraj_id">{{ traj_list.0.2 }}</span>
+                                <span id="selectedTraj_note">
+                                  {% if traj_list.0.4 %}
+                                    ({{traj_list.0.4}})
+                                  {% endif %}
+                                </span>
                               </span>
                               <span class="caret pull-right" style="margin-top:7px"></span>
                             </button>
@@ -389,13 +394,27 @@ padding-right:60px
                               {% for e in traj_list.0.3 %}
                                 data-{{e.0}}="{{e.2}}"
                               {% endfor %}
-                              >Trajectory {{traj_list.0.2}}</li>
+                              {% if traj_list.0.4 %}
+                                data-trajcomment="{{traj_list.0.4}}"
+                              {% endif %}
+                              >Trajectory {{traj_list.0.2}}
+                              {% if traj_list.0.4 %}
+                                ({{traj_list.0.4}})
+                              {% endif %}
+                            </li>
                             {% for traj in traj_list|slice:"1:" %}
                               <li class="traj_element" style="padding:5px 10px 5px 10px;" id="traj_id_{{traj.2}}" data-tpath={{traj.0}} data-fplot_file={{traj.3.0.2}} 
                               {% for e in traj.3 %}
                                 data-{{e.0}}="{{e.2}}"
                               {% endfor %}
-                              >Trajectory {{traj.2}}</li>
+                              {% if traj.4 %}
+                                data-trajcomment="{{traj.4}}"
+                              {% endif %}
+                              >Trajectory {{traj.2}}
+                                {% if traj.4 %}
+                                  ({{traj.4}})
+                                {% endif %}
+                              </li>
                             {% endfor %}
                             </ul>
                           </div>
@@ -1748,9 +1767,14 @@ Hydrogen bonds
 
                         <div style="margin-left:18px;margin-bottom:10px;">
                          Trajectory: 
-                                <select id="hbonds_traj" name="hbonds_traj">
+                                <select id="hbonds_traj" name="hbonds_traj">   
                                    {% for traj in traj_list %}
-                                   <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                                   <option   value="{{traj.0}}">
+                                    Traj. ID {{traj.2}}
+                                      {% if traj.4 %}
+                                        ({{traj.4}})
+                                      {% endif %}
+                                   </option>
                                    {% endfor %}
                                 </select>
 
@@ -1873,17 +1897,22 @@ Hydrogen bonds
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                          In trajectory: 
                            <span style="margin-left:5px">
-                                <select id="" name="int_traj">
+                                <select id="interact_traj_sel" class="analysis_traj_sel" data-analysisstride="#int_stride" name="int_traj">
                                    <!--<option disabled selected value> </option>-->
                                    {% for traj in traj_list %}
-                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
+                                   <option class="trajForInt" name="{{traj.0}}" value="{{traj.2}}" data-trajid={{traj.2}} >
+                                      Traj. ID {{traj.2}}
+                                        {% if traj.4 %}
+                                          ({{traj.4}})
+                                        {% endif %}
+                                   </option>
                                    {% endfor %}
                                 </select>
                            </span>
                            <span style="color:#DC143C;margin-left:5px" id="int_traj_error"></span>
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px" id="int_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="int_stride"  type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                     </div>
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:10px">
                         Threshold:
@@ -1922,7 +1951,12 @@ Hydrogen bonds
                      Trajectory: 
                             <select id="salt_traj" name="salt_traj">
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                               <option   value="{{traj.0}}">
+                                  Traj. ID {{traj.2}}
+                                    {% if traj.4 %}
+                                      ({{traj.4}})
+                                    {% endif %}
+                               </option>
                                {% endfor %}
                             </select>
 
@@ -2035,16 +2069,21 @@ Hydrogen bonds
                     <div style="margin-bottom:10px;">
                      In trajectory: 
                        <span style="margin-left:5px">
-                            <select id="" name="dist_traj">
+                            <select id="dist_traj_sel" class="analysis_traj_sel" data-analysisstride="#dist_stride" name="dist_traj">
                                <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}">Traj. ID {{traj.2}}</option>
+                               <option class="trajForDist" name="{{traj.0}}" value="{{traj.2}}" data-trajid={{traj.2}}>
+                                  Traj. ID {{traj.2}}
+                                    {% if traj.4 %}
+                                      ({{traj.4}})
+                                    {% endif %}
+                               </option>
                                {% endfor %}
                             </select>
                        </span>
                     </div>
                     <div id="dist_stride_parent">
-                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                        Stride: <input class="form-control input-sm inp_stride" id="dist_stride"  type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                     </div>
                     <div class=row>
                         <button id="gotoDistPg" class="pull-right btn btn-info withTrajs" style="margin-top:5px;padding:5px;margin-left:10px;margin-right:15px" >Compute</button>
@@ -2068,10 +2107,15 @@ Hydrogen bonds
 
                     <div style="margin-left:18px;margin-bottom:10px;">
                      Trajectory: 
-                            <select id="rmsd_traj" name="rmsd_traj">
+                            <select id="rmsd_traj_sel" class="analysis_traj_sel" data-analysisstride="#rmsd_stride" name="rmsd_traj">
                                <!--option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                               <option   value="{{traj.0}}" data-trajid={{traj.2}}>
+                                  Traj. ID {{traj.2}}
+                                    {% if traj.4 %}
+                                      ({{traj.4}})
+                                    {% endif %}
+                               </option>
                                {% endfor %}
                             </select>
 
@@ -2096,7 +2140,7 @@ Hydrogen bonds
                                  </span>
                           </div>
                           <div style="margin-bottom:5px" id="rmsd_stride_parent" class="row">
-                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default=10 placeholder=10 style="width:50px;padding-left:7px;">
+                            Stride: <input class="form-control input-sm inp_stride" id="rmsd_stride" type="number" data-default={{first_strideval}} placeholder={{first_strideval}} style="width:50px;padding-left:7px;">
                           </div>
 
                           <div id="rmsd_sel_frames_error" class="row" >
@@ -2107,10 +2151,15 @@ Hydrogen bonds
                         Reference: frame 
                             <input placeholder=0 class="form-control input-sm maxinp8 changeVal" id="rmsd_ref_frame" type="text" style="width:50px;padding-left:7px;margin-bottom:5px">
                             from trajectory 
-                            <select id="rmsd_ref_traj_id" name="rmsd_ref_traj">
+                            <select id="rmsd_ref_traj_id" name="">
                                <!--<option disabled selected value> </option>-->
                                {% for traj in traj_list %}
-                               <option   value="{{traj.0}}">Traj. ID {{traj.2}}</option>
+                               <option   value="{{traj.0}}">
+                                  Traj. ID {{traj.2}}
+                                    {% if traj.4 %}
+                                      ({{traj.4}})
+                                    {% endif %}
+                               </option>
                                {% endfor %}
                             </select>
                           <div class="col-md-12" id="rmsd_ref_frames_error" class="row" style="padding:0" >

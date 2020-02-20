@@ -7,7 +7,11 @@ change_lig_name={7:{"resname":"CHL1 and 59",
                 10:{"resname":"CAU",
                     "longname":"Carazolol",
                     "orig_resname":"CAU",
-                    "add_twice":False}
+                    "add_twice":False},
+                197:{"resname":"POPC and (173, 197, 206, 217, 285, 301)",
+                    "longname":"Lipid translocation",
+                    "orig_resname":"POPC",
+                    "add_twice":"Lipid"}
                 }
 
 cons_classA=[["N1.50", "98%",""], ["D2.50", "90%",""], ["R3.50", "95%",""],["W4.50", "97%",""],["P5.50", "78%",""], ["P6.50", "99%",""], ["P7.50", "88%",""]]
