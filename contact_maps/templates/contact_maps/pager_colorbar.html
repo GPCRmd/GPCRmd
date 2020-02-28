@@ -1,0 +1,31 @@
+<div id="heatmap_pager" class="fixedwidth">
+  <ul class="pagination" id="pager_list">
+    <li class="page-item prev">
+      <a class="page-link" aria-label="Previous" onclick="heatmap_change('prev')">
+        <span aria-hidden="true">&laquo;</span>
+        <span class="sr-only">Previous</span>
+      </a>
+    </li>
+    {% for number_heatmap in number_heatmaps_list %}
+      {% if number_heatmap == number_heatmaps_list.0 %}
+      <li class="page-item active" id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
+      {% else %}
+      <li class="page-item"  id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item next">
+      <a class="page-link"  aria-label="Next" onclick="heatmap_change('next')">
+        <span aria-hidden="true">&raquo;</span>
+        <span class="sr-only">Next</span>
+      </a>
+    </li>
+  </ul>
+  <div class="legendary" id="legend_container">
+    <div class="legendary col-xs-6" id="legend_bar"></div>
+    <div class="legendary col-xs-6">
+      <p class="legend_text"  style="top: 0%">100%</p>
+      <p class="legend_text" style="top: 40%">50%</p>
+      <p class="legend_text" style="top: 85%">0%</p>
+    </div>
+  </div>
+</div>

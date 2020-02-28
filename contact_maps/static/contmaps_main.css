@@ -176,7 +176,7 @@ input[type=checkbox] {
   visibility:hidden;
   position:absolute;
   z-index:-1;
-  height: 89%;
+  height: 77%;
 }
 
 #trajsDropdown_options {
@@ -264,10 +264,10 @@ hr {
 #legend_bar {
   /* Permalink - use to edit and share this gradient: https://colorzilla.com/gradient-editor/#800000+0,ff0000+25,ff8c00+50,ffff00+75,00ff00+100,00ff00+100 */
   background: #800000; /* Old browsers */
-  background: -moz-linear-gradient(top, #800000 0%, #ff0000 25%, #ff8c00 50%, #ffff00 75%, #00ff00 100%, #00ff00 100%); /* FF3.6-15 */
-  background: -webkit-linear-gradient(top, #800000 0%,#ff0000 25%,#ff8c00 50%,#ffff00 75%,#00ff00 100%,#00ff00 100%); /* Chrome10-25,Safari5.1-6 */
-  background: linear-gradient(to bottom, #800000 0%,#ff0000 25%,#ff8c00 50%,#ffff00 75%,#00ff00 100%,#00ff00 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#800000', endColorstr='#00ff00',GradientType=0 ); /* IE6-9 */  
+  background: -moz-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(top, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(to bottom, #800000 0%, #ff0000 20%, #ff8c00 40%, #ffff00 60%, #00ff00 80%, #d3d3d3 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#800000', endColorstr='#d3d3d3',GradientType=0 ); /* IE6-9 */  
 }
 
 .legendary {
