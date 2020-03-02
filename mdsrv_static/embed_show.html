@@ -124,6 +124,8 @@
 
         $(document).ready(function(){
         document.domain=document.domain;
+
+
         stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
 
             if ($(".str_file", window.parent.document).data("is_home")){
@@ -175,6 +177,7 @@
 
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
+                    $(window.parent.document).scrollTop(0);
                     if (ligsel){
                         o.setSelection("not _h and (protein or "+ligsel+")");
                         o.addRepresentation( "spacefill", {  sele: ligsel  } );

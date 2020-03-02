@@ -82,6 +82,7 @@ color_label_forms=["blue","red","yellow","green","orange","magenta","brown","pin
 # Custom view function wrappers
 from functools import wraps
 from django.utils.decorators import available_attrs
+import copy
 
 def obtain_prot_chains(pdb_name):
     chain_name_s=set()
@@ -13369,4 +13370,291 @@ def get_precomputed_file_path(objecttype,comp_type=None,url=False):
     else:
         path += os.path.sep
     return path
+
+
+def search_in_treeData(classifli,myslug):#gpcrclassif_fams,myfam_slug
+    namefound=False
+    for nlevel in range(0,len(classifli)):
+        thisslug= classifli[nlevel]["slug"]
+        if myslug==thisslug:
+            namefound=True
+            return(nlevel)
+    return(False)
+
+def datasets(request):
+    consideredgpcrs_path='/protwis/sites/files/Precomputed/Summary_info/considered_gpcrs.data'
+    with open(consideredgpcrs_path, 'rb') as filehandle:  
+        gpcrclassif = pickle.load(filehandle)
+
+    others_gpcrclassif=copy.deepcopy(gpcrclassif)
+    dynall=DyndbDynamics.objects.filter(is_published=True) #all().exclude(id=5) #I think dyn 5 is wrong
+    dynprot=dynall.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
+    dynprot=dynprot.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
+    dynprot=dynprot.annotate(dyn_id=F('id'))
+    dynprot = dynprot.annotate(pdb_namechain=F("id_model__pdbid"))
+    dynprot=dynprot.annotate(modelname=F('id_model__name'))
+    dynprot=dynprot.annotate(modeltype=F('id_model__type'))
+    dynprot=dynprot.annotate(user_id=F('submission_id__user_id__id'))
+    dynprot=dynprot.annotate(user_fname=F('submission_id__user_id__first_name'))
+    dynprot=dynprot.annotate(user_lname=F('submission_id__user_id__last_name'))
+    dynprot=dynprot.annotate(user_institution=F('submission_id__user_id__institution'))
+    dynall_values=dynprot.values("dyn_id","fam_slug","fam_slug2","pdb_namechain","modelname","modeltype","user_id","user_fname","user_lname","user_institution")
+
+
+    dyn_dict={}
+    for dyn in dynall_values:
+        dyn_id=dyn["dyn_id"]
+        if dyn_id not in dyn_dict:
+            dyn_dict[dyn_id]={}
+        is_hm=False
+        dyn_id=dyn["dyn_id"]
+        pdbid=dyn["pdb_namechain"].split(".")[0]
+        if pdbid:
+            if pdbid == "HOMO":
+                is_hm=True
+        prot_slug=dyn["fam_slug"]
+        if not prot_slug:
+            prot_slug=dyn["fam_slug2"]
+        if prot_slug:
+            fam_slug=prot_slug[:-8]
+            subtype_slug=prot_slug[:-4]
+            class_slug=prot_slug[:3]
+            #fam_nm=slugtofamdata[fam_slug]
+            #subtype_nm=slugtofamdata[subtype_slug]
+            #class_nm=slugtofamdata[class_slug]
+            dyn_dict[dyn_id]["fam_slug"]=fam_slug
+            dyn_dict[dyn_id]["subtype_slug"]=subtype_slug
+            dyn_dict[dyn_id]["class_slug"]=class_slug
+            dyn_dict[dyn_id]["prot_slug"]=prot_slug
+        dyn_dict[dyn_id]["is_hm"]=is_hm
+        dyn_dict[dyn_id]["pdbid"]=pdbid
+        dyn_dict[dyn_id]["modelname"]=dyn["modelname"]
+        if dyn["modeltype"]==0:
+            modeltype="Apoform"
+        else:
+            modeltype="Complex"
+        dyn_dict[dyn_id]["modeltype"]=modeltype
+        user_id=dyn["user_id"]
+        is_gpcrmd=False
+        if int(dyn_id) in range(4,11):
+            author="GPCR drug discovery group (Pompeu Fabra University)"
+        elif user_id in {1, 3, 5, 12, 14}:
+            is_gpcrmd=True
+            author="GPCRmd community"
+        else:
+            author ="%s %s, %s" % (dyn["user_fname"],dyn["user_lname"],dyn["user_institution"])
+        dyn_dict[dyn_id]["is_gpcrmd"]=is_gpcrmd
+        dyn_dict[dyn_id]["author"]=author
+
+
+
+
+    for dyn_id,dyndata in dyn_dict.items():
+        context={}
+        myclass_slug=dyndata["class_slug"]
+        myfam_slug=dyndata["fam_slug"]
+        mysubtype_slug=dyndata["subtype_slug"]
+        myprot_slug=dyndata["prot_slug"]
+        modelname=dyndata["modelname"]
+        modeltype=dyndata["modeltype"]
+        author=dyndata["author"]
+        mymodelname="<b>%s:</b> %s" %(modeltype,modelname)
+        pdbid=dyndata["pdbid"]
+        nclass=search_in_treeData(gpcrclassif,myclass_slug)
+        if nclass is False:
+            continue
+        gpcrclassif_fams=gpcrclassif[nclass]["children"]
+        nfam=search_in_treeData(gpcrclassif_fams,myfam_slug)
+        if nfam is False:
+            continue
+        gpcrclassif_sf=gpcrclassif_fams[nfam]["children"]
+        nsf=search_in_treeData(gpcrclassif_sf,mysubtype_slug)
+        if nsf is False:
+            continue
+        gpcrclassif_prot=gpcrclassif_sf[nsf]["children"]
+        npr=search_in_treeData(gpcrclassif_prot,myprot_slug)
+        if npr is False:
+            continue
+        print(nclass,nfam,nsf,npr)
+        if dyndata["is_gpcrmd"]:
+            gpcrpdbdict=gpcrclassif_prot[npr]["children"]
+            if pdbid not in gpcrpdbdict:
+                gpcrpdbdict[pdbid]=[]
+            gpcrpdbdict[pdbid].append((dyn_id,mymodelname))
+            gpcrclassif[nclass]["has_sim"]=True
+            gpcrclassif_fams[nfam]["has_sim"]=True
+            gpcrclassif_sf[nsf]["has_sim"]=True
+            gpcrclassif_prot[npr]["has_sim"]=True
+        else:
+            o_gpcrclassif_fams=others_gpcrclassif[nclass]["children"]
+            o_gpcrclassif_sf=o_gpcrclassif_fams[nfam]["children"]
+            o_gpcrclassif_prot=o_gpcrclassif_sf[nsf]["children"]
+            o_gpcrpdbdict=o_gpcrclassif_prot[npr]["children"]
+            if pdbid not in o_gpcrpdbdict:
+                o_gpcrpdbdict[pdbid]=[]
+            o_gpcrpdbdict[pdbid].append((dyn_id,mymodelname,author))
+            o_gpcrpdbdict[pdbid]=sorted(o_gpcrpdbdict[pdbid], key=lambda x: x[1])
+            others_gpcrclassif[nclass]["has_sim"]=True
+            o_gpcrclassif_fams[nfam]["has_sim"]=True
+            o_gpcrclassif_sf[nsf]["has_sim"]=True
+            o_gpcrclassif_prot[npr]["has_sim"]=True            
+
+    context["gpcrclassif"]= gpcrclassif
+    context["others_gpcrclassif"]=others_gpcrclassif
+
+    gpcrmdtree_path="/protwis/sites/files/Precomputed/Summary_info/gpcrmdtree.data"
+    with open(gpcrmdtree_path, 'rb') as filehandle:  
+        tree_data = pickle.load(filehandle)
+
+    context['tree_data']=json.dumps(tree_data)
+    print(json.dumps(tree_data))
+    
+
+
+    return render(request, 'dynadb/datasets.html', context)
+
+def table(request):
+    dynobj=DyndbDynamics.objects.filter(is_published=True)
+    dynprot = dynobj.annotate(dyn_id=F('id'))
+    dynprot = dynprot.annotate(pdb_namechain=F("id_model__pdbid"))
+    dynprot = dynprot.annotate(dyncomp_resname=F("dyndbdynamicscomponents__resname"))
+    dynprot = dynprot.annotate(dyncomp_type=F("dyndbdynamicscomponents__type"))
+    dynprot = dynprot.annotate(dyncomp_id=F("dyndbdynamicscomponents__id_molecule_id"))
+    dynprot = dynprot.annotate(comp_name=F("id_model__dyndbmodelcomponents__id_molecule__id_compound__name"))
+    dynprot = dynprot.annotate(molecule_id=F("id_model__dyndbmodelcomponents__id_molecule_id"))
+    dynprot = dynprot.annotate(comp_type=F("id_model__dyndbmodelcomponents__type"))
+    dynprot=dynprot.annotate(mysoftware=F('software'))
+    dynprot=dynprot.annotate(software_version=F('sversion'))
+    dynprot=dynprot.annotate(forcefield=F('ff'))
+    dynprot=dynprot.annotate(forcefield_version=F('ffversion'))
+    dynprot=dynprot.annotate(uniprot=F('id_model__id_protein__uniprotkbac'))
+    dynprot=dynprot.annotate(uniprot2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__uniprotkbac'))
+    dynprot=dynprot.annotate(protname=F('id_model__id_protein__name'))
+    dynprot=dynprot.annotate(protname2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__name'))
+    dynprot=dynprot.annotate(protid=F('id_model__id_protein_id'))
+    dynprot=dynprot.annotate(protid2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein_id'))
+    dynprot=dynprot.annotate(species=F('id_model__id_protein__id_uniprot_species__scientific_name'))
+    dynprot=dynprot.annotate(species2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__id_uniprot_species__scientific_name'))
+    dynprot=dynprot.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
+    dynprot=dynprot.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
+    dynprot=dynprot.annotate(fam_name=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family__parent__name'))
+    dynprot=dynprot.annotate(fam_name2=F('id_model__id_protein__receptor_id_protein__family__parent__name'))
+    dynprot=dynprot.annotate(class_name=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family__parent__parent__parent__name'))
+    dynprot=dynprot.annotate(class_name2=F('id_model__id_protein__receptor_id_protein__family__parent__parent__parent__name'))
+    dynprot=dynprot.annotate(uprot_entry=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__entry_name'))
+    dynprot=dynprot.annotate(uprot_entry2=F('id_model__id_protein__receptor_id_protein__entry_name'))
+    dynprot=dynprot.annotate(modelname=F('id_model__name'))
+    dynprot=dynprot.annotate(modeltype=F('id_model__type'))
+    dynprot=dynprot.annotate(user_id=F('submission_id__user_id__id'))
+    dynprot=dynprot.annotate(user_fname=F('submission_id__user_id__first_name'))
+    dynprot=dynprot.annotate(user_lname=F('submission_id__user_id__last_name'))
+    dynprot=dynprot.annotate(user_institution=F('submission_id__user_id__institution'))
+    dynall_values=dynprot.values("dyn_id","fam_slug","fam_slug2","modelname","modeltype","user_id","user_fname","user_lname","user_institution","uniprot","uniprot2","protname","protname2","species","species2","mysoftware","software_version","forcefield","forcefield_version","pdb_namechain","comp_name","dyncomp_resname","comp_type","fam_name","fam_name2","class_name","class_name2","protid","protid2","molecule_id","atom_num","dyncomp_type","dyncomp_id","uprot_entry","uprot_entry2")
+
+
+    dyn_dict = {}
+    for dyn in dynall_values:
+        dyn_id=dyn["dyn_id"]
+        if dyn_id not in dyn_dict:
+            dyn_dict[dyn_id]={}
+            dyn_dict[dyn_id]["dyn_id"]=dyn_id
+            dyn_dict[dyn_id]["lig_li"]=set()
+            dyn_dict[dyn_id]["uniprot"]=set()
+            dyn_dict[dyn_id]["uprot_entry"]=set()
+            dyn_dict[dyn_id]["memb_comp"]=set()
+            dyn_dict[dyn_id]["simtime"]=0
+        dyn_dict[dyn_id]["atom_num"]=dyn["atom_num"]
+        pdb_namechain=dyn["pdb_namechain"]
+        is_hm=False
+        if pdb_namechain=="HOMO":
+            pdb_namechain="Homology model"
+            is_hm=True
+        else:
+            pdbid=pdb_namechain.split(".")[0]
+            dyn_dict[dyn_id]["pdbid"]=pdbid
+            dyn_dict[dyn_id]["state"]=pdb_state.get(pdbid)
+        dyn_dict[dyn_id]["pdb_namechain"]=pdb_namechain
+        dyn_dict[dyn_id]["is_hm"]=is_hm
+        mol_id=dyn["molecule_id"]
+        if dyn["comp_type"]==1:
+            molname=dyn["comp_name"].capitalize()
+            dyn_dict[dyn_id]["lig_li"].add((molname,mol_id))
+        if dyn["dyncomp_type"]==2:
+            dyn_dict[dyn_id]["memb_comp"].add((dyn["dyncomp_resname"],dyn["dyncomp_id"]))
+        dyn_dict[dyn_id]["software"]=dyn["mysoftware"] + " "+dyn["software_version"]
+        dyn_dict[dyn_id]["forcefield"]=dyn["forcefield"]+" "+dyn["forcefield_version"]
+        up=dyn["uniprot"]
+        if not up:
+            up=dyn["uniprot2"]
+        if up:
+            dyn_dict[dyn_id]["uniprot"].add(up)
+        prot_name=dyn["protname"] or dyn["protname2"]
+        prot_id=dyn["protid"] or dyn["protid2"]
+        if prot_name:
+            prot_name=prot_name.capitalize()
+            dyn_dict[dyn_id]["prot_name"]=prot_name
+            dyn_dict[dyn_id]["prot_id"]=prot_id
+        uprot_entry=dyn["uprot_entry"] or dyn["uprot_entry2"]
+        if uprot_entry:
+            dyn_dict[dyn_id]["uprot_entry"].add(uprot_entry)
+        species=dyn["species"]
+        if not species:
+            species=dyn["species2"]
+        if species:
+            dyn_dict[dyn_id]["species"]=species
+        prot_slug=dyn["fam_slug"]
+        if not prot_slug:
+            prot_slug=dyn["fam_slug2"]
+        if prot_slug:
+            #fam_slug=prot_slug[:-8]
+            #subtype_slug=prot_slug[:-4]
+            #class_slug=prot_slug[:3]
+            #dyn_dict[dyn_id]["fam_slug"]=fam_slug
+            #dyn_dict[dyn_id]["subtype_slug"]=subtype_slug
+            #dyn_dict[dyn_id]["class_slug"]=class_slug
+            dyn_dict[dyn_id]["prot_slug"]=prot_slug
+        else:#If it doesn't have a slug it's not a GPCR, it's a prot ligand
+            dyn_dict[dyn_id]["lig_li"].add((prot_name,prot_id))
+        dyn_dict[dyn_id]["fam_name"]=dyn["fam_name"] or dyn["fam_name2"]
+        class_name=dyn["class_name"] or dyn["class_name2"]
+        if class_name:
+            dyn_dict[dyn_id]["class_name"]=class_name.replace("Class ","")
+        dyn_dict[dyn_id]["modelname"]=dyn["modelname"]
+        if dyn["modeltype"]==0:
+            modeltype="Apoform"
+        else:
+            modeltype="Complex"
+        dyn_dict[dyn_id]["modeltype"]=modeltype
+        user_id=dyn["user_id"]
+        if int(dyn_id) in range(4,11):
+            author="GPCR drug discovery group (Pompeu Fabra University)"
+        elif user_id in {1, 3, 5, 12, 14}:
+            author="GPCRmd community"
+        else:
+            author ="%s %s, %s" % (dyn["user_fname"],dyn["user_lname"],dyn["user_institution"])
+        dyn_dict[dyn_id]["author"]=author
+
+    dynfiledata = dynobj.annotate(dyn_id=F('id'))
+    dynfiledata = dynfiledata.annotate(file_id=F('dyndbfilesdynamics__id_files__id'))
+    dynfiledata = dynfiledata.annotate(framenum=F('dyndbfilesdynamics__framenum'))
+    dynfiledata = dynfiledata.annotate(file_is_traj=F('dyndbfilesdynamics__id_files__id_file_types__is_trajectory'))
+    dynfiledata = dynfiledata.values("dyn_id","framenum","file_id","file_is_traj","delta")
+    for dyn in dynfiledata:
+        dyn_id=dyn["dyn_id"]
+        if dyn["file_is_traj"]:
+            dyn_dict[dyn_id]["simtime"]+=dyn["framenum"]*dyn["delta"]/1000
+    for dyn_id,dyn_data in dyn_dict.items():
+        dyn_data["simtime"]="%.2f" % dyn_data["simtime"]
+
+
+
+    context={}
+    context["tabledata"]=sorted(dyn_dict.values(),key=lambda x:x["prot_slug"])
+    return render(request, 'dynadb/table.html', context)
+
+
+#Link to report page
+#Description (?)
+#Sodium (?)
+
 
