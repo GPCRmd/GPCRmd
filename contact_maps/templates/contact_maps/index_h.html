@@ -55,41 +55,18 @@
           {% include './contact_maps/menu_customheatmap.html' %}
         </div>
         <!--Heatmap pager -->
-        <div id="heatmap_pager" class="fixedwidth">
-          <ul class="pagination" id="pager_list">
-            <li class="page-item prev">
-              <a class="page-link" aria-label="Previous" onclick="heatmap_change('prev')">
-                <span aria-hidden="true">&laquo;</span>
-                <span class="sr-only">Previous</span>
-              </a>
-            </li>
-            {% for number_heatmap in number_heatmaps_list %}
-              {% if number_heatmap == number_heatmaps_list.0 %}
-              <li class="page-item active" id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
-              {% else %}
-              <li class="page-item"  id="heatmap_page_{{number_heatmap}}"><a class="page-link" onclick="heatmap_change( {{number_heatmap}} )">{{number_heatmap}}</a></li>
-              {% endif %}
-            {% endfor %}
-            <li class="page-item next">
-              <a class="page-link"  aria-label="Next" onclick="heatmap_change('next')">
-                <span aria-hidden="true">&raquo;</span>
-                <span class="sr-only">Next</span>
-              </a>
-            </li>
-          </ul>
-          <div class="legendary" id="legend_container">
-            <div class="legendary col-xs-6" id="legend_bar"></div>
-            <div class="legendary col-xs-6">
-              <p class="legend_text"  style="top: 0%">100%</p>
-              <p class="legend_text" style="top: 40%">50%</p>
-              <p class="legend_text" style="top: 85%">0%</p>
-            </div>
-          </div>
-        </div>
+        {% include './contact_maps/pager_colorbar.html' %}        
         <div id="dendrogram-heatmap" class="row fixedwidth">
           <div id="dendrogram">
             {{dendrogram | safe }}
           </div>
+          <script>
+            //-------------- Resize dendrograms to avoid spurious margin. 
+            //I know it is a bad practice to put javascript intermixed with html, but it was the only way to get it correctly executed
+            var dend_elements = $('.infolayer, .cartesianlayer');
+            dend_elements.css('transform-origin', 'bottom');
+            dend_elements.css('transform', 'scale(1.0, 1.05)');
+          </script>
           <div id="loading_div">
             <img id="loading_heatmap" src="{% static 'view/images/loading-gear.gif' %}"/>
             <p id="loading_text">Loading {{number_heatmaps_list|length}} heatmaps</p>
@@ -132,7 +109,7 @@
       <div class="panel-body">
 
         <center>
-          <h4>Please, select two of the clusters of the dendrogram bellow to compare its main
+          <h4>Please, select two of the clusters from the above dendrogram to compare its top
             <select id="flarerange">
               {% for number in flarerange %}
               {% if number == 5 %}
