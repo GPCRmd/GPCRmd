@@ -1418,7 +1418,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     #traj_list.append(['Dynamics/10140_trj_4.dcd', '10140_trj_4.dcd', 10140, '10140_trj_4_hbonds_OK.json']);
                     
 
-                    
+                    if int(dyn_id) ==29:
+                        reaj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,

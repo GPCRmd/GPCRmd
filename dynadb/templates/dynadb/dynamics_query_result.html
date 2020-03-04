@@ -107,7 +107,7 @@
     <div class="panel-body">
 
         <div class="row" style="margin-bottom:15px">
-            <div id='leftcol' class="col-md-4 ">
+            <div class="col-md-4 ">
                 <p class="dyn_info_title">General information</p>
                     <div class="techinfo_content">
                         <p><b>Name</b>: {{answer.model_name}} </p>
@@ -124,7 +124,9 @@
                             <p><b>Submitted by</b>: {{answer.author}}</p>
                         {%endif%}
                     </div>
-                <p class="dyn_info_title" style="margin-top:20px">System details</p>
+            </div>
+            <div class="col-md-4 ">
+                <p class="dyn_info_title" style="">System setup</p>
                     <div class="techinfo_content">
                     {%if answer.solventtype%}
                         <p><b>Solvent type</b>: {{answer.solventtype}}</p>
@@ -151,7 +153,9 @@
                         <p><b>Total number of atoms</b>: {{answer.atom_num}}</p>
                     {%endif%}
                     </div>
-                <p class="dyn_info_title" style="margin-top:20px">Simulation details</p>
+            </div>
+            <div class="col-md-4 ">
+                <p class="dyn_info_title" style="">Simulation details</p>
                 <div class="techinfo_content">
                     {%if answer.soft%}
                         <p><b>Software and version</b>: {{answer.soft}}, {{answer.softv}} </p>
@@ -166,7 +170,7 @@
                     {%endif%}
 
                     {%if answer.delta%}
-                        <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></b>: {{answer.delta}} ns </p>
+                        <p><b>Delta <span title="Time gap between frames" class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px"></span></b>: {{answer.delta}} ns </p>
                     {%endif%}
                     {%if answer.replicates%}
                         <p><b>Replicates</b>: {{answer.replicates}}</p>
@@ -188,10 +192,12 @@
 
                     
                 </div>
-            </div> <!--lef div end-->
+            </div> 
+        </div>
+        <hr style="margin:40px 0">
+        <div class="row" style="margin-bottom:15px">
 
-
-            <div id='middlecol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
+            <div id='middlecol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;">
                 <p class="techinfo_title">Simulation output files</p>
                 <div class="techinfo_content">
                     <div id='allfiles' >
@@ -203,7 +209,7 @@
                 </div>
             </div> <!--end middle col div-->
 
-            <div id='rightcol' class="col-md-4 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
+            <div id='rightcol' class="col-md-6 techinfo" style="overflow:auto;max-height:321px;overflow-x:hidden;" >
                 {% if answer.files.param_files %}
                 <p class="techinfo_title">Simulation protocol & starting files <span style="cursor: default;font-size:15px" title="Download the starting structures, input files, parameters..." class="glyphicon glyphicon-info-sign" data-toggle="tooltip"  data-container="body"></span></p>
                 <div class="techinfo_content">
@@ -216,7 +222,9 @@
                 {% endif %}
 
             </div> <!--end right col div-->
-        </div>
+        </div> <!-- end row-->
+
+    <hr style="margin:40px 0">
 
     {% if answer.references  %}
         <div class="techinfo">
@@ -506,6 +514,9 @@
 {% endblock content %}
 
 {% block addon_js %}
+<script>
+    $(window).scrollTop(0);
+</script>
 <script type="text/javascript" src="{% static 'dynadb/molecular_carousel.js' %}"></script>
 <script type="text/javascript" src="https://3Dmol.csb.pitt.edu/build/3Dmol-nojquery.js"></script>
 <!--<script type="text/javascript" src="{% static 'dynadb/mol3dv.js' %}"></script>-->

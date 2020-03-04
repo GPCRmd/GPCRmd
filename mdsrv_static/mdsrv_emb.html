@@ -626,7 +626,8 @@
 
 
                                 if (bs_info){
-                                    var bs_info_li=bs_info.split("-");
+                                    bs_info_deco=decodeURIComponent(bs_info.replace(/\+/g, " "))
+                                    var bs_info_li=bs_info_deco.split("-");
                                     var recept =bs_info_li[0];
                                     var ligli=bs_info_li[1].split(",");
                                     var bsnum =0;
@@ -790,7 +791,8 @@
                                 for (trajN = 0; trajN < trajCompT.length; trajN++) {
                                     trajCompT[trajN].signals.frameChanged.add(function(){
                                         if (bs_info){
-                                            var bs_info_li=bs_info.split("-");
+                                            bs_info_deco=decodeURIComponent(bs_info.replace(/\+/g, " "))
+                                            var bs_info_li=bs_info_deco.split("-");
                                             var recept =bs_info_li[0];
                                             var ligli=bs_info_li[1].split(",");
                                             var bsnum =0;

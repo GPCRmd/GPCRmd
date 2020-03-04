@@ -145,7 +145,7 @@
         </li>-->
             <ul class="nav navbar-nav navbar-left">
                 <li id="home"><a href="/home/">Home</a></li>
-
+                <li id="datasets"><a href="/dynadb/datasets/">Datasets</a></li>
                 <li class="dropdown" id="Analysis_li">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#">Analysis tools
                     <span class="caret"></span></a>
@@ -229,11 +229,15 @@
                       case "search":
                         activate_option("search");
                         break
+                      case "datasets":
+                        activate_option("datasets");
+                        break
                       default:
                         activate_option("simsub");
                     }
 
                 }
+
 
                     /*                if (selected_li.parentElement.classList.toString().indexOf("dropdown-menu")>-1 ){
                     var myid=selected_li.parentElement.getAttribute('data-pointto');

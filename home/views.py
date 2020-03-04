@@ -166,9 +166,9 @@ def gpcrmd_home(request):
 
     context["subm_data"] =json.dumps(subm_data)
     ################
-    gpcrmdtree_path='/protwis/sites/files/Precomputed/Summary_info/gpcrmdtree.data'
-    with open(gpcrmdtree_path, 'rb') as filehandle:  
-        tree_data = pickle.load(filehandle)
+    #gpcrmdtree_path='/protwis/sites/files/Precomputed/Summary_info/gpcrmdtree.data'
+    #with open(gpcrmdtree_path, 'rb') as filehandle:  
+        #tree_data = pickle.load(filehandle)
     fam_count=0
     subt_count=0
     pdb_count=0

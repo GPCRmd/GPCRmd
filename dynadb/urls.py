@@ -112,6 +112,8 @@ urlpatterns = [
     #url(r'^files/(?P<path>.*)$', 'django.views.static.serve', {'document_root': settings.MEDIA_ROOT,}), #this line shouldnt be here
     url(r'^submitted/(?P<submission_id>[0-9]+)/$', views.SUBMITTEDview, name='submitted'),
     url(r'^close_submission/(?P<submission_id>[0-9]+)/$', views.close_submission, name='close_submission'),
+    url(r'^datasets/$', views.datasets, name='datasets'),
+    url(r'^table/$', views.table, name='table'),
     url(r'^blank/$', TemplateView.as_view(template_name="dynadb/blank.html"), name='blank'),]
 
 #    url(r'^some_temp/$', views.some_view, name='some_temp')

@@ -1,0 +1,102 @@
+<head>
+<script>
+    document.domain=document.domain;
+</script>
+{% extends "home/base.html" %} 
+{% load staticfiles %} 
+{% load dynadb %}
+{% block addon_css %}
+<style>
+.container{
+    width: 90%;
+}
+</style>
+{% endblock %}
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css"></head>
+<body>
+{% block content %}
+
+<table id="table_id" class="display" style="display: none;font-size: 13px">
+    <thead>
+        <tr>
+            <th> </th>
+            <!--<th>Dyn ID</th>-->
+            <th>Receptor</th>
+            <th>Uniprot entry name</th>
+            <th>Uniprot ID</th>
+            <th>Family</th>
+            <th>Class</th>
+            <th>PDB ID</th>
+            <th>State</th>
+            <th>Species</th>
+            <th>Model type</th>
+            <th>Ligand(s)</th>
+            <th>Model name</th>
+            <th>Num. of atoms</th>
+            <th>Membrane composition</th>
+            <th><span data-toggle="tooltip" title="Accumulated simulation time (µs)">Accum. sim. time (µs)</th>
+            <th>Software</th>
+            <th>Force field</th>
+            <th>Submitted by</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for data in tabledata %}
+        <tr>
+            <td class="links">
+                 <a style="width:105px;text-align:left" href="/view/{{data.dyn_id}}/" class="btn btn-default btn-xs" role="button">Go to Workbench</a>
+                 <a style="width:105px;text-align:left" href="/dynadb/dynamics/id/{{data.dyn_id}}/" class="btn btn-default btn-xs" role="button">Go to Report</a>
+            </td>
+<!--            <td>
+                {{data.dyn_id}}
+            </td>-->
+            <td class="receptor"><a href="/dynadb/protein/id/{{data.prot_id}}/">{{data.prot_name}}</a></td>
+            <td class="uniprotentryname">
+                {% for up in data.uprot_entry %}
+                    {{up}}
+                {% endfor %}
+            </td>
+            <td class="uniprotid">
+                {% for up in data.uniprot %}
+                    <a href="https://www.uniprot.org/uniprot/{{up}}" >{{up}}</a>
+                {% endfor %}
+            </td>
+            <td  class="family">{{data.fam_name}}</td>
+            <td  class="gpcrclass">{{data.class_name}}</td>
+            {% if is_hm %}
+                <td  class="pdbid">{{data.pdb_namechain}}</td>
+            {% else %}
+                <td class="pdbid"><a href="https://www.rcsb.org/structure/{{data.pdbid}}">{{data.pdb_namechain}}</a></td>
+            {% endif %}
+            <td class="state">{{data.state}}</td>
+            <td  class="species"><i>{{data.species}}</i></td>
+            <td class="modeltype">{{data.modeltype}}</td>
+            <td class="ligands">
+                {% for lig in data.lig_li %}
+                    <a href="/dynadb/molecule/id/{{lig.1}}/">{% autoescape off %}{{lig.0 | limitlength:60}}{% endautoescape %}</a>
+                {% endfor %}
+            </td>
+            <td class="modelname">{% autoescape off %}{{data.modelname | limitlength:60}}{% endautoescape %}</td>
+            <td>{{data.atom_num}}</td>
+            <td class="numofatoms">
+                {% for lip in data.memb_comp %}
+                    <a href="/dynadb/molecule/id/{{lip.1}}/">{{lip.0}}</a>
+                {% endfor %}
+            </td>
+            <td class="membranecomposition">{{data.simtime}}</td>
+            <td class="simtime">{{data.software}}</td>
+            <td class="forcefield">{{data.forcefield}}</td>
+            <td class="author">{{data.author}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock content %}
+{% block addon_js %} 
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+
+<script type="text/javascript" src="{% static 'dynadb/searchtable.js' %}"></script>
+{% endblock %}
+</body>
