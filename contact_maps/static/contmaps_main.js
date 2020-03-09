@@ -319,5 +319,4 @@ function select_simulations(itype, clusters, ligandonly, rev, stnd){
   else {
     custombutton.attr('disabled',false);
   }
-
 }
