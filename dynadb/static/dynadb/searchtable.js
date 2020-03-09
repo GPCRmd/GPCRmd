@@ -11,5 +11,6 @@ $(document).ready( function () {
 
         }
     );
+    $('#loading', window.parent.document).css("display","none");
     $('#table_id').css("display","table");
 } );

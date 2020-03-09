@@ -1,3 +1,6 @@
+<script>
+    document.domain=document.domain;
+</script>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
 {% block addon_css %}
@@ -215,7 +218,7 @@ kbd{
    <div class="panel panel-primary" style="background-color:#3278B4;text-align:center;margin-bottom:10px;color:white;margin: 0; overflow:auto;">  
        <div class="panel-body" style="min-width:380px;padding-bottom:10px">
           <div style="float:left;" id="aroundtitle">
-            <h2 >Simulation browser</h2>
+            <h2 >Search</h2>
           </div>
         <div class="howtoparent" style="">
             <a href="https://youtu.be/BLLXC8G10R0" class="btn btn-default btn-sm howtobtn"  target="_blank" role="button" style="">How to<br>use it<br><span class="glyphicon glyphicon-play" style="font-size:14px"></span></a>
@@ -233,224 +236,272 @@ kbd{
         </div>
    </div>-->
 
-    <div id="headerbrowser" style="word-break: normal" class="jumbotron">
-    
-    <p style="font-size:18px">Use the panel in the left (A) to search for specific elements: GPCR's, other proteins, molecules in standard form or in specific states (protonated states, enantiomers, tautomers, etc), then click "Add to Search". Use the right panel (B) to search dynamics with the desired elements you have added. For more advanced search options and further help click "Show Help" button.</p>
-    <center><button  id="helpbutton" type="button" value="Help" class="btn btn-primary btn-xs">Show Help</button></center>
 
-      <div id="help" style="word-break: normal">
-
-            <ul>
-            <li><a href="#use"> Usage</a></li>
-            <li><a href="#cam"> Difference between standard form and specific state</a></li>
-            <li><a href="#adv"> Simple and Advanced Search</a></li>
-            <li><a href="#exm"> Exact Match</a></li>
-            <li><a href="#top"> Empty search </a></li>
-            <!--<li><a href="#sid"> Search by GPCRmd ID</a></li>-->
-            <!--<li><a href="#allobj">Complex, Complex Structure, dynamics</a></li>-->
-            </ul>
-            <br><br>
-            <h2 id='use'> Usage: </h2>
-            <p> Imagine that you want to cook something and you are interested in a few ingredients, it would be nice to have some website where you could look for those ingredients, and then look for a recipe which uses those elements. This is exactly what we have done...for molecular dynamics. If you are interested in a simulation containing the ingredients serotonin and the serotonine receptor, you look for the molecule serotonin in the left panel (A), results will appear and then you click "Add to Search". Now, you look for the serotonin receptor -again in the left panel-, and click "Add to Search". Finally, go to the right panel (B) and click the search button. We will show you all the simulations containing those elements.</p>
-            <br>
-            <h3>Left Panel, searching the elements: </h3><br>
-
-            <p>Use the panel in the left to search for molecules or proteins (the "elements" which constitute simulations). You can use SMILES, InChI, InChIKey, PubChem CIDs, ChEMBL id's and common names to search for molecules. In order to find proteins, Uniprot accession codes and common names can be used. You can filter the type of the results returned (All, protein, standard form, specific states). Next to every result, you will find an "Add to search" button, which will add the element to the right panel, allowing you to search a simulation using a given combination of elements. For example: standard form Clozapine AND protein P28222.</p>
-
-            <br><br>
-            <h3>Right Panel, joining the elements</h3><br>
-            <p>The right panel holds all the elements you have added during your elements search. You can directly click the search button <span class="glyphicon glyphicon-search"> </span> to find all simulations matching that combination
-            or you can tune a bit your results by filtering by some parameters (time step, software used, etc.). You can select the function which the molecule performs in the system: "Orthosteric ligand", "Allosteric Ligand", "Other" or "All". "All" meaning any of the previous. For proteins, you can select if it is a GPCR or not, using the <b>"is GPCR" checkbox</b>. If it is not selected, we assume that the protein is NOT a GPCR. If you need to use boolean operators like OR, AND, NOT, switch to the <a href='#adv'> Advanced search</a></p>
-            <br><br><br>
-            <h2 id='cam'> Difference between standard form and specific states</h2><br>
-            <p> The difference between standard form and specific states is that a standard form represents a <b>set</b> of related molecules which only differ in the protonation state, or tautomerization state, or some other subtle features. Each of this different states is a single specific state. As the concept of specific state is more precise, when searching with it, you will only find those simulations containing exactly that specific state. However, if you search by a standard form, you will find all the simulations which have any of the related molecules belonging to that standard form set. So, if you search systems using Clozapine (standard form) you will always get more results (or the same) than if you search by Clozapine (specific state X).</p>
-            <br><br><br>
-            <h2 id='adv'> Simple and Advanced Search</h2><br>
-
-            <p>In the right panel, you can choose between <b>Simple and Advanced search</b>, the difference being that the second kind allows you to use "AND", "OR" and "NOT" boolean operators, as well as brackets. Simple search only allows "AND" operator (which is enough in most cases). The following is an example of how to perform a search with brackets:</p><br>
-
-            <center><table class="jumbotable">
-            <tr><td>P28222</td><td>P28222</td></tr>
-            <tr><td>AND ( Serotonin</td><td>AND Serotonin</td></tr> 
-            <tr><td>OR Clozapine</td><td> OR Clozapine</td></tr>
-            <tr><td>OR POPC )</td><td>OR POPC</td></tr>
-            </table></center>
-
-            <p>The example search in the left will return the systems matching any of the following:</p>
-            <ul>
-            <li>P28222 + Serotonin</li>
-            <li>P28222 + Clozapine</li>
-            <li>P28222 + POPC </li>
-            <li>P28222 + Serotonin + Clozapine</li>
-            <li>P28222 + Serotonin + POPC </li>
-            <li>P28222 + Serotonin + Clozapine + POPC </li>
-            <li>P28222 + POPC + Clozapine </li>
-
-            </ul>
-
-            <p>However, the example search in the right will return the systems matching any of the following: </p>
-            <ul>
-            <li>P28222 + Serotonin</li>
-            <li>Every system with Clozapine</li>
-            <li>Every system with POPC </li>
-            </ul>
-            <p>Please, keep in mind that the results may not be composed only by the elements you have included in the search. So, when we say that the system will match "P28222 + Serotonin", it means that at least, it has those two components, but it also may have something else, like ions, water, etc. Read the <a href='#exm'> Exact match </a> section to know how to avoid this greedy behaviour.</p>
-
-            <!--<h2 id='allobj'>Complex, Complex Structure and dynamics</h2><br>
-            <p> You may be interested in finding not only the simulation, but the more basic layers on which it is built. These layers are the objects: <b>"Complex" and "Complex Structure"</b>. "Complex" is a system composed by a GPCR, other proteins, orthoesteric and alloesteric ligands. "Complex Structure" is a complex with other selected co-crystallized molecules (think of it as a PDB file) and "dynamics" is a "Complex Structure" which may have been solvated and/or membrane-embeded and has a trajectory. For the last two cases,"Complex Structure" and "dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> -->
-            <br><br><br>
-            <h2 id='exm'>Exact Match</h2><br>
-
-            <p> If you select "Exact Match", the search will return only those simulations whose composition matches exactly the one you have build in the right panel. If there is any other element in the simulation that you have not included in the search, it will not appear as a result. So, if you look for P28222 AND Serotonin, and select exact match, only those systems composed by P28222 and serotonin and nothing else will be retrieved; a system with P28222, water and serotonin will not be a result.</p>
-            <br><br><br>
-            <!--<h2 id='sid' >Search by GPCRmd ID:</h2><br>
-
-            <p>You also have the option to search by the identifiers used in the GPCRmd database, just check the <b>"Search by GPCRmd ID" checkbox</b>. If you select this type of search, you can return standard forms, specific states, proteins and dynamics. Below you will find the definition of these three concepts. You may find this kind of search useful to check if the simulation you have submited is available. </p>
-
-            <br><br><br>-->
-            <h2 id='top' >Empty Search:</h2><br>
-
-            <p>You can search simulations without adding any elements. This will return every simulation we have in our database. You can still filter by any of the fields: Force Field, Software, etc. </p>
-
-          </div>
-    </div>
 </div> <!--colum -->
 </div><!--row-->
 </div><!--container-->
 
 <div class="container-fluid">
  <div class="row">
-  <div class="col-sm-6">
-    <div class="panel panel-info" id="haystacksearch">
-      <div id="fakeheader" style="background-color:#d9edf7; width:100%">  
-          <div class="panel-heading" style="padding:1px;margin:0px">
-                <center><h5 style="font-size:18px;">Element browser (A)</h5> 
-                <p>Search the elements you want in the simulation, then click "Add to Search".</p>
-                <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
-
-                    <input id="protein22" type="text" class="form-control" name="name" placeholder="Clozapine,P28222,Adenosine receptor..."></input>
-                    <select id="simpletype">
-                        <option selected="selected" value="All">All</option>
-                        <option title="Simulations" value="dynamics">Dynamics ID</option>
-                        <option title="G protein coupled receptor" value="gpcr">GPCR</option>
-                        <option title="G protein, arrestin, peptide ligand, nanobody, etc." value="protein">Other proteins</option>
-                        <!--<option title="Comprises a set of related molecules which only differ in subtle features such as protonation state or the tautomerazation state. This set is represented by the standard molecule of the set, choosen more or less arbitrarily. The two protonation states of the acetic acid (COOH and COO-) conform a single standard form, represented by the specific state COOH"> standard form</option>-->
-                        
-                        <!--<option title="Each of the related molecules that form a standard form. Acetic Acid can be in two different states: COOH and COO-, each of them is a different specific state, and one of them is used to represent the standard form. " value="molecule">specific state</option>-->
-                        <!--<option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option>                        
-                        <option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> -->
-                    </select>
-                    <button id="Searcher" type="button" value="Search" class="btn btn-info btn-md"> <span class="glyphicon glyphicon-search"> </button>
-                    <br><span style="visibility: hidden"><input  id="idsearch" type="checkbox" value="val">Search by GPCRmd ID</span>
-                    
-
-                </form> 
-                </center>
-                <br>
-          </div>
-      </div> <!-- fakeheader-->
-      
-      
-      
-      <div class="panel-body" id="haystacksearchbody">
-
-            <div id="hiddenbar" class="progress">
-                <div id="hiddenbarin" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:1%"></div><br><br><br>
-            </div>
-
-
-            <table id='ajaxresults22'> <thead><tr><th> Results: </th><th id='badge_legend'> <span title="In how many simulations does this element appear?" class="badge" style="background-color:red;"># dynamics</span> <span title="Net Charge" class="badge" style="background-color:#3278B4;">Net Charge</span>          </th></tr></thead><tbody><tr><td>No results</td><td>          </td></tr></tbody></table>
-
-            <br><br>
-      </div>
-    </div>
+  <div class="col-sm-12" style="margin:10px 0;text-align:center;font-weight:bold;font-size:15px">
+      <ul class="nav nav-tabs">
+        <li class="active" style="width:50%"><a data-toggle="tab" href="#searchtable">List of simulated systems</a></li>
+        <li style="width:50%"><a data-toggle="tab" href="#browser" >Browser </a></li>
+      </ul>
   </div>
+ </div>
+</div>
 
-       <!--<div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="http://cdn.mysitemyway.com/etc-mysitemyway/icons/legacy-previews/icons/magic-marker-icons-arrows/114869-magic-marker-icon-arrows-dotted-arrow-right.png" height="150" width="350"></div>-->
+<div class="tab-content restheight100" style="height: 100%">
+    <div id="searchtable" class="height100 tab-pane fade in active" style="margin:0px 15px;height: 100%;">
+        <center class="height100" style="height: 100%"> 
 
-        <div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="{% static 'dynadb/arrowdashed.png' %}" height="150" width="350"></div>
 
+<span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
 
-       <!-- <div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="/dynadb/files/arrow.png" height="150" width="350"></div>-->
-  <div class="col-sm-6">
-        
-        <div class="panel panel-info" id="floatdiv">
-            <div class="panel-heading" id="lightup"> <center><h5 style="font-size:18px;">Simulation Browser (B)</h5></center>
+            <iframe class="height100" id="height: 100%" style="border:none" height=100% width="100%"  src="/dynadb/table">        </iframe>
 
-                <!--<img src="https://cdn.pixabay.com/photo/2014/04/03/10/29/arrow-right-310628_960_720.png">-->
-                
-                <center><button id="gotoadvsearch" class="btn btn-info" type="button" value="Advanced Search">Go to Advanced Search</button></center>
-            </div>
-
-        <div id='crazycolor' class="panel-body">
-        <center>
-
-        <table id="myTable">
-        <thead>
-        <tr>
-            <th></th>
-            <th>Type</th>
-            <th>ID</th>
-            <th></th><!--IS RECEPTOR -->
-            <th></th><!--name-->
-            <th></th><!--REMOVE-->
-        </tr>
-        </thead>
-        <tbody>
-        </tbody>
-        </table>
-        <br>
-        
-        <!--Return: <select id="result_type"><option selected="selected" value="dynamics">dynamics</option><option value="model">Complex Structure</option><option value="complex">Complex</option></select> -->
-        <div id='noselect' style="display: none;"> Return: <select id="result_type"> <option selected="selected" value="dynamics">dynamics</option></select> </div>
-
-        <div id='hiddenmodel'>
-            <br>
-            <label><input type="radio" name="radiosearch" value="apo"> Only apoform </label>
-            <label><input type="radio" name="radiosearch" value="com"> Only complexes </label>
-            <label><input type="radio" name="radiosearch" value="both" checked="checked" > Both </label><br>
-        </div>
-
-        <hr>
-        <center><button type="button" class="btn btn-info" data-toggle="collapse" data-target="#tablefilter">See simulation filters</button></center>
-        <div id="tablefilter" class="col-sm-12 collapse">
-            <br>
-            <div id="tablefilterl" align="left" class="col-sm-6">
-                <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br><br>
-                Time step  <select style="display:none;" id="gle"><option value="smaller"> <= </option> <option value="equal" selected="selected"> = </option> <option value="greater"> >= </option> </select> <input id='tstep' type="text" name="tstep"><br><br>
-                Force Field  <select id="fftype"><option selected="selected" value=""> </option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option></select><br><br>
-                Software used  <select id="soft"><option selected="selected" value=""> </option><option value="ACEMD">ACEMD</option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option><option value="DESMOND">DESMOND</option><option value="GROMACS">GROMACS</option><option value="GROMAS">GROMAS</option><option value="NAMD">NAMD</option><option value="YASARA">YASARA</option><option value="OTHER">OTHER</option></select><br><br>
-            </div>
-
-            <div id="tablefilterr" align="left" class="col-sm-6">
-                <div id='hidden'>
-                    <div id="search_type_dyn">
-                      <label><input type="radio" name="radiosearch1" value="apo"> Only apoform </label>
-                      <label><input type="radio" name="radiosearch1" value="com"> Only complexes </label>
-                      <label><input type="radio" name="radiosearch1" value="both" checked="checked"> Both </label>
-                    </div>
-                </div><br>
-                Membrane type  <select id="memtype"><option selected="selected" value=""> </option><option value="1">Implicit</option><option value="2">Homogeneous</option><option value="3">Heterogeneous</option></select><br><br>
-               Method  <select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics (MM)</option><option value="4">MM Monte Carlo</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option><option value="2">QM/MM</option><option value="3">NMR</option></select><br><br>
-               Solvent type  <select id="soltype"><option selected="selected" value=""> </option> <option value="1">Implicit</option><option value="2">TIP3P</option><option value="3">TIP4P</option><option value="4">TIPS</option><option value="5">SPC</option><option value="6">SPC/E</option><option value="7">Other</option></select><br><br>
-            </div>
-        </div>
-        <br><br><br><button id="tablesearch" type="button" value="search" class="btn btn-info btn-md "> <span class="glyphicon glyphicon-search"> </span></button>
-        <br><br><br><br><br>
         </center>
+    </div>
+    <div id="browser" class="tab-pane fade in">
+    <div class="container-fluid"  >
+     <div class="row">
+      <div class="col-sm-12">
 
-    </div> <!--panel body-->
+        <div id="headerbrowser" style="word-break: normal" class="jumbotron">
+        
+        <p style="font-size:16px">
 
-  </div> <!--panel class-->
+
+        Find simulations based on the elements included in it. First, use panel <span style="font-weight: bold">1</span> to search the desired elements (GPCRs, other proteins, molecules, etc). Add the elements to the search by clicking "Add to Search". Use the panel <span style="font-weight: bold">2</span> to search for dynamics containing the elements added.</p>
+        <center><button  id="helpbutton" type="button" value="Help" class="btn btn-primary btn-xs">Show Help</button></center>
+
+          <div id="help" style="word-break: normal">
+
+                <ul>
+                <li><a href="#use"> Usage</a></li>
+                <li><a href="#cam"> Difference between standard form and specific state</a></li>
+                <li><a href="#adv"> Simple and Advanced Search</a></li>
+                <li><a href="#exm"> Exact Match</a></li>
+                <li><a href="#top"> Empty search </a></li>
+                <!--<li><a href="#sid"> Search by GPCRmd ID</a></li>-->
+                <!--<li><a href="#allobj">Complex, Complex Structure, dynamics</a></li>-->
+                </ul>
+                <br><br>
+                <h2 id='use'> Usage: </h2>
+                <p style="font-size: 16px"> 
+                Let's say you are looking for a simulation containing serotonin and the serotonin receptor. You should use the panel <span style="font-weight: bold">1</span> to search for these elements (e.g. search by the word "serotonin"). You will obtain a list of elements related to your search (serotonin, serotonin receptors, ...). Select the elements you are interested in by clicking "Add to Search". They will appear in panel <span style="font-weight: bold">2</span>. If you don not want to apply any more filters or use the advanced search, you can just click at the search button of panel <span style="font-weight: bold">2</span>. A list of simulations corresponding to your search will appear.</p>
+                <br>
+
+                <h3>Panel <span style="font-weight: bold">1</span>, searching the elements: </h3><br>
+
+                <p  style="font-size: 16px">Use panel <span style="font-weight: bold">1</span> to search for molecules or proteins (the "elements" which constitute simulations). You can use SMILES, InChI, InChIKey, PubChem CIDs, ChEMBL id's and common names to search for molecules. In order to find proteins, Uniprot accession codes and common names can be used. You can indicate if your search is a GPCR or another protein using the dropdown. You can also use it to search by dynamics ID. If you are not looking for a protein, just use the option "All". Then press the search button to obtain the resulting elements.  Next to every result, you will find an "Add to search" button, which will add the element to the panel <span style="font-weight: bold">2</span>.</p>
+
+                <br><br>
+                <h3>Panel <span style="font-weight: bold">2</span>, joining the elements</h3><br>
+                <p style="font-size: 16px">Panel <span style="font-weight: bold">2</span> holds all the elements you have added. You can directly click on the search button <span class="glyphicon glyphicon-search"> </span> to find all simulations matching that combination of elements,
+                or you can tune your results by filtering by some parameters, which you will find at "See simulation filters". Such parameters include time step, software used, etc. For molecules, you can select whether your molecule is an "Orthosteric ligand", "Allosteric Ligand", "Other" or "All" (meaning any of the previous). For proteins, you can select if it is a GPCR or not, using the <b>"is GPCR" checkbox</b>. If it is not selected, we assume that the protein is NOT a GPCR. If you need to use boolean operators like OR, AND, NOT, switch to the <a href='#adv'> Advanced search</a>.</p>
+                <br><br><br>
+                <h2 id='cam'> Difference between standard form and specific states</h2><br>
+                <p style="font-size: 16px"> The difference between standard form and specific states is that a standard form represents a <b>set</b> of related molecules that only differ in the protonation state, tautomerization state, or some other subtle features. Each of these different states is a single specific state. As the concept of specific state is more precise, when searching with it, you will only find those simulations containing exactly that specific state. However, if you search by a standard form, you will find all the simulations which have any of the related molecules belonging to that standard form. Therefore, if, for example, you search systems using Clozapine (standard form) you will always get more results (or the same) than if you search by Clozapine (specific state X).</p>
+                <br><br><br>
+                <h2 id='adv'> Simple and Advanced Search</h2><br>
+
+                <p style="font-size: 16px">In panel <span style="font-weight: bold">2</span>, you can choose between <b>Simple and Advanced search</b>, the difference being that the second allows you to use "AND", "OR" and "NOT" boolean operators, as well as brackets. Simple search only allows "AND" operator (which is enough in most cases). The following is an example of how to perform a search with brackets:</p><br>
+
+                <center><table class="jumbotable"  style="font-size: 16px">
+                <tr><td>P28222</td><td>P28222</td></tr>
+                <tr><td>AND ( Serotonin</td><td>AND Serotonin</td></tr> 
+                <tr><td>OR Clozapine</td><td> OR Clozapine</td></tr>
+                <tr><td>OR POPC )</td><td>OR POPC</td></tr>
+                </table></center>
+
+                <p style="font-size: 16px">The example search in the left will return the systems matching any of the following:</p>
+                <ul style="font-size: 16px">
+                <li>P28222 + Serotonin</li>
+                <li>P28222 + Clozapine</li>
+                <li>P28222 + POPC </li>
+                <li>P28222 + Serotonin + Clozapine</li>
+                <li>P28222 + Serotonin + POPC </li>
+                <li>P28222 + Serotonin + Clozapine + POPC </li>
+                <li>P28222 + POPC + Clozapine </li>
+
+                </ul>
+
+                <p  style="font-size: 16px">However, the example search in the right will return the systems matching any of the following: </p>
+                <ul style="font-size: 16px">
+                <li>P28222 + Serotonin</li>
+                <li>Every system with Clozapine</li>
+                <li>Every system with POPC </li>
+                </ul>
+                <p style="font-size: 16px">Please, keep in mind that the results may not be composed only by the elements you have included in the search. So, when we say that the system will match "P28222 + Serotonin", it means that at least, it has these two components - it may also have something else, like ions, water, etc. Read the <a href='#exm'> Exact match </a> section to know how to avoid this greedy behavior.</p>
+
+                <!--<h2 id='allobj'>Complex, Complex Structure and dynamics</h2><br>
+                <p> You may be interested in finding not only the simulation, but the more basic layers on which it is built. These layers are the objects: <b>"Complex" and "Complex Structure"</b>. "Complex" is a system composed by a GPCR, other proteins, orthoesteric and alloesteric ligands. "Complex Structure" is a complex with other selected co-crystallized molecules (think of it as a PDB file) and "dynamics" is a "Complex Structure" which may have been solvated and/or membrane-embeded and has a trajectory. For the last two cases,"Complex Structure" and "dynamics", you can select what kind of system you want as results: <b>"complex" (the system is composed by proteins and ligands), "apoforms" (the system lacks ligands, but can have molecules with other functions), or both types</b>. In addition, for these two same cases, you can do a search without adding any element to the rigth panel and the search will retrieve all systems in the database matching the filters that you have selected (apoform or not, complex structure or dynamics, dynamics settings, etc.). "dynamics" option allows you to filter the results by some additional features, like the solvent used in the simulation, or the method used to produce it.</p> -->
+                <br><br><br>
+                <h2 id='exm'>Exact Match</h2><br>
+
+                <p style="font-size: 16px"> If you select "Exact Match", the search will return only those simulations whose composition matches exactly the one you have built in the right panel. If there is any other element in the simulation that you have not included in the search, it will not appear as a result. So, if you look for P28222 AND Serotonin, and select exact match, only those systems composed by P28222 and serotonin and nothing else will be retrieved; a system with P28222, water and serotonin will not be a result.</p>
+                <br><br><br>
+                <!--<h2 id='sid' >Search by GPCRmd ID:</h2><br>
+
+                <p>You also have the option to search by the identifiers used in the GPCRmd database, just check the <b>"Search by GPCRmd ID" checkbox</b>. If you select this type of search, you can return standard forms, specific states, proteins and dynamics. Below you will find the definition of these three concepts. You may find this kind of search useful to check if the simulation you have submited is available. </p>
+
+                <br><br><br>-->
+                <h2 id='top' >Empty Search:</h2><br>
+
+                <p style="font-size: 16px">You can search simulations without adding any elements. This will return every simulation we have in our database. You can still filter by any of the fields: Force Field, Software, etc. </p>
+
+              </div>
+        </div>
+    </div><!--col-->
+    </div><!--row-->
+    </div><!--container-->
 
 
+    <div class="container-fluid">
+     <div class="row">
+      <div class="col-sm-6">
+        <div class="panel panel-info" id="haystacksearch">
+          <div id="fakeheader" style="background-color:#d9edf7; width:100%">  
+              <div class="panel-heading" style="padding:1px;margin:0px">
+                    <center>
+                        <h5 style="font-size:18px;">
+                            <span class="badge panelnum" style="background-color:#5BC0DE;font-size:15px;top:-2px;position:relative;margin-right:5px;">1</span>
+                            Element browser
+                        </h5> 
+                    <p>Search the elements you want in the simulation, then click "Add to Search".</p>
+                    <form method="post" id="ajaxform" action="." enctype="multipart/form-data">{% csrf_token %}
 
-</div> <!--second col-->
-</div><!--container-->
+                        <input id="protein22" type="text" class="form-control" name="name" placeholder="Clozapine,P28222,Adenosine receptor..."></input>
+                        <select id="simpletype">
+                            <option selected="selected" value="All">All</option>
+                            <option title="Simulations" value="dynamics">Dynamics ID</option>
+                            <option title="G protein coupled receptor" value="gpcr">GPCR</option>
+                            <option title="G protein, arrestin, peptide ligand, nanobody, etc." value="protein">Other proteins</option>
+                            <!--<option title="Comprises a set of related molecules which only differ in subtle features such as protonation state or the tautomerazation state. This set is represented by the standard molecule of the set, choosen more or less arbitrarily. The two protonation states of the acetic acid (COOH and COO-) conform a single standard form, represented by the specific state COOH"> standard form</option>-->
+                            
+                            <!--<option title="Each of the related molecules that form a standard form. Acetic Acid can be in two different states: COOH and COO-, each of them is a different specific state, and one of them is used to represent the standard form. " value="molecule">specific state</option>-->
+                            <!--<option title="System composed by a GPCR and other proteins plus its orthosteric and allosteric ligands" value="complex">Complex (only with ID search)</option>                        
+                            <option value="model" title="Entity of Complex and other selected cocrystallized molecules which is used to build the entire solvated and membrane-embeded system">Complex Structure (only with ID search)</option> -->
+                        </select>
+                        <button id="Searcher" type="button" value="Search" class="btn btn-info btn-md"> <span class="glyphicon glyphicon-search"> </span></button>
+                        <br><span style="visibility: hidden"><input  id="idsearch" type="checkbox" value="val">Search by GPCRmd ID</span>
+                        
+
+                    </form> 
+                    </center>
+                    <br>
+              </div>
+          </div> <!-- fakeheader-->
+          
+          
+          
+          <div class="panel-body" id="haystacksearchbody">
+
+                <div id="hiddenbar" class="progress">
+                    <div id="hiddenbarin" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width:1%"></div><br><br><br>
+                </div>
+
+
+                <table id='ajaxresults22'> <thead><tr><th> Results: </th><th id='badge_legend'> <span title="In how many simulations does this element appear?" class="badge" style="background-color:red;"># dynamics</span> <span title="Net Charge" class="badge" style="background-color:#3278B4;">Net Charge</span>          </th></tr></thead><tbody><tr><td>No results</td><td>          </td></tr></tbody></table>
+
+                <br><br>
+          </div>
+        </div>
+      </div>
+
+           <!--<div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="http://cdn.mysitemyway.com/etc-mysitemyway/icons/legacy-previews/icons/magic-marker-icons-arrows/114869-magic-marker-icon-arrows-dotted-arrow-right.png" height="150" width="350"></div>-->
+
+            <div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="{% static 'dynadb/arrowdashed.png' %}" height="150" width="350"></div>
+
+
+           <!-- <div id='arrowdiv' style="position:absolute; z-index:9;display: none;"><img id='arrow' src="/dynadb/files/arrow.png" height="150" width="350"></div>-->
+      <div class="col-sm-6">
+            
+            <div class="panel panel-info" id="floatdiv">
+                <div class="panel-heading" id="lightup"> <center>
+                    <h5 style="font-size:18px;">
+                        <span class="badge" style="background-color:#5BC0DE;font-size:15px;top:-2px;position:relative;margin-right:5px;">2</span>
+                        Simulation Browser
+                    </h5></center>
+
+                    <!--<img src="https://cdn.pixabay.com/photo/2014/04/03/10/29/arrow-right-310628_960_720.png">-->
+                    
+                    <center><button id="gotoadvsearch" class="btn btn-info" type="button" value="Advanced Search">Go to Advanced Search</button></center>
+                </div>
+
+            <div id='crazycolor' class="panel-body">
+            <center>
+
+            <table id="myTable">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Type</th>
+                <th>ID</th>
+                <th></th><!--IS RECEPTOR -->
+                <th></th><!--name-->
+                <th></th><!--REMOVE-->
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+            </table>
+            <br>
+            
+            <!--Return: <select id="result_type"><option selected="selected" value="dynamics">dynamics</option><option value="model">Complex Structure</option><option value="complex">Complex</option></select> -->
+            <div id='noselect' style="display: none;"> Return: <select id="result_type"> <option selected="selected" value="dynamics">dynamics</option></select> </div>
+
+            <div id='hiddenmodel'>
+                <br>
+                <label><input type="radio" name="radiosearch" value="apo"> Only apoform </label>
+                <label><input type="radio" name="radiosearch" value="com"> Only complexes </label>
+                <label><input type="radio" name="radiosearch" value="both" checked="checked" > Both </label><br>
+            </div>
+
+            <hr>
+            <center><button type="button" class="btn btn-info" data-toggle="collapse" data-target="#tablefilter">See simulation filters</button></center>
+            <div id="tablefilter" class="col-sm-12 collapse">
+                <br>
+                <div id="tablefilterl" align="left" class="col-sm-6">
+                    <label><input id="exactmatch" type="checkbox" name="exact" value="exactmatch"> Exact Match </label><br><br>
+                    Time step  <select style="display:none;" id="gle"><option value="smaller"> <= </option> <option value="equal" selected="selected"> = </option> <option value="greater"> >= </option> </select> <input id='tstep' type="text" name="tstep"><br><br>
+                    Force Field  <select id="fftype"><option selected="selected" value=""> </option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option></select><br><br>
+                    Software used  <select id="soft"><option selected="selected" value=""> </option><option value="ACEMD">ACEMD</option><option value="AMBER">AMBER</option><option value="CHARMM">CHARMM</option><option value="DESMOND">DESMOND</option><option value="GROMACS">GROMACS</option><option value="GROMAS">GROMAS</option><option value="NAMD">NAMD</option><option value="YASARA">YASARA</option><option value="OTHER">OTHER</option></select><br><br>
+                </div>
+
+                <div id="tablefilterr" align="left" class="col-sm-6">
+                    <div id='hidden'>
+                        <div id="search_type_dyn">
+                          <label><input type="radio" name="radiosearch1" value="apo"> Only apoform </label>
+                          <label><input type="radio" name="radiosearch1" value="com"> Only complexes </label>
+                          <label><input type="radio" name="radiosearch1" value="both" checked="checked"> Both </label>
+                        </div>
+                    </div><br>
+                    Membrane type  <select id="memtype"><option selected="selected" value=""> </option><option value="1">Implicit</option><option value="2">Homogeneous</option><option value="3">Heterogeneous</option></select><br><br>
+                   Method  <select id="method"><option selected="selected" value=""> </option><option value="1">Molecular Mechanics (MM)</option><option value="4">MM Monte Carlo</option><option value="5">MM MSM/HMM adaptive</option><option value="6">MM metadynamics</option><option value="7">MM umbrella sampling</option><option value="8">MM biased</option><option value="9">MM scaled potentials</option><option value="2">QM/MM</option><option value="3">NMR</option></select><br><br>
+                   Solvent type  <select id="soltype"><option selected="selected" value=""> </option> <option value="1">Implicit</option><option value="2">TIP3P</option><option value="3">TIP4P</option><option value="4">TIPS</option><option value="5">SPC</option><option value="6">SPC/E</option><option value="7">Other</option></select><br><br>
+                </div>
+            </div>
+            <br><br><br><button id="tablesearch" type="button" value="search" class="btn btn-info btn-md "> <span class="glyphicon glyphicon-search"> </span></button>
+            <br><br><br><br><br>
+            </center>
+
+        </div> <!--panel body-->
+
+      </div> <!--panel class-->
+
+
+    </div>
+    </div> <!--second col-->
+    </div><!--container-->
+    </div>
 </div>
 {% endblock %}
 
 {% block addon_js %}
+    <script src="{% static 'dynadb/table_parent.js' %}"></script>
     <script src="{% static 'dynadb/help_searcher.js' %}"></script>
     <script src="{% static 'dynadb/complex_searcher.js' %}"></script>
     <script src="{% static 'dynadb/autosearch.js' %}"></script>
