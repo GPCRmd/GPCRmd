@@ -706,7 +706,7 @@ def distances_Wtraj(dist_str,struc_path,traj_path,strideVal,seg_to_chain,gpcr_ch
         dist_li =dist_li[:20]
         small_error.append("Too much distances to compute. Some have been omitted.")        
     try:
-        itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path , stride = strideVal)
+        itertraj=md.iterload(filename=traj_path,chunk=10, top=struc_path , stride = strideVal)
     except Exception:
         return (False,None, "Error loading input files.",True,"")
     count=0
@@ -1572,7 +1572,7 @@ def compute_rmsd(rmsdStr,rmsdTraj,traj_frame_rg,ref_frame,rmsdRefTraj,traj_sel,s
         fr_to=int(fr_li[1])+1
     try:
         ref_traj_fr=md.load_frame(ref_traj_path,int(ref_frame),top=struc_path)
-        itertraj=md.iterload(filename=traj_path,chunk=50/strideVal, skip =fr_from ,top=struc_path, stride =strideVal)
+        itertraj=md.iterload(filename=traj_path,chunk=10, skip =fr_from ,top=struc_path, stride =strideVal)
     except Exception:
         return (False,None, ["Error loading input files."])
     if len(ref_traj_fr)==0:
@@ -1721,30 +1721,34 @@ def download_hb_sb(request, dyn_id, bond_type, traj_path):
 
 def download_dist(request, dyn_id, dist_id):
     save_error_dist=False
+    error_txt=" "
     if request.session.get('dist_data', False):
         dist_data_s_all=request.session['dist_data']
         if dyn_id in dist_data_s_all:
             dist_data_s=dist_data_s_all[dyn_id]
             dist_dict=dist_data_s["dist_dict"]
-            dist_data_all=dist_dict[dist_id]
-            dist_data_all=dist_dict[dist_id]
-            (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
-            writer = csv.writer(response)
-            writer.writerow(["#Structure: "+struc_filename])
-            writer.writerow(["#Trajectory: "+traj_filename])
-            if (int(strideVal) > 1):
-                writer.writerow(["#Strided: "+strideVal])
-            header=[]
-            for name in dist_data[0]:
-                header.append("'"+name+"'")
-            writer.writerow(header)
-            for row in dist_data[1:]:
-                rowcol=[]
-                for col in row:
-                    rowcol.append(col)
-                writer.writerow(rowcol) 
+            if dist_id in dist_dict:
+                dist_data_all=dist_dict[dist_id]
+                (dist_data,struc_filename,traj_filename,strideVal)=dist_data_all
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+dist_id+'.csv"'
+                writer = csv.writer(response)
+                writer.writerow(["#Structure: "+struc_filename])
+                writer.writerow(["#Trajectory: "+traj_filename])
+                if (int(strideVal) > 1):
+                    writer.writerow(["#Strided: "+strideVal])
+                header=[]
+                for name in dist_data[0]:
+                    header.append("'"+name+"'")
+                writer.writerow(header)
+                for row in dist_data[1:]:
+                    rowcol=[]
+                    for col in row:
+                        rowcol.append(col)
+                    writer.writerow(rowcol) 
+            else:
+                save_error_dist=True
+                error_txt="Session data expired. Please re-load the page and try again."
         else:
             save_error_dist=True
     else:
@@ -1753,44 +1757,49 @@ def download_dist(request, dyn_id, dist_id):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
-        writer.writerow([" "])
+        writer.writerow([error_txt])
     return response
     
 def download_int(request,dyn_id, int_id):
     int_save_error=False
+    error_txt=" "
     if request.session.get('int_data', False):
         int_data_s_all=request.session['int_data']
         if dyn_id in int_data_s_all:
             int_data_s=int_data_s_all[dyn_id]
             int_info=int_data_s["int_info"]
-            int_data_all=int_info[int_id]
-            (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
-            response = HttpResponse(content_type='text/csv')
-            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
-            writer = csv.writer(response)
-            if (dist_scheme=="closest"):
-                dist_scheme_name="All atoms";
-            else:
-                dist_scheme_name="Heavy atoms only";
+            if int_id in int_info:
+                int_data_all=int_info[int_id]
+                (int_dict,thresh,traj_fileint,struc_fileint,dist_scheme,strideVal)=int_data_all
+                response = HttpResponse(content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_fileint).group(1)+"_"+int_id+'_interact.csv"'
+                writer = csv.writer(response)
+                if (dist_scheme=="closest"):
+                    dist_scheme_name="All atoms";
+                else:
+                    dist_scheme_name="Heavy atoms only";
 
-            writer.writerow(["#Structure: "+struc_fileint])
-            writer.writerow(["#Trajectory: "+traj_fileint])
-            if (int(strideVal) > 1):
-                writer.writerow(["#Strided: "+strideVal])
-            if (dist_scheme=="closest"):
-                dist_scheme_name="All atoms";
-            else:
-                dist_scheme_name="Heavy atoms only";
+                writer.writerow(["#Structure: "+struc_fileint])
+                writer.writerow(["#Trajectory: "+traj_fileint])
+                if (int(strideVal) > 1):
+                    writer.writerow(["#Strided: "+strideVal])
+                if (dist_scheme=="closest"):
+                    dist_scheme_name="All atoms";
+                else:
+                    dist_scheme_name="Heavy atoms only";
 
-            writer.writerow(["#Threshold: "+thresh+ " angstroms ("+dist_scheme+")"])
-            writer.writerow(["'Ligand'","'Position'" ,"'Residue'", "'Chain'", "'Frequency (%)'"])
-            for (lig, lig_int) in int_dict.items():
-                (pos,chain,res,freq)=lig_int[0]
-                all_first=["'"+lig+"'", pos,"'"+res+"'","'"+chain+"'",freq]
-                writer.writerow(all_first)
-                for inter in lig_int[1:]:
-                    (pos,chain,res,freq)=inter
-                    writer.writerow(["", pos,"'"+res+"'","'"+chain+"'",freq])
+                writer.writerow(["#Threshold: "+thresh+ " angstroms ("+dist_scheme+")"])
+                writer.writerow(["'Ligand'","'Position'" ,"'Residue'", "'Chain'", "'Frequency (%)'"])
+                for (lig, lig_int) in int_dict.items():
+                    (pos,chain,res,freq)=lig_int[0]
+                    all_first=["'"+lig+"'", pos,"'"+res+"'","'"+chain+"'",freq]
+                    writer.writerow(all_first)
+                    for inter in lig_int[1:]:
+                        (pos,chain,res,freq)=inter
+                        writer.writerow(["", pos,"'"+res+"'","'"+chain+"'",freq])
+            else:
+                error_txt="Session data expired. Please re-load the page and try again."
+                int_save_error=True
         else:
             int_save_error=True
     else:
@@ -1799,7 +1808,7 @@ def download_int(request,dyn_id, int_id):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
-        writer.writerow([" "])
+        writer.writerow([error_txt])
     return response
     
 
@@ -1851,7 +1860,7 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
 
     struc_path = "/protwis/sites/files/"+struc_p
     traj_path = "/protwis/sites/files/"+traj_p
-    itertraj=md.iterload(filename=traj_path,chunk=(50/strideVal), top=struc_path, stride=strideVal)
+    itertraj=md.iterload(filename=traj_path,chunk=10, top=struc_path, stride=strideVal)
     first=True 
     structable=False
     lig_multiple_res=False
@@ -1960,32 +1969,37 @@ def compute_interaction(res_li,struc_p,traj_p,num_prots,thresh,serial_mdInd,gpcr
 
 def download_rmsd(request, dyn_id,rmsd_id):
     save_error=False
+    error_txt=" "
     if request.session.get('rmsd_data', False):
         rmsd_data_s_all=request.session['rmsd_data']
         if dyn_id in rmsd_data_s_all:
             rmsd_data_s=rmsd_data_s_all[dyn_id]
             rmsd_dict=rmsd_data_s["rmsd_dict"]
-            rmsd_data_all=rmsd_dict[rmsd_id]
-            (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
-            response = HttpResponse(content_type='text/csv')
-            
-            response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
-            writer = csv.writer(response)
-            writer.writerow(["#Structure: "+struc_filename])
-            writer.writerow(["#Trajectory: "+traj_filename])
-            if (int(strideVal) > 1):
-                writer.writerow(["#Strided: "+strideVal])
-            writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
-            writer.writerow(["#Selection: "+proper_name(traj_sel)])
-            header=[]
-            for name in rmsd_data[0]:
-                header.append("'"+name+"'")
-            writer.writerow(header)
-            for row in rmsd_data[1:]:
-                rowcol=[]
-                for col in row:
-                    rowcol.append(col)
-                writer.writerow(rowcol) 
+            if rmsd_id in rmsd_dict:
+                rmsd_data_all=rmsd_dict[rmsd_id]
+                (rmsd_data,struc_filename,traj_filename,traj_frame_rg,ref_frame,rtraj_filename,traj_sel,strideVal)=rmsd_data_all        
+                response = HttpResponse(content_type='text/csv')
+                
+                response['Content-Disposition'] = 'attachment; filename="'+re.search("(\w*)\.\w*$",struc_filename).group(1)+"_"+rmsd_id+'.csv"'
+                writer = csv.writer(response)
+                writer.writerow(["#Structure: "+struc_filename])
+                writer.writerow(["#Trajectory: "+traj_filename])
+                if (int(strideVal) > 1):
+                    writer.writerow(["#Strided: "+strideVal])
+                writer.writerow(["#Reference: frame "+ref_frame+" of trajectory "+rtraj_filename])
+                writer.writerow(["#Selection: "+proper_name(traj_sel)])
+                header=[]
+                for name in rmsd_data[0]:
+                    header.append("'"+name+"'")
+                writer.writerow(header)
+                for row in rmsd_data[1:]:
+                    rowcol=[]
+                    for col in row:
+                        rowcol.append(col)
+                    writer.writerow(rowcol) 
+            else:
+                save_error=True
+                error_txt="Session data expired. Please re-load the page and try again."
         else:
             save_error=True
     else:
@@ -1994,7 +2008,7 @@ def download_rmsd(request, dyn_id,rmsd_id):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="x.csv"'
         writer = csv.writer(response)
-        writer.writerow([" "])
+        writer.writerow([error_txt])
     return response
     
 def viewer_docs(request):
