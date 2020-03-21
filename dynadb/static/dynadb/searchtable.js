@@ -13,4 +13,12 @@ $(document).ready( function () {
     );
     $('#loading', window.parent.document).css("display","none");
     $('#table_id').css("display","table");
+
+
+    $(".links a").click(function(){
+        $("body").css("cursor","progress");
+        $('*', window.parent.document).css("cursor","progress");
+    }) ;
 } );
+
+
