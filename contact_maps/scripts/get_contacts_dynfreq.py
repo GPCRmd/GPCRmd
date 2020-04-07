@@ -1,12 +1,13 @@
 import re
 import os
 import glob
+import numpy as np
 import argparse as ap
 import pandas as pd
 from json import loads, dump
 from sys import stdout
 from shutil import copyfile,copyfileobj
-
+import time
 
 def json_dict(path):
     """Converts json file to pyhton dict."""
@@ -136,6 +137,74 @@ def add_dyn_to_dynfile(dynname, files_basepath):
     dyn_csv_file = open(dyn_csv, "w")
     dyn_csv_file.write(col_csv)
     dyn_csv_file.close()
+
+def pharmacophores(dynname, outfile, itype, dyn_contacts_file, lig_resname = ""):
+    """
+    Get the list of atoms interacting with the ligand of this simulation every 10 frames
+    """
+    print('computing pharmacophores for ', itype)
+    # Set array itype if necessari
+    if itype == 'hb':
+        itype = 'hblb hbls'
+    elif itype in ['wb', 'wb2']:
+        itype = 'l' + itype
+    elif itype == 'all':
+        itype = "vdw hbls hblb lwb lwb2 hp"
+
+    # Skipping whole step if pharmacophore file already exists
+    if os.path.exists(outfile):
+        print('pharmacophore file for itype '+itype+' already exists. Step omitted')
+        return
+    
+    # Skip if no ligand apported.
+    if not bool(lig_resname):
+        return 
+    
+    # Open dynamic interaction data and itereate
+    filtered_array = []
+    with open(dyn_contacts_file, 'r') as infile:
+
+        # If we have a list of itypes, like in hb (hbbb, hblb, hbsb, hbsl)
+        if ' ' in itype:
+            for row in infile: 
+                row_array = row.split('\t')[0:4]
+
+                # Get interaction lines of our interaction type and where the ligand is one of the interacting parts
+                if (row_array[1] in itype):
+                    if ((lig_resname in row_array[3]) or (lig_resname in row_array[2])):
+                        filtered_array.append(row_array)
+        else:
+            for row in infile: 
+                row_array = row.split('\t')[0:4]
+                # Get interaction lines of our interaction type and where the ligand is one of the interacting parts
+                if (row_array[1] == itype):
+                    if ((lig_resname in row_array[3]) or (lig_resname in row_array[2])):
+                        filtered_array.append(row_array)
+
+    if filtered_array.size == 0:
+        print('no ligand-receptor interactions for itype '+itype)
+        return
+
+    # Convert previous array to pandas dataframe
+    df = pd.DataFrame(np.array(filtered_array), columns=['frame', 'itype', 'Position1', 'Position2'])
+    df['frame'] = pd.to_numeric(df['frame'])
+
+    # Conserve only interacting atoms each 10th frame
+    df10th = df[(df['frame'] % 10) == 0]
+    
+    # Take interacting atom codes and separate between ligand and receptor atoms
+    pharmacophore_atoms = pd.unique(df10th['Position1'].append(df10th['Position2']))
+    pharmacophore_receptor = set()
+    pharmacophore_ligand = set()
+    for atom in pharmacophore_atoms:
+        if lig_resname in atom:
+            pharmacophore_ligand.add(atom)
+        else:
+            pharmacophore_receptor.add(atom)
+
+    #Save pharmacophoric atoms
+    with open(outfile,'w') as outf: 
+        dump({ 'ligand' : list(pharmacophore_ligand), 'receptor' : list(pharmacophore_receptor) }, outf)
 
 def get_contact_frequencies(get_contacts_path, dyn_contacts_file, itype, labelfile, outfile, repeat_dynamics): 
     """
@@ -302,9 +371,11 @@ create_labelfile(dynname, files_path, ligfile)
 if ligand_sel:
     ligand_text1 = " or %s" % (ligand_sel)
     ligand_text2 = "--ligand \"%s\" " % (ligand_sel)
+    lig_resname = re.search("resname (\w+)", ligand_sel).groups()[0]
 else:
     ligand_text1 = ""
     ligand_text2 = ""
+    lig_resname = ""
 
 dyn_contacts_file = str("%s%s-%s_dynamic.tsv" % (files_path, dynname, mytrajid))
 dyn_contacts_file_merged = str("%s%s_dynamic.tsv" % (files_path, dynname))
@@ -327,18 +398,25 @@ if merge_dynamics:
     # Create files_path for freqeuncy files
     mkdir_p(str(files_path + "frequency_tables"))
 
-    no_ligand = set(("sb", "pc", "ts", "ps", "hp"))
+    no_ligand = set(("sb", "pc", "ts", "ps", "hp", "hbbb", "hbsb", "hbss"))
 
-    # Calculate frequencies for each type
+    # Calculate frequencies and pharmacophores for each type
     for itype in set(("sb","hp","pc","ps","ts","vdw", "wb", "wb2", "hb", "hbbb","hbsb","hbss","hbls","hblb","all")):
+    #for itype in {"wb2"}: # For debugging
+
+        #Calculate pharmacophores for this interaction type
+        pharmacofolder = files_path+'pharmacophores/' 
+        os.makedirs(pharmacofolder, exist_ok=True)
+
+        if itype not in no_ligand:
+            pharmacophores(dynname, pharmacofolder+itype+'.json', itype, dyn_contacts_file, lig_resname)
 
         #Omit already computed frequencies
         outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
+        labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
         if os.path.exists(outfile):
             continue
-
         print(str("computing %s frequencies") % (itype))
-        labelfile = str("%s%s_labels.tsv" % (files_path, dynname))
         
         # HB and wb have to be calculated in a special way
         if  itype in multi_itypes:
