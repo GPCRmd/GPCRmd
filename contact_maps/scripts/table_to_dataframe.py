@@ -3,7 +3,6 @@ import pandas as pd
 from  numpy import array
 from json import loads, dump
 from  plotly.figure_factory import create_dendrogram
-from  plotly.offline import plot
 import numpy as np
 import os
 import re
@@ -118,13 +117,13 @@ def split_by_standard(df, compl_data):
 
 def filter_lowfreq(df, main_itype):
     """
-    Filter low-frequency interactions. Remove all positions With do not have at least 2 interactions with more than 
-    50% frequency
+    Filter low-frequency interactions. Remove all position pairs not having at least 2 simulations
+    with more than 50% interaction frequency
     """
     df_purged = df.drop(['itype','Position','Position1','Position2'], 1)
-    df['above_50perc'] = (df_purged > 50).sum(1)
-    pos_topreserve = set(df['Position'][ (df['above_50perc'] > 1) & (df['itype'] == main_itype) ])
-    df.drop('above_50perc', 1, inplace = True)
+    df['above_30perc'] = (df_purged > 50).sum(1)
+    pos_topreserve = set(df['Position'][ (df['above_30perc'] > 1) & (df['itype'] == main_itype) ])
+    df.drop('above_30perc', 1, inplace = True)
     df = df[df['Position'].isin(pos_topreserve)]
      
     return(df)
@@ -257,7 +256,7 @@ def dyn_flareplots(df, folderpath, dyn_list, itype, flare_template = False):
     Create top20 interaction jsons for each simulation. Needed for customized selection flareplots.
     """
     os.makedirs(folderpath, exist_ok = True)
-    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']
+    colors = ['#800000', '#860000', '#8c0000', '#930000', '#990000', '#9f0000', '#a60000', '#ac0000', '#b20000', '#b90000', '#bf0000', '#c50000', '#cc0000', '#d20000', '#d80000', '#df0000', '#e50000', '#eb0000', '#f20000', '#f80000', '#ff0000', '#ff0700', '#ff0e00', '#ff1500', '#ff1c00', '#ff2300', '#ff2a00', '#ff3100', '#ff3800', '#ff3f00', '#ff4600', '#ff4d00', '#ff5400', '#ff5b00', '#ff6200', '#ff6900', '#ff7000', '#ff7700', '#ff7e00', '#ff8500', '#ff8c00', '#ff9100', '#ff9700', '#ff9d00', '#ffa300', '#ffa800', '#ffae00', '#ffb400', '#ffba00', '#ffbf00', '#ffc500', '#ffcb00', '#ffd100', '#ffd600', '#ffdc00', '#ffe200', '#ffe800', '#ffed00', '#fff300', '#fff900', '#ffff00', '#f2ff00', '#e5ff00', '#d8ff00', '#ccff00', '#bfff00', '#b2ff00', '#a5ff00', '#99ff00', '#8cff00', '#7fff00', '#72ff00', '#66ff00', '#59ff00', '#4cff00', '#3fff00', '#33ff00', '#26ff00', '#19ff00', '#0cff00', '#00ff00', '#0afc0a', '#15fa15', '#1ff81f', '#2af62a', '#34f434', '#3ff13f', '#49ef49', '#54ed54', '#5eeb5e', '#69e969', '#74e674', '#7ee47e', '#89e289', '#93e093', '#9ede9e', '#a8dba8', '#b3d9b3', '#bdd7bd', '#c8d5c8', '#d3d3d3']
     for dyn in dyn_list:
 
         # Select top interactions based on its mean frequency. Also asign color based on mean value
@@ -519,7 +518,7 @@ def flareplot_json(df, clustdict, folderpath, flare_template = False):
     Create json entries for significative positions (top10 mean frequency) of each cluster produced
     """
     os.makedirs(folderpath,  exist_ok = True)
-    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']    
+    colors = ['#800000', '#860000', '#8c0000', '#930000', '#990000', '#9f0000', '#a60000', '#ac0000', '#b20000', '#b90000', '#bf0000', '#c50000', '#cc0000', '#d20000', '#d80000', '#df0000', '#e50000', '#eb0000', '#f20000', '#f80000', '#ff0000', '#ff0700', '#ff0e00', '#ff1500', '#ff1c00', '#ff2300', '#ff2a00', '#ff3100', '#ff3800', '#ff3f00', '#ff4600', '#ff4d00', '#ff5400', '#ff5b00', '#ff6200', '#ff6900', '#ff7000', '#ff7700', '#ff7e00', '#ff8500', '#ff8c00', '#ff9100', '#ff9700', '#ff9d00', '#ffa300', '#ffa800', '#ffae00', '#ffb400', '#ffba00', '#ffbf00', '#ffc500', '#ffcb00', '#ffd100', '#ffd600', '#ffdc00', '#ffe200', '#ffe800', '#ffed00', '#fff300', '#fff900', '#ffff00', '#f2ff00', '#e5ff00', '#d8ff00', '#ccff00', '#bfff00', '#b2ff00', '#a5ff00', '#99ff00', '#8cff00', '#7fff00', '#72ff00', '#66ff00', '#59ff00', '#4cff00', '#3fff00', '#33ff00', '#26ff00', '#19ff00', '#0cff00', '#00ff00', '#0afc0a', '#15fa15', '#1ff81f', '#2af62a', '#34f434', '#3ff13f', '#49ef49', '#54ed54', '#5eeb5e', '#69e969', '#74e674', '#7ee47e', '#89e289', '#93e093', '#9ede9e', '#a8dba8', '#b3d9b3', '#bdd7bd', '#c8d5c8', '#d3d3d3']    
     for clust in clustdict.keys():
 
         # Select top interactions based on its mean frequency. Also asign color based on mean value
@@ -599,7 +598,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     fig['layout']['margin'].update({
         'r' : 150,
         'l' : 100,
-        't' : 50,#This problem with the phantom margin has to be solved at some point
+        't' : 200,#This problem with the phantom margin has to be solved at some point
         'b' : 0,
         'pad' : 0,
         'autoexpand' : False,
@@ -635,7 +634,7 @@ def dendrogram_clustering(dend_matrix, labels, height, width, filename, clusters
     dendro_leaves = fig['layout']['yaxis']['ticktext']
 
     # Writing dendrogram on file
-    plot(fig, filename=filename, auto_open=False,config={
+    fig.write_html(filename, auto_open=False,config={
         "displayModeBar": "hover",
         "showAxisDragHandles": False,
         "showAxisRangeEntryBoxes": False,
@@ -806,7 +805,7 @@ def define_figure(width, height, dataframe, hover, itype):
     """
 
     # Mapper
-    colors = ['#800000', '#850000', '#8a0000', '#8f0000', '#940000', '#990000', '#9e0000', '#a30000', '#a80000', '#ad0000', '#b20000', '#b70000', '#bc0000', '#c20000', '#c70000', '#cc0000', '#d10000', '#d60000', '#db0000', '#e00000', '#e50000', '#ea0000', '#ef0000', '#f40000', '#f90000', '#ff0000', '#ff0500', '#ff0b00', '#ff1000', '#ff1600', '#ff1c00', '#ff2100', '#ff2700', '#ff2c00', '#ff3200', '#ff3800', '#ff3d00', '#ff4300', '#ff4800', '#ff4e00', '#ff5400', '#ff5900', '#ff5f00', '#ff6400', '#ff6a00', '#ff7000', '#ff7500', '#ff7b00', '#ff8000', '#ff8600', '#ff8c00', '#ff9000', '#ff9500', '#ff9900', '#ff9e00', '#ffa300', '#ffa700', '#ffac00', '#ffb000', '#ffb500', '#ffba00', '#ffbe00', '#ffc300', '#ffc700', '#ffcc00', '#ffd100', '#ffd500', '#ffda00', '#ffde00', '#ffe300', '#ffe800', '#ffec00', '#fff100', '#fff500', '#fffa00', '#ffff00', '#f4ff00', '#eaff00', '#e0ff00', '#d6ff00', '#ccff00', '#c1ff00', '#b7ff00', '#adff00', '#a3ff00', '#99ff00', '#8eff00', '#84ff00', '#7aff00', '#70ff00', '#66ff00', '#5bff00', '#51ff00', '#47ff00', '#3dff00', '#33ff00', '#28ff00', '#1eff00', '#14ff00', '#0aff00', '#00ff00']
+    colors = ['#800000', '#860000', '#8c0000', '#930000', '#990000', '#9f0000', '#a60000', '#ac0000', '#b20000', '#b90000', '#bf0000', '#c50000', '#cc0000', '#d20000', '#d80000', '#df0000', '#e50000', '#eb0000', '#f20000', '#f80000', '#ff0000', '#ff0700', '#ff0e00', '#ff1500', '#ff1c00', '#ff2300', '#ff2a00', '#ff3100', '#ff3800', '#ff3f00', '#ff4600', '#ff4d00', '#ff5400', '#ff5b00', '#ff6200', '#ff6900', '#ff7000', '#ff7700', '#ff7e00', '#ff8500', '#ff8c00', '#ff9100', '#ff9700', '#ff9d00', '#ffa300', '#ffa800', '#ffae00', '#ffb400', '#ffba00', '#ffbf00', '#ffc500', '#ffcb00', '#ffd100', '#ffd600', '#ffdc00', '#ffe200', '#ffe800', '#ffed00', '#fff300', '#fff900', '#ffff00', '#f2ff00', '#e5ff00', '#d8ff00', '#ccff00', '#bfff00', '#b2ff00', '#a5ff00', '#99ff00', '#8cff00', '#7fff00', '#72ff00', '#66ff00', '#59ff00', '#4cff00', '#3fff00', '#33ff00', '#26ff00', '#19ff00', '#0cff00', '#00ff00', '#0afc0a', '#15fa15', '#1ff81f', '#2af62a', '#34f434', '#3ff13f', '#49ef49', '#54ed54', '#5eeb5e', '#69e969', '#74e674', '#7ee47e', '#89e289', '#93e093', '#9ede9e', '#a8dba8', '#b3d9b3', '#bdd7bd', '#c8d5c8', '#d3d3d3']
     colors.reverse()
     mapper = LinearColorMapper(palette=colors, low=0, high=100)
 
@@ -1015,7 +1014,7 @@ def create_csvfile(options_path, recept_info,df):
     df_csv.drop(columns = ['helixloop','Interacting positions'], inplace = True)
 
     #Store dataframe as csv
-    df_csv.to_csv(path_or_buf = options_path+"dataframe.csv" )
+    df_csv.to_csv(path_or_buf = options_path+"dataframe.csv", float_format='%.1f')
 
 ############
 ## Variables
@@ -1179,7 +1178,7 @@ def get_contacts_plots(itype, ligandonly):
         
         # Making one-simulation flareplots. Only done in cmpl to avoid repeating same Simulations
         if stnd == "cmpl":
-            sim_jsons_path = '%scontmaps_inputs/%s/%s/simulation_jsons/' % (basepath, itype, ligandonly)
+            sim_jsons_path = '%scontmaps_inputs/%s/simulation_jsons/%s/' % (basepath, itype, ligandonly)
             dyn_flareplots(df_columned, sim_jsons_path, dendlabels_dyns, itype,  flare_template)
 
         #Computing frequency matrix
