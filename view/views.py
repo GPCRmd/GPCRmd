@@ -973,10 +973,16 @@ def obtain_tunnel_data(dyn_id,traj_list):
                 if a=="info.txt" or b=="info.txt":
                     continue
                 if a[:10]==b[:10]:
-                    cluster_num=int(a.split("_")[2])
+                    if ".pdb" in a:
+                        struc_dt=a;
+                        traj_dt=b;
+                    else:
+                        struc_dt=b;
+                        traj_dt=a;
+                    cluster_num=int(struc_dt.split("_")[2])
                     if cluster_num not in dyn_clu_pairs_d:
                         dyn_clu_pairs_d[cluster_num]=[]
-                    dyn_clu_pairs_d[cluster_num].append((a,b))
+                    dyn_clu_pairs_d[cluster_num].append((struc_dt,traj_dt))
         dyn_tun_info_file=os.path.join(traj_dyn,"info.txt")
         if not dyntunnel_stride:
             if os.path.isfile(dyn_tun_info_file):
