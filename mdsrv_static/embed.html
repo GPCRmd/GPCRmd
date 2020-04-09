@@ -136,7 +136,6 @@
                         compsel_changed_trajnum=0;
                         fix_jump=false
                     }
-                ////////////
                 } else {
                     update_fp_etal=true;
                 }
@@ -245,6 +244,16 @@
 
                             
                         }
+                        //!!!!
+
+                        $("#analysis_tunnels", window.parent.document).find(".tun_cluster_display_dyn:checked").each(function(){
+                            var traj_id=$(this).data("traj_id");
+                            var cluster_name=$(this).val();
+                            var rep_name=traj_id+"_"+cluster_name;
+                            var cluster_num=Number(cluster_name.split("_")[1].replace("c",""));
+                            set_dyntunnel_frame(cluster_num,rep_name,traj_id)
+
+                        })
                     }
                 }  
             });
@@ -1205,9 +1214,6 @@
             }
 
             if (water_check == true){
-                console.log("waterdist " + water_dist)
-                setSelTemp.push("water");
-                setSelLi.push("water");
                 var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
                 // console.log(water_sele_tostring)
                 atoms_within = sele.toSeleString();
@@ -1636,7 +1642,6 @@
         function show_hide_watermap(is_checked, mapname,stage){
             ///This function 
             stage.getComponentsByName(mapname).setVisibility(is_checked);
-            console.log(is_checked + mapname)
             
             return(stage)
 
@@ -1649,7 +1654,6 @@
             // polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr" ////// 
             // o.addRepresentation("licorice", {name:"polar_res",visible:false, sele:polar_residues}) ////// 
             stage.getRepresentationsByName("polar_res").setVisibility(is_checked)
-            console.log(stage.getRepresentationsByName("polar_res").setVisibility(is_checked))
             
         }
 
@@ -1680,6 +1684,191 @@
             }
         }
 
+        function hide_old_tunnels(traj_db_id){
+            for (traj_id in loaded_clusters){
+                if (traj_id != traj_db_id){
+                    for (t_type in loaded_clusters[traj_id]){
+                        var tunrep_li=loaded_clusters[traj_id][t_type];
+                        for (tr=0;tr<tunrep_li.length;tr++){
+                            var cluster_name=tunrep_li[tr]
+                            var rep_name=traj_id+"_"+cluster_name;
+                            stage.getComponentsByName("comp_"+rep_name).setVisibility(false);
+                        }
+                    }
+                }
+            }
+        }
+
+        function load_tunnel(traj_id,data_type,tun_files,cluster_num,cluster_name){
+            var rep_name=traj_id+"_"+cluster_name;
+
+            if( cluster_num<tun_color_li.length){
+                var color_num=cluster_num % tun_color_li.length; 
+            } else {
+                var color_num=cluster_num
+            }
+            var color_code=tun_color_li[color_num];
+
+            if ((data_type)=="clust"){
+                for (tf=0;tf < tun_files.length; tf++){
+                    tun_file=tun_files[tf];
+                    var tun_filepath=path+"Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_timeless/"+tun_file;
+
+                    stage.loadFile(tun_filepath , {visible: false}).then( function( tc ){
+                        tc.setName("comp_"+rep_name);
+                        tc.addRepresentation( "line" ,{colorValue: color_code , colorScheme:"uniform", linewidth:1,"name":rep_name});
+                    })
+
+                }
+            } else {
+                for (tf=0;tf < tun_files.length; tf++){
+                    var current_frame=0;//[!] Set correct frame!!
+                    var tun_frame=current_frame;
+                    var atom_rads=tunnels_radius[traj_id][cluster_num -1 ][tun_frame];
+                    var tun_file_struc=tun_files[tf][0];
+                    var tun_file_traj=tun_files[tf][1];
+                    var tun_filepath_struc="file://_DB/Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_long/"+tun_file_struc;
+                    var tun_filepath_traj="_DB/Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_long/"+tun_file_traj;
+                    stage.loadFile(tun_filepath_struc , {visible: false}).then( function( tc ){
+                        tc.setName("comp_"+rep_name);
+                        tc.addTrajectory(tun_filepath_traj ); 
+
+                        for (ar=0;ar< atom_rads.length;ar++){
+                            var rad=atom_rads[ar];
+                            var rad_sel="@"+ar;
+                            var dyn_rep_name=rep_name+"_"+ar;
+                            tc.addRepresentation( "spacefill" ,{colorValue: color_code , colorScheme:"uniform", linewidth:1,"name":dyn_rep_name, sele:rad_sel, radius: rad});
+
+                        }
+
+                    })
+                }
+            }
+        }
+
+        function load_all_tunnel_files(){
+            for (traj_id in tunnels_dict){
+                loaded_clusters[traj_id]={"clust":[],"dyn":[]};
+
+                var tunnel_clusters=tunnels_dict[traj_id];
+                for (tc=0;tc<tunnel_clusters.length;tc++){ //Iterate tunnel clusters
+                    var cluster_num=tc+1;
+                    var tun_type_li=["clust","dyn"];
+                    for (dt=0;dt<tun_type_li.length;dt++){ //Iterate static (clustered)=0 and dynamic=1 type
+                        var data_type=tun_type_li[dt];
+
+                        if (data_type=="clust"){
+                            var cluster_name="clustering_c"+cluster_num;
+                        } else {
+                            var cluster_name="dynamic_c"+cluster_num;
+                        }
+
+                        //Save cluster data to loaded_clusters dict
+                        var trajclutype_li=loaded_clusters[traj_id][data_type];
+                        trajclutype_li[trajclutype_li.length]=cluster_name;
+
+                        //Load files
+                        var tun_clu_files= tunnel_clusters[tc][dt];
+                        load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name);
+                    }
+
+////////////
+
+                }
+            }
+
+        }
+
+
+        function set_dyntunnel_frame(cluster_num,rep_name,traj_id){
+            var current_frame=trajComp.trajectory.currentFrame;
+
+            var rads_li=tunnels_radius[traj_id][cluster_num -1 ]
+            var current_rad_frame=Math.floor(current_frame/tun_stride)
+            updatetun=true;
+            if (traj_id in last_tun_traj){
+                if (rep_name in last_tun_traj[traj_id]){
+                    if (last_tun_traj[traj_id][rep_name] == current_rad_frame ){
+                        updatetun=false;
+                    } else {
+                        last_tun_traj[traj_id][rep_name]=current_rad_frame
+                    }
+                } else {
+                    last_tun_traj[traj_id][rep_name]=current_rad_frame
+                }
+            } else {
+                last_tun_traj[traj_id]={}
+                last_tun_traj[traj_id][rep_name]=current_rad_frame
+            }
+            if (updatetun){
+                var tun_clu_comps=stage.getComponentsByName("comp_"+rep_name).list; //Components of thys dyn tunnel cluster (could be more than 1  ) 
+                for (tc=0;tc<tun_clu_comps.length;tc++){
+                    tun_clu_traj=tun_clu_comps[tc].trajList[0];
+                    tun_clu_traj.setFrame(current_frame);
+                }
+                var atom_rads=rads_li[current_rad_frame];
+                for (ar=0;ar< atom_rads.length;ar++){
+                    var rad=atom_rads[ar];
+                    var rad_sel="@"+ar;
+                    var dyn_rep_name=rep_name+"_"+ar;
+                    stage.getRepresentationsByName(dyn_rep_name).setParameters({radius: rad})
+                    //tc.addRepresentation( "spacefill" ,{colorValue: color_code , colorScheme:"uniform", linewidth:1,"name":rep_name, sele:rad_sel, radius: rad});
+
+                }
+            }
+        }
+
+
+        function show_tunnels(thisobj){
+
+            var tun_file_li= $(thisobj).data("file_li");
+            var traj_id=$(thisobj).data("traj_id");
+            if ($(thisobj).is(":checked")){
+                var showtunnels=true;
+            } else {
+                var showtunnels=false;
+            }
+            if ($(thisobj).hasClass("tun_cluster_display_clus")){
+                var data_type="clust";
+            } else {
+                var data_type="dyn";
+            }
+            if (!(traj_id in loaded_clusters)){
+                loaded_clusters[traj_id]={"clust":[],"dyn":[]};
+            }
+            var cluster_name=$(thisobj).val();
+            var rep_name=traj_id+"_"+cluster_name;
+            var cluster_num=Number(cluster_name.split("_")[1].replace("c",""));
+
+            var loaded_trajtype=loaded_clusters[traj_id][data_type];
+            if (loaded_trajtype.indexOf(cluster_name) != -1) {
+                if (showtunnels){  
+                    //Show
+                    if (data_type=="dyn"){                        
+                        //Set frame and radius if frame changed since last rep
+                        set_dyntunnel_frame(cluster_num,rep_name,traj_id)
+                    }
+                    var tun_comp_visibility=true;
+                    //stage.getRepresentationsByName(rep_name).setVisibility(true);
+                } else {
+                    //Hide
+                    var tun_comp_visibility=false;
+                    //stage.getRepresentationsByName(rep_name).setVisibility(false);
+                }
+                //stage.getComponentsByName("comp_"+rep_name).list[0].setVisibility(tun_comp_visibility);
+                stage.getComponentsByName("comp_"+rep_name).setVisibility(tun_comp_visibility);
+            } else {
+                //This should not happen because files are loaded when page is opened, but just in case:
+                if (showtunnels){  
+                    var trajclutype_li=loaded_clusters[traj_id][data_type];
+                    trajclutype_li[trajclutype_li.length]=cluster_name;
+                    //Load tunnel files
+                    load_tunnel(traj_id,data_type,tun_file_li,cluster_num,cluster_name)
+                }
+
+            }
+
+        }
 
 //END functions.
 //START main
@@ -1713,6 +1902,7 @@
             var onclickshow="dists";
             var pdb_muts= $("#view_screen", window.parent.document).data("pdb_muts");
             var pdb_vars= $("#view_screen", window.parent.document).data("pdb_vars");
+            var dyn_id=$("#view_screen", window.parent.document).data("dyn_id");
             //var gpcrSelExp= parent.gpcr_selection()
             //!
             //var fpsegStr=$("#fpdiv" , window.parent.document).data("fpseg_li");
@@ -1819,6 +2009,11 @@
                         $("#last_played").text(mytraj_nm);
 
                         realign_EDmap()
+                        //Tunnels:
+                        parent.update_tunnelfiles(traj_db_id);
+                        hide_old_tunnels(traj_db_id);
+
+
 
                         //WATERMAP CODE 
                         var selected_traj=$(this).attr("id").replace("traj_id_", "");
@@ -1835,10 +2030,7 @@
                                     var watermap=watermap_loaded.list[0]
                                     watermap.setVisibility(true)
 
-                                    }else{
-                                        console.log("the map is not loaded")
                                     }
-                                    //
                     
                                 }else{
                                     var hide=trajnames_list[i]
@@ -1846,10 +2038,6 @@
                                     // stage.getComponentsByName(hide).list[0].setVisibility[false]
                                 }
                             }
-                            console.log('we check the selected_filename that will be set to visibility true' + selected_filename)
-                            // var test=stage.getComponentsByName(selected_filename).list[0]
-                            // test.setVisibility(true)
-                            console.log(hide_list)
 
                             for (var j=0; j<hide_list.length; j++){
                                 var hide_name=hide_list[j]
@@ -2015,7 +2203,7 @@
 
                 }; 
  
-
+                // Manage ED maps -----------
                 var pdbid=$("#pdbid", window.parent.document).text();
                 if (pdbid.indexOf(".")>-1){
                     var pdbid_spl=pdbid.split(".");
@@ -2127,6 +2315,50 @@
 
 
                 }
+
+
+
+                // Manage tunnels -----------
+
+
+
+                loaded_clusters={};
+
+                tun_color_li=["#0080ff","#009900","#ff0000" ,"#00ffff","#ffff00","#ff00ff","#ffa500","#d2b48c","#ffc0cb","#990099","#00ff00","#b784a7",'#ADB57B', '#16BF33', '#1DE1DF', '#A30E0A', '#94EF24', '#01296D', '#E46EA6', '#41B664', '#A4CDD8', '#3682AA', '#C107E4', '#C7A5AA', '#CB3851', '#6C6010', '#BB8298', '#25A811', '#8EAAAE', '#F355DB']
+                var tunnel_obj=$("#analysis_tunnels", window.parent.document);
+                tunnels_radius=tunnel_obj.data("tunnels_radius");
+                tunnels_dict=tunnel_obj.data("tunnels");
+                tun_stride=Number(tunnel_obj.data("tunnel_stride"));
+                last_tun_traj={};
+                
+                load_all_tunnel_files()
+
+                tunnel_obj.on("change",".tun_cluster_display",function(){
+                    //$(this).is(":checked")                    
+                    var thisobj=this
+                    show_tunnels(thisobj);
+                })
+                tunnel_obj.on("click",".tun_display_btn", function(){
+                    var tun_selector=$(this).data("target");
+                    if ($(this).hasClass("show_all_tun")){
+                        var checkedbox=true;
+                    } else {
+                        var checkedbox=false;
+                    }
+                    tunnel_obj.find(tun_selector).each(function(){
+                        $(this).prop("checked",checkedbox);
+                        var thisobj=this
+                        show_tunnels(thisobj);
+                    }) 
+                })
+
+//               $("#hello", window.parent.document).on("click", function(){
+//                   console.log("!!!!!!!!!!!!!!!")
+//                   c=stage.getComponentsByName("comp_10430_dynamic_c6").list[0].trajList[0]
+//                   c.setFrame(301);
+//               })
+
+
 ////////////SETTINGS:
 
                 $("#screenshot", window.parent.document).click(function(){

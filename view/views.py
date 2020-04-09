@@ -937,6 +937,80 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
             pdb_muts[pdb_pos]["vars"]=pos_muts
     return pdb_muts
 
+def obtain_tunnel_data(dyn_id,traj_list):
+    """
+    Returns, for static cluster files (timeless):
+        list of files related to each cluster: each element of the list corresponds to a cluster and contains a list of pdb files of said cluster.
+    for dynamic cluster files:
+        list of files related to each cluster: each element of the list corresponds to a cluster and contains a list of pdb+xtc sets of said cluster.
+    The static and dynami lists are ordered so that element 1 of static list corresponds to element 1 of dynamic list. Which corresponds to cluster 1.
+    """
+    root = settings.MEDIA_ROOT
+    tun_path=os.path.join(root,"Precomputed/tunnels/output_files")
+    tunnels={}
+    tunnels_radius={}
+    dyntunnel_stride=None
+    for mytraj in traj_list:
+        traj_id=mytraj[2]
+        traj_tun_path=os.path.join(tun_path,"dyn%s/traj_%s"%(dyn_id,traj_id))
+        traj_static=os.path.join(traj_tun_path,"data/clusters_timeless")
+        radius_path=os.path.join(traj_tun_path,"data/cluster_radii")
+        traj_dyn=os.path.join(traj_tun_path,"data/clusters_long")
+        statics_d={}
+        if os.path.isdir(traj_static):
+            for filenm in os.listdir(traj_static):
+                cluster_num=int(filenm.split("_")[2])
+                if cluster_num not in statics_d:
+                    statics_d[cluster_num]=[]
+                statics_d[cluster_num].append(filenm)
+        #statics=[ json.dumps( statics_d[k]) for k in sorted(statics_d.keys())]
+        statics=[  statics_d[k] for k in sorted(statics_d.keys())]
+        dyn_clu_pairs_d={}
+        if os.path.isdir(traj_dyn):
+            dyn_cluster_files=os.listdir(traj_dyn)
+            file_combos=itertools.combinations(dyn_cluster_files,2)
+            for (a,b) in file_combos:
+                if a=="info.txt" or b=="info.txt":
+                    continue
+                if a[:10]==b[:10]:
+                    cluster_num=int(a.split("_")[2])
+                    if cluster_num not in dyn_clu_pairs_d:
+                        dyn_clu_pairs_d[cluster_num]=[]
+                    dyn_clu_pairs_d[cluster_num].append((a,b))
+        dyn_tun_info_file=os.path.join(traj_dyn,"info.txt")
+        if not dyntunnel_stride:
+            if os.path.isfile(dyn_tun_info_file):
+                with open(dyn_tun_info_file) as f:
+                    stridestr=f.read()
+                dyntunnel_stride=int( stridestr.split(" ")[1])
+        #dyn_clu_pairs=[ json.dumps(dyn_clu_pairs_d[k]) for k in sorted(dyn_clu_pairs_d.keys())]
+        dyn_clu_pairs=[ dyn_clu_pairs_d[k] for k in sorted(dyn_clu_pairs_d.keys())]
+
+        radius_d={}
+        if os.path.isdir(radius_path):
+            for filenm in os.listdir(radius_path):
+                cluster_num=int(filenm.replace(".r","").split("_")[2])
+                frame_radius=[]
+                with open(os.path.join(radius_path,filenm)) as fp:
+                    for line in fp:
+                        n=4
+                        line=line.rstrip("\n")
+                        radius_atoms=[line[i:i+n] for i in range(0, len(line), n)]
+                        frame_radius.append(radius_atoms)
+                radius_d[cluster_num]=frame_radius
+        radius=[  radius_d[k] for k in sorted(radius_d.keys())]
+        if statics and dyn_clu_pairs and radius:
+            if len(statics)==len(dyn_clu_pairs) and len(statics)==len(radius):
+                fin_traj_tun_list=list(zip(statics, dyn_clu_pairs))
+                tunnels[traj_id]=fin_traj_tun_list
+                tunnels_radius[traj_id]=radius
+    if not dyntunnel_stride:
+        return (False,False,False)
+    if tunnels:
+        return (tunnels,json.dumps(tunnels_radius),dyntunnel_stride)
+    else:
+        return (False,False,False)
+
 def obtain_ed_align_matrix(dyn_id,traj_list):
 #    if dyn_id=="4":
 #        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
@@ -1224,6 +1298,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         #(traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         (traj_list, show_fp)=get_fplot_data(dyn_id,traj_list)
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
+        ############
+        (tunnels,tunnels_radius,dyntunnel_stride)=obtain_tunnel_data(dyn_id,traj_list)
+        #print("\n\n\n\n")
+
+        ############
         if str(dyn_id)=="197":
             i=1
             for traj_e in traj_list:
@@ -1452,6 +1531,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tunnels_radius":tunnels_radius,
+                        "dyntunnel_stride":dyntunnel_stride,
+                        "test":"HI THERE",
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
@@ -1483,6 +1567,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tunnels_radius":tunnels_radius,
+                        "dyntunnel_stride":dyntunnel_stride,
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
                         }
@@ -1511,6 +1599,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tunnels_radius":tunnels_radius,
+                        "dyntunnel_stride":dyntunnel_stride,
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy)
                         }
@@ -1537,6 +1629,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "bind_domain":bind_domain,
                     "presel_pos":presel_pos,
                     "ed_mats":ed_mats,
+                    "tunnels":tunnels,
+                    "tunnels_dump":json.dumps(tunnels),
+                    "tunnels_radius":tunnels_radius,
+                    "dyntunnel_stride":dyntunnel_stride,
                     "watermaps" : watermaps,
                     "occupancy" : json.dumps(occupancy)
                     }

@@ -1,5 +1,4 @@
 $(document).ready(function(){
-    
     $(".sel_input, .inputdist, .dist_from, .dist_to").val("");
     //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
@@ -276,7 +275,7 @@ $(document).ready(function(){
         return trajchange;
     }
     window.changeTrajFlarePlot=changeTrajFlarePlot;
-    
+
     function emptyFPsels(){
         $("#flare-container").find("g.node.toggledNode").each(function(){
             if (plot){
@@ -4930,6 +4929,7 @@ $(document).ready(function(){
             $(this).attr("class", "ed_seq_sel");
         });
         $("#EDselectionDiv").trigger("click");
+        $(".hide_all_tun").trigger("click");
     }); 
 
 
@@ -4956,6 +4956,58 @@ $(document).ready(function(){
 //        $("#varinfo_par").html("");
 //    });
 
+// ---------- Tunnels
+
+    var tunnels_dict=$("#analysis_tunnels").data("tunnels");
+    
+    update_tunnelfiles = function(traj_id_s){
+        //When trajectory changes, the list of clusters and associated filesZ is updated
+        if (tunnels_dict){
+            var traj_id=Number(traj_id_s);
+            var cluster_li=tunnels_dict[traj_id];
+            var tbody_html="<tr>\
+                                <td></td>\
+                                <td style='text-align:center'>\
+                                    <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun' data-target='.tun_cluster_display_clus' >Show<br>all</button>\
+                                    <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_clus'>Hide<br>all</button>\
+                                </td>\
+                                <td style='text-align:center'>\
+                                  <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun'  data-target='.tun_cluster_display_dyn'>Show<br>all</button>\
+                                  <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_dyn'>Hide<br>all</button>\
+                                </td>\
+                              </tr>";
+            for (c=0;c < cluster_li.length; c++){
+                var clurser_num=c+1;
+                var cluster=cluster_li[c];
+                var cluster_clu=JSON.stringify( cluster[0]);
+                var cluster_dyn=JSON.stringify(cluster[1]);
+
+                var cl_row="<tr>\
+                            <td style='text-align:right;font-weight:bold'>c"+clurser_num+"</td>\
+                            <td style='text-align:center'>\
+                              <label class='checkbox' style='margin:0'>\
+                                <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_clus' value='clustering_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-file_li='"+cluster_clu+"' data-traj_id='"+traj_id+"'>\
+                              </label>\
+                            </td>\
+                            <td style='text-align:center'>\
+                              <label class='checkbox'  style='margin:0'>\
+                                <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_dyn' value='dynamic_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-file_li='"+cluster_dyn+"' data-traj_id='"+traj_id+"'>\
+                              </label>\
+                            </td>\
+                          </tr>";
+                tbody_html+=cl_row;
+            }
+            $("#tunnel_options tbody").html(tbody_html)
+            
+        }
+
+    }
+    window.update_tunnelfiles=update_tunnelfiles;
+
+
+
+
+
 //-------- Flare Plots --------
     function showHideTitle(titletext,newWord){
         if (newWord == "display"){
@@ -4965,7 +5017,7 @@ $(document).ready(function(){
         }
         return (newtitle);
     }
-    
+
    
 
     function hoverlabelsFP(){

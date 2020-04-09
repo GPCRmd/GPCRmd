@@ -6,6 +6,9 @@
     <script>document.domain=document.domain;</script>
 {% extends "home/base.html" %} 
 {% load staticfiles %} 
+
+{% load view_custom %}         
+
 {% block addon_css %}
 <style>
 
@@ -255,6 +258,12 @@ padding-right:60px
 #aroundtitle{
   width: calc(100% - 52px)
 }
+
+#tunnel_options button{
+  line-height: 120%;
+  width:45px;
+}
+
 </style>
 {% endblock %}
 </head>
@@ -2356,14 +2365,76 @@ Hydrogen bonds
                             </tr>
 
 
-
+                      </tbody>
+                    </table>
                         
               
               </div>
-
+              </div>
+              </div>
             {% endif %}
+<!-- ============= Tunnels  =========== --> 
+
+            {% if tunnels %}
+
+           <div class="row">
+                <div class="section_pan" data-toggle="collapse" data-target="#analysis_tunnels" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Tunnels and channels </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
+           </div>
+             <div id="analysis_tunnels" class="row collapse" data-tunnels="{{tunnels_dump}}" data-tunnels_radius="{{tunnels_radius}}" data-tunnel_stride="{{dyntunnel_stride}}">
+                 <div class="" style="margin-top:10px;margin-bottom:15px">
+                    <div style="margin-right:5px;margin-left:14px;margin-bottom:15px">
+                      {% if tunnels|get_item:traj_list.0.2 %}
 
 
+                          <table class="table" style="font-size:14px" id="tunnel_options" >
+                            <thead>
+                              <tr>
+                                <th></th>
+                                <th style="text-align:center">Tunnel clustering</th>
+                                <th style="text-align:center" >Dynamic tunnels</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td></td>
+                                <td style="text-align:center">
+                                    <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn show_all_tun" data-target=".tun_cluster_display_clus" >Show<br>all</button>
+                                    <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn hide_all_tun" data-target=".tun_cluster_display_clus">Hide<br>all</button>
+                                </td>
+                                <td style="text-align:center">
+                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn show_all_tun"  data-target=".tun_cluster_display_dyn">Show<br>all</button>
+                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn hide_all_tun" data-target=".tun_cluster_display_dyn">Hide<br>all</button>
+                                </td>
+                              </tr>
+                              {% for cluster in tunnels|get_item:traj_list.0.2 %}
+                              <tr>
+                                <td style="text-align:right;font-weight:bold">c{{ forloop.counter }}</td>
+                                <td style="text-align:center">
+                                  <label class="checkbox" style="margin:0">
+                                    <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_clus" value="clustering_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-file_li="{{ cluster.0|json_dump }}" data-traj_id="{{traj_list.0.2}}">
+                                  </label>
+                                </td>
+                                <td style="text-align:center">
+                                  <label class="checkbox"  style="margin:0">
+                                    <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_dyn" value="dynamic_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-file_li="{{ cluster.1|json_dump }}" data-traj_id="{{traj_list.0.2}}">
+                                  </label>
+                                </td>
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+
+
+                      {% else %}
+                        <div class="alert alert-info" style="margin:30px 0;">
+                          No results found for this trajectory. Please select a different trajectory.
+                        </div>
+                      {% endif %}
+
+                    </div>
+                 </div>
+             </div>
+            {% endif %}
 <!-- ============= SASA Analysis =========== --> 
 
 <!--           <div class="row">
@@ -2461,7 +2532,6 @@ Hydrogen bonds
   </div><!-- end inner_remaining -->
 
 {% endblock content %} 
-         
 
 {% block addon_js %} 
        <script src="{% static 'view/emb_ngl_viewer.js' %}"></script>
