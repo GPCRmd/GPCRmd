@@ -249,8 +249,8 @@
                         $("#analysis_tunnels", window.parent.document).find(".tun_cluster_display_dyn:checked").each(function(){
                             var traj_id=$(this).data("traj_id");
                             var cluster_name=$(this).val();
-                            var rep_name=traj_id+"_"+cluster_name;
                             var cluster_num=Number(cluster_name.split("_")[1].replace("c",""));
+                            var rep_name=dyntunnel_repname_from_clusternum(cluster_num,traj_id)
                             set_dyntunnel_frame(cluster_num,rep_name,traj_id)
 
                         })
@@ -1690,38 +1690,77 @@
                     for (t_type in loaded_clusters[traj_id]){
                         var tunrep_li=loaded_clusters[traj_id][t_type];
                         for (tr=0;tr<tunrep_li.length;tr++){
-                            var cluster_name=tunrep_li[tr]
-                            var rep_name=traj_id+"_"+cluster_name;
-                            stage.getComponentsByName("comp_"+rep_name).setVisibility(false);
+                            var rep_name=tunrep_li[tr]
+                            if (t_type=="clust"){
+                                stage.getComponentsByName("comp_"+rep_name).setVisibility(false);
+                            } else {
+                                stage.getRepresentationsByName(rep_name).setVisibility(false);
+                                
+                            }
                         }
+                    }
+                } else {
+                    var tun_selector=".tun_cluster_display_clus";
+                    var reptype="line";
+                    var reproot_li=loaded_clusters[traj_id]["clust"];
+                    for (rr=0;rr<reproot_li.length;rr++){
+                        var repr_root=reproot_li[rr]
+                        change_rep_tunnel(repr_root,reptype,traj_id);
                     }
                 }
             }
         }
 
-        function load_tunnel(traj_id,data_type,tun_files,cluster_num,cluster_name){
-            var rep_name=traj_id+"_"+cluster_name;
-
+        function tunnel_color_from_clusternum(cluster_num){
             if( cluster_num<tun_color_li.length){
                 var color_num=cluster_num % tun_color_li.length; 
             } else {
                 var color_num=cluster_num
             }
             var color_code=tun_color_li[color_num];
+            return color_code
+        }
+
+        function load_tunnel(traj_id,data_type,tun_files,cluster_num,cluster_name){
+            var trajclutype_li=loaded_clusters[traj_id][data_type];
+            var rep_name=traj_id+"_"+cluster_name;
+            tun_struc_loaded[traj_id][rep_name]=false
+            var color_code = tunnel_color_from_clusternum(cluster_num)
 
             if ((data_type)=="clust"){
+                trajclutype_li[trajclutype_li.length]=rep_name;
                 for (tf=0;tf < tun_files.length; tf++){
                     tun_file=tun_files[tf];
                     var tun_filepath=path+"Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_timeless/"+tun_file;
 
-                    stage.loadFile(tun_filepath , {visible: false}).then( function( tc ){
+                    stage.loadFile(tun_filepath, {visible: false} ).then( function( tc ){
                         tc.setName("comp_"+rep_name);
-                        tc.addRepresentation( "line" ,{colorValue: color_code , colorScheme:"uniform", linewidth:1,"name":rep_name});
+                        tc.addRepresentation( "line" ,{ colorValue: color_code , colorScheme:"uniform", linewidth:1, name:rep_name+"_line"});
+                        //tc.addRepresentation( "surface" ,{visible: false, colorValue: color_code , colorScheme:"uniform", contour: true , probeRadius:0.01 , name:rep_name+"_surface"    });
+                        //tc.addRepresentation( "surface" ,{visible: false,  colorValue: color_code , colorScheme:"uniform", wireframe: true , probeRadius: 0.01 , cutoff: 5 , name:rep_name+"_surfacesummary" });
+                        tc.addRepresentation( "spacefill" ,{ visible: false , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_spacefill", radius:0.3});
                     })
 
                 }
             } else {
-                for (tf=0;tf < tun_files.length; tf++){
+                if (!(traj_id in traj_per_dyncomp)){
+                    traj_per_dyncomp[traj_id]={}
+                } 
+                for (cm=0;cm<tun_files.length;cm++ ){
+                    var merged_str=tun_files[cm][0];
+                    var merged_traj=tun_files[cm][1];
+                    var name_root=traj_id+"_"+cluster_name+"_"+(cm+1);
+                    var comp_name="comp_"+name_root;
+                    var tun_filepath_struc="file://_DB/Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_merge/"+merged_str;
+                    var tun_filepath_traj="_DB/Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_merge/"+merged_traj;
+                    traj_per_dyncomp[traj_id][comp_name]=[tun_filepath_struc,tun_filepath_traj];
+
+                }
+
+
+
+
+           /*     for (tf=0;tf < tun_files.length; tf++){
                     var current_frame=0;//[!] Set correct frame!!
                     var tun_frame=current_frame;
                     var atom_rads=tunnels_radius[traj_id][cluster_num -1 ][tun_frame];
@@ -1742,18 +1781,26 @@
                         }
 
                     })
-                }
+                }*/
             }
         }
 
         function load_all_tunnel_files(){
+            var dyn_clu_merge=$("#analysis_tunnels", window.parent.document).data("dyn_clu_merge");
             for (traj_id in tunnels_dict){
                 loaded_clusters[traj_id]={"clust":[],"dyn":[]};
-
+                tun_struc_loaded[traj_id]={};
                 var tunnel_clusters=tunnels_dict[traj_id];
-                for (tc=0;tc<tunnel_clusters.length;tc++){ //Iterate tunnel clusters
+                for (tc=0;tc<tunnel_clusters.length;tc++){ //Iterate tunnel clusters (static)
                     var cluster_num=tc+1;
-                    var tun_type_li=["clust","dyn"];
+                    var data_type="clust"
+                    var cluster_name="clustering_c"+cluster_num;
+
+                    //Load files
+                    var tun_clu_files= tunnel_clusters[tc];
+                    load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name);
+
+                    /*var tun_type_li=["clust","dyn"];
                     for (dt=0;dt<tun_type_li.length;dt++){ //Iterate static (clustered)=0 and dynamic=1 type
                         var data_type=tun_type_li[dt];
 
@@ -1770,11 +1817,41 @@
                         //Load files
                         var tun_clu_files= tunnel_clusters[tc][dt];
                         load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name);
-                    }
+                    }*/
 
 ////////////
 
                 }
+                if (dyn_clu_merge){
+                    var traj_cmerge_li=dyn_clu_merge[traj_id];
+                    load_tunnel(traj_id,"dyn",traj_cmerge_li,false,"dynmerge");
+                    
+                }
+            }
+            for (traj_id in traj_per_dyncomp){
+                var trajclutype_li=loaded_clusters[traj_id]["dyn"];
+                for (comp_name in traj_per_dyncomp[traj_id]){
+                    tun_filepath_struc=traj_per_dyncomp[traj_id][comp_name][0]
+                    stage.loadFile(tun_filepath_struc , {name:comp_name}).then( function( tc ){
+                        loadcomp_name=tc.name;
+                        traj_id=Number(tc.name.split("_")[1]);
+                        tun_filepath_traj=traj_per_dyncomp[traj_id][loadcomp_name][1]
+                        tc.addTrajectory(tun_filepath_traj ); 
+                        tc.structure.eachChain(function(c){
+                            var chainname=c.chainname;
+                            var chainsel=":"+chainname
+                            var thiscomp_name=tc.name;
+                            var rep_name=thiscomp_name.replace("comp_","")+"_"+chainname;
+                            trajclutype_li[trajclutype_li.length]=rep_name;
+                            //tc.addRepresentation("licorice",{ colorScheme:"uniform", sele:chainsel,name:rep_name,visible: false,radius:0.8})
+                            tc.addRepresentation("spacefill",{ colorScheme:"uniform", sele:chainsel,name:rep_name,visible: false})
+
+                        });
+                    })
+
+                }
+
+                
             }
 
         }
@@ -1782,31 +1859,32 @@
 
         function set_dyntunnel_frame(cluster_num,rep_name,traj_id){
             var current_frame=trajComp.trajectory.currentFrame;
-
-            var rads_li=tunnels_radius[traj_id][cluster_num -1 ]
+            var comp_name="comp_"+rep_name.slice(0,-2);
+            //var rads_li=tunnels_radius[traj_id][cluster_num -1 ]
             var current_rad_frame=Math.floor(current_frame/tun_stride)
             updatetun=true;
             if (traj_id in last_tun_traj){
-                if (rep_name in last_tun_traj[traj_id]){
-                    if (last_tun_traj[traj_id][rep_name] == current_rad_frame ){
+                if (comp_name in last_tun_traj[traj_id]){
+                    if (last_tun_traj[traj_id][comp_name] == current_rad_frame ){
                         updatetun=false;
                     } else {
-                        last_tun_traj[traj_id][rep_name]=current_rad_frame
+                        last_tun_traj[traj_id][comp_name]=current_rad_frame
                     }
                 } else {
-                    last_tun_traj[traj_id][rep_name]=current_rad_frame
+                    last_tun_traj[traj_id][comp_name]=current_rad_frame
                 }
             } else {
                 last_tun_traj[traj_id]={}
-                last_tun_traj[traj_id][rep_name]=current_rad_frame
+                last_tun_traj[traj_id][comp_name]=current_rad_frame
             }
             if (updatetun){
-                var tun_clu_comps=stage.getComponentsByName("comp_"+rep_name).list; //Components of thys dyn tunnel cluster (could be more than 1  ) 
+                
+                var tun_clu_comps=stage.getComponentsByName(comp_name).list; //Components of thys dyn tunnel cluster (could be more than 1  ) 
                 for (tc=0;tc<tun_clu_comps.length;tc++){
                     tun_clu_traj=tun_clu_comps[tc].trajList[0];
                     tun_clu_traj.setFrame(current_frame);
                 }
-                var atom_rads=rads_li[current_rad_frame];
+                /*var atom_rads=rads_li[current_rad_frame];
                 for (ar=0;ar< atom_rads.length;ar++){
                     var rad=atom_rads[ar];
                     var rad_sel="@"+ar;
@@ -1814,14 +1892,57 @@
                     stage.getRepresentationsByName(dyn_rep_name).setParameters({radius: rad})
                     //tc.addRepresentation( "spacefill" ,{colorValue: color_code , colorScheme:"uniform", linewidth:1,"name":rep_name, sele:rad_sel, radius: rad});
 
-                }
+                }*/
             }
         }
 
+        function dyntunnel_repname_from_clusternum(cluster_num,traj_id){
+            var clusterset_num=Math.ceil( cluster_num/26);
+            var letterpos=(cluster_num-1) % 26;
+            var clusterchain="ABCDEFGHIJKLMNOPQRSTUVWXYZ"[letterpos];
+            var rep_name=traj_id+"_dynmerge_"+clusterset_num+"_"+clusterchain;
+            return (rep_name)
+        }
+
+
+        function change_rep_tunnel(repr_root,reptype,traj_id){
+            var comp_name="comp_"+repr_root;
+
+            if (reptype.indexOf("+")> -1){
+                var active_reps=[repr_root+"_line",repr_root+"_spacefill"]
+            } else {
+                var active_reps=[repr_root+"_"+reptype]
+            }
+            var thiscomp=stage.getComponentsByName(comp_name);
+            if (reptype == "surface"){
+                if (!(tun_struc_loaded[traj_id][repr_root])){
+                    tun_struc_loaded[traj_id][repr_root]=true;
+                    var comp_name_sp=comp_name.split("_");
+                    var cluster_num=Number(comp_name_sp[comp_name_sp.length - 1].replace("c",""));
+                    var color_code = tunnel_color_from_clusternum(cluster_num);
+                    comp_name_sp[comp_name_sp.length]
+                    thiscomp.addRepresentation( "surface" ,{visible: false,  colorScheme:"uniform", colorValue:color_code , contour: true , probeRadius:0.01 , name:repr_root+"_surface"    });
+                }
+            }
+
+
+            var thiscompli=thiscomp.list;
+            for (tc=0;tc<thiscompli.length;tc++){
+                var thiscompreps=thiscompli[tc].reprList;
+                for (tr=0;tr<thiscompreps.length;tr++){
+                    var thisrep=thiscompreps[tr];
+                    var thisrepname=thisrep.name;
+                    if (active_reps.indexOf(thisrepname)>-1){
+                        thisrep.setVisibility(true);
+                    } else {
+                        thisrep.setVisibility(false);
+                    }
+                }
+            }
+
+        }
 
         function show_tunnels(thisobj){
-
-            var tun_file_li= $(thisobj).data("file_li");
             var traj_id=$(thisobj).data("traj_id");
             if ($(thisobj).is(":checked")){
                 var showtunnels=true;
@@ -1833,39 +1954,34 @@
             } else {
                 var data_type="dyn";
             }
-            if (!(traj_id in loaded_clusters)){
-                loaded_clusters[traj_id]={"clust":[],"dyn":[]};
-            }
             var cluster_name=$(thisobj).val();
-            var rep_name=traj_id+"_"+cluster_name;
             var cluster_num=Number(cluster_name.split("_")[1].replace("c",""));
 
-            var loaded_trajtype=loaded_clusters[traj_id][data_type];
-            if (loaded_trajtype.indexOf(cluster_name) != -1) {
+            if (data_type=="clust"){
+                var rep_name=traj_id+"_"+cluster_name;
                 if (showtunnels){  
                     //Show
-                    if (data_type=="dyn"){                        
-                        //Set frame and radius if frame changed since last rep
-                        set_dyntunnel_frame(cluster_num,rep_name,traj_id)
-                    }
                     var tun_comp_visibility=true;
-                    //stage.getRepresentationsByName(rep_name).setVisibility(true);
                 } else {
-                    //Hide
                     var tun_comp_visibility=false;
-                    //stage.getRepresentationsByName(rep_name).setVisibility(false);
                 }
-                //stage.getComponentsByName("comp_"+rep_name).list[0].setVisibility(tun_comp_visibility);
+                //stage.getRepresentationsByName(rep_name).setVisibility(tun_comp_visibility);
                 stage.getComponentsByName("comp_"+rep_name).setVisibility(tun_comp_visibility);
             } else {
-                //This should not happen because files are loaded when page is opened, but just in case:
-                if (showtunnels){  
-                    var trajclutype_li=loaded_clusters[traj_id][data_type];
-                    trajclutype_li[trajclutype_li.length]=cluster_name;
-                    //Load tunnel files
-                    load_tunnel(traj_id,data_type,tun_file_li,cluster_num,cluster_name)
+                var colorVal=tunnel_color_from_clusternum(cluster_num);
+                rep_name=dyntunnel_repname_from_clusternum(cluster_num,traj_id)
+                if (fixed_tun_color.indexOf(rep_name)==-1){
+                    stage.getRepresentationsByName(rep_name).setParameters({colorValue: colorVal});
+                    fixed_tun_color[fixed_tun_color.length]=rep_name;
                 }
-
+                if (showtunnels){  
+                    //Show
+                    var tun_comp_visibility=true;
+                    set_dyntunnel_frame(cluster_num,rep_name,traj_id)
+                } else {
+                    var tun_comp_visibility=false;
+                }
+                stage.getRepresentationsByName(rep_name).setVisibility(tun_comp_visibility);
             }
 
         }
@@ -2323,13 +2439,15 @@
 
 
                 loaded_clusters={};
-
+                traj_per_dyncomp={};
+                tun_struc_loaded={}
                 tun_color_li=["#0080ff","#009900","#ff0000" ,"#00ffff","#ffff00","#ff00ff","#ffa500","#d2b48c","#ffc0cb","#990099","#00ff00","#b784a7",'#ADB57B', '#16BF33', '#1DE1DF', '#A30E0A', '#94EF24', '#01296D', '#E46EA6', '#41B664', '#A4CDD8', '#3682AA', '#C107E4', '#C7A5AA', '#CB3851', '#6C6010', '#BB8298', '#25A811', '#8EAAAE', '#F355DB']
                 var tunnel_obj=$("#analysis_tunnels", window.parent.document);
                 tunnels_radius=tunnel_obj.data("tunnels_radius");
                 tunnels_dict=tunnel_obj.data("tunnels");
                 tun_stride=Number(tunnel_obj.data("tunnel_stride"));
                 last_tun_traj={};
+                fixed_tun_color=[];
                 
                 load_all_tunnel_files()
 
@@ -2351,6 +2469,17 @@
                         show_tunnels(thisobj);
                     }) 
                 })
+                tunnel_obj.on("click",".tun_display_style", function(){
+                    var tun_selector=$(this).data("target");
+                    var reptype=$(this).val()
+                    tunnel_obj.find(tun_selector).each(function(){
+                        var traj_id=$(this).data("traj_id");
+                        var cluster_name=$(this).val();
+                        var repr_root=traj_id+"_"+cluster_name;
+                        change_rep_tunnel(repr_root,reptype,traj_id);
+                    })
+                })
+                
 
 //               $("#hello", window.parent.document).on("click", function(){
 //                   console.log("!!!!!!!!!!!!!!!")
