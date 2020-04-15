@@ -376,7 +376,7 @@ padding-right:60px
 
 <!-- ============= IFRAME =========== -->
             <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}">
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}">
                 <div id="legend_row" class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
@@ -459,7 +459,8 @@ padding-right:60px
                 </div>          
             </div>            
            
-
+            <div id="speed_warnings" class="row">
+            </div>
 <!-- ============= Apply buttonss =========== -->
             <div style="margin-bottom:5px">
 <!--                <div class="row" style="margin-top:5px;margin-bottom:10px;" >
@@ -2380,65 +2381,81 @@ Hydrogen bonds
            <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_tunnels" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Tunnels and channels </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
-             <div id="analysis_tunnels" class="row collapse" data-tunnels="{{tunnels_dump}}" data-tunnels_radius="{{tunnels_radius}}" data-tunnel_stride="{{dyntunnel_stride}}" data-dyn_clu_merge="{{dyn_clu_merge|json_dump}}">
+             <div id="analysis_tunnels" class="row collapse" data-tunnels="{{tunnels_dump}}" data-tunnels_radius="{{tunnels_radius}}"  data-tun_clust_rep_avail="{{tun_clust_rep_avail|json_dump}}" data-traj_clust_rad="{{traj_clust_rad}}">
                  <div class="" style="margin-top:10px;margin-bottom:15px">
                     <div style="margin-right:5px;margin-left:14px;margin-bottom:15px">
                       {% if tunnels|get_item:traj_list.0.2 %}
 
-
                           <table class="table" style="font-size:14px" id="tunnel_options" >
                             <thead>
-                              <tr>
+                              <tr style="background-color:#f3f3f3">
                                 <th></th>
-                                <th style="text-align:center">Tunnel clustering</th>
-                                {% if dyn_clu_merge %}
-                                <th style="text-align:center" >Dynamic tunnels</th>
+                                <th style="text-align:center">Clusters</th>
+                                {% if tun_clust_rep_avail %}
+                                <th style="text-align:center" >Representative 
+                                    <span id="tun_repr_tooltip" title="Tunnel or channel with highest throughput of its cluster, found at the frame indicated." class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px" ></span>
+                                </th>
                                 {% endif %}
                               </tr>
                             </thead>
                             <tbody>
-                              <tr>
+                              <tr style="background-color:#FCFCFC">
                                 <td></td>
                                 <td style="text-align:center">
                                     <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn show_all_tun" data-target=".tun_cluster_display_clus" >Show<br>all</button>
                                     <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn hide_all_tun" data-target=".tun_cluster_display_clus">Hide<br>all</button>
                                 </td>
-                                {% if dyn_clu_merge %}
+                                {% if tun_clust_rep_avail %}
                                 <td style="text-align:center">
-                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn show_all_tun"  data-target=".tun_cluster_display_dyn">Show<br>all</button>
-                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn hide_all_tun" data-target=".tun_cluster_display_dyn">Hide<br>all</button>
+                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn show_all_tun"  data-target=".tun_cluster_display_repr">Show<br>all</button>
+                                  <button type="button" class="btn btn-default btn-xs changefocus tun_display_btn hide_all_tun" data-target=".tun_cluster_display_repr">Hide<br>all</button>
                                 </td>
                                 {% endif %}
                               </tr>
-                              <tr>
+                              <tr style='background-color:#FCFCFC'>
                                 <td  style="text-align:right;font-weight:bold">Style</td>
                                 <td style="text-align:center">
                                     <select class="form-control input-sm tun_display_style" data-target=".tun_cluster_display_clus" style="padding:0;font-size:14px;margin:1px">
                                        <option selected="" value="line">Line</option>
+                                       <option value="spacefill">Spacefill</option>
                                        <option value="line+spacefill">Ball+stick</option>
-                                       <!--<option value="surface">Surface</option>-->
+                                       <option value="licorice">Licorice</option>
+                                       <option value="surfaceWireframe">Surface wireframe</option>
+                                       <option value="surfaceOpaque">Surface opaque</option>
                                        <!--<option value="surfacesummary">Summary</option>-->
                                     </select>
+                                    <span id="loading_tun_style_clus" style="display:none"><img src="{% static 'view/images/loading-gear.gif' %}" style="width:17px;height:17px;"/></span>
                                 </td>
-                                {% if dyn_clu_merge %}
+                                {% if tun_clust_rep_avail %}
                                 <td style="text-align:center">
                                     -
                                 </td>
                                 {% endif %}
                               </tr>
                               {% for cluster in tunnels|get_item:traj_list.0.2 %}
-                              <tr>
+                              <tr style="">
                                 <td style="text-align:right;font-weight:bold">c{{ forloop.counter }}</td>
                                 <td style="text-align:center">
                                   <label class="checkbox" style="margin:0">
-                                    <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_clus" value="clustering_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-file_li="{{ cluster|json_dump }}" data-traj_id="{{traj_list.0.2}}">
+                                    <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_clus" value="clustering_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-file_li="{{ cluster.0|json_dump }}" data-traj_id="{{traj_list.0.2}}">
                                   </label>
                                 </td>
-                                {% if dyn_clu_merge %}
-                                <td style="text-align:center">
-                                  <label class="checkbox"  style="margin:0">
-                                    <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_dyn" value="dynamic_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-traj_id="{{traj_list.0.2}}">
-                                  </label>
+                                {% if tun_clust_rep_avail %}
+                                <td style="padding:0 0 5px 0" >
+                                  <center>
+                                    <div style="width:100px">
+                                      <div style="float:left;top:-10px;width:20px;padding-top:5px">
+                                          <label class="checkbox" style="margin:0">
+                                            <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_repr" value="repr_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0;display:block;position:relative" data-traj_id="{{traj_list.0.2}}"  >
+                                          </label>
+                                      </div>
+                                    <div style="display:block;width:80px;float:left;margin-top:5px">
+                                      <button class="btn btn-default btn-xs display_rep_tunnel_fr" type="button" style="width:80px" data-frameNum='{{ cluster.1.1 }}'>
+                                        Display<br>frame {{ cluster.1.1 }}
+                                      </button>
+                                     </div>
+                                    </div>
+                                  </center> 
                                 </td>
                                 {% endif %}
                               </tr>

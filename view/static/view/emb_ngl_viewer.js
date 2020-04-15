@@ -2451,7 +2451,6 @@ $(document).ready(function(){
             var seltrajid=$(this).children(":selected").data("trajid");
             var newstride=trajidtoframenum[seltrajid][1];
             newstride=newstride.toString();
-            console.log(newstride)
             var selector_strideinp=$(this).data("analysisstride");
             var strideinp_obj=$(selector_strideinp);
             strideinp_obj.data("default",newstride);
@@ -4959,91 +4958,78 @@ $(document).ready(function(){
 // ---------- Tunnels
 
     var tunnels_dict=$("#analysis_tunnels").data("tunnels");
-    var dyn_clu_merge=$("#analysis_tunnels").data("dyn_clu_merge");
+    //var dyn_clu_merge=$("#analysis_tunnels").data("dyn_clu_merge");
+    var tun_clust_rep_avail=$("#analysis_tunnels").data("tun_clust_rep_avail");
     
     update_tunnelfiles = function(traj_id_s){
         //When trajectory changes, the list of clusters and associated filesZ is updated
         if (tunnels_dict){
             var traj_id=Number(traj_id_s);
             var cluster_li=tunnels_dict[traj_id];
-            if  (dyn_clu_merge){
-                var tbody_html="<tr>\
-                                    <td></td>\
-                                    <td style='text-align:center'>\
-                                        <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun' data-target='.tun_cluster_display_clus' >Show<br>all</button>\
-                                        <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_clus'>Hide<br>all</button>\
-                                    </td>\
-                                    <td style='text-align:center'>\
-                                      <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun'  data-target='.tun_cluster_display_dyn'>Show<br>all</button>\
-                                      <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_dyn'>Hide<br>all</button>\
-                                    </td>\
-                                  </tr>\
-                                  <tr>\
-                                    <td  style='text-align:right;font-weight:bold'>Style</td>\
-                                    <td style='text-align:center'>\
-                                        <select class='form-control input-sm tun_display_style' data-target='.tun_cluster_display_clus' style='padding:0;font-size:14px;margin:1px'>\
-                                           <option selected='' value='line'>Line</option>\
-                                           <option value='line+spacefill'>Ball+stick</option>\
-                                        </select>\
-                                    </td>\
-                                    <td style='text-align:center'>\
-                                        -\
-                                    </td>\
-                                  </tr>";
-                for (c=0;c < cluster_li.length; c++){
-                    var clurser_num=c+1;
-                    var cluster=cluster_li[c];
-                    var cluster_clu=JSON.stringify( cluster);
-                    //var cluster_dyn=JSON.stringify(cluster[1]);
-
-                    var cl_row="<tr>\
-                                <td style='text-align:right;font-weight:bold'>c"+clurser_num+"</td>\
+            var td_btns="<td></td>\
+                         <td style='text-align:center'>\
+                             <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun' data-target='.tun_cluster_display_clus' >Show<br>all</button>\
+                             <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_clus'>Hide<br>all</button>\
+                         </td>";
+            var td_style="<td  style='text-align:right;font-weight:bold'>Style</td>\
+                            <td style='text-align:center'>\
+                                <select class='form-control input-sm tun_display_style' data-target='.tun_cluster_display_clus' style='padding:0;font-size:14px;margin:1px'>\
+                                   <option selected='' value='line'>Line</option>\
+                                   <option value='spacefill'>Spacefill</option>\
+                                   <option value='line+spacefill'>Ball+stick</option>\
+                                   <option value='surfaceWireframe'>Surface wireframe</option>\
+                                   <option value='surfaceOpaque'>Surface opaque</option>\
+                                </select>\
+                                <span id='loading_tun_style_clus' style='display:none' ><img src='/static/view/images/loading-gear.gif' style='width:17px;height:17px;'/></span>\
+                            </td>";
+            if (tun_clust_rep_avail){
+                td_btns+="<td style='text-align:center'>\
+                            <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun'  data-target='.tun_cluster_display_repr'>Show<br>all</button>\
+                            <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_repr'>Hide<br>all</button>\
+                          </td>";
+                td_style+="<td style='text-align:center'>\
+                                -\
+                            </td>";
+            }
+            var tbody_html="<tr style='background-color:#FCFCFC'>\
+                            "+td_btns+"\
+                            </tr>\
+                            <tr style='background-color:#FCFCFC'>\
+                            "+td_style+"\
+                            </tr>";
+            for (c=0;c < cluster_li.length; c++){
+                var clurser_num=c+1;
+                var cluster=cluster_li[c];
+                var rep_tun_frame=cluster[1][1];
+                var cluster_clu=JSON.stringify( cluster[0]);
+                var td_viewtun="<td style='text-align:right;font-weight:bold'>c"+clurser_num+"</td>\
                                 <td style='text-align:center'>\
                                   <label class='checkbox' style='margin:0'>\
                                     <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_clus' value='clustering_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-file_li='"+cluster_clu+"' data-traj_id='"+traj_id+"'>\
                                   </label>\
-                                </td>\
-                                <td style='text-align:center'>\
-                                  <label class='checkbox'  style='margin:0'>\
-                                    <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_dyn' value='dynamic_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-traj_id='"+traj_id+"'>\
-                                  </label>\
-                                </td>\
-                              </tr>";
-                    tbody_html+=cl_row;
+                                </td>";
+                if  (tun_clust_rep_avail){
+                    td_viewtun+="<td style='padding:0 0 5px 0' >\
+                                  <center>\
+                                    <div style='width:100px'>\
+                                      <div style='float:left;top:-10px;width:20px;padding-top:5px'>\
+                                          <label class='checkbox' style='margin:0'>\
+                                            <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_repr' value='repr_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0;display:block;position:relative' data-traj_id='"+traj_id+"'  >\
+                                          </label>\
+                                      </div>\
+                                    <div style='display:block;width:80px;float:left;margin-top:5px'>\
+                                      <button class='btn btn-default btn-xs display_rep_tunnel_fr' type='button' style='width:80px' data-frameNum='"+rep_tun_frame+"'>\
+                                        Display<br>frame "+rep_tun_frame+"\
+                                      </button>\
+                                     </div>\
+                                    </div>\
+                                  </center>\
+                                </td>";
                 }
-            } else {
-                var tbody_html="<tr>\
-                                    <td></td>\
-                                    <td style='text-align:center'>\
-                                        <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun' data-target='.tun_cluster_display_clus' >Show<br>all</button>\
-                                        <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_clus'>Hide<br>all</button>\
-                                    </td>\
-                                  </tr>\
-                                  <tr>\
-                                    <td  style='text-align:right;font-weight:bold'>Style</td>\
-                                    <td style='text-align:center'>\
-                                        <select class='form-control input-sm tun_display_style' data-target='.tun_cluster_display_clus' style='padding:0;font-size:14px;margin:1px'>\
-                                           <option selected='' value='line'>Line</option>\
-                                           <option value='line+spacefill'>Ball+stick</option>\
-                                        </select>\
-                                    </td>\
-                                  </tr>";
-                for (c=0;c < cluster_li.length; c++){
-                    var clurser_num=c+1;
-                    var cluster=cluster_li[c];
-                    var cluster_clu=JSON.stringify( cluster);
-                    //var cluster_dyn=JSON.stringify(cluster[1]);
-
-                    var cl_row="<tr>\
-                                <td style='text-align:right;font-weight:bold'>c"+clurser_num+"</td>\
-                                <td style='text-align:center'>\
-                                  <label class='checkbox' style='margin:0'>\
-                                    <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_clus' value='clustering_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-file_li='"+cluster_clu+"' data-traj_id='"+traj_id+"'>\
-                                  </label>\
-                                </td>\
-                              </tr>";
-                    tbody_html+=cl_row;
-                }
+                var cl_row="<tr>\
+                            "+td_viewtun+"\
+                            </tr>";
+                tbody_html+=cl_row;
             }
             $("#tunnel_options tbody").html(tbody_html)
 
@@ -5053,6 +5039,7 @@ $(document).ready(function(){
     window.update_tunnelfiles=update_tunnelfiles;
 
 
+    $('#tun_repr_tooltip').tooltip();  
 
 
 
