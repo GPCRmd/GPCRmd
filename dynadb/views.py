@@ -13618,7 +13618,7 @@ def table(request):
         dyn_dict[dyn_id]["fam_name"]=dyn["fam_name"] or dyn["fam_name2"]
         class_name=dyn["class_name"] or dyn["class_name2"]
         if class_name:
-            dyn_dict[dyn_id]["class_name"]=class_name.replace("Class ","")
+            dyn_dict[dyn_id]["class_name"]= class_name.split(" ")[1]
         dyn_dict[dyn_id]["modelname"]=dyn["modelname"]
         if dyn["modeltype"]==0:
             modeltype="Apoform"

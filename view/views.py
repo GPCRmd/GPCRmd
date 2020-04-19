@@ -422,6 +422,13 @@ def obtain_prot_lig(dyn_id):
             protlig_all.append({"sel":sel,"name":name})
     return(protlig_all)
 
+def load_heavy_tag(mol_type):
+    if mol_type in [ 'Lipid', 'Water', 'Other']:
+        return "load_heavy"
+    else:
+        return ""
+
+
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
     Arguments:
@@ -495,7 +502,7 @@ def obtain_compounds(dyn_id):
     comp_li=[[name,sname,ctype] for (name,(sname,ctype)) in comp_dict.items()]
     comp_li=sorted(comp_li, key=lambda x:x[0].lower())
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
-    comp_li=[[str_len_limit(lname),sname,mtype]  for lname,sname,mtype in comp_li]
+    comp_li=[[str_len_limit(lname),sname,mtype,load_heavy_tag(mtype)]  for lname,sname,mtype in comp_li]
     lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
 
     protlig_all=obtain_prot_lig(dyn_id)
@@ -504,7 +511,7 @@ def obtain_compounds(dyn_id):
         protlig_sel=protlig["sel"]
         lig_li.append([protlig_name,protlig_sel])
         lig_li_s.append(protlig_sel)
-        comp_li.append([protlig_name,protlig_sel,"Prot_ligand"])
+        comp_li.append([protlig_name,protlig_sel,"Prot_ligand",""])
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
@@ -1310,6 +1317,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             watermaps = True 
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
+        heavy_comp_sel=" or ".join({e[1] for e in comp_li if e[3]})
         light_sel_s={e[1] for e in comp_li if e[2]=='Ligand' or e[2]=='Ions'}
         light_sel_s.add("protein")
         light_sel=" or ".join(light_sel_s)
@@ -1534,6 +1542,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1578,6 +1587,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1613,6 +1623,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
@@ -1646,6 +1657,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "first_strideval":first_strideval,
                     "trajidToFramenum":json.dumps(trajidToFramenum),
                     "compounds" : comp_li,
+                    "heavy_comp_sel":heavy_comp_sel,
                     "light_sel":json.dumps(light_sel),
                     "ligands": lig_li,
                     "other_prots":[],

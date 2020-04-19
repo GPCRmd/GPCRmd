@@ -376,7 +376,7 @@ padding-right:60px
 
 <!-- ============= IFRAME =========== -->
             <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}">
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}" data-heavy_comp_sel="{{heavy_comp_sel}}">
                 <div id="legend_row" class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
@@ -460,6 +460,10 @@ padding-right:60px
             </div>            
            
             <div id="speed_warnings" class="row">
+              <div id="speed_warnings_light">
+              </div>
+              <div id="speed_warnings_heavy">
+              </div>
             </div>
 <!-- ============= Apply buttonss =========== -->
             <div style="margin-bottom:5px">
@@ -573,7 +577,7 @@ padding-right:60px
                           <!--{% if other_prots%}
                             <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn changefocus" title="{{other_prots.1}}" id="{{other_prots.0}}" >Other proteins</button>
                           {% endif %}-->
-                          {% for long_n, short_n, ctype in compounds %}
+                          {% for long_n, short_n, ctype, load_heavy_tag in compounds %}
                               {% if ctype == "Ligand" %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn active changefocus {{ctype}}" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                               {% elif ctype == "Prot_ligand" %}
@@ -581,7 +585,7 @@ padding-right:60px
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements nonGPCR nglCallBtn active changefocus" title="Chain {{short_n}}" data-selector="{{short_n}}" >{{long_n}}</button>
 
                               {% else %}
-                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
+                                <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default rep_elements comp nglCallBtn changefocus {{load_heavy_tag}}" title="{{short_n}}" id="{{short_n}}" data-comptype="{{ctype}}" >{{long_n}}</button>
                               {% endif %}
                           {% endfor %}
                           {% if ligands_short %}
@@ -621,15 +625,15 @@ padding-right:60px
                            Show 
                               <select class="resWthComp nglCallChangeWth" name="rescomp">
                                   <option  selected value="protein">residues</option> <!-- This can be improved by considering the case of multiple proteins: add option for each prot at this sel.-->
-                                 {% for long_n, short_n in compounds %}
-                                      <option   value="{{short_n}}">{{long_n}}</option>
+                                 {% for long_n, short_n, ctype, load_heavy_tag in compounds %}
+                                      <option   value="{{short_n}}" class="{{load_heavy_tag}}">{{long_n}}</option>
                                  {% endfor %}
                               </select>                     
                             within 
                           <input class="form-control input-sm inputdist nglCallChangeWth" type="text" style="width:40px;padding-left:7px;">
                             &#8491; of
                               <select class="wthComp" name="comp">
-                                 {% for long_n, short_n, ctype in compounds %}
+                                 {% for long_n, short_n, ctype, load_heavy_tag in compounds %}
                                  <option  value="{{short_n}}">{{long_n}}</option>
                                  {% endfor %}
                                  <!--{% if other_prots%}
@@ -677,12 +681,17 @@ padding-right:60px
                     <div style="margin-top:10px;margin-bottom:15px;color:#808080">
                     Input your selection using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a>. Generic GPCR residue numbering can also be used (more info <a href="/view/docs/#customsel" target="_blank">here</a>).
                     </div>
-
+                     <div style="margin:15px 0 20px 15px;">
+                      <label class="checkbox" style="margin:0;font-weight:normal;width:220px">
+                        <input  type="checkbox" id="load_heavy_textinput" class="check_trigger_ngl" style="top:-3px;"> Include membrane and water 
+                        <span title="Check this box to include water and membrane molecules. This may cause a slow-down of the trajectory playback speed." class="structuresel_tooltip glyphicon glyphicon-exclamation-sign" data-toggle="tooltip" style="cursor: default;font-size:12px" ></span>
+                      </label>
+                     </div>
                    <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
                      <div id="text_input_all"  style="margin-top:10px;">
                           <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
                              <div  class="row">
-                                <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> 
+                                <div class="col-sm-10 ti_left" style="padding-right:3px;padding-left:3px"> 
                                 <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">
                                 <div class="pull-right" style="padding:0;margin:0;font-size:12px">
                                      <div style="float:left;height:27px" >
@@ -726,7 +735,7 @@ padding-right:60px
        -->
                                </div>
                                 </div>
-                                <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
+                                <div class="col-sm-2 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">
                                       <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>
                                       <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>
                                 </div>
@@ -1092,7 +1101,7 @@ padding-right:60px
                         <div id="ed_map_btns"  >
                           <button title="{{chains}}" style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default ed_receptor nglCallBtn changefocus  ed_map_el"  id="ed_receptor">Receptor</button>
 
-                          {% for long_n, short_n, ctype in compounds %}
+                          {% for long_n, short_n, ctype, load_heavy_tag in compounds %}
                               {% if ctype == "Ligand" %}
                                 <button style="margin-bottom:10px;margin-right:3px;margin-left:3px;min-width:16%;padding:5px;text-transform:capitalize;" class="btn btn-default  ed_map_el nglCallBtn changefocus  ed_ligand" title="{{short_n}}" data-shortn="{{short_n}}" >{{long_n}}</button>
                               {% endif %}
@@ -2358,9 +2367,10 @@ Hydrogen bonds
                         </span>
 
                               <td style="text-align:left">
+                                <span id="waterswithin_parent" >
                                 <input class="form-control waterswithin" id='waterswithin'type="text" style="width:40px;height:25px;padding-left:15px;margin-left:25px">
                                 Å of protein
-
+                                </span>
                             </td>
 <!--                             </span> -->
                             </tr>

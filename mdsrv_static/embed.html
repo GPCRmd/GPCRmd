@@ -88,6 +88,7 @@
         
         function selWithinComponent(o,show,radius,ligSele){
             var radius=Number(radius);
+            //o.structure.getAtomSetWithinSelection( new NGL.Selection( "protein" ), water_dist);
             var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
             //var center=o.structure.atomCenter( new NGL.Selection( ligSele ) );
             var sele2 = o.structure.getAtomSetWithinGroup( sele );
@@ -118,6 +119,7 @@
             trajComp.signals.frameChanged.add(function(ft){
                 current_traj=traj_li_all[traj_lastPlayedID].replace("Dynamics/","")
                 if (compsel_changed_todo>0){
+                    //console.log("Sel changes to fix: ",compsel_changed_todo)
                     if (current_traj !=trajComp.name){
                         fix_jump=true;
                     }
@@ -131,6 +133,7 @@
                             tmptrajComp=stage.getComponentsByName("my_comp").list[0].trajList[traj_lastPlayedID]
                             ok=framenum_rpresetsel
                             tmptrajComp.setFrame(ok);
+
                         }
                         compsel_changed_todo=compsel_changed_todo-1;
                         compsel_changed_trajnum=0;
@@ -151,7 +154,6 @@
                         $("#trajRange").slider("refresh");
                         $("#traj_time_val").html(((fnum+1)*delta).toFixed(2));
                         traj_fnum[traj_lastPlayedID]=fnum;
-                        //setSelTemp=[];//
                         /////////
                         if (! $.isEmptyObject(fpSelInt)){ 
                             var uplinksli=[];
@@ -175,7 +177,6 @@
                                 o.addRepresentation( "distance", { atomPair: uplinksli, colorValue: "#000000", colorScheme:"uniform", labelVisible:false   ,fontWeight: "normal" ,name : 'FP int' } );            
                                 o.addRepresentation( "licorice", { colorValue:"#43E19C", radius: "0.210", sele: uplinkres.slice(0, -4) , name:"FP res" } );
                             }
-                            //setSelTemp.push(uplinkres.slice(0, -4));
                         } else if (stage.getRepresentationsByName('FP int').list.length > 0){
                             //var aa=stage.getRepresentationsByName('FP res').list[0]//.repr.removeRepresentation();
                             o.removeRepresentation(stage.getRepresentationsByName('FP res').list[0]);
@@ -200,7 +201,6 @@
                                 //stage.getRepresentationsByName(BSRepName).setSelection(recept+" and "+sele.toSeleString());
                                 stage.getRepresentationsByName(BSRepName+"_2").setSelection(recept+" and "+ sele2.toSeleString());
                                 bsnum+=1;
-                                //setSelTemp.push(recept+" and "+ sele2.toSeleString());
                             }
                         }
                         if (dist_within_li.length > 0){
@@ -222,12 +222,14 @@
                                         restriction="not ("+ligSele+") and ";
                                     } 
                                     var result=selWithinComponent(o,show,dist_comp[1],ligSele);
-                                    var sele = result[0];
+                                    var selec = result[0];
                                     var sele2 = result[1];
                                     WthRepName="sel"+dist_comp[2];
+                                    if (show=="TIP3"){
+                                        sele2=selec;
+                                    }
                                     stage.getRepresentationsByName(WthRepName).setSelection(show+" and "+restriction + sele2.toSeleString());
                                     //stage.getRepresentationsByName(WthRepName+"2").setSelection(show+" and "+restriction + sele2.toSeleString());
-                                    //setSelTemp.push(show+" and "+restriction + sele2.toSeleString());
                                 }
                             }
                         }
@@ -296,7 +298,7 @@
                             <div style="margin-bottom:5px"><span class="glyphicon glyphicon-info-sign"></span> <span style="font-weight:bold">Note:</span> '+warning_msg+'</div>\
                             <div style="display:inline-block;position:relative;top:4px"><input type="checkbox" id="notshow_warn_light" class="notshow_warn" style="margin-top:0;"></div> \
                             <div class="" style="display:inline-block;">Do not show this again.</div><p>'
-                            $("#speed_warnings", window.parent.document).html(light_warning_html)
+                            $("#speed_warnings_light", window.parent.document).html(light_warning_html)
 
                             warning_load[traj_db_id]['light']=false;
                         }
@@ -887,17 +889,6 @@
             return(setSelDict)
         }*/
 
-        function obtainSetSelTempAtms(o,setSelTemp,setSelStr){
-            var setSelTempAtms="";
-            if (setSelTemp.length > 0){
-                //setSelTempAtms=o.structure.getAtomSet(new NGL.Selection( "("+setSelTemp.join(") or (") +")" )).toSeleString();
-                setSelTempAtms="("+setSelTemp.join(") or (") +")";
-                if (setSelStr){
-                    setSelTempAtms=" or "+setSelTempAtms;
-                }
-            }
-            return setSelTempAtms;
-        }
 
 
         function applySele (value) {
@@ -949,10 +940,165 @@
             return hbonds;
         }
 
+        chain_eachresidue = function(cp,mycallback, selection){
+         // I use this to iterate residues with option to breal the loop
+          var count = cp.residueCount
+          var offset = cp.residueOffset
+          var rp = cp.structure._rp
+          var end = offset + count
+          
+          if (selection && selection.test) {
+            var residueOnlyTest = selection.residueOnlyTest
+            if (residueOnlyTest) {
+              for (let i = offset; i < end; ++i) {
+                rp.index = i
+                if (residueOnlyTest(rp)) {
+                  var res_result=mycallback(rp)
+                  var breakloop=res_result[0]
+                  var isheavy=res_result[1]
+                  if (breakloop){
+                    return (isheavy)
+                  }
+                }
+              }
+            } else {
+              for (let i = offset; i < end; ++i) {
+                rp.index = i
+                var res_result=mycallback(rp)
+                var breakloop=res_result[0]
+                var isheavy=res_result[1]
+                if (breakloop){
+                  return (isheavy)
+                }
+              }
+            }
+          } else {
+            for (let i = offset; i < end; ++i) {
+              rp.index = i
+              var res_result=mycallback(rp)
+              var breakloop=res_result[0]
+              var isheavy=res_result[1]
+              if (breakloop){
+                return (isheavy)
+              }
+            }
+          }
+          return false
+
+        }
+
+
+
+/*        function model_eachres(mp,mycallback, selection){
+            // I use this to iterate residues with option to breal the loop
+            var count = mp.chainCount
+            var offset = mp.chainOffset
+            var cp = mp.structure._cp
+            var end = offset + count
+
+            if (selection && selection.test) {
+              var chainOnlyTest = selection.chainOnlyTest
+              if (chainOnlyTest) {
+                for (let i = offset; i < end; ++i) {
+                  cp.index = i
+                  if (chainOnlyTest(cp)) {
+                    var isheavy=chain_eachresidue(cp,mycallback, selection)
+                    if (isheavy){
+                        return true
+                    }
+                  }
+                }
+              } else {
+                for (let i = offset; i < end; ++i) {
+                  cp.index = i
+                  var isheavy=chain_eachresidue(cp,mycallback, selection)
+                  if (isheavy){
+                      return true
+                  }
+                }
+              }
+            } else {
+              for (let i = offset; i < end; ++i) {
+                cp.index = i
+                var isheavy=chain_eachresidue(cp,mycallback, selection)
+                if (isheavy){
+                    return true
+                }
+              }
+        }
+        return false
+
+        }
+
+        function struc_eachres(mystruc,mycallback, selection){
+            // I use this to iterate residues with option to breal the loop
+            var isheavy=false;
+            var mn = mystruc.modelStore.count
+            var mp = mystruc.getModelProxy()
+            var modelOnlyTest = selection.modelOnlyTest
+            if (modelOnlyTest) {
+              for (let i = 0; i < mn; ++i) {
+                mp.index = i
+                if (modelOnlyTest(mp)) {
+                  var isheavy=model_eachres(mp,mycallback, selection)
+                }
+              }
+            } else {
+              for (let i = 0; i < mn; ++i) {
+                mp.index = i
+                var isheavy=model_eachres(mp,mycallback, selection)
+              }
+            }
+            return isheavy
+        }
         
+        check_heavy_in_sel=function(rp){
+          var resname=rp.resname;
+          var breakloop=false;
+          var isheavy=false;
+          if (rp.isProtein()){
+            breakloop=true;
+          } else if (heavy_res_li.indexOf(resname)>-1){
+            breakloop=true;
+            isheavy=true;
+          } else if (rp.isIon()){
+            breakloop=true;
+          }
+          return [breakloop,isheavy]
+        }
+*/
+
+        function change_general_selection(o,heavy_comp_sel,final_load_heavy,showH){
+            if (final_load_heavy){
+                //change to heacçvy
+                if (showH){
+                    var newgensel="all";
+                    showH_activated=true;
+                } else {
+                    var newgensel="not _h";
+                    showH_activated=false;
+                }
+                o.setSelection(newgensel)
+                heavy_loaded=true;
+            } else {
+                //change to light
+                if (showH){
+                    var newgensel="not ("+heavy_comp_sel+")" ;
+                    showH_activated=true;
+                } else {
+                    var newgensel="not _h and not ("+heavy_comp_sel+")";
+                    showH_activated=false;
+                }
+                heavy_loaded=false;
+                o.setSelection(newgensel)
+            } 
+            //console.log(o.selection.string) 
+        }
+
+
         function createReps(){
             parent.passInfoToIframe();
-
+            var final_load_heavy=parent.final_load_heavy;
             var results = parent.results;
             var cp = results["cp"];
             var high_pre=results["high_pre"];
@@ -985,12 +1131,8 @@
             var  pdcolors=high_pre["colors"];
             var  pdrep=high_pre["rep"];
             //var setSelDict={};
-            var setSelLi=[];
-            var setSelTemp=[];
             var showH = false;
             showH =results["showH"];
-            var load_heavy=false;
-            var heavy_loaded=false;
             var o=stage.getComponentsByName("my_comp").list[0];
             var saveRepLi=[];
             o.eachRepresentation(function(rep, comp){
@@ -1013,6 +1155,41 @@
                     showBackground: true,
                     scale: 1.7, labelType: "text", labelText:ltext ,fontWeight: "normal" , name:lname } );
             }
+
+
+            if (final_load_heavy != heavy_loaded){
+                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH)
+                if (final_load_heavy){
+                    if (warning_load_heavy){
+                        var warning_msg='Loading membrane and/or water molecules will slow down the playback speed.'
+                        var heavy_warning_html='<div class="alert alert-warning alert-dismissible" style="margin:2px 0 auto;padding:5px 30px 5px 10px;font-size:12px">\
+                        <a href="#" class="close warn_heavy_close" data-dismiss="alert" aria-label="close">×</a>\
+                        <div style="margin-bottom:5px"><span class="glyphicon glyphicon-info-sign"></span> <span style="font-weight:bold">Note:</span> '+warning_msg+'</div>\
+                        <div style="display:inline-block;position:relative;top:4px"><input type="checkbox" id="notshow_warn_heavy" class="notshow_warn" style="margin-top:0;"></div> \
+                        <div class="" style="display:inline-block;">Do not show this again.</div><p>'
+                        $("#speed_warnings_heavy", window.parent.document).html(heavy_warning_html)
+
+                        //warning_load_heavy=false;
+                    }
+                } else {
+                    $("#speed_warnings_heavy", window.parent.document).html("")
+                }
+                if (compsel_changed_todo==0){
+                    framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
+                    compsel_changed_trajnum=0;
+                }
+                compsel_changed_todo+=1;
+            }
+            if (showH != showH_activated){
+                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH)
+                if (compsel_changed_todo==0){
+                    framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
+                    compsel_changed_trajnum=0;
+                }
+                compsel_changed_todo+=1;
+            }
+
+
             for (dname in clickedDistData){
                 var apair=clickedDistData[dname];
                 o.addRepresentation( "distance", { atomPair: apair , colorValue: "#8bb0ff", colorScheme:"uniform", labelColor: "#7da8ff" ,fontWeight: "normal" , name : dname} );
@@ -1020,7 +1197,7 @@
 
             $("#buttons").html("");
 
-       
+            //Receptor representation
             if (receptorsel.length > 0){
                 if (bs_info.length > 0){
                     o.addRepresentation( "cartoon", { colorScheme:"uniform", colorValue: "#FFFFFF",  sele: receptorsel } );
@@ -1034,19 +1211,18 @@
                     }
                                     }
                 //setSelDict=addToSel(o,receptorsel,setSelDict);
-                setSelLi.push(receptorsel);
 
             } 
-            
+            //Other proteins representation
             if (nonGPCR.length > 0){
                 for (ng=0 ; ng < nonGPCR.length ; ng++){
                     chains_s = nonGPCR[ng];
                     nonGPCR_sel = "protein and ("+ fromChainLiToNGL(chains_s) + ")";
                     o.addRepresentation( "cartoon", { colorScheme: "chainid", colorScale:"Set1",  sele: nonGPCR_sel } );
                     //setSelDict=addToSel(o,nonGPCR_sel,setSelDict);
-                    setSelLi.push(nonGPCR_sel);
                 }
             }
+            //Non-protein Quick seleciton buttons and helices (no tincluding binding site)
             if (cp.length > 0){
                 var comptype_dict={
                     "lg":[],
@@ -1066,15 +1242,13 @@
                     }
                     all_cp_li[all_cp_li.length]=mycomp;
                     comptype_dict[mycompType].push(mycomp);
-                    var heavy_load_mols=["lp","o","w"];
+                    /*var heavy_load_mols=["lp","o","w"];
                     if (heavy_load_mols.indexOf(mycompType)>-1){
                         load_heavy=true;
-                    }
+                    }*/
 
                 }
-                var all_cp = all_cp_li.join(" or ");
-                //o.addRepresentation( "licorice", { colorScheme: "element", visible: true, sele: all_cp, radius: 0.30 } );
-                setSelLi.push(all_cp);
+
                 for (comp_key in comptype_dict){
                     var comptype_sel=comptype_dict[comp_key];
                     if (comptype_sel.length > 0){
@@ -1105,6 +1279,8 @@
                     }
                 }
             }
+
+            //Conserved positions
             if (cons_pos == "y"){
                 var pd_all = [pdA,pdB,pdC,pdF];
                 //var color_list = ["#00d8ff","#ff8500","#ccff00","#ff00d2"]; // A, B, C, F
@@ -1117,15 +1293,13 @@
                                 var mycolor=pdcolors[mypos];
                                 o.addRepresentation( pdrep, {  colorValue: mycolor, colorScheme:"uniform", sele: "protein and "+ mypos } );
                             }
-                            
-                            var cons_pos_ok = class_li.join(" OR ");
-                            setSelLi.push("protein and ("+ cons_pos_ok +")");
                                                    
                         }
                     }
                 }  
             }            
             
+            //Custom selection [!]
             if (layers_li.length > 0){
                 var selAll=[]
                 for (lN = 0; lN < layers_li.length; lN++) {
@@ -1134,8 +1308,12 @@
                     var rep = layer_all[1];
                     var color = layer_all[2];
                     var scheme = layer_all[3];
-                    var selectionTest = new NGL.Selection( sel ).selection[ "error" ];
+                    var nglselection= new NGL.Selection( sel );
+                    var selectionTest = nglselection.selection[ "error" ];
+
+
                     if (!selectionTest){
+
                         if (scheme=="FPscheme"){
                             if (rep=="line"){
                                 o.addRepresentation( rep, { linewidth: 6,  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme,  } ); 
@@ -1166,11 +1344,10 @@
                         }
                     }
                 }
-                selAllStr="("+selAll.join(") or (")+")";
-                //setSelDict=addToSel(o,selAllStr,setSelDict);  
-                setSelLi.push(selAllStr);
+
             }
             
+            // Binding site buttom
             if (bs_info.length > 0){
                 var bs_info_li=bs_info.split("-");
                 var recept =bs_info_li[0];
@@ -1190,11 +1367,12 @@
                     o.addRepresentation( "licorice", { colorValue:"#b6a476", radius: "0.210", sele: recept+" and "+ sele2.toSeleString() , name:BSRepName+"_2"} );
                     bsnum+=1;
                     //setSelDict=addToSel(o,recept+" and "+ sele2.toSeleString(),setSelDict);
-                    setSelTemp.push(recept);
                 }
                 
             }
 
+            //Show X within Y A of Z
+            //load_heavy ?
             if (dist_within_li.length > 0){
                 for (wth_n = 0; wth_n < dist_within_li.length; wth_n++) {
                     var dist_comp=  dist_within_li[wth_n].split("-");
@@ -1215,16 +1393,22 @@
                             o.addRepresentation( "licorice", { colorValue:"#dcffae", radius: "0.210", sele: ligSele, name:"sel_within_0" } );
                             restriction="not ("+ligSele+") and ";
                             //setSelDict=addToSel(o,ligSele,setSelDict);
-                            setSelTemp.push(ligSele);
                         }   
                         var result=selWithinComponent(o,show,dist_comp[1],ligSele);
-                        var sele = result[0];
+                        var selec = result[0];
                         var sele2 = result[1];
                         WthRepName="sel"+ligSele;
+                        if (show=="TIP3"){
+                            sele2=selec;
+                        }
                         o.addRepresentation( "licorice", { colorValue:"#ff7575", radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString(), name:WthRepName } );
-                        //o.addRepresentation( "licorice", { colorValue:"#ff7575",opacity:0.5 , radius: "0.210", sele: show+" and "+restriction + sele2.toSeleString() , name:WthRepName+"2"} );
-                        //setSelDict=addToSel(o,show+" and "+restriction + sele2.toSeleString(),setSelDict);
-                        setSelTemp.push(show);
+
+
+                //var sele=o.structure.getAtomSetWithinSelection( new NGL.Selection( ligSele ), radius );
+                //var sele=o.structure.getAtomSetWithinSelection(new NGL.Selection("protein"), water_dist);
+                //atoms_within = sele.toSeleString();
+                //water_sele = "water and ("+ atoms_within+")";
+
                     }else {
                         var rowid=dist_comp[3];
                         parent.NGL_addErrorToInput("#"+rowid);
@@ -1242,7 +1426,6 @@
                 // water_sele2 ="TIP3 and (" + atoms_within+")";
                 o.addRepresentation("ball+stick", {name:"waterselection", sele: water_sele}); 
                 // o.addRepresentation("ball+stick", {name:"waterselection2", sele: water_sele2}); 
-
 
             }
 
@@ -1298,7 +1481,6 @@
                 }
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                 //setSelDict=addToSel(o,resids,setSelDict);
-                setSelLi.push(resids);
             }
 
             if (hbonds.length > 0){
@@ -1308,7 +1490,6 @@
                 o.addRepresentation( "distance", { atomPair: hbonds , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                 //setSelDict=addToSel(o,resids,setSelDict);
-                setSelLi.push(resids);
             }
 
             if (hbonds_inter.length > 0){
@@ -1331,7 +1512,6 @@
 
                 o.addRepresentation( "distance", { atomPair: hbonds_inter, colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: res_sel , colorValue: "#8e74ff" } );
-                setSelLi.push(res_sel);
             }
 
             if (sbonds_atoms.length > 0){
@@ -1341,7 +1521,6 @@
                 o.addRepresentation( "distance", { atomPair: sbonds_atoms , colorValue: "#e67300", colorScheme:"uniform", labelColor: "#994499" ,fontWeight: "normal" ,name : 'Hydrogen Bond' } );
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: resids , colorValue: "#8e74ff" } );
                 //setSelDict=addToSel(o,resids,setSelDict);
-                setSelLi.push(resids);
             }
 
             if (int_res_li.length > 0){
@@ -1376,7 +1555,6 @@
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "licorice", {  radius: "0.210", sele: final_sele , colorValue: "#8e74ff" } );// colorValue: "#00d215"
                 //setSelDict=addToSel(o,final_sele,setSelDict);
-                setSelLi.push(final_sele);
 
             }
             
@@ -1413,8 +1591,6 @@
                 final_sele=final_sele.join(" , ");
                 o.addRepresentation( "spacefill", {   sele: final_sele , colorValue:"#8e74ff"/*"#461bff"*/ } );// colorValue: "#00d215"
                 //setSelDict=addToSel(o,final_sele,setSelDict);
-                setSelLi.push(final_sele);
-
             }
 
             if (! $.isEmptyObject(fpSelInt)){
@@ -1441,42 +1617,13 @@
 
             // if ($(".PolarDisplay", window.parent.document).is(':checked')) {
             if (polar_check == true){
-            polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
-            o.addRepresentation("licorice", {name:"polar_res",visible:true, sele:polar_residues})
-            setSelTemp.push(polar_residues)
+                polar_residues="Asp or Cys or Gly or Glu or His or Lys or Arg or Asn or Gln or Ser or Thr or Tyr"
+                o.addRepresentation("licorice", {name:"polar_res",visible:true, sele:polar_residues})
             }
 
 
-
-            if ($("#FPdisplay",window.parent.document).hasClass("active")){
-                if ($("g.node.toggledNode", window.parent.document).length >0){
-                    setSelTemp.push("protein");
-                } 
-            } 
-            
-                       
-            setSelStr="";
-            if (setSelLi.length > 0){
-                setSelStr="("+setSelLi.join(") or (")+")";
-            }
-            var setSelTempAtms=obtainSetSelTempAtms(o,setSelTemp,setSelStr)
-            var setSelAll=setSelStr+setSelTempAtms;
-            
-            if ((! showH) &&  setSelAll.length > 0){
-                setSelAll="not _h and ("+setSelAll+")"
-            }
-            
-            var setSelFIN="";
-            if (setSelAll.length > 0){
-                setSelFIN=o.structure.getAtomSet(new NGL.Selection( setSelAll )).toSeleString();
-            }
-
-            if (compsel_changed_todo==0){
-                framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
-                compsel_changed_trajnum=0;
-            }
-            compsel_changed_todo+=1;
-            o.setSelection(setSelFIN);
+            //compsel_changed_todo+=1;
+            //o.setSelection(setSelFIN);
                 
             
             //if (trajComp){
@@ -2067,6 +2214,7 @@
             var delta=Number($(".str_file", window.parent.document).data("delta"));
             var light_sel=$("#view_screen", window.parent.document).data("light_sel");
             var warning_load={}
+            warning_load_heavy=true;
             var traj_li_all = [];
             var traj_fnum = {};
             var traj_lastPlayedID=0;
@@ -2080,11 +2228,14 @@
                 traj_id=Number(traj_el.attr("id").replace('traj_id_',""));
                 warning_load[traj_id]={};
                 warning_load[traj_id]['light']=true;
-                warning_load[traj_id]['heavy']=true;
+                //warning_load[traj_id]['heavy']=true;
                 if (i==0){
                     traj_db_id=traj_id;
                 }
             });
+            var heavy_loaded=false;
+            var showH_activated=false;
+            var heavy_comp_sel=$("#view_screen", window.parent.document).data("heavy_comp_sel")
             var set_tunnel_prot_rep=false;
             var trajComp, player, ori ;
             var clickedRep={};
@@ -2097,8 +2248,6 @@
             var trajtimeout=50;
             var mytraj=$("#selectedTraj" , window.parent.document).data("tpath");
             //var setSelDict={};
-            var setSelLi=[];
-            var setSelStr="protein";
             var trajchange=false;
             var trajIntType="";
             var onclickshow="dists";
@@ -2161,7 +2310,7 @@
             
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                        o.setSelection("protein");
+                        o.setSelection("not _h and not ("+heavy_comp_sel+")");
                         o.signals.trajectoryAdded.add(function(trajComp){ $("#loading", window.parent.document).html(""); });
                         if (fpsegStr){
                             o.addRepresentation( "cartoon", { colorScheme: FPscheme,  sele: "protein" } );
@@ -2569,7 +2718,6 @@
                 })
                 tunnel_obj.on("click",".display_rep_tunnel_fr", function(){
                     var frame_num=Number($(this).data("framenum"));
-                    console.log(frame_num);
                     $('body').trigger('changeframeNGL', [ frame_num ]);
                 })
 
@@ -2749,10 +2897,13 @@
                         if ($(this).attr("id")=="notshow_warn_light"){
                             for (traj_id in warning_load){
                                 warning_load[traj_id]["light"]=false;
-                                $("#speed_warnings", window.parent.document).html("")
+                                $("#speed_warnings_light", window.parent.document).html("")
                             }
+                        }else {
+                        warning_load_heavy=false;
+                        $("#speed_warnings_heavy", window.parent.document).html("")
                         }
-                    }
+                    } 
                 })
                 
             }
