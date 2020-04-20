@@ -1068,9 +1068,9 @@
         }
 */
 
-        function change_general_selection(o,heavy_comp_sel,final_load_heavy,showH){
+        function change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel){
             if (final_load_heavy){
-                //change to heacçvy
+                //change to heacvy
                 if (showH){
                     var newgensel="all";
                     showH_activated=true;
@@ -1080,13 +1080,26 @@
                 }
                 o.setSelection(newgensel)
                 heavy_loaded=true;
+                customSel_activated=false;
             } else {
                 //change to light
                 if (showH){
-                    var newgensel="not ("+heavy_comp_sel+")" ;
+                    if (custom_total_sel){
+                        var newgensel="not ("+heavy_comp_sel+") or "+custom_total_sel ;
+                        customSel_activated=true;
+                    } else {
+                        var newgensel="not ("+heavy_comp_sel+")" ;
+                        customSel_activated=false;
+                    }
                     showH_activated=true;
                 } else {
-                    var newgensel="not _h and not ("+heavy_comp_sel+")";
+                    if (custom_total_sel){
+                        var newgensel="not _h and (not ("+heavy_comp_sel+") or "+custom_total_sel +")";
+                        customSel_activated=true;
+                    } else {
+                        var newgensel="not _h and not ("+heavy_comp_sel+")";
+                        customSel_activated=false;
+                    }
                     showH_activated=false;
                 }
                 heavy_loaded=false;
@@ -1156,9 +1169,73 @@
                     scale: 1.7, labelType: "text", labelText:ltext ,fontWeight: "normal" , name:lname } );
             }
 
+            //Define selection needed to show custom sel
+            var layers_li_processed=[];
+            var custom_total_sel=""
+            if (layers_li.length > 0){
+                var custom_selAll=[]
+                for (lN = 0; lN < layers_li.length; lN++) {
+                    var layer_all = layers_li[lN];
+                    var sel = layer_all[0];
+                    var rep = layer_all[1];
+                    var color = layer_all[2];
+                    var scheme = layer_all[3];
+                    var rownum=layer_all[4];
+                    if (rownum.startsWith("ti")){ //atom selection section
+                        var is_custom_sel=true;
+                    } else {
+                        var is_custom_sel=false;
+                    }
+                    var nglselection= new NGL.Selection( sel );
+                    var selectionTest = nglselection.selection[ "error" ];
+                    var layer_processed={};
+
+                    layer_processed["rep"]=rep;
+                    if (!selectionTest){
+                        if (scheme=="FPscheme"){
+                            if (rep=="line"){
+                                layer_processed["params"]={ linewidth: 6,  colorValue: color,  sele: sel , colorScheme: FPscheme  };
+                            } else {
+                                layer_processed["params"]={  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme };
+                            }
+                        } else {
+                            if (rep=="line"){
+                                layer_processed["params"]={ linewidth: 6,  colorValue: color,  sele: sel , colorScheme: scheme }
+                            } else {
+                                layer_processed["params"]={  colorValue: color,  sele: sel , colorScheme: scheme };
+                                //o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
+                            }
+                        }
+                        if (is_custom_sel){
+                            custom_selAll.push(sel);
+                        }
+                        layers_li_processed[layers_li_processed.length]=layer_processed;
+                    } else {
+                        var rownum=layer_all[4];
+                        var to_add_inside='Invalid selection.';
+                        var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
+                        if (is_custom_sel){ //atom selection section
+                            var textRowsel=$("#"+rownum,window.parent.document);
+                            textRowsel.find(".ti_alert_ngl").html(to_add);
+                            textRowsel.find("input").css("border-color","#A94442");
+                            
+                        } else { //sequence selection section
+                            var seqRowsel=$("#"+rownum,window.parent.document);
+                            seqRowsel.find(".si_alert_ngl").html(to_add);
+                            seqRowsel.find("input").css("border-color","#A94442");
+                        }
+                    }
+                }
+                if (custom_selAll.length >0 ){
+                    custom_total_sel="("+custom_selAll.join(") or (")+")";
+                }
+            }
+
+
+            //Set total selection
 
             if (final_load_heavy != heavy_loaded){
-                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH)
+                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
                 if (final_load_heavy){
                     if (warning_load_heavy){
                         var warning_msg='Loading membrane and/or water molecules will slow down the playback speed.'
@@ -1181,7 +1258,16 @@
                 compsel_changed_todo+=1;
             }
             if (showH != showH_activated){
-                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH)
+                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
+                if (compsel_changed_todo==0){
+                    framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
+                    compsel_changed_trajnum=0;
+                }
+                compsel_changed_todo+=1;
+            }
+            
+            if (custom_total_sel || customSel_activated){
+                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
                 if (compsel_changed_todo==0){
                     framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
                     compsel_changed_trajnum=0;
@@ -1299,53 +1385,15 @@
                 }  
             }            
             
-            //Custom selection [!]
-            if (layers_li.length > 0){
-                var selAll=[]
-                for (lN = 0; lN < layers_li.length; lN++) {
-                    var layer_all = layers_li[lN];
-                    var sel = layer_all[0];
-                    var rep = layer_all[1];
-                    var color = layer_all[2];
-                    var scheme = layer_all[3];
-                    var nglselection= new NGL.Selection( sel );
-                    var selectionTest = nglselection.selection[ "error" ];
-
-
-                    if (!selectionTest){
-
-                        if (scheme=="FPscheme"){
-                            if (rep=="line"){
-                                o.addRepresentation( rep, { linewidth: 6,  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme,  } ); 
-                            } else {
-                                o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: FPscheme } ); 
-                            }
-                        } else {
-                            if (rep=="line"){
-                                o.addRepresentation( rep, { linewidth: 6,  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
-                            } else {
-                                o.addRepresentation( rep, {  colorValue: color, /*radius: "0.210" ,*/ sele: sel , colorScheme: scheme } ); 
-                            }
-                        }
-                        selAll.push(sel);
-                    } else {
-                        var rownum=layer_all[4];
-                        var to_add_inside='Invalid selection.';
-                        var to_add='<div class="alert alert-danger row" style = "margin-bottom:10px" ><a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a><span class="error_text">'+to_add_inside+'</span></div>';
-                        if (rownum.startsWith("ti")){ //atom selection section
-                            var textRowsel=$("#"+rownum,window.parent.document);
-                            textRowsel.find(".ti_alert_ngl").html(to_add);
-                            textRowsel.find("input").css("border-color","#A94442");
-                            
-                        } else { //sequence selection section
-                            var seqRowsel=$("#"+rownum,window.parent.document);
-                            seqRowsel.find(".si_alert_ngl").html(to_add);
-                            seqRowsel.find("input").css("border-color","#A94442");
-                        }
-                    }
-                }
-
-            }
+            //Custom selection
+            if (layers_li_processed.length > 0){
+                for (lN = 0; lN < layers_li_processed.length; lN++) {
+                    var layer_processed=layers_li_processed[lN];
+                    var rep=layer_processed["rep"];
+                    var params=layer_processed["params"];
+                    o.addRepresentation( rep, params ); 
+                };
+            };
             
             // Binding site buttom
             if (bs_info.length > 0){
@@ -2235,6 +2283,7 @@
             });
             var heavy_loaded=false;
             var showH_activated=false;
+            var customSel_activated=false;
             var heavy_comp_sel=$("#view_screen", window.parent.document).data("heavy_comp_sel")
             var set_tunnel_prot_rep=false;
             var trajComp, player, ori ;

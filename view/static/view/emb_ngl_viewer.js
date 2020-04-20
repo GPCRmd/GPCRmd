@@ -4573,12 +4573,13 @@ $(document).ready(function(){
         var layers_li=layers_res[0];
         var layers_row_li=layers_res[1];
         var customsel_hasOKval=layers_res[2];
-        var free_load_heavy=false;
+        
+        /*var free_load_heavy=false;
         var loadh_custom_checkbox= $("#load_heavy_textinput");
         var loadh_custom_checkbox_ischecked=loadh_custom_checkbox.is(":checked");
         if (customsel_hasOKval && loadh_custom_checkbox_ischecked ){
             free_load_heavy=true;
-        }
+        }*/
         //load_heavy_textinput
         var dist_groups_li=displayCheckedDists();
         var int_res_li_res=displayIntResids();
@@ -4611,13 +4612,13 @@ $(document).ready(function(){
             showH=true;
         } 
         var url_load_heavy=false;
-        if (cp_load_heavy || free_load_heavy || water_check || hbdb_load_heavy){
+        if (cp_load_heavy || water_check || hbdb_load_heavy){
             url_load_heavy=true;
         }
-        block_loadh_custom_checkbox=false;
+        /*block_loadh_custom_checkbox=false;
         if (cp_load_heavy || water_check || hbdb_load_heavy){
             block_loadh_custom_checkbox=true;
-        }
+        }*/
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "layers_row_li":layers_row_li,
@@ -4643,7 +4644,7 @@ $(document).ready(function(){
                 "fpSelInt":fpSelInt_send,
                 "showH":showH,
                 "load_heavy":url_load_heavy,
-                "block_loadh_custom_checkbox":block_loadh_custom_checkbox
+                //"block_loadh_custom_checkbox":block_loadh_custom_checkbox
         });
     }
     
@@ -4674,13 +4675,13 @@ $(document).ready(function(){
         if (results["load_heavy"] || dist_load_heavy ){
             final_load_heavy=true;
         }
-        block_loadh_custom_checkbox=results["block_loadh_custom_checkbox"];
+        /*block_loadh_custom_checkbox=results["block_loadh_custom_checkbox"];
         if (block_loadh_custom_checkbox || dist_load_heavy){
             $("#load_heavy_textinput").attr("disabled", true);
             $("#load_heavy_textinput").prop("checked",true);
         } else {
             $("#load_heavy_textinput").removeAttr("disabled");
-        }
+        }*/
         window.final_load_heavy=final_load_heavy;
     }    
     window.passInfoToIframe=passInfoToIframe;
@@ -5153,7 +5154,7 @@ $(document).ready(function(){
 
 
     $('#tun_repr_tooltip').tooltip();  
-    $('.structuresel_tooltip').tooltip();  
+    //$('.structuresel_tooltip').tooltip();  
     
 
 

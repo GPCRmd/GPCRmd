@@ -423,7 +423,7 @@ def obtain_prot_lig(dyn_id):
     return(protlig_all)
 
 def load_heavy_tag(mol_type):
-    if mol_type in [ 'Lipid', 'Water', 'Other']:
+    if mol_type in [ 'Lipid', 'Water']:
         return "load_heavy"
     else:
         return ""
@@ -1531,7 +1531,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     
 
                     if int(dyn_id) ==29:
-                        reaj_list=[traj_list[0]]
+                        traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,

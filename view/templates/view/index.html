@@ -681,12 +681,12 @@ padding-right:60px
                     <div style="margin-top:10px;margin-bottom:15px;color:#808080">
                     Input your selection using the <a href="http://nglviewer.org/ngl/api/manual/usage/selection-language.html" target="_blank">NGL selection language</a>. Generic GPCR residue numbering can also be used (more info <a href="/view/docs/#customsel" target="_blank">here</a>).
                     </div>
-                     <div style="margin:15px 0 20px 15px;">
+                     <!--<div style="margin:15px 0 20px 15px;">
                       <label class="checkbox" style="margin:0;font-weight:normal;width:220px">
                         <input  type="checkbox" id="load_heavy_textinput" class="check_trigger_ngl" style="top:-3px;"> Include membrane and water 
                         <span title="Check this box to include water and membrane molecules. This may cause a slow-down of the trajectory playback speed." class="structuresel_tooltip glyphicon glyphicon-exclamation-sign" data-toggle="tooltip" style="cursor: default;font-size:12px" ></span>
                       </label>
-                     </div>
+                     </div>-->
                    <div class="gpcr_pdb" style="padding-left:15px" data-gpcr_pdb ="{{gpcr_pdb}}" >
                      <div id="text_input_all"  style="margin-top:10px;">
                           <div  class="text_input" id="ti_row0" style="margin-bottom:5px">
@@ -2402,8 +2402,8 @@ Hydrogen bonds
                                 <th></th>
                                 <th style="text-align:center">Clusters</th>
                                 {% if tun_clust_rep_avail %}
-                                <th style="text-align:center" >Representative 
-                                    <span id="tun_repr_tooltip" title="Tunnel or channel with highest throughput of its cluster, found at the frame indicated." class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px" ></span>
+                                <th style="text-align:center" >Highest throughput 
+                                    <span id="tun_repr_tooltip" title="Tunnel or channel of the cluster with highest throughput (probability of being used as a route for transportation). The tunnel is found at the frame indicated." class="glyphicon glyphicon-info-sign" data-toggle="tooltip" style="cursor: default;font-size:12px" ></span>
                                 </th>
                                 {% endif %}
                               </tr>
