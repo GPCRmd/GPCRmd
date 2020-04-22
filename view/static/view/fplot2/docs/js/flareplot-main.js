@@ -213,7 +213,7 @@ function createFlareplot(width, inputGraph, containerSelector){
               }
               seg_li.sort()
               helix_colors = {1:"#78C5D5",12:"#5FB0BF",2:"#459BA8",23:"#5FAF88",3:"#79C268",34:"#9FCD58",4:"#C5D747",45:"#DDD742",5:"#F5D63D",56:"#F3B138",6:"#F18C32",67:"#ED7A6A",7:"#E868A1",78:"#D466A4",8:"#BF63A6"}
-              var seg_nms={"1":"TM1","2":"TM2","3":"TM3","4":"TM4","5":"TM5","6":"TM6","7":"TM7","8":"TM8","12":"ICL1","23":"ECL1","34":"ICL2","45":"ECL2","56":"ICL3","67":"ECL3","78":""}
+              var seg_nms={"1":"TM1","2":"TM2","3":"TM3","4":"TM4","5":"TM5","6":"TM6","7":"TM7","8":"H8","12":"ICL1","23":"ECL1","34":"ICL2","45":"ECL2","56":"ICL3","67":"ECL3","78":""}
               var accum=0;
 
 

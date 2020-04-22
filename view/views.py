@@ -429,6 +429,13 @@ def obtain_prot_lig(dyn_id):
             protlig_all.append({"sel":sel,"name":name})
     return(protlig_all)
 
+def load_heavy_tag(mol_type):
+    if mol_type in [ 'Lipid', 'Water']:
+        return "load_heavy"
+    else:
+        return ""
+
+
 def obtain_compounds(dyn_id):
     """Creates a list of the ligands, ions, lipids, water molecules, etc found at the dynamic.
     Arguments:
@@ -502,7 +509,7 @@ def obtain_compounds(dyn_id):
     comp_li=[[name,sname,ctype] for (name,(sname,ctype)) in comp_dict.items()]
     comp_li=sorted(comp_li, key=lambda x:x[0].lower())
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
-    comp_li=[[str_len_limit(lname),sname,mtype]  for lname,sname,mtype in comp_li]
+    comp_li=[[str_len_limit(lname),sname,mtype,load_heavy_tag(mtype)]  for lname,sname,mtype in comp_li]
     lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
 
     protlig_all=obtain_prot_lig(dyn_id)
@@ -511,7 +518,7 @@ def obtain_compounds(dyn_id):
         protlig_sel=protlig["sel"]
         lig_li.append([protlig_name,protlig_sel])
         lig_li_s.append(protlig_sel)
-        comp_li.append([protlig_name,protlig_sel,"Prot_ligand"])
+        comp_li.append([protlig_name,protlig_sel,"Prot_ligand",""])
     return(comp_li,lig_li,lig_li_s)
 
 def findGPCRclass(num_scheme):
@@ -944,6 +951,102 @@ def extract_mut_info(pdb_muts,gpcr_Gprot,seq_pdb):
             pdb_muts[pdb_pos]["vars"]=pos_muts
     return pdb_muts
 
+def obtain_tunnel_data(dyn_id,traj_list):
+    """
+    Returns, for static cluster files (timeless):
+        list of files related to each cluster: each element of the list corresponds to a cluster and contains a list of pdb files of said cluster.
+    for dynamic cluster files:
+        list of files related to each cluster: each element of the list corresponds to a cluster and contains a list of pdb+xtc sets of said cluster.
+    The static and dynami lists are ordered so that element 1 of static list corresponds to element 1 of dynamic list. Which corresponds to cluster 1.
+    """
+    tun_strideVal=25
+    root = settings.MEDIA_ROOT
+    tun_path=os.path.join(root,"Precomputed/tunnels/output_files")
+    tunnels={}
+    traj_clust_rad={}
+    clust_rep_avail=False
+    for mytraj in traj_list:
+        traj_id=mytraj[2]
+        traj_tun_path=os.path.join(tun_path,"dyn%s/traj_%s"%(dyn_id,traj_id))
+        traj_static=os.path.join(traj_tun_path,"data/clusters_timeless")
+        radius_path=os.path.join(traj_tun_path,"data/cluster_radii")
+        #traj_dyn=os.path.join(traj_tun_path,"data/clusters_merge")
+        traj_rep=os.path.join(traj_tun_path,"data/clusters_rep")
+        statics_d={}
+        rep_d={}
+        if os.path.isdir(traj_static):
+            for filenm in os.listdir(traj_static):
+                cluster_num=int(filenm.split("_")[2])
+                if cluster_num not in statics_d:
+                    statics_d[cluster_num]=[]
+                statics_d[cluster_num].append(filenm)
+        statics=[  statics_d[k] for k in sorted(statics_d.keys())]
+
+        radius_d={}
+        clust_rad={}
+        if os.path.isdir(radius_path):
+            for filenm in os.listdir(radius_path):
+                cluster_num=int(filenm.replace(".r","").split("_")[2])
+                frame_radius=[]
+                with open(os.path.join(radius_path,filenm)) as fp:
+                    for line in fp:
+                        n=4
+                        line=line.rstrip("\n")
+                        radius_atoms=[line[i:i+n] for i in range(0, len(line), n)]
+                        frame_radius.append(radius_atoms)
+                radius_d[cluster_num]=frame_radius
+        if os.path.isdir(traj_rep):
+            for filenm in os.listdir(traj_rep):
+                cluster_num=int(filenm.split("_")[2])
+                vals_in_nm=re.findall('[0-9]+',filenm)
+                rep_cl=vals_in_nm[0]
+                rep_fr=vals_in_nm[1]
+                traj_fr=int(rep_fr)*tun_strideVal
+                repfr_rads=radius_d[cluster_num][int(rep_fr)]
+                rep_d[cluster_num]=[[filenm],traj_fr]
+                clust_rad[cluster_num]=repfr_rads
+        clust_rep=[  rep_d[k] for k in sorted(rep_d.keys())]
+
+        if clust_rad:
+            traj_clust_rad[traj_id]=clust_rad
+        if statics:
+            if clust_rep:
+                clust_rep_avail=True
+                if len(statics)==len(clust_rep):
+                    tunnels[traj_id]=list(zip(statics,clust_rep))
+                else:
+                    tunnels[traj_id]=list(zip(statics,[[]]*len(statics)))
+            else:
+                tunnels[traj_id]=list(zip(statics,[[]]*len(statics)))
+    if tunnels:
+        return (tunnels,clust_rep_avail,traj_clust_rad)
+    else:
+        return (False,False,traj_clust_rad)
+#        dyn_clu_pairs_d={}
+#        if os.path.isdir(traj_dyn):
+#            dyn_cluster_files=os.listdir(traj_dyn)
+#            file_combos=itertools.combinations(dyn_cluster_files,2)
+#            for (a,b) in file_combos:
+#                if a=="info.txt" or b=="info.txt":
+#                    continue
+#                num_a=int(re.split('_|\.',a)[-2])
+#                num_b=int(re.split('_|\.',b)[-2])
+#                if num_a==num_b:
+#                    if ".pdb" in a:
+#                        struc_dt=a;
+#                        traj_dt=b;
+#                    else:
+#                        struc_dt=b;
+#                        traj_dt=a;
+#                    dyn_clu_pairs_d[num_a]=(struc_dt,traj_dt)
+#            dyn_tun_info_file=os.path.join(traj_dyn,"info.txt")
+#            if not dyntunnel_stride:
+#                if os.path.isfile(dyn_tun_info_file):
+#                    with open(dyn_tun_info_file) as f:
+#                        stridestr=f.read()
+#                    dyntunnel_stride=int( stridestr.split(" ")[1])
+#        dyn_clu_pairs=[ dyn_clu_pairs_d[k] for k in sorted(dyn_clu_pairs_d.keys())]
+
 def obtain_ed_align_matrix(dyn_id,traj_list):
 #    if dyn_id=="4":
 #        r_angl=[0.09766122750587349, -0.058302789675214316, 0.1389009096961483]
@@ -1230,6 +1333,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             pharma_json = {}
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
+        heavy_comp_sel=" or ".join({e[1] for e in comp_li if e[3]})
+        light_sel_s={e[1] for e in comp_li if e[2]=='Ligand' or e[2]=='Ions'}
+        light_sel_s.add("protein")
+        light_sel=" or ".join(light_sel_s)
         (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)=obtain_dyn_files(dynfiles,True)
         first_strideval=trajidToFramenum[traj_list[0][2]][1]
         #structure_file="Dynamics/with_prot_lig_multchains_gpcrs.pdb"########################### [!] REMOVE
@@ -1240,6 +1347,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         #(traj_list,fpdir)=get_fplot_path(dyn_id,traj_list)
         (traj_list, show_fp)=get_fplot_data(dyn_id,traj_list)
         ed_mats=obtain_ed_align_matrix(dyn_id,traj_list)
+        ############
+        (tunnels,clust_rep_avail,traj_clust_rad)=obtain_tunnel_data(dyn_id,traj_list)
+        #dyn_clu_merge,dyntunnel_stride
+        #print("\n\n\n\n")
+        ############
         if str(dyn_id)=="197":
             i=1
             for traj_e in traj_list:
@@ -1435,7 +1547,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     
 
                     if int(dyn_id) ==29:
-                        reaj_list=[traj_list[0]]
+                        traj_list=[traj_list[0]]
                     context={
                         "dyn_id":dyn_id,
                         "mdsrv_url":mdsrv_url,
@@ -1446,6 +1558,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
+                        "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "all_gpcrs_info" : all_gpcrs_info,
@@ -1468,6 +1582,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdb_muts":json.dumps(pdb_muts),
                         "pdb_vars":json.dumps(pdb_vars),
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tun_clust_rep_avail":clust_rep_avail,
+                        "traj_clust_rad":json.dumps(traj_clust_rad),
+                        "test":"HI THERE",
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
@@ -1486,6 +1605,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
+                        "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
@@ -1501,6 +1622,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tun_clust_rep_avail":clust_rep_avail,
+                        "traj_clust_rad":json.dumps(traj_clust_rad),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
                         "has_pharmacophores" : has_pharmacophores,
@@ -1518,6 +1643,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "first_strideval":first_strideval,
                         "trajidToFramenum":json.dumps(trajidToFramenum),
                         "compounds" : comp_li,
+                        "heavy_comp_sel":heavy_comp_sel,
+                        "light_sel":json.dumps(light_sel),
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
@@ -1531,6 +1658,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "presel_pos":presel_pos,
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
+                        "tunnels":tunnels,
+                        "tunnels_dump":json.dumps(tunnels),
+                        "tun_clust_rep_avail":clust_rep_avail,
+                        "traj_clust_rad":json.dumps(traj_clust_rad),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
                         "has_pharmacophores" : has_pharmacophores,
@@ -1548,6 +1679,8 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "first_strideval":first_strideval,
                     "trajidToFramenum":json.dumps(trajidToFramenum),
                     "compounds" : comp_li,
+                    "heavy_comp_sel":heavy_comp_sel,
+                    "light_sel":json.dumps(light_sel),
                     "ligands": lig_li,
                     "other_prots":[],
                     "ligands_short": ",".join(lig_li_s),                  
@@ -1559,6 +1692,10 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "bind_domain":bind_domain,
                     "presel_pos":presel_pos,
                     "ed_mats":ed_mats,
+                    "tunnels":tunnels,
+                    "tunnels_dump":json.dumps(tunnels),
+                    "tun_clust_rep_avail":clust_rep_avail,
+                    "traj_clust_rad":json.dumps(traj_clust_rad),
                     "watermaps" : watermaps,
                     "occupancy" : json.dumps(occupancy),
                     "has_pharmacophores" : has_pharmacophores,

@@ -1,5 +1,4 @@
 $(document).ready(function(){
-    
     $(".sel_input, .inputdist, .dist_from, .dist_to").val("");
     //$("#show_within").empty();
     // $("#rad_high").attr("checked",false).checkboxradio("refresh");
@@ -43,6 +42,18 @@ $(document).ready(function(){
         });
     }
   
+    $(".check_trigger_ngl").on("change",function(){
+        var triggerreps=false;
+        $("#text_input_all").find(".sel_input").each(function(){
+            if ($(this).val()){
+                triggerreps=true;
+            }
+        })
+        if (triggerreps){
+            $("#selectionDiv").trigger("click");
+        }
+    })
+
     $(".PolarDisplay").on("click", function(){ 
         $("#selectionDiv").trigger("click");
     })
@@ -51,9 +62,9 @@ $(document).ready(function(){
         $("#selectionDiv").trigger("click");
     })
 
-    $(".waterswithin").on("change"), function(){
+    $(".waterswithin").on("change", function(){
         $("#selectionDiv").trigger("click");
-    }
+    })
 
 
 
@@ -276,7 +287,7 @@ $(document).ready(function(){
         return trajchange;
     }
     window.changeTrajFlarePlot=changeTrajFlarePlot;
-    
+
     function emptyFPsels(){
         $("#flare-container").find("g.node.toggledNode").each(function(){
             if (plot){
@@ -414,7 +425,6 @@ $(document).ready(function(){
         }
         return sel_pos_li
     }
-
     function createRepFromCrossGPCRpg(){
         var bind_domain=$("#VisualizationDiv").data("bind_domain");
         var presel_pos=$("#VisualizationDiv").data("presel_pos");
@@ -663,12 +673,14 @@ $(document).ready(function(){
     function obtainTextInput(){
         var layer=[];
         var layer_row=[];
+        customsel_hasOKval=false;
         $("#text_input_all").find(".text_input").each(function(){
             //$(this).find(".span_morecolors").removeClass("has-error");
             var rownum=$(this).attr("id");
             var pre_sel = $(this).find(".sel_input").val();
             sel_enc =inputText(gpcr_pdb_dict,pre_sel,rownum,"main",".ti_alert");
             if (sel_enc.length > 0){
+                customsel_hasOKval=true;
                 var ltype = $(this).find(".high_type").val();
                 var lscheme = $(this).find(".high_scheme").val();
                 var lcolor=retrieveRowCol($(this));
@@ -701,7 +713,7 @@ $(document).ready(function(){
                 layer_row[layer_row.length]=[sel_enc, ltype, lcolor,lscheme,rownum];
             }
         });
-        return([layer,layer_row]);
+        return([layer,layer_row,customsel_hasOKval]);
     }
     
 
@@ -755,7 +767,7 @@ $(document).ready(function(){
             $("#text_input_all").find(".ti_add_btn").css("visibility","hidden");
             var row='<div  class="text_input" id="ti_row'+ti_i+'" style="margin-bottom:5px">\
                            <div  class="row">\
-                              <div class="col-sm-11 ti_left" style="padding-right:3px;padding-left:3px"> \
+                              <div class="col-sm-10 ti_left" style="padding-right:3px;padding-left:3px"> \
                                 <input type="text" value="" class="form-control sel_input nglCallChange" placeholder="Specify your selection" style="width:100%;background-color:#F8F8F8">\
                                 <div class="pull-right" style="padding:0;margin:0;font-size:12px">\
                                      <div style="float:left;height:27px" >\
@@ -794,7 +806,7 @@ $(document).ready(function(){
                                       <span class="span_morecolors displaydrop" style="float:left" ></span>\
                                </div>\
                               </div>\
-                              <div class="col-sm-1 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
+                              <div class="col-sm-2 radio" style="padding-right:0;padding-left:0;margin-top:7px;width:48px;text-align: center">\
                                     <button class="btn btn-link ti_rm_btn" style="color:#DC143C;font-size:20px;margin:0;padding:0;"><span class="glyphicon glyphicon-remove-sign"></span></button>\
                                     <button class="btn btn-link ti_add_btn" style="color:#57C857;font-size:20px;margin:0;padding:0"><span class="glyphicon glyphicon-plus-sign"></span></button>\
                               </div>\
@@ -1274,15 +1286,19 @@ $(document).ready(function(){
     function obtainCompounds(){
         var shortTypeName={'Ligand':'lg','Lipid':'lp','Ions':'i','Water':'w','Other':'o'}
         var comp=[];
+        var cp_req_load_heavy=false;
         $(".comp.active").each(function(){
             var ctype=$(this).data("comptype");
             comp[comp.length]=$(this).attr("id")+"_"+shortTypeName[ctype];
+            if ($(this).hasClass("load_heavy")){
+                cp_req_load_heavy=true;
+            }
         });
         var tms_selstr=obtainTMs("qs");
         if (tms_selstr){
             comp[comp.length]=tms_selstr+"_"+"t" //T for TM
         }
-        return comp;
+        return [comp,cp_req_load_heavy];
     }
     
     function obtainBS(){
@@ -1474,27 +1490,42 @@ $(document).ready(function(){
 
     var comp_lg=[];
     var comp_sh=[];
+    var comp_loadheavy_mask=[];
+    var comp_loadheavy=[]
     $(".comp").each(function(){
         var comp_l=$(this).text();
         var comp_s=$(this).attr("id");
         comp_lg[comp_lg.length]=comp_l;
         comp_sh[comp_sh.length]=comp_s;
+        var loadheavy_mask=false;
+        if ($(this).hasClass("load_heavy")){
+            var loadheavy_mask=true;
+            comp_loadheavy[comp_loadheavy.length]=comp_s
+        }
+        comp_loadheavy_mask[comp_loadheavy_mask.length]=loadheavy_mask;
     });
+
     
     $(".nonGPCR").each(function(){
         var comp_l=$(this).text();
         var comp_s=$(this).attr("id");
         comp_lg[comp_lg.length]=comp_l;
         comp_sh[comp_sh.length]=comp_s;
+        comp_loadheavy_mask[comp_loadheavy_mask.length]=false;
     });
 
     var select="";
     for (comp_n = 0; comp_n < comp_lg.length ; comp_n++){
-        var option='<option value="'+comp_sh[comp_n]+'">'+comp_lg[comp_n]+'</option>';
+        var load_heavy_class="";
+        if (comp_loadheavy_mask[comp_n]){
+            load_heavy_class="load_heavy";
+        }
+        var option='<option value="'+comp_sh[comp_n]+'" class="'+load_heavy_class+'">'+comp_lg[comp_n]+'</option>';
         select += option;
     }
     
-    var wth_i=1;
+
+    var wth_i=1;    
     $(".sel_within").on("click",".add_btn",function(){ 
         if ($(".sel_within").children().length < 15){
             $(".sel_within").find(".add_btn").css("visibility","hidden");
@@ -1548,6 +1579,7 @@ $(document).ready(function(){
     function obtainDistSel(){
         var dist_of=[];
         //var consider_comp=[];
+        var ds_req_load_heavy=false;
         $(".sel_within").find(".dist_sel").each(function(){ 
             var inp=$(this).find(".inputdist").val();
             if (inp && /^[\d.]+$/.test(inp)) {
@@ -1564,30 +1596,37 @@ $(document).ready(function(){
                     }
                 }
                 if (comp != "none"){
-                    var show = $(this).find(".resWthComp").val();
+                    var show_sel=$(this).find(".resWthComp");
+                    var show = show_sel.val();
                     dist_of[dist_of.length]=show+"-"+inp+"-"+comp+"-"+rownum;
-                    /*if (show != "protein"){
-                        consider_comp[consider_comp.length]=show;
-                    }*/
+                    if (show_sel.find(":selected").hasClass("load_heavy")){
+                        ds_req_load_heavy=true;
+                    }
                 }
             }
 
         });
-        return (dist_of);
+        return [dist_of,ds_req_load_heavy];
     }
 
     function obtainWaterDist(){             
-    //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?    //we are in the parent so no need for window.parent.document                                     
-    var checked=$(".WaterDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
-
-    var inp=$("#waterswithin").val()
-        if(inp && /^[\d.]+$/.test(inp)) {  
-            var water_dist=Number(inp)
-        }else{
-            water_dist=Number(0)      //give an error?? or not? for example if user types a letter 
+        //TO DO: ask if this is error proof! now we define, if there is something typed and if it is a digit. but what if user types a character ?    //we are in the parent so no need for window.parent.document                                     
+        var checked=$(".WaterDistDisplay").is(":checked");  //with Jquery check if checkbox is checked, if it not consider radius as 0. 
+        show_wat=false;
+        if (checked){
+            var inp=$("#waterswithin").val()
+            if(inp && /^[\d.]+$/.test(inp)) {  
+                var water_dist=Number(inp)
+                $("#waterswithin_parent").removeClass("has-error")
+                show_wat=true;
+            }else{
+                water_dist=Number(0)      //give an error?? or not? for example if user types a letter 
+                $("#waterswithin_parent").addClass("has-error")
             }
+            
+        }
 
-        return[checked, water_dist]
+        return[show_wat, water_dist]
     }
 
     function obtainPolar(){
@@ -2452,12 +2491,10 @@ $(document).ready(function(){
             var seltrajid=$(this).children(":selected").data("trajid");
             var newstride=trajidtoframenum[seltrajid][1];
             newstride=newstride.toString();
-            console.log(newstride)
             var selector_strideinp=$(this).data("analysisstride");
             var strideinp_obj=$(selector_strideinp);
             strideinp_obj.data("default",newstride);
             strideinp_obj.attr("placeholder",newstride)
-            console.log("...........")
         }
     })
 
@@ -3216,7 +3253,23 @@ $(document).ready(function(){
         }
     }
 
+    function check_res_isheavy(acceptor_str){
+        for (cl=0; cl<comp_loadheavy.length; cl++){
+            var heavycomp=comp_loadheavy[cl];
+            if (Number(heavycomp.slice(-1))){ //If ends by number
+                if (acceptor_str.startsWith(heavycomp)){
+                    return true
+                }
+            } else {
+                acceptor_resname=acceptor_str.replace(/\d+$/,"");
+                if (acceptor_resname == heavycomp){
+                    return true
+                }
 
+            }
+        }
+        return false
+    }
 
     $("#analysis_bonds").on("click",".hbond_openchose_click", function(){
         var target=$(this).attr("data-target");
@@ -3415,6 +3468,11 @@ $(document).ready(function(){
                             for (hN=0;hN<hbonds_li_sorted.length;hN++){
                                 var donor_str=hbonds_li_sorted[hN][0];
                                 var acceptor_str=hbonds_li_sorted[hN][1];
+                                var acceptor_isheavy=check_res_isheavy(acceptor_str);
+                                var leadheavyclass="";
+                                if (acceptor_isheavy){
+                                    leadheavyclass="load_heavy";
+                                }
                                 var freq=hbonds_li_sorted[hN][2];
                                 var atom0=hbonds_li_sorted[hN][3];
                                 var atom1=hbonds_li_sorted[hN][4];
@@ -3433,7 +3491,7 @@ $(document).ready(function(){
                                         <td> '+acceptor_str+acceptorballes+' </td>\
                                         <td> '+freq+'% </td>\
                                         <td>\
-                                            <button class="showhb_inter btn btn-default btn-xs clickUnclick"  \
+                                            <button class="showhb_inter btn btn-default btn-xs clickUnclick '+leadheavyclass+'"  \
                                             data-resids='+ donor + '$%$' + acceptor +' \
                                             data-atomindexes='+atom0+'$%$'+atom1+'>Show Hbond</button></td>';
                             }
@@ -3603,6 +3661,12 @@ $(document).ready(function(){
                             for (hN=0;hN<salty_li_sorted.length;hN++){
                                 var donor_str=salty_li_sorted[hN][0];
                                 var acceptor_str=salty_li_sorted[hN][1];
+                                var acceptor_isheavy=check_res_isheavy(acceptor_str);
+                                var donor_isheavy=check_res_isheavy(donor_str);
+                                var leadheavyclass="";
+                                if (acceptor_isheavy || donor_isheavy){
+                                    leadheavyclass="load_heavy";
+                                }
                                 var freq=salty_li_sorted[hN][2];
                                 var atom0=salty_li_sorted[hN][3];
                                 var atom1=salty_li_sorted[hN][4];
@@ -3620,7 +3684,7 @@ $(document).ready(function(){
                                                 <td> '+acceptor_str+acceptorballes+'</td>\
                                                 <td> '+freq+'% </td>\
                                                 <td>\
-                                                    <button class="showsb btn btn-default btn-xs clickUnclick"  data-resids='+ donor + '$%$' + acceptor +' \
+                                                    <button class="showsb btn btn-default btn-xs clickUnclick '+leadheavyclass+'"  data-resids='+ donor + '$%$' + acceptor +' \
                                                         data-atomindexes='+atom0+'$%$'+atom1+'>Show Salt Bridge</button>' ;
                             }
 
@@ -3826,6 +3890,7 @@ $(document).ready(function(){
         var atomssb=[];
         var all_resids_sasa=[];
         var all_resids_inter=[];
+        var load_heavy_hbsb=false;
         $("#analysis_bonds").find(".showhb.active").each(function(){
             var atoms_pre=$(this).data('atomindexes').split('$%$');
             var atoms_pre2=[Number(atoms_pre[0]),Number(atoms_pre[1])];
@@ -3842,6 +3907,9 @@ $(document).ready(function(){
             var resids=$(this).data('resids').split('$%$');
             all_resids_inter.push(Number(resids[0]));
             all_resids_inter.push(resids[1]);
+            if ($(this).hasClass("load_heavy")){
+                load_heavy_hbsb=true;
+            }
         });
         
         $("#analysis_salt").find(".showsb.active").each(function(){
@@ -3851,6 +3919,9 @@ $(document).ready(function(){
             var resids=$(this).data('resids').split('$%$');
             all_resids_sb.push(Number(resids[0]));
             all_resids_sb.push(Number(resids[1]));
+            if ($(this).hasClass("load_heavy")){
+                load_heavy_hbsb=true;
+            }
         });        
         return({
                 "atomshb":atomshb,
@@ -3858,7 +3929,8 @@ $(document).ready(function(){
                 "atomssb":atomssb,
                 "all_resids":all_resids,
                 "all_resids_inter": all_resids_inter,
-                "all_resids_sb":all_resids_sb
+                "all_resids_sb":all_resids_sb,
+                "load_heavy":load_heavy_hbsb
                 })
     }
     
@@ -4496,15 +4568,26 @@ $(document).ready(function(){
                  "ed_sel":ed_finsel})
     }
 
-    function obtainURLinfo(gpcr_pdb_dict){
+    function obtainURLinfo(gpcr_pdb_dict){ //ADD load_heavy info in returned dict here
         var layers_res =obtainTextInput();
-        var layers_li=layers_res[0]
-        var layers_row_li=layers_res[1]
+        var layers_li=layers_res[0];
+        var layers_row_li=layers_res[1];
+        var customsel_hasOKval=layers_res[2];
+        
+        /*var free_load_heavy=false;
+        var loadh_custom_checkbox= $("#load_heavy_textinput");
+        var loadh_custom_checkbox_ischecked=loadh_custom_checkbox.is(":checked");
+        if (customsel_hasOKval && loadh_custom_checkbox_ischecked ){
+            free_load_heavy=true;
+        }*/
+        //load_heavy_textinput
         var dist_groups_li=displayCheckedDists();
         var int_res_li_res=displayIntResids();
         var int_res_li=int_res_li_res[0];
         var int_res_li_ch = int_res_li_res[1];
-        cp = obtainCompounds();
+        cp_result = obtainCompounds();
+        cp=cp_result[0]
+        cp_load_heavy=cp_result[1]
         nonGPCR=obtainNonGPCRchains(".nonGPCR.active");// list of strings, each string contains the chains of a non-GPCR prot selected.
         if (gpcr_pdb_dict=="no"){
             high_pre = [];
@@ -4519,6 +4602,7 @@ $(document).ready(function(){
         var waterbox = obtainWaterBox();
         var polar_check = obtainPolar();
         var resultHBSB=selectionHBSB();
+        var hbdb_load_heavy=resultHBSB["load_heavy"]
         fpSelInt_send={};
         if ($("#FPdisplay").hasClass("active")){
             fpSelInt_send=fpSelInt;
@@ -4527,6 +4611,14 @@ $(document).ready(function(){
         if ($("#showHOn.active").length >0){
             showH=true;
         } 
+        var url_load_heavy=false;
+        if (cp_load_heavy || water_check || hbdb_load_heavy){
+            url_load_heavy=true;
+        }
+        /*block_loadh_custom_checkbox=false;
+        if (cp_load_heavy || water_check || hbdb_load_heavy){
+            block_loadh_custom_checkbox=true;
+        }*/
         return ({"cp":cp ,
                 "layers_li":layers_li,
                 "layers_row_li":layers_row_li,
@@ -4550,7 +4642,9 @@ $(document).ready(function(){
                 "allresidssb":resultHBSB["all_resids_sb"],
                 "all_resids_sasa":all_resids_sasa,
                 "fpSelInt":fpSelInt_send,
-                "showH":showH
+                "showH":showH,
+                "load_heavy":url_load_heavy,
+                //"block_loadh_custom_checkbox":block_loadh_custom_checkbox
         });
     }
     
@@ -4572,9 +4666,23 @@ $(document).ready(function(){
             }
         }
         window.pd=pd;
-        var dist_of=obtainDistSel();  
+        var dist_sel_res=obtainDistSel();  
+        var dist_of=dist_sel_res[0];  
+        var dist_load_heavy=dist_sel_res[1];  
         window.dist_of=dist_of;
         //obtainLegend(legend_el);
+        final_load_heavy=false;
+        if (results["load_heavy"] || dist_load_heavy ){
+            final_load_heavy=true;
+        }
+        /*block_loadh_custom_checkbox=results["block_loadh_custom_checkbox"];
+        if (block_loadh_custom_checkbox || dist_load_heavy){
+            $("#load_heavy_textinput").attr("disabled", true);
+            $("#load_heavy_textinput").prop("checked",true);
+        } else {
+            $("#load_heavy_textinput").removeAttr("disabled");
+        }*/
+        window.final_load_heavy=final_load_heavy;
     }    
     window.passInfoToIframe=passInfoToIframe;
     
@@ -4582,7 +4690,8 @@ $(document).ready(function(){
     var passinfoToPlayTraj= function(){ //defined in the parent 
         var bs_info=obtainBS();
         window.bs_info=bs_info;
-        var dist_of=obtainDistSel();  
+        var dist_sel_res=obtainDistSel();  
+        var dist_of=dist_sel_res[0];  
         window.dist_of=dist_of;
         var water_dist=obtainWaterDist()[1];     //
         window.water_dist=water_dist;
@@ -4750,7 +4859,10 @@ $(document).ready(function(){
         if (add_fpsegStr){
             fpsegStr_send = fpsegStr;
         }
-        var dist_of=obtainDistSel(); 
+        var dist_sel_res=obtainDistSel();  
+        var dist_of=dist_sel_res[0];  
+        //var dist_load_heavy=dist_sel_res[1];  
+
         for (dN=0 ; dN < dist_of.length ; dN++){
             dn_pre=dist_of[dN];
             dn_now=dn_pre.replace(/-\w*$/,"");
@@ -4930,6 +5042,7 @@ $(document).ready(function(){
             $(this).attr("class", "ed_seq_sel");
         });
         $("#EDselectionDiv").trigger("click");
+        $(".hide_all_tun").trigger("click");
     }); 
 
 
@@ -4956,6 +5069,96 @@ $(document).ready(function(){
 //        $("#varinfo_par").html("");
 //    });
 
+// ---------- Tunnels
+
+    var tunnels_dict=$("#analysis_tunnels").data("tunnels");
+    //var dyn_clu_merge=$("#analysis_tunnels").data("dyn_clu_merge");
+    var tun_clust_rep_avail=$("#analysis_tunnels").data("tun_clust_rep_avail");
+    
+    update_tunnelfiles = function(traj_id_s){
+        //When trajectory changes, the list of clusters and associated filesZ is updated
+        if (tunnels_dict){
+            var traj_id=Number(traj_id_s);
+            var cluster_li=tunnels_dict[traj_id];
+            var td_btns="<td></td>\
+                         <td style='text-align:center'>\
+                             <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun' data-target='.tun_cluster_display_clus' >Show<br>all</button>\
+                             <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_clus'>Hide<br>all</button>\
+                         </td>";
+            var td_style="<td  style='text-align:right;font-weight:bold'>Style</td>\
+                            <td style='text-align:center'>\
+                                <select class='form-control input-sm tun_display_style' data-target='.tun_cluster_display_clus' style='padding:0;font-size:14px;margin:1px'>\
+                                   <option selected='' value='line'>Line</option>\
+                                   <option value='spacefill'>Spacefill</option>\
+                                   <option value='line+spacefill'>Ball+stick</option>\
+                                   <option value='surfaceWireframe'>Surface wireframe</option>\
+                                   <option value='surfaceOpaque'>Surface opaque</option>\
+                                </select>\
+                                <span id='loading_tun_style_clus' style='display:none' ><img src='/static/view/images/loading-gear.gif' style='width:17px;height:17px;'/></span>\
+                            </td>";
+            if (tun_clust_rep_avail){
+                td_btns+="<td style='text-align:center'>\
+                            <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn show_all_tun'  data-target='.tun_cluster_display_repr'>Show<br>all</button>\
+                            <button type='button' class='btn btn-default btn-xs changefocus tun_display_btn hide_all_tun' data-target='.tun_cluster_display_repr'>Hide<br>all</button>\
+                          </td>";
+                td_style+="<td style='text-align:center'>\
+                                -\
+                            </td>";
+            }
+            var tbody_html="<tr style='background-color:#FCFCFC'>\
+                            "+td_btns+"\
+                            </tr>\
+                            <tr style='background-color:#FCFCFC'>\
+                            "+td_style+"\
+                            </tr>";
+            for (c=0;c < cluster_li.length; c++){
+                var clurser_num=c+1;
+                var cluster=cluster_li[c];
+                var rep_tun_frame=cluster[1][1];
+                var cluster_clu=JSON.stringify( cluster[0]);
+                var td_viewtun="<td style='text-align:right;font-weight:bold'>c"+clurser_num+"</td>\
+                                <td style='text-align:center'>\
+                                  <label class='checkbox' style='margin:0'>\
+                                    <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_clus' value='clustering_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0' data-file_li='"+cluster_clu+"' data-traj_id='"+traj_id+"'>\
+                                  </label>\
+                                </td>";
+                if  (tun_clust_rep_avail){
+                    td_viewtun+="<td style='padding:0 0 5px 0' >\
+                                  <center>\
+                                    <div style='width:100px'>\
+                                      <div style='float:left;top:-10px;width:20px;padding-top:5px'>\
+                                          <label class='checkbox' style='margin:0'>\
+                                            <input  type='checkbox'  class='tun_cluster_display tun_cluster_display_repr' value='repr_c"+clurser_num+"' style='margin-left:-5px;margin-top:0,margin-bottom:0;display:block;position:relative' data-traj_id='"+traj_id+"'  >\
+                                          </label>\
+                                      </div>\
+                                    <div style='display:block;width:80px;float:left;margin-top:5px'>\
+                                      <button class='btn btn-default btn-xs display_rep_tunnel_fr' type='button' style='width:80px' data-frameNum='"+rep_tun_frame+"'>\
+                                        Display<br>frame "+rep_tun_frame+"\
+                                      </button>\
+                                     </div>\
+                                    </div>\
+                                  </center>\
+                                </td>";
+                }
+                var cl_row="<tr>\
+                            "+td_viewtun+"\
+                            </tr>";
+                tbody_html+=cl_row;
+            }
+            $("#tunnel_options tbody").html(tbody_html)
+
+        }
+
+    }
+    window.update_tunnelfiles=update_tunnelfiles;
+
+
+    $('#tun_repr_tooltip').tooltip();  
+    //$('.structuresel_tooltip').tooltip();  
+    
+
+
+
 //-------- Flare Plots --------
     function showHideTitle(titletext,newWord){
         if (newWord == "display"){
@@ -4965,7 +5168,7 @@ $(document).ready(function(){
         }
         return (newtitle);
     }
-    
+
    
 
     function hoverlabelsFP(){

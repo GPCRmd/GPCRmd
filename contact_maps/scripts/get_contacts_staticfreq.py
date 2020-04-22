@@ -193,7 +193,7 @@ mypdbpath = args.topology
 ligfile = args.ligfile
 repeat_static = args.repeat_static
 cores = args.cores
-get_contacts_path = "/protwis/sites/protwis/contact_maps/scripts/get_contacts/"
+get_contacts_path = "~/bin/"
 files_path = "/protwis/sites/files/Precomputed/get_contacts_files/dynamic_symlinks/" + dynname + "/"
 
 #Interaction multi-types dictionary
