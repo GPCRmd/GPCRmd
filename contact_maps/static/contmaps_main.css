@@ -43,7 +43,7 @@ a {
   position: relative; 
   overflow-y: auto; 
   overflow-x: auto;
-  height: 77%; /* DO NOT TOUCH THIS LINE!!!!!!! It may result in overflowing problems in firefox */
+  height: 90%; /* DO NOT TOUCH THIS LINE!!!!!!! It may result in overflowing problems in firefox */
 }
 
 #itype_link{
@@ -65,7 +65,6 @@ a {
 }
 
 #doc_col{
-  height: 35%;
 }
 
 .clusteropt {
@@ -176,7 +175,7 @@ input[type=checkbox] {
   visibility:hidden;
   position:absolute;
   z-index:-1;
-  height: 77%;
+  height: 90%;
 }
 
 #trajsDropdown_options {
@@ -311,8 +310,6 @@ hr {
 }
 
 #flare_col {
-  visibility: hidden;
-  position: absolute;
 }
 
 .fpdiv {

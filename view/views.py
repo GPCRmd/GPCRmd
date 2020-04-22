@@ -29,6 +29,13 @@ import os
 from pathlib import Path
 import pandas as pd
 
+def json_dict(path):
+    """Converts json file to pyhton dict."""
+    json_file=open(path)
+    json_str = json_file.read()
+    json_data = json.loads(json_str)
+    return json_data
+
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the residue number."""
     (ext_range,chain)=gpcr_pdb[my_pos]
@@ -1213,6 +1220,15 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         if occupancy:
             watermaps = True 
 #### --------------------------------
+#### ---- PHarmacophores ------------
+        pharma_jsonpath = "/protwis/sites/files/Precomputed/pharmacophores/dyn"+dyn_id+'/pharmaco_itypes.json'
+        if os.path.exists(pharma_jsonpath):
+            has_pharmacophores = True
+            pharma_json = json_dict(pharma_jsonpath)
+        else: 
+            has_pharmacophores = False
+            pharma_json = {}
+#### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         (structure_file,structure_file_id,structure_name, traj_list,trajidToFramenum)=obtain_dyn_files(dynfiles,True)
         first_strideval=trajidToFramenum[traj_list[0][2]][1]
@@ -1454,7 +1470,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "ed_mats":ed_mats,
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1484,7 +1502,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)                        
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1512,7 +1532,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "pdbid":pdbid,
                         "ed_mats":ed_mats,
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1538,7 +1560,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "presel_pos":presel_pos,
                     "ed_mats":ed_mats,
                     "watermaps" : watermaps,
-                    "occupancy" : json.dumps(occupancy)
+                    "occupancy" : json.dumps(occupancy),
+                    "has_pharmacophores" : has_pharmacophores,
+                    "pharma_json" : json.dumps(pharma_json)
                     }
             return render(request, 'view/index.html', context)
 

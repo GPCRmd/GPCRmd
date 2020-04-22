@@ -97,7 +97,7 @@
 
     <!--Here be flareplots and NGLs -->
     <div class="panel panel-primary" id="flare_title">
-      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" aria-expanded="false" onclick="turn_arrow('flare_arrow','click_title')">
+      <div class="panel-body" id="click_title" data-toggle="collapse" data-target="#flare_col" onclick="turn_arrow('flare_arrow','click_title')">
         <div class="title_div">
           <h4 class="title">Top representative interactions in clusters  <span id="flare_arrow" class="glyphicon arrow glyphicon-chevron-down"></span>
           </h4>
@@ -105,7 +105,7 @@
       </div>
     </div>
 
-    <div class="panel panel-primary" id="flare_col" data-fpdir="{{fpdir}}">
+    <div class="panel panel-primary collapse" id="flare_col" data-fpdir="{{fpdir}}" aria-expanded="false">
       <div class="panel-body">
 
         <center>
