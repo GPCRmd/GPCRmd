@@ -2416,10 +2416,8 @@
 
 
 
-                        //Load new pharmacophores (pharmacopohres are numbered 1 to 3 instead of 0 to 2)
-                        var traj_btn_id = $('.traj_btn').attr('id') 
-                        var traj_number = traj_btn_id.replace( /^\D+/g, '');
-                        pharmacophores(+traj_number+1, stage)
+                        //Load new pharmacophores 
+                        parent.$("#pharmaitype_selector").trigger('change');
 
                         //WATERMAP CODE 
                         var selected_traj=$(this).attr("id").replace("traj_id_", "");
@@ -2484,73 +2482,73 @@
                     var pharmahas_itypes = parent.$('#analysis_pharmacophores').data('has_itypes');
                     var itypes = ['wb', 'wb2', 'hb', 'hblb', 'hbls', 'all', 'vdw'];
                     var pharmafolder = "/mdsrv/file/_DB/Precomputed/pharmacophores/dyn"+dyn_id;
-                    for (itype in pharmahas_itypes[trajid]){
+                    //TO CHANGE WHEN WE HAVE MORE THAN HB
+                    /*for (itype in pharmahas_itypes[trajid]){
                         if (pharmahas_itypes[trajid][itype] == 'false'){
                             parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');
                         }
-                    }
-                }
-                function pharmacophores(pharma_trajid, stage){
-                    /*
-                    Load pharmacophore structures for visualized system in the trajid trajectory
-                    */
-
-                    //Omit pharmacophores if loaded system has no ligands
-                    var thereis_ligand = Boolean(parent.$("#quicksel_all .Ligand").length);
-                    if (!(thereis_ligand)){
-                        return
-                    }
-
-                    var fs, dynid, pharmafolder_path, itypes, ligrecs, itype, ligrec, pharma_file_path, has_pharmacophore_path;
-                    dynid = parent.window.location.pathname.split('/')[2]
-                    pharmafolder_path = path + '/Precomputed/pharmacophores/dyn'+dynid+'/'
-                    itypes = ['wb', 'wb2', 'hb', 'hblb', 'hbls', 'all', 'vdw'];
-                    ligrecs = ['ligand', 'receptor'];
-                    // For every itype in which there are pharmacophores
+                    }*/
                     for (i in itypes){
                         itype = itypes[i];
-
-                        //Check if there are pharmacopohres for this itype in this system
-                        // For ligand and receptor pharmacophores
-                        for (h in ligrecs){
-                            ligrec = ligrecs[h];
-                            pharma_file_path = pharmafolder_path+itype+'/'+ligrec+'_'+pharma_trajid+'.pdb';
-                            has_pharmacophore_path = pharmafolder_path+itype+'/has_pharmacophore_'+pharma_trajid+'.txt';
-                            stage.loadFile(pharma_file_path, {name: 'pharma'+ligrec+'_'+itype, visible: false}).then(function(pharmacophore){
-                                pharmacophore.addRepresentation('ball+stick', {
-                                    colorScheme: "element",
-                                });
-                            });  
-                        }                        
+                        parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');                        
                     }
+                    parent.$(".pharmaitype[value='hb']").attr('disabled', 'false');                        
 
-                    //trigger change event in pharmacophore options menu to make visible the selected
-                    //adjust the new trajectory pharmacophores to the selected options
-                    parent.$(".pharmacheck").trigger('check'); 
-                    pharmacophore_options(1, dynid)
                 }
-                //Load files
-                pharmacophores(1, stage);
+                function load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active){
+                    /*
+                    Load pharmacophore components for visualized system in the pharma_trajid trajectory
+                    */
+
+                    var fs, dynid, pharmafolder_path, itypes, ligrecs, itype, ligrec, activecomps, pharma_file_path, is_active, compname;
+                    dynid = parent.window.location.pathname.split('/')[2]
+                    pharmafolder_path = path + '/Precomputed/pharmacophores/dyn'+dynid+'/'
+                    ligrecs = ['ligand', 'receptor'];
+                    activecomps = { 'ligand' : lig_active, 'receptor' : rec_active };
+
+                    // For ligand and receptor pharmacophores
+                    for (h in ligrecs){
+                        ligrec = ligrecs[h];
+                        pharma_file_path = pharmafolder_path+itype+'/'+ligrec+'_'+pharma_trajid+'.pdb';
+                        is_active = activecomps[ligrec];
+                        compname = 'pharma'+ligrec;
+                        //If this is a trajectory change and not the first load  of the page, delete previous pharmacophore components
+                        comp_remove = stage.getComponentsByName(compname)
+                        stage.removeComponent(comp_remove['list'][0])
+                        stage.loadFile(pharma_file_path, {name: compname, visible: is_active}).then(function(pharmacophore){
+                            pharmacophore.addRepresentation('ball+stick', {
+                                colorScheme: "element",
+                            });
+                        });  
+                    }                        
+
+                    pharmacophore_options(pharma_trajid, dynid)
+                }
+
+                // Load some pharmacophores to start with
+                load_pharmacophores(1, stage, 'hb', false, false);
+
                 // On any change of the pharmacophores options
-                var lig_active, rec_active, selected_itype, prev_itype='hb';
+                var lig_active, rec_active, traj_btn_id, pharma_trajid, activecomps;
                 parent.$(".pharmacheck, #pharmaitype_selector").change(function(){
-                    console.log(stage)
                     // Check current status of options
                     lig_active = parent.$("#pharmalig").is(':checked');
                     rec_active = parent.$("#pharmarec").is(':checked');
-                    selected_itype = parent.document.getElementById('pharmaitype_selector').value
-                    //Disable previously active pharmacophore represenatations
-                    stage.getComponentsByName('pharmaligand_'+prev_itype).setVisibility(false);
-                    stage.getComponentsByName('pharmareceptor_'+prev_itype).setVisibility(false);
-                    //Make visible selected pharmacopohres
-                    if (lig_active){
-                        stage.getComponentsByName('pharmaligand_'+selected_itype).setVisibility(true);
+                    traj_btn_id = $('.traj_btn').attr('id') ;
+                    itype = parent.document.getElementById('pharmaitype_selector').value
+                    pharma_trajid = +traj_btn_id.replace( /^\D+/g, '')+1;
+
+                    // If what has been changed is the itype, load new pharmacophore files and delete the old ones
+                    if ($(this).is('#pharmaitype_selector')){
+                        load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active);
                     }
-                    if (rec_active) {
-                        stage.getComponentsByName('pharmareceptor_'+selected_itype).setVisibility(true);
+                    // If checkboxes have been changed, made appropiate changes in visibility
+                    else {
+                        stage.getComponentsByName('pharmaligand').setVisibility(lig_active);
+                        stage.getComponentsByName('pharmareceptor').setVisibility(rec_active);
                     }
-                    prev_itype = selected_itype;
                 })
+                ///////////////////
 
                 // this part is after stage.load. 
                 var dict_occupancy=$("#analysis_watermap", window.parent.document).data("occupancy_data")
