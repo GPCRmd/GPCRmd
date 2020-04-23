@@ -29,6 +29,13 @@ import os
 from pathlib import Path
 import pandas as pd
 
+def json_dict(path):
+    """Converts json file to pyhton dict."""
+    json_file=open(path)
+    json_str = json_file.read()
+    json_data = json.loads(json_str)
+    return json_data
+
 def find_range_from_cons_pos(my_pos, gpcr_pdb):
     """Given a position in GPCR generic numbering, returns the residue number."""
     (ext_range,chain)=gpcr_pdb[my_pos]
@@ -1316,6 +1323,15 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
         if occupancy:
             watermaps = True 
 #### --------------------------------
+#### ---- PHarmacophores ------------
+        pharma_jsonpath = "/protwis/sites/files/Precomputed/pharmacophores/dyn"+dyn_id+'/pharmaco_itypes.json'
+        if os.path.exists(pharma_jsonpath):
+            has_pharmacophores = True
+            pharma_json = json_dict(pharma_jsonpath)
+        else: 
+            has_pharmacophores = False
+            pharma_json = {}
+#### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
         heavy_comp_sel=" or ".join({e[1] for e in comp_li if e[3]})
         light_sel_s={e[1] for e in comp_li if e[2]=='Ligand' or e[2]=='Ions'}
@@ -1573,7 +1589,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "test":"HI THERE",
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)
                          }
                     return render(request, 'view/index.html', context)
                 else:
@@ -1609,7 +1627,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "tun_clust_rep_avail":clust_rep_avail,
                         "traj_clust_rad":json.dumps(traj_clust_rad),
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)                        
                         }
                     return render(request, 'view/index.html', context)
             else: #No checkpdb and matchpdb
@@ -1643,7 +1663,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "tun_clust_rep_avail":clust_rep_avail,
                         "traj_clust_rad":json.dumps(traj_clust_rad),
                         "watermaps" : watermaps,
-                        "occupancy" : json.dumps(occupancy)
+                        "occupancy" : json.dumps(occupancy),
+                        "has_pharmacophores" : has_pharmacophores,
+                        "pharma_json" : json.dumps(pharma_json)
                         }
                 return render(request, 'view/index.html', context)
         else: #len(chain_name_li) <= 0
@@ -1675,7 +1697,9 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "tun_clust_rep_avail":clust_rep_avail,
                     "traj_clust_rad":json.dumps(traj_clust_rad),
                     "watermaps" : watermaps,
-                    "occupancy" : json.dumps(occupancy)
+                    "occupancy" : json.dumps(occupancy),
+                    "has_pharmacophores" : has_pharmacophores,
+                    "pharma_json" : json.dumps(pharma_json)
                     }
             return render(request, 'view/index.html', context)
 

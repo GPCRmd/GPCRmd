@@ -411,6 +411,29 @@ if merge_dynamics:
         if itype not in no_ligand:
             pharmacophores(dynname, pharmacofolder+itype+'.json', itype, dyn_contacts_file, lig_resname)
 
+    	#Calculate pharmacophores for this interaction type
+    	pharmacofolder = files_path+'pharmacophores/' 
+		os.makedirs(pharmacofolder, exists_ok=True)
+    	def pharmacophores(dynname, outfile, itype, dyn_contacts_file):
+    		"""
+			Get the list of atoms interacting with the ligand of this simulation every 10 frames
+    		"""
+    		
+    		# Put interaction data into dataframe
+    		df = pd.read_csv(dyn_contacts_file, skiprows=1, sep=' ', names=['frame', 'itype', 'Position1', 'Position2'])
+    		
+    		# Filter out not interesting ligand types
+    		df_itype = df[df['itype'] == itype]
+
+    		# Filter no-ligand interactions
+		    compl_data = json_dict("/protwis/sites/files/Precomputed/get_contacts_files/compl_info.json")
+		    ligname = compl_data[dynname]['lig_sname']
+		    df_itype_filtered = df_itype[ligname in (df_itype['Position1'] or df['Position2'])]
+
+		    print(df_itype_filtered)
+		pharmacophores(dynname, pharmacofolder+itype+'.tsv', itype, dyn_contacts_file)
+
+
         #Omit already computed frequencies
         outfile = str("%sfrequency_tables/%s_freqs_%s.tsv" % (files_path, dynname, itype))
         labelfile = str("%s%s_labels.tsv" % (files_path, dynname))

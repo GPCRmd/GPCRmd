@@ -2226,7 +2226,6 @@ Hydrogen bonds
 <!-- ============= Water Map Analysis =========== --> 
             {% if watermaps %}
 
-
            <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_watermap" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Water volume distribution </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
@@ -2378,16 +2377,53 @@ Hydrogen bonds
 
                       </tbody>
                     </table>
-                        
-              
               </div>
-              </div>
-              </div>
+            </div>
+          </div>
+
             {% endif %}
+<!-- ============= Pharmacophores =========== --> 
+          {% if has_pharmacophores %}
+          <div class="row" >
+            <div class="section_pan" data-toggle="collapse" data-target="#analysis_pharmacophores" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" >
+              <span> Dynamic pharmacophores </span>
+              <span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span>
+            </div>
+          </div>
+          <div id="analysis_pharmacophores" data-has_itypes="{{pharma_json}}" class="collapse" data-occupancy_data="{{occupancy}}">
+            <div class="row" style="margin-top:10px;margin-bottom:15px">
+              <div style="margin-left:0;padding-left:0;width:70px;" class="col-md-2">Display:</div>
+              <div  class="col-md-5">
+                <div class="row">
+                  <label class="checkbox" style="margin:0px">
+                    <input type="checkbox" value="showwaterdist" class="pharmacheck" id='pharmalig' style="margin-left:0px;margin-top:0,margin-bottom:0">
+                  </label>
+                  <div style="margin-left:30px">Ligand pharmacophores</div>                    
+                </div>
+                <div class="row">
+                  <label class="checkbox" style="margin:0px">
+                    <input type="checkbox" value="showwaterdist" class="pharmacheck" id='pharmarec' style="margin-left:0px;margin-top:0,margin-bottom:0">
+                  </label>
+                  <div style="margin-left:30px">Receptor contacts of ligands</div>                                    
+                </div>
+              </div>
+              <div class="col-md-5">
+                <select id='pharmaitype_selector'>
+                  <option selected="true" class='pharmaitype' value="hb">Hydrogen bonds (all)</option>
+                  <option class='pharmaitype' value="hbls">Hydrogen bonds (sidechain atoms)</option>
+                  <option class='pharmaitype' value="hblb">Hydrogen bonds (backbone atoms)</option>
+                  <option class='pharmaitype' value="wb">Water bridge</option>
+                  <option class='pharmaitype' value="wb2">Extended water bridge</option>
+                  <option class='pharmaitype' value="vdw">Van der waals</option>
+                  <option class='pharmaitype' value="all">All types</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          {% endif %}
 <!-- ============= Tunnels  =========== --> 
 
             {% if tunnels %}
-
            <div class="row">
                 <div class="section_pan" data-toggle="collapse" data-target="#analysis_tunnels" style="cursor:pointer;padding:10px 10px 5px 10px;background-color:#ffffff;border-bottom:1px solid #337ab7;border-radius:0;" ><span>Tunnels and channels </span><span style="float:right;margin-right:5px;" class="glyphicon glyphicon-chevron-down arrow"></span></div>
            </div>
@@ -2571,7 +2607,8 @@ Hydrogen bonds
             {% endif %}
                 
 <!-- ANALYSIS END -->        
-                </div>
+
+
             </div>
         </div>
      </div>
