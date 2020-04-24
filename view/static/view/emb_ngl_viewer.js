@@ -5022,6 +5022,8 @@ $(document).ready(function(){
         $("#analysis_bonds").find(".showhb_inter.active").removeClass("active");
         $("#analysis_salt").find(".showsb.active").removeClass("active");
         $("#analysis_bonds").find(".showhb.active").removeClass("active");
+        $(".WaterDisplay , .WaterDistDisplay").prop("checked",false);
+        $('#embed_mdsrv')[0].contentWindow.hideAllWaterMaps();
         //$("#FPdisplay").removeClass("active");
         //$("#FPdisplay").text("Display interactions");
         emptyFPsels();

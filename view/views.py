@@ -510,6 +510,7 @@ def obtain_compounds(dyn_id):
     comp_li=sorted(comp_li, key=lambda x:x[0].lower())
     comp_li=sorted(comp_li, key=lambda x: sort_by_myorderlist(['Ligand','Lipid','Ions','Water','Other'],x[2]))
     comp_li=[[str_len_limit(lname),sname,mtype,load_heavy_tag(mtype)]  for lname,sname,mtype in comp_li]
+
     lig_li==[[str_len_limit(lname),sname]  for lname,sname in lig_li]
 
     protlig_all=obtain_prot_lig(dyn_id)
@@ -1333,6 +1334,11 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             pharma_json = {}
 #### --------------------------------
         (comp_li,lig_li,lig_li_s)=obtain_compounds(dyn_id)
+        exception_light=""
+        has_exception_light=change_lig_name.get(int(dyn_id))
+        if has_exception_light:
+            exception_light=has_exception_light["resname"]
+
         heavy_comp_sel=" or ".join({e[1] for e in comp_li if e[3]})
         light_sel_s={e[1] for e in comp_li if e[2]=='Ligand' or e[2]=='Ions'}
         light_sel_s.add("protein")
@@ -1560,6 +1566,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "compounds" : comp_li,
                         "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
+                        "exception_light":exception_light,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "all_gpcrs_info" : all_gpcrs_info,
@@ -1607,6 +1614,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "compounds" : comp_li,
                         "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
+                        "exception_light":exception_light,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
@@ -1645,6 +1653,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "compounds" : comp_li,
                         "heavy_comp_sel":heavy_comp_sel,
                         "light_sel":json.dumps(light_sel),
+                        "exception_light":exception_light,
                         "ligands": lig_li,
                         "ligands_short": ",".join(lig_li_s),
                         "other_prots":other_prots,
@@ -1681,6 +1690,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "compounds" : comp_li,
                     "heavy_comp_sel":heavy_comp_sel,
                     "light_sel":json.dumps(light_sel),
+                    "exception_light":exception_light,
                     "ligands": lig_li,
                     "other_prots":[],
                     "ligands_short": ",".join(lig_li_s),                  

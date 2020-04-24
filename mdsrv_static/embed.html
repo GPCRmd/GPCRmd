@@ -1068,7 +1068,7 @@
         }
 */
 
-        function change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel){
+        function change_general_selection(o,not_heavy,final_load_heavy,showH,custom_total_sel){
             if (final_load_heavy){
                 //change to heacvy
                 if (showH){
@@ -1085,19 +1085,19 @@
                 //change to light
                 if (showH){
                     if (custom_total_sel){
-                        var newgensel="not ("+heavy_comp_sel+") or "+custom_total_sel ;
+                        var newgensel= not_heavy + " or "+custom_total_sel ;
                         customSel_activated=true;
                     } else {
-                        var newgensel="not ("+heavy_comp_sel+")" ;
+                        var newgensel=not_heavy ;
                         customSel_activated=false;
                     }
                     showH_activated=true;
                 } else {
                     if (custom_total_sel){
-                        var newgensel="not _h and (not ("+heavy_comp_sel+") or "+custom_total_sel +")";
+                        var newgensel="not _h and ("+not_heavy+" or "+custom_total_sel +")";
                         customSel_activated=true;
                     } else {
-                        var newgensel="not _h and not ("+heavy_comp_sel+")";
+                        var newgensel="not _h and "+not_heavy;
                         customSel_activated=false;
                     }
                     showH_activated=false;
@@ -1233,9 +1233,11 @@
 
 
             //Set total selection
-
+            var sel_changed=false;
             if (final_load_heavy != heavy_loaded){
-                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
+                //console.log(1)
+                var sel_changed=true;
+                change_general_selection(o,not_heavy,final_load_heavy,showH,custom_total_sel)
                 if (final_load_heavy){
                     if (warning_load_heavy){
                         var warning_msg='Loading membrane and/or water molecules will slow down the playback speed.'
@@ -1257,8 +1259,10 @@
                 }
                 compsel_changed_todo+=1;
             }
-            if (showH != showH_activated){
-                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
+            if ((showH != showH_activated) && (!(sel_changed))){
+                console.log(2)
+                sel_changed=true;
+                change_general_selection(o,not_heavy,final_load_heavy,showH,custom_total_sel)
                 if (compsel_changed_todo==0){
                     framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
                     compsel_changed_trajnum=0;
@@ -1266,8 +1270,9 @@
                 compsel_changed_todo+=1;
             }
             
-            if (custom_total_sel || customSel_activated){
-                change_general_selection(o,heavy_comp_sel,final_load_heavy,showH,custom_total_sel)
+            if ((custom_total_sel || customSel_activated) && (!(sel_changed)) && (!(heavy_loaded))){
+                console.log(3)
+                change_general_selection(o,not_heavy,final_load_heavy,showH,custom_total_sel)
                 if (compsel_changed_todo==0){
                     framenum_rpresetsel=traj_fnum[traj_lastPlayedID];
                     compsel_changed_trajnum=0;
@@ -2284,7 +2289,14 @@
             var heavy_loaded=false;
             var showH_activated=false;
             var customSel_activated=false;
-            var heavy_comp_sel=$("#view_screen", window.parent.document).data("heavy_comp_sel")
+            var heavy_comp_sel=$("#view_screen", window.parent.document).data("heavy_comp_sel");
+            var exception_light=$("#view_screen", window.parent.document).data("exception_light");
+            if (exception_light){
+                var not_heavy = "(not ("+heavy_comp_sel+") or ("+exception_light+"))";
+            } else {
+                var not_heavy="not ("+heavy_comp_sel+")";
+                
+            }
             var set_tunnel_prot_rep=false;
             var trajComp, player, ori ;
             var clickedRep={};
@@ -2359,7 +2371,7 @@
             
             if (struc) {
                 stage.loadFile( path + struc , {visible: true}).then( function( o ){
-                        o.setSelection("not _h and not ("+heavy_comp_sel+")");
+                        o.setSelection("not _h and "+not_heavy);
                         o.signals.trajectoryAdded.add(function(trajComp){ $("#loading", window.parent.document).html(""); });
                         if (fpsegStr){
                             o.addRepresentation( "cartoon", { colorScheme: FPscheme,  sele: "protein" } );
@@ -2613,9 +2625,16 @@
                                 var selected_filename=trajnames_list[i]
                             }
                         }
-
                         stage = show_hide_watermap(is_checked,selected_filename, stage)
                     })
+
+
+                    window.hideAllWaterMaps = function() {
+                        for (var i = 0; i < trajnames_list.length; i++){
+                            var selected_filename=trajnames_list[i]
+                            stage = show_hide_watermap(false,selected_filename, stage)
+                        }
+                    }
 
 
                     $("#WatermapType", window.parent.document).on("click",function(){
