@@ -45,6 +45,7 @@ class Command(BaseCommand):
                         cluster_dict[this_gnum]=[chain_name+"."+pdb_pos,""]
                     resi_to_name[(pdb_pos,chain_name)]=str(this_gnum)
             return(resi_to_group,resi_to_name,cluster_dict)  
+
         def obtain_resi_to_dicts(dyn_id,pdbpath,chain_name_li,gpcr_Gprot,gpcr_Dprot):
             gen_num_res=obtain_gen_numbering(dyn_id, gpcr_Dprot,gpcr_Gprot) 
             if len(gen_num_res) <= 2:
@@ -79,7 +80,7 @@ class Command(BaseCommand):
                 if gnum != "None":
                     chain=gnum.split("x",1)[0]
                     resi_to_name[pos]=chain+"."+gnum
-            return resi_to_group,resi_to_name
+            return resi_to_group,resi_to_name,chains_taken
 
 
         if options['ignore_publication']:
@@ -116,6 +117,7 @@ class Command(BaseCommand):
                 dyn_dict[dyn_id]["is_published"]=dyn["is_pub"]
                 dyn_dict[dyn_id]["submission_id"]=dyn["sub_id"]
                 dyn_dict[dyn_id]["seg_to_chain"]={}
+                dyn_dict[dyn_id]["prot_lig_li"]=False
             file_info={"id":dyn["file_id"],"path":dyn["file_path"]}
             if dyn["file_is_traj"]:
                 dyn_dict[dyn_id]["files"]["traj"].append(file_info)
@@ -149,10 +151,18 @@ class Command(BaseCommand):
         dynprot=dynobj.annotate(dyn_id=F('id'))
         dynprot=dynprot.annotate(uniprot=F('id_model__id_protein__uniprotkbac'))
         dynprot=dynprot.annotate(uniprot2=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__uniprotkbac'))
-        dynprot = dynprot.values("dyn_id","uniprot","uniprot2")
+        dynprot=dynprot.annotate(fam_slug=F('id_model__id_complex_molecule__id_complex_exp__dyndbcomplexprotein__id_protein__receptor_id_protein__family_id__slug'))
+        dynprot=dynprot.annotate(fam_slug2=F('id_model__id_protein__receptor_id_protein__family_id__slug'))
+        dynprot = dynprot.values("dyn_id","uniprot","uniprot2","fam_slug","fam_slug2")
         
         for dyn in dynprot:
             dyn_id=dyn["dyn_id"]
+            prot_slug=dyn["fam_slug"]
+            if not prot_slug:
+                prot_slug=dyn["fam_slug2"]
+            if not prot_slug:
+                dyn_dict[dyn_id]["prot_lig_li"]=True
+                print("\n\nHas prot lig: %s\n\n"% dyn_id)
             up=dyn["uniprot"]
             if not up:
                 up=dyn["uniprot2"]
@@ -198,9 +208,10 @@ class Command(BaseCommand):
             gpcr_Dprot=DyndbProtein.objects.get(id=mdprot_id)
             resi_to_dicts = obtain_resi_to_dicts(dyn_id,pdbpath,chain_name_li,gpcr_Gprot,gpcr_Dprot)
             if resi_to_dicts:
-                (resi_to_group,resi_to_name)=resi_to_dicts
+                (resi_to_group,resi_to_name,prot_chains)=resi_to_dicts
                 dyn_dict[dyn_id]["resi_to_group"]=resi_to_group
                 dyn_dict[dyn_id]["resi_to_name"]=resi_to_name
+                dyn_dict[dyn_id]["prot_chains"]=prot_chains
 
 
         with open("/protwis/sites/files/Precomputed/Summary_info/dyn_dict.data", 'wb') as filehandle:  

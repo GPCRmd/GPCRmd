@@ -272,8 +272,23 @@
 
         <h5 class="subsect">Dynamic pharmacophores</h5>
         <p class="ptext">
-            Shows the positions in which the atoms of the simulation made a ligand-receptor hydrogen bond interaction during the simulation. These interaction values were obtained applying the aforementioned GetContacts interaction criteria.
+            Shows the positions in which a ligand-receptor hydrogen bond interaction occurred during the simulation. Interaction data was obtained based on the aforementioned GetContacts interaction criteria.
         </p>
+
+        <h5 class="subsect">Tunnels and channels</h5>
+        <p class="ptext">
+            Displays the tunnels and channels formed in the receptor during the simulation. Tunnels are defined as void pathways leading from a cavity buried in a protein core to the surrounding solvent, while in channels both endings are opened to the surrounding solvent.
+        </p>
+        <p class="ptext">
+            Tunnels/channels are precalculated using the software <a href='https://caver.cz/index.php'>Caver</a>. The starting point coordinates are set to the centre of the binding pocket, and the following input parameters are used: probe_radius=1.4, shell_radius=3, shell_depth=4.
+        </p>
+        <p class="ptext">
+            All the tunnels/channels identified in the simulation are clustered by similarity. Such clusters of identified tunnels can be displayed by selecting them in the “Clusters” column.
+        </p>
+        <p class="ptext">
+            It is also possible to display the tunnel with the highest throughput of each cluster. <a href='https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1002708'>As defined by Caver</a>, the throughput of a tunnel or channel corresponds to the importance of the pathway, which is the probability that the pathway is used as a route for transportation. Tunnel throughput is calculated based on the radius and length of the tunnel. The frame at which the highest-throughput tunnel of each cluster is found can be displayed by clicking at the “Display frame x” button.
+        </p>
+
 <!--        <h5 class=subsect>SASA analysis</h5>
         <p class=ptext> This tool allows you to compute the Solvent Accesible Surface Area(SASA) of a given set of atoms. We use the <a href=http://mdtraj.org/1.8.0/examples/solvent-accessible-surface-area.html>shrake_rupley</a> function from MDTraj module. Once we have the SASA value for each atom at each frame, we sum the SASA of all the atoms belonging to each frame. Then, we plot the obtained value per frame, so you can see how the SASA of that set of atoms fluctuates through time. We have defined a few options to define the atoms that will be considered:</p>
 
