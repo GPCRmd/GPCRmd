@@ -2416,8 +2416,17 @@
 
 
 
-                        //Load new pharmacophores 
-                        parent.$("#pharmaitype_selector").trigger('change');
+                        //Remove auld pharmacophore components
+                        ligrecs = ['ligand', 'receptor'];
+                        for (h in ligrecs){
+                            ligrec = ligrecs[h];
+                            notloaded_pharmacophore = true;
+                            compname = 'pharma'+ligrec;
+                            //If this is a trajectory change and not the first load  of the page, delete previous pharmacophore components
+                            comp_remove = stage.getComponentsByName(compname)
+                            stage.removeComponent(comp_remove['list'][0])
+                        };
+                        parent.$(".pharmacheck").trigger('change');
 
                         //WATERMAP CODE 
                         var selected_traj=$(this).attr("id").replace("traj_id_", "");
@@ -2482,7 +2491,6 @@
                     var pharmahas_itypes = parent.$('#analysis_pharmacophores').data('has_itypes');
                     var itypes = ['wb', 'wb2', 'hb', 'hblb', 'hbls', 'all', 'vdw'];
                     var pharmafolder = "/mdsrv/file/_DB/Precomputed/pharmacophores/dyn"+dyn_id;
-                    //TO CHANGE WHEN WE HAVE MORE THAN HB
                     /*for (itype in pharmahas_itypes[trajid]){
                         if (pharmahas_itypes[trajid][itype] == 'false'){
                             parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');
@@ -2492,7 +2500,7 @@
                         itype = itypes[i];
                         parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');                        
                     }
-                    parent.$(".pharmaitype[value='hb']").attr('disabled', 'false');                        
+                    parent.$(".pharmaitype[value='hb']").attr('disabled', 'false');
 
                 }
                 function load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active){
@@ -2526,10 +2534,11 @@
                 }
 
                 // Load some pharmacophores to start with
-                load_pharmacophores(1, stage, 'hb', false, false);
+                //load_pharmacophores(1, stage, 'hb', false, false);
 
                 // On any change of the pharmacophores options
                 var lig_active, rec_active, traj_btn_id, pharma_trajid, activecomps;
+                var notloaded_pharmacophore = true;
                 parent.$(".pharmacheck, #pharmaitype_selector").change(function(){
                     // Check current status of options
                     lig_active = parent.$("#pharmalig").is(':checked');
@@ -2539,8 +2548,10 @@
                     pharma_trajid = +traj_btn_id.replace( /^\D+/g, '')+1;
 
                     // If what has been changed is the itype, load new pharmacophore files and delete the old ones
-                    if ($(this).is('#pharmaitype_selector')){
+                    if (($(this).is('#pharmaitype_selector'))||(notloaded_pharmacophore && (lig_active||rec_active))){
+                        console.log('loading');
                         load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active);
+                        notloaded_pharmacophore = false;
                     }
                     // If checkboxes have been changed, made appropiate changes in visibility
                     else {
