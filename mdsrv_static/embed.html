@@ -2549,7 +2549,6 @@
 
                     // If what has been changed is the itype, load new pharmacophore files and delete the old ones
                     if (($(this).is('#pharmaitype_selector'))||(notloaded_pharmacophore && (lig_active||rec_active))){
-                        console.log('loading');
                         load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active);
                         notloaded_pharmacophore = false;
                     }
