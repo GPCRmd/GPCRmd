@@ -72,6 +72,23 @@
                 trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                 player = new NGL.TrajectoryPlayer(trajComp.trajectory);
                 player.interpolateType='spline';
+                
+                if (warning_load){
+                  if (traj_db_id in warning_load){
+                    if (warning_load[traj_db_id]['light']){
+                      var warning_msg='The playback speed is slower while loading the frames for the first time. Once all frames are loaded, the trajectory is played at normal speed.'
+                      var light_warning_html='<div class="alert alert-warning alert-dismissible" style="margin:2px 0 auto;padding:5px 30px 5px 10px;font-size:12px">\
+                      <a href="#" class="close warn_light_close" data-dismiss="alert" aria-label="close">×</a>\
+                      <div style="margin-bottom:5px"><span class="glyphicon glyphicon-info-sign"></span> <span style="font-weight:bold">Note:</span> '+warning_msg+'</div>\
+                      <div style="display:inline-block;position:relative;top:4px"><input type="checkbox" id="notshow_warn_light" class="notshow_warn" style="margin-top:0;"></div> \
+                      <div class="" style="display:inline-block;">Do not show this again.</div><p>'
+                      $("#speed_warnings_light", window.parent.document).html(light_warning_html)
+
+                      warning_load[traj_db_id]['light']=false;
+                    }
+                  }
+                }
+
                 if(isact){
                     $(this).removeClass("active");
                     $(this).children().attr("class","glyphicon glyphicon-play");
