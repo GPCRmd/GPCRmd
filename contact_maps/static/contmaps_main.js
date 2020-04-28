@@ -44,12 +44,11 @@ $(document).ready(function(){
   //-------Dropdowns
   $('.dropdown-submenu a.test').on("click", function(e){
     $(this).next('ul').toggle();
-    e.stopPropagation();
     e.preventDefault();
   });
   //---------Avoid dropdown menu to retract at click
   var button;
-  $('.dropdown-menu').on("click", function(e){
+  $('.notretract').on("click", function(e){
     e.stopPropagation();
   });
 
