@@ -376,7 +376,7 @@ padding-right:60px
 
 <!-- ============= IFRAME =========== -->
             <span id="loading"><center ><img src="{% static 'view/images/loading-gear.gif' %}" style="width:50px;height:50px;margin-top:210px;position:absolute;z-index:10;margin-left:-25px"/></center></span>
-            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}" data-heavy_comp_sel="{{heavy_comp_sel}}">
+            <div id="view_screen" class="row str_file" data-struc_file={{structure_file}} data-struc_file_id={{structure_file_id}} data-dyn_id={{dyn_id}} data-all_chains="{{all_chains}}" data-delta="{{delta}}" data-pdb_muts="{{pdb_muts}}" data-pdb_vars="{{pdb_vars}}" data-seg_li="{{seg_li}}" data-light_sel="{{light_sel}}" data-heavy_comp_sel="{{heavy_comp_sel}}" data-exception_light="{{exception_light}}">
                 <div id="legend_row" class="row" style=max-width:620px;margin:auto>
                     <div id="legend" style="float:left;min-height:20px"> </div>
                     <!--button class="btn btn-danger btn-xs pull-right" style="margin:0;" type="button" id="clear_dist_reps">Clear distances</button>-->
@@ -2261,6 +2261,7 @@ Hydrogen bonds
                               <label class="checkbox" style="margin:0">
                                 <input type="checkbox" value="occupancy" class="WaterDisplay" style="margin-left:40px;margin-top:0,margin-bottom:0">
                               </label>
+                              <span id="loading_display_watermap" style="display:none;margin-left:70px;">Loading... <img src="{% static 'view/images/loading-gear.gif' %}" style="width:17px;height:17px;"/></span>
                             </td>
                           </tr>
 
