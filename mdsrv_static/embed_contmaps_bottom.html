@@ -63,30 +63,29 @@
             }
         }
 
-        function trajButtons(stage){
+        function trajButtons(stage, id){
 
+            var dynid, btn_traj_id, isact, trajComp, speed_war, display;
             $(".traj_btn").click( function(){
                 //$("#trajRange").attr("max",trajComp.trajectory._frameCount);
-                var btn_traj_id=$(this).attr("data-traj");
-                var isact = $(this).hasClass("active");
+                dynid = parent.$("#ngldiv"+id+" .dyn_element.is_active").data("dynid");
+                btn_traj_id=$(this).attr("data-traj");
+                isact = $(this).hasClass("active");
                 trajComp = stage.getComponentsByName("my_comp").list[0].trajList[btn_traj_id];
                 player = new NGL.TrajectoryPlayer(trajComp.trajectory);
-                player.interpolateType='spline';
+                speed_war = parent.$("#speed_warnings"+id);
+                display = speed_war.data('display');
                 
-                if (warning_load){
-                  if (traj_db_id in warning_load){
-                    if (warning_load[traj_db_id]['light']){
-                      var warning_msg='The playback speed is slower while loading the frames for the first time. Once all frames are loaded, the trajectory is played at normal speed.'
-                      var light_warning_html='<div class="alert alert-warning alert-dismissible" style="margin:2px 0 auto;padding:5px 30px 5px 10px;font-size:12px">\
-                      <a href="#" class="close warn_light_close" data-dismiss="alert" aria-label="close">×</a>\
-                      <div style="margin-bottom:5px"><span class="glyphicon glyphicon-info-sign"></span> <span style="font-weight:bold">Note:</span> '+warning_msg+'</div>\
-                      <div style="display:inline-block;position:relative;top:4px"><input type="checkbox" id="notshow_warn_light" class="notshow_warn" style="margin-top:0;"></div> \
-                      <div class="" style="display:inline-block;">Do not show this again.</div><p>'
-                      $("#speed_warnings_light", window.parent.document).html(light_warning_html)
-
-                      warning_load[traj_db_id]['light']=false;
-                    }
-                  }
+                //Load warning message if this trajectory of this simulation has not yet been run in this viewer
+                if ((warning_load[dynid][btn_traj_id]) && display){
+                  var warning_msg='The playback speed is slower while loading the frames for the first time. Once all frames are loaded, the trajectory is played at normal speed.'
+                  var light_warning_html='<div class="alert alert-warning alert-dismissible" style="margin:2px 0 auto;padding:5px 30px 5px 10px;font-size:12px">\
+                  <a href="#" class="close warn_light_close" data-dismiss="alert" aria-label="close">×</a>\
+                  <div style="margin-bottom:5px"><span class="glyphicon glyphicon-info-sign"></span> <span style="font-weight:bold">Note:</span> '+warning_msg+'</div>\
+                  <div style="display:inline-block;position:relative;top:4px"><input type="checkbox" id="notshow_warn_light" class="notshow_warn" style="margin-top:0;"></div> \
+                  <div class="" style="display:inline-block;">Do not show this again.</div><p>'
+                  speed_war.html(light_warning_html)
+                  warning_load[dynid][btn_traj_id] = false
                 }
 
                 if(isact){
@@ -422,6 +421,11 @@
               create_traj_dropdown(traj_fnames,traj_fnames[0],id)
           }
 
+          //Save trajectories on warning_load dictionary
+          for (t=0 ; t < traj_f.length ; t++){
+            warning_load[dynid][t] = true;
+          }
+
           //Put name of the trajectory being run
           $("#last_played").text(traj_fnames[0]);
 
@@ -548,6 +552,9 @@
                     '" data-dynid="'+dynid+
                     '">'+name_simulation+'</li>' + "\n";
                 }
+
+                //Append simulations into the warning-load dictionary (the one for knowing if is first time traj is run)
+                warning_load[dynid] = {};
             }
             parent.$('#ngldiv'+id+' .simList').html(new_dyns);
 
@@ -594,7 +601,10 @@
         var traj_path= "_DB/";
         var path= "/mdsrv/file/_DB/";
         var trajComp,traj_fnames,player;
-        var new_clust, stage;
+        var new_clust, stage, traj_db_id;
+        var traj_li_all = [];
+        var traj_fnum = {};
+        var warning_load = {};
 
         //Set id of traj_btn element, with the 0 or 1 of corresponding NGL viewer
         $(".traj_btn").attr('id', 'traj_btn'+id);
@@ -610,6 +620,14 @@
           parent.$("#restartPos"+id).trigger('click');
         });
 
+        var speed_warnings;
+        parent.$("#speed_warnings"+id).on("change",".notshow_warn",function(){
+          if ($(this).is(":checked") ){
+            speed_warnings = parent.$("#speed_warnings"+id);
+            speed_warnings.html("");
+            speed_warnings.data('display', false)
+          } 
+        })
         /////Initial stage. Triggered when flareplots are fully loaded
         $(document.body).bind('createNGL'+id, function(e, clustdict, compl_data) {  
 
@@ -635,7 +653,7 @@
 
           stage = new NGL.Stage("viewport");
           stage.setParameters( { backgroundColor: "white" , cameraType:"orthographic"} );
-          trajButtons(stage);//Control of play/pause and change of frame 
+          trajButtons(stage, id);//Control of play/pause and change of frame 
 
           //Initial dynamics. If clusternumber is not a number (but a dynX thing), go for customized path
           new_clust = parent.$("#fpdiv"+id+" .clusters_dropup-ul li.is_active").attr('data-tag')

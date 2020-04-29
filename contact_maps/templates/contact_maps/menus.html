@@ -6,7 +6,7 @@
       Simulation datasets 
       <span class="caret"></span>
     </button>
-    <ul class="dropdown-menu dropdown-dataset dropdown-itype">
+    <ul class="dropdown-menu dropdown-dataset dropdown-itype notretract">
       <li>
         <label class="dataset_checkbox mycheckbox">
           <input type="checkbox" checked disabled id="" name="dataset"/>
@@ -31,7 +31,7 @@
       Interaction Type 
       <span class="caret"></span>
     </button>
-    <ul class="dropdown-menu dropdown-itype">
+    <ul class="dropdown-menu dropdown-itype notretract">
     {% for group, types_tuple in itypes_order %}
       <li>
         <label class="macrotype">
@@ -102,7 +102,7 @@
       Interaction Partners 
       <span class="caret"></span>
     </button>
-    <ul class="dropdown-menu dropdown-partner">
+    <ul class="dropdown-menu dropdown-partner notretract">
       <li>
         <label class="partners_checkbox mycheckbox">
           {% if "prt" in ligandonly %}

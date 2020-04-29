@@ -249,9 +249,11 @@
           </div>
 
           <span id="loading_ngl0"><img src="{% static 'view/images/loading-gear.gif' %}" class="loading_NGL_bottom"/></span>
-          <iframe id="ngl_iframe0" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="0" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} scrolling="no" height="500px" width="100%"></iframe>
+          <iframe id="ngl_iframe0" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="0" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} data-warnings=true scrolling="no" height="500px" width="100%"></iframe>
           <div id="posNotinRec0" class="alert alert-warning posNotinRec">
             <span id="posNotinRec_text0"></span>
+          </div>
+          <div id="speed_warnings0" data-display=true>
           </div>
           <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
           <div class="pull-right">                          
@@ -287,6 +289,8 @@
           <iframe id="ngl_iframe1" data-mdsrv_url={{mdsrv_url}} src="{{mdsrv_url}}/html/embed_contmaps_bottom.html" data-number="1" data-itype={{itype_code}} data-ligandonly={{ligandonly}} data-cluster={{cluster}} data-stnd={{stnd}} scrolling="no" height="500px" width="100%"></iframe>
           <div id="posNotinRec1" class="alert alert-warning posNotinRec">
             <span id="posNotinRec_text1"></span>
+          </div>
+          <div id="speed_warnings1" data-display=true>
           </div>
           <button  class="btn btn-danger btn-xs NGLclear">Clear All</button>
           <div class="pull-right">                          
