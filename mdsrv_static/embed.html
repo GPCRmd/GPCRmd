@@ -1940,7 +1940,61 @@
                 edfofc.setPosition(transl)
             }
         }
+        //////pharmacophore functions
+        function create_colordict(){
+            // Determine the color pattern for pharmacophores (either by element or by ligand-receptor)
+            var colorpat = parent.$("#pharmacolor_selector").val();
+            var colordict = {'receptor': "", 'ligand' : ""};
+            if (colorpat == "partner") {
+                colordict['receptor'] = '#03fcf4';
+                colordict['ligand'] = '#f562ed';  
+            }
+            else {
+                colordict['receptor'] = 'element';
+                colordict['ligand'] = 'element';  
+            }
+            return colordict
+        };
+        function pharmacophore_options(trajid, dyn_id) {
+            // Disable itypes for which the selected trajectory does not have pharmacophores 
+            var pharmahas_itypes = parent.$('#analysis_pharmacophores').data('has_itypes');
+            var itypes = ['wb', 'wb2', 'hb', 'hblb', 'hbls', 'all', 'vdw'];
+            var pharmafolder = "/mdsrv/file/_DB/Precomputed/pharmacophores/dyn"+dyn_id;
+            /*for (itype in pharmahas_itypes[trajid]){
+                if (pharmahas_itypes[trajid][itype] == 'false'){
+                    parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');
+                }
+            }*/
+            for (i in itypes){
+                itype = itypes[i];
+                parent.$(".pharmaitype[value='"+itype+"']").prop('disabled', true);
+            }
+            parent.$(".pharmaitype[value='hb']").prop('disabled', false);
+        }
+        function load_pharmacophores(dynid, pharma_trajid, stage, itype, is_active, ligrec){
+            /*
+            Load pharmacophore components for visualized system in the pharma_trajid trajectory
+            */
 
+            var pharmafolder_path = path + '/Precomputed/pharmacophores/dyn'+dynid+'/'
+            var ligrecs = ['receptor', 'ligand' ];
+            var pharma_file_path = pharmafolder_path+itype+'/'+ligrec+'_'+pharma_trajid+'.pdb';
+            var compname = 'pharma'+ligrec;
+
+            // Determine color pattern
+            var parameters;
+            var color_dict = create_colordict()
+            if (color_dict[ligrec] == 'element'){
+                parameters = { 'colorScheme' : "element", 'name' : compname}
+            } else {
+                parameters = { 'color' : color_dict[ligrec], 'name' : compname}
+            }
+
+            //Create new component for new pharmacophore
+            stage.loadFile(pharma_file_path, {name: compname, visible: is_active}).then(function(pharmacophore){
+                pharmacophore.addRepresentation('point', parameters);
+            });
+        }
         function hide_old_tunnels(traj_db_id){
             for (traj_id in loaded_clusters){
                 if (traj_id != traj_db_id){
@@ -2520,56 +2574,20 @@
                 });
 
                 /////////////////Pharmacophores part
-                function pharmacophore_options(trajid, dyn_id) {    
-                    var pharmahas_itypes = parent.$('#analysis_pharmacophores').data('has_itypes');
-                    var itypes = ['wb', 'wb2', 'hb', 'hblb', 'hbls', 'all', 'vdw'];
-                    var pharmafolder = "/mdsrv/file/_DB/Precomputed/pharmacophores/dyn"+dyn_id;
-                    /*for (itype in pharmahas_itypes[trajid]){
-                        if (pharmahas_itypes[trajid][itype] == 'false'){
-                            parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');
-                        }
-                    }*/
-                    for (i in itypes){
-                        itype = itypes[i];
-                        parent.$(".pharmaitype[value='"+itype+"']").attr('disabled', 'true');                        
-                    }
-                    parent.$(".pharmaitype[value='hb']").attr('disabled', 'false');
 
-                }
-                function load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active){
-                    /*
-                    Load pharmacophore components for visualized system in the pharma_trajid trajectory
-                    */
+                //Set initial itype options for pharmacophores
+                var dynid = parent.window.location.pathname.split('/')[2]
+                pharmacophore_options("1", dynid)
 
-                    var fs, dynid, pharmafolder_path, itypes, ligrecs, itype, ligrec, activecomps, pharma_file_path, is_active, compname;
-                    dynid = parent.window.location.pathname.split('/')[2]
-                    pharmafolder_path = path + '/Precomputed/pharmacophores/dyn'+dynid+'/'
-                    ligrecs = ['ligand', 'receptor'];
-                    activecomps = { 'ligand' : lig_active, 'receptor' : rec_active };
+                //On any change of the pharmacophore colors
+                var colordict, pharmarec_rep, pharmalig_rep;
+                parent.$("#pharmacolor_selector").change(function(){
+                    colordict = create_colordict();
+                    pharmarec_rep = stage.getRepresentationsByName('pharmareceptor').setColor(colordict['receptor']);
+                    pharmalig_rep = stage.getRepresentationsByName('pharmaligand').setColor(colordict['ligand']);
+                });
 
-                    // For ligand and receptor pharmacophores
-                    for (h in ligrecs){
-                        ligrec = ligrecs[h];
-                        pharma_file_path = pharmafolder_path+itype+'/'+ligrec+'_'+pharma_trajid+'.pdb';
-                        is_active = activecomps[ligrec];
-                        compname = 'pharma'+ligrec;
-                        //If this is a trajectory change and not the first load  of the page, delete previous pharmacophore components
-                        comp_remove = stage.getComponentsByName(compname)
-                        stage.removeComponent(comp_remove['list'][0])
-                        stage.loadFile(pharma_file_path, {name: compname, visible: is_active}).then(function(pharmacophore){
-                            pharmacophore.addRepresentation('ball+stick', {
-                                colorScheme: "element",
-                            });
-                        });  
-                    }                        
-
-                    pharmacophore_options(pharma_trajid, dynid)
-                }
-
-                // Load some pharmacophores to start with
-                //load_pharmacophores(1, stage, 'hb', false, false);
-
-                // On any change of the pharmacophores options
+                // On any change of the pharmacophores itype and checkboxes options
                 var lig_active, rec_active, traj_btn_id, pharma_trajid, activecomps;
                 var notloaded_pharmacophore = true;
                 parent.$(".pharmacheck, #pharmaitype_selector").change(function(){
@@ -2577,19 +2595,23 @@
                     lig_active = parent.$("#pharmalig").is(':checked');
                     rec_active = parent.$("#pharmarec").is(':checked');
                     traj_btn_id = $('.traj_btn').attr('id') ;
-                    itype = parent.document.getElementById('pharmaitype_selector').value
+                    itype_sel = parent.document.getElementById('pharmaitype_selector').value
                     pharma_trajid = +traj_btn_id.replace( /^\D+/g, '')+1;
 
-                    // If what has been changed is the itype, load new pharmacophore files and delete the old ones
+                    // If what has been changed is the itype, load new pharmacophore files
                     if (($(this).is('#pharmaitype_selector'))||(notloaded_pharmacophore && (lig_active||rec_active))){
-                        load_pharmacophores(pharma_trajid, stage, itype, lig_active, rec_active);
+                        load_pharmacophores(dynid, pharma_trajid, stage, itype_sel, lig_active, "ligand");
+                        load_pharmacophores(dynid, pharma_trajid, stage, itype_sel, rec_active, "receptor");
+                        pharmacophore_options(pharma_trajid, dynid)
                         notloaded_pharmacophore = false;
                     }
                     // If checkboxes have been changed, made appropiate changes in visibility
                     else {
                         stage.getComponentsByName('pharmaligand').setVisibility(lig_active);
                         stage.getComponentsByName('pharmareceptor').setVisibility(rec_active);
-                    }
+                    }            
+                    //Disable itypes without pharmacophore in this trajectory
+
                 })
                 ///////////////////
 
