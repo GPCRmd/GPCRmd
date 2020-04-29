@@ -1080,7 +1080,9 @@ padding-right:60px
           <!--<div id="edSel" style="margin-bottom:5px" data-r_angl="{{ed_align_matrix.0}}" data-transl="{{ed_align_matrix.1}}">-->
           <div id="edSel" style="margin-bottom:5px" data-r_angl="{{ed_align_matrix.0}}" data-trajmat_dict="{{ed_mats}}">
             <div class="row" style="margin-top:15px;">
-                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:3px solid #999999;border-radius:0;text-align:center;font-size:16px" data-toggle="collapse" data-target="#edSel_opt"><span>Experimental density map </span><span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
+                <div class="section_pan" style="cursor:pointer;padding:5px 10px 5px 10px;background-color:#ffffff;border-bottom:3px solid #999999;border-radius:0;text-align:center;font-size:16px" data-toggle="collapse" data-target="#edSel_opt"><span>Experimental density map </span>
+                   <span id="loading_edmap" style="display:none"><img src="{% static 'view/images/loading-gear.gif' %}" style="width:17px;height:17px;"/></span>
+                  <span style="float:right;margin-right:5px" class="glyphicon glyphicon-chevron-up arrow"></span></div> 
             </div>
             <div id="edSel_opt" class="collapse in" style="padding-left:15px;">
             <!-- ============= ED Comp buttonss (ED quicksel) =========== -->

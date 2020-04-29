@@ -1707,39 +1707,117 @@
           return !selection.selection[ "error" ]
         }
 
+        function load_EDmap(maptype){
+            parent.$("#loading_edmap").css("display","inline");
+            var edmapUrl = "https://edmaps.rcsb.org/maps/";
+            loaded_EDmaps=true;
+            var notready_msg=$("#trajnotready");
+            notready_msg.attr("data-original-title","Loading experimental density map...");
+            notready_msg.css("display","block");
+            if (maptype.indexOf("fofc")>-1) {
+                stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: true}).then(function(edc){
+                    edc.setName("EDmap_comp_fofc");
+                    edc.signals.representationAdded.add(function(r){
+                        parent.$("#loading_edmap").css("display","none");
+                        parent.passInfoToIframe_ED();
+                        var results_ED = parent.results_ED;
+                        var loadEd=results_ED["loadEd"];
+                        if  (! loadEd){
+                            edc.setVisibility(false);
+                        }
+                        if ( map_hidden["fofc"]){
+                            r.setVisibility(false);
+                        }
+                    })
+                    edc.setRotation( r_angl)
+                    edc.setPosition(transl)
+
+
+                    edc.addRepresentation("surface", edmap_params["fofcpos"])
+                    edc.addRepresentation("surface", edmap_params["fofcneg"])
+                })
+
+            }
+            if (maptype.indexOf("2fofc")>-1){
+                stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_2fofc.dsn6", {visible: true}).then(function(edc){
+                    edc.setName("EDmap_comp_2fofc");
+                    edc.signals.representationAdded.add(function(r){
+                        parent.$("#loading_edmap").css("display","none");
+                        parent.passInfoToIframe_ED();
+                        var results_ED = parent.results_ED;
+                        var loadEd=results_ED["loadEd"];
+                        if (! loadEd){
+                            edc.setVisibility(false);
+                        }
+                        if ( map_hidden["2fofc"]){
+                            r.setVisibility(false);
+                        }
+                        $("#trajnotready").css("display","none");
+                    })
+                    edc.setRotation( r_angl);
+                    edc.setPosition(transl);
+                    edc.addRepresentation("surface", edmap_params["2fofc"])
+
+                })
+            } 
+
+        }
+
         function updateEDmapSel(){
             parent.passInfoToIframe_ED();
             var results_ED = parent.results_ED;
             var loadEd=results_ED["loadEd"];
             var ed_sel=results_ED["ed_sel"];
 
-            var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
-            var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
-            //ed2fofc.removeAllRepresentations();
-            //edfofc.removeAllRepresentations();
-            if (loadEd){
-                applySele(ed_sel);
-                ed2fofc.setVisibility(true);
-                edfofc.setVisibility(true);
+            if (! loaded_EDmaps){
+                load_EDmap(["fofc","2fofc"]);
+                if (loadEd){
+                    applySele(ed_sel);
+                } else {
+                   stage.setFocus(0);
+                   $("#EDmapzoom", window.parent.document).val(0);
+                   $("#EDmapzoom_val", window.parent.document).html(0);
+                }
             } else {
-               ed2fofc.setVisibility(false);
-               edfofc.setVisibility(false);
-               stage.setFocus(0);
-               $("#EDmapzoom", window.parent.document).val(0);
-               $("#EDmapzoom_val", window.parent.document).html(0);
+                var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
+                var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
+                if (loadEd){
+                    applySele(ed_sel);
+                    if (ed2fofc && edfofc){
+                        ed2fofc.setVisibility(true);
+                        edfofc.setVisibility(true);
+                    }
+                } else {
+                   if (ed2fofc && edfofc){
+                       ed2fofc.setVisibility(false);
+                       edfofc.setVisibility(false);                    
+                   }
+                   stage.setFocus(0);
+                   $("#EDmapzoom", window.parent.document).val(0);
+                   $("#EDmapzoom_val", window.parent.document).html(0);
+                }
+
             }
         }
 
         function show_hide_map(is_checked,mapchanged){
             if (mapchanged=="2fofc"){
                 stage.getRepresentationsByName("2fofc").setVisibility(is_checked);
+                map_hidden["fofc"]=is_checked;
             }else{
                 stage.getRepresentationsByName("fofcpos").setVisibility(is_checked);
                 stage.getRepresentationsByName("fofcneg").setVisibility(is_checked);
+                map_hidden["2fofc"]=is_checked;
             }
         }
 
         function change_EDmap_style(v,mapsel,chtype){
+            if (mapsel=="fofc"){
+                var mapsel_li=["fofcpos","fofcneg"];
+            } else {
+                var mapsel_li=[mapsel];
+            }
+
             if (chtype=="general"){
                 if (v === "contour") {
                   p = {
@@ -1749,6 +1827,14 @@
                     metalness: 0,
                     wireframe: false
                   }
+                  for (var e=0;e<mapsel_li.length;e++){
+                    var thismapsel=mapsel_li[e];
+                    edmap_params[thismapsel].contour=p.contour;
+                    edmap_params[thismapsel].flatShaded=p.flatShaded;
+                    edmap_params[thismapsel].opacity=p.opacity;
+                    edmap_params[thismapsel].metalness=p.metalness;
+                    edmap_params[thismapsel].wireframe=p.wireframe;
+                  }
                 } else if (v === "wireframe") {
                   p = {
                     contour: false,
@@ -1756,6 +1842,14 @@
                     opacity: 1,
                     metalness: 0,
                     wireframe: true
+                  }
+                  for (var e=0;e<mapsel_li.length;e++){
+                    var thismapsel=mapsel_li[e];
+                    edmap_params[thismapsel].contour=p.contour;
+                    edmap_params[thismapsel].flatShaded=p.flatShaded;
+                    edmap_params[thismapsel].opacity=p.opacity;
+                    edmap_params[thismapsel].metalness=p.metalness;
+                    edmap_params[thismapsel].wireframe=p.wireframe;
                   }
                 } else if (v === "smooth") {
                   p = {
@@ -1765,6 +1859,14 @@
                     metalness: 0,
                     wireframe: false
                   }
+                  for (var e=0;e<mapsel_li.length;e++){
+                    var thismapsel=mapsel_li[e];
+                    edmap_params[thismapsel].contour=p.contour;
+                    edmap_params[thismapsel].flatShaded=p.flatShaded;
+                    edmap_params[thismapsel].opacity=p.opacity;
+                    edmap_params[thismapsel].metalness=p.metalness;
+                    edmap_params[thismapsel].wireframe=p.wireframe;
+                  }
                 } else if (v === "flat") {
                   p = {
                     contour: false,
@@ -1773,15 +1875,35 @@
                     metalness: 0.2,
                     wireframe: false
                   }
+                  for (var e=0;e<mapsel_li.length;e++){
+                    var thismapsel=mapsel_li[e];
+                    edmap_params[thismapsel].contour=p.contour;
+                    edmap_params[thismapsel].flatShaded=p.flatShaded;
+                    edmap_params[thismapsel].opacity=p.opacity;
+                    edmap_params[thismapsel].metalness=p.metalness;
+                    edmap_params[thismapsel].wireframe=p.wireframe;
+                  }
               }
             } else if (chtype=="color"){
               p = {
                 colorValue:v
               }
+              for (var e=0;e<mapsel_li.length;e++){
+                var thismapsel=mapsel_li[e];
+                edmap_params[thismapsel].colorValue=p.colorValue;
+              }
             } else if (chtype=="isolevel"){
-                p={isolevel:v}
+              p={isolevel:v}
+              for (var e=0;e<mapsel_li.length;e++){
+                var thismapsel=mapsel_li[e];
+                edmap_params[thismapsel].isolevel=p.isolevel;
+              }
             } else if (chtype=="mapsize"){
-                p={boxSize:parseInt(v)}
+              p={boxSize:parseInt(v)}
+              for (var e=0;e<mapsel_li.length;e++){
+                var thismapsel=mapsel_li[e];
+                edmap_params[thismapsel].boxSize=p.boxSize;
+              }
             }
             if (mapsel=="2fofc"){
                 stage.getRepresentationsByName("2fofc").setParameters(p);
@@ -1796,6 +1918,22 @@
             //stage.getRepresentationsByName("surface").setParameters(p)
         }
 
+        function realign_EDmap(){        
+            var mat_info=obtain_transmat_for_traj();
+            if (mat_info){            
+                r_angl=mat_info[0];
+                transl=mat_info[1];
+
+                var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
+                var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
+                if (ed2fofc && edfofc){
+                    ed2fofc.setRotation( r_angl)
+                    ed2fofc.setPosition(transl)
+                    edfofc.setRotation( r_angl)
+                    edfofc.setPosition(transl)                    
+                }
+            }
+        }
 /////////Functions for Water Map
         function change_watermap_style(val,mapname, slider_val ){
             map_info=loaded_watermaps[mapname];
@@ -1885,6 +2023,19 @@
             parent.$("#loading_display_watermap").css("display","inline");
             parent.$(".WaterDisplay").attr("disabled", true);
             stage.loadFile(trajPath, {visible:is_checked}).then(function(watermap){
+                watermap.signals.representationAdded.add(function(r){
+                    $("#trajnotready").css("display","none");
+                    parent.$("#loading_display_watermap").css("display","none");
+                    parent.$(".WaterDisplay").removeAttr("disabled");
+                    var compname=watermap.name
+                    for (var i = 0; i <trajnames_list.length; i++){
+                        var selected_filename=trajnames_list[i]
+                        if (selected_filename != compname){
+                            stage= show_hide_watermap(false, selected_filename,stage)  
+                        }
+                    }
+                })
+
                 watermap.addRepresentation("surface", watermaps_params);
 
             }); 
@@ -1926,20 +2077,7 @@
             }
         }
 
-        function realign_EDmap(){        
-            var mat_info=obtain_transmat_for_traj();
-            if (mat_info){            
-                var r_angl=mat_info[0];
-                var transl=mat_info[1];
 
-                var ed2fofc=stage.getComponentsByName("EDmap_comp_2fofc").list[0];
-                var edfofc=stage.getComponentsByName("EDmap_comp_fofc").list[0];
-                ed2fofc.setRotation( r_angl)
-                ed2fofc.setPosition(transl)
-                edfofc.setRotation( r_angl)
-                edfofc.setPosition(transl)
-            }
-        }
 
         function hide_old_tunnels(traj_db_id){
             for (traj_id in loaded_clusters){
@@ -1967,6 +2105,13 @@
                 $("#selectionDiv" , window.parent.document).trigger("click");                    
 
             }
+            tunnel_reprs_when_load={"line":true,
+                                    "spacefill":false,
+                                    "spacefillsmall":false,
+                                    "licorice":false,
+                                    "surfaceOpaque":false,
+                                    "surfaceWireframe":false
+                                    }
         }
 
         function tunnel_color_from_clusternum(cluster_num){
@@ -1979,7 +2124,7 @@
             return color_code
         }
 
-        function load_tunnel(traj_id,data_type,tun_files,cluster_num,cluster_name){
+        function load_tunnel(traj_id,data_type,tun_files,cluster_num,cluster_name,compvisible){
             var rep_name=traj_id+"_"+cluster_name;
             var trajclutype_li=loaded_clusters[traj_id][data_type];
             trajclutype_li[trajclutype_li.length]=rep_name;
@@ -1991,13 +2136,41 @@
                     tun_file=tun_files[tf];
                     var tun_filepath=path+"Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_timeless/"+tun_file;
 
-                    stage.loadFile(tun_filepath, {visible: false} ).then( function( tc ){
+                    stage.loadFile(tun_filepath, {visible: compvisible} ).then( function( tc ){
                         tc.setName("comp_"+rep_name);
-                        tc.addRepresentation( "line" ,{ colorValue: color_code , colorScheme:"uniform", linewidth:1, name:rep_name+"_line"});
-                        tc.addRepresentation( "spacefill" ,{ visible: false , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_spacefillsmall", radius:0.3});
-                        tc.addRepresentation( "spacefill" ,{ visible: false , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_spacefill"});
-                        tc.addRepresentation( "licorice" ,{ visible: false , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_licorice"});
+                        tc.signals.representationAdded.add(function(r){
+                            var comp_traj=Number(r.name.split("_")[0])
+                            if (traj_db_id!=comp_traj){
+                                tc.setVisibility(false);
+                            }
+                        })
+                        tc.addRepresentation( "line" ,{visible:tunnel_reprs_when_load["line"] , colorValue: color_code , colorScheme:"uniform", linewidth:1, name:rep_name+"_line"});
+                        tc.addRepresentation( "spacefill" ,{ visible: tunnel_reprs_when_load["spacefillsmall"] , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_spacefillsmall", radius:0.3});
+                        tc.addRepresentation( "spacefill" ,{ visible: tunnel_reprs_when_load["spacefill"] , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_spacefill"});
+                        tc.addRepresentation( "licorice" ,{ visible: tunnel_reprs_when_load["licorice"] , colorValue: color_code , colorScheme:"uniform", name:rep_name+"_licorice"});
                         
+
+////
+                        if (tunnel_reprs_when_load["surfaceOpaque"] || tunnel_reprs_when_load["surfaceWireframe"]){
+                            if (tunnel_reprs_when_load["surfaceWireframe"]){
+                                var reptype="surfaceWireframe";
+                                tc.addRepresentation( "surface" ,{visible: true,  colorScheme:"uniform", colorValue:color_code , contour: true , probeRadius:0.01 , name:rep_name+"_"+reptype    });                                
+                            } else {
+                                var reptype="surfaceOpaque";
+                                tc.addRepresentation( "surface" ,{visible: true,  colorScheme:"uniform", colorValue:color_code , probeRadius:0.01 , name:rep_name+"_"+reptype    });
+                            }
+                            tun_struc_loaded[traj_id][rep_name][reptype]=true;
+                            var tunnel_obj=$("#analysis_tunnels", window.parent.document);
+                            tunnel_obj.find("#loading_tun_style_clus").css("display","inline");
+                            setInterval(function(){tunnel_obj.find("#loading_tun_style_clus").css("display","none");},3000);
+
+                        }
+
+
+////
+
+
+
 
                     })
 
@@ -2007,8 +2180,14 @@
                 for (tf=0;tf < tun_files.length; tf++){
                     tun_file=tun_files[tf];
                     var tun_filepath=path+"Precomputed/tunnels/output_files/dyn"+dyn_id+"/traj_"+traj_id+"/data/clusters_rep/"+tun_file;
-                    stage.loadFile(tun_filepath, {visible: false} ).then( function( tc ){
+                    stage.loadFile(tun_filepath, {visible: compvisible} ).then( function( tc ){
                         tc.setName("comp_"+rep_name);
+                        tc.signals.representationAdded.add(function(r){
+                            var comp_traj=Number(r.name.split("_")[0])
+                            if (traj_db_id!=comp_traj){
+                                tc.setVisibility(false);
+                            }
+                        })
                         //tc.addRepresentation( "spacefill" ,{ colorValue: color_code , colorScheme:"uniform", name:name});
                         for (ar=0;ar< atom_rads.length;ar++){
                             var rad=atom_rads[ar];
@@ -2063,7 +2242,7 @@
             }*/
         }
 
-        function load_all_tunnel_files(){
+        function load_all_tunnel_files(load_pdbs){
             var dyn_clu_merge=$("#analysis_tunnels", window.parent.document).data("dyn_clu_merge");
             for (traj_id in tunnels_dict){
                 loaded_clusters[traj_id]={"clust":[],"repr":[]};
@@ -2074,21 +2253,24 @@
                 } else {
                     var data_type_li=['clust']
                 }
-                for (tc=0;tc<tunnel_clusters.length;tc++){ //Iterate tunnel clusters (static)
-                    var cluster_num=tc+1;
-                    var tun_clu_allfiles= tunnel_clusters[tc];
-                    for (tt=0;tt<data_type_li.length;tt++){
-                        var data_type=data_type_li[tt]
-                        if (data_type=="clust"){
-                            var cluster_name="clustering_c"+cluster_num;
-                            var tun_clu_files= tun_clu_allfiles[tt];
-                        } else {
-                            var cluster_name="repr_c"+cluster_num;
-                            var tun_clu_files= tun_clu_allfiles[tt][0];
+                if (load_pdbs){
+                    for (tc=0;tc<tunnel_clusters.length;tc++){ //Iterate tunnel clusters (static)
+                        var cluster_num=tc+1;
+                        var tun_clu_allfiles= tunnel_clusters[tc];
+                        for (tt=0;tt<data_type_li.length;tt++){
+                            var data_type=data_type_li[tt]
+                            if (data_type=="clust"){
+                                var cluster_name="clustering_c"+cluster_num;
+                                var tun_clu_files= tun_clu_allfiles[tt];
+                            } else {
+                                var cluster_name="repr_c"+cluster_num;
+                                var tun_clu_files= tun_clu_allfiles[tt][0];
+                            }
+                            //Load files
+                            load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name,false);
                         }
-                        //Load files
-                        load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name);
-                    }
+
+                }
 
                     /*var tun_type_li=["clust","dyn"];
                     for (dt=0;dt<tun_type_li.length;dt++){ //Iterate static (clustered)=0 and dynamic=1 type
@@ -2194,47 +2376,73 @@
 
         function change_rep_tunnel(repr_root,reptype,traj_id){
             var comp_name="comp_"+repr_root;
-            var thiscomp=stage.getComponentsByName(comp_name);
             if (reptype.indexOf("+")> -1){
                 var active_reps=[repr_root+"_line",repr_root+"_spacefillsmall"]
             } else {
                 var active_reps=[repr_root+"_"+reptype]
             }
-
-            if (reptype.indexOf("surface")>-1){
-                if (!(tun_struc_loaded[traj_id][repr_root][reptype])){
-                    tun_struc_loaded[traj_id][repr_root][reptype]=true;
-                    var comp_name_sp=comp_name.split("_");
-                    var cluster_num=Number(comp_name_sp[comp_name_sp.length - 1].replace("c",""));
-                    var color_code = tunnel_color_from_clusternum(cluster_num);
-                    comp_name_sp[comp_name_sp.length]
-                    if (reptype=="surfaceWireframe"){
-                        thiscomp.addRepresentation( "surface" ,{visible: false,  colorScheme:"uniform", colorValue:color_code , contour: true , probeRadius:0.01 , name:repr_root+"_"+reptype    });
-                        
-                    } else if (reptype=="surfaceOpaque"){
-                        var qwer=thiscomp.addRepresentation( "surface" ,{visible: false,  colorScheme:"uniform", colorValue:color_code , probeRadius:0.01 , name:repr_root+"_"+reptype    });
-                    }
-                    var tunnel_obj=$("#analysis_tunnels", window.parent.document);
-                    tunnel_obj.find("#loading_tun_style_clus").css("display","inline");
-                    setInterval(function(){tunnel_obj.find("#loading_tun_style_clus").css("display","none");},3000);
-                    //var thisrep=stage.getRepresentationsByName(repr_root+"_"+reptype).list[0]
-                    //thisrep.signals.
-
-                } 
-            } 
-            var thiscompli=thiscomp.list;
-            for (tc=0;tc<thiscompli.length;tc++){
-                var thiscompreps=thiscompli[tc].reprList;
-                for (tr=0;tr<thiscompreps.length;tr++){
-                    var thisrep=thiscompreps[tr];
-                    var thisrepname=thisrep.name;
-                    if (active_reps.indexOf(thisrepname)>-1){ //Activate selected rep
-                        thisrep.setVisibility(true);
-                    } else {
-                        thisrep.setVisibility(false);
+            //Check if the tunnel is loaded
+            
+            var trajclutype_li=loaded_clusters[traj_id]["clust"];
+            if (trajclutype_li.indexOf(repr_root)==-1){ 
+                //Not loaded yet
+                if (reptype.indexOf("+")> -1){
+                    tunnel_reprs_when_load={"line":true,
+                        "spacefill":false,
+                        "spacefillsmall":true,
+                        "licorice":false,
+                        "surfaceOpaque":false,
+                        "surfaceWireframe":false
+                        }
+                } else {
+                    for (dictreptype in tunnel_reprs_when_load){
+                        if (dictreptype==reptype){
+                            tunnel_reprs_when_load[dictreptype]=true;
+                        } else {
+                            tunnel_reprs_when_load[dictreptype]=false;
+                        }
                     }
                 }
+            } else {
+                //Change rep
+                var thiscomp=stage.getComponentsByName(comp_name);
+                if (reptype.indexOf("surface")>-1){
+                    if (!(tun_struc_loaded[traj_id][repr_root][reptype])){
+                        tun_struc_loaded[traj_id][repr_root][reptype]=true;
+                        var comp_name_sp=comp_name.split("_");
+                        var cluster_num=Number(comp_name_sp[comp_name_sp.length - 1].replace("c",""));
+                        var color_code = tunnel_color_from_clusternum(cluster_num);
+                        comp_name_sp[comp_name_sp.length]
+                        if (reptype=="surfaceWireframe"){
+                            thiscomp.addRepresentation( "surface" ,{visible: false,  colorScheme:"uniform", colorValue:color_code , contour: true , probeRadius:0.01 , name:repr_root+"_"+reptype    });
+                            
+                        } else if (reptype=="surfaceOpaque"){
+                            var qwer=thiscomp.addRepresentation( "surface" ,{visible: false,  colorScheme:"uniform", colorValue:color_code , probeRadius:0.01 , name:repr_root+"_"+reptype    });
+                        }
+                        var tunnel_obj=$("#analysis_tunnels", window.parent.document);
+                        tunnel_obj.find("#loading_tun_style_clus").css("display","inline");
+                        setInterval(function(){tunnel_obj.find("#loading_tun_style_clus").css("display","none");},3000);
+                        //var thisrep=stage.getRepresentationsByName(repr_root+"_"+reptype).list[0]
+                        //thisrep.signals.
+
+                    } 
+                } 
+                var thiscompli=thiscomp.list;
+                for (tc=0;tc<thiscompli.length;tc++){
+                    var thiscompreps=thiscompli[tc].reprList;
+                    for (tr=0;tr<thiscompreps.length;tr++){
+                        var thisrep=thiscompreps[tr];
+                        var thisrepname=thisrep.name;
+                        if (active_reps.indexOf(thisrepname)>-1){ //Activate selected rep
+                            thisrep.setVisibility(true);
+                        } else {
+                            thisrep.setVisibility(false);
+                        }
+                    }
+                }
+
             }
+
 
         }
 
@@ -2254,14 +2462,29 @@
             var cluster_num=Number(cluster_name.split("_")[1].replace("c",""));
 
             var rep_name=traj_id+"_"+cluster_name;
+            var load_tunnel_file=false;
+            var trajclutype_li=loaded_clusters[traj_id][data_type];
             if (showtunnels){  
-                //Show
                 var tun_comp_visibility=true;
+                if (trajclutype_li.indexOf(rep_name)<0){
+                    load_tunnel_file=true;
+                }
             } else {
                 var tun_comp_visibility=false;
             }
             //stage.getRepresentationsByName(rep_name).setVisibility(tun_comp_visibility);
-            stage.getComponentsByName("comp_"+rep_name).setVisibility(tun_comp_visibility);
+            if (load_tunnel_file){
+                var tun_clu_allfiles=tunnels_dict[traj_id][cluster_num-1];
+                if (data_type=="clust"){
+                    var tun_clu_files= tun_clu_allfiles[0];
+                } else {
+                    var tun_clu_files= tun_clu_allfiles[1][0];
+                }
+                load_tunnel(traj_id,data_type,tun_clu_files,cluster_num,cluster_name,true)
+            } else {
+                stage.getComponentsByName("comp_"+rep_name).setVisibility(tun_comp_visibility);
+            }
+
             /*else {
                 var colorVal=tunnel_color_from_clusternum(cluster_num);
                 rep_name=dyntunnel_repname_from_clusternum(cluster_num,traj_id)
@@ -2278,6 +2501,8 @@
                 }
                 stage.getRepresentationsByName(rep_name).setVisibility(tun_comp_visibility);
             }*/
+
+            //Manage change in protein representation (color)
             if (showtunnels){
                 if (!(set_tunnel_prot_rep)){
                     //Activate tunnels prot representation
@@ -2611,7 +2836,7 @@
                 // loop over dictionary with trajid and filepath, change path with serverpath and load the maps  load all the maps in one time 
                 loaded_watermaps={};
                 if (dict_occupancy){
-                    var trajnames_list=[]      
+                    trajnames_list=[]      
                     for (var traj_key in dict_occupancy){
                         if (traj_list_md.includes(traj_key)){  //This is to check if the trajectories in dict and on server are equal
 
@@ -2636,23 +2861,6 @@
                                     smooth: 0,
                                     linewidth:0.1,
                                 };  
-                    stage.signals.componentAdded.add( function( d ){
-                        var compname=d.name;
-                        if (compname.indexOf("occupancy")>-1){
-                            if (d.volume){
-                                $("#trajnotready").css("display","none");
-                                parent.$("#loading_display_watermap").css("display","none");
-                                parent.$(".WaterDisplay").removeAttr("disabled");;
-                                for (var i = 0; i <trajnames_list.length; i++){
-                                    var selected_filename=trajnames_list[i]
-                                    if (selected_filename != compname){
-                                        stage= show_hide_watermap(false, selected_filename,stage)  
-                                    }
-                                }
-                            }
-
-                        }
-                    })
 
                     // ACTION with Jquery select button. check which map is selected from dropdown. 
                     $(".WaterDisplay", window.parent.document).on("change", function(){
@@ -2737,67 +2945,55 @@
                 }; 
  
                 // Manage ED maps -----------
-                var pdbid=$("#pdbid", window.parent.document).text();
+                pdbid=$("#pdbid", window.parent.document).text();
                 if (pdbid.indexOf(".")>-1){
                     var pdbid_spl=pdbid.split(".");
                     pdbid=pdbid_spl[0]
                 }
 
                 var mat_info=obtain_transmat_for_traj();
-                var r_angl=mat_info[0];
-                var transl=mat_info[1];
+                r_angl=mat_info[0];
+                transl=mat_info[1];
+                if (pdbid && r_angl && transl){                    
+                    loaded_EDmaps=false;
+                    map_hidden={"fofc":false,"2fofc":false}
+                    edmap_params={}
+                    edmap_params["fofcpos"]={
+                      name:"fofcpos",
+                      color: "mediumseagreen",
+                      isolevel: 3,
+                      //boxSize: 10,
+                      contour: true,
+                      flatShaded: false,
+                      opacity: 1,
+                      metalness: 0,
+                      wireframe: false
+                    }
+                    edmap_params["fofcneg"]={
+                      name:"fofcneg",
+                      color: "tomato",
+                      isolevel: 3,
+                      negateIsolevel: true,
+                      //boxSize: 10,
+                      contour: true,
+                      flatShaded: false,
+                      opacity: 1,
+                      metalness: 0,
+                      wireframe: false
+                    }
+                    edmap_params["2fofc"]={
+                      name:"2fofc",
+                      contour: true,
+                      color: "skyblue",
+                      isolevel: 1.5,
+                      flatShaded: false,
+                      opacity: 1,
+                      metalness: 0,
+                      wireframe: false
+                    }
 
-                if (pdbid && r_angl && transl){
-                    var edmapUrl = "https://edmaps.rcsb.org/maps/";
-                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_2fofc.dsn6", {visible: false}).then(function(edc){
-                        edc.setName("EDmap_comp_2fofc");
-                        edc.setRotation( r_angl);
-                        edc.setPosition(transl);
-                        edc.addRepresentation("surface", {
-                          name:"2fofc",
-                          contour: true,
-                          color: "skyblue",
-                          isolevel: 1.5,
 
-                          flatShaded: false,
-                          opacity: 1,
-                          metalness: 0,
-                          wireframe: false
-                        })
-
-                    })
-                    stage.loadFile(edmapUrl + pdbid.toLowerCase() + "_fofc.dsn6", {visible: false}).then(function(edc){
-                        edc.setName("EDmap_comp_fofc");
-                        edc.setRotation( r_angl)
-                        edc.setPosition(transl)
-
-
-                        edc.addRepresentation("surface", {
-                          name:"fofcpos",
-                          color: "mediumseagreen",
-                          isolevel: 3,
-                          //boxSize: 10,
-                          contour: true,
-                          flatShaded: false,
-                          opacity: 1,
-                          metalness: 0,
-                          wireframe: false
-                        })
-                        edc.addRepresentation("surface", {
-                          name:"fofcneg",
-                          color: "tomato",
-                          isolevel: 3,
-                          negateIsolevel: true,
-                          //boxSize: 10,
-                          contour: true,
-                          flatShaded: false,
-                          opacity: 1,
-                          metalness: 0,
-                          wireframe: false
-
-                        })
-
-                    })
+                    //load_EDmap(["fofc","2fofc"]);
 
                     $("#EDselectionDiv", window.parent.document).on("click" , function(){
                         updateEDmapSel();
@@ -2867,8 +3063,14 @@
                 tun_stride=Number(tunnel_obj.data("tunnel_stride"));
                 last_tun_traj={};
                 fixed_tun_color=[];
-                
-                load_all_tunnel_files()
+                tunnel_reprs_when_load={"line":true,
+                                        "spacefill":false,
+                                        "spacefillsmall":false,
+                                        "licorice":false,
+                                        "surfaceOpaque":false,
+                                        "surfaceWireframe":false
+                                        }
+                load_all_tunnel_files(false);//Don't load PDBs, just prepare dictionaries
 
                 tunnel_obj.on("change",".tun_cluster_display",function(){
                     //$(this).is(":checked")                    
