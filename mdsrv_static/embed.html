@@ -2527,8 +2527,21 @@
             var struc=$(".str_file", window.parent.document).data("struc_file");
             var delta=Number($(".str_file", window.parent.document).data("delta"));
             var light_sel=$("#view_screen", window.parent.document).data("light_sel");
-            var warning_load={}
+            var session_warning_load= parent.$("#speed_warnings").data("warning_load");
+            console.log(session_warning_load)
             warning_load_heavy=true;
+            warning_load_light=true;
+            if (session_warning_load){
+                if ("heavy" in session_warning_load){
+                    warning_load_heavy=session_warning_load["heavy"]
+                } 
+                if ("trajload" in session_warning_load){
+                    if (! session_warning_load["trajload"]){ //if loading is set to FALSE
+                        warning_load_light=false;
+                    }
+                }
+            }
+            var warning_load={}
             var traj_li_all = [];
             var traj_fnum = {};
             var traj_lastPlayedID=0;
@@ -2541,7 +2554,7 @@
                 traj_fnum[i]=0;
                 traj_id=Number(traj_el.attr("id").replace('traj_id_',""));
                 warning_load[traj_id]={};
-                warning_load[traj_id]['light']=true;
+                warning_load[traj_id]['light']=warning_load_light;
                 //warning_load[traj_id]['heavy']=true;
                 if (i==0){
                     traj_db_id=traj_id;
@@ -3283,9 +3296,11 @@
                                 warning_load[traj_id]["light"]=false;
                                 $("#speed_warnings_light", window.parent.document).html("")
                             }
+                            parent.saveNotShowWarningInCache("trajload")
                         }else {
-                        warning_load_heavy=false;
-                        $("#speed_warnings_heavy", window.parent.document).html("")
+                            warning_load_heavy=false;
+                            $("#speed_warnings_heavy", window.parent.document).html("")
+                            parent.saveNotShowWarningInCache("heavy")
                         }
                     } 
                 })

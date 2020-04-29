@@ -2477,7 +2477,6 @@ $(document).ready(function(){
         var mysel = mychart.getSelection()[0];
         if (mysel){        
             var frame_num=array_f[mysel.row+1][0];
-            //console.log(frame_num)
             //var frameinput_sel=$('#embed_mdsrv')[0].contentWindow.$("#trajRange");
             //frameinput_sel.val(frame_num);
             //frameinput_sel.slider("refresh");
@@ -4710,6 +4709,9 @@ $(document).ready(function(){
          return (my_str);
     }
     
+
+
+
     function getCorrectSettingVal(settingsVal,defaultVal){
         if (settingsVal && settingsVal != defaultVal){// If it's the default we don't need to sent it to MDsrv
             settingsVal = Number(settingsVal);
@@ -4726,7 +4728,22 @@ $(document).ready(function(){
             return ("");
         }
     }
-    
+    //Warnings
+    saveNotShowWarningInCache = function(warning_type){
+        $.ajax({
+            type: "POST",
+            url: "/view/"+dyn_id+"/", 
+            dataType: "json",
+            data: { 
+              "warning_type":warning_type
+            },
+            timeout: 600000
+            
+        });
+    }
+    window.saveNotShowWarningInCache=saveNotShowWarningInCache;
+
+    //Control representations
     $("#to_mdsrv").click(function(){
         var results = obtainURLinfo(gpcr_pdb_dict);
         var cp = results["cp"];

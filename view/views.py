@@ -960,7 +960,6 @@ def obtain_tunnel_data(dyn_id,traj_list):
         list of files related to each cluster: each element of the list corresponds to a cluster and contains a list of pdb+xtc sets of said cluster.
     The static and dynami lists are ordered so that element 1 of static list corresponds to element 1 of dynamic list. Which corresponds to cluster 1.
     """
-    tun_strideVal=25
     root = settings.MEDIA_ROOT
     tun_path=os.path.join(root,"Precomputed/tunnels/output_files")
     tunnels={}
@@ -1002,6 +1001,10 @@ def obtain_tunnel_data(dyn_id,traj_list):
                 vals_in_nm=re.findall('[0-9]+',filenm)
                 rep_cl=vals_in_nm[0]
                 rep_fr=vals_in_nm[1]
+                if len(vals_in_nm)>2:
+                    tun_strideVal=int(vals_in_nm[2])
+                else:
+                    tun_strideVal=25
                 traj_fr=int(rep_fr)*tun_strideVal
                 repfr_rads=radius_d[cluster_num][int(rep_fr)]
                 rep_d[cluster_num]=[[filenm],traj_fr]
@@ -1312,11 +1315,23 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
             else:
                 data = {"result":None,"success": False, "e_msg":"Session error.","int_id":None ,"strided":strideVal}
             return HttpResponse(json.dumps(data), content_type='view/'+dyn_id)
+        elif request.POST.get("warning_type"):
+            warning_type=request.POST.get("warning_type")
+            if request.session.get('warning_load', False):
+                warning_load=request.session["warning_load"]
+            else:
+                warning_load={"trajload":True,"heavy":True}
+            warning_load[warning_type]=False;
+            request.session['warning_load']=warning_load
     dynfiles=DyndbFilesDynamics.objects.prefetch_related("id_files").filter(id_dynamics=dyn_id)
     if len(dynfiles) ==0:
         error="Structure file not found."
         return render(request, 'view/index_error.html', {"error":error} )
     else:
+        if request.session.get('warning_load', False):
+            warning_load=request.session["warning_load"]
+        else:
+            warning_load={"trajload":True,"heavy":True}
 ##### ---- NATHALIE CODE HERE -------
 # retrieving the filepaths from the database. put traj_id as key and vol/occ map as value. Then pass this variable through context variable.
         watermaps = False
@@ -1595,6 +1610,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "traj_clust_rad":json.dumps(traj_clust_rad),
                         "test":"HI THERE",
                         "TMsel_all":sorted(TMsel_all_ok.items(), key=lambda x:int(x[0][-1])),
+                        "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
                         "has_pharmacophores" : has_pharmacophores,
@@ -1634,6 +1650,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "tunnels_dump":json.dumps(tunnels),
                         "tun_clust_rep_avail":clust_rep_avail,
                         "traj_clust_rad":json.dumps(traj_clust_rad),
+                        "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
                         "has_pharmacophores" : has_pharmacophores,
@@ -1671,6 +1688,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                         "tunnels_dump":json.dumps(tunnels),
                         "tun_clust_rep_avail":clust_rep_avail,
                         "traj_clust_rad":json.dumps(traj_clust_rad),
+                        "warning_load":json.dumps(warning_load),
                         "watermaps" : watermaps,
                         "occupancy" : json.dumps(occupancy),
                         "has_pharmacophores" : has_pharmacophores,
@@ -1706,6 +1724,7 @@ def index(request, dyn_id, sel_pos=False,selthresh=False):
                     "tunnels_dump":json.dumps(tunnels),
                     "tun_clust_rep_avail":clust_rep_avail,
                     "traj_clust_rad":json.dumps(traj_clust_rad),
+                    "warning_load":json.dumps(warning_load),
                     "watermaps" : watermaps,
                     "occupancy" : json.dumps(occupancy),
                     "has_pharmacophores" : has_pharmacophores,
