@@ -2491,7 +2491,9 @@ Hydrogen bonds
                               </tr>
                               {% for cluster in tunnels|get_item:traj_list.0.2 %}
                               <tr style="">
-                                <td style="text-align:right;font-weight:bold">c{{ forloop.counter }}</td>
+                                <td style="text-align:right;font-weight:bold">c{{ forloop.counter }}
+                                  <span style="height: 5px;width:5px;background-color:{{forloop.counter | tunnel_color_from_clusternum}};border-radius: 50%;display: inline-block;margin-left:10px"></span>
+                                </td>
                                 <td style="text-align:center">
                                   <label class="checkbox" style="margin:0">
                                     <input  type="checkbox"  class="tun_cluster_display tun_cluster_display_clus" value="clustering_c{{ forloop.counter }}" style="margin-left:-5px;margin-top:0,margin-bottom:0" data-file_li="{{ cluster.0|json_dump }}" data-traj_id="{{traj_list.0.2}}">
