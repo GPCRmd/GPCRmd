@@ -1602,7 +1602,7 @@ def webformdata(request) :
         msg.attach(part)
 
 
-        server = smtplib.SMTP("***REMOVED***:587")
+        server = smtplib.SMTP("smtp.gmail.com:587")
         server.ehlo()
         server.starttls()
         server.login("gpcrdb@gmail.com", "gpcrdb2016")
